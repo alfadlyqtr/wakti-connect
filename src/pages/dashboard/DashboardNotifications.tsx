@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Bell, Trash2, Check, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ const DashboardNotifications = () => {
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<any[]>([]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Fetch user role from Supabase
     const getUserRole = async () => {
       try {
@@ -39,9 +39,23 @@ const DashboardNotifications = () => {
 
     getUserRole();
     
+    // Set up auth state listener
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event);
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        getUserRole();
+      } else if (event === 'SIGNED_OUT') {
+        setUserRole(null);
+      }
+    });
+
     // In a real app, we would fetch notifications from the API
     // For now, just setting empty array
     setNotifications([]);
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
   const isPaidAccount = userRole === "individual" || userRole === "business";

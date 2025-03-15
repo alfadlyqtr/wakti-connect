@@ -36,14 +36,14 @@ const Sidebar = ({ isOpen, userRole = "free" }: SidebarProps) => {
       icon: <CheckSquare size={20} />,
       path: "/tasks",
       roles: ["free", "individual", "business"],
-      badge: userRole === "free" ? "View Only" : null,
+      badge: !isPaidAccount ? "View Only" : null,
     },
     {
       title: "Appointments",
       icon: <Calendar size={20} />,
       path: "/appointments",
       roles: ["free", "individual", "business"],
-      badge: userRole === "free" ? "View Only" : null,
+      badge: !isPaidAccount ? "View Only" : null,
     },
     {
       title: "Messages",
@@ -56,7 +56,7 @@ const Sidebar = ({ isOpen, userRole = "free" }: SidebarProps) => {
       icon: <Bell size={20} />,
       path: "/notifications",
       roles: ["free", "individual", "business"],
-      badge: userRole === "free" ? "View Only" : null,
+      badge: !isPaidAccount ? "View Only" : null,
     },
     {
       title: "Contacts",
