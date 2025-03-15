@@ -1,12 +1,14 @@
 
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, Mail, Lock, Eye, EyeOff, User, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { toast } from "@/components/ui/use-toast";
 import {
   Card,
   CardContent,
@@ -22,19 +24,121 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 
 const AuthForm = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [accountType, setAccountType] = useState("free");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  // Check if the user is already authenticated
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (data?.session) {
+        // User is already logged in, redirect to dashboard
+        navigate("/dashboard");
+      }
+    };
+
+    checkSession();
+
+    // Listen for auth state changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === "SIGNED_IN" && session) {
+          navigate("/dashboard");
+        }
+      }
+    );
+
+    // Cleanup
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError("");
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (rememberMe) {
+        // Set session expiry to 30 days instead of the default
+        // This is handled by Supabase automatically based on the rememberMe option
+      }
+
+      toast({
+        title: "Success!",
+        description: "You have been logged in successfully.",
+      });
+
+      // Redirect happens in the auth state change listener
+    } catch (error: any) {
+      setError(error.message || "Failed to log in. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error.message || "Failed to log in. Please try again.",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
+  };
+
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            account_type: accountType,
+          },
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Account created!",
+        description: "Please check your email to verify your account.",
+      });
+
+      // Note: we don't redirect here as the user needs to verify their email first
+    } catch (error: any) {
+      setError(error.message || "Failed to create account. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Signup failed",
+        description: error.message || "Failed to create account. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -65,8 +169,13 @@ const AuthForm = () => {
         </CardHeader>
 
         <CardContent>
+          {error && (
+            <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md mb-4">
+              {error}
+            </div>
+          )}
           <TabsContent value="login" className="mt-0">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -76,6 +185,8 @@ const AuthForm = () => {
                     type="email" 
                     placeholder="name@example.com" 
                     className="pl-10"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
@@ -98,6 +209,8 @@ const AuthForm = () => {
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     className="pl-10 pr-10"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                   <Button
@@ -150,7 +263,7 @@ const AuthForm = () => {
           </TabsContent>
 
           <TabsContent value="register" className="mt-0">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSignup} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="full-name">Full Name</Label>
                 <div className="relative">
@@ -160,6 +273,8 @@ const AuthForm = () => {
                     type="text" 
                     placeholder="John Doe" 
                     className="pl-10"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
                     required
                   />
                 </div>
@@ -174,6 +289,8 @@ const AuthForm = () => {
                     type="email" 
                     placeholder="name@example.com" 
                     className="pl-10"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
@@ -188,6 +305,8 @@ const AuthForm = () => {
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     className="pl-10 pr-10"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                   <Button
@@ -209,16 +328,25 @@ const AuthForm = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="account-type">Account Type</Label>
-                <Select defaultValue="free">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="free">Free</SelectItem>
-                    <SelectItem value="individual">Individual</SelectItem>
-                    <SelectItem value="business">Business</SelectItem>
-                  </SelectContent>
-                </Select>
+                <RadioGroup 
+                  defaultValue="free" 
+                  value={accountType}
+                  onValueChange={setAccountType}
+                  className="grid grid-cols-3 gap-2 pt-2"
+                >
+                  <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-accent cursor-pointer">
+                    <RadioGroupItem value="free" id="free" />
+                    <Label htmlFor="free" className="cursor-pointer">Free</Label>
+                  </div>
+                  <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-accent cursor-pointer">
+                    <RadioGroupItem value="individual" id="individual" />
+                    <Label htmlFor="individual" className="cursor-pointer">Individual</Label>
+                  </div>
+                  <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-accent cursor-pointer">
+                    <RadioGroupItem value="business" id="business" />
+                    <Label htmlFor="business" className="cursor-pointer">Business</Label>
+                  </div>
+                </RadioGroup>
               </div>
               
               <div className="flex items-center gap-2">
@@ -258,7 +386,32 @@ const AuthForm = () => {
           </div>
           
           <div className="grid grid-cols-1 gap-3 w-full">
-            <Button variant="outline" type="button" className="w-full">
+            <Button 
+              variant="outline" 
+              type="button" 
+              className="w-full"
+              onClick={async () => {
+                setIsLoading(true);
+                try {
+                  const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                      redirectTo: `${window.location.origin}/auth/callback`,
+                    },
+                  });
+                  
+                  if (error) throw error;
+                } catch (error: any) {
+                  toast({
+                    variant: "destructive",
+                    title: "Login failed",
+                    description: error.message || "Failed to log in with Google. Please try again.",
+                  });
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+            >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M47.532 24.5528C47.532 22.9214 47.3997 21.2811 47.1175 19.6761H24.48V28.9181H37.4434C36.9055 31.8988 35.177 34.5356 32.6461 36.2111V42.2078H40.3801C44.9217 38.0278 47.532 31.8547 47.532 24.5528Z" fill="#4285F4"/>
                 <path d="M24.48 48.0016C30.9529 48.0016 36.4116 45.8764 40.3888 42.2078L32.6549 36.2111C30.5031 37.675 27.7252 38.5039 24.4888 38.5039C18.2275 38.5039 12.9187 34.2798 11.0139 28.6006H3.03296V34.7825C7.10718 42.8868 15.4056 48.0016 24.48 48.0016Z" fill="#34A853"/>
