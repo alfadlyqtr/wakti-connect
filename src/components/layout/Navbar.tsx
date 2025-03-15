@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   Bell, 
@@ -8,7 +8,8 @@ import {
   X, 
   Moon, 
   Sun, 
-  User
+  User,
+  LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/hooks/use-theme";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NavbarProps {
   toggleSidebar: () => void;
@@ -29,6 +31,30 @@ interface NavbarProps {
 const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
   const { theme, setTheme } = useTheme();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      setIsAuthenticated(!!data.session);
+    };
+
+    checkAuth();
+
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <header className="w-full bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
@@ -133,9 +159,16 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
                 <Link to="/settings">Settings</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/auth">Login / Sign Up</Link>
-              </DropdownMenuItem>
+              {isAuthenticated ? (
+                <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem asChild>
+                  <Link to="/auth">Login / Sign Up</Link>
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

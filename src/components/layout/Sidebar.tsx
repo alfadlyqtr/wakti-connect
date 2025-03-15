@@ -21,6 +21,8 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ isOpen, userRole = "free" }: SidebarProps) => {
+  const isPaidAccount = userRole === "individual" || userRole === "business";
+
   // Define menu items based on user role
   const menuItems = [
     {

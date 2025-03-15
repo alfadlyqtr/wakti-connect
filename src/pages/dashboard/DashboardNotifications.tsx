@@ -83,9 +83,11 @@ const DashboardNotifications = () => {
               <p className="text-center text-sm text-muted-foreground max-w-xs">
                 You're all caught up! No new notifications at this time.
               </p>
-              <Badge variant="outline" className="bg-amber-500/10 text-amber-500">
-                View Only
-              </Badge>
+              {userRole === "free" && (
+                <Badge variant="outline" className="bg-amber-500/10 text-amber-500">
+                  View Only
+                </Badge>
+              )}
             </div>
           </div>
         )}
