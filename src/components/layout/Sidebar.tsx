@@ -11,7 +11,12 @@ import {
   Crown,
   Home,
   BarChart2,
-  UserCog
+  UserCog,
+  Clock,
+  FileSpreadsheet,
+  CreditCard,
+  TrendingUp,
+  Briefcase
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -73,10 +78,34 @@ const Sidebar = ({ isOpen, userRole = "free" }: SidebarProps) => {
       roles: ["business"],
     },
     {
+      title: "Work Logs",
+      icon: <Clock size={20} />,
+      path: "/dashboard/work-logs",
+      roles: ["business"],
+    },
+    {
+      title: "Services",
+      icon: <Briefcase size={20} />,
+      path: "/dashboard/services",
+      roles: ["business"],
+    },
+    {
       title: "Business Reports",
-      icon: <BarChart2 size={20} />,
+      icon: <FileSpreadsheet size={20} />,
       path: "/dashboard/reports",
       roles: ["business"],
+    },
+    {
+      title: "Analytics",
+      icon: <TrendingUp size={20} />,
+      path: "/dashboard/analytics",
+      roles: ["business"],
+    },
+    {
+      title: "Billing & Subscription",
+      icon: <CreditCard size={20} />,
+      path: "/dashboard/billing",
+      roles: ["free", "individual", "business"],
     },
     {
       title: "Settings",
@@ -162,8 +191,11 @@ const Sidebar = ({ isOpen, userRole = "free" }: SidebarProps) => {
               <Button 
                 size="sm" 
                 className="w-full bg-white hover:bg-white/90 text-wakti-blue"
+                asChild
               >
-                Upgrade Plan
+                <NavLink to="/dashboard/upgrade">
+                  Upgrade Plan
+                </NavLink>
               </Button>
             </div>
           </div>

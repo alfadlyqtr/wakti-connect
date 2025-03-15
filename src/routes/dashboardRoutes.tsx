@@ -10,7 +10,13 @@ import DashboardNotifications from "@/pages/dashboard/DashboardNotifications";
 import DashboardContacts from "@/pages/dashboard/DashboardContacts";
 import DashboardSettings from "@/pages/dashboard/DashboardSettings";
 import DashboardStaffManagement from "@/pages/dashboard/DashboardStaffManagement";
+import DashboardWorkLogs from "@/pages/dashboard/DashboardWorkLogs";
+import DashboardServiceManagement from "@/pages/dashboard/DashboardServiceManagement";
 import DashboardBusinessReports from "@/pages/dashboard/DashboardBusinessReports";
+import DashboardBusinessAnalytics from "@/pages/dashboard/DashboardBusinessAnalytics";
+import DashboardBilling from "@/pages/dashboard/DashboardBilling";
+import DashboardUpgrade from "@/pages/dashboard/DashboardUpgrade";
+import DashboardPaymentConfirmation from "@/pages/dashboard/DashboardPaymentConfirmation";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 const DashboardRoutes = () => {
@@ -142,11 +148,78 @@ const DashboardRoutes = () => {
       />
       
       <Route 
+        path="/work-logs" 
+        element={
+          <ProtectedRoute>
+            <DashboardLayout userRole="business">
+              <DashboardWorkLogs />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/services" 
+        element={
+          <ProtectedRoute>
+            <DashboardLayout userRole="business">
+              <DashboardServiceManagement />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
         path="/reports" 
         element={
           <ProtectedRoute>
             <DashboardLayout userRole="business">
               <DashboardBusinessReports />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/analytics" 
+        element={
+          <ProtectedRoute>
+            <DashboardLayout userRole="business">
+              <DashboardBusinessAnalytics />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Billing & Subscription routes */}
+      <Route 
+        path="/billing" 
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <DashboardBilling />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/upgrade" 
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <DashboardUpgrade />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/payment-confirmation" 
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <DashboardPaymentConfirmation />
             </DashboardLayout>
           </ProtectedRoute>
         } 
