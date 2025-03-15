@@ -11,6 +11,15 @@ import DashboardLayout from "./components/dashboard/DashboardLayout";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
 
+// Import the new dashboard pages
+import DashboardHome from "./pages/dashboard/DashboardHome";
+import DashboardTasks from "./pages/dashboard/DashboardTasks";
+import DashboardAppointments from "./pages/dashboard/DashboardAppointments";
+import DashboardMessages from "./pages/dashboard/DashboardMessages";
+import DashboardNotifications from "./pages/dashboard/DashboardNotifications";
+import DashboardContacts from "./pages/dashboard/DashboardContacts";
+import DashboardSettings from "./pages/dashboard/DashboardSettings";
+
 const queryClient = new QueryClient();
 
 // Auth callback handler for OAuth providers
@@ -19,9 +28,23 @@ const AuthCallback = () => {
     // Handle OAuth redirect
     const handleOAuthRedirect = async () => {
       const { data, error } = await supabase.auth.getSession();
-      // Redirect to dashboard if session exists
+      
+      // Redirect to appropriate dashboard based on account type
       if (data?.session) {
-        window.location.href = "/dashboard";
+        // Get user profile to check account type
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('account_type')
+          .eq('id', data.session.user.id)
+          .single();
+        
+        if (profileData) {
+          // Redirect based on account type
+          window.location.href = `/dashboard/${profileData.account_type}`;
+        } else {
+          // Default redirect if no profile
+          window.location.href = "/dashboard";
+        }
       } else {
         window.location.href = "/auth";
       }
@@ -65,10 +88,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return isAuthenticated ? <>{children}</> : <Navigate to="/auth" />;
 };
 
-const Dashboard = () => {
-  return <div>Dashboard Content</div>;
-};
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -84,7 +103,86 @@ const App = () => (
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <DashboardLayout>
-                <Dashboard />
+                <DashboardHome />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Account type specific dashboard routes */}
+          <Route path="/dashboard/free" element={
+            <ProtectedRoute>
+              <DashboardLayout userRole="free">
+                <DashboardHome />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/dashboard/individual" element={
+            <ProtectedRoute>
+              <DashboardLayout userRole="individual">
+                <DashboardHome />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/dashboard/business" element={
+            <ProtectedRoute>
+              <DashboardLayout userRole="business">
+                <DashboardHome />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Task routes */}
+          <Route path="/tasks" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <DashboardTasks />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Appointments routes */}
+          <Route path="/appointments" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <DashboardAppointments />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Messages routes */}
+          <Route path="/messages" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <DashboardMessages />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Notifications routes */}
+          <Route path="/notifications" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <DashboardNotifications />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Contacts routes */}
+          <Route path="/contacts" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <DashboardContacts />
+              </DashboardLayout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Settings routes */}
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <DashboardLayout>
+                <DashboardSettings />
               </DashboardLayout>
             </ProtectedRoute>
           } />
@@ -98,3 +196,4 @@ const App = () => (
 );
 
 export default App;
+
