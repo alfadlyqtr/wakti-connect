@@ -9,6 +9,8 @@ import DashboardMessages from "@/pages/dashboard/DashboardMessages";
 import DashboardNotifications from "@/pages/dashboard/DashboardNotifications";
 import DashboardContacts from "@/pages/dashboard/DashboardContacts";
 import DashboardSettings from "@/pages/dashboard/DashboardSettings";
+import DashboardStaffManagement from "@/pages/dashboard/DashboardStaffManagement";
+import DashboardBusinessReports from "@/pages/dashboard/DashboardBusinessReports";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 const DashboardRoutes = () => {
@@ -122,6 +124,29 @@ const DashboardRoutes = () => {
           <ProtectedRoute>
             <DashboardLayout>
               <DashboardSettings />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Business-specific routes */}
+      <Route 
+        path="/staff" 
+        element={
+          <ProtectedRoute>
+            <DashboardLayout userRole="business">
+              <DashboardStaffManagement />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/reports" 
+        element={
+          <ProtectedRoute>
+            <DashboardLayout userRole="business">
+              <DashboardBusinessReports />
             </DashboardLayout>
           </ProtectedRoute>
         } 

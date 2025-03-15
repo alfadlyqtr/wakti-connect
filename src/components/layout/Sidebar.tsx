@@ -9,7 +9,9 @@ import {
   Users,
   Settings,
   Crown,
-  Home
+  Home,
+  BarChart2,
+  UserCog
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -34,40 +36,52 @@ const Sidebar = ({ isOpen, userRole = "free" }: SidebarProps) => {
     {
       title: "Tasks",
       icon: <CheckSquare size={20} />,
-      path: "/tasks",
+      path: "/dashboard/tasks",
       roles: ["free", "individual", "business"],
       badge: !isPaidAccount ? "View Only" : null,
     },
     {
       title: "Appointments",
       icon: <Calendar size={20} />,
-      path: "/appointments",
+      path: "/dashboard/appointments",
       roles: ["free", "individual", "business"],
       badge: !isPaidAccount ? "View Only" : null,
     },
     {
       title: "Messages",
       icon: <MessageSquare size={20} />,
-      path: "/messages",
+      path: "/dashboard/messages",
       roles: ["individual", "business"],
     },
     {
       title: "Notifications",
       icon: <Bell size={20} />,
-      path: "/notifications",
+      path: "/dashboard/notifications",
       roles: ["free", "individual", "business"],
       badge: !isPaidAccount ? "View Only" : null,
     },
     {
       title: "Contacts",
       icon: <Users size={20} />,
-      path: "/contacts",
+      path: "/dashboard/contacts",
       roles: ["individual", "business"],
+    },
+    {
+      title: "Staff Management",
+      icon: <UserCog size={20} />,
+      path: "/dashboard/staff",
+      roles: ["business"],
+    },
+    {
+      title: "Business Reports",
+      icon: <BarChart2 size={20} />,
+      path: "/dashboard/reports",
+      roles: ["business"],
     },
     {
       title: "Settings",
       icon: <Settings size={20} />,
-      path: "/settings",
+      path: "/dashboard/settings",
       roles: ["free", "individual", "business"],
     },
   ];
