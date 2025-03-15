@@ -2,6 +2,9 @@
 import React, { useEffect } from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
 import Auth from "@/pages/Auth";
+import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
+import VerificationPage from "@/pages/auth/VerificationPage";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
@@ -66,6 +69,9 @@ const AuthRoutes = () => {
     <Routes>
       <Route index element={<Auth />} />
       <Route path="/callback" element={<AuthCallback />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/verify" element={<VerificationPage />} />
     </Routes>
   );
 };

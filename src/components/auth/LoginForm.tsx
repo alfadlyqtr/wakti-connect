@@ -93,7 +93,7 @@ const LoginForm = ({ setError }: LoginFormProps) => {
         <div className="flex items-center justify-between">
           <Label htmlFor="password">Password</Label>
           <Link 
-            to="/reset-password" 
+            to="/forgot-password" 
             className="text-sm text-muted-foreground hover:text-foreground"
           >
             Forgot password?

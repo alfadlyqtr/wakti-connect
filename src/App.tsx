@@ -7,6 +7,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import PublicRoutes from "./routes/publicRoutes";
 import AuthRoutes from "./routes/authRoutes";
 import DashboardRoutes from "./routes/dashboardRoutes";
+import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+import VerificationPage from "./pages/auth/VerificationPage";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +25,11 @@ const App = () => (
           
           {/* Auth routes */}
           <Route path="/auth/*" element={<AuthRoutes />} />
+          
+          {/* Direct auth-related pages for deep linking */}
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/verify-email" element={<VerificationPage />} />
           
           {/* Dashboard routes */}
           <Route path="/dashboard/*" element={<DashboardRoutes />} />
