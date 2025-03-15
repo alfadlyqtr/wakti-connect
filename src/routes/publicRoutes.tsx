@@ -14,7 +14,8 @@ import PrivacyPage from "@/pages/public/PrivacyPage";
 const PublicRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Index />} />
+      {/* The index route now corresponds to the root path */}
+      <Route index element={<Index />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/features" element={<FeaturesPage />} />
       <Route path="/contact" element={<ContactPage />} />
@@ -22,6 +23,7 @@ const PublicRoutes = () => {
       <Route path="/faq" element={<FaqPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
+      {/* Catch-all route for unmatched public routes */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

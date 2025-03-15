@@ -64,8 +64,8 @@ const AuthCallback = () => {
 const AuthRoutes = () => {
   return (
     <Routes>
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route index element={<Auth />} />
+      <Route path="/callback" element={<AuthCallback />} />
     </Routes>
   );
 };

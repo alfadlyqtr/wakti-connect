@@ -16,7 +16,7 @@ const DashboardRoutes = () => {
     <Routes>
       {/* General dashboard route */}
       <Route 
-        path="/dashboard" 
+        index
         element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -28,7 +28,7 @@ const DashboardRoutes = () => {
       
       {/* Account type specific dashboard routes */}
       <Route 
-        path="/dashboard/free" 
+        path="/free" 
         element={
           <ProtectedRoute>
             <DashboardLayout userRole="free">
@@ -39,7 +39,7 @@ const DashboardRoutes = () => {
       />
       
       <Route 
-        path="/dashboard/individual" 
+        path="/individual" 
         element={
           <ProtectedRoute>
             <DashboardLayout userRole="individual">
@@ -50,7 +50,7 @@ const DashboardRoutes = () => {
       />
       
       <Route 
-        path="/dashboard/business" 
+        path="/business" 
         element={
           <ProtectedRoute>
             <DashboardLayout userRole="business">

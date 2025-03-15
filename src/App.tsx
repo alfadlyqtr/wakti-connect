@@ -17,14 +17,14 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Public routes */}
-          <Route path="/*" element={<PublicRoutes />} />
+          {/* Public routes - using exact path for the root */}
+          <Route path="/" element={<PublicRoutes />} />
           
           {/* Auth routes */}
           <Route path="/auth/*" element={<AuthRoutes />} />
           
           {/* Dashboard routes */}
-          <Route path="/*" element={<DashboardRoutes />} />
+          <Route path="/dashboard/*" element={<DashboardRoutes />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
