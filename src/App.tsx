@@ -21,6 +21,15 @@ import DashboardNotifications from "./pages/dashboard/DashboardNotifications";
 import DashboardContacts from "./pages/dashboard/DashboardContacts";
 import DashboardSettings from "./pages/dashboard/DashboardSettings";
 
+// Import public pages
+import PricingPage from "./pages/public/PricingPage";
+import FeaturesPage from "./pages/public/FeaturesPage";
+import ContactPage from "./pages/public/ContactPage";
+import AboutPage from "./pages/public/AboutPage";
+import FaqPage from "./pages/public/FaqPage";
+import TermsPage from "./pages/public/TermsPage";
+import PrivacyPage from "./pages/public/PrivacyPage";
+
 const queryClient = new QueryClient();
 
 // Auth callback handler for OAuth providers
@@ -140,7 +149,17 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Public pages */}
           <Route path="/" element={<Index />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/features" element={<FeaturesPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/faq" element={<FaqPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          
+          {/* Auth pages */}
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           

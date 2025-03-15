@@ -2,94 +2,132 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { 
+  Clock, 
+  Users, 
+  Globe, 
+  Heart,
+  Shield,
+  Zap,
+} from "lucide-react";
 
 const AboutPage = () => {
   const teamMembers = [
     {
       name: "Alex Johnson",
-      role: "Founder & CEO",
-      image: "/placeholder.svg",
-      bio: "Alex founded Wakti with a vision to transform how individuals and businesses manage their time and tasks."
+      role: "CEO & Co-Founder",
+      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+      bio: "Former product manager at Google, passionate about productivity tools and user experience."
     },
     {
-      name: "Sarah Chen",
-      role: "Chief Product Officer",
-      image: "/placeholder.svg",
-      bio: "Sarah leads product development and ensures Wakti delivers intuitive and powerful solutions for our users."
+      name: "Samantha Lee",
+      role: "CTO & Co-Founder",
+      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+      bio: "Tech enthusiast with 10+ years experience in software development and cloud architecture."
     },
     {
-      name: "Michael Rodriguez",
-      role: "CTO",
-      image: "/placeholder.svg",
-      bio: "Michael oversees our technical architecture and implementation, ensuring Wakti is robust, secure, and scalable."
+      name: "Michael Torres",
+      role: "Head of Design",
+      image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+      bio: "Award-winning designer focused on creating intuitive and beautiful user interfaces."
     },
     {
-      name: "Jessica Kim",
-      role: "Head of Customer Success",
-      image: "/placeholder.svg",
-      bio: "Jessica ensures our customers receive exceptional support and maximize value from the Wakti platform."
+      name: "Rachel Kim",
+      role: "Head of Marketing",
+      image: "https://images.unsplash.com/photo-1520813792240-56fc4a3765a7?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+      bio: "Digital marketing specialist with a passion for growth strategies and customer engagement."
     }
   ];
 
   const values = [
     {
-      title: "User-Centric Design",
-      description: "We put our users at the center of everything we create, focusing on intuitive interfaces and meaningful features."
+      icon: <Clock className="h-6 w-6" />,
+      title: "Efficiency First",
+      description: "We believe your time is precious. Everything we build aims to save you time and boost your productivity."
     },
     {
-      title: "Continuous Improvement",
-      description: "We're never satisfied with the status quo, constantly innovating and improving our platform."
+      icon: <Users className="h-6 w-6" />,
+      title: "Customer Obsessed",
+      description: "Our customers are at the heart of every decision we make. Your success is our success."
     },
     {
-      title: "Transparency",
-      description: "We believe in honest communication with our users about our services, pricing, and roadmap."
+      icon: <Shield className="h-6 w-6" />,
+      title: "Trust & Security",
+      description: "We take data privacy seriously and implement robust security measures to protect your information."
     },
     {
-      title: "Empowerment",
-      description: "We aim to empower individuals and businesses to achieve more through efficient time and task management."
+      icon: <Zap className="h-6 w-6" />,
+      title: "Continuous Innovation",
+      description: "We're constantly improving our platform with new features and enhancements based on user feedback."
+    },
+    {
+      icon: <Globe className="h-6 w-6" />,
+      title: "Global Mindset",
+      description: "We design for users across the world, considering diverse needs and accessibility requirements."
+    },
+    {
+      icon: <Heart className="h-6 w-6" />,
+      title: "Passionate Team",
+      description: "Our team is passionate about building tools that make a positive impact on how people work."
     }
   ];
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-background to-background/90">
-        <div className="container px-4 mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">About Wakti</h1>
-          <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            We're on a mission to help individuals and businesses maximize productivity through intelligent time and task management.
+      <section className="py-20 bg-gradient-to-b from-wakti-blue to-blue-700 text-white">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">Our Mission</h1>
+          <p className="text-xl max-w-3xl mx-auto mb-10 opacity-90">
+            At WAKTI, we're on a mission to help individuals and businesses manage their time more effectively, 
+            boost productivity, and achieve their goals with less stress.
           </p>
+          <Button 
+            size="lg" 
+            className="bg-white text-wakti-blue hover:bg-white/90"
+            asChild
+          >
+            <Link to="/auth">Join Our Community</Link>
+          </Button>
         </div>
       </section>
 
-      {/* Our Story */}
-      <section className="py-16">
-        <div className="container px-4 mx-auto">
-          <div className="flex flex-col md:flex-row gap-12 items-center">
-            <div className="md:w-1/2">
+      {/* Our Story Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div>
               <h2 className="text-3xl font-bold mb-6">Our Story</h2>
               <div className="space-y-4">
                 <p>
-                  Wakti was founded in 2023 with a simple but powerful vision: to create a comprehensive platform that transforms how people manage their time, tasks, and business operations.
+                  WAKTI was founded in 2022 by a team of productivity enthusiasts who were frustrated with 
+                  juggling multiple tools for task management, scheduling, and communication.
                 </p>
                 <p>
-                  Our founder, Alex Johnson, experienced firsthand the challenges of juggling multiple task management and scheduling tools while running a small business. This frustration led to the creation of Wakti—a unified solution that brings together task management, appointment scheduling, and business operations.
+                  We believed there had to be a better way to manage all these aspects of work in one unified platform. 
+                  After months of research and development, we launched the first version of WAKTI with a simple goal: 
+                  to create an all-in-one productivity solution that's powerful yet intuitive.
                 </p>
                 <p>
-                  Since our launch, we've grown to serve thousands of users across 30+ countries, from individual freelancers to medium-sized businesses with complex team structures.
-                </p>
-                <p>
-                  Today, we're a team of 15 passionate individuals dedicated to continuously improving and expanding the Wakti platform to meet the evolving needs of our diverse user base.
+                  Today, WAKTI is used by thousands of individuals and businesses worldwide, from freelancers and 
+                  small teams to large enterprises. We're constantly evolving our platform based on user feedback 
+                  to make it the most effective productivity tool on the market.
                 </p>
               </div>
             </div>
-            <div className="md:w-1/2">
-              <div className="relative rounded-xl overflow-hidden border border-border shadow-xl">
-                <img
-                  src="/placeholder.svg"
-                  alt="Wakti Team"
-                  className="w-full h-auto"
+            <div className="relative">
+              <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+                <img 
+                  src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" 
+                  alt="WAKTI team collaborating" 
+                  className="w-full h-full object-cover"
                 />
+              </div>
+              <div className="absolute -bottom-4 -right-4 bg-background border rounded-lg p-4 shadow-lg w-32 h-32 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-wakti-blue">3K+</div>
+                  <div className="text-sm text-muted-foreground">Happy Users</div>
+                </div>
               </div>
             </div>
           </div>
@@ -97,13 +135,22 @@ const AboutPage = () => {
       </section>
 
       {/* Our Values */}
-      <section className="py-16 bg-muted/50">
-        <div className="container px-4 mx-auto">
-          <h2 className="text-3xl font-bold mb-12 text-center">Our Values</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold mb-4">Our Values</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              These core principles guide everything we do at WAKTI, from product development to customer support.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {values.map((value, index) => (
-              <div key={index} className="bg-card p-6 rounded-lg border border-border shadow-sm">
-                <h3 className="text-xl font-semibold mb-4">{value.title}</h3>
+              <div key={index} className="bg-background p-6 rounded-lg border hover:shadow-md transition-all">
+                <div className="bg-wakti-blue/10 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4 text-wakti-blue">
+                  {value.icon}
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{value.title}</h3>
                 <p className="text-muted-foreground">{value.description}</p>
               </div>
             ))}
@@ -112,20 +159,28 @@ const AboutPage = () => {
       </section>
 
       {/* Team Section */}
-      <section className="py-16">
-        <div className="container px-4 mx-auto">
-          <h2 className="text-3xl font-bold mb-12 text-center">Meet Our Team</h2>
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold mb-4">Meet Our Team</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              The talented individuals behind WAKTI who are passionate about creating the best productivity tools.
+            </p>
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {teamMembers.map((member, index) => (
-              <div key={index} className="bg-card rounded-lg border border-border shadow-sm overflow-hidden">
-                <img 
-                  src={member.image} 
-                  alt={member.name} 
-                  className="w-full h-48 object-cover"
-                />
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold">{member.name}</h3>
-                  <p className="text-wakti-blue mb-4">{member.role}</p>
+              <div key={index} className="bg-background rounded-lg border overflow-hidden hover:shadow-md transition-all">
+                <div className="aspect-square overflow-hidden">
+                  <img 
+                    src={member.image} 
+                    alt={member.name} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold text-lg">{member.name}</h3>
+                  <p className="text-wakti-blue text-sm mb-2">{member.role}</p>
                   <p className="text-muted-foreground text-sm">{member.bio}</p>
                 </div>
               </div>
@@ -135,18 +190,27 @@ const AboutPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 md:py-24 bg-wakti-blue text-white">
-        <div className="container px-4 mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6">Join Us on Our Journey</h2>
-          <p className="text-xl opacity-90 mb-8 max-w-2xl mx-auto">
-            Try Wakti today and experience the difference our platform can make for your productivity.
+      <section className="py-16 bg-wakti-blue text-white">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-4">Ready to Transform Your Productivity?</h2>
+          <p className="text-xl opacity-90 max-w-2xl mx-auto mb-8">
+            Join thousands of users who've already discovered the power of WAKTI.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Button size="lg" variant="outline" className="bg-white text-wakti-blue hover:bg-white/90" asChild>
-              <Link to="/auth">Get Started Free</Link>
+            <Button 
+              size="lg" 
+              className="bg-white text-wakti-blue hover:bg-white/90"
+              asChild
+            >
+              <Link to="/auth">Get Started for Free</Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10" asChild>
-              <Link to="/contact">Contact Us</Link>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-white text-white hover:bg-white/10"
+              asChild
+            >
+              <Link to="/contact">Contact Sales</Link>
             </Button>
           </div>
         </div>

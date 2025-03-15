@@ -4,140 +4,127 @@ import { Link } from "react-router-dom";
 
 const TermsPage = () => {
   return (
-    <div className="min-h-screen py-16 px-4">
-      <div className="container mx-auto max-w-4xl">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Terms & Conditions</h1>
-          <p className="text-muted-foreground">Last updated: June 1, 2023</p>
-        </div>
-
-        <div className="prose prose-sm dark:prose-invert max-w-none">
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
-            <p>
-              Welcome to Wakti ("we," "our," or "us"). These Terms and Conditions ("Terms") govern your access to and use of the Wakti platform, including our website, mobile applications, and services (collectively, the "Services").
+    <div className="min-h-screen py-16">
+      <div className="container mx-auto px-4">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold mb-8">Terms of Service</h1>
+          
+          <div className="prose prose-slate dark:prose-invert max-w-none">
+            <p className="text-muted-foreground mb-6">
+              Last Updated: June 15, 2023
             </p>
+            
             <p>
-              By accessing or using our Services, you agree to be bound by these Terms. If you do not agree to these Terms, you may not access or use the Services.
+              Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the WAKTI website and application (the "Service") operated by WAKTI Inc. ("us", "we", or "our").
             </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">2. Account Registration</h2>
+            
             <p>
-              To use certain features of our Services, you may need to create an account. When you register, you agree to:
+              Your access to and use of the Service is conditioned on your acceptance of and compliance with these Terms. These Terms apply to all visitors, users, and others who access or use the Service.
             </p>
-            <ul className="list-disc pl-6 mb-4">
-              <li>Provide accurate, current, and complete information</li>
-              <li>Maintain the security of your account credentials</li>
-              <li>Promptly update your account information if it changes</li>
-              <li>Accept responsibility for all activities that occur under your account</li>
-            </ul>
+            
             <p>
-              We reserve the right to suspend or terminate your account if any information provided is inaccurate, out-of-date, or incomplete.
+              By accessing or using the Service you agree to be bound by these Terms. If you disagree with any part of the terms, you may not access the Service.
             </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">3. Subscription and Payments</h2>
+            
+            <h2 className="text-2xl font-semibold mt-8 mb-4">1. Accounts</h2>
+            
             <p>
-              Wakti offers various subscription plans. By subscribing to a paid plan, you agree to the following:
+              When you create an account with us, you must provide information that is accurate, complete, and current at all times. Failure to do so constitutes a breach of the Terms, which may result in immediate termination of your account on our Service.
             </p>
-            <ul className="list-disc pl-6 mb-4">
-              <li>You authorize us to charge the applicable fees to your chosen payment method</li>
-              <li>Subscriptions will automatically renew unless cancelled before the renewal date</li>
-              <li>You can cancel your subscription at any time through your account settings</li>
-              <li>We may change subscription fees upon notice; continued use after a price change constitutes acceptance</li>
-            </ul>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">4. Acceptable Use</h2>
+            
             <p>
-              When using our Services, you agree not to:
+              You are responsible for safeguarding the password that you use to access the Service and for any activities or actions under your password, whether your password is with our Service or a third-party service.
             </p>
-            <ul className="list-disc pl-6 mb-4">
-              <li>Violate any applicable laws or regulations</li>
-              <li>Infringe upon the rights of others</li>
-              <li>Use the Services to distribute unauthorized or unsolicited advertising</li>
-              <li>Attempt to interfere with or disrupt the Services</li>
-              <li>Impersonate another person or entity</li>
-              <li>Use the Services to store or transmit harmful code</li>
-            </ul>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">5. Intellectual Property</h2>
+            
             <p>
-              All content, features, and functionality of our Services, including but not limited to text, graphics, logos, icons, and software, are the exclusive property of Wakti or our licensors and are protected by copyright, trademark, and other intellectual property laws.
+              You agree not to disclose your password to any third party. You must notify us immediately upon becoming aware of any breach of security or unauthorized use of your account.
             </p>
+            
+            <h2 className="text-2xl font-semibold mt-8 mb-4">2. Subscriptions</h2>
+            
             <p>
-              We grant you a limited, non-exclusive, non-transferable license to use the Services for their intended purposes. You may not copy, modify, distribute, sell, or lease any part of our Services without our written permission.
+              Some parts of the Service are billed on a subscription basis ("Subscription(s)"). You will be billed in advance on a recurring and periodic basis ("Billing Cycle"). Billing cycles are set either on a monthly or annual basis, depending on the type of subscription plan you select when purchasing a Subscription.
             </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">6. Privacy</h2>
+            
             <p>
-              Our collection and use of personal information in connection with the Services is governed by our Privacy Policy, which is incorporated into these Terms by reference. By using our Services, you consent to the collection and use of your information as described in our Privacy Policy.
+              At the end of each Billing Cycle, your Subscription will automatically renew under the exact same conditions unless you cancel it or WAKTI Inc. cancels it. You may cancel your Subscription renewal either through your online account management page or by contacting WAKTI Inc. customer support team.
             </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">7. Limitation of Liability</h2>
+            
             <p>
-              To the maximum extent permitted by law, Wakti shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to loss of profits, data, use, or goodwill, arising out of or in connection with your access to or use of the Services.
+              A valid payment method, including credit card, is required to process the payment for your Subscription. You shall provide WAKTI Inc. with accurate and complete billing information including full name, address, state, zip code, telephone number, and valid payment method information. By submitting such payment information, you automatically authorize WAKTI Inc. to charge all Subscription fees incurred through your account to any such payment instruments.
             </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">8. Indemnification</h2>
+            
             <p>
-              You agree to indemnify and hold Wakti harmless from any claims, damages, liabilities, costs, or expenses (including reasonable attorneys' fees) arising from your use of the Services or any violation of these Terms.
+              Should automatic billing fail to occur for any reason, WAKTI Inc. will issue an electronic invoice indicating that you must proceed manually, within a certain deadline date, with the full payment corresponding to the billing period as indicated on the invoice.
             </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">9. Modifications to the Terms</h2>
+            
+            <h2 className="text-2xl font-semibold mt-8 mb-4">3. Free Trial</h2>
+            
             <p>
-              We may modify these Terms at any time. If we make material changes, we will notify you by email or by posting a notice on our website. Your continued use of the Services after such notification constitutes your acceptance of the modified Terms.
+              WAKTI Inc. may, at its sole discretion, offer a Subscription with a free trial for a limited period of time ("Free Trial").
             </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">10. Termination</h2>
+            
             <p>
-              We may terminate or suspend your access to the Services at any time, with or without cause, and with or without notice. Upon termination, your right to use the Services will immediately cease.
+              You may be required to enter your billing information in order to sign up for the Free Trial.
             </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">11. Governing Law</h2>
+            
             <p>
-              These Terms shall be governed by and construed in accordance with the laws of the State of California, without regard to its conflict of law provisions. Any disputes arising under these Terms shall be resolved exclusively in the state or federal courts located in San Francisco, California.
+              If you do enter your billing information when signing up for the Free Trial, you will not be charged by WAKTI Inc. until the Free Trial has expired. On the last day of the Free Trial period, unless you cancelled your Subscription, you will be automatically charged the applicable subscription fee for the type of Subscription you have selected.
             </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">12. Contact Information</h2>
+            
             <p>
-              If you have any questions about these Terms, please contact us at <a href="mailto:legal@wakti.com" className="text-wakti-blue hover:underline">legal@wakti.com</a>.
+              At any time and without notice, WAKTI Inc. reserves the right to (i) modify the terms and conditions of the Free Trial offer, or (ii) cancel such Free Trial offer.
             </p>
-          </section>
-        </div>
-
-        <div className="mt-12 text-center">
-          <p className="text-muted-foreground mb-4">
-            Related Documents:
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link to="/privacy" className="text-wakti-blue hover:underline">
-              Privacy Policy
-            </Link>
-            <span className="text-muted-foreground">•</span>
-            <Link to="/contact" className="text-wakti-blue hover:underline">
-              Contact Us
-            </Link>
+            
+            <h2 className="text-2xl font-semibold mt-8 mb-4">4. Content</h2>
+            
+            <p>
+              Our Service allows you to post, link, store, share and otherwise make available certain information, text, graphics, videos, or other material ("Content"). You are responsible for the Content that you post to the Service, including its legality, reliability, and appropriateness.
+            </p>
+            
+            <p>
+              By posting Content to the Service, you grant us the right and license to use, modify, perform, display, reproduce, and distribute such Content on and through the Service. You retain any and all of your rights to any Content you submit, post or display on or through the Service and you are responsible for protecting those rights.
+            </p>
+            
+            <p>
+              You represent and warrant that: (i) the Content is yours (you own it) or you have the right to use it and grant us the rights and license as provided in these Terms, and (ii) the posting of your Content on or through the Service does not violate the privacy rights, publicity rights, copyrights, contract rights or any other rights of any person.
+            </p>
+            
+            <h2 className="text-2xl font-semibold mt-8 mb-4">5. Termination</h2>
+            
+            <p>
+              We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.
+            </p>
+            
+            <p>
+              Upon termination, your right to use the Service will immediately cease. If you wish to terminate your account, you may simply discontinue using the Service, or notify us that you wish to delete your account.
+            </p>
+            
+            <h2 className="text-2xl font-semibold mt-8 mb-4">6. Limitation of Liability</h2>
+            
+            <p>
+              In no event shall WAKTI Inc., nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from (i) your access to or use of or inability to access or use the Service; (ii) any conduct or content of any third party on the Service; (iii) any content obtained from the Service; and (iv) unauthorized access, use or alteration of your transmissions or content, whether based on warranty, contract, tort (including negligence) or any other legal theory, whether or not we have been informed of the possibility of such damage, and even if a remedy set forth herein is found to have failed of its essential purpose.
+            </p>
+            
+            <h2 className="text-2xl font-semibold mt-8 mb-4">7. Changes</h2>
+            
+            <p>
+              We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material we will try to provide at least 30 days' notice prior to any new terms taking effect. What constitutes a material change will be determined at our sole discretion.
+            </p>
+            
+            <p>
+              By continuing to access or use our Service after those revisions become effective, you agree to be bound by the revised terms. If you do not agree to the new terms, please stop using the Service.
+            </p>
+            
+            <h2 className="text-2xl font-semibold mt-8 mb-4">8. Contact Us</h2>
+            
+            <p>
+              If you have any questions about these Terms, please <Link to="/contact" className="text-wakti-blue hover:underline">contact us</Link>.
+            </p>
+          </div>
+          
+          <div className="mt-12 flex justify-center">
+            <Link to="/privacy" className="text-wakti-blue hover:underline">View our Privacy Policy</Link>
           </div>
         </div>
       </div>

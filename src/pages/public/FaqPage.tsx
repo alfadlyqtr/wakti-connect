@@ -1,179 +1,196 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 
 const FaqPage = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [category, setCategory] = useState<string>("general");
 
   const faqCategories = [
-    {
-      category: "General",
-      faqs: [
-        {
-          question: "What is Wakti?",
-          answer: "Wakti is an all-in-one platform for task management, appointment scheduling, and team collaboration. Our platform is designed for both individuals and businesses to maximize productivity and streamline workflow."
-        },
-        {
-          question: "How much does Wakti cost?",
-          answer: "Wakti offers three pricing tiers: Free, Individual ($9.99/month), and Business ($29.99/month). Each tier offers different features tailored to different needs. Visit our Pricing page for more details."
-        },
-        {
-          question: "Is there a free trial for paid plans?",
-          answer: "Yes, we offer a 14-day free trial for both our Individual and Business plans. No credit card is required to start your trial."
-        },
-        {
-          question: "Can I upgrade or downgrade my plan at any time?",
-          answer: "Yes, you can change your subscription plan at any time. When upgrading, you'll have immediate access to new features. When downgrading, your new plan will take effect at the end of your current billing cycle."
-        }
-      ]
-    },
-    {
-      category: "Features",
-      faqs: [
-        {
-          question: "What's the difference between the Free, Individual, and Business plans?",
-          answer: "The Free plan provides view-only access to tasks and appointments. The Individual plan adds full task and appointment management, messaging, and contacts. The Business plan includes team management, staff assignment, business analytics, and more advanced features for organizations."
-        },
-        {
-          question: "Can I share tasks with other users?",
-          answer: "Yes, on the Individual and Business plans, you can share tasks with other Wakti users who are in your contacts list."
-        },
-        {
-          question: "Does Wakti work on mobile devices?",
-          answer: "Yes, Wakti is fully responsive and works on desktops, tablets, and mobile phones. We're also developing dedicated mobile apps for iOS and Android that will be released soon."
-        },
-        {
-          question: "Can I integrate Wakti with other tools I use?",
-          answer: "We currently offer integrations with Google Calendar, Microsoft Office 365, and Slack. We're continuously adding new integrations based on user feedback."
-        }
-      ]
-    },
-    {
-      category: "Account & Security",
-      faqs: [
-        {
-          question: "How do I create an account?",
-          answer: "You can sign up for a Wakti account by visiting our Sign Up page. You can register using your email address, or through Google or Facebook authentication."
-        },
-        {
-          question: "Is my data secure with Wakti?",
-          answer: "Yes, we take security seriously. Wakti uses industry-standard encryption for all data, both in transit and at rest. We never share your data with third parties without your explicit consent."
-        },
-        {
-          question: "Can I delete my account?",
-          answer: "Yes, you can delete your account at any time from your Account Settings page. Please note that account deletion is permanent and all your data will be removed from our systems."
-        },
-        {
-          question: "What happens to my data if I cancel my subscription?",
-          answer: "If you downgrade from a paid plan to the free plan, you'll still have access to view your existing data, but won't be able to add new items or edit existing ones. If you delete your account, all your data will be permanently removed."
-        }
-      ]
-    },
-    {
-      category: "Business-Specific",
-      faqs: [
-        {
-          question: "How many team members can I add to a Business account?",
-          answer: "The standard Business plan includes up to 10 team members. For larger teams, please contact our sales team for custom pricing."
-        },
-        {
-          question: "Can I set different permission levels for team members?",
-          answer: "Yes, in the Business plan, you can assign different roles (Admin, Co-Admin, Staff) to team members with varying permission levels."
-        },
-        {
-          question: "How does the appointment booking system work for businesses?",
-          answer: "Business accounts can create bookable services, assign them to staff members, and manage customer appointments. Customers can book these services through your business profile page or via direct invitation links."
-        },
-        {
-          question: "What analytics are available in the Business plan?",
-          answer: "Business accounts have access to analytics including customer engagement, staff performance, appointment statistics, and booking conversion rates."
-        }
-      ]
-    }
+    { id: "general", name: "General" },
+    { id: "pricing", name: "Pricing & Plans" },
+    { id: "features", name: "Features" },
+    { id: "account", name: "Account & Security" },
+    { id: "business", name: "Business Users" },
   ];
 
-  // Filter FAQs based on search term
-  const filteredFaqs = searchTerm 
-    ? faqCategories.map(category => ({
-        ...category,
-        faqs: category.faqs.filter(faq => 
-          faq.question.toLowerCase().includes(searchTerm.toLowerCase()) || 
-          faq.answer.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      })).filter(category => category.faqs.length > 0)
-    : faqCategories;
+  const faqItems = {
+    general: [
+      {
+        question: "What is WAKTI?",
+        answer: "WAKTI is an all-in-one productivity platform that combines task management, appointment scheduling, messaging, and business tools in one seamless interface. It's designed to help individuals and businesses streamline their workflow and boost productivity."
+      },
+      {
+        question: "Who can use WAKTI?",
+        answer: "WAKTI is designed for everyone! We have plans for individuals looking to organize their personal tasks and appointments, as well as robust features for businesses of all sizes to manage their team, services, and clients."
+      },
+      {
+        question: "Is WAKTI available on mobile devices?",
+        answer: "Yes! WAKTI is fully responsive and works on desktop, tablet, and mobile devices. We also offer dedicated mobile apps for iOS and Android for a seamless on-the-go experience."
+      },
+      {
+        question: "How do I get started with WAKTI?",
+        answer: "Getting started is easy! Simply sign up for a free account, and you'll be guided through a simple onboarding process to set up your profile and preferences. You can start using basic features immediately and upgrade to a paid plan whenever you're ready."
+      },
+      {
+        question: "Can I import data from other tools?",
+        answer: "Yes, WAKTI supports importing data from popular productivity tools like Asana, Trello, Google Calendar, and more. Once you've created your account, you'll find import options in your settings."
+      }
+    ],
+    pricing: [
+      {
+        question: "How much does WAKTI cost?",
+        answer: "WAKTI offers three main plans: Free (with limited features), Individual ($9.99/month), and Business ($29.99/month). We also offer custom Enterprise plans for larger organizations. You can view detailed pricing information on our Pricing page."
+      },
+      {
+        question: "Can I try WAKTI before subscribing?",
+        answer: "Absolutely! Our Free plan allows you to explore basic features at no cost. Additionally, our paid plans come with a 14-day free trial, so you can test all features before committing."
+      },
+      {
+        question: "Do you offer any discounts?",
+        answer: "Yes, we offer discounted annual billing (save 20% compared to monthly billing), as well as special pricing for non-profits, educational institutions, and startups. Contact our sales team for more information."
+      },
+      {
+        question: "What payment methods do you accept?",
+        answer: "We accept all major credit cards (Visa, Mastercard, American Express, Discover), as well as PayPal. For Business and Enterprise plans, we also support invoice payment."
+      },
+      {
+        question: "Can I change or cancel my plan?",
+        answer: "Yes, you can upgrade, downgrade, or cancel your plan at any time from your account settings. If you cancel a paid plan, you'll continue to have access until the end of your current billing period."
+      }
+    ],
+    features: [
+      {
+        question: "What task management features does WAKTI offer?",
+        answer: "WAKTI offers comprehensive task management including creating, editing, and prioritizing tasks, setting deadlines, adding to-do lists inside tasks, organizing with labels, sharing tasks with teammates, and tracking status (Pending, In Progress, Completed)."
+      },
+      {
+        question: "How does the appointment booking system work?",
+        answer: "Our appointment system allows you to create personal appointments and reminders, send event invitations to other users, and for business users, offer bookable services to clients. Clients can book through your public booking page or via the WAKTI AI Chatbot integration."
+      },
+      {
+        question: "Can I communicate with my team or clients through WAKTI?",
+        answer: "Yes! WAKTI includes a built-in messaging system that allows you to communicate with other WAKTI users in your contacts. Business users can message staff members and clients, while Individual users can message their contacts and subscribed businesses."
+      },
+      {
+        question: "What makes WAKTI different from other productivity tools?",
+        answer: "Unlike specialized tools that focus on just task management or appointment scheduling, WAKTI brings everything together in one platform. This eliminates the need to switch between multiple apps and ensures all your productivity data is connected and accessible."
+      },
+      {
+        question: "Can I customize WAKTI to match my workflow?",
+        answer: "Absolutely! WAKTI is highly customizable, from color-coded task labels to personalized dashboard views. Business users get even more customization options, including a mini landing page and custom service offerings."
+      }
+    ],
+    account: [
+      {
+        question: "How do I create an account?",
+        answer: "You can sign up by visiting our website and clicking the 'Sign Up' button. You can create an account using your email address, Google account, or other social login options."
+      },
+      {
+        question: "Is my data secure with WAKTI?",
+        answer: "Yes, we take security seriously. WAKTI uses industry-standard encryption, secure data centers, and follows best practices for data protection. We never share your data with third parties without your explicit permission."
+      },
+      {
+        question: "Can I delete my account?",
+        answer: "Yes, you can delete your account and all associated data at any time through your account settings. Please note that account deletion is permanent and cannot be undone."
+      },
+      {
+        question: "How do I reset my password?",
+        answer: "If you forget your password, you can reset it by clicking the 'Forgot Password' link on the login page. We'll send a password reset link to your registered email address."
+      },
+      {
+        question: "Can I share my account with other people?",
+        answer: "For security reasons, we recommend not sharing your account credentials. Instead, Business plan users can add team members with their own accounts and assign appropriate access levels."
+      }
+    ],
+    business: [
+      {
+        question: "What features are exclusive to Business users?",
+        answer: "Business users get access to team task assignments, staff management, work hour tracking, service management, business analytics, customizable business profile pages, and the ability to embed the WAKTI AI Chatbot for bookings."
+      },
+      {
+        question: "How many team members can I add to my Business account?",
+        answer: "The standard Business plan includes up to 5 team members. You can add additional members for a small monthly fee per user, or contact us about our custom Enterprise plans for larger teams."
+      },
+      {
+        question: "Can I control what my team members can access?",
+        answer: "Yes, WAKTI offers role-based permissions for Business accounts. You can assign roles (Admin, Co-Admin, Staff) to control exactly what each team member can view and modify."
+      },
+      {
+        question: "How does the business analytics feature work?",
+        answer: "Business analytics provides insights into your team's productivity, client engagement, service popularity, and revenue trends. You can view data in customizable dashboards and export reports for further analysis."
+      },
+      {
+        question: "Can clients book appointments without creating a WAKTI account?",
+        answer: "Yes! Your business gets a public booking page that clients can access without creating an account. For even more convenience, you can embed the WAKTI AI Chatbot on your website to handle bookings."
+      }
+    ]
+  };
+
+  const currentFaqs = faqItems[category as keyof typeof faqItems];
 
   return (
-    <div className="min-h-screen py-16 px-4">
-      <div className="container mx-auto max-w-4xl">
-        <div className="text-center mb-12">
+    <div className="min-h-screen py-16">
+      <div className="container mx-auto px-4">
+        {/* Hero Section */}
+        <section className="text-center mb-16">
           <h1 className="text-4xl font-bold mb-4">Frequently Asked Questions</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Find answers to common questions about Wakti and how it works.
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Find answers to common questions about WAKTI's features, pricing, and account management.
           </p>
-          
-          <div className="relative max-w-xl mx-auto">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search for questions..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+        </section>
+
+        {/* FAQ Categories */}
+        <div className="flex flex-wrap justify-center gap-2 mb-10">
+          {faqCategories.map((cat) => (
+            <Button
+              key={cat.id}
+              variant={category === cat.id ? "default" : "outline"}
+              onClick={() => setCategory(cat.id)}
+              className={category === cat.id ? "bg-wakti-blue" : ""}
+            >
+              {cat.name}
+            </Button>
+          ))}
         </div>
 
-        {filteredFaqs.length > 0 ? (
-          filteredFaqs.map((category, i) => (
-            <div key={i} className="mb-12">
-              <h2 className="text-2xl font-semibold mb-6">{category.category}</h2>
-              <Accordion type="single" collapsible className="w-full">
-                {category.faqs.map((faq, j) => (
-                  <AccordionItem key={j} value={`item-${i}-${j}`}>
-                    <AccordionTrigger className="text-left font-medium">
-                      {faq.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground">
-                      {faq.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
-          ))
-        ) : (
-          <div className="text-center py-8">
-            <h3 className="text-xl font-medium mb-2">No results found</h3>
-            <p className="text-muted-foreground mb-6">
-              We couldn't find any FAQs matching your search. Try different keywords or ask us directly.
-            </p>
-          </div>
-        )}
+        {/* FAQ Accordion */}
+        <div className="max-w-3xl mx-auto mb-16">
+          <Accordion type="single" collapsible className="w-full">
+            {currentFaqs.map((faq, index) => (
+              <AccordionItem key={index} value={`item-${index}`}>
+                <AccordionTrigger className="text-left font-semibold">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent>
+                  <p className="text-muted-foreground">{faq.answer}</p>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
 
-        <div className="mt-16 bg-muted/60 rounded-lg p-8 text-center">
-          <h2 className="text-2xl font-semibold mb-4">Still have questions?</h2>
-          <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-            If you couldn't find the answer you were looking for, our support team is here to help.
+        {/* Still have questions */}
+        <section className="bg-muted rounded-xl p-8 text-center max-w-3xl mx-auto">
+          <h2 className="text-2xl font-bold mb-4">Still Have Questions?</h2>
+          <p className="text-muted-foreground mb-6">
+            Can't find the answer you're looking for? Our support team is here to help.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Button asChild>
               <Link to="/contact">Contact Support</Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link to="/auth">Create Account</Link>
+              <a href="mailto:support@wakti.app">Email Us</a>
             </Button>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );
