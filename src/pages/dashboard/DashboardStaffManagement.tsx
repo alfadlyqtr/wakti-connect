@@ -10,16 +10,18 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, DollarSign, Users, UserPlus, Briefcase } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
+interface Profile {
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
 interface StaffMember {
   id: string;
   staff_id: string;
   business_id: string;
   role: string;
   created_at: string;
-  profile?: {
-    full_name: string | null;
-    avatar_url: string | null;
-  }
+  profile?: Profile | null;
 }
 
 interface WorkLog {
@@ -46,16 +48,31 @@ const DashboardStaffManagement = () => {
         throw new Error('Not authenticated');
       }
       
-      const { data, error } = await supabase
+      // First fetch the business staff records
+      const { data: staffData, error: staffError } = await supabase
         .from('business_staff')
-        .select(`
-          *,
-          profile:staff_id(full_name, avatar_url)
-        `)
+        .select('*')
         .eq('business_id', session.session.user.id);
         
-      if (error) throw error;
-      return data as StaffMember[];
+      if (staffError) throw staffError;
+      
+      // Now fetch profile data for each staff member
+      const staffWithProfiles = await Promise.all(
+        staffData.map(async (staff) => {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('full_name, avatar_url')
+            .eq('id', staff.staff_id)
+            .single();
+            
+          return {
+            ...staff,
+            profile: profileError ? null : profileData
+          } as StaffMember;
+        })
+      );
+      
+      return staffWithProfiles;
     }
   });
 
