@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 const DashboardNotifications = () => {
   const [userRole, setUserRole] = useState<"free" | "individual" | "business" | null>(null);
@@ -20,14 +21,25 @@ const DashboardNotifications = () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          const { data: profileData } = await supabase
+          const { data: profileData, error } = await supabase
             .from('profiles')
             .select('account_type')
             .eq('id', session.user.id)
             .single();
           
+          if (error) {
+            console.error("Error fetching user profile:", error);
+            return;
+          }
+          
           if (profileData?.account_type) {
             setUserRole(profileData.account_type as "free" | "individual" | "business");
+            console.log("Notifications page - user role:", profileData.account_type);
+            
+            // If the user has a paid account, fetch their notifications
+            if (profileData.account_type === "individual" || profileData.account_type === "business") {
+              fetchNotifications(session.user.id);
+            }
           }
         }
       } catch (error) {
@@ -36,22 +48,46 @@ const DashboardNotifications = () => {
         setLoading(false);
       }
     };
+    
+    const fetchNotifications = async (userId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error("Error fetching notifications:", error);
+          toast({
+            title: "Failed to load notifications",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        if (data) {
+          setNotifications(data);
+          console.log("Notifications loaded:", data.length);
+        }
+      } catch (error) {
+        console.error("Error in fetchNotifications:", error);
+      }
+    };
 
     getUserRole();
     
     // Set up auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event);
+      console.log("Auth state changed in Notifications:", event);
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         getUserRole();
       } else if (event === 'SIGNED_OUT') {
         setUserRole(null);
+        setNotifications([]);
       }
     });
-
-    // In a real app, we would fetch notifications from the API
-    // For now, just setting empty array
-    setNotifications([]);
 
     return () => {
       authListener?.subscription.unsubscribe();
@@ -71,39 +107,49 @@ const DashboardNotifications = () => {
           </p>
         </div>
         
-        {isPaidAccount ? (
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full md:w-auto md:inline-flex grid-cols-3 mb-4">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="unread">Unread</TabsTrigger>
-              <TabsTrigger value="read">Read</TabsTrigger>
-            </TabsList>
-            
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-              <div className="flex flex-col items-center justify-center space-y-3 py-12">
-                <Bell className="h-12 w-12 text-muted-foreground" />
-                <h3 className="text-lg font-semibold">No notifications</h3>
-                <p className="text-center text-sm text-muted-foreground max-w-xs">
-                  You're all caught up! No new notifications at this time.
-                </p>
-              </div>
-            </div>
-          </Tabs>
-        ) : (
+        {loading ? (
           <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-            <div className="flex flex-col items-center justify-center space-y-3 py-12">
-              <Bell className="h-12 w-12 text-muted-foreground" />
-              <h3 className="text-lg font-semibold">No notifications</h3>
-              <p className="text-center text-sm text-muted-foreground max-w-xs">
-                You're all caught up! No new notifications at this time.
-              </p>
-              {userRole === "free" && (
-                <Badge variant="outline" className="bg-amber-500/10 text-amber-500">
-                  View Only
-                </Badge>
-              )}
+            <div className="flex items-center justify-center py-8">
+              <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
             </div>
           </div>
+        ) : (
+          <>
+            {isPaidAccount ? (
+              <Tabs defaultValue="all" className="w-full">
+                <TabsList className="grid w-full md:w-auto md:inline-flex grid-cols-3 mb-4">
+                  <TabsTrigger value="all">All</TabsTrigger>
+                  <TabsTrigger value="unread">Unread</TabsTrigger>
+                  <TabsTrigger value="read">Read</TabsTrigger>
+                </TabsList>
+                
+                <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+                  <div className="flex flex-col items-center justify-center space-y-3 py-12">
+                    <Bell className="h-12 w-12 text-muted-foreground" />
+                    <h3 className="text-lg font-semibold">No notifications</h3>
+                    <p className="text-center text-sm text-muted-foreground max-w-xs">
+                      You're all caught up! No new notifications at this time.
+                    </p>
+                  </div>
+                </div>
+              </Tabs>
+            ) : (
+              <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+                <div className="flex flex-col items-center justify-center space-y-3 py-12">
+                  <Bell className="h-12 w-12 text-muted-foreground" />
+                  <h3 className="text-lg font-semibold">No notifications</h3>
+                  <p className="text-center text-sm text-muted-foreground max-w-xs">
+                    You're all caught up! No new notifications at this time.
+                  </p>
+                  {userRole === "free" && (
+                    <Badge variant="outline" className="bg-amber-500/10 text-amber-500">
+                      View Only
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     );

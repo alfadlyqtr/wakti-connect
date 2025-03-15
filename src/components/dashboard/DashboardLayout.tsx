@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -12,19 +13,26 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userRole, setUserRole] = useState<"free" | "individual" | "business">(propUserRole || "free");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Fetch user role from Supabase if not provided as prop
     const getUserRole = async () => {
+      setLoading(true);
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          const { data: profileData } = await supabase
+          const { data: profileData, error } = await supabase
             .from('profiles')
             .select('account_type')
             .eq('id', session.user.id)
             .single();
+          
+          if (error) {
+            console.error("Error fetching user profile:", error);
+            return;
+          }
           
           if (profileData?.account_type) {
             setUserRole(profileData.account_type as "free" | "individual" | "business");
@@ -33,6 +41,8 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         }
       } catch (error) {
         console.error("Error fetching user role:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -40,12 +50,17 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       getUserRole();
     } else {
       setUserRole(propUserRole);
+      setLoading(false);
     }
     
     // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event);
+      
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         getUserRole();
+      } else if (event === 'SIGNED_OUT') {
+        setUserRole("free");
       }
     });
 
@@ -67,7 +82,13 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         
         <main className="flex-1 overflow-y-auto pt-4 px-4 pb-12 lg:pl-64 transition-all duration-300">
           <div className="container mx-auto animate-in">
-            {children}
+            {loading ? (
+              <div className="flex items-center justify-center h-[calc(100vh-100px)]">
+                <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              children
+            )}
           </div>
         </main>
       </div>
