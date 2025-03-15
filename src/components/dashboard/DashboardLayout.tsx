@@ -4,6 +4,7 @@ import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userRole, setUserRole] = useState<"free" | "individual" | "business">(propUserRole || "free");
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Fetch user role from Supabase if not provided as prop
@@ -22,22 +24,30 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (session?.user) {
-          const { data: profileData, error } = await supabase
-            .from('profiles')
-            .select('account_type')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (error) {
-            console.error("Error fetching user profile:", error);
-            return;
+        if (!session?.user) {
+          console.log("No active session found, redirecting to auth page");
+          navigate("/auth");
+          return;
+        }
+        
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('account_type')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (error) {
+          console.error("Error fetching user profile:", error);
+          if (error.code === 'PGRST116') {
+            console.log("Profile not found, user may need to sign up");
+            navigate("/auth");
           }
-          
-          if (profileData?.account_type) {
-            setUserRole(profileData.account_type as "free" | "individual" | "business");
-            console.log("User role set from DB:", profileData.account_type);
-          }
+          return;
+        }
+        
+        if (profileData?.account_type) {
+          setUserRole(profileData.account_type as "free" | "individual" | "business");
+          console.log("User role set from DB:", profileData.account_type);
         }
       } catch (error) {
         console.error("Error fetching user role:", error);
@@ -61,13 +71,14 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         getUserRole();
       } else if (event === 'SIGNED_OUT') {
         setUserRole("free");
+        navigate("/auth");
       }
     });
 
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, [propUserRole]);
+  }, [propUserRole, navigate]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);

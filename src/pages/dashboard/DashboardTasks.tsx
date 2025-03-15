@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Plus, Search, Filter } from "lucide-react";
+import { Plus, Search, Filter, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -14,98 +14,77 @@ import {
 import TaskCard from "@/components/ui/TaskCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { useQuery } from "@tanstack/react-query";
+
+// Define Task type based on our database schema
+interface Task {
+  id: string;
+  title: string;
+  description: string | null;
+  status: "pending" | "in-progress" | "completed" | "late";
+  priority: "urgent" | "high" | "medium" | "normal";
+  due_date: string | null;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
 
 const DashboardTasks = () => {
   const [userRole, setUserRole] = useState<"free" | "individual" | "business" | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [tasks, setTasks] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterPriority, setFilterPriority] = useState<string>("all");
 
+  // Fetch tasks with React Query for better caching and refetching
+  const { data: tasks, isLoading, error, refetch } = useQuery({
+    queryKey: ['tasks'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        throw new Error("No active session");
+      }
+      
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('account_type')
+        .eq('id', session.user.id)
+        .single();
+      
+      setUserRole(profileData?.account_type || "free");
+      
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('due_date', { ascending: true });
+      
+      if (error) {
+        console.error("Error fetching tasks:", error);
+        throw error;
+      }
+      
+      return data as Task[];
+    },
+    // Don't refetch automatically on window focus for this demo
+    refetchOnWindowFocus: false,
+  });
+
+  // Show error toast if query fails
   useEffect(() => {
-    const getUserRole = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          const { data: profileData, error } = await supabase
-            .from('profiles')
-            .select('account_type')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (error) {
-            console.error("Error fetching user profile:", error);
-            return;
-          }
-          
-          if (profileData?.account_type) {
-            setUserRole(profileData.account_type as "free" | "individual" | "business");
-            console.log("Task page - user role:", profileData.account_type);
-            
-            // If the user has a paid account, fetch their tasks
-            if (profileData.account_type === "individual" || profileData.account_type === "business") {
-              fetchTasks(session.user.id);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user role:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchTasks = async (userId: string) => {
-      try {
-        const { data, error } = await supabase
-          .from('tasks')
-          .select('*')
-          .eq('user_id', userId)
-          .order('due_date', { ascending: true });
-        
-        if (error) {
-          console.error("Error fetching tasks:", error);
-          toast({
-            title: "Failed to load tasks",
-            description: error.message,
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        if (data) {
-          setTasks(data);
-          console.log("Tasks loaded:", data.length);
-        }
-      } catch (error) {
-        console.error("Error in fetchTasks:", error);
-      }
-    };
-
-    getUserRole();
-    
-    // Set up auth state listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed in Tasks:", event);
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        getUserRole();
-      } else if (event === 'SIGNED_OUT') {
-        setUserRole(null);
-        setTasks([]);
-      }
-    });
-
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
-  }, []);
+    if (error) {
+      toast({
+        title: "Failed to load tasks",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
+      });
+    }
+  }, [error]);
 
   const isPaidAccount = userRole === "individual" || userRole === "business";
 
   // Filter tasks based on search and filters
-  const filteredTasks = tasks.filter((task) => {
+  const filteredTasks = tasks?.filter((task) => {
     // Search filter
     const matchesSearch = searchQuery 
       ? task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -119,20 +98,61 @@ const DashboardTasks = () => {
     const matchesPriority = filterPriority === "all" ? true : task.priority === filterPriority;
     
     return matchesSearch && matchesStatus && matchesPriority;
-  });
+  }) || [];
 
   const handleCreateTask = async () => {
     if (!isPaidAccount) return;
     
-    // This is a simple placeholder. In a real implementation,
-    // you would open a modal to create a new task
-    toast({
-      title: "Create Task",
-      description: "Task creation form would open here",
-    });
+    try {
+      // Get current user
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to create tasks",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // In a real implementation, this would open a modal form
+      // For now, create a sample task
+      const newTask = {
+        user_id: session.user.id,
+        title: "New Task",
+        description: "Click to edit this task",
+        status: "pending",
+        priority: "normal",
+        due_date: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+      };
+
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert(newTask)
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Task Created",
+        description: "New task has been created successfully",
+      });
+
+      // Refetch tasks to update the list
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Failed to create task",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col gap-2">
@@ -144,7 +164,8 @@ const DashboardTasks = () => {
         
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
           <div className="flex items-center justify-center py-8">
-            <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
+            <Loader2 className="h-8 w-8 animate-spin text-wakti-blue" />
+            <span className="ml-2">Loading tasks...</span>
           </div>
         </div>
       </div>
@@ -216,7 +237,7 @@ const DashboardTasks = () => {
                 id={task.id}
                 title={task.title}
                 description={task.description || ""}
-                dueDate={new Date(task.due_date)}
+                dueDate={task.due_date ? new Date(task.due_date) : new Date()}
                 status={task.status}
                 priority={task.priority}
                 category="Personal" // This would come from labels in a real implementation

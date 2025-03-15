@@ -1,105 +1,87 @@
 
-import React, { useState, useEffect } from "react";
-import { Plus, Calendar, Search } from "lucide-react";
+import React, { useState } from "react";
+import { Plus, Calendar, Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import AppointmentCard from "@/components/ui/AppointmentCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { useQuery } from "@tanstack/react-query";
+
+// Define Appointment type based on our database schema
+interface Appointment {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  start_time: string;
+  end_time: string;
+  location: string | null;
+  is_all_day: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 const DashboardAppointments = () => {
-  const [userRole, setUserRole] = useState<"free" | "individual" | "business" | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [appointments, setAppointments] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    const getUserRole = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          const { data: profileData, error } = await supabase
-            .from('profiles')
-            .select('account_type')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (error) {
-            console.error("Error fetching user profile:", error);
-            return;
-          }
-          
-          if (profileData?.account_type) {
-            setUserRole(profileData.account_type as "free" | "individual" | "business");
-            console.log("Appointments page - user role:", profileData.account_type);
-            
-            // If the user has a paid account, fetch their appointments
-            if (profileData.account_type === "individual" || profileData.account_type === "business") {
-              fetchAppointments(session.user.id);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching user role:", error);
-      } finally {
-        setLoading(false);
+  // Fetch appointments with React Query
+  const { 
+    data: appointmentsData,
+    isLoading,
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['appointments'],
+    queryFn: async () => {
+      // Get current session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        throw new Error("No active session");
       }
-    };
-
-    const fetchAppointments = async (userId: string) => {
-      try {
-        const { data, error } = await supabase
-          .from('appointments')
-          .select('*')
-          .eq('user_id', userId)
-          .order('start_time', { ascending: true });
+      
+      // Fetch user's account type
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('account_type')
+        .eq('id', session.user.id)
+        .single();
+      
+      // Fetch appointments
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('start_time', { ascending: true });
         
-        if (error) {
-          console.error("Error fetching appointments:", error);
-          toast({
-            title: "Failed to load appointments",
-            description: error.message,
-            variant: "destructive",
-          });
-          return;
-        }
+      if (error) {
+        console.error("Error fetching appointments:", error);
+        throw error;
+      }
         
-        if (data) {
-          setAppointments(data);
-          console.log("Appointments loaded:", data.length);
-        }
-      } catch (error) {
-        console.error("Error in fetchAppointments:", error);
-      }
-    };
+      return {
+        appointments: data as Appointment[],
+        userRole: profileData?.account_type || "free"
+      };
+    },
+    refetchOnWindowFocus: false,
+  });
 
-    getUserRole();
-    
-    // Set up auth state listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed in Appointments:", event);
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        getUserRole();
-      } else if (event === 'SIGNED_OUT') {
-        setUserRole(null);
-        setAppointments([]);
-      }
-    });
+  // Show error toast if query fails
+  React.useEffect(() => {
+    if (error) {
+      toast({
+        title: "Failed to load appointments",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
+      });
+    }
+  }, [error]);
 
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
-  }, []);
-
+  const userRole = appointmentsData?.userRole || "free";
+  const appointments = appointmentsData?.appointments || [];
   const isPaidAccount = userRole === "individual" || userRole === "business";
 
   // Filter appointments based on search
@@ -114,15 +96,63 @@ const DashboardAppointments = () => {
   const handleCreateAppointment = async () => {
     if (!isPaidAccount) return;
     
-    // This is a simple placeholder. In a real implementation,
-    // you would open a modal to create a new appointment
-    toast({
-      title: "Create Appointment",
-      description: "Appointment creation form would open here",
-    });
+    try {
+      // Get current user
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to create appointments",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create a sample appointment (in a real app, this would open a form modal)
+      const startTime = new Date();
+      startTime.setHours(startTime.getHours() + 1);
+      startTime.setMinutes(0);
+      startTime.setSeconds(0);
+      
+      const endTime = new Date(startTime);
+      endTime.setHours(endTime.getHours() + 1);
+      
+      const newAppointment = {
+        user_id: session.user.id,
+        title: "New Appointment",
+        description: "Click to edit this appointment",
+        start_time: startTime.toISOString(),
+        end_time: endTime.toISOString(),
+        location: "Office",
+        is_all_day: false
+      };
+
+      const { error } = await supabase
+        .from('appointments')
+        .insert(newAppointment);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Appointment Created",
+        description: "New appointment has been created successfully",
+      });
+
+      // Refetch appointments to update the list
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Failed to create appointment",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col gap-2">
@@ -134,7 +164,8 @@ const DashboardAppointments = () => {
         
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
           <div className="flex items-center justify-center py-8">
-            <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
+            <Loader2 className="h-8 w-8 animate-spin text-wakti-blue" />
+            <span className="ml-2">Loading appointments...</span>
           </div>
         </div>
       </div>
