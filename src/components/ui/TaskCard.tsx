@@ -92,6 +92,8 @@ const TaskCard = ({
     }).format(date);
   };
 
+  const isPaidAccount = userRole === "individual" || userRole === "business";
+
   return (
     <Card className={cn(
       "task-card group transition-all duration-300",
@@ -108,7 +110,7 @@ const TaskCard = ({
             {title}
           </h3>
         </div>
-        {userRole !== "free" ? (
+        {isPaidAccount ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">

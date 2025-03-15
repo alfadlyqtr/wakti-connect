@@ -71,6 +71,8 @@ const AppointmentCard = ({
     }).format(date);
   };
 
+  const isPaidAccount = userRole === "individual" || userRole === "business";
+
   // Limit the number of invitees shown
   const displayInvitees = invitees.slice(0, 3);
   const remainingInvitees = invitees.length - 3;
@@ -93,7 +95,7 @@ const AppointmentCard = ({
             {status}
           </Badge>
         </div>
-        {userRole !== "free" ? (
+        {isPaidAccount ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">

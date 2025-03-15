@@ -1,7 +1,98 @@
 
-import React from "react";
+import React, { useState } from "react";
+import { Bell, Trash2, Check, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
 
 const DashboardNotifications = () => {
+  const [userRole, setUserRole] = useState<"free" | "individual" | "business" | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    // Fetch user role from Supabase
+    const getUserRole = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('account_type')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profileData?.account_type) {
+            setUserRole(profileData.account_type as "free" | "individual" | "business");
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user role:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getUserRole();
+    
+    // In a real app, we would fetch notifications from the API
+    // For now, just setting empty array
+    setNotifications([]);
+  }, []);
+
+  const isPaidAccount = userRole === "individual" || userRole === "business";
+
+  // Demo empty state
+  if (notifications.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>
+          <p className="text-muted-foreground">
+            Stay updated with important alerts and notifications.
+          </p>
+        </div>
+        
+        {isPaidAccount ? (
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="grid w-full md:w-auto md:inline-flex grid-cols-3 mb-4">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="unread">Unread</TabsTrigger>
+              <TabsTrigger value="read">Read</TabsTrigger>
+            </TabsList>
+            
+            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+              <div className="flex flex-col items-center justify-center space-y-3 py-12">
+                <Bell className="h-12 w-12 text-muted-foreground" />
+                <h3 className="text-lg font-semibold">No notifications</h3>
+                <p className="text-center text-sm text-muted-foreground max-w-xs">
+                  You're all caught up! No new notifications at this time.
+                </p>
+              </div>
+            </div>
+          </Tabs>
+        ) : (
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+            <div className="flex flex-col items-center justify-center space-y-3 py-12">
+              <Bell className="h-12 w-12 text-muted-foreground" />
+              <h3 className="text-lg font-semibold">No notifications</h3>
+              <p className="text-center text-sm text-muted-foreground max-w-xs">
+                You're all caught up! No new notifications at this time.
+              </p>
+              <Badge variant="outline" className="bg-amber-500/10 text-amber-500">
+                View Only
+              </Badge>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
@@ -11,29 +102,7 @@ const DashboardNotifications = () => {
         </p>
       </div>
       
-      <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-        <div className="flex flex-col items-center justify-center space-y-3 py-12">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-muted-foreground"
-          >
-            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-          </svg>
-          <h3 className="text-lg font-semibold">No notifications</h3>
-          <p className="text-center text-sm text-muted-foreground max-w-xs">
-            You're all caught up! No new notifications at this time.
-          </p>
-        </div>
-      </div>
+      {/* This would be populated with actual notifications in a real app */}
     </div>
   );
 };
