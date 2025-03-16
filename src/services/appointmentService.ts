@@ -23,7 +23,8 @@ const createNewAppointment = async (
     start_time: formData.start_time,
     end_time: formData.end_time,
     is_all_day: formData.is_all_day || false,
-    status: (formData.status as AppointmentStatus) || "scheduled"
+    status: (formData.status as AppointmentStatus) || "scheduled",
+    assignee_id: formData.assignee_id || null
   };
 
   const { data, error } = await supabase

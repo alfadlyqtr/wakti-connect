@@ -85,19 +85,14 @@ export async function createTask(taskData: TaskFormData): Promise<Task> {
     description: taskData.description || null,
     status: taskData.status as TaskStatus || "pending",
     priority: taskData.priority as TaskPriority || "normal",
-    due_date: taskData.due_date || null
+    due_date: taskData.due_date || null,
+    assignee_id: taskData.assignee_id || null  // Add assignee_id explicitly here
   };
-
-  // Add assignee_id if provided
-  if (taskData.assignee_id !== undefined) {
-    // We need to use as any to handle the assignee_id property
-    (newTask as any).assignee_id = taskData.assignee_id;
-  }
 
   // Handle insertion with proper types
   const { data, error } = await supabase
     .from('tasks')
-    .insert(newTask as any)
+    .insert(newTask)
     .select();
 
   if (error) {
