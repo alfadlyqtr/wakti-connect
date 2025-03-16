@@ -6,6 +6,7 @@ import ContactEditor from "./ContactEditor";
 import HoursEditor from "./HoursEditor";
 import AboutEditor from "./AboutEditor";
 import DefaultEditor from "./DefaultEditor";
+import GalleryEditor from "./gallery";
 
 const SectionEditorFields: React.FC = () => {
   const { section, contentData, handleInputChange } = useSectionEditor();
@@ -23,6 +24,9 @@ const SectionEditorFields: React.FC = () => {
         
       case 'about':
         return <AboutEditor contentData={contentData} handleInputChange={handleInputChange} />;
+        
+      case 'gallery':
+        return <GalleryEditor contentData={contentData} handleInputChange={handleInputChange} />;
         
       default:
         return <DefaultEditor contentData={contentData} handleInputChange={handleInputChange} />;
