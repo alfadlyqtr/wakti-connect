@@ -31,7 +31,22 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         .order('start_time', { ascending: true });
         
       if (error) throw error;
-      appointmentsData = data || [];
+      
+      // Transform data to ensure it has all Appointment properties
+      appointmentsData = (data || []).map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        title: item.title,
+        description: item.description,
+        location: item.location,
+        start_time: item.start_time,
+        end_time: item.end_time,
+        is_all_day: item.is_all_day || false,
+        status: item.status || "scheduled",
+        assignee_id: item.assignee_id || null,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
       break;
     }
     case "past": {
@@ -43,7 +58,22 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         .order('start_time', { ascending: false });
         
       if (error) throw error;
-      appointmentsData = data || [];
+      
+      // Transform data to ensure it has all Appointment properties
+      appointmentsData = (data || []).map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        title: item.title,
+        description: item.description,
+        location: item.location,
+        start_time: item.start_time,
+        end_time: item.end_time,
+        is_all_day: item.is_all_day || false,
+        status: item.status || "scheduled",
+        assignee_id: item.assignee_id || null,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
       break;
     }
     case "invitations": {
@@ -61,20 +91,21 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
       if (data && data.length > 0) {
         for (const item of data) {
           if (item.appointments) {
+            const appt = item.appointments;
             // Use explicit property assignments with default values as needed
             appointmentsData.push({
-              id: item.appointments.id,
-              user_id: item.appointments.user_id,
-              title: item.appointments.title,
-              description: item.appointments.description,
-              location: item.appointments.location,
-              start_time: item.appointments.start_time,
-              end_time: item.appointments.end_time,
-              is_all_day: item.appointments.is_all_day || false,
-              status: item.appointments.status || "scheduled",
-              assignee_id: item.appointments.assignee_id || null,
-              created_at: item.appointments.created_at,
-              updated_at: item.appointments.updated_at
+              id: appt.id,
+              user_id: appt.user_id,
+              title: appt.title,
+              description: appt.description,
+              location: appt.location,
+              start_time: appt.start_time,
+              end_time: appt.end_time,
+              is_all_day: appt.is_all_day || false,
+              status: appt.status || "scheduled",
+              assignee_id: appt.assignee_id || null,
+              created_at: appt.created_at,
+              updated_at: appt.updated_at
             });
           }
         }
@@ -89,7 +120,22 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         .order('start_time', { ascending: true });
         
       if (error) throw error;
-      appointmentsData = data || [];
+      
+      // Transform data to ensure it has all Appointment properties
+      appointmentsData = (data || []).map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        title: item.title,
+        description: item.description,
+        location: item.location,
+        start_time: item.start_time,
+        end_time: item.end_time,
+        is_all_day: item.is_all_day || false,
+        status: item.status || "scheduled",
+        assignee_id: item.assignee_id || null,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
       break;
     }
     case "shared-appointments": {
@@ -107,20 +153,21 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
       if (data && data.length > 0) {
         for (const item of data) {
           if (item.appointments) {
+            const appt = item.appointments;
             // Use explicit property assignments with default values as needed
             appointmentsData.push({
-              id: item.appointments.id,
-              user_id: item.appointments.user_id,
-              title: item.appointments.title,
-              description: item.appointments.description,
-              location: item.appointments.location,
-              start_time: item.appointments.start_time,
-              end_time: item.appointments.end_time,
-              is_all_day: item.appointments.is_all_day || false,
-              status: item.appointments.status || "scheduled",
-              assignee_id: item.appointments.assignee_id || null,
-              created_at: item.appointments.created_at,
-              updated_at: item.appointments.updated_at
+              id: appt.id,
+              user_id: appt.user_id,
+              title: appt.title,
+              description: appt.description,
+              location: appt.location,
+              start_time: appt.start_time,
+              end_time: appt.end_time,
+              is_all_day: appt.is_all_day || false,
+              status: appt.status || "scheduled",
+              assignee_id: appt.assignee_id || null,
+              created_at: appt.created_at,
+              updated_at: appt.updated_at
             });
           }
         }
@@ -135,7 +182,22 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         .order('start_time', { ascending: true });
         
       if (error) throw error;
-      appointmentsData = data || [];
+      
+      // Transform data to ensure it has all Appointment properties
+      appointmentsData = (data || []).map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        title: item.title,
+        description: item.description,
+        location: item.location,
+        start_time: item.start_time,
+        end_time: item.end_time,
+        is_all_day: item.is_all_day || false,
+        status: item.status || "scheduled",
+        assignee_id: item.assignee_id || null,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
       break;
     }
     default: {
@@ -146,33 +208,28 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         .order('start_time', { ascending: true });
         
       if (error) throw error;
-      appointmentsData = data || [];
+      
+      // Transform data to ensure it has all Appointment properties
+      appointmentsData = (data || []).map(item => ({
+        id: item.id,
+        user_id: item.user_id,
+        title: item.title,
+        description: item.description,
+        location: item.location,
+        start_time: item.start_time,
+        end_time: item.end_time,
+        is_all_day: item.is_all_day || false,
+        status: item.status || "scheduled",
+        assignee_id: item.assignee_id || null,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
       break;
     }
   }
   
-  // Process and normalize the appointments with default values for missing fields
-  const normalizedAppointments: Appointment[] = [];
-  
-  for (const appointment of appointmentsData) {
-    normalizedAppointments.push({
-      id: appointment.id,
-      user_id: appointment.user_id,
-      title: appointment.title,
-      description: appointment.description,
-      location: appointment.location,
-      start_time: appointment.start_time,
-      end_time: appointment.end_time,
-      is_all_day: appointment.is_all_day || false,
-      status: appointment.status || "scheduled",
-      assignee_id: appointment.assignee_id || null,
-      created_at: appointment.created_at,
-      updated_at: appointment.updated_at
-    });
-  }
-  
   return { 
-    appointments: normalizedAppointments,
+    appointments: appointmentsData,
     userRole: userRole as "free" | "individual" | "business"
   };
 }

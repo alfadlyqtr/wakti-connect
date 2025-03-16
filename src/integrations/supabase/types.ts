@@ -49,6 +49,7 @@ export type Database = {
       }
       appointments: {
         Row: {
+          assignee_id: string | null
           created_at: string
           description: string | null
           end_time: string
@@ -56,11 +57,13 @@ export type Database = {
           is_all_day: boolean
           location: string | null
           start_time: string
+          status: string
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          assignee_id?: string | null
           created_at?: string
           description?: string | null
           end_time: string
@@ -68,11 +71,13 @@ export type Database = {
           is_all_day?: boolean
           location?: string | null
           start_time: string
+          status?: string
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          assignee_id?: string | null
           created_at?: string
           description?: string | null
           end_time?: string
@@ -80,6 +85,7 @@ export type Database = {
           is_all_day?: boolean
           location?: string | null
           start_time?: string
+          status?: string
           title?: string
           updated_at?: string
           user_id?: string
@@ -455,6 +461,7 @@ export type Database = {
       }
       tasks: {
         Row: {
+          assignee_id: string | null
           created_at: string
           description: string | null
           due_date: string | null
@@ -466,6 +473,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          assignee_id?: string | null
           created_at?: string
           description?: string | null
           due_date?: string | null
@@ -477,6 +485,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          assignee_id?: string | null
           created_at?: string
           description?: string | null
           due_date?: string | null

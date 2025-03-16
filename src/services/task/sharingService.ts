@@ -70,7 +70,8 @@ export async function assignTask(taskId: string, staffId: string): Promise<boole
         description: taskData.description,
         status: taskData.status,
         priority: taskData.priority,
-        due_date: taskData.due_date
+        due_date: taskData.due_date,
+        user_id: taskData.user_id
       })
       .eq('id', taskId);
 
