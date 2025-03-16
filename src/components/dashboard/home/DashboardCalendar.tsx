@@ -27,14 +27,18 @@ export function DashboardCalendar() {
   };
 
   // Custom day renderer for the calendar
-  const renderDay = (props: React.HTMLAttributes<HTMLDivElement> & { date: Date; selected?: boolean }) => {
-    const { date, selected, ...dayProps } = props;
-    const eventTypes = getEventTypesForDate(date);
+  const renderDay = (day: Date, selectedDays: Date[], dayProps: React.HTMLAttributes<HTMLDivElement>) => {
+    const eventTypes = getEventTypesForDate(day);
+    const isSelected = selectedDays.some(selectedDay => 
+      selectedDay.getDate() === day.getDate() && 
+      selectedDay.getMonth() === day.getMonth() &&
+      selectedDay.getFullYear() === day.getFullYear()
+    );
     
     return (
       <CalendarDayCell
-        date={date}
-        selected={selected}
+        date={day}
+        selected={isSelected}
         eventTypes={eventTypes}
         onSelect={handleDateSelect}
         {...dayProps}

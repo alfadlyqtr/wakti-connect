@@ -3,30 +3,30 @@ import { supabase } from "@/integrations/supabase/client";
 import { RecurringSettings, RecurringFormData, EntityType } from "@/types/recurring.types";
 
 // Create recurring settings for a task or appointment
-export async function createRecurringSetting(
-  entityId: string, 
-  entityType: EntityType, 
-  recurringData: RecurringFormData
-): Promise<RecurringSettings> {
-  const { data: session } = await supabase.auth.getSession();
-  
-  if (!session?.session) {
-    throw new Error("Authentication required");
-  }
-  
+export async function createRecurringSetting(data: {
+  entity_id: string;
+  entity_type: EntityType;
+  created_by: string;
+  frequency: string;
+  interval: number;
+  days_of_week?: string[];
+  day_of_month?: number;
+  end_date?: Date;
+  max_occurrences?: number;
+}): Promise<RecurringSettings> {
   const settingsData = {
-    entity_id: entityId,
-    entity_type: entityType,
-    frequency: recurringData.frequency,
-    interval: recurringData.interval,
-    days_of_week: recurringData.days_of_week,
-    day_of_month: recurringData.day_of_month,
-    end_date: recurringData.end_date ? recurringData.end_date.toISOString() : null,
-    max_occurrences: recurringData.max_occurrences,
-    created_by: session.session.user.id
+    entity_id: data.entity_id,
+    entity_type: data.entity_type,
+    frequency: data.frequency,
+    interval: data.interval,
+    days_of_week: data.days_of_week,
+    day_of_month: data.day_of_month,
+    end_date: data.end_date ? data.end_date.toISOString() : null,
+    max_occurrences: data.max_occurrences,
+    created_by: data.created_by
   };
   
-  const { data, error } = await supabase
+  const { data: response, error } = await supabase
     .from('recurring_settings')
     .insert(settingsData)
     .select()
@@ -39,7 +39,7 @@ export async function createRecurringSetting(
     throw error;
   }
   
-  return data as RecurringSettings;
+  return response as RecurringSettings;
 }
 
 // Update recurring settings
