@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import "@/components/layout/sidebar/sidebar.css";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -18,7 +18,6 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch user role from Supabase if not provided as prop
     const getUserRole = async () => {
       setLoading(true);
       try {
@@ -63,7 +62,6 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       setLoading(false);
     }
     
-    // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event);
       

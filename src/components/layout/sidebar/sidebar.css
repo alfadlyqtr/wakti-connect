@@ -1,0 +1,17 @@
+
+.sidebar-item {
+  @apply flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors;
+  @apply text-muted-foreground hover:bg-muted/50 hover:text-foreground;
+}
+
+.sidebar-item.active {
+  @apply bg-primary/10 text-primary;
+}
+
+.sidebar-item svg {
+  @apply text-muted-foreground group-hover:text-foreground;
+}
+
+.sidebar-item.active svg {
+  @apply text-primary;
+}
