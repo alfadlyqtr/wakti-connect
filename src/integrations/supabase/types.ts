@@ -203,6 +203,103 @@ export type Database = {
         }
         Relationships: []
       }
+      job_cards: {
+        Row: {
+          created_at: string
+          end_time: string | null
+          id: string
+          job_id: string
+          notes: string | null
+          payment_amount: number | null
+          payment_method: string | null
+          staff_relation_id: string
+          start_time: string
+          updated_at: string
+          work_log_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          job_id: string
+          notes?: string | null
+          payment_amount?: number | null
+          payment_method?: string | null
+          staff_relation_id: string
+          start_time?: string
+          updated_at?: string
+          work_log_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          job_id?: string
+          notes?: string | null
+          payment_amount?: number | null
+          payment_method?: string | null
+          staff_relation_id?: string
+          start_time?: string
+          updated_at?: string
+          work_log_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_cards_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_cards_staff_relation_id_fkey"
+            columns: ["staff_relation_id"]
+            isOneToOne: false
+            referencedRelation: "business_staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_cards_work_log_id_fkey"
+            columns: ["work_log_id"]
+            isOneToOne: false
+            referencedRelation: "staff_work_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          business_id: string
+          created_at: string
+          default_price: number | null
+          description: string | null
+          duration: number | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          default_price?: number | null
+          description?: string | null
+          duration?: number | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          default_price?: number | null
+          description?: string | null
+          duration?: number | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -418,6 +515,7 @@ export type Database = {
           notes: string | null
           staff_relation_id: string
           start_time: string
+          status: string | null
           updated_at: string
         }
         Insert: {
@@ -428,6 +526,7 @@ export type Database = {
           notes?: string | null
           staff_relation_id: string
           start_time: string
+          status?: string | null
           updated_at?: string
         }
         Update: {
@@ -438,6 +537,7 @@ export type Database = {
           notes?: string | null
           staff_relation_id?: string
           start_time?: string
+          status?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -595,7 +695,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_if_task_shared_with_user: {
+        Args: {
+          task_id: string
+          user_uuid: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       account_type: "free" | "individual" | "business"
