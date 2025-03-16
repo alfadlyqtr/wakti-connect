@@ -155,28 +155,29 @@ export function DashboardCalendar() {
   };
 
   // Custom day renderer for the calendar
-  const renderDay = (day: Date, selectedDate: Date | undefined, dayProps: React.HTMLAttributes<HTMLDivElement>) => {
-    const eventTypes = getEventTypesForDate(day);
+  const renderDay = (props: React.HTMLAttributes<HTMLDivElement> & { date: Date; selected?: boolean }) => {
+    const { date, selected, ...dayProps } = props;
+    const eventTypes = getEventTypesForDate(date);
     
     return (
       <div 
         {...dayProps}
         onClick={(e) => {
           dayProps.onClick?.(e);
-          handleDateSelect(day);
+          handleDateSelect(date);
         }}
         className={cn(
           dayProps.className,
           "relative group hover:bg-muted cursor-pointer transition-colors",
-          isEqual(day, selectedDate as Date) && "bg-primary text-primary-foreground",
-          !isSameMonth(day, new Date()) && "text-muted-foreground opacity-50",
-          isToday(day) && !isEqual(day, selectedDate as Date) && "border border-primary",
+          selected && "bg-primary text-primary-foreground",
+          !isSameMonth(date, new Date()) && "text-muted-foreground opacity-50",
+          isToday(date) && !selected && "border border-primary",
         )}
       >
-        <time dateTime={format(day, 'yyyy-MM-dd')}>{format(day, 'd')}</time>
+        <time dateTime={format(date, 'yyyy-MM-dd')}>{format(date, 'd')}</time>
         
         {/* Event indicators */}
-        {dateHasEvents(day) && (
+        {dateHasEvents(date) && (
           <div className="absolute bottom-1 left-0 right-0 flex justify-center space-x-1">
             {eventTypes.hasTasks && <EventDot type="task" />}
             {eventTypes.hasAppointments && <EventDot type="appointment" />}
@@ -203,7 +204,7 @@ export function DashboardCalendar() {
         onSelect={setSelectedDate}
         className="border rounded-md p-3 w-full pointer-events-auto"
         components={{
-          Day: ({ day, selectedDay, ...props }) => renderDay(day, selectedDay, props as React.HTMLAttributes<HTMLDivElement>)
+          Day: renderDay
         }}
       />
       
