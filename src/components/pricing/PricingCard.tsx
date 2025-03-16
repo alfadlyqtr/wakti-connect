@@ -55,7 +55,10 @@ const PricingCard = ({
       <CardContent className="flex-1">
         <div className="mb-6">
           <span className="text-4xl font-bold">
-            {price === "0" ? "Free" : `QAR ${price}`}
+            {price === "0" ? "Free" : price.includes(".") 
+              ? price.startsWith("QAR") ? price : `$${price}`
+              : `QAR ${price}`
+            }
           </span>
           <span className="text-muted-foreground ml-2">
             {period}

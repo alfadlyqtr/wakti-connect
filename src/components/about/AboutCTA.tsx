@@ -10,7 +10,7 @@ const AboutCTA = () => {
       <h2 className="text-3xl font-bold mb-6">Join the WAKTI Community</h2>
       <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
         Experience how WAKTI can transform your productivity and help your business grow.
-        Start your journey today with our 14-day free trial.
+        Start your journey today with our 3-day free trial.
       </p>
       
       <div className="flex flex-col sm:flex-row justify-center gap-4">

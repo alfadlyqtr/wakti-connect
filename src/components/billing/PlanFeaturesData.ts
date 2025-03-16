@@ -24,6 +24,7 @@ export const planFeatures: PlanFeaturesData = {
   individual: [
     { name: "Full task management", included: true },
     { name: "Full appointment scheduling", included: true },
+    { name: "Custom event creation & sharing", included: true },
     { name: "Messaging capabilities", included: true },
     { name: "Contact management", included: true },
     { name: "Full notifications", included: true },

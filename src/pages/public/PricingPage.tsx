@@ -2,13 +2,14 @@
 import React from "react";
 import { SectionContainer } from "@/components/ui/section-container";
 import BillingCycleToggle from "@/components/billing/BillingCycleToggle";
+import CurrencyToggle from "@/components/billing/CurrencyToggle";
 import PricingCardsGrid from "@/components/pricing/PricingCardsGrid";
 import FeaturesComparisonTable from "@/components/pricing/FeaturesComparisonTable";
 import PricingFaqs from "@/components/pricing/PricingFaqs";
 import { usePricingPlans } from "@/components/pricing/usePricingPlans";
 
 const PricingPage = () => {
-  const { billingCycle, setBillingCycle, pricingPlans } = usePricingPlans();
+  const { billingCycle, setBillingCycle, currency, setCurrency, pricingPlans } = usePricingPlans();
 
   return (
     <div className="min-h-screen py-16">
@@ -21,6 +22,11 @@ const PricingPage = () => {
         <BillingCycleToggle 
           billingCycle={billingCycle} 
           setBillingCycle={setBillingCycle} 
+        />
+        
+        <CurrencyToggle
+          currency={currency}
+          setCurrency={setCurrency}
         />
       </SectionContainer>
 

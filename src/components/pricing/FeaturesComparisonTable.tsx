@@ -46,7 +46,7 @@ const FeaturesComparisonTable = () => {
           
           <tr className="border-b">
             <td className="py-4 px-6 font-medium" colSpan={4}>
-              <span className="font-bold">Appointments</span>
+              <span className="font-bold">Events & Appointments</span>
             </td>
           </tr>
           <tr className="border-b">
@@ -56,7 +56,13 @@ const FeaturesComparisonTable = () => {
             <td className="py-4 px-6 text-center">✓</td>
           </tr>
           <tr className="border-b">
-            <td className="py-4 px-6">Booking Page</td>
+            <td className="py-4 px-6">Custom Event Creation</td>
+            <td className="py-4 px-6 text-center">—</td>
+            <td className="py-4 px-6 text-center">✓</td>
+            <td className="py-4 px-6 text-center">✓</td>
+          </tr>
+          <tr className="border-b">
+            <td className="py-4 px-6">Business Booking Page</td>
             <td className="py-4 px-6 text-center">—</td>
             <td className="py-4 px-6 text-center">—</td>
             <td className="py-4 px-6 text-center">✓</td>

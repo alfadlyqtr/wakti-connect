@@ -34,10 +34,16 @@ const FeaturePlanComparison = () => {
       business: true,
     },
     {
-      name: "Custom Booking Pages",
+      name: "Custom Event Creation",
       free: false,
-      individual: "Basic",
-      business: "Advanced",
+      individual: true,
+      business: true,
+    },
+    {
+      name: "Business Booking Pages",
+      free: false,
+      individual: false,
+      business: true,
     },
     {
       name: "Staff Management",

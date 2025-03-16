@@ -30,10 +30,11 @@ const Pricing = () => {
         "Unlimited tasks",
         "Create & manage appointments",
         "Message individual users",
+        "Custom event creation & sharing",
         "Full contact management",
         "Priority support"
       ],
-      buttonText: "Start 14-Day Trial",
+      buttonText: "Start 3-Day Trial",
       buttonLink: "/auth?tab=register&plan=individual",
       variant: "default",
       popular: true,
@@ -51,7 +52,7 @@ const Pricing = () => {
         "TMW AI Chatbot Integration",
         "Business analytics"
       ],
-      buttonText: "Start 14-Day Trial",
+      buttonText: "Start 3-Day Trial",
       buttonLink: "/auth?tab=register&plan=business",
       variant: "outline",
       popular: false,

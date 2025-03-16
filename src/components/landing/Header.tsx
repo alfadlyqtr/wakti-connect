@@ -114,6 +114,9 @@ const Header = () => {
           </NavigationMenu>
         </div>
       </div>
+      <div className="text-center text-xs text-muted-foreground py-1 border-t border-border/50">
+        Designed and made by <a href="https://tmw.qa/" target="_blank" rel="noopener noreferrer" className="text-wakti-blue hover:underline">TMW</a>
+      </div>
     </header>
   );
 };
