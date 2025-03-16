@@ -46,6 +46,7 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
         .order('created_at', { ascending: false });
         
       if (error) throw error;
+      // Extract just the tasks objects from the response
       tasksData = data?.map(item => item.tasks) || [];
       break;
     }
@@ -77,10 +78,18 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
     }
   }
   
-  // Ensure all task objects have default values for missing fields
+  // Process and normalize the tasks with default values for missing fields
   const tasks = tasksData.map(task => ({
-    ...task,
-    assignee_id: task.assignee_id || null
+    id: task.id,
+    title: task.title,
+    description: task.description,
+    status: task.status || "pending",
+    priority: task.priority || "normal",
+    due_date: task.due_date,
+    user_id: task.user_id,
+    assignee_id: task.assignee_id || null,
+    created_at: task.created_at,
+    updated_at: task.updated_at
   })) as Task[];
   
   return { 

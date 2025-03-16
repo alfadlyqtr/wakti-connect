@@ -55,6 +55,7 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         .order('created_at', { ascending: false });
         
       if (error) throw error;
+      // Extract just the appointments objects from the response  
       appointmentsData = data?.map(item => item.appointments) || [];
       break;
     }
@@ -78,6 +79,7 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         .order('created_at', { ascending: false });
         
       if (error) throw error;
+      // Extract just the appointments objects from the response
       appointmentsData = data?.map(item => item.appointments) || [];
       break;
     }
@@ -105,11 +107,20 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
     }
   }
   
-  // Ensure all appointment objects have default values for missing fields
+  // Process and normalize the appointments with default values for missing fields
   const appointments = appointmentsData.map(appointment => ({
-    ...appointment,
+    id: appointment.id,
+    user_id: appointment.user_id,
+    title: appointment.title,
+    description: appointment.description,
+    location: appointment.location,
+    start_time: appointment.start_time,
+    end_time: appointment.end_time,
+    is_all_day: appointment.is_all_day || false,
     status: appointment.status || "scheduled",
-    assignee_id: appointment.assignee_id || null
+    assignee_id: appointment.assignee_id || null,
+    created_at: appointment.created_at,
+    updated_at: appointment.updated_at
   })) as Appointment[];
   
   return { 
