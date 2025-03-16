@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
 import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
 import { BusinessPageSection } from "@/types/business.types";
@@ -25,15 +25,25 @@ const BusinessLandingPageComponent = () => {
   const { businessPage, pageSections, socialLinks, isLoading } = useBusinessPage(slug);
   const { isSubscribed, subscriptionId, subscribe, unsubscribe, checkingSubscription } = useBusinessSubscribers(businessPage?.business_id);
   const [isAuthenticated, setIsAuthenticated] = React.useState<boolean | null>(null);
+  const location = useLocation();
+  
+  // Check if we're in preview mode
+  const isPreviewMode = location.search.includes('preview=true');
   
   React.useEffect(() => {
+    // Skip auth check in preview mode
+    if (isPreviewMode) {
+      setIsAuthenticated(false);
+      return;
+    }
+    
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setIsAuthenticated(!!session?.user);
     };
     
     checkAuth();
-  }, []);
+  }, [isPreviewMode]);
   
   const handleSubscribe = () => {
     if (!businessPage?.business_id) return;
@@ -132,7 +142,7 @@ const BusinessLandingPageComponent = () => {
           </div>
           
           <div>
-            {isAuthenticated !== null && (
+            {!isPreviewMode && isAuthenticated !== null && (
               checkingSubscription ? (
                 <Button variant="outline" disabled size="sm">
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -162,6 +172,12 @@ const BusinessLandingPageComponent = () => {
                   Subscribe
                 </Button>
               )
+            )}
+            
+            {isPreviewMode && (
+              <div className="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 text-xs px-3 py-1 rounded-full font-medium">
+                Preview Mode
+              </div>
             )}
           </div>
         </div>
