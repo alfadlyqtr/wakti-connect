@@ -7,10 +7,8 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogFooter,
   DialogDescription
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { jobCardFormSchema, JobCardFormValues } from "./JobCardFormSchema";
 import { useJobs } from "@/hooks/useJobs";
@@ -18,6 +16,7 @@ import { useJobCards } from "@/hooks/useJobCards";
 import { JobCardFormData } from "@/types/jobs.types";
 import { formatDateTimeToISO } from "@/utils/formatUtils";
 import JobCardFormFields from "./JobCardFormFields";
+import JobCardDialogControls from "./JobCardDialogControls";
 
 interface CreateJobCardDialogProps {
   open: boolean;
@@ -75,6 +74,10 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
     }
   };
   
+  const handleCancel = () => {
+    onOpenChange(false);
+  };
+  
   return (
     <Dialog open={open} onOpenChange={(open) => {
       if (!open) form.reset();
@@ -100,21 +103,10 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
               setEndTime={setEndTime}
             />
             
-            <DialogFooter className="mt-6">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={createJobCard.isPending}
-              >
-                {createJobCard.isPending ? "Creating..." : "Create Job Card"}
-              </Button>
-            </DialogFooter>
+            <JobCardDialogControls 
+              onCancel={handleCancel}
+              isSubmitting={createJobCard.isPending}
+            />
           </form>
         </FormProvider>
       </DialogContent>
