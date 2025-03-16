@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
 import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
@@ -35,6 +35,25 @@ const BusinessLandingPageComponent = () => {
     
     checkAuth();
   }, [isPreviewMode]);
+  
+  // Inject TMW AI Chatbot script if enabled
+  useEffect(() => {
+    if (businessPage?.chatbot_enabled && businessPage?.chatbot_code) {
+      // Create a script element to inject the chatbot code
+      const script = document.createElement('script');
+      script.id = 'tmw-chatbot-script';
+      script.innerHTML = businessPage.chatbot_code;
+      document.body.appendChild(script);
+      
+      // Cleanup function to remove the script when component unmounts
+      return () => {
+        const existingScript = document.getElementById('tmw-chatbot-script');
+        if (existingScript) {
+          document.body.removeChild(existingScript);
+        }
+      };
+    }
+  }, [businessPage?.chatbot_enabled, businessPage?.chatbot_code]);
   
   if (isLoading) {
     return (

@@ -27,8 +27,10 @@ const BusinessPageBuilder = () => {
     description: "",
     is_published: false,
     chatbot_enabled: false,
+    chatbot_code: "",
     primary_color: "#3B82F6",
-    secondary_color: "#10B981"
+    secondary_color: "#10B981",
+    logo_url: ""
   });
   
   // Update local state from fetched data
@@ -40,8 +42,10 @@ const BusinessPageBuilder = () => {
         description: ownerBusinessPage.description || "",
         is_published: ownerBusinessPage.is_published || false,
         chatbot_enabled: ownerBusinessPage.chatbot_enabled || false,
+        chatbot_code: ownerBusinessPage.chatbot_code || "",
         primary_color: ownerBusinessPage.primary_color || "#3B82F6",
-        secondary_color: ownerBusinessPage.secondary_color || "#10B981"
+        secondary_color: ownerBusinessPage.secondary_color || "#10B981",
+        logo_url: ownerBusinessPage.logo_url || ""
       });
     }
   }, [ownerBusinessPage]);
@@ -106,11 +110,13 @@ const BusinessPageBuilder = () => {
         <TabsContent value="settings">
           <PageSettingsTab
             pageData={pageData}
+            businessId={ownerBusinessPage.business_id}
             handlePageDataChange={handlePageDataChange}
             handleToggleChange={handleToggleChange}
             handleSavePageSettings={handleSavePageSettings}
             updatePage={updatePage}
             autoSavePageSettings={autoSavePageSettings}
+            getPublicPageUrl={getPublicPageUrl}
           />
         </TabsContent>
         

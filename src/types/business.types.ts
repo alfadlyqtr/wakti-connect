@@ -11,6 +11,8 @@ export interface BusinessPage {
   secondary_color: string;
   is_published: boolean;
   chatbot_enabled: boolean;
+  chatbot_code?: string;
+  is_featured?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -33,8 +35,7 @@ export type SectionType =
   'hours' | 
   'contact' | 
   'gallery' | 
-  'about' | 
-  'testimonials';
+  'about';
 
 export interface BusinessSocialLink {
   id: string;

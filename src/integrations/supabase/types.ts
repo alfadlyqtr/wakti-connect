@@ -146,14 +146,16 @@ export type Database = {
         Row: {
           banner_url: string | null
           business_id: string
+          chatbot_code: string | null
           chatbot_enabled: boolean | null
           created_at: string
           description: string | null
           id: string
+          is_featured: boolean | null
           is_published: boolean | null
           logo_url: string | null
-          page_slug: string
-          page_title: string
+          page_slug: string | null
+          page_title: string | null
           primary_color: string | null
           secondary_color: string | null
           updated_at: string
@@ -161,14 +163,16 @@ export type Database = {
         Insert: {
           banner_url?: string | null
           business_id: string
+          chatbot_code?: string | null
           chatbot_enabled?: boolean | null
           created_at?: string
           description?: string | null
           id?: string
+          is_featured?: boolean | null
           is_published?: boolean | null
           logo_url?: string | null
-          page_slug: string
-          page_title: string
+          page_slug?: string | null
+          page_title?: string | null
           primary_color?: string | null
           secondary_color?: string | null
           updated_at?: string
@@ -176,17 +180,46 @@ export type Database = {
         Update: {
           banner_url?: string | null
           business_id?: string
+          chatbot_code?: string | null
           chatbot_enabled?: boolean | null
           created_at?: string
           description?: string | null
           id?: string
+          is_featured?: boolean | null
           is_published?: boolean | null
           logo_url?: string | null
-          page_slug?: string
-          page_title?: string
+          page_slug?: string | null
+          page_title?: string | null
           primary_color?: string | null
           secondary_color?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      business_section_templates: {
+        Row: {
+          created_at: string
+          id: string
+          is_system: boolean
+          section_type: string
+          template_content: Json
+          template_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          section_type: string
+          template_content: Json
+          template_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          section_type?: string
+          template_content?: Json
+          template_name?: string
         }
         Relationships: []
       }
