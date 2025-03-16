@@ -12,6 +12,7 @@ import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import VerificationPage from "./pages/auth/VerificationPage";
 import Header from "./components/landing/Header";
+import ScrollToTop from "./components/ui/scroll-to-top";
 
 // Import i18n
 import "./i18n/i18n";
@@ -25,6 +26,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToTop />
           <Routes>
             {/* Public routes */}
             <Route path="/*" element={
