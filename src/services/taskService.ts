@@ -19,7 +19,7 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
   
   const userRole = profileData?.account_type || "free";
   
-  let query;
+  let query: any;
   
   switch (tab) {
     case "my-tasks":
@@ -77,6 +77,7 @@ export async function createTask(taskData: TaskFormData): Promise<Task> {
     throw new Error("Authentication required to create tasks");
   }
 
+  // Prepare the new task object
   const newTask = {
     user_id: session.user.id,
     title: taskData.title,
@@ -86,14 +87,17 @@ export async function createTask(taskData: TaskFormData): Promise<Task> {
     due_date: taskData.due_date || null
   };
 
-  // If assignee_id is provided and valid, add it to the task
-  if (taskData.assignee_id) {
-    Object.assign(newTask, { assignee_id: taskData.assignee_id });
-  }
+  // Create a separate assignee object to avoid TypeScript errors
+  const assigneeData = taskData.assignee_id 
+    ? { assignee_id: taskData.assignee_id } 
+    : {};
+
+  // Merge the objects for the final insert
+  const fullTaskData = { ...newTask, ...assigneeData };
 
   const { data, error } = await supabase
     .from('tasks')
-    .insert(newTask)
+    .insert(fullTaskData)
     .select();
 
   if (error) {

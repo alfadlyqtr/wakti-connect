@@ -1,6 +1,11 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Appointment, AppointmentTab, AppointmentFormData, AppointmentsResult } from "@/types/appointment.types";
+import { 
+  Appointment, 
+  AppointmentTab, 
+  AppointmentFormData, 
+  AppointmentsResult 
+} from "@/types/appointment.types";
 
 // Fetch appointments based on the selected tab
 export async function fetchAppointments(tab: AppointmentTab): Promise<AppointmentsResult> {
@@ -19,35 +24,37 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
   
   const userRole = profileData?.account_type || "free";
   
-  let query;
+  let query: any;
   
   switch (tab) {
-    case "my-appointments":
-      // User's own appointments
+    case "upcoming":
+      // Upcoming appointments
       query = supabase
         .from('appointments')
         .select('*')
-        .eq('user_id', session.user.id)
-        .order('start_time', { ascending: true });
+        .or(`user_id.eq.${session.user.id},invited_users.cs.{${session.user.id}}`)
+        .gte('date', new Date().toISOString().split('T')[0])
+        .order('date', { ascending: true });
       break;
       
-    case "shared-appointments":
-      // Appointments shared with the user
+    case "past":
+      // Past appointments
+      query = supabase
+        .from('appointments')
+        .select('*')
+        .or(`user_id.eq.${session.user.id},invited_users.cs.{${session.user.id}}`)
+        .lt('date', new Date().toISOString().split('T')[0])
+        .order('date', { ascending: false });
+      break;
+      
+    case "invitations":
+      // Appointment invitations
       query = supabase
         .from('appointment_invitations')
-        .select('appointment_id, appointments(*)')
-        .eq('invited_user_id', session.user.id)
-        .eq('status', 'accepted')
+        .select('appointment_id, status, appointments(*)')
+        .eq('user_id', session.user.id)
+        .eq('status', 'pending')
         .order('created_at', { ascending: false });
-      break;
-      
-    case "assigned-appointments":
-      // Appointments assigned to the user (for staff members)
-      query = supabase
-        .from('appointments')
-        .select('*')
-        .eq('assignee_id', session.user.id)
-        .order('start_time', { ascending: true });
       break;
   }
   
@@ -58,8 +65,8 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
     throw error;
   }
   
-  // Transform shared appointments data if needed
-  const transformedData: Appointment[] = tab === "shared-appointments" 
+  // Transform invitation data if needed
+  const transformedData: Appointment[] = tab === "invitations" 
     ? data.map((item: any) => item.appointments) 
     : data;
   
@@ -78,25 +85,30 @@ export async function createAppointment(appointmentData: AppointmentFormData): P
     throw new Error("Authentication required to create appointments");
   }
 
+  // Basic appointment data
   const newAppointment = {
     user_id: session.user.id,
     title: appointmentData.title,
     description: appointmentData.description || null,
-    start_time: appointmentData.start_time,
-    end_time: appointmentData.end_time,
     location: appointmentData.location || null,
-    is_all_day: appointmentData.is_all_day || false,
-    status: appointmentData.status || "upcoming"
+    date: appointmentData.date,
+    start_time: appointmentData.startTime,
+    end_time: appointmentData.endTime,
+    is_all_day: appointmentData.isAllDay || false,
+    status: "confirmed"
   };
 
-  // If assignee_id is provided and valid, add it to the appointment
-  if (appointmentData.assignee_id) {
-    Object.assign(newAppointment, { assignee_id: appointmentData.assignee_id });
-  }
+  // Handle invitees separately to avoid TypeScript errors
+  const inviteesData = appointmentData.invitees?.length 
+    ? { invited_users: appointmentData.invitees } 
+    : {};
+
+  // Create the complete appointment data
+  const fullAppointmentData = { ...newAppointment, ...inviteesData };
 
   const { data, error } = await supabase
     .from('appointments')
-    .insert(newAppointment)
+    .insert(fullAppointmentData)
     .select();
 
   if (error) {
