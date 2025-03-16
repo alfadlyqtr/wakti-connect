@@ -9,6 +9,7 @@ export interface Appointment {
   end_time: string;
   is_all_day: boolean;
   status: AppointmentStatus;
+  assignee_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -27,6 +28,7 @@ export interface AppointmentFormData {
   end_time?: string;
   is_all_day?: boolean;
   invitees?: string[];
+  assignee_id?: string | null;
   
   // Form-specific fields (used in form UI but transformed before API calls)
   date?: Date;
