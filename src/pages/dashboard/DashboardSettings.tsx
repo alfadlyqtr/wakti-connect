@@ -10,6 +10,7 @@ import { CreditCard, UserCircle, Bell, Palette } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 const DashboardSettings = () => {
   const { data: profile } = useQuery({
@@ -23,6 +24,11 @@ const DashboardSettings = () => {
         .select('*')
         .eq('id', session.user.id)
         .single();
+        
+      // Add email from auth session
+      if (data && session.user) {
+        data.email = session.user.email;
+      }
         
       return data;
     }
@@ -140,7 +146,7 @@ const DashboardSettings = () => {
                   id="bio"
                   className="w-full min-h-[100px] p-2 border rounded-md"
                   placeholder="Tell us about yourself"
-                  defaultValue={profile?.bio || ''}
+                  defaultValue={profile?.occupation || ''}
                 />
               </div>
               
