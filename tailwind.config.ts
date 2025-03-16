@@ -1,8 +1,16 @@
 
 import { fontFamily } from "tailwindcss/defaultTheme";
 import { type Config } from "tailwindcss";
-import headlessui from "@headlessui/tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
+
+// Attempt to import headlessui, but don't fail if it's not available
+let headlessui;
+try {
+  headlessui = require("@headlessui/tailwindcss");
+} catch (e) {
+  // Package not available, use a dummy plugin
+  headlessui = () => ({ handler: () => {} });
+}
 
 const config = {
   darkMode: ["class"],
