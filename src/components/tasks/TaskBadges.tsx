@@ -6,11 +6,12 @@ import { Share2, UserCheck } from "lucide-react";
 import { TaskStatus, TaskPriority } from "@/types/task.types";
 
 interface TaskBadgesProps {
-  status: TaskStatus;
+  dueDate: Date;
   priority: TaskPriority;
-  category: string;
   isShared?: boolean;
   isAssigned?: boolean;
+  status?: TaskStatus;
+  category?: string;
 }
 
 export const getStatusColor = (status: TaskStatus) => {
@@ -40,7 +41,7 @@ export const getPriorityColor = (priority: TaskPriority) => {
 };
 
 export const getCategoryColor = (category: string) => {
-  switch (category.toLowerCase()) {
+  switch (category?.toLowerCase()) {
     case "personal":
       return "bg-wakti-blue/10 text-wakti-blue hover:bg-wakti-blue/20";
     case "shared":
@@ -71,18 +72,36 @@ export const TaskSharingBadges = ({ isShared, isAssigned }: { isShared?: boolean
   );
 };
 
-const TaskBadges: React.FC<TaskBadgesProps> = ({ status, priority, category, isShared, isAssigned }) => {
+const TaskBadges = ({ 
+  dueDate, 
+  priority, 
+  isShared, 
+  isAssigned,
+  status = "pending",
+  category = "personal"
+}: TaskBadgesProps) => {
+  const formattedDate = dueDate.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric'
+  });
+
   return (
     <div className="flex flex-wrap gap-2">
-      <Badge variant="outline" className={cn("text-xs", getStatusColor(status))}>
-        {status.replace('-', ' ')}
+      <Badge variant="outline" className="text-xs flex items-center">
+        {formattedDate}
       </Badge>
+      
       <Badge variant="outline" className={cn("text-xs", getPriorityColor(priority))}>
         {priority}
       </Badge>
-      <Badge variant="outline" className={cn("text-xs", getCategoryColor(category))}>
-        {category}
-      </Badge>
+      
+      {category && (
+        <Badge variant="outline" className={cn("text-xs", getCategoryColor(category))}>
+          {category}
+        </Badge>
+      )}
+      
+      <TaskSharingBadges isShared={isShared} isAssigned={isAssigned} />
     </div>
   );
 };

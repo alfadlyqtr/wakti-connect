@@ -2,9 +2,9 @@
 import React from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TaskActionsMenu } from "@/components/tasks/TaskActionsMenu";
-import { TaskStatusIcon } from "@/components/tasks/TaskStatusIcon";
-import { TaskBadges } from "@/components/tasks/TaskBadges";
+import TaskActionsMenu from "@/components/tasks/TaskActionsMenu";
+import TaskStatusIcon from "@/components/tasks/TaskStatusIcon";
+import TaskBadges from "@/components/tasks/TaskBadges";
 import { RecurringBadge } from "@/components/ui/RecurringBadge";
 import { TaskPriority, TaskStatus } from "@/types/task.types";
 

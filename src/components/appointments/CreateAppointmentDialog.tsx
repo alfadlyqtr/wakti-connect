@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { 
   Dialog, 
   DialogContent, 
@@ -14,16 +15,17 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Appointment } from "@/types/appointment.types";
 import { AppointmentFormFields } from "./AppointmentFormFields";
-import { AppointmentFormValues, getDefaultFormValues } from "./AppointmentFormSchema";
+import { AppointmentFormValues, appointmentFormSchema, getDefaultFormValues } from "./AppointmentFormSchema";
 import RecurringFormFields from "@/components/recurring/RecurringFormFields";
 import { toast } from "@/components/ui/use-toast";
+import { AppointmentFormData } from "@/types/appointment.types";
+import { RecurringFormData } from "@/types/recurring.types";
 
 interface CreateAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateAppointment: (appointment: Partial<Appointment>, recurringData?: any) => Promise<any>;
+  onCreateAppointment: (appointment: AppointmentFormData, recurringData?: RecurringFormData) => Promise<any>;
   userRole: "free" | "individual" | "business";
 }
 
@@ -38,7 +40,8 @@ export function CreateAppointmentDialog({
   
   const isPaidAccount = userRole === "individual" || userRole === "business";
   
-  const form = useForm<AppointmentFormValues & { isRecurring: boolean, recurring: any }>({
+  const form = useForm<AppointmentFormValues>({
+    resolver: zodResolver(appointmentFormSchema),
     defaultValues: {
       ...getDefaultFormValues(),
       isRecurring: false,
@@ -50,14 +53,14 @@ export function CreateAppointmentDialog({
     }
   });
   
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: AppointmentFormValues) => {
     setIsSubmitting(true);
     try {
       // Combine date and time values
       const startDate = new Date(values.date);
       const endDate = new Date(values.date);
       
-      if (!values.isAllDay) {
+      if (!values.isAllDay && values.startTime && values.endTime) {
         const [startHours, startMinutes] = values.startTime.split(':').map(Number);
         const [endHours, endMinutes] = values.endTime.split(':').map(Number);
         
@@ -69,7 +72,7 @@ export function CreateAppointmentDialog({
         endDate.setHours(23, 59, 59, 999);
       }
       
-      const appointmentData = {
+      const appointmentData: AppointmentFormData = {
         title: values.title,
         description: values.description,
         location: values.location,
@@ -78,7 +81,7 @@ export function CreateAppointmentDialog({
         is_all_day: values.isAllDay
       };
       
-      const recurringData = values.isRecurring ? values.recurring : undefined;
+      const recurringData = values.isRecurring ? values.recurring as RecurringFormData : undefined;
       
       await onCreateAppointment(appointmentData, recurringData);
       
@@ -133,7 +136,7 @@ export function CreateAppointmentDialog({
               </Label>
             </div>
             
-            <RecurringFormFields form={form} userRole={userRole} />
+            {isRecurring && <RecurringFormFields form={form} userRole={userRole} />}
             
             <DialogFooter className="pt-4">
               <DialogClose asChild>

@@ -15,16 +15,17 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Task } from "@/types/task.types";
-import { taskFormSchema, TaskFormValues } from "./TaskFormSchema";
+import { TaskFormValues, taskFormSchema } from "./TaskFormSchema";
 import TaskFormFields from "./TaskFormFields";
 import RecurringFormFields from "@/components/recurring/RecurringFormFields";
 import { toast } from "@/components/ui/use-toast";
+import { TaskFormData } from "@/types/task.types";
+import { RecurringFormData } from "@/types/recurring.types";
 
 interface CreateTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateTask: (task: Partial<Task>, recurringData?: any) => Promise<any>;
+  onCreateTask: (task: TaskFormData, recurringData?: RecurringFormData) => Promise<any>;
   userRole: "free" | "individual" | "business";
 }
 
@@ -39,7 +40,7 @@ export function CreateTaskDialog({
   
   const isPaidAccount = userRole === "individual" || userRole === "business";
   
-  const form = useForm<TaskFormValues & { isRecurring: boolean, recurring: any }>({
+  const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
       title: "",
@@ -55,10 +56,10 @@ export function CreateTaskDialog({
     }
   });
   
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: TaskFormValues) => {
     setIsSubmitting(true);
     try {
-      const taskData = {
+      const taskData: TaskFormData = {
         title: values.title,
         description: values.description,
         priority: values.priority,
@@ -66,7 +67,7 @@ export function CreateTaskDialog({
         status: "pending"
       };
       
-      const recurringData = values.isRecurring ? values.recurring : undefined;
+      const recurringData = values.isRecurring ? values.recurring as RecurringFormData : undefined;
       
       await onCreateTask(taskData, recurringData);
       
@@ -121,7 +122,7 @@ export function CreateTaskDialog({
               </Label>
             </div>
             
-            <RecurringFormFields form={form} userRole={userRole} />
+            {isRecurring && <RecurringFormFields form={form} userRole={userRole} />}
             
             <DialogFooter className="pt-4">
               <DialogClose asChild>
