@@ -52,7 +52,7 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
       if (data && data.length > 0) {
         for (const item of data) {
           if (item.tasks) {
-            // Create a new object instead of passing the reference
+            // Create a new object with explicit properties instead of object spread
             const taskCopy = { 
               id: item.tasks.id,
               title: item.tasks.title,
@@ -61,7 +61,8 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
               priority: item.tasks.priority,
               due_date: item.tasks.due_date,
               user_id: item.tasks.user_id,
-              assignee_id: item.tasks.assignee_id,
+              // Set a default null value for potentially missing assignee_id field
+              assignee_id: item.tasks.assignee_id || null,
               created_at: item.tasks.created_at,
               updated_at: item.tasks.updated_at
             };

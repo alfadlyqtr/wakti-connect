@@ -51,7 +51,7 @@ export async function shareTask(taskId: string, userId: string): Promise<boolean
 // Assign a task to a staff member
 export async function assignTask(taskId: string, staffId: string): Promise<boolean> {
   try {
-    // First, check if the task exists
+    // Get the current task to make sure it exists
     const { data: taskData, error: fetchError } = await supabase
       .from('tasks')
       .select('*')
@@ -60,10 +60,17 @@ export async function assignTask(taskId: string, staffId: string): Promise<boole
 
     if (fetchError) throw fetchError;
 
-    // Now perform the update with the correct field
+    // Update the task with an assignee
     const { error } = await supabase
       .from('tasks')
-      .update({ assignee_id: staffId })
+      .update({ 
+        status: taskData.status,
+        title: taskData.title,
+        description: taskData.description,
+        due_date: taskData.due_date,
+        priority: taskData.priority,
+        assignee_id: staffId  // This is the field we're actually changing
+      })
       .eq('id', taskId);
 
     if (error) throw error;

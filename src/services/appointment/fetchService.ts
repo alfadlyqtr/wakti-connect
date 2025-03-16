@@ -61,7 +61,7 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
       if (data && data.length > 0) {
         for (const item of data) {
           if (item.appointments) {
-            // Create a new object instead of passing the reference
+            // Create a new object with explicit properties instead of object spread
             const appointmentCopy = {
               id: item.appointments.id,
               user_id: item.appointments.user_id,
@@ -71,8 +71,9 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
               start_time: item.appointments.start_time,
               end_time: item.appointments.end_time,
               is_all_day: item.appointments.is_all_day,
-              status: item.appointments.status,
-              assignee_id: item.appointments.assignee_id,
+              // Use default values for potentially missing fields
+              status: item.appointments.status || "scheduled",
+              assignee_id: item.appointments.assignee_id || null,
               created_at: item.appointments.created_at,
               updated_at: item.appointments.updated_at
             };
@@ -108,7 +109,7 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
       if (data && data.length > 0) {
         for (const item of data) {
           if (item.appointments) {
-            // Create a new object instead of passing the reference
+            // Create a new object with explicit properties instead of object spread
             const appointmentCopy = {
               id: item.appointments.id,
               user_id: item.appointments.user_id,
@@ -118,8 +119,9 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
               start_time: item.appointments.start_time,
               end_time: item.appointments.end_time,
               is_all_day: item.appointments.is_all_day,
-              status: item.appointments.status,
-              assignee_id: item.appointments.assignee_id,
+              // Use default values for potentially missing fields
+              status: item.appointments.status || "scheduled",
+              assignee_id: item.appointments.assignee_id || null,
               created_at: item.appointments.created_at,
               updated_at: item.appointments.updated_at
             };
