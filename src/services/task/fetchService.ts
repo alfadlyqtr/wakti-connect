@@ -1,6 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { TaskTab, TasksResult, Task, TaskStatus, TaskPriority } from "./types";
+import { TaskTab, TasksResult } from "./types";
+import {
+  fetchMyTasks,
+  fetchSharedTasks,
+  fetchAssignedTasks,
+  fetchDefaultTasks
+} from "./fetchers";
 
 // Fetch tasks based on the selected tab
 export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
@@ -19,127 +25,30 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
   
   const userRole = profileData?.account_type || "free";
   
-  // Declare variable to hold tasks data
-  let tasksData: Task[] = [];
-  
-  // Use switch case to handle all tab values properly
+  // Fetch tasks based on the selected tab
   switch (tab) {
-    case "my-tasks": {
-      // User's own tasks
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('due_date', { ascending: true });
-        
-      if (error) throw error;
-      
-      // Transform data to ensure it has all Task properties with proper typing
-      tasksData = (data || []).map(item => ({
-        id: item.id,
-        title: item.title,
-        description: item.description,
-        status: (item.status || "pending") as TaskStatus,
-        priority: (item.priority || "normal") as TaskPriority,
-        due_date: item.due_date,
-        user_id: item.user_id,
-        assignee_id: item.assignee_id || null,
-        created_at: item.created_at,
-        updated_at: item.updated_at
-      }));
-      break;
-    }
+    case "my-tasks":
+      return {
+        tasks: await fetchMyTasks(session.user.id),
+        userRole: userRole as "free" | "individual" | "business"
+      };
     
-    case "shared-tasks": {
-      // Tasks shared with the user
-      const { data, error } = await supabase
-        .from('shared_tasks')
-        .select('task_id, tasks(*)')
-        .eq('shared_with', session.user.id)
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      
-      // Extract just the tasks objects from the response
-      tasksData = [];
-      if (data && data.length > 0) {
-        for (const item of data) {
-          if (item.tasks) {
-            const task = item.tasks;
-            // Create a new object with explicit property assignments and proper type casting
-            tasksData.push({
-              id: task.id,
-              title: task.title,
-              description: task.description,
-              status: (task.status || "pending") as TaskStatus,
-              priority: (task.priority || "normal") as TaskPriority,
-              due_date: task.due_date,
-              user_id: task.user_id,
-              assignee_id: task.assignee_id || null,
-              created_at: task.created_at,
-              updated_at: task.updated_at
-            });
-          }
-        }
-      }
-      break;
-    }
+    case "shared-tasks":
+      return {
+        tasks: await fetchSharedTasks(session.user.id),
+        userRole: userRole as "free" | "individual" | "business"
+      };
     
-    case "assigned-tasks": {
-      // Tasks assigned to the user (for staff members)
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('assignee_id', session.user.id)
-        .order('due_date', { ascending: true });
-        
-      if (error) throw error;
-      
-      // Transform data with proper typing
-      tasksData = (data || []).map(item => ({
-        id: item.id,
-        title: item.title,
-        description: item.description,
-        status: (item.status || "pending") as TaskStatus,
-        priority: (item.priority || "normal") as TaskPriority,
-        due_date: item.due_date,
-        user_id: item.user_id,
-        assignee_id: item.assignee_id || null,
-        created_at: item.created_at,
-        updated_at: item.updated_at
-      }));
-      break;
-    }
+    case "assigned-tasks":
+      return {
+        tasks: await fetchAssignedTasks(session.user.id),
+        userRole: userRole as "free" | "individual" | "business"
+      };
     
-    default: {
-      // Fallback to my-tasks if an invalid tab is provided
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('due_date', { ascending: true });
-        
-      if (error) throw error;
-      
-      // Transform data with proper typing
-      tasksData = (data || []).map(item => ({
-        id: item.id,
-        title: item.title,
-        description: item.description,
-        status: (item.status || "pending") as TaskStatus,
-        priority: (item.priority || "normal") as TaskPriority,
-        due_date: item.due_date,
-        user_id: item.user_id,
-        assignee_id: item.assignee_id || null,
-        created_at: item.created_at,
-        updated_at: item.updated_at
-      }));
-      break;
-    }
+    default:
+      return {
+        tasks: await fetchDefaultTasks(session.user.id),
+        userRole: userRole as "free" | "individual" | "business"
+      };
   }
-  
-  return { 
-    tasks: tasksData,
-    userRole: userRole as "free" | "individual" | "business"
-  };
 }
