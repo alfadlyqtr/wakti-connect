@@ -16,7 +16,7 @@ const DashboardHome = () => {
     isLoading 
   } = useDashboardData();
 
-  if (isLoading) {
+  if (isLoading || !profileData) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col gap-2">
@@ -38,16 +38,16 @@ const DashboardHome = () => {
       {/* Main Dashboard Cards */}
       <DashboardSummaryCards 
         profileData={profileData}
-        todayTasks={todayTasks}
-        upcomingAppointments={upcomingAppointments}
-        unreadNotifications={unreadNotifications}
+        todayTasks={todayTasks || []}
+        upcomingAppointments={upcomingAppointments || []}
+        unreadNotifications={unreadNotifications || []}
       />
 
       {/* Business-specific section */}
-      {profileData?.account_type === 'business' && <BusinessDashboardStats />}
+      {profileData.account_type === 'business' && <BusinessDashboardStats />}
       
       {/* Individual-specific features */}
-      {profileData?.account_type === 'individual' && <IndividualDashboardStats />}
+      {profileData.account_type === 'individual' && <IndividualDashboardStats />}
     </div>
   );
 };

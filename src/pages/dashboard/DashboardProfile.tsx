@@ -25,6 +25,21 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
+// Define profile type to ensure TypeScript knows about our new columns
+interface ProfileData {
+  id: string;
+  full_name: string | null;
+  display_name: string | null;
+  business_name: string | null;
+  occupation: string | null;
+  account_type: "free" | "individual" | "business";
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+  is_searchable: boolean | null;
+  theme_preference: string | null;
+}
+
 const DashboardProfile = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -51,7 +66,7 @@ const DashboardProfile = () => {
         throw error;
       }
       
-      return data;
+      return data as ProfileData;
     },
   });
 

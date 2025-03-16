@@ -370,28 +370,40 @@ export type Database = {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
           avatar_url: string | null
+          business_name: string | null
           created_at: string
+          display_name: string | null
           full_name: string | null
           id: string
           is_searchable: boolean | null
+          occupation: string | null
+          theme_preference: string | null
           updated_at: string
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["account_type"]
           avatar_url?: string | null
+          business_name?: string | null
           created_at?: string
+          display_name?: string | null
           full_name?: string | null
           id: string
           is_searchable?: boolean | null
+          occupation?: string | null
+          theme_preference?: string | null
           updated_at?: string
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"]
           avatar_url?: string | null
+          business_name?: string | null
           created_at?: string
+          display_name?: string | null
           full_name?: string | null
           id?: string
           is_searchable?: boolean | null
+          occupation?: string | null
+          theme_preference?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -701,6 +713,10 @@ export type Database = {
           user_uuid: string
         }
         Returns: boolean
+      }
+      get_auth_user_account_type: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
     }
     Enums: {
