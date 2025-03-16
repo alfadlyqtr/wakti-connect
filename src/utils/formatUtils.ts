@@ -27,3 +27,22 @@ export const formatNumber = (value: number | null | undefined): string => {
   if (value === null || value === undefined) return "—";
   return new Intl.NumberFormat('en-US').format(value);
 };
+
+/**
+ * Convert a date and time strings to ISO format
+ */
+export const formatDateTimeToISO = (date: Date, startTime: string, endTime: string) => {
+  const startDateTime = new Date(date);
+  const endDateTime = new Date(date);
+  
+  const [startHours, startMinutes] = startTime.split(':').map(Number);
+  const [endHours, endMinutes] = endTime.split(':').map(Number);
+  
+  startDateTime.setHours(startHours, startMinutes);
+  endDateTime.setHours(endHours, endMinutes);
+  
+  return {
+    start_time: startDateTime.toISOString(),
+    end_time: endDateTime.toISOString()
+  };
+};
