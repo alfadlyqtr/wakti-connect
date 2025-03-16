@@ -62,7 +62,7 @@ const ContactForm = () => {
       
       <ContactSuccessDialog 
         open={showSuccessDialog} 
-        onClose={() => setShowSuccessDialog(false)} 
+        onOpenChange={setShowSuccessDialog} 
       />
     </div>
   );
