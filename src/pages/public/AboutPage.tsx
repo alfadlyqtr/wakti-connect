@@ -4,8 +4,6 @@ import AboutHero from "@/components/about/AboutHero";
 import AboutStory from "@/components/about/AboutStory";
 import AboutMission from "@/components/about/AboutMission";
 import AboutValues from "@/components/about/AboutValues";
-import AboutTeam from "@/components/about/AboutTeam";
-import AboutFeatures from "@/components/about/AboutFeatures";
 import AboutCTA from "@/components/about/AboutCTA";
 
 const AboutPage = () => {
@@ -14,9 +12,7 @@ const AboutPage = () => {
       <AboutHero />
       <AboutMission />
       <AboutStory />
-      <AboutFeatures />
       <AboutValues />
-      <AboutTeam />
       <AboutCTA />
     </div>
   );
