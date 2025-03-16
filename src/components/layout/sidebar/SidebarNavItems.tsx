@@ -23,7 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -33,7 +33,7 @@ interface UserData {
 
 const SidebarNavItems = ({ onNavClick }: { onNavClick?: () => void }) => {
   const location = useLocation();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [userData, setUserData] = React.useState<UserData | null>(null);
   const [unreadMessagesCount, setUnreadMessagesCount] = React.useState(0);
   const queryClient = useQueryClient();
