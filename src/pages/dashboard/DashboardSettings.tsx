@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,9 +10,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Tables } from "@/integrations/supabase/types";
+
+type ProfileWithEmail = Tables<"profiles"> & {
+  email?: string;
+};
 
 const DashboardSettings = () => {
-  const { data: profile } = useQuery({
+  const { data: profile } = useQuery<ProfileWithEmail>({
     queryKey: ['settingsProfile'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -25,12 +29,12 @@ const DashboardSettings = () => {
         .eq('id', session.user.id)
         .single();
         
-      // Add email from auth session
-      if (data && session.user) {
-        data.email = session.user.email;
+      const profileWithEmail: ProfileWithEmail = data || {};
+      if (session.user) {
+        profileWithEmail.email = session.user.email;
       }
         
-      return data;
+      return profileWithEmail;
     }
   });
 
