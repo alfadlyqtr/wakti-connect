@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Globe, RefreshCw, Smartphone, Desktop } from "lucide-react";
+import { Globe, RefreshCw, Smartphone, Monitor } from "lucide-react";
 
 interface PagePreviewTabProps {
   getPublicPageUrl: () => string;
@@ -62,7 +62,7 @@ const PagePreviewTab: React.FC<PagePreviewTabProps> = ({ getPublicPageUrl }) => 
               onClick={() => setViewMode('desktop')}
               title="Desktop view"
             >
-              <Desktop className="h-4 w-4" />
+              <Monitor className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
