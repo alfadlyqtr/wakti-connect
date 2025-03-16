@@ -34,7 +34,7 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
         
       if (error) throw error;
       
-      // Transform data to ensure it has all Task properties
+      // Transform data to ensure it has all Task properties with proper typing
       tasksData = (data || []).map(item => ({
         id: item.id,
         title: item.title,
@@ -66,7 +66,7 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
         for (const item of data) {
           if (item.tasks) {
             const task = item.tasks;
-            // Create a new object with explicit property assignments
+            // Create a new object with explicit property assignments and proper type casting
             tasksData.push({
               id: task.id,
               title: task.title,
@@ -95,7 +95,7 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
         
       if (error) throw error;
       
-      // Transform data to ensure it has all Task properties
+      // Transform data with proper typing
       tasksData = (data || []).map(item => ({
         id: item.id,
         title: item.title,
@@ -121,7 +121,7 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
         
       if (error) throw error;
       
-      // Transform data to ensure it has all Task properties
+      // Transform data with proper typing
       tasksData = (data || []).map(item => ({
         id: item.id,
         title: item.title,

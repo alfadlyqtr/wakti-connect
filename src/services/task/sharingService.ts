@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { TaskStatus, TaskPriority } from "./types";
 
 // Share a task with another user
 export async function shareTask(taskId: string, userId: string): Promise<boolean> {
@@ -59,17 +60,21 @@ export async function assignTask(taskId: string, staffId: string): Promise<boole
       .single();
 
     if (fetchError) throw fetchError;
+    
+    if (!taskData) {
+      throw new Error("Task not found");
+    }
 
     // Update the task with an assignee
     const { error } = await supabase
       .from('tasks')
       .update({ 
         assignee_id: staffId,
-        // Include existing values to avoid losing data
+        // Include existing values explicitly to ensure consistency
         title: taskData.title,
         description: taskData.description,
-        status: taskData.status,
-        priority: taskData.priority,
+        status: taskData.status as TaskStatus,
+        priority: taskData.priority as TaskPriority,
         due_date: taskData.due_date,
         user_id: taskData.user_id
       })
