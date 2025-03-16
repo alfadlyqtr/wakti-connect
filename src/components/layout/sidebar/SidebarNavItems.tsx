@@ -1,5 +1,5 @@
 
-import { BarChart2, Bell, BookOpen, Calendar, CreditCard, FileText, Home, Mail, MenuIcon, MessageSquare, Settings, ShieldCheck, Users, Clock, Briefcase, FileCheck, User, Palette } from "lucide-react";
+import { BarChart2, Bell, BookOpen, Calendar, CreditCard, FileText, Home, Mail, MenuIcon, MessageSquare, Settings, ShieldCheck, Users, Clock, Briefcase, FileCheck, User, Palette, Store, UserPlus, Globe } from "lucide-react";
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -49,6 +49,20 @@ const navItems: NavItem[] = [
     icon: <Bell className="h-5 w-5" />,
   },
   // Business plan specific
+  {
+    title: "Landing Page",
+    href: "/dashboard/business-page",
+    icon: <Globe className="h-5 w-5" />,
+    plans: ["business"],
+    roles: ["admin", "co-admin"]
+  },
+  {
+    title: "Subscribers",
+    href: "/dashboard/subscribers",
+    icon: <UserPlus className="h-5 w-5" />,
+    plans: ["business"],
+    roles: ["admin", "co-admin", "staff"]
+  },
   {
     title: "Service Management",
     href: "/dashboard/service-management",

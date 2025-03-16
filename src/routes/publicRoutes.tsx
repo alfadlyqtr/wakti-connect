@@ -11,6 +11,7 @@ import FaqPage from "@/pages/public/FaqPage";
 import TermsPage from "@/pages/public/TermsPage";
 import PrivacyPage from "@/pages/public/PrivacyPage";
 import Footer from "@/components/landing/Footer";
+import BusinessLandingPage from "@/pages/business/BusinessLandingPage";
 
 const PublicRoutes = () => {
   return (
@@ -24,6 +25,7 @@ const PublicRoutes = () => {
         <Route path="faq" element={<FaqPage />} />
         <Route path="terms" element={<TermsPage />} />
         <Route path="privacy" element={<PrivacyPage />} />
+        <Route path="business/:slug" element={<BusinessLandingPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Footer />

@@ -20,6 +20,8 @@ import DashboardWorkLogs from "@/pages/dashboard/DashboardWorkLogs";
 import DashboardJobs from "@/pages/dashboard/DashboardJobs";
 import DashboardJobCards from "@/pages/dashboard/DashboardJobCards";
 import DashboardProfile from "@/pages/dashboard/DashboardProfile";
+import DashboardBusinessPage from "@/pages/dashboard/DashboardBusinessPage";
+import DashboardSubscribers from "@/pages/dashboard/DashboardSubscribers";
 
 const DashboardRoutes = () => {
   return (
@@ -43,6 +45,9 @@ const DashboardRoutes = () => {
         <Route path="/work-logs" element={<DashboardWorkLogs />} />
         <Route path="/jobs" element={<DashboardJobs />} />
         <Route path="/job-cards" element={<DashboardJobCards />} />
+        {/* New Business Pages */}
+        <Route path="/business-page" element={<DashboardBusinessPage />} />
+        <Route path="/subscribers" element={<DashboardSubscribers />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </DashboardLayout>

@@ -1,0 +1,21 @@
+
+import React from "react";
+import { useParams } from "react-router-dom";
+import BusinessLandingPageComponent from "@/components/business/landing/BusinessLandingPage";
+
+const BusinessLandingPage = () => {
+  const { slug } = useParams<{ slug: string }>();
+  
+  if (!slug) {
+    return (
+      <div className="text-center py-12">
+        <h1 className="text-2xl font-bold">Business Page Not Found</h1>
+        <p className="text-muted-foreground mt-2">The URL is invalid.</p>
+      </div>
+    );
+  }
+  
+  return <BusinessLandingPageComponent />;
+};
+
+export default BusinessLandingPage;
