@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { BusinessPage } from "@/types/business.types";
@@ -100,8 +99,6 @@ const PageSettingsTab: React.FC<PageSettingsTabProps> = ({
       const logoUrl = await updateBusinessLogo(businessId, file);
       
       // Update the page data with the new logo URL
-      handleToggleChange('logo_url', logoUrl);
-      
       if (autoSavePageSettings) {
         autoSavePageSettings({
           ...pageData,

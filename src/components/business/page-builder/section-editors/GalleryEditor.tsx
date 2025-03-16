@@ -58,15 +58,13 @@ const GalleryEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
       // Update the content data with the new images
       const updatedImages = [...images, ...newImages];
       
-      // Create a synthetic event to update the content data
-      const syntheticEvent = {
+      // Use type assertion to fix TypeScript errors with synthetic events
+      handleInputChange({
         target: {
           name: 'images',
           value: updatedImages
         }
-      } as React.ChangeEvent<HTMLInputElement>;
-      
-      handleInputChange(syntheticEvent);
+      } as unknown as React.ChangeEvent<HTMLInputElement>);
       
       toast({
         title: "Images uploaded",
@@ -94,15 +92,13 @@ const GalleryEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
     const updatedImages = [...images];
     updatedImages.splice(index, 1);
     
-    // Create a synthetic event to update the content data
-    const syntheticEvent = {
+    // Type assertion for the synthetic event
+    handleInputChange({
       target: {
         name: 'images',
         value: updatedImages
       }
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    handleInputChange(syntheticEvent);
+    } as unknown as React.ChangeEvent<HTMLInputElement>);
   };
   
   const handleImageCaptionChange = (index: number, caption: string) => {
@@ -112,15 +108,13 @@ const GalleryEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
       caption
     };
     
-    // Create a synthetic event to update the content data
-    const syntheticEvent = {
+    // Type assertion for the synthetic event
+    handleInputChange({
       target: {
         name: 'images',
         value: updatedImages
       }
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    handleInputChange(syntheticEvent);
+    } as unknown as React.ChangeEvent<HTMLInputElement>);
   };
   
   const handleImageAltChange = (index: number, alt: string) => {
@@ -130,62 +124,52 @@ const GalleryEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
       alt
     };
     
-    // Create a synthetic event to update the content data
-    const syntheticEvent = {
+    // Type assertion for the synthetic event
+    handleInputChange({
       target: {
         name: 'images',
         value: updatedImages
       }
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    handleInputChange(syntheticEvent);
+    } as unknown as React.ChangeEvent<HTMLInputElement>);
   };
   
   const handleLayoutChange = (layout: string) => {
-    // Create a synthetic event to update the content data
-    const syntheticEvent = {
+    // Type assertion for the synthetic event
+    handleInputChange({
       target: {
         name: 'layout',
         value: layout
       }
-    } as React.ChangeEvent<HTMLInputElement>;
-    
-    handleInputChange(syntheticEvent);
+    } as unknown as React.ChangeEvent<HTMLInputElement>);
   };
   
   const applyTemplate = (templateContent: any) => {
     // Apply template properties selectively, preserving existing images
     if (templateContent.title) {
-      const syntheticEvent = {
+      handleInputChange({
         target: {
           name: 'title',
           value: templateContent.title
         }
-      } as React.ChangeEvent<HTMLInputElement>;
-      
-      handleInputChange(syntheticEvent);
+      } as React.ChangeEvent<HTMLInputElement>);
     }
     
     if (templateContent.layout) {
-      const syntheticEvent = {
+      handleInputChange({
         target: {
           name: 'layout',
           value: templateContent.layout
         }
-      } as React.ChangeEvent<HTMLInputElement>;
-      
-      handleInputChange(syntheticEvent);
+      } as React.ChangeEvent<HTMLInputElement>);
     }
     
     if (templateContent.showCaptions !== undefined) {
-      const syntheticEvent = {
+      handleInputChange({
         target: {
           name: 'showCaptions',
           value: templateContent.showCaptions
         }
-      } as React.ChangeEvent<HTMLInputElement>;
-      
-      handleInputChange(syntheticEvent);
+      } as React.ChangeEvent<HTMLInputElement>);
     }
   };
   
@@ -228,14 +212,13 @@ const GalleryEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
               id="showCaptions"
               checked={contentData.showCaptions || false}
               onChange={(e) => {
-                const syntheticEvent = {
+                // Type assertion for the synthetic event
+                handleInputChange({
                   target: {
                     name: 'showCaptions',
                     value: e.target.checked
                   }
-                } as React.ChangeEvent<HTMLInputElement>;
-                
-                handleInputChange(syntheticEvent);
+                } as unknown as React.ChangeEvent<HTMLInputElement>);
               }}
               className="rounded border-gray-300"
             />
@@ -297,6 +280,7 @@ const GalleryEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
         </div>
       </div>
       
+      {/* Display uploaded images */}
       {images.length > 0 && (
         <div className="space-y-2">
           <Label>Gallery Images ({images.length})</Label>

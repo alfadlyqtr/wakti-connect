@@ -35,7 +35,8 @@ export type SectionType =
   'hours' | 
   'contact' | 
   'gallery' | 
-  'about';
+  'about' |
+  'testimonials';
 
 export interface BusinessSocialLink {
   id: string;
@@ -54,7 +55,10 @@ export type SocialPlatform =
   'youtube' | 
   'pinterest' | 
   'tiktok' | 
-  'website';
+  'website' |
+  'whatsapp' |
+  'telegram' |
+  'googlereview';
 
 export interface BusinessSubscriber {
   id: string;
