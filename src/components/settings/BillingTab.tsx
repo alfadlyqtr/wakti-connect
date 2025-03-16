@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
+import { toast } from "@/components/ui/use-toast";
+import { useRouter } from "react-router-dom";
 
 interface BillingTabProps {
   profile?: (Tables<"profiles"> & {
@@ -13,6 +15,24 @@ interface BillingTabProps {
 }
 
 const BillingTab: React.FC<BillingTabProps> = ({ profile }) => {
+  const router = useRouter();
+  
+  const handleUpgradePlan = () => {
+    router.navigate("/dashboard/upgrade");
+    toast({
+      title: "Redirecting to plan selection",
+      description: "You'll now be able to choose your preferred plan."
+    });
+  };
+  
+  const handleChangePayment = () => {
+    // In a real app, this would open a payment method change dialog
+    toast({
+      title: "Feature in development",
+      description: "Payment method changes are coming soon."
+    });
+  };
+  
   return (
     <Card>
       <CardHeader className="px-4 sm:px-6">
@@ -34,7 +54,12 @@ const BillingTab: React.FC<BillingTabProps> = ({ profile }) => {
               ? 'Enhanced personal productivity tools and unlimited task storage.'
               : 'Basic features with limited storage.'}
           </p>
-          <Button className="w-full sm:w-auto">Upgrade Plan</Button>
+          <Button 
+            className="w-full sm:w-auto"
+            onClick={handleUpgradePlan}
+          >
+            Upgrade Plan
+          </Button>
         </div>
         
         <div className="space-y-2">
@@ -45,7 +70,14 @@ const BillingTab: React.FC<BillingTabProps> = ({ profile }) => {
                 <CreditCard className="h-5 w-5 mr-2" />
                 <span>•••• •••• •••• 4242</span>
               </div>
-              <Button variant="ghost" size="sm" className="mt-2 sm:mt-0">Change</Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="mt-2 sm:mt-0"
+                onClick={handleChangePayment}
+              >
+                Change
+              </Button>
             </div>
           </div>
         </div>
