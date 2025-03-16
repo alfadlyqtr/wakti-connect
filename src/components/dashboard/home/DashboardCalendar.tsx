@@ -28,23 +28,31 @@ export function DashboardCalendar() {
   };
 
   // Custom day renderer for the calendar
-  const renderDay = (props: DayProps) => {
-    const { date, selected, disabled, ...dayProps } = props;
+  const renderDay = (day: DayProps) => {
+    // Extract the date from the day props
+    const { date } = day;
     
-    // Skip rendering if the date is disabled or undefined
-    if (disabled || !date) {
-      return <div {...dayProps} />;
+    // Skip rendering if the date is undefined
+    if (!date) {
+      return <div />;
     }
     
+    // Check if this date is selected
+    const isSelected = selectedDate && 
+      selectedDate.getDate() === date.getDate() && 
+      selectedDate.getMonth() === date.getMonth() &&
+      selectedDate.getFullYear() === date.getFullYear();
+    
+    // Get event types for this date
     const eventTypes = getEventTypesForDate(date);
     
     return (
       <CalendarDayCell
         date={date}
-        selected={selected}
+        selected={isSelected}
         eventTypes={eventTypes}
         onSelect={handleDateSelect}
-        {...dayProps}
+        {...day}
       />
     );
   };
