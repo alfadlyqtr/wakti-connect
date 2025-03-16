@@ -1,6 +1,6 @@
 
 import React from "react";
-import { CheckCircle2, Clock, AlertCircle, MoreVertical } from "lucide-react";
+import { CheckCircle2, Clock, AlertCircle, MoreVertical, Share2, UserCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
   Card, 
@@ -30,6 +30,8 @@ interface TaskCardProps {
   priority: TaskPriority;
   category: string;
   userRole?: "free" | "individual" | "business";
+  isAssigned?: boolean;
+  isShared?: boolean;
 }
 
 const TaskCard = ({
@@ -41,6 +43,8 @@ const TaskCard = ({
   priority,
   category,
   userRole = "free",
+  isAssigned = false,
+  isShared = false
 }: TaskCardProps) => {
   // Status Icon Component
   const StatusIcon = () => {
@@ -83,6 +87,19 @@ const TaskCard = ({
     }
   };
 
+  const getCategoryColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case "personal":
+        return "bg-wakti-blue/10 text-wakti-blue hover:bg-wakti-blue/20";
+      case "shared":
+        return "bg-purple-500/10 text-purple-500 hover:bg-purple-500/20";
+      case "assigned":
+        return "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20";
+      default:
+        return "bg-wakti-blue/10 text-wakti-blue hover:bg-wakti-blue/20";
+    }
+  };
+
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
@@ -111,21 +128,47 @@ const TaskCard = ({
           </h3>
         </div>
         {isPaidAccount ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                <MoreVertical className="h-4 w-4" />
-                <span className="sr-only">Task menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem>Edit</DropdownMenuItem>
-              <DropdownMenuItem>Mark as Complete</DropdownMenuItem>
-              <DropdownMenuItem>Share</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-500">Delete</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center">
+            {isShared && (
+              <Badge variant="outline" className="mr-2 bg-purple-500/10 text-purple-500 text-xs">
+                <Share2 className="h-3 w-3 mr-1" />
+                Shared
+              </Badge>
+            )}
+            {isAssigned && (
+              <Badge variant="outline" className="mr-2 bg-emerald-500/10 text-emerald-500 text-xs">
+                <UserCheck className="h-3 w-3 mr-1" />
+                Assigned
+              </Badge>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">Task menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem>Edit</DropdownMenuItem>
+                {status !== "completed" ? (
+                  <DropdownMenuItem>Mark as Complete</DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem>Mark as Pending</DropdownMenuItem>
+                )}
+                
+                {userRole === "individual" && !isShared && !isAssigned && (
+                  <DropdownMenuItem>Share Task</DropdownMenuItem>
+                )}
+                
+                {userRole === "business" && !isAssigned && (
+                  <DropdownMenuItem>Assign to Staff</DropdownMenuItem>
+                )}
+                
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-red-500">Delete</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         ) : (
           <Badge variant="outline" className="bg-amber-500/10 text-amber-500 text-xs">
             View Only
@@ -147,7 +190,7 @@ const TaskCard = ({
           <Badge variant="outline" className={cn("text-xs", getPriorityColor(priority))}>
             {priority}
           </Badge>
-          <Badge variant="outline" className="bg-wakti-blue/10 text-wakti-blue text-xs">
+          <Badge variant="outline" className={cn("text-xs", getCategoryColor(category))}>
             {category}
           </Badge>
         </div>

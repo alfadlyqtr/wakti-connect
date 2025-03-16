@@ -1,13 +1,17 @@
 
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { useAppointments } from "@/hooks/useAppointments";
+import { useAppointments, AppointmentTab } from "@/hooks/useAppointments";
 import AppointmentControls from "@/components/appointments/AppointmentControls";
 import EmptyAppointmentsState from "@/components/appointments/EmptyAppointmentsState";
 import AppointmentGrid from "@/components/appointments/AppointmentGrid";
+import { CreateAppointmentDialog } from "@/components/appointments/CreateAppointmentDialog";
 
 const DashboardAppointments = () => {
+  const [activeTab, setActiveTab] = useState<AppointmentTab>("my-appointments");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  
   const { 
     appointmentsData,
     filteredAppointments, 
@@ -15,8 +19,9 @@ const DashboardAppointments = () => {
     error, 
     searchQuery, 
     setSearchQuery,
-    createAppointment
-  } = useAppointments();
+    createAppointment,
+    userRole
+  } = useAppointments(activeTab);
 
   // Show error toast if query fails
   useEffect(() => {
@@ -29,8 +34,16 @@ const DashboardAppointments = () => {
     }
   }, [error]);
 
-  const userRole = appointmentsData?.userRole || "free";
   const isPaidAccount = userRole === "individual" || userRole === "business";
+
+  const handleCreateAppointment = async (appointmentData: any) => {
+    await createAppointment(appointmentData);
+    setCreateDialogOpen(false);
+  };
+
+  const handleTabChange = (newTab: AppointmentTab) => {
+    setActiveTab(newTab);
+  };
 
   if (isLoading) {
     return (
@@ -64,8 +77,11 @@ const DashboardAppointments = () => {
       <AppointmentControls
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onCreateAppointment={createAppointment}
+        onCreateAppointment={() => setCreateDialogOpen(true)}
         isPaidAccount={isPaidAccount}
+        currentTab={activeTab}
+        onTabChange={handleTabChange}
+        userRole={userRole}
       />
       
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
@@ -73,14 +89,23 @@ const DashboardAppointments = () => {
           <AppointmentGrid 
             appointments={filteredAppointments} 
             userRole={userRole} 
+            tab={activeTab}
           />
         ) : (
           <EmptyAppointmentsState 
             isPaidAccount={isPaidAccount} 
-            onCreateAppointment={createAppointment} 
+            onCreateAppointment={() => setCreateDialogOpen(true)} 
+            tab={activeTab}
           />
         )}
       </div>
+      
+      <CreateAppointmentDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreateAppointment={handleCreateAppointment}
+        userRole={userRole}
+      />
     </div>
   );
 };

@@ -1,51 +1,60 @@
 
 import React from "react";
-import { Plus } from "lucide-react";
+import { ClipboardCheck, Plus, Share2, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { TaskTab } from "@/hooks/useTasks";
 
 interface EmptyTasksStateProps {
   isPaidAccount: boolean;
   onCreateTask: () => void;
+  tab: TaskTab;
 }
 
-const EmptyTasksState = ({ isPaidAccount, onCreateTask }: EmptyTasksStateProps) => {
+const EmptyTasksState = ({ isPaidAccount, onCreateTask, tab }: EmptyTasksStateProps) => {
+  // Different content based on the current tab
+  const content = {
+    "my-tasks": {
+      icon: <ClipboardCheck className="h-12 w-12 text-muted-foreground" />,
+      title: "No Tasks Created Yet",
+      description: "Create your first task to get started with task management.",
+      buttonText: "Create Task"
+    },
+    "shared-tasks": {
+      icon: <Share2 className="h-12 w-12 text-muted-foreground" />,
+      title: "No Shared Tasks",
+      description: "You don't have any tasks shared with you yet.",
+      buttonText: "Create Task"
+    },
+    "assigned-tasks": {
+      icon: <UserCheck className="h-12 w-12 text-muted-foreground" />,
+      title: "No Assigned Tasks",
+      description: "You don't have any tasks assigned to you yet.",
+      buttonText: "Assign Task"
+    }
+  };
+  
   return (
-    <div className="flex flex-col items-center justify-center space-y-3 py-12">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="48"
-        height="48"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="text-muted-foreground"
-      >
-        <rect width="18" height="18" x="3" y="3" rx="2" />
-        <path d="M8 12h8M12 8v8" />
-      </svg>
-      <h3 className="text-lg font-semibold">No tasks found</h3>
-      <p className="text-center text-sm text-muted-foreground max-w-xs">
-        {isPaidAccount 
-          ? "You haven't created any tasks yet. Start by creating a new task to organize your work."
-          : "Free accounts can only view tasks. Upgrade to create and manage tasks."}
+    <div className="py-12 flex flex-col items-center justify-center text-center">
+      {content[tab].icon}
+      
+      <h3 className="mt-4 text-lg font-semibold">
+        {content[tab].title}
+      </h3>
+      
+      <p className="mt-2 text-muted-foreground max-w-sm">
+        {content[tab].description}
       </p>
-      {isPaidAccount ? (
-        <Button onClick={onCreateTask} className="flex items-center gap-2">
-          <Plus size={16} />
-          Create New Task
+      
+      {isPaidAccount && (
+        <Button onClick={onCreateTask} className="mt-6">
+          <Plus className="h-4 w-4 mr-2" />
+          {content[tab].buttonText}
         </Button>
-      ) : (
-        <div className="text-center">
-          <Badge variant="outline" className="bg-amber-500/10 text-amber-500 mb-2">
-            View Only
-          </Badge>
-          <p className="text-xs text-muted-foreground">
-            Upgrade to create and manage tasks
-          </p>
+      )}
+      
+      {!isPaidAccount && (
+        <div className="mt-4 text-sm text-muted-foreground">
+          Upgrade to Individual or Business plan to create and manage tasks.
         </div>
       )}
     </div>

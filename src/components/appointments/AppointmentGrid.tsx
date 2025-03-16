@@ -1,14 +1,15 @@
 
 import React from "react";
-import AppointmentCard from "@/components/ui/AppointmentCard";
-import { Appointment } from "@/hooks/useAppointments";
+import { AppointmentCard } from "@/components/ui/AppointmentCard";
+import { Appointment, AppointmentTab } from "@/hooks/useAppointments";
 
 interface AppointmentGridProps {
   appointments: Appointment[];
-  userRole: "free" | "individual" | "business" | null;
+  userRole: "free" | "individual" | "business";
+  tab: AppointmentTab;
 }
 
-const AppointmentGrid = ({ appointments, userRole }: AppointmentGridProps) => {
+const AppointmentGrid = ({ appointments, userRole, tab }: AppointmentGridProps) => {
   if (appointments.length === 0) return null;
   
   return (
@@ -18,10 +19,14 @@ const AppointmentGrid = ({ appointments, userRole }: AppointmentGridProps) => {
           key={appointment.id}
           id={appointment.id}
           title={appointment.title}
-          dateTime={new Date(appointment.start_time)}
+          description={appointment.description || ""}
+          startTime={new Date(appointment.start_time)}
+          endTime={new Date(appointment.end_time)}
           location={appointment.location || ""}
-          status="confirmed" // This would be dynamic in a real implementation
-          userRole={userRole || "free"}
+          isAllDay={appointment.is_all_day}
+          userRole={userRole}
+          isAssigned={tab === "assigned-appointments"}
+          isShared={tab === "shared-appointments"}
         />
       ))}
     </div>

@@ -3,13 +3,17 @@ import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useTasks } from "@/hooks/useTasks";
+import { useTasks, TaskTab } from "@/hooks/useTasks";
 import TaskControls from "@/components/tasks/TaskControls";
 import EmptyTasksState from "@/components/tasks/EmptyTasksState";
 import TaskGrid from "@/components/tasks/TaskGrid";
+import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog";
 
 const DashboardTasks = () => {
   const [userRole, setUserRole] = useState<"free" | "individual" | "business" | null>(null);
+  const [activeTab, setActiveTab] = useState<TaskTab>("my-tasks");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  
   const { 
     filteredTasks, 
     isLoading, 
@@ -20,8 +24,9 @@ const DashboardTasks = () => {
     setFilterStatus,
     filterPriority,
     setFilterPriority,
-    createTask
-  } = useTasks();
+    createTask,
+    userRole: fetchedUserRole
+  } = useTasks(activeTab);
 
   // Fetch user role
   useEffect(() => {
@@ -59,6 +64,15 @@ const DashboardTasks = () => {
 
   const isPaidAccount = userRole === "individual" || userRole === "business";
 
+  const handleCreateTask = async (taskData: any) => {
+    await createTask(taskData);
+    setCreateDialogOpen(false);
+  };
+
+  const handleTabChange = (newTab: TaskTab) => {
+    setActiveTab(newTab);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -95,17 +109,35 @@ const DashboardTasks = () => {
         onStatusChange={setFilterStatus}
         filterPriority={filterPriority}
         onPriorityChange={setFilterPriority}
-        onCreateTask={createTask}
+        onCreateTask={() => setCreateDialogOpen(true)}
+        currentTab={activeTab}
+        onTabChange={handleTabChange}
         isPaidAccount={isPaidAccount}
+        userRole={userRole || "free"}
       />
       
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
         {filteredTasks.length > 0 ? (
-          <TaskGrid tasks={filteredTasks} userRole={userRole} />
+          <TaskGrid 
+            tasks={filteredTasks} 
+            userRole={userRole} 
+            tab={activeTab}
+          />
         ) : (
-          <EmptyTasksState isPaidAccount={isPaidAccount} onCreateTask={createTask} />
+          <EmptyTasksState 
+            isPaidAccount={isPaidAccount} 
+            onCreateTask={() => setCreateDialogOpen(true)} 
+            tab={activeTab}
+          />
         )}
       </div>
+      
+      <CreateTaskDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreateTask={handleCreateTask}
+        userRole={userRole || "free"}
+      />
     </div>
   );
 };

@@ -1,14 +1,15 @@
 
 import React from "react";
 import TaskCard from "@/components/ui/TaskCard";
-import { Task } from "@/hooks/useTasks";
+import { Task, TaskTab } from "@/hooks/useTasks";
 
 interface TaskGridProps {
   tasks: Task[];
   userRole: "free" | "individual" | "business" | null;
+  tab: TaskTab;
 }
 
-const TaskGrid = ({ tasks, userRole }: TaskGridProps) => {
+const TaskGrid = ({ tasks, userRole, tab }: TaskGridProps) => {
   if (tasks.length === 0) return null;
   
   return (
@@ -22,8 +23,10 @@ const TaskGrid = ({ tasks, userRole }: TaskGridProps) => {
           dueDate={task.due_date ? new Date(task.due_date) : new Date()}
           status={task.status}
           priority={task.priority}
-          category="Personal" // This would come from labels in a real implementation
+          category={tab === "assigned-tasks" ? "Assigned" : tab === "shared-tasks" ? "Shared" : "Personal"}
           userRole={userRole || "free"}
+          isAssigned={tab === "assigned-tasks"}
+          isShared={tab === "shared-tasks"}
         />
       ))}
     </div>
