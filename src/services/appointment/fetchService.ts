@@ -32,7 +32,7 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         
       if (error) throw error;
       
-      // Transform data to ensure it has all Appointment properties with proper typing
+      // Transform data ensuring proper type casting for status
       appointmentsData = (data || []).map(item => ({
         id: item.id,
         user_id: item.user_id,
@@ -42,7 +42,7 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         start_time: item.start_time,
         end_time: item.end_time,
         is_all_day: item.is_all_day || false,
-        status: (item.status || "scheduled") as AppointmentStatus,
+        status: validateAppointmentStatus(item.status),
         assignee_id: item.assignee_id || null,
         created_at: item.created_at,
         updated_at: item.updated_at
@@ -69,7 +69,7 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         start_time: item.start_time,
         end_time: item.end_time,
         is_all_day: item.is_all_day || false,
-        status: (item.status || "scheduled") as AppointmentStatus,
+        status: validateAppointmentStatus(item.status),
         assignee_id: item.assignee_id || null,
         created_at: item.created_at,
         updated_at: item.updated_at
@@ -102,7 +102,7 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
               start_time: appt.start_time,
               end_time: appt.end_time,
               is_all_day: appt.is_all_day || false,
-              status: (appt.status || "scheduled") as AppointmentStatus,
+              status: validateAppointmentStatus(appt.status),
               assignee_id: appt.assignee_id || null,
               created_at: appt.created_at,
               updated_at: appt.updated_at
@@ -131,7 +131,7 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         start_time: item.start_time,
         end_time: item.end_time,
         is_all_day: item.is_all_day || false,
-        status: (item.status || "scheduled") as AppointmentStatus,
+        status: validateAppointmentStatus(item.status),
         assignee_id: item.assignee_id || null,
         created_at: item.created_at,
         updated_at: item.updated_at
@@ -163,7 +163,7 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
               start_time: appt.start_time,
               end_time: appt.end_time,
               is_all_day: appt.is_all_day || false,
-              status: (appt.status || "scheduled") as AppointmentStatus,
+              status: validateAppointmentStatus(appt.status),
               assignee_id: appt.assignee_id || null,
               created_at: appt.created_at,
               updated_at: appt.updated_at
@@ -192,7 +192,7 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         start_time: item.start_time,
         end_time: item.end_time,
         is_all_day: item.is_all_day || false,
-        status: (item.status || "scheduled") as AppointmentStatus,
+        status: validateAppointmentStatus(item.status),
         assignee_id: item.assignee_id || null,
         created_at: item.created_at,
         updated_at: item.updated_at
@@ -218,7 +218,7 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         start_time: item.start_time,
         end_time: item.end_time,
         is_all_day: item.is_all_day || false,
-        status: (item.status || "scheduled") as AppointmentStatus,
+        status: validateAppointmentStatus(item.status),
         assignee_id: item.assignee_id || null,
         created_at: item.created_at,
         updated_at: item.updated_at
@@ -231,4 +231,16 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
     appointments: appointmentsData,
     userRole: userRole as "free" | "individual" | "business"
   };
+}
+
+// Helper function to validate appointment status
+function validateAppointmentStatus(status: any): AppointmentStatus {
+  const validStatuses: AppointmentStatus[] = ["scheduled", "cancelled", "completed"];
+  
+  if (status && validStatuses.includes(status as AppointmentStatus)) {
+    return status as AppointmentStatus;
+  }
+  
+  // Default to "scheduled" if status is invalid
+  return "scheduled";
 }
