@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, User, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,11 +23,26 @@ const SignupForm = ({ setError }: SignupFormProps) => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [accountType, setAccountType] = useState("free");
+  const [businessName, setBusinessName] = useState("");
+  
+  const needsBusinessName = accountType === "business";
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
+
+    // Validate business name if account type is business
+    if (needsBusinessName && !businessName.trim()) {
+      setError("Business name is required for business accounts");
+      toast({
+        variant: "destructive",
+        title: "Missing business name",
+        description: "Please provide a business name for your business account",
+      });
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -37,6 +52,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
           data: {
             full_name: fullName,
             account_type: accountType,
+            business_name: needsBusinessName ? businessName : null,
           },
         },
       });
@@ -149,6 +165,25 @@ const SignupForm = ({ setError }: SignupFormProps) => {
           </div>
         </RadioGroup>
       </div>
+      
+      {/* Show business name field only for business account type */}
+      {needsBusinessName && (
+        <div className="space-y-2">
+          <Label htmlFor="business-name">Business Name <span className="text-destructive">*</span></Label>
+          <div className="relative">
+            <Building className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+            <Input 
+              id="business-name" 
+              type="text" 
+              placeholder="Your Business Name" 
+              className="pl-10"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              required
+            />
+          </div>
+        </div>
+      )}
       
       <div className="flex items-center gap-2">
         <Checkbox id="terms" required />

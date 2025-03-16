@@ -55,6 +55,10 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
     if (profileData?.display_name) return profileData.display_name;
     if (profileData?.business_name) return profileData.business_name;
     if (profileData?.full_name) return profileData.full_name;
+    
+    // Provide role-based fallback
+    if (profileData?.account_type === 'business') return 'Business Admin';
+    if (profileData?.account_type === 'individual') return 'Professional';
     return 'User';
   };
   

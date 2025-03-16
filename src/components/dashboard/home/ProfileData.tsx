@@ -34,6 +34,22 @@ export const ProfileData = ({ profileData }: ProfileDataProps) => {
     }
   };
 
+  // Get business user role display
+  const getBusinessRoleDisplay = () => {
+    if (profileData?.account_type === 'business') {
+      if (profileData?.business_name) {
+        return profileData.business_name;
+      }
+      return 'Business Administrator';
+    }
+    
+    if (profileData?.occupation) {
+      return profileData.occupation;
+    }
+    
+    return profileData?.account_type === 'individual' ? 'Professional' : 'Personal User';
+  };
+
   const getAccountIcon = () => {
     switch (profileData?.account_type) {
       case 'business':
@@ -72,8 +88,7 @@ export const ProfileData = ({ profileData }: ProfileDataProps) => {
             </span>
           </div>
           <p className="text-xs text-muted-foreground">
-            {profileData?.business_name ? `${profileData.business_name}` : 
-             profileData?.occupation ? `${profileData.occupation}` : 'Personal User'}
+            {getBusinessRoleDisplay()}
           </p>
         </div>
       </div>

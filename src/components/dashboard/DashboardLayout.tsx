@@ -53,6 +53,22 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           return null;
         }
         
+        if (data.account_type === 'business' && !data.business_name) {
+          // If business account but no business name is set, inform the user
+          toast({
+            title: "Complete your business profile",
+            description: "Please set your business name in your profile settings",
+            action: (
+              <button 
+                className="bg-primary text-white px-3 py-1 rounded-md text-xs"
+                onClick={() => navigate("/dashboard/profile")}
+              >
+                Update Profile
+              </button>
+            )
+          });
+        }
+        
         return data as ProfileData;
       } catch (error) {
         console.error("Error fetching user profile:", error);

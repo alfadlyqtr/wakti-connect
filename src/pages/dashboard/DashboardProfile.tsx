@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,7 +18,10 @@ const profileFormSchema = z.object({
   display_name: z.string().min(2, {
     message: "Display name must be at least 2 characters.",
   }).optional(),
-  business_name: z.string().optional(),
+  business_name: z.string().optional().refine(value => {
+    // Business name is required for business accounts
+    return true; // This will be checked in the onSubmit handler
+  }),
   occupation: z.string().optional(),
 });
 
@@ -78,6 +81,11 @@ const DashboardProfile = () => {
         throw new Error("No active session");
       }
       
+      // For business accounts, business name is required
+      if (profile?.account_type === 'business' && !values.business_name) {
+        throw new Error("Business name is required for business accounts");
+      }
+      
       const { data, error } = await supabase
         .from('profiles')
         .update(values)
@@ -122,8 +130,19 @@ const DashboardProfile = () => {
     },
   });
 
+  // If this is a business account and the business name isn't set, auto-open edit mode
+  useEffect(() => {
+    if (profile?.account_type === 'business' && !profile?.business_name && !isEditing) {
+      setIsEditing(true);
+      toast({
+        title: "Complete your business profile",
+        description: "Please add your business name",
+      });
+    }
+  }, [profile, isEditing, toast]);
+
   // Reset form when profile data changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (profile) {
       form.reset({
         full_name: profile.full_name || "",
@@ -135,6 +154,15 @@ const DashboardProfile = () => {
   }, [profile, form]);
 
   const onSubmit = (values: ProfileFormValues) => {
+    // Business users must have a business name
+    if (profile?.account_type === 'business' && !values.business_name) {
+      form.setError('business_name', {
+        type: 'manual',
+        message: 'Business name is required for business accounts',
+      });
+      return;
+    }
+    
     updateProfile.mutate(values);
   };
 
@@ -143,6 +171,19 @@ const DashboardProfile = () => {
     const name = profile?.display_name || profile?.full_name || "";
     if (!name) return "?";
     return name.charAt(0).toUpperCase();
+  };
+
+  // Get appropriate role display
+  const getRoleDisplay = () => {
+    if (profile?.account_type === 'business') {
+      return profile?.business_name || "Business Administrator";
+    }
+    
+    if (profile?.account_type === 'individual') {
+      return profile?.occupation || "Professional";
+    }
+    
+    return "Personal User";
   };
 
   // Loading state
@@ -179,7 +220,7 @@ const DashboardProfile = () => {
                 <AvatarFallback className="text-2xl">{getInitials()}</AvatarFallback>
               </Avatar>
               <div className="text-center">
-                <h3 className="text-lg font-medium">{profile?.display_name || profile?.full_name}</h3>
+                <h3 className="text-lg font-medium">{profile?.display_name || profile?.full_name || getRoleDisplay()}</h3>
                 <p className="text-sm text-muted-foreground capitalize">{profile?.account_type} Account</p>
               </div>
             </div>
@@ -252,9 +293,9 @@ const DashboardProfile = () => {
                       name="business_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Business Name</FormLabel>
+                          <FormLabel>Business Name <span className="text-destructive">*</span></FormLabel>
                           <FormControl>
-                            <Input placeholder="Your business name" {...field} value={field.value || ''} />
+                            <Input placeholder="Your business name" {...field} value={field.value || ''} required />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -282,6 +323,7 @@ const DashboardProfile = () => {
                       variant="outline"
                       onClick={() => setIsEditing(false)}
                       className="flex-1"
+                      disabled={profile?.account_type === 'business' && !profile?.business_name}
                     >
                       Cancel
                     </Button>
