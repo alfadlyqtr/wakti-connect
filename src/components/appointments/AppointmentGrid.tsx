@@ -1,6 +1,6 @@
 
 import React from "react";
-import { AppointmentCard } from "@/components/ui/AppointmentCard";
+import AppointmentCard from "@/components/ui/AppointmentCard";
 import { Appointment, AppointmentTab } from "@/hooks/useAppointments";
 
 interface AppointmentGridProps {

@@ -13,7 +13,6 @@ const DashboardAppointments = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   
   const { 
-    appointmentsData,
     filteredAppointments, 
     isLoading, 
     error, 
