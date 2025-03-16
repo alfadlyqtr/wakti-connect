@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -76,7 +75,7 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
       
       // Make sure required fields are present
       const jobCardData: JobCardFormData = {
-        job_id: data.job_id,
+        job_id: data.job_id, // Ensure this is required and present
         payment_method: data.payment_method,
         payment_amount: data.payment_amount,
         start_time: data.start_time || now,
