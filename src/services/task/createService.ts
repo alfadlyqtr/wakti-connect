@@ -25,7 +25,17 @@ export async function createTask(taskData: TaskFormData, recurringData?: Recurri
   // If recurring data is provided, create recurring settings
   if (recurringData && task) {
     try {
-      await createRecurringSetting(task.id, 'task' as EntityType, recurringData);
+      await createRecurringSetting({
+        entity_id: task.id,
+        entity_type: 'task' as EntityType,
+        created_by: session.user.id,
+        frequency: recurringData.frequency!,
+        interval: recurringData.interval!,
+        days_of_week: recurringData.days_of_week,
+        day_of_month: recurringData.day_of_month,
+        end_date: recurringData.end_date,
+        max_occurrences: recurringData.max_occurrences
+      });
       
       // If there's a due date and we need to generate recurring instances
       if (taskData.due_date && recurringData.frequency) {

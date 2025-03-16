@@ -7,6 +7,7 @@ import DayEventsDialog from "./DayEventsDialog";
 import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import { useCalendarEventUtils } from "@/hooks/useCalendarEventUtils";
 import CalendarDayCell from "./CalendarDayCell";
+import { DayProps } from "react-day-picker";
 
 export function DashboardCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(startOfToday());
@@ -27,18 +28,20 @@ export function DashboardCalendar() {
   };
 
   // Custom day renderer for the calendar
-  const renderDay = (day: Date, selectedDays: Date[], dayProps: React.HTMLAttributes<HTMLDivElement>) => {
-    const eventTypes = getEventTypesForDate(day);
-    const isSelected = selectedDays.some(selectedDay => 
-      selectedDay.getDate() === day.getDate() && 
-      selectedDay.getMonth() === day.getMonth() &&
-      selectedDay.getFullYear() === day.getFullYear()
-    );
+  const renderDay = (props: DayProps) => {
+    const { date, selected, disabled, ...dayProps } = props;
+    
+    // Skip rendering if the date is disabled or undefined
+    if (disabled || !date) {
+      return <div {...dayProps} />;
+    }
+    
+    const eventTypes = getEventTypesForDate(date);
     
     return (
       <CalendarDayCell
-        date={day}
-        selected={isSelected}
+        date={date}
+        selected={selected}
         eventTypes={eventTypes}
         onSelect={handleDateSelect}
         {...dayProps}
