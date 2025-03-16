@@ -40,10 +40,13 @@ export const useBusinessSubscribers = (businessId?: string) => {
         }
       }));
       
-      return transformedData as unknown as BusinessSubscriberWithProfile[];
+      return transformedData as BusinessSubscriberWithProfile[];
     },
     enabled: !!businessId
   });
+
+  // Get subscriber count
+  const subscriberCount = subscribers?.length || 0;
 
   // Subscribe to a business
   const subscribe = useMutation({
@@ -120,13 +123,13 @@ export const useBusinessSubscribers = (businessId?: string) => {
   });
 
   // Check if the current user is subscribed to a business
-  const { data: isSubscribed, isLoading: checkingSubscription } = useQuery({
+  const { data: subscriptionData, isLoading: checkingSubscription } = useQuery({
     queryKey: ['isUserSubscribed', businessId],
     queryFn: async () => {
-      if (!businessId) return false;
+      if (!businessId) return { subscribed: false, subscriptionId: null };
       
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return false;
+      if (!session?.user) return { subscribed: false, subscriptionId: null };
       
       const { data, error } = await supabase
         .from('business_subscribers')
@@ -151,11 +154,12 @@ export const useBusinessSubscribers = (businessId?: string) => {
 
   return {
     subscribers,
+    subscriberCount,
     isLoading,
     subscribe,
     unsubscribe,
-    isSubscribed: isSubscribed?.subscribed || false,
-    subscriptionId: isSubscribed?.subscriptionId || null,
+    isSubscribed: subscriptionData?.subscribed || false,
+    subscriptionId: subscriptionData?.subscriptionId || null,
     checkingSubscription
   };
 };

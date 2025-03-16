@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 
 interface BusinessServicesListProps {
   section: BusinessPageSection;
-  businessId: string;
+  businessId?: string;
 }
 
 interface BusinessService {
@@ -31,6 +31,19 @@ const BusinessServicesList = ({ section, businessId }: BusinessServicesListProps
     showPrices = true,
     showDuration = true
   } = content;
+
+  // If no businessId is provided, we can't fetch services
+  if (!businessId) {
+    return (
+      <div>
+        <h2 className="text-2xl font-bold mb-2">{title}</h2>
+        <p className="text-muted-foreground mb-6">{description}</p>
+        <div className="text-center py-8 border rounded-lg">
+          <p className="text-muted-foreground">No services available</p>
+        </div>
+      </div>
+    );
+  }
   
   // Fetch services for this business
   const { data: services, isLoading } = useQuery({
@@ -47,7 +60,8 @@ const BusinessServicesList = ({ section, businessId }: BusinessServicesListProps
       }
       
       return data as BusinessService[];
-    }
+    },
+    enabled: !!businessId
   });
   
   const handleBookService = (serviceId: string) => {

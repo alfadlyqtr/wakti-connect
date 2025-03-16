@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BusinessPage, BusinessPageSection, BusinessSocialLink } from "@/types/business.types";
 import { toast } from "@/components/ui/use-toast";
+import { fromTable } from "@/integrations/supabase/helper";
 
 export const useBusinessPage = (pageSlug?: string) => {
   const queryClient = useQueryClient();
@@ -25,7 +26,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
-      return data as unknown as BusinessPage;
+      return data as BusinessPage;
     },
     enabled: !!pageSlug
   });
@@ -51,7 +52,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
-      return data as unknown as BusinessPage;
+      return data as BusinessPage;
     },
     enabled: !pageSlug // Only fetch when not viewing a specific page by slug
   });
@@ -74,7 +75,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
-      return data as unknown as BusinessPageSection[];
+      return data as BusinessPageSection[];
     },
     enabled: !!(businessPage?.id || ownerBusinessPage?.id)
   });
@@ -96,7 +97,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
-      return data as unknown as BusinessSocialLink[];
+      return data as BusinessSocialLink[];
     },
     enabled: !!(businessPage?.business_id || ownerBusinessPage?.business_id)
   });
@@ -128,7 +129,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
-      return data as unknown as BusinessPage;
+      return data as BusinessPage;
     },
     onSuccess: () => {
       toast({

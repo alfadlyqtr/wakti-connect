@@ -68,7 +68,7 @@ const BusinessLandingPageComponent = () => {
         return <BusinessAbout key={section.id} section={section} />;
       
       case 'services':
-        return <BusinessServicesList key={section.id} section={section} />;
+        return <BusinessServicesList key={section.id} section={section} businessId={businessPage?.business_id} />;
       
       case 'contact':
         return <BusinessContactInfo key={section.id} section={section} />;
