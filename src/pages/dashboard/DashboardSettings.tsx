@@ -7,9 +7,11 @@ import AccountTab from "@/components/settings/AccountTab";
 import ProfileTab from "@/components/settings/ProfileTab";
 import BillingTab from "@/components/settings/BillingTab";
 import NotificationsTab from "@/components/settings/NotificationsTab";
+import useIsMobile from "@/hooks/use-mobile";
 
 const DashboardSettings = () => {
   const { data: profile } = useProfileSettings();
+  const isMobile = useIsMobile();
 
   return (
     <div className="space-y-6">
@@ -21,22 +23,22 @@ const DashboardSettings = () => {
       </div>
       
       <Tabs defaultValue="account" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
+        <TabsList className={`grid w-full ${isMobile ? 'grid-cols-4' : 'grid-cols-4 lg:w-[600px]'}`}>
           <TabsTrigger value="account" className="flex items-center gap-2">
             <UserCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">Account</span>
+            <span className={isMobile ? "hidden" : "hidden sm:inline"}>Account</span>
           </TabsTrigger>
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <UserCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">Profile</span>
+            <span className={isMobile ? "hidden" : "hidden sm:inline"}>Profile</span>
           </TabsTrigger>
           <TabsTrigger value="billing" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
-            <span className="hidden sm:inline">Billing</span>
+            <span className={isMobile ? "hidden" : "hidden sm:inline"}>Billing</span>
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
-            <span className="hidden sm:inline">Notifications</span>
+            <span className={isMobile ? "hidden" : "hidden sm:inline"}>Notifications</span>
           </TabsTrigger>
         </TabsList>
         

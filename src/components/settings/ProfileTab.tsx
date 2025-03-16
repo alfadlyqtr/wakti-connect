@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tables } from "@/integrations/supabase/types";
+import useIsMobile from "@/hooks/use-mobile";
 
 interface ProfileTabProps {
   profile?: (Tables<"profiles"> & {
@@ -14,23 +15,25 @@ interface ProfileTabProps {
 }
 
 const ProfileTab: React.FC<ProfileTabProps> = ({ profile }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="px-4 sm:px-6">
         <CardTitle>Profile Information</CardTitle>
         <CardDescription>
           Update your public profile information
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center gap-4">
+      <CardContent className="space-y-5 px-4 sm:px-6">
+        <div className={`${isMobile ? 'flex flex-col' : 'flex items-center'} gap-4`}>
           <Avatar className="w-20 h-20">
             <AvatarImage src={profile?.avatar_url || ''} />
             <AvatarFallback>
               {profile?.display_name?.charAt(0) || profile?.full_name?.charAt(0) || 'U'}
             </AvatarFallback>
           </Avatar>
-          <Button variant="outline">Change Picture</Button>
+          <Button variant="outline" className="mt-2 sm:mt-0">Change Picture</Button>
         </div>
         
         <div className="space-y-2">
@@ -55,7 +58,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile }) => {
           />
         </div>
         
-        <Button>Save Profile</Button>
+        <Button className="w-full sm:w-auto">Save Profile</Button>
       </CardContent>
     </Card>
   );

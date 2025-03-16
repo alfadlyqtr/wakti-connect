@@ -16,13 +16,13 @@ const AccountTab: React.FC<AccountTabProps> = ({ profile }) => {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader>
+        <CardHeader className="px-4 sm:px-6">
           <CardTitle>Account Information</CardTitle>
           <CardDescription>
             Update your account details and personal information.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 px-4 sm:px-6">
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
             <Input id="name" placeholder="Your name" defaultValue={profile?.full_name || ''} />
@@ -31,18 +31,18 @@ const AccountTab: React.FC<AccountTabProps> = ({ profile }) => {
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" placeholder="Your email" defaultValue={profile?.email || ''} />
           </div>
-          <Button>Save Changes</Button>
+          <Button className="w-full sm:w-auto">Save Changes</Button>
         </CardContent>
       </Card>
       
       <Card>
-        <CardHeader>
+        <CardHeader className="px-4 sm:px-6">
           <CardTitle>Password</CardTitle>
           <CardDescription>
             Change your password to keep your account secure.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 px-4 sm:px-6">
           <div className="space-y-2">
             <Label htmlFor="currentPassword">Current Password</Label>
             <Input id="currentPassword" type="password" />
@@ -55,7 +55,7 @@ const AccountTab: React.FC<AccountTabProps> = ({ profile }) => {
             <Label htmlFor="confirmPassword">Confirm New Password</Label>
             <Input id="confirmPassword" type="password" />
           </div>
-          <Button>Update Password</Button>
+          <Button className="w-full sm:w-auto">Update Password</Button>
         </CardContent>
       </Card>
     </div>
