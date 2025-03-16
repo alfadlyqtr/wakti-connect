@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskTab, TaskFormData, TasksResult } from "@/types/task.types";
+import { Task, TaskTab, TaskFormData, TasksResult, TaskStatus, TaskPriority } from "@/types/task.types";
 
 // Fetch tasks based on the selected tab
 export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
@@ -19,7 +19,8 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
   
   const userRole = profileData?.account_type || "free";
   
-  let query: any;
+  // Use explicit function signatures to avoid deep instantiations
+  let query;
   
   switch (tab) {
     case "my-tasks":
@@ -77,27 +78,23 @@ export async function createTask(taskData: TaskFormData): Promise<Task> {
     throw new Error("Authentication required to create tasks");
   }
 
-  // Prepare the new task object
+  // Prepare the new task object with basic properties
   const newTask = {
     user_id: session.user.id,
     title: taskData.title,
     description: taskData.description || null,
-    status: taskData.status || "pending",
-    priority: taskData.priority || "normal",
+    status: taskData.status as TaskStatus || "pending",
+    priority: taskData.priority as TaskPriority || "normal",
     due_date: taskData.due_date || null
   };
 
-  // Create a separate assignee object to avoid TypeScript errors
-  const assigneeData = taskData.assignee_id 
-    ? { assignee_id: taskData.assignee_id } 
-    : {};
-
-  // Merge the objects for the final insert
-  const fullTaskData = { ...newTask, ...assigneeData };
-
+  // Handle insertion with proper types
   const { data, error } = await supabase
     .from('tasks')
-    .insert(fullTaskData)
+    .insert({ 
+      ...newTask,
+      ...(taskData.assignee_id ? { assignee_id: taskData.assignee_id } : {})
+    })
     .select();
 
   if (error) {

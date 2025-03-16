@@ -1,31 +1,37 @@
 
-// Define explicit interfaces to avoid deep type instantiation
 export interface Appointment {
   id: string;
+  user_id: string;
   title: string;
   description: string | null;
+  location: string | null;
   start_time: string;
   end_time: string;
-  location: string | null;
   is_all_day: boolean;
-  status: "upcoming" | "completed" | "cancelled";
-  user_id: string;
-  assignee_id?: string | null;
+  status: AppointmentStatus;
   created_at: string;
   updated_at: string;
 }
 
-export type AppointmentTab = "my-appointments" | "shared-appointments" | "assigned-appointments";
+export type AppointmentStatus = "scheduled" | "cancelled" | "completed";
+
+export type AppointmentTab = "upcoming" | "past" | "invitations";
 
 export interface AppointmentFormData {
   title: string;
   description?: string;
-  start_time: string;
-  end_time: string;
   location?: string;
-  is_all_day: boolean;
-  status?: "upcoming" | "completed" | "cancelled";
-  assignee_id?: string | null;
+  status?: AppointmentStatus;
+  start_time?: string;
+  end_time?: string;
+  is_all_day?: boolean;
+  invitees?: string[];
+  
+  // Form-specific fields (used in form UI but transformed before API calls)
+  date?: Date;
+  startTime?: string;
+  endTime?: string;
+  isAllDay?: boolean;
 }
 
 export interface AppointmentsResult {
