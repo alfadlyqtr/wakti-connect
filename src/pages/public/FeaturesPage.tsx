@@ -12,8 +12,8 @@ const FeaturesPage = () => {
       <FeatureHero />
       <FeatureCategories />
       <FeatureGrid />
-      <FeatureCallToAction />
       <FeaturePlanComparison />
+      <FeatureCallToAction />
     </div>
   );
 };

@@ -1,58 +1,48 @@
 
 import React from "react";
 import { SectionContainer } from "@/components/ui/section-container";
-import { SectionHeading } from "@/components/ui/section-heading";
-import { Clock, Users, Shield, Zap, Globe, Heart } from "lucide-react";
+import { Shield, Users, Sparkles, Clock } from "lucide-react";
 
 const AboutValues = () => {
   const values = [
     {
-      icon: <Clock className="h-6 w-6" />,
-      title: "Efficiency First",
-      description: "We believe your time is precious. Everything we build aims to save you time and boost your productivity."
+      icon: <Shield className="h-6 w-6" />,
+      title: "Trust & Security",
+      description: "We treat your data with the utmost respect, implementing robust security measures and transparent privacy policies."
     },
     {
       icon: <Users className="h-6 w-6" />,
-      title: "Customer Obsessed",
-      description: "Our customers are at the heart of every decision we make. Your success is our success."
+      title: "User-Centered Design",
+      description: "Every feature we build starts with understanding our users' needs and challenges, ensuring intuitive and helpful solutions."
     },
     {
-      icon: <Shield className="h-6 w-6" />,
-      title: "Trust & Security",
-      description: "We take data privacy seriously and implement robust security measures to protect your information."
-    },
-    {
-      icon: <Zap className="h-6 w-6" />,
+      icon: <Sparkles className="h-6 w-6" />,
       title: "Continuous Innovation",
-      description: "We're constantly improving our platform with new features and enhancements based on user feedback."
+      description: "We're committed to staying ahead of productivity trends and constantly improving our platform based on feedback and new technologies."
     },
     {
-      icon: <Globe className="h-6 w-6" />,
-      title: "Global Mindset",
-      description: "We design for users across the world, considering diverse needs and accessibility requirements."
-    },
-    {
-      icon: <Heart className="h-6 w-6" />,
-      title: "Passionate Team",
-      description: "Our team is passionate about building tools that make a positive impact on how people work."
+      icon: <Clock className="h-6 w-6" />,
+      title: "Time Efficiency",
+      description: "We believe that time is your most valuable resource, and our tools are designed to help you make the most of every minute."
     }
   ];
-  
+
   return (
-    <SectionContainer>
-      <SectionHeading 
-        title="Our Values" 
-        subtitle="These core principles guide everything we do at WAKTI, from product development to customer support."
-      />
+    <SectionContainer className="py-16">
+      <h2 className="text-3xl font-bold text-center mb-12">Our Core Values</h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {values.map((value, index) => (
-          <div key={index} className="bg-background p-6 rounded-lg border hover:shadow-md transition-all">
-            <div className="bg-wakti-blue/10 p-3 rounded-full w-12 h-12 flex items-center justify-center mb-4 text-wakti-blue">
-              {value.icon}
+          <div key={index} className="text-center">
+            <div className="w-16 h-16 bg-wakti-blue/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="text-wakti-blue">
+                {value.icon}
+              </div>
             </div>
-            <h3 className="text-xl font-semibold mb-2">{value.title}</h3>
-            <p className="text-muted-foreground">{value.description}</p>
+            <h3 className="text-xl font-bold mb-3">{value.title}</h3>
+            <p className="text-muted-foreground">
+              {value.description}
+            </p>
           </div>
         ))}
       </div>

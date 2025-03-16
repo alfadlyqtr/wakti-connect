@@ -1,76 +1,40 @@
 
 import React from "react";
 import { SectionContainer } from "@/components/ui/section-container";
+import { Lightbulb, Target, MoveUp } from "lucide-react";
 
 const AboutVisionMission = () => {
   return (
-    <SectionContainer className="bg-muted/30">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        <div className="bg-card p-8 rounded-lg border">
-          <h3 className="text-2xl font-bold mb-4 text-wakti-blue">Our Vision</h3>
+    <SectionContainer className="py-16 bg-muted/30">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="bg-background p-8 rounded-lg shadow-sm border">
+          <div className="w-12 h-12 bg-wakti-blue/10 rounded-full flex items-center justify-center mb-6">
+            <Lightbulb className="text-wakti-blue h-6 w-6" />
+          </div>
+          <h3 className="text-2xl font-bold mb-4">Our Vision</h3>
           <p className="text-muted-foreground">
-            We envision a world where people and businesses spend less time on managing their work 
-            and more time on doing what they love. WAKTI aims to become the leading productivity 
-            platform that simplifies work management across diverse industries.
+            To create a world where productivity tools enhance human potential instead of adding complexity, allowing individuals and businesses to focus on what truly matters.
           </p>
         </div>
         
-        <div className="bg-card p-8 rounded-lg border">
-          <h3 className="text-2xl font-bold mb-4 text-wakti-blue">Our Mission</h3>
+        <div className="bg-background p-8 rounded-lg shadow-sm border">
+          <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mb-6">
+            <Target className="text-green-500 h-6 w-6" />
+          </div>
+          <h3 className="text-2xl font-bold mb-4">Our Mission</h3>
           <p className="text-muted-foreground">
-            Our mission is to create intuitive tools that enhance productivity and streamline workflows. 
-            We're committed to building solutions that are accessible, powerful, and adaptable to the 
-            evolving needs of our users, from individuals to large enterprises.
+            To provide an integrated platform that simplifies task management, appointment scheduling, and team collaboration for individuals and businesses of all sizes.
           </p>
         </div>
-      </div>
-      
-      <div className="mt-12">
-        <h3 className="text-2xl font-bold mb-6 text-center">How WAKTI Helps</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-card p-6 rounded-lg border">
-            <h4 className="text-xl font-semibold mb-3">For Individuals</h4>
-            <ul className="space-y-2">
-              <li className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
-                <span>Simplify personal task management and scheduling</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
-                <span>Keep track of appointments and deadlines</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
-                <span>Improve personal productivity and focus</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
-                <span>Reduce stress with better time management</span>
-              </li>
-            </ul>
+        
+        <div className="bg-background p-8 rounded-lg shadow-sm border">
+          <div className="w-12 h-12 bg-purple-500/10 rounded-full flex items-center justify-center mb-6">
+            <MoveUp className="text-purple-500 h-6 w-6" />
           </div>
-          
-          <div className="bg-card p-6 rounded-lg border">
-            <h4 className="text-xl font-semibold mb-3">For Businesses</h4>
-            <ul className="space-y-2">
-              <li className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
-                <span>Streamline team coordination and task assignment</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
-                <span>Manage staff scheduling and appointments</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
-                <span>Track performance with comprehensive analytics</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
-                <span>Enhance customer experience with booking system</span>
-              </li>
-            </ul>
-          </div>
+          <h3 className="text-2xl font-bold mb-4">Our Goals</h3>
+          <p className="text-muted-foreground">
+            To continuously innovate and expand our platform based on user feedback, creating tools that adapt to the evolving needs of our diverse user base across the MENA region.
+          </p>
         </div>
       </div>
     </SectionContainer>

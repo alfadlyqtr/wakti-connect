@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,19 @@ import {
 } from "@/components/ui/card";
 import { SectionContainer } from "@/components/ui/section-container";
 import { FaqSection, FaqItem } from "@/components/ui/faq-section";
+import BillingCycleToggle from "@/components/billing/BillingCycleToggle";
 
 const PricingPage = () => {
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+
+  const getPrice = (basePrice: number) => {
+    return billingCycle === "yearly" ? (basePrice * 10).toFixed(2) : basePrice.toFixed(2);
+  };
+
+  const getSavings = (basePrice: number) => {
+    return (basePrice * 12 - basePrice * 10).toFixed(2);
+  };
+
   const pricingPlans = [
     {
       name: "Free",
@@ -35,8 +46,9 @@ const PricingPage = () => {
     {
       name: "Individual",
       description: "For personal productivity",
-      price: "$9.99",
-      period: "per month",
+      price: `$${getPrice(9.99)}`,
+      period: billingCycle === "monthly" ? "per month" : "per year",
+      savings: billingCycle === "yearly" ? `Save $${getSavings(9.99)}/year` : null,
       features: [
         "Create, edit, and delete tasks",
         "Share tasks with other users",
@@ -53,8 +65,9 @@ const PricingPage = () => {
     {
       name: "Business",
       description: "For teams and businesses",
-      price: "$29.99",
-      period: "per month",
+      price: `$${getPrice(29.99)}`,
+      period: billingCycle === "monthly" ? "per month" : "per year",
+      savings: billingCycle === "yearly" ? `Save $${getSavings(29.99)}/year` : null,
       features: [
         "All Individual features",
         "Assign tasks to staff",
@@ -120,6 +133,11 @@ const PricingPage = () => {
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           Choose the plan that fits your needs. Start with our free tier and upgrade as you grow.
         </p>
+        
+        <BillingCycleToggle 
+          billingCycle={billingCycle} 
+          setBillingCycle={setBillingCycle} 
+        />
       </SectionContainer>
 
       <SectionContainer className="mb-16">
@@ -148,6 +166,11 @@ const PricingPage = () => {
                   <span className="text-muted-foreground ml-2">
                     {plan.period}
                   </span>
+                  {plan.savings && (
+                    <div className="mt-1">
+                      <span className="text-sm text-green-500">{plan.savings}</span>
+                    </div>
+                  )}
                 </div>
                 <ul className="space-y-2">
                   {plan.features.map((feature) => (

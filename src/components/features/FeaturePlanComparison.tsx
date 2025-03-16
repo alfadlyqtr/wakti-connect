@@ -1,59 +1,107 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { SectionContainer } from "@/components/ui/section-container";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { Check, X } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const FeaturePlanComparison = () => {
+  const features = [
+    {
+      name: "Task Management",
+      free: "View Only",
+      individual: true,
+      business: true,
+    },
+    {
+      name: "Task Sharing",
+      free: false,
+      individual: true,
+      business: true,
+    },
+    {
+      name: "Appointment Scheduling",
+      free: "View Only",
+      individual: true,
+      business: true,
+    },
+    {
+      name: "Custom Booking Pages",
+      free: false,
+      individual: "Basic",
+      business: "Advanced",
+    },
+    {
+      name: "Staff Management",
+      free: false,
+      individual: false,
+      business: true,
+    },
+    {
+      name: "Business Analytics",
+      free: false,
+      individual: "Basic",
+      business: "Advanced",
+    },
+  ];
+
+  const renderStatus = (status: boolean | string) => {
+    if (typeof status === "boolean") {
+      return status ? (
+        <Check className="h-5 w-5 text-green-500 mx-auto" />
+      ) : (
+        <X className="h-5 w-5 text-red-500 mx-auto" />
+      );
+    }
+    return <span className="text-center block">{status}</span>;
+  };
+
   return (
-    <SectionContainer className="mb-12">
-      <h2 className="text-3xl font-bold text-center mb-10">Compare Plans</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b">
-              <th className="py-4 px-6 text-left">Feature</th>
-              <th className="py-4 px-6 text-center">Free</th>
-              <th className="py-4 px-6 text-center">Individual</th>
-              <th className="py-4 px-6 text-center">Business</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b">
-              <td className="py-4 px-6 font-medium">Task Management</td>
-              <td className="py-4 px-6 text-center">View Only</td>
-              <td className="py-4 px-6 text-center">Full Access</td>
-              <td className="py-4 px-6 text-center">Team Access</td>
-            </tr>
-            <tr className="border-b">
-              <td className="py-4 px-6 font-medium">Appointment Booking</td>
-              <td className="py-4 px-6 text-center">View Only</td>
-              <td className="py-4 px-6 text-center">Full Access</td>
-              <td className="py-4 px-6 text-center">Business-wide</td>
-            </tr>
-            <tr className="border-b">
-              <td className="py-4 px-6 font-medium">Messaging</td>
-              <td className="py-4 px-6 text-center">—</td>
-              <td className="py-4 px-6 text-center">Limited</td>
-              <td className="py-4 px-6 text-center">Full Access</td>
-            </tr>
-            <tr className="border-b">
-              <td className="py-4 px-6 font-medium">Business Dashboard</td>
-              <td className="py-4 px-6 text-center">—</td>
-              <td className="py-4 px-6 text-center">—</td>
-              <td className="py-4 px-6 text-center">Full Access</td>
-            </tr>
-            <tr className="border-b">
-              <td className="py-4 px-6 font-medium">Staff Management</td>
-              <td className="py-4 px-6 text-center">—</td>
-              <td className="py-4 px-6 text-center">—</td>
-              <td className="py-4 px-6 text-center">Full Access</td>
-            </tr>
-          </tbody>
-        </table>
+    <SectionContainer className="py-16">
+      <h2 className="text-3xl font-bold text-center mb-6">Plan Comparison</h2>
+      <p className="text-center text-muted-foreground max-w-3xl mx-auto mb-12">
+        Choose the plan that's right for you and your team. Upgrade or downgrade anytime.
+      </p>
+
+      <div className="rounded-lg border overflow-hidden mb-8">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[180px]">Feature</TableHead>
+              <TableHead className="text-center">Free</TableHead>
+              <TableHead className="text-center">Individual</TableHead>
+              <TableHead className="text-center">Business</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {features.map((feature, index) => (
+              <TableRow key={index}>
+                <TableCell className="font-medium">{feature.name}</TableCell>
+                <TableCell className="text-center">
+                  {renderStatus(feature.free)}
+                </TableCell>
+                <TableCell className="text-center">
+                  {renderStatus(feature.individual)}
+                </TableCell>
+                <TableCell className="text-center">
+                  {renderStatus(feature.business)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
-      <div className="text-center mt-8">
-        <Button asChild>
+
+      <div className="text-center">
+        <Button asChild size="lg">
           <Link to="/pricing">View Full Pricing Details</Link>
         </Button>
       </div>

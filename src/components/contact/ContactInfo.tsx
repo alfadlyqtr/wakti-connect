@@ -26,8 +26,8 @@ const ContactInfo = () => {
           </div>
           <div>
             <p className="font-medium">Phone</p>
-            <a href="tel:+1234567890" className="hover:underline">
-              +1 (234) 567-890
+            <a href="tel:+97444123456" className="hover:underline">
+              +974 4412 3456
             </a>
           </div>
         </div>
@@ -39,9 +39,9 @@ const ContactInfo = () => {
           <div>
             <p className="font-medium">Address</p>
             <address className="not-italic">
-              123 Productivity Street<br />
-              San Francisco, CA 94103<br />
-              United States
+              WAKTI Headquarters<br />
+              West Bay Tower<br />
+              Doha, Qatar
             </address>
           </div>
         </div>
@@ -52,7 +52,7 @@ const ContactInfo = () => {
           </div>
           <div>
             <p className="font-medium">Support Hours</p>
-            <p>Monday - Friday<br />9AM - 6PM EST</p>
+            <p>Sunday - Thursday<br />8AM - 5PM AST</p>
           </div>
         </div>
       </div>

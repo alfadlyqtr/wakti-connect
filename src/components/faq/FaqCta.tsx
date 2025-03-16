@@ -10,17 +10,14 @@ interface FaqCtaProps {
   buttonLink: string;
 }
 
-const FaqCta = ({ 
-  title, 
-  description, 
-  buttonText, 
-  buttonLink 
-}: FaqCtaProps) => {
+const FaqCta = ({ title, description, buttonText, buttonLink }: FaqCtaProps) => {
   return (
-    <div className="mt-20 text-center">
-      <h3 className="text-2xl font-semibold mb-4">{title}</h3>
-      <p className="text-muted-foreground mb-8">{description}</p>
-      <Button size="lg" asChild>
+    <div className="text-center py-12 mt-12 border-t">
+      <h2 className="text-2xl font-bold mb-4">{title}</h2>
+      <p className="text-muted-foreground max-w-xl mx-auto mb-6">
+        {description}
+      </p>
+      <Button asChild>
         <Link to={buttonLink}>{buttonText}</Link>
       </Button>
     </div>
