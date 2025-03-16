@@ -31,7 +31,11 @@ interface UserData {
   accountType: string;
 }
 
-const SidebarNavItems = ({ onNavClick }: { onNavClick?: () => void }) => {
+interface SidebarNavItemsProps {
+  onNavClick?: () => void;
+}
+
+const SidebarNavItems = ({ onNavClick }: SidebarNavItemsProps) => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [userData, setUserData] = React.useState<UserData | null>(null);

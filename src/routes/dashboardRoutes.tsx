@@ -23,7 +23,7 @@ import DashboardBusinessPage from '@/pages/dashboard/DashboardBusinessPage';
 import DashboardSubscribers from '@/pages/dashboard/DashboardSubscribers';
 
 const dashboardRoutes = (
-  <React.Fragment>
+  <>
     <Route path="" element={<DashboardHome />} />
     <Route path="tasks" element={<DashboardTasks />} />
     <Route path="appointments" element={<DashboardAppointments />} />
@@ -44,7 +44,7 @@ const dashboardRoutes = (
     <Route path="notifications" element={<DashboardNotifications />} />
     <Route path="business-page" element={<DashboardBusinessPage />} />
     <Route path="subscribers" element={<DashboardSubscribers />} />
-  </React.Fragment>
+  </>
 );
 
 export default dashboardRoutes;

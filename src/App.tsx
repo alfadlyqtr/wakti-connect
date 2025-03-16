@@ -32,7 +32,9 @@ const App = () => (
             <Route path="/*" element={
               <>
                 <Header />
-                <PublicRoutes />
+                <Routes>
+                  {PublicRoutes}
+                </Routes>
               </>
             } />
             
@@ -45,7 +47,11 @@ const App = () => (
             <Route path="/verify-email" element={<VerificationPage />} />
             
             {/* Dashboard routes */}
-            <Route path="/dashboard/*" element={<DashboardRoutes />} />
+            <Route path="/dashboard/*" element={
+              <Routes>
+                {DashboardRoutes}
+              </Routes>
+            } />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

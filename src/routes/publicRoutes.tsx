@@ -12,7 +12,7 @@ import TermsPage from '@/pages/public/TermsPage';
 import BusinessLandingPage from '@/pages/business/BusinessLandingPage';
 
 const publicRoutes = (
-  <React.Fragment>
+  <>
     <Route path="/" element={<LandingPage />} />
     <Route path="/about" element={<AboutPage />} />
     <Route path="/features" element={<FeaturesPage />} />
@@ -22,7 +22,7 @@ const publicRoutes = (
     <Route path="/privacy" element={<PrivacyPage />} />
     <Route path="/terms" element={<TermsPage />} />
     <Route path="/business/:slug" element={<BusinessLandingPage />} />
-  </React.Fragment>
+  </>
 );
 
 export default publicRoutes;

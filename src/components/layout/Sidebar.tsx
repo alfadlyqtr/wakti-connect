@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { SidebarNavItems } from "./sidebar/SidebarNavItems";
+import SidebarNavItems from "./sidebar/SidebarNavItems";
 import SidebarUpgradeBanner from "./sidebar/SidebarUpgradeBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -104,7 +104,7 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
         
         {/* Navigation Items */}
         <div className="flex-grow overflow-y-auto">
-          <SidebarNavItems userRole={userRole} />
+          <SidebarNavItems onNavClick={() => {}} />
         </div>
         
         {/* Upgrade Banner - Only show for free users */}
