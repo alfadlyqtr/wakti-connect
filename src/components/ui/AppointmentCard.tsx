@@ -1,83 +1,103 @@
 
 import React from "react";
-import { Calendar, Clock, MapPin } from "lucide-react";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Calendar, Clock, MapPin } from "lucide-react";
 import { format } from "date-fns";
+import { RecurringBadge } from "@/components/ui/RecurringBadge";
 
-export interface AppointmentCardProps {
+interface AppointmentCardProps {
   id: string;
   title: string;
+  description?: string;
+  location?: string;
   startTime: Date;
   endTime: Date;
-  location?: string;
   isAllDay?: boolean;
-  status?: "upcoming" | "completed" | "cancelled";
-  description?: string;
-  userRole?: "free" | "individual" | "business";
-  isAssigned?: boolean;
-  isShared?: boolean;
-  onClick?: () => void;
+  status: "scheduled" | "cancelled" | "completed";
+  isRecurring?: boolean;
+  recurringFrequency?: string;
+  isRecurringInstance?: boolean;
 }
 
-export const AppointmentCard: React.FC<AppointmentCardProps> = ({
+const AppointmentCard = ({
+  id,
   title,
+  description,
+  location,
   startTime,
   endTime,
-  location,
   isAllDay = false,
-  status = "upcoming",
-  onClick,
-}) => {
+  status,
+  isRecurring = false,
+  recurringFrequency,
+  isRecurringInstance = false
+}: AppointmentCardProps) => {
+  // Format the dates
+  const startDate = format(startTime, "MMM d, yyyy");
+  const startTimeFormatted = isAllDay ? "All day" : format(startTime, "h:mm a");
+  const endTimeFormatted = isAllDay ? "" : format(endTime, "h:mm a");
+  
+  // Status badge color mapping
   const statusColors = {
-    upcoming: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-    completed: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-    cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+    scheduled: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+    cancelled: "bg-red-500/10 text-red-500 border-red-500/20",
+    completed: "bg-green-500/10 text-green-500 border-green-500/20"
   };
-
+  
   return (
-    <Card className="h-full">
+    <Card className="border-border/40 shadow-sm hover:shadow transition-shadow">
       <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-base">{title}</CardTitle>
-          <Badge className={cn(statusColors[status])}>
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="pb-2">
-        <div className="space-y-2">
-          <div className="flex items-center text-sm">
-            <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-            <span>{format(startTime, "MMMM d, yyyy")}</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge 
+              variant="outline" 
+              className={`font-normal ${statusColors[status]}`}
+            >
+              {status === "scheduled" ? "Upcoming" : 
+               status === "cancelled" ? "Cancelled" : "Completed"}
+            </Badge>
+            {(isRecurring || isRecurringInstance) && (
+              <RecurringBadge 
+                frequency={recurringFrequency} 
+                isRecurringInstance={isRecurringInstance} 
+              />
+            )}
           </div>
-          {!isAllDay && (
-            <div className="flex items-center text-sm">
-              <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-              <span>
-                {format(startTime, "h:mm a")} - {format(endTime, "h:mm a")}
-              </span>
-            </div>
-          )}
-          {location && (
-            <div className="flex items-center text-sm">
-              <MapPin className="mr-2 h-4 w-4 text-muted-foreground" />
-              <span>{location}</span>
-            </div>
-          )}
+          <div className="flex items-center">
+            {/* Menu or actions can be added here */}
+          </div>
         </div>
+        <h3 className="text-base font-semibold leading-tight mt-1">{title}</h3>
+      </CardHeader>
+      
+      <CardContent className="pb-3 space-y-2">
+        {description && (
+          <p className="text-muted-foreground text-sm line-clamp-2">
+            {description}
+          </p>
+        )}
+        
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Calendar className="h-4 w-4" />
+          <span>{startDate}</span>
+        </div>
+        
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Clock className="h-4 w-4" />
+          <span>{startTimeFormatted}{!isAllDay && endTimeFormatted ? ` - ${endTimeFormatted}` : ""}</span>
+        </div>
+        
+        {location && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <MapPin className="h-4 w-4" />
+            <span className="truncate">{location}</span>
+          </div>
+        )}
       </CardContent>
-      <CardFooter>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="w-full"
-          onClick={onClick}
-        >
-          View Details
-        </Button>
+      
+      <CardFooter className="pt-0">
+        {/* Additional content like badges, actions, or participants can go here */}
       </CardFooter>
     </Card>
   );

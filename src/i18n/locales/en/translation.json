@@ -1,3 +1,4 @@
+
 {
   "common": {
     "wakti": "Wakti",
@@ -102,6 +103,7 @@
           "Message individual users",
           "Custom event creation & sharing",
           "Full contact management",
+          "Recurring tasks & appointments",
           "Priority support"
         ]
       },
@@ -162,5 +164,38 @@
     "createAccount": "Create Account",
     "continueWith": "Or continue with",
     "enterDetails": "Please enter your details"
+  },
+  "recurring": {
+    "makeRecurring": "Make this recurring",
+    "recurringSettings": "Recurring Settings",
+    "frequency": "Frequency",
+    "interval": "Interval",
+    "daysOfWeek": "Days of Week",
+    "dayOfMonth": "Day of Month",
+    "endDate": "End Date",
+    "maxOccurrences": "Maximum Occurrences",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "premiumFeature": "Premium Feature",
+    "premiumDescription": "Recurring tasks and appointments are available on paid plans only. Upgrade to Individual or Business plans to access this feature.",
+    "recurEvery": "Recur every",
+    "days": "days",
+    "weeks": "weeks",
+    "months": "months",
+    "years": "years",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday",
+    "onDay": "On day",
+    "noEndDate": "No end date",
+    "endAfter": "End after",
+    "occurrences": "occurrences",
+    "endBy": "End by"
   }
 }

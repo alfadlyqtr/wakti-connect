@@ -10,6 +10,7 @@ import {
   AppointmentFormData
 } from "@/services/appointment";
 import { filterAppointments } from "@/utils/appointmentUtils";
+import { RecurringFormData } from "@/types/recurring.types";
 
 export type { Appointment, AppointmentTab, AppointmentFormData } from "@/services/appointment";
 
@@ -31,13 +32,15 @@ export const useAppointments = (tab: AppointmentTab = "upcoming") => {
   });
 
   // Create a new appointment
-  const createAppointment = async (appointmentData: Partial<AppointmentFormData>) => {
+  const createAppointment = async (appointmentData: Partial<AppointmentFormData>, recurringData?: RecurringFormData) => {
     try {
-      const result = await createAppointmentService(appointmentData as AppointmentFormData);
+      const result = await createAppointmentService(appointmentData as AppointmentFormData, recurringData);
       
       toast({
-        title: "Appointment Created",
-        description: "New appointment has been created successfully",
+        title: recurringData ? "Recurring Appointment Created" : "Appointment Created",
+        description: recurringData 
+          ? "New recurring appointment has been created successfully" 
+          : "New appointment has been created successfully",
       });
 
       // Refetch appointments to update the list
@@ -45,11 +48,14 @@ export const useAppointments = (tab: AppointmentTab = "upcoming") => {
       
       return result;
     } catch (error: any) {
-      toast({
-        title: "Failed to create appointment",
-        description: error.message || "An unexpected error occurred",
-        variant: "destructive",
-      });
+      if (error.message !== "This feature is only available for paid accounts") {
+        toast({
+          title: "Failed to create appointment",
+          description: error.message || "An unexpected error occurred",
+          variant: "destructive",
+        });
+      }
+      throw error;
     }
   };
 

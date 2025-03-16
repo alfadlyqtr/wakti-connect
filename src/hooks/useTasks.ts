@@ -10,6 +10,7 @@ import {
 } from "@/services/task";
 import { filterTasks } from "@/utils/taskUtils";
 import { Task, TaskTab, TaskFormData } from "@/types/task.types";
+import { RecurringFormData } from "@/types/recurring.types";
 
 export type { Task, TaskTab, TaskFormData } from "@/types/task.types";
 
@@ -31,13 +32,15 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
   });
 
   // Create a new task
-  const createTask = async (taskData: Partial<TaskFormData>) => {
+  const createTask = async (taskData: Partial<TaskFormData>, recurringData?: RecurringFormData) => {
     try {
-      const result = await createTaskService(taskData as TaskFormData);
+      const result = await createTaskService(taskData as TaskFormData, recurringData);
       
       toast({
-        title: "Task Created",
-        description: "New task has been created successfully",
+        title: recurringData ? "Recurring Task Created" : "Task Created",
+        description: recurringData 
+          ? "New recurring task has been created successfully" 
+          : "New task has been created successfully",
       });
 
       // Refetch tasks to update the list
@@ -45,11 +48,14 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
       
       return result;
     } catch (error: any) {
-      toast({
-        title: "Failed to create task",
-        description: error.message || "An unexpected error occurred",
-        variant: "destructive",
-      });
+      if (error.message !== "This feature is only available for paid accounts") {
+        toast({
+          title: "Failed to create task",
+          description: error.message || "An unexpected error occurred",
+          variant: "destructive",
+        });
+      }
+      throw error;
     }
   };
 

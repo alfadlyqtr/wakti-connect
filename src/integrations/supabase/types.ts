@@ -55,7 +55,9 @@ export type Database = {
           end_time: string
           id: string
           is_all_day: boolean
+          is_recurring_instance: boolean | null
           location: string | null
+          parent_recurring_id: string | null
           start_time: string
           status: string
           title: string
@@ -69,7 +71,9 @@ export type Database = {
           end_time: string
           id?: string
           is_all_day?: boolean
+          is_recurring_instance?: boolean | null
           location?: string | null
+          parent_recurring_id?: string | null
           start_time: string
           status?: string
           title: string
@@ -83,7 +87,9 @@ export type Database = {
           end_time?: string
           id?: string
           is_all_day?: boolean
+          is_recurring_instance?: boolean | null
           location?: string | null
+          parent_recurring_id?: string | null
           start_time?: string
           status?: string
           title?: string
@@ -293,6 +299,51 @@ export type Database = {
         }
         Relationships: []
       }
+      recurring_settings: {
+        Row: {
+          created_at: string
+          created_by: string
+          day_of_month: number | null
+          days_of_week: string[] | null
+          end_date: string | null
+          entity_id: string
+          entity_type: string
+          frequency: string
+          id: string
+          interval: number
+          max_occurrences: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          day_of_month?: number | null
+          days_of_week?: string[] | null
+          end_date?: string | null
+          entity_id: string
+          entity_type: string
+          frequency: string
+          id?: string
+          interval?: number
+          max_occurrences?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          day_of_month?: number | null
+          days_of_week?: string[] | null
+          end_date?: string | null
+          entity_id?: string
+          entity_type?: string
+          frequency?: string
+          id?: string
+          interval?: number
+          max_occurrences?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       shared_tasks: {
         Row: {
           created_at: string
@@ -466,6 +517,8 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          is_recurring_instance: boolean | null
+          parent_recurring_id: string | null
           priority: string
           status: string
           title: string
@@ -478,6 +531,8 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          is_recurring_instance?: boolean | null
+          parent_recurring_id?: string | null
           priority?: string
           status?: string
           title: string
@@ -490,6 +545,8 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          is_recurring_instance?: boolean | null
+          parent_recurring_id?: string | null
           priority?: string
           status?: string
           title?: string
