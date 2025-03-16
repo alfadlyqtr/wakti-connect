@@ -1,9 +1,8 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SectionType } from "@/types/business.types";
 import CreateBusinessPageForm from "./CreateBusinessPageForm";
 import PageSectionsTab from "./PageSectionsTab";
 import PageSettingsTab from "./PageSettingsTab";
@@ -16,7 +15,9 @@ const BusinessPageBuilder = () => {
     socialLinks, 
     updatePage,
     createPage,
-    isLoading
+    isLoading,
+    autoSavePageSettings,
+    getPublicPageUrl
   } = useBusinessPage();
   
   // Create state for editable page data
@@ -31,7 +32,7 @@ const BusinessPageBuilder = () => {
   });
   
   // Update local state from fetched data
-  React.useEffect(() => {
+  useEffect(() => {
     if (ownerBusinessPage) {
       setPageData({
         page_title: ownerBusinessPage.page_title || "",
@@ -60,11 +61,6 @@ const BusinessPageBuilder = () => {
     } else {
       createPage.mutate(pageData);
     }
-  };
-  
-  const getPublicPageUrl = () => {
-    if (!ownerBusinessPage) return '';
-    return `${window.location.origin}/business/${ownerBusinessPage.page_slug}`;
   };
   
   if (isLoading) {
@@ -114,6 +110,7 @@ const BusinessPageBuilder = () => {
             handleToggleChange={handleToggleChange}
             handleSavePageSettings={handleSavePageSettings}
             updatePage={updatePage}
+            autoSavePageSettings={autoSavePageSettings}
           />
         </TabsContent>
         

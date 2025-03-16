@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { BusinessPage } from "@/types/business.types";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Save } from "lucide-react";
+import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 
 interface PageSettingsTabProps {
   pageData: {
@@ -24,6 +25,7 @@ interface PageSettingsTabProps {
   handleToggleChange: (name: string, checked: boolean) => void;
   handleSavePageSettings: () => void;
   updatePage: ReturnType<typeof useMutation<BusinessPage, Error, any>>;
+  autoSavePageSettings?: (pageData: Partial<BusinessPage>) => void;
 }
 
 const PageSettingsTab: React.FC<PageSettingsTabProps> = ({
@@ -31,8 +33,46 @@ const PageSettingsTab: React.FC<PageSettingsTabProps> = ({
   handlePageDataChange,
   handleToggleChange,
   handleSavePageSettings,
-  updatePage
+  updatePage,
+  autoSavePageSettings
 }) => {
+  const [isDirty, setIsDirty] = React.useState(false);
+  
+  // Set up debounced auto-save
+  const debouncedAutoSave = useDebouncedCallback((data) => {
+    if (autoSavePageSettings) {
+      autoSavePageSettings(data);
+      setIsDirty(false);
+    }
+  }, 2000);
+  
+  // Custom input change handler that triggers auto-save
+  const handleInputChangeWithAutoSave = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    handlePageDataChange(e);
+    setIsDirty(true);
+    
+    if (autoSavePageSettings) {
+      const { name, value } = e.target;
+      debouncedAutoSave({
+        ...pageData,
+        [name]: value
+      });
+    }
+  };
+  
+  // Custom toggle change handler that triggers auto-save
+  const handleToggleWithAutoSave = (name: string, checked: boolean) => {
+    handleToggleChange(name, checked);
+    setIsDirty(true);
+    
+    if (autoSavePageSettings) {
+      debouncedAutoSave({
+        ...pageData,
+        [name]: checked
+      });
+    }
+  };
+  
   return (
     <Card>
       <CardHeader>
@@ -49,7 +89,7 @@ const PageSettingsTab: React.FC<PageSettingsTabProps> = ({
               id="page_title"
               name="page_title"
               value={pageData.page_title}
-              onChange={handlePageDataChange}
+              onChange={handleInputChangeWithAutoSave}
               placeholder="My Business"
             />
           </div>
@@ -69,7 +109,7 @@ const PageSettingsTab: React.FC<PageSettingsTabProps> = ({
                 id="page_slug"
                 name="page_slug"
                 value={pageData.page_slug}
-                onChange={handlePageDataChange}
+                onChange={handleInputChangeWithAutoSave}
                 placeholder="my-business"
               />
             </div>
@@ -82,7 +122,7 @@ const PageSettingsTab: React.FC<PageSettingsTabProps> = ({
             id="description"
             name="description"
             value={pageData.description || ""}
-            onChange={handlePageDataChange}
+            onChange={handleInputChangeWithAutoSave}
             placeholder="Describe your business in a few sentences"
             rows={3}
           />
@@ -97,13 +137,13 @@ const PageSettingsTab: React.FC<PageSettingsTabProps> = ({
                 name="primary_color"
                 type="color"
                 value={pageData.primary_color}
-                onChange={handlePageDataChange}
+                onChange={handleInputChangeWithAutoSave}
                 className="w-12 h-9 p-1"
               />
               <Input
                 type="text"
                 value={pageData.primary_color}
-                onChange={handlePageDataChange}
+                onChange={handleInputChangeWithAutoSave}
                 name="primary_color"
               />
             </div>
@@ -117,13 +157,13 @@ const PageSettingsTab: React.FC<PageSettingsTabProps> = ({
                 name="secondary_color"
                 type="color"
                 value={pageData.secondary_color}
-                onChange={handlePageDataChange}
+                onChange={handleInputChangeWithAutoSave}
                 className="w-12 h-9 p-1"
               />
               <Input
                 type="text"
                 value={pageData.secondary_color}
-                onChange={handlePageDataChange}
+                onChange={handleInputChangeWithAutoSave}
                 name="secondary_color"
               />
             </div>
@@ -134,7 +174,7 @@ const PageSettingsTab: React.FC<PageSettingsTabProps> = ({
           <Switch
             id="is_published"
             checked={pageData.is_published}
-            onCheckedChange={(checked) => handleToggleChange('is_published', checked)}
+            onCheckedChange={(checked) => handleToggleWithAutoSave('is_published', checked)}
           />
           <Label htmlFor="is_published">
             Publish Page
@@ -145,15 +185,24 @@ const PageSettingsTab: React.FC<PageSettingsTabProps> = ({
           <Switch
             id="chatbot_enabled"
             checked={pageData.chatbot_enabled}
-            onCheckedChange={(checked) => handleToggleChange('chatbot_enabled', checked)}
+            onCheckedChange={(checked) => handleToggleWithAutoSave('chatbot_enabled', checked)}
           />
           <Label htmlFor="chatbot_enabled">
             Enable AI Chatbot
           </Label>
         </div>
       </CardContent>
-      <CardFooter>
-        <Button onClick={handleSavePageSettings} disabled={updatePage.isPending}>
+      <CardFooter className="flex justify-between">
+        {isDirty && (
+          <p className="text-xs text-muted-foreground">
+            Auto-saving changes...
+          </p>
+        )}
+        <Button 
+          onClick={handleSavePageSettings} 
+          disabled={updatePage.isPending}
+          className="ml-auto"
+        >
           {updatePage.isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

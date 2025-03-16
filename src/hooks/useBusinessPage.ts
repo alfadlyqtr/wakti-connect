@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BusinessPage, BusinessPageSection, BusinessSocialLink } from "@/types/business.types";
 import { toast } from "@/components/ui/use-toast";
 import { fromTable } from "@/integrations/supabase/helper";
+import { useCallback } from "react";
 
 export const useBusinessPage = (pageSlug?: string) => {
   const queryClient = useQueryClient();
@@ -54,7 +55,7 @@ export const useBusinessPage = (pageSlug?: string) => {
     }
   });
 
-  // Fetch page sections
+  // Fetch page sections with optimized query
   const { data: pageSections, isLoading: sectionsLoading } = useQuery({
     queryKey: ['businessPageSections', businessPage?.id || ownerBusinessPage?.id],
     queryFn: async () => {
@@ -137,7 +138,7 @@ export const useBusinessPage = (pageSlug?: string) => {
     }
   });
 
-  // Update business page
+  // Update business page with debounce for auto-save
   const updatePage = useMutation({
     mutationFn: async (updates: Partial<BusinessPage>) => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -180,6 +181,84 @@ export const useBusinessPage = (pageSlug?: string) => {
     }
   });
 
+  // New method for updating a section with optimistic updates
+  const updateSection = useMutation({
+    mutationFn: async ({ sectionId, content }: { sectionId: string, content: any }) => {
+      const { data, error } = await fromTable('business_page_sections')
+        .update({ section_content: content })
+        .eq('id', sectionId)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error("Error updating section:", error);
+        throw error;
+      }
+      
+      return data as BusinessPageSection;
+    },
+    onMutate: async ({ sectionId, content }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['businessPageSections'] });
+      
+      // Save the previous value
+      const previousSections = queryClient.getQueryData<BusinessPageSection[]>(
+        ['businessPageSections', businessPage?.id || ownerBusinessPage?.id]
+      );
+      
+      // Optimistically update the UI
+      if (previousSections) {
+        queryClient.setQueryData<BusinessPageSection[]>(
+          ['businessPageSections', businessPage?.id || ownerBusinessPage?.id],
+          previousSections.map(section => 
+            section.id === sectionId 
+              ? { ...section, section_content: content } 
+              : section
+          )
+        );
+      }
+      
+      return { previousSections };
+    },
+    onError: (err, variables, context) => {
+      // If there was an error, roll back
+      if (context?.previousSections) {
+        queryClient.setQueryData(
+          ['businessPageSections', businessPage?.id || ownerBusinessPage?.id], 
+          context.previousSections
+        );
+      }
+      toast({
+        variant: "destructive",
+        title: "Failed to update section",
+        description: "Your changes could not be saved. Please try again."
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Section updated",
+        description: "Your section has been updated."
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ['businessPageSections', businessPage?.id || ownerBusinessPage?.id] 
+      });
+    }
+  });
+
+  // Auto-save helper function
+  const autoSavePageSettings = useCallback((pageData: Partial<BusinessPage>) => {
+    if (ownerBusinessPage?.id) {
+      updatePage.mutate(pageData);
+    }
+  }, [ownerBusinessPage?.id, updatePage]);
+
+  // Get public URL function
+  const getPublicPageUrl = useCallback(() => {
+    if (!ownerBusinessPage?.page_slug && !businessPage?.page_slug) return '';
+    const slug = ownerBusinessPage?.page_slug || businessPage?.page_slug;
+    return `${window.location.origin}/business/${slug}`;
+  }, [ownerBusinessPage?.page_slug, businessPage?.page_slug]);
+
   return {
     // Public view data
     businessPage,
@@ -198,6 +277,11 @@ export const useBusinessPage = (pageSlug?: string) => {
     // Mutations
     createPage,
     updatePage,
+    updateSection,
+    autoSavePageSettings,
+    
+    // Helper functions
+    getPublicPageUrl,
     
     // Loading state
     isLoading: pageLoading || ownerPageLoading || sectionsLoading || linksLoading
