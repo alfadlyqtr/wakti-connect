@@ -2,11 +2,16 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
-import { fetchAppointments, createAppointment as createAppointmentService } from "@/services/appointmentService";
+import { 
+  fetchAppointments, 
+  createAppointment as createAppointmentService,
+  Appointment,
+  AppointmentTab,
+  AppointmentFormData
+} from "@/services/appointment";
 import { filterAppointments } from "@/utils/appointmentUtils";
-import { Appointment, AppointmentTab, AppointmentFormData } from "@/types/appointment.types";
 
-export type { Appointment, AppointmentTab, AppointmentFormData } from "@/types/appointment.types";
+export type { Appointment, AppointmentTab, AppointmentFormData } from "@/services/appointment";
 
 export const useAppointments = (tab: AppointmentTab = "upcoming") => {
   const [searchQuery, setSearchQuery] = useState("");
