@@ -19,60 +19,60 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
   
   const userRole = profileData?.account_type || "free";
   
-  // Declare variable to hold query results
-  let { data: tasksData = [], error } = { data: [] as any[], error: null };
+  // Declare variable to hold tasks data
+  let tasksData: any[] = [];
   
   // Use switch case to handle all tab values properly
   switch (tab) {
     case "my-tasks": {
       // User's own tasks
-      const response = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('user_id', session.user.id)
         .order('due_date', { ascending: true });
         
-      if (response.error) throw response.error;
-      tasksData = response.data || [];
+      if (error) throw error;
+      tasksData = data || [];
       break;
     }
     
     case "shared-tasks": {
       // Tasks shared with the user
-      const response = await supabase
+      const { data, error } = await supabase
         .from('shared_tasks')
         .select('task_id, tasks(*)')
         .eq('shared_with', session.user.id)
         .order('created_at', { ascending: false });
         
-      if (response.error) throw response.error;
-      tasksData = response.data?.map(item => item.tasks as Task) || [];
+      if (error) throw error;
+      tasksData = data?.map(item => item.tasks) || [];
       break;
     }
     
     case "assigned-tasks": {
       // Tasks assigned to the user (for staff members)
-      const response = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('assignee_id', session.user.id)
         .order('due_date', { ascending: true });
         
-      if (response.error) throw response.error;
-      tasksData = response.data || [];
+      if (error) throw error;
+      tasksData = data || [];
       break;
     }
     
     default: {
       // Fallback to my-tasks if an invalid tab is provided
-      const response = await supabase
+      const { data, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('user_id', session.user.id)
         .order('due_date', { ascending: true });
         
-      if (response.error) throw response.error;
-      tasksData = response.data || [];
+      if (error) throw error;
+      tasksData = data || [];
       break;
     }
   }
@@ -81,7 +81,7 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
   const tasks = tasksData.map(task => ({
     ...task,
     assignee_id: task.assignee_id || null
-  }));
+  })) as Task[];
   
   return { 
     tasks,

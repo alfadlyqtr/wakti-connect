@@ -7,7 +7,7 @@ export interface Task {
   priority: TaskPriority;
   due_date: string | null;
   user_id: string;
-  assignee_id?: string | null;
+  assignee_id: string | null;
   created_at: string;
   updated_at: string;
 }
