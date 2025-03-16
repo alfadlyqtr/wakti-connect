@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -5,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import "@/components/layout/sidebar/sidebar.css";
+import { useQuery } from "@tanstack/react-query";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -13,25 +15,24 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [userRole, setUserRole] = useState<"free" | "individual" | "business">(propUserRole || "free");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const getUserRole = async () => {
-      setLoading(true);
+  const { data: profileData, isLoading: profileLoading } = useQuery({
+    queryKey: ['dashboardUserProfile'],
+    queryFn: async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) {
           console.log("No active session found, redirecting to auth page");
           navigate("/auth");
-          return;
+          return null;
         }
         
-        const { data: profileData, error } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
-          .select('account_type')
+          .select('account_type, display_name, business_name, full_name, theme_preference')
           .eq('id', session.user.id)
           .single();
         
@@ -41,34 +42,52 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
             console.log("Profile not found, user may need to sign up");
             navigate("/auth");
           }
-          return;
+          return null;
         }
         
-        if (profileData?.account_type) {
-          setUserRole(profileData.account_type as "free" | "individual" | "business");
-          console.log("User role set from DB:", profileData.account_type);
+        return data;
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        return null;
+      }
+    },
+  });
+
+  // Set theme based on user preference
+  useEffect(() => {
+    if (profileData?.theme_preference) {
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(profileData.theme_preference);
+    }
+  }, [profileData?.theme_preference]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      setLoading(true);
+      try {
+        const { data } = await supabase.auth.getSession();
+        
+        if (!data.session) {
+          navigate("/auth");
         }
       } catch (error) {
-        console.error("Error fetching user role:", error);
+        console.error("Error checking auth:", error);
+        navigate("/auth");
       } finally {
         setLoading(false);
       }
     };
 
     if (!propUserRole) {
-      getUserRole();
+      checkAuth();
     } else {
-      setUserRole(propUserRole);
       setLoading(false);
     }
     
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event);
       
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        getUserRole();
-      } else if (event === 'SIGNED_OUT') {
-        setUserRole("free");
+      if (event === 'SIGNED_OUT') {
         navigate("/auth");
       }
     });
@@ -82,16 +101,18 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const userRoleValue = profileData?.account_type || propUserRole || "free";
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
       
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar isOpen={isSidebarOpen} userRole={userRole} />
+        <Sidebar isOpen={isSidebarOpen} userRole={userRoleValue as "free" | "individual" | "business"} />
         
         <main className="flex-1 overflow-y-auto pt-4 px-4 pb-12 lg:pl-64 transition-all duration-300">
           <div className="container mx-auto animate-in">
-            {loading ? (
+            {loading || profileLoading ? (
               <div className="flex items-center justify-center h-[calc(100vh-100px)]">
                 <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
               </div>

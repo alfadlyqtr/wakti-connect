@@ -4,7 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Loader2 } from "lucide-react";
+import { Loader2, Building, UserCircle, Crown, Briefcase } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SectionHeading } from "@/components/ui/section-heading";
+
+interface ProfileData {
+  full_name: string | null;
+  display_name: string | null;
+  business_name: string | null;
+  occupation: string | null;
+  account_type: "free" | "individual" | "business";
+  avatar_url: string | null;
+  theme_preference: string | null;
+}
 
 const DashboardHome = () => {
   // Fetch user profile data
@@ -19,7 +31,7 @@ const DashboardHome = () => {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('full_name, account_type')
+        .select('full_name, account_type, display_name, business_name, occupation, avatar_url, theme_preference')
         .eq('id', session.user.id)
         .single();
       
@@ -28,7 +40,7 @@ const DashboardHome = () => {
         throw error;
       }
       
-      return data;
+      return data as ProfileData;
     },
   });
 
@@ -125,6 +137,36 @@ const DashboardHome = () => {
     },
   });
 
+  // Get display name for welcome message
+  const getDisplayName = () => {
+    if (profileData?.display_name) return profileData.display_name;
+    if (profileData?.full_name) return profileData.full_name;
+    return '';
+  };
+
+  // Get account specific welcome title
+  const getWelcomeTitle = () => {
+    switch (profileData?.account_type) {
+      case 'business':
+        return 'Business Dashboard';
+      case 'individual':
+        return 'Professional Dashboard';
+      default:
+        return 'Personal Dashboard';
+    }
+  };
+
+  const getAccountIcon = () => {
+    switch (profileData?.account_type) {
+      case 'business':
+        return <Building className="text-green-500 h-6 w-6" />;
+      case 'individual':
+        return <Briefcase className="text-wakti-blue h-6 w-6" />;
+      default:
+        return <UserCircle className="text-wakti-gold h-6 w-6" />;
+    }
+  };
+
   const isLoading = profileLoading || tasksLoading || appointmentsLoading || notificationsLoading;
 
   if (isLoading) {
@@ -143,13 +185,41 @@ const DashboardHome = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome back{profileData?.full_name ? `, ${profileData.full_name}` : ''}!
-        </p>
+      {/* Dashboard Header with User Profile */}
+      <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">
+            {getWelcomeTitle()}
+          </h1>
+          <p className="text-muted-foreground">
+            Welcome back{getDisplayName() ? `, ${getDisplayName()}` : ''}!
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-3 p-2 bg-card rounded-lg border shadow-sm">
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={profileData?.avatar_url || undefined} alt="Profile" />
+            <AvatarFallback className="bg-primary/10">
+              {getDisplayName()?.charAt(0) || '?'}
+            </AvatarFallback>
+          </Avatar>
+          
+          <div>
+            <div className="flex items-center">
+              {getAccountIcon()}
+              <span className="ml-1 text-sm font-medium capitalize">
+                {profileData?.account_type || 'Free'} Account
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {profileData?.business_name ? `${profileData.business_name}` : 
+               profileData?.occupation ? `${profileData.occupation}` : 'Personal User'}
+            </p>
+          </div>
+        </div>
       </div>
       
+      {/* Main Dashboard Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -269,9 +339,14 @@ const DashboardHome = () => {
         </Card>
       </div>
 
+      {/* Business-specific section */}
       {profileData?.account_type === 'business' && (
         <>
-          <h2 className="text-xl font-semibold mt-8 mb-4">Business Analytics</h2>
+          <SectionHeading 
+            title="Business Analytics" 
+            centered={false}
+            className="mt-8 mb-4"
+          />
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -311,6 +386,46 @@ const DashboardHome = () => {
                 <div className="text-2xl font-bold">0</div>
                 <p className="text-xs text-muted-foreground">
                   Business services offered
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </>
+      )}
+      
+      {/* Individual-specific features */}
+      {profileData?.account_type === 'individual' && (
+        <>
+          <SectionHeading 
+            title="My Productivity" 
+            centered={false}
+            className="mt-8 mb-4"
+          />
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Completed Tasks
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">0</div>
+                <p className="text-xs text-muted-foreground">
+                  Tasks completed this week
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Contacts
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">0</div>
+                <p className="text-xs text-muted-foreground">
+                  People in your network
                 </p>
               </CardContent>
             </Card>

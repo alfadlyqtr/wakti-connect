@@ -19,12 +19,14 @@ import DashboardStaffManagement from "@/pages/dashboard/DashboardStaffManagement
 import DashboardWorkLogs from "@/pages/dashboard/DashboardWorkLogs";
 import DashboardJobs from "@/pages/dashboard/DashboardJobs";
 import DashboardJobCards from "@/pages/dashboard/DashboardJobCards";
+import DashboardProfile from "@/pages/dashboard/DashboardProfile";
 
 const DashboardRoutes = () => {
   return (
     <DashboardLayout>
       <Routes>
         <Route path="/" element={<DashboardHome />} />
+        <Route path="/profile" element={<DashboardProfile />} />
         <Route path="/tasks" element={<DashboardTasks />} />
         <Route path="/appointments" element={<DashboardAppointments />} />
         <Route path="/messages" element={<DashboardMessages />} />

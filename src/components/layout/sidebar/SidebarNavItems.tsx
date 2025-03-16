@@ -1,5 +1,5 @@
 
-import { BarChart2, Bell, BookOpen, Calendar, CreditCard, FileText, Home, Mail, MenuIcon, MessageSquare, Settings, ShieldCheck, Users, Clock, Briefcase, FileCheck } from "lucide-react";
+import { BarChart2, Bell, BookOpen, Calendar, CreditCard, FileText, Home, Mail, MenuIcon, MessageSquare, Settings, ShieldCheck, Users, Clock, Briefcase, FileCheck, User, Palette } from "lucide-react";
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,11 @@ const navItems: NavItem[] = [
     title: "Dashboard",
     href: "/dashboard",
     icon: <Home className="h-5 w-5" />,
+  },
+  {
+    title: "Profile",
+    href: "/dashboard/profile",
+    icon: <User className="h-5 w-5" />,
   },
   {
     title: "Tasks",
@@ -94,6 +99,11 @@ const navItems: NavItem[] = [
     roles: ["admin", "co-admin"]
   },
   // General
+  {
+    title: "Appearance",
+    href: "/dashboard/appearance",
+    icon: <Palette className="h-5 w-5" />,
+  },
   {
     title: "Billing",
     href: "/dashboard/billing",
