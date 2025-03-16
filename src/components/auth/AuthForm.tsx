@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import SocialAuth from "./SocialAuth";
+import LanguageSwitcher from "@/components/ui/language-switcher";
 
 const AuthForm = () => {
   const navigate = useNavigate();
@@ -64,10 +65,13 @@ const AuthForm = () => {
                 <span>Back</span>
               </Link>
             </Button>
-            <TabsList className="grid w-32 sm:w-48 grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Sign Up</TabsTrigger>
-            </TabsList>
+            <div className="flex items-center gap-2">
+              <LanguageSwitcher />
+              <TabsList className="grid w-32 sm:w-48 grid-cols-2">
+                <TabsTrigger value="login">Login</TabsTrigger>
+                <TabsTrigger value="register">Sign Up</TabsTrigger>
+              </TabsList>
+            </div>
           </div>
           <CardTitle className="text-2xl text-center">Welcome to Wakti</CardTitle>
           <CardDescription className="text-center">
