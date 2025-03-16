@@ -5,17 +5,21 @@ import { supabase } from "./client";
 
 /**
  * This is a workaround to allow typing newly created tables that aren't yet in generated types
+ * Uses type assertions to avoid excessive type checking depth
  */
 export const fromTable = <T = any>(tableName: string) => {
   return {
     select: (query = '*') => {
-      return supabase.from(tableName).select(query);
+      // Type assertion to avoid excessive type checking depth
+      return supabase.from(tableName).select(query) as any;
     },
     insert: (values: any) => {
-      return supabase.from(tableName).insert(values);
+      // Type assertion to avoid excessive type checking depth
+      return supabase.from(tableName).insert(values) as any;
     },
     update: (values: any, conditions?: Record<string, any>) => {
-      let query = supabase.from(tableName).update(values);
+      // Type assertion to avoid excessive type checking depth
+      let query = supabase.from(tableName).update(values) as any;
       if (conditions) {
         Object.entries(conditions).forEach(([key, value]) => {
           query = query.eq(key, value);
@@ -24,7 +28,8 @@ export const fromTable = <T = any>(tableName: string) => {
       return query;
     },
     delete: (conditions?: Record<string, any>) => {
-      let query = supabase.from(tableName).delete();
+      // Type assertion to avoid excessive type checking depth
+      let query = supabase.from(tableName).delete() as any;
       if (conditions) {
         Object.entries(conditions).forEach(([key, value]) => {
           query = query.eq(key, value);
@@ -33,7 +38,8 @@ export const fromTable = <T = any>(tableName: string) => {
       return query;
     },
     upsert: (values: any) => {
-      return supabase.from(tableName).upsert(values);
+      // Type assertion to avoid excessive type checking depth
+      return supabase.from(tableName).upsert(values) as any;
     }
   };
 };

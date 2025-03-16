@@ -128,22 +128,27 @@ export const useBusinessSubscribers = (businessId?: string) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return { subscribed: false, subscriptionId: null };
       
-      const { data, error } = await fromTable('business_subscribers')
-        .select('id')
-        .eq('business_id', businessId)
-        .eq('subscriber_id', session.user.id)
-        .single();
-      
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // No subscription found
-          return { subscribed: false, subscriptionId: null };
+      try {
+        const { data, error } = await fromTable('business_subscribers')
+          .select('id')
+          .eq('business_id', businessId)
+          .eq('subscriber_id', session.user.id)
+          .single();
+        
+        if (error) {
+          if (error.code === 'PGRST116') {
+            // No subscription found
+            return { subscribed: false, subscriptionId: null };
+          }
+          console.error("Error checking subscription:", error);
+          throw error;
         }
-        console.error("Error checking subscription:", error);
-        throw error;
+        
+        return { subscribed: true, subscriptionId: data.id };
+      } catch (error) {
+        console.error("Error in subscription check:", error);
+        return { subscribed: false, subscriptionId: null };
       }
-      
-      return { subscribed: true, subscriptionId: data.id };
     },
     enabled: !!businessId
   });

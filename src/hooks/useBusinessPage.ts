@@ -14,7 +14,7 @@ export const useBusinessPage = (pageSlug?: string) => {
     queryFn: async () => {
       if (!pageSlug) return null;
       
-      const { data, error } = await fromTable<BusinessPage>('business_pages')
+      const { data, error } = await fromTable('business_pages')
         .select()
         .eq('page_slug', pageSlug)
         .eq('is_published', true)
@@ -25,6 +25,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
+      // Safe type assertion since we know the structure
       return data as BusinessPage;
     },
     enabled: !!pageSlug
@@ -40,7 +41,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw new Error("No active session");
       }
       
-      const { data, error } = await fromTable<BusinessPage>('business_pages')
+      const { data, error } = await fromTable('business_pages')
         .select()
         .eq('business_id', session.user.id)
         .single();
@@ -50,6 +51,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
+      // Safe type assertion since we know the structure
       return data as BusinessPage;
     },
     enabled: !pageSlug // Only fetch when not viewing a specific page by slug
@@ -62,7 +64,7 @@ export const useBusinessPage = (pageSlug?: string) => {
       const pageId = businessPage?.id || ownerBusinessPage?.id;
       if (!pageId) return [];
       
-      const { data, error } = await fromTable<BusinessPageSection>('business_page_sections')
+      const { data, error } = await fromTable('business_page_sections')
         .select()
         .eq('page_id', pageId)
         .order('section_order', { ascending: true });
@@ -72,6 +74,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
+      // Safe type assertion since we know the structure
       return data as BusinessPageSection[];
     },
     enabled: !!(businessPage?.id || ownerBusinessPage?.id)
@@ -84,7 +87,7 @@ export const useBusinessPage = (pageSlug?: string) => {
       const businessId = businessPage?.business_id || ownerBusinessPage?.business_id;
       if (!businessId) return [];
       
-      const { data, error } = await fromTable<BusinessSocialLink>('business_social_links')
+      const { data, error } = await fromTable('business_social_links')
         .select()
         .eq('business_id', businessId);
       
@@ -93,6 +96,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
+      // Safe type assertion since we know the structure
       return data as BusinessSocialLink[];
     },
     enabled: !!(businessPage?.business_id || ownerBusinessPage?.business_id)
@@ -112,7 +116,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw new Error("No business page found");
       }
       
-      const { data, error } = await fromTable<BusinessPage>('business_pages')
+      const { data, error } = await fromTable('business_pages')
         .update(updates, { id: pageId, business_id: session.user.id }) // Ensure owner
         .select()
         .single();
@@ -122,6 +126,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
+      // Safe type assertion since we know the structure
       return data as BusinessPage;
     },
     onSuccess: () => {

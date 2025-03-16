@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { fromTable } from "@/integrations/supabase/helper";
 
 interface BusinessServicesListProps {
   section: BusinessPageSection;
@@ -48,8 +50,7 @@ const BusinessServicesList = ({ section, businessId }: BusinessServicesListProps
   const { data: services, isLoading } = useQuery({
     queryKey: ['businessServices', businessId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('business_services')
+      const { data, error } = await fromTable('business_services')
         .select('*')
         .eq('business_id', businessId);
       
