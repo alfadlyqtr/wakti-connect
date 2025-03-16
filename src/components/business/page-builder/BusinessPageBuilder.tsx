@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
 import { Button } from "@/components/ui/button";
@@ -89,7 +88,7 @@ const BusinessPageBuilder = () => {
           section_title: `New ${sectionType} section`,
           section_content: {},
           is_visible: true
-        })
+        } as any)
         .select()
         .single();
       
@@ -120,7 +119,7 @@ const BusinessPageBuilder = () => {
     mutationFn: async ({ sectionId, newOrder }: { sectionId: string, newOrder: number }) => {
       const { data, error } = await supabase
         .from('business_page_sections')
-        .update({ section_order: newOrder })
+        .update({ section_order: newOrder } as any)
         .eq('id', sectionId)
         .select()
         .single();
@@ -148,7 +147,7 @@ const BusinessPageBuilder = () => {
     mutationFn: async ({ sectionId, isVisible }: { sectionId: string, isVisible: boolean }) => {
       const { data, error } = await supabase
         .from('business_page_sections')
-        .update({ is_visible: isVisible })
+        .update({ is_visible: isVisible } as any)
         .eq('id', sectionId)
         .select()
         .single();

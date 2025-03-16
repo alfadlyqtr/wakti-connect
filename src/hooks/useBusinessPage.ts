@@ -25,12 +25,12 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
-      return data as BusinessPage;
+      return data as unknown as BusinessPage;
     },
     enabled: !!pageSlug
   });
 
-  // Fetch business page by business ID (for owners)
+  //  Fetch business page by business ID (for owners)
   const { data: ownerBusinessPage, isLoading: ownerPageLoading } = useQuery({
     queryKey: ['ownerBusinessPage'],
     queryFn: async () => {
@@ -51,7 +51,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
-      return data as BusinessPage;
+      return data as unknown as BusinessPage;
     },
     enabled: !pageSlug // Only fetch when not viewing a specific page by slug
   });
@@ -74,7 +74,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
-      return data as BusinessPageSection[];
+      return data as unknown as BusinessPageSection[];
     },
     enabled: !!(businessPage?.id || ownerBusinessPage?.id)
   });
@@ -96,7 +96,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
-      return data as BusinessSocialLink[];
+      return data as unknown as BusinessSocialLink[];
     },
     enabled: !!(businessPage?.business_id || ownerBusinessPage?.business_id)
   });
@@ -128,7 +128,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
-      return data;
+      return data as unknown as BusinessPage;
     },
     onSuccess: () => {
       toast({

@@ -29,7 +29,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section }) => {
         .from('business_page_sections')
         .update({
           section_content: updates
-        })
+        } as any)
         .eq('id', section.id)
         .select()
         .single();

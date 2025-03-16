@@ -1,249 +1,203 @@
 
 import React from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { useParams } from "react-router-dom";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
 import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
-import { Loader2, Calendar, MapPin, Clock, Phone, Mail, Globe, Share2 } from "lucide-react";
-import { SectionType } from "@/types/business.types";
-import { cn } from "@/lib/utils";
+import { BusinessPageSection } from "@/types/business.types";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import BusinessSocialLinks from "./BusinessSocialLinks";
-import BusinessServicesList from "./BusinessServicesList";
-import BusinessGallery from "./BusinessGallery";
-import BusinessHeader from "./BusinessHeader";
-import BusinessHours from "./BusinessHours";
-import BusinessContactInfo from "./BusinessContactInfo";
-import BusinessAbout from "./BusinessAbout";
-import BusinessTestimonials from "./BusinessTestimonials";
-import { format } from "date-fns";
 
-const BusinessLandingPage = () => {
+// Import page section components
+import BusinessHeader from "./BusinessHeader";
+import BusinessAbout from "./BusinessAbout";
+import BusinessServicesList from "./BusinessServicesList";
+import BusinessContactInfo from "./BusinessContactInfo";
+import BusinessGallery from "./BusinessGallery";
+import BusinessHours from "./BusinessHours";
+import BusinessTestimonials from "./BusinessTestimonials";
+import BusinessSocialLinks from "./BusinessSocialLinks";
+
+const BusinessLandingPageComponent = () => {
   const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
+  const { businessPage, pageSections, socialLinks, isLoading } = useBusinessPage(slug);
+  const { isSubscribed, subscriptionId, subscribe, unsubscribe, checkingSubscription } = useBusinessSubscribers(businessPage?.business_id);
+  const [isAuthenticated, setIsAuthenticated] = React.useState<boolean | null>(null);
   
-  const { 
-    businessPage, 
-    pageSections, 
-    socialLinks,
-    isLoading 
-  } = useBusinessPage(slug);
-  
-  const { 
-    isSubscribed, 
-    subscribe, 
-    unsubscribe, 
-    subscriptionLoading
-  } = useBusinessSubscribers(businessPage?.business_id);
-  
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
-  
-  // Check if user is logged in
   React.useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session?.user);
+      setIsAuthenticated(!!session?.user);
     };
+    
     checkAuth();
   }, []);
   
-  const handleSubscribe = async () => {
-    if (!isLoggedIn) {
+  const handleSubscribe = () => {
+    if (!businessPage?.business_id) return;
+    
+    if (isAuthenticated === false) {
       toast({
-        title: "Login required",
+        title: "Authentication required",
         description: "Please log in to subscribe to this business.",
-        action: (
-          <Button onClick={() => navigate("/auth")}>
-            Login
-          </Button>
-        )
+        variant: "destructive"
       });
       return;
     }
     
-    if (!businessPage?.business_id) return;
+    subscribe.mutate(businessPage.business_id);
+  };
+  
+  const handleUnsubscribe = () => {
+    if (!subscriptionId) return;
+    unsubscribe.mutate(subscriptionId);
+  };
+  
+  const renderSection = (section: BusinessPageSection) => {
+    if (!section.is_visible) return null;
     
-    if (isSubscribed) {
-      unsubscribe.mutate(businessPage.business_id);
-    } else {
-      subscribe.mutate(businessPage.business_id);
+    switch (section.section_type) {
+      case 'header':
+        return businessPage ? (
+          <BusinessHeader key={section.id} section={section} businessPage={businessPage} />
+        ) : null;
+      
+      case 'about':
+        return <BusinessAbout key={section.id} section={section} />;
+      
+      case 'services':
+        return <BusinessServicesList key={section.id} section={section} />;
+      
+      case 'contact':
+        return <BusinessContactInfo key={section.id} section={section} />;
+      
+      case 'gallery':
+        return <BusinessGallery key={section.id} section={section} />;
+      
+      case 'hours':
+        return <BusinessHours key={section.id} section={section} />;
+      
+      case 'testimonials':
+        return <BusinessTestimonials key={section.id} section={section} />;
+      
+      default:
+        return (
+          <div key={section.id} className="py-6">
+            <p className="text-muted-foreground text-center">Unknown section type</p>
+          </div>
+        );
     }
   };
   
-  const handleSharePage = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: businessPage?.page_title || 'Business Landing Page',
-        url: window.location.href
-      })
-      .catch(err => {
-        console.error('Error sharing:', err);
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast({
-        title: "Link copied",
-        description: "The page link has been copied to your clipboard."
-      });
-    }
-  };
-  
-  // Render loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
   
-  // Render 404 if page not found
   if (!businessPage) {
     return (
-      <div className="text-center py-12">
-        <h1 className="text-2xl font-bold mb-4">Business Page Not Found</h1>
-        <p className="text-muted-foreground mb-6">
-          The business page you're looking for doesn't exist or isn't published yet.
+      <div className="container mx-auto px-4 py-16 text-center">
+        <h1 className="text-3xl font-bold mb-4">Business Page Not Found</h1>
+        <p className="text-muted-foreground">
+          The business page you're looking for doesn't exist or has been removed.
         </p>
-        <Button onClick={() => navigate("/")}>
-          Return Home
-        </Button>
       </div>
     );
   }
   
-  // Set page style based on business colors
-  const pageStyle = {
-    '--primary-color': businessPage.primary_color || '#3B82F6',
-    '--secondary-color': businessPage.secondary_color || '#10B981',
-  } as React.CSSProperties;
-  
-  // Render each section based on its type
-  const renderSection = (section: any) => {
-    const sectionType = section.section_type as SectionType;
-    
-    switch (sectionType) {
-      case 'header':
-        return <BusinessHeader section={section} businessPage={businessPage} />;
-      case 'services':
-        return <BusinessServicesList section={section} businessId={businessPage.business_id} />;
-      case 'hours':
-        return <BusinessHours section={section} />;
-      case 'contact':
-        return <BusinessContactInfo section={section} />;
-      case 'gallery':
-        return <BusinessGallery section={section} />;
-      case 'about':
-        return <BusinessAbout section={section} />;
-      case 'testimonials':
-        return <BusinessTestimonials section={section} />;
-      default:
-        return null;
-    }
-  };
-
   return (
     <div 
-      className="min-h-screen bg-background"
-      style={pageStyle}
+      style={{
+        '--primary-color': businessPage.primary_color,
+        '--secondary-color': businessPage.secondary_color
+      } as React.CSSProperties}
+      className="min-h-screen pb-16"
     >
-      {/* Business Banner */}
-      {businessPage.banner_url && (
-        <div 
-          className="w-full h-48 md:h-64 bg-cover bg-center"
-          style={{ backgroundImage: `url(${businessPage.banner_url})` }}
-        />
-      )}
-      
-      {/* Business Info Header */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-          <div className="flex items-center gap-4">
-            {businessPage.logo_url && (
+      <div className="sticky top-0 z-10 bg-background border-b shadow-sm">
+        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center space-x-3">
+            {businessPage.logo_url ? (
               <img 
                 src={businessPage.logo_url} 
                 alt={`${businessPage.page_title} logo`}
-                className="w-16 h-16 rounded-full object-cover border border-border"
+                className="h-8 w-auto"
               />
-            )}
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold">{businessPage.page_title}</h1>
-              {businessPage.description && (
-                <p className="text-muted-foreground mt-1">{businessPage.description}</p>
-              )}
-            </div>
+            ) : null}
+            <span className="font-medium">{businessPage.page_title}</span>
           </div>
           
-          <div className="flex gap-2 mt-4 md:mt-0">
-            <Button 
-              onClick={handleSubscribe}
-              disabled={subscriptionLoading}
-              variant={isSubscribed ? "outline" : "default"}
-            >
-              {subscriptionLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
-              {isSubscribed ? "Unsubscribe" : "Subscribe"}
-            </Button>
-            
-            <Button onClick={handleSharePage} variant="outline">
-              <Share2 className="h-4 w-4 mr-2" />
-              Share
-            </Button>
+          <div>
+            {isAuthenticated !== null && (
+              checkingSubscription ? (
+                <Button variant="outline" disabled size="sm">
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Loading...
+                </Button>
+              ) : isSubscribed ? (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleUnsubscribe}
+                  disabled={unsubscribe.isPending}
+                >
+                  {unsubscribe.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : null}
+                  Unsubscribe
+                </Button>
+              ) : (
+                <Button 
+                  size="sm"
+                  onClick={handleSubscribe}
+                  disabled={subscribe.isPending}
+                >
+                  {subscribe.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : null}
+                  Subscribe
+                </Button>
+              )
+            )}
           </div>
         </div>
       </div>
       
-      {/* Business Social Links */}
-      {socialLinks && socialLinks.length > 0 && (
-        <div className="container mx-auto px-4 pb-6">
-          <BusinessSocialLinks socialLinks={socialLinks} />
-        </div>
-      )}
-      
-      {/* Render Page Sections */}
-      <div className="container mx-auto px-4 py-6">
-        {pageSections && pageSections.length > 0 ? (
+      <div className="container mx-auto px-4">
+        {/* If no sections, show a default header */}
+        {(!pageSections || pageSections.length === 0) && (
+          <div className="py-16 text-center">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+              {businessPage.page_title}
+            </h1>
+            {businessPage.description && (
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                {businessPage.description}
+              </p>
+            )}
+          </div>
+        )}
+        
+        {/* Render page sections in order */}
+        {pageSections && pageSections.length > 0 && 
           pageSections
-            .filter(section => section.is_visible)
-            .map(section => (
-              <div key={section.id} className="mb-10">
-                {renderSection(section)}
-              </div>
-            ))
-        ) : (
-          <div className="text-center py-12 border rounded-lg">
-            <h2 className="text-xl font-medium mb-2">No Content Available</h2>
-            <p className="text-muted-foreground">
-              This business page is still being set up.
-            </p>
+            .sort((a, b) => a.section_order - b.section_order)
+            .map(renderSection)
+        }
+        
+        {/* Social Links Footer */}
+        {socialLinks && socialLinks.length > 0 && (
+          <div className="mt-12 pt-6 border-t">
+            <BusinessSocialLinks socialLinks={socialLinks} />
           </div>
         )}
       </div>
-      
-      {/* Footer */}
-      <footer className="bg-muted py-6 mt-10">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                &copy; {new Date().getFullYear()} {businessPage.page_title}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Last updated: {format(new Date(businessPage.updated_at), 'MMMM d, yyyy')}
-              </p>
-            </div>
-            <div className="mt-4 md:mt-0">
-              <p className="text-xs text-muted-foreground">
-                Powered by <span className="font-semibold">WAKTI</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };
 
-export default BusinessLandingPage;
+export default BusinessLandingPageComponent;

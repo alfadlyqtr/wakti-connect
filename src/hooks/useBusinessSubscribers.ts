@@ -1,79 +1,53 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { BusinessSubscriber, BusinessSubscriberWithProfile } from "@/types/business.types";
+import { BusinessSubscriberWithProfile } from "@/types/business.types";
 import { toast } from "@/components/ui/use-toast";
 
 export const useBusinessSubscribers = (businessId?: string) => {
   const queryClient = useQueryClient();
 
-  // Fetch all subscribers for a business
-  const { data: subscribers, isLoading: subscribersLoading } = useQuery({
+  // Fetch business subscribers with profiles
+  const { data: subscribers, isLoading } = useQuery({
     queryKey: ['businessSubscribers', businessId],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.user) {
-        throw new Error("No active session");
-      }
-      
-      // Use provided businessId or current user's ID
-      const targetBusinessId = businessId || session.user.id;
+      if (!businessId) return [];
       
       const { data, error } = await supabase
         .from('business_subscribers')
         .select(`
           *,
-          profiles:subscriber_id (
+          profiles:subscriber_id(
             display_name,
             full_name,
             avatar_url
           )
         `)
-        .eq('business_id', targetBusinessId);
+        .eq('business_id', businessId);
       
       if (error) {
-        console.error("Error fetching subscribers:", error);
+        console.error("Error fetching business subscribers:", error);
         throw error;
       }
-      
-      return data as BusinessSubscriberWithProfile[];
-    },
-    enabled: !!businessId
-  });
 
-  // Check if user is subscribed to a business
-  const { data: isSubscribed, isLoading: subscriptionLoading } = useQuery({
-    queryKey: ['isSubscribed', businessId],
-    queryFn: async () => {
-      if (!businessId) return false;
+      // Transform the data to match our expected format
+      const transformedData = data.map((item: any) => ({
+        ...item,
+        profile: item.profiles || {
+          display_name: null,
+          full_name: null,
+          avatar_url: null
+        }
+      }));
       
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.user) {
-        return false;
-      }
-      
-      const { data, error } = await supabase
-        .from('business_subscribers')
-        .select('id')
-        .eq('business_id', businessId)
-        .eq('subscriber_id', session.user.id)
-        .maybeSingle();
-      
-      if (error) {
-        console.error("Error checking subscription:", error);
-        throw error;
-      }
-      
-      return !!data;
+      return transformedData as unknown as BusinessSubscriberWithProfile[];
     },
     enabled: !!businessId
   });
 
   // Subscribe to a business
   const subscribe = useMutation({
-    mutationFn: async (businessId: string) => {
+    mutationFn: async (businessIdToSubscribe: string) => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) {
@@ -82,11 +56,9 @@ export const useBusinessSubscribers = (businessId?: string) => {
       
       const { data, error } = await supabase
         .from('business_subscribers')
-        .upsert({
-          business_id: businessId,
+        .insert({
+          business_id: businessIdToSubscribe,
           subscriber_id: session.user.id,
-          status: 'active',
-          subscription_date: new Date().toISOString()
         })
         .select()
         .single();
@@ -100,10 +72,11 @@ export const useBusinessSubscribers = (businessId?: string) => {
     },
     onSuccess: () => {
       toast({
-        title: "Subscribed",
-        description: "You are now subscribed to this business"
+        title: "Subscription successful",
+        description: "You have successfully subscribed to this business."
       });
-      queryClient.invalidateQueries({ queryKey: ['isSubscribed'] });
+      queryClient.invalidateQueries({ queryKey: ['businessSubscribers'] });
+      queryClient.invalidateQueries({ queryKey: ['userSubscriptions'] });
     },
     onError: (error) => {
       toast({
@@ -116,18 +89,11 @@ export const useBusinessSubscribers = (businessId?: string) => {
 
   // Unsubscribe from a business
   const unsubscribe = useMutation({
-    mutationFn: async (businessId: string) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.user) {
-        throw new Error("You must be logged in to unsubscribe");
-      }
-      
+    mutationFn: async (subscriptionId: string) => {
       const { error } = await supabase
         .from('business_subscribers')
         .delete()
-        .eq('business_id', businessId)
-        .eq('subscriber_id', session.user.id);
+        .eq('id', subscriptionId);
       
       if (error) {
         console.error("Error unsubscribing from business:", error);
@@ -139,9 +105,10 @@ export const useBusinessSubscribers = (businessId?: string) => {
     onSuccess: () => {
       toast({
         title: "Unsubscribed",
-        description: "You have unsubscribed from this business"
+        description: "You have unsubscribed from this business."
       });
-      queryClient.invalidateQueries({ queryKey: ['isSubscribed'] });
+      queryClient.invalidateQueries({ queryKey: ['businessSubscribers'] });
+      queryClient.invalidateQueries({ queryKey: ['userSubscriptions'] });
     },
     onError: (error) => {
       toast({
@@ -152,43 +119,43 @@ export const useBusinessSubscribers = (businessId?: string) => {
     }
   });
 
-  // Get subscriber count for analytics
-  const { data: subscriberCount, isLoading: countLoading } = useQuery({
-    queryKey: ['subscriberCount', businessId],
+  // Check if the current user is subscribed to a business
+  const { data: isSubscribed, isLoading: checkingSubscription } = useQuery({
+    queryKey: ['isUserSubscribed', businessId],
     queryFn: async () => {
+      if (!businessId) return false;
+      
       const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return false;
       
-      if (!session?.user) {
-        throw new Error("No active session");
-      }
-      
-      // Use provided businessId or current user's ID
-      const targetBusinessId = businessId || session.user.id;
-      
-      const { count, error } = await supabase
+      const { data, error } = await supabase
         .from('business_subscribers')
-        .select('*', { count: 'exact', head: true })
-        .eq('business_id', targetBusinessId);
+        .select('id')
+        .eq('business_id', businessId)
+        .eq('subscriber_id', session.user.id)
+        .single();
       
       if (error) {
-        console.error("Error fetching subscriber count:", error);
+        if (error.code === 'PGRST116') {
+          // No subscription found
+          return { subscribed: false, subscriptionId: null };
+        }
+        console.error("Error checking subscription:", error);
         throw error;
       }
       
-      return count || 0;
+      return { subscribed: true, subscriptionId: data.id };
     },
     enabled: !!businessId
   });
 
   return {
     subscribers,
-    subscribersLoading,
-    isSubscribed,
-    subscriptionLoading,
-    subscriberCount,
-    countLoading,
+    isLoading,
     subscribe,
     unsubscribe,
-    isLoading: subscribersLoading || subscriptionLoading || countLoading
+    isSubscribed: isSubscribed?.subscribed || false,
+    subscriptionId: isSubscribed?.subscriptionId || null,
+    checkingSubscription
   };
 };
