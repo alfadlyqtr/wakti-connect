@@ -2,7 +2,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment, AppointmentTab, AppointmentFormData, AppointmentsResult } from "@/types/appointment.types";
 
-export async function fetchUserRole() {
+// Fetch appointments based on the selected tab
+export async function fetchAppointments(tab: AppointmentTab): Promise<AppointmentsResult> {
   const { data: { session } } = await supabase.auth.getSession();
   
   if (!session?.user) {
@@ -16,79 +17,78 @@ export async function fetchUserRole() {
     .eq('id', session.user.id)
     .single();
   
-  return profileData?.account_type || "free";
-}
-
-export async function fetchAppointments(tab: AppointmentTab): Promise<AppointmentsResult> {
-  const { data: { session } } = await supabase.auth.getSession();
+  const userRole = profileData?.account_type || "free";
   
-  if (!session?.user) {
-    throw new Error("No active session");
-  }
-  
-  const userRole = await fetchUserRole();
-  
-  let appointmentsData;
+  let query;
   
   switch (tab) {
     case "my-appointments":
       // User's own appointments
-      const { data: myAppointments, error: myError } = await supabase
+      query = supabase
         .from('appointments')
         .select('*')
         .eq('user_id', session.user.id)
         .order('start_time', { ascending: true });
-        
-      if (myError) throw myError;
-      appointmentsData = myAppointments;
       break;
       
     case "shared-appointments":
       // Appointments shared with the user
-      const { data: sharedData, error: sharedError } = await supabase
-        .from('appointment_invitations') // Changed from shared_appointments to match correct table
+      query = supabase
+        .from('appointment_invitations')
         .select('appointment_id, appointments(*)')
-        .eq('invited_user_id', session.user.id) // Using invited_user_id instead of shared_with
+        .eq('invited_user_id', session.user.id)
+        .eq('status', 'accepted')
         .order('created_at', { ascending: false });
-        
-      if (sharedError) throw sharedError;
-      appointmentsData = sharedData.map((item: any) => item.appointments);
       break;
       
     case "assigned-appointments":
       // Appointments assigned to the user (for staff members)
-      const { data: assignedAppointments, error: assignedError } = await supabase
+      query = supabase
         .from('appointments')
         .select('*')
         .eq('assignee_id', session.user.id)
         .order('start_time', { ascending: true });
-        
-      if (assignedError) throw assignedError;
-      appointmentsData = assignedAppointments;
       break;
   }
   
+  const { data, error } = await query;
+  
+  if (error) {
+    console.error(`Error fetching ${tab}:`, error);
+    throw error;
+  }
+  
+  // Transform shared appointments data if needed
+  let transformedData: Appointment[];
+  if (tab === "shared-appointments") {
+    transformedData = data.map((item: any) => item.appointments) as Appointment[];
+  } else {
+    transformedData = data as Appointment[];
+  }
+  
   return { 
-    appointments: appointmentsData as Appointment[],
-    userRole
+    appointments: transformedData,
+    userRole: userRole as "free" | "individual" | "business"
   };
 }
 
-export async function createAppointment(appointmentData: AppointmentFormData) {
+// Create a new appointment
+export async function createAppointment(appointmentData: AppointmentFormData): Promise<Appointment> {
+  // Get current user
   const { data: { session } } = await supabase.auth.getSession();
   
   if (!session) {
-    throw new Error("Authentication required");
+    throw new Error("Authentication required to create appointments");
   }
 
   const newAppointment = {
     user_id: session.user.id,
     title: appointmentData.title,
-    description: appointmentData.description || "",
+    description: appointmentData.description || null,
     start_time: appointmentData.start_time,
     end_time: appointmentData.end_time,
     location: appointmentData.location || null,
-    is_all_day: appointmentData.is_all_day,
+    is_all_day: appointmentData.is_all_day || false,
     status: appointmentData.status || "upcoming",
     assignee_id: appointmentData.assignee_id || null
   };
@@ -102,5 +102,5 @@ export async function createAppointment(appointmentData: AppointmentFormData) {
     throw error;
   }
   
-  return data[0];
+  return data[0] as Appointment;
 }

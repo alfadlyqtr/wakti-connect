@@ -6,7 +6,7 @@ import { fetchAppointments, createAppointment as createAppointmentService } from
 import { filterAppointments } from "@/utils/appointmentUtils";
 import { Appointment, AppointmentTab, AppointmentFormData } from "@/types/appointment.types";
 
-export { Appointment, AppointmentTab } from "@/types/appointment.types";
+export type { Appointment, AppointmentTab, AppointmentFormData } from "@/types/appointment.types";
 
 export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
   const [searchQuery, setSearchQuery] = useState("");

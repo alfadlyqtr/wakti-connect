@@ -1,7 +1,7 @@
 
 import React from "react";
-import AppointmentCard from "@/components/ui/AppointmentCard";
-import { Appointment, AppointmentTab } from "@/hooks/useAppointments";
+import { AppointmentCard } from "@/components/ui/AppointmentCard";
+import { Appointment, AppointmentTab } from "@/types/appointment.types";
 
 interface AppointmentGridProps {
   appointments: Appointment[];
