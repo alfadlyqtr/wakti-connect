@@ -61,7 +61,7 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
       if (data && data.length > 0) {
         for (const item of data) {
           if (item.appointments) {
-            appointmentsData.push(item.appointments);
+            appointmentsData.push({...item.appointments});
           }
         }
       }
@@ -93,7 +93,7 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
       if (data && data.length > 0) {
         for (const item of data) {
           if (item.appointments) {
-            appointmentsData.push(item.appointments);
+            appointmentsData.push({...item.appointments});
           }
         }
       }

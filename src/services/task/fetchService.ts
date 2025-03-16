@@ -52,7 +52,7 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
       if (data && data.length > 0) {
         for (const item of data) {
           if (item.tasks) {
-            tasksData.push(item.tasks);
+            tasksData.push({...item.tasks});
           }
         }
       }
