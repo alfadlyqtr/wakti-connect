@@ -93,6 +93,9 @@ const Footer = () => {
           <p className="text-muted-foreground text-sm">
             © {new Date().getFullYear()} WAKTI. All rights reserved.
           </p>
+          <p className="text-muted-foreground text-xs mt-2">
+            Designed and made by <a href="https://tmw.qa/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">TMW</a>
+          </p>
         </div>
       </div>
     </footer>
