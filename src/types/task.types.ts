@@ -10,6 +10,16 @@ export interface Task {
   assignee_id: string | null;
   created_at: string;
   updated_at: string;
+  is_recurring_instance?: boolean;
+  parent_recurring_id?: string | null;
+  subtasks?: SubTask[];
+}
+
+export interface SubTask {
+  id?: string;
+  content: string;
+  is_completed: boolean;
+  task_id?: string;
 }
 
 export type TaskStatus = "pending" | "in-progress" | "completed" | "late";
@@ -24,6 +34,7 @@ export interface TaskFormData {
   priority?: TaskPriority;
   due_date?: string;
   assignee_id?: string | null;
+  subtasks?: SubTask[];
 }
 
 export interface TasksResult {

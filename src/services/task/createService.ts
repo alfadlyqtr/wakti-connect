@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskFormData } from "./types";
+import { Task, TaskFormData, SubTask } from "./types";
 import { createNewTask } from "./baseService";
 import { RecurringFormData, EntityType } from "@/types/recurring.types";
 import { createRecurringSetting, generateRecurringDates } from "@/services/recurring/recurringService";
@@ -16,6 +16,11 @@ export async function createTask(taskData: TaskFormData, recurringData?: Recurri
 
   // Create the new task using the base service
   const task = await createNewTask(session.user.id, taskData);
+  
+  // If there are subtasks, create them
+  if (taskData.subtasks && taskData.subtasks.length > 0) {
+    await createSubtasks(task.id, taskData.subtasks);
+  }
   
   // If recurring data is provided, create recurring settings
   if (recurringData && task) {
@@ -39,6 +44,26 @@ export async function createTask(taskData: TaskFormData, recurringData?: Recurri
   }
   
   return task;
+}
+
+// Create subtasks for a task
+async function createSubtasks(taskId: string, subtasks: SubTask[]): Promise<void> {
+  if (!subtasks.length) return;
+  
+  const subtasksToCreate = subtasks.map(subtask => ({
+    task_id: taskId,
+    content: subtask.content,
+    is_completed: subtask.is_completed || false,
+  }));
+  
+  const { error } = await supabase
+    .from('todo_items')
+    .insert(subtasksToCreate);
+    
+  if (error) {
+    console.error("Failed to create subtasks:", error);
+    throw error;
+  }
 }
 
 // Create recurring task instances

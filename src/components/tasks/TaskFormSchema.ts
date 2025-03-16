@@ -1,4 +1,3 @@
-
 import * as z from "zod";
 
 export const taskFormSchema = z.object({
@@ -6,7 +5,13 @@ export const taskFormSchema = z.object({
   description: z.string().optional(),
   priority: z.enum(["urgent", "high", "medium", "normal"]).default("normal"),
   due_date: z.date(),
-  // Adding the recurring fields to the schema
+  due_time: z.string().optional(),
+  subtasks: z.array(
+    z.object({
+      content: z.string().min(1, "Subtask content is required"),
+      is_completed: z.boolean().default(false)
+    })
+  ).default([]),
   isRecurring: z.boolean().optional(),
   recurring: z.object({
     frequency: z.enum(["daily", "weekly", "monthly", "yearly"]).optional(),

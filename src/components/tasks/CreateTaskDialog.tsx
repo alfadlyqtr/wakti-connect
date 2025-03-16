@@ -47,6 +47,8 @@ export function CreateTaskDialog({
       description: "",
       priority: "normal",
       due_date: new Date(Date.now() + 86400000), // Tomorrow
+      due_time: "",
+      subtasks: [],
       isRecurring: false,
       recurring: {
         frequency: "daily",
@@ -59,12 +61,21 @@ export function CreateTaskDialog({
   const handleSubmit = async (values: TaskFormValues) => {
     setIsSubmitting(true);
     try {
+      // Format the datetime by combining date and time
+      let dueDateTime = new Date(values.due_date);
+      
+      if (values.due_time) {
+        const [hours, minutes] = values.due_time.split(':').map(Number);
+        dueDateTime.setHours(hours, minutes);
+      }
+      
       const taskData: TaskFormData = {
         title: values.title,
         description: values.description,
         priority: values.priority,
-        due_date: values.due_date.toISOString(),
-        status: "pending"
+        due_date: dueDateTime.toISOString(),
+        status: "pending",
+        subtasks: values.subtasks
       };
       
       const recurringData = values.isRecurring ? values.recurring as RecurringFormData : undefined;

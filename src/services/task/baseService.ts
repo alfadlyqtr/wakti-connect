@@ -27,3 +27,29 @@ export async function createNewTask(userId: string, taskData: Partial<TaskFormDa
   
   return data[0] as Task;
 }
+
+// Get task with subtasks
+export async function getTaskWithSubtasks(taskId: string): Promise<Task> {
+  // First get the task
+  const { data: taskData, error: taskError } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('id', taskId)
+    .single();
+    
+  if (taskError) throw taskError;
+  
+  // Then get any subtasks
+  const { data: subtasksData, error: subtasksError } = await supabase
+    .from('todo_items')
+    .select('*')
+    .eq('task_id', taskId);
+    
+  if (subtasksError) throw subtasksError;
+  
+  // Combine the data
+  return {
+    ...taskData,
+    subtasks: subtasksData || []
+  } as Task;
+}
