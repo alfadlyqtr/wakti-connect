@@ -1,5 +1,8 @@
 
 import { BarChart2, Bell, BookOpen, Calendar, CreditCard, FileText, Home, Mail, MenuIcon, MessageSquare, Settings, ShieldCheck, Users, Clock, Briefcase, FileCheck } from "lucide-react";
+import React from "react";
+import { NavLink } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 type NavItem = {
   title: string;
@@ -103,5 +106,49 @@ const navItems: NavItem[] = [
   },
 ];
 
-export { navItems };
+interface SidebarNavItemsProps {
+  userRole?: "free" | "individual" | "business";
+  staffRole?: "admin" | "co-admin" | "staff" | null;
+}
+
+const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({ 
+  userRole = "free", 
+  staffRole = null 
+}) => {
+  // Filter items based on the user's role and plan
+  const filteredItems = navItems.filter(item => {
+    // If the item has plans specified, check if the user's plan is included
+    if (item.plans && !item.plans.includes(userRole)) {
+      return false;
+    }
+    
+    // If the item has roles specified, check if the user's role is included
+    if (item.roles && staffRole && !item.roles.includes(staffRole)) {
+      return false;
+    }
+    
+    return true;
+  });
+
+  return (
+    <div className="space-y-1">
+      {filteredItems.map((item, index) => (
+        <NavLink
+          key={index}
+          to={item.href}
+          className={({ isActive }) => cn(
+            "flex items-center rounded-md px-3 py-2 text-sm",
+            "hover:bg-accent hover:text-accent-foreground",
+            isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+          )}
+        >
+          <span className="mr-3">{item.icon}</span>
+          <span>{item.title}</span>
+        </NavLink>
+      ))}
+    </div>
+  );
+};
+
+export { navItems, SidebarNavItems };
 export type { NavItem };

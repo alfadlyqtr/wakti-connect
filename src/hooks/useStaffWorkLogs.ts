@@ -91,10 +91,12 @@ export const useStaffWorkLogs = () => {
               });
             }
             
-            // Transform the sessions to include a date field
+            // Transform the sessions to include a date field and ensure correct status type
             const formattedSessions = (sessions || []).map(session => {
-              // Make sure to properly type the status field
-              const typedStatus = (session.status as string || 'active') as 'active' | 'completed' | 'cancelled';
+              // Ensure the status is one of the valid options
+              let typedStatus: 'active' | 'completed' | 'cancelled' = 'active';
+              if (session.status === 'completed') typedStatus = 'completed';
+              if (session.status === 'cancelled') typedStatus = 'cancelled';
               
               return {
                 ...session,
@@ -151,12 +153,12 @@ export const useStaffWorkLogs = () => {
         description: "Your work day has been started successfully",
       });
       
-      // Add the date field
-      const session = {
+      // Create a properly typed WorkSession
+      const session: WorkSession = {
         ...data,
         date: new Date(data.start_time).toISOString().split('T')[0],
         status: data.status as 'active' | 'completed' | 'cancelled'
-      } as WorkSession;
+      };
       
       return session;
     },
@@ -194,12 +196,12 @@ export const useStaffWorkLogs = () => {
         description: "Your work day has been ended successfully",
       });
       
-      // Add the date field
-      const session = {
+      // Create a properly typed WorkSession
+      const session: WorkSession = {
         ...data,
         date: new Date(data.start_time).toISOString().split('T')[0],
         status: data.status as 'active' | 'completed' | 'cancelled'
-      } as WorkSession;
+      };
       
       return session;
     },

@@ -2,7 +2,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import SidebarNavItems from "./sidebar/SidebarNavItems";
+import { navItems } from "./sidebar/SidebarNavItems";
 import SidebarUpgradeBanner from "./sidebar/SidebarUpgradeBanner";
 
 interface SidebarProps {
@@ -45,7 +45,14 @@ const Sidebar = ({ isOpen, userRole = "free" }: SidebarProps) => {
         </div>
         
         <nav className="flex-1 overflow-y-auto py-4 px-3">
-          <SidebarNavItems userRole={userRole} />
+          <div>
+            {navItems.map((item, index) => (
+              // Render sidebar navigation items here
+              <div key={index} className="mb-1">
+                {/* This is a placeholder - you'll need to implement the actual rendering logic */}
+              </div>
+            ))}
+          </div>
         </nav>
         
         {userRole === "free" && <SidebarUpgradeBanner />}

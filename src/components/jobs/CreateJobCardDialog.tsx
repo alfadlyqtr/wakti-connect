@@ -15,6 +15,7 @@ import { Form } from "@/components/ui/form";
 import { jobCardFormSchema, JobCardFormValues } from "./JobCardFormSchema";
 import { useJobs } from "@/hooks/useJobs";
 import { useJobCards } from "@/hooks/useJobCards";
+import { JobCardFormData } from "@/types/jobs.types";
 import {
   FormField,
   FormItem,
@@ -72,12 +73,22 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
   const onSubmit = async (data: JobCardFormValues) => {
     try {
       const now = new Date().toISOString();
-      await createJobCard.mutateAsync({
-        ...data,
-        staff_relation_id: staffRelationId,
+      
+      // Make sure required fields are present
+      const jobCardData: JobCardFormData = {
+        job_id: data.job_id,
+        payment_method: data.payment_method,
+        payment_amount: data.payment_amount,
         start_time: data.start_time || now,
-        end_time: data.end_time || now
+        end_time: data.end_time || now,
+        notes: data.notes
+      };
+      
+      await createJobCard.mutateAsync({
+        ...jobCardData,
+        staff_relation_id: staffRelationId
       });
+      
       form.reset();
       onOpenChange(false);
     } catch (error) {

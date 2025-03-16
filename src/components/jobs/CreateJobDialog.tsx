@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useJobs } from "@/hooks/useJobs";
 import { jobFormSchema, JobFormValues } from "./JobFormSchema";
+import { JobFormData } from "@/types/jobs.types";
 import JobFormFields from "./JobFormFields";
 
 interface CreateJobDialogProps {
