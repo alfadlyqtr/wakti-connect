@@ -2,7 +2,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
-import { fetchTasks, createTask as createTaskService, shareTask as shareTaskService, assignTask as assignTaskService } from "@/services/taskService";
+import { 
+  fetchTasks, 
+  createTask as createTaskService, 
+  shareTask as shareTaskService, 
+  assignTask as assignTaskService 
+} from "@/services/task";
 import { filterTasks } from "@/utils/taskUtils";
 import { Task, TaskTab, TaskFormData } from "@/types/task.types";
 

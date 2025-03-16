@@ -1,6 +1,6 @@
 
 // Re-export appointment types to ensure consistent imports
-export { 
+export type { 
   Appointment, 
   AppointmentTab, 
   AppointmentFormData, 
