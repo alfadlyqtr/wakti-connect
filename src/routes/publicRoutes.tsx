@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Route, Routes } from "react-router-dom";
+import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
 import PricingPage from "@/pages/public/PricingPage";
 import FeaturesPage from "@/pages/public/FeaturesPage";
@@ -9,13 +10,12 @@ import AboutPage from "@/pages/public/AboutPage";
 import FaqPage from "@/pages/public/FaqPage";
 import TermsPage from "@/pages/public/TermsPage";
 import PrivacyPage from "@/pages/public/PrivacyPage";
-import LandingPage from "@/pages/public/LandingPage";
 
 const PublicRoutes = () => {
   return (
     <Routes>
-      {/* The index route now uses LandingPage instead of Index */}
-      <Route index element={<LandingPage />} />
+      {/* The index route now corresponds to the root path */}
+      <Route index element={<Index />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/features" element={<FeaturesPage />} />
       <Route path="/contact" element={<ContactPage />} />
