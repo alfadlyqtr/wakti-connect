@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import EventDot from "./EventDot";
 import { DayEventTypes } from "@/types/calendar.types";
 
-interface CalendarDayCellProps extends React.HTMLAttributes<HTMLDivElement> {
+interface CalendarDayCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'> {
   date: Date;
   selected?: boolean;
   eventTypes: DayEventTypes;

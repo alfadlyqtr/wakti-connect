@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { AppointmentFormData } from "../appointment/types";
 import { RecurringFormData } from "@/types/recurring.types";
-import { createRecurringSettings } from "../recurring/recurringService";
+import { createRecurringSetting } from "../recurring/recurringService";
 
 /**
  * Create a new appointment
@@ -41,7 +41,7 @@ export async function createAppointment(formData: AppointmentFormData, recurring
     
     // Handle recurring settings if provided
     if (recurringData && data) {
-      await createRecurringSettings({
+      await createRecurringSetting({
         entity_id: data.id,
         entity_type: 'appointment',
         created_by: session.user.id,
