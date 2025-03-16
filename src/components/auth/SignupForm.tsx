@@ -9,12 +9,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 interface SignupFormProps {
   setError: (error: string) => void;
 }
 
 const SignupForm = ({ setError }: SignupFormProps) => {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -64,7 +66,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
   return (
     <form onSubmit={handleSignup} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="full-name">Full Name</Label>
+        <Label htmlFor="full-name">{t('auth.fullName')}</Label>
         <div className="relative">
           <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
           <Input 
@@ -80,7 +82,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="signup-email">Email</Label>
+        <Label htmlFor="signup-email">{t('auth.email')}</Label>
         <div className="relative">
           <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
           <Input 
@@ -96,7 +98,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="signup-password">Password</Label>
+        <Label htmlFor="signup-password">{t('auth.password')}</Label>
         <div className="relative">
           <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
           <Input 
@@ -126,7 +128,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="account-type">Account Type</Label>
+        <Label htmlFor="account-type">{t('auth.accountType')}</Label>
         <RadioGroup 
           defaultValue="free" 
           value={accountType}
@@ -135,15 +137,15 @@ const SignupForm = ({ setError }: SignupFormProps) => {
         >
           <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-accent cursor-pointer">
             <RadioGroupItem value="free" id="free" />
-            <Label htmlFor="free" className="cursor-pointer">Free</Label>
+            <Label htmlFor="free" className="cursor-pointer">{t('auth.free')}</Label>
           </div>
           <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-accent cursor-pointer">
             <RadioGroupItem value="individual" id="individual" />
-            <Label htmlFor="individual" className="cursor-pointer">Individual</Label>
+            <Label htmlFor="individual" className="cursor-pointer">{t('auth.individual')}</Label>
           </div>
           <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-accent cursor-pointer">
             <RadioGroupItem value="business" id="business" />
-            <Label htmlFor="business" className="cursor-pointer">Business</Label>
+            <Label htmlFor="business" className="cursor-pointer">{t('auth.business')}</Label>
           </div>
         </RadioGroup>
       </div>
@@ -154,7 +156,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
           htmlFor="terms" 
           className="text-sm font-normal cursor-pointer"
         >
-          I agree to the <Link to="/terms" className="underline underline-offset-2">Terms of Service</Link> and <Link to="/privacy" className="underline underline-offset-2">Privacy Policy</Link>
+          {t('auth.termsAgreement')}
         </Label>
       </div>
       
@@ -162,10 +164,10 @@ const SignupForm = ({ setError }: SignupFormProps) => {
         {isLoading ? (
           <div className="flex items-center gap-2">
             <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            <span>Creating account...</span>
+            <span>{t('auth.creatingAccount')}</span>
           </div>
         ) : (
-          <span>Create Account</span>
+          <span>{t('auth.createAccount')}</span>
         )}
       </Button>
     </form>

@@ -1,4 +1,3 @@
-
 {
   "common": {
     "wakti": "Wakti",
@@ -141,5 +140,27 @@
     "settings": "Settings",
     "home": "Home",
     "viewOnly": "View Only"
+  },
+  "auth": {
+    "welcomeToWakti": "Welcome to Wakti",
+    "manageEfficiently": "Manage your tasks and appointments efficiently",
+    "login": "Login",
+    "signUp": "Sign Up",
+    "back": "Back",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "rememberMe": "Remember me",
+    "loggingIn": "Logging in...",
+    "fullName": "Full Name",
+    "accountType": "Account Type",
+    "free": "Free",
+    "individual": "Individual",
+    "business": "Business",
+    "termsAgreement": "I agree to the Terms of Service and Privacy Policy",
+    "creatingAccount": "Creating account...",
+    "createAccount": "Create Account",
+    "continueWith": "Or continue with",
+    "enterDetails": "Please enter your details"
   }
 }

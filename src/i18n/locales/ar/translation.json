@@ -1,4 +1,3 @@
-
 {
   "common": {
     "wakti": "وقتي",
@@ -141,5 +140,27 @@
     "settings": "الإعدادات",
     "home": "الرئيسية",
     "viewOnly": "عرض فقط"
+  },
+  "auth": {
+    "welcomeToWakti": "مرحبًا بك في وقتي",
+    "manageEfficiently": "إدارة مهامك ومواعيدك بكفاءة",
+    "login": "تسجيل الدخول",
+    "signUp": "إنشاء حساب",
+    "back": "رجوع",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "rememberMe": "تذكرني",
+    "loggingIn": "جاري تسجيل الدخول...",
+    "fullName": "الاسم الكامل",
+    "accountType": "نوع الحساب",
+    "free": "مجاني",
+    "individual": "فردي",
+    "business": "للأعمال",
+    "termsAgreement": "أوافق على شروط الخدمة وسياسة الخصوصية",
+    "creatingAccount": "جاري إنشاء الحساب...",
+    "createAccount": "إنشاء حساب",
+    "continueWith": "أو المتابعة باستخدام",
+    "enterDetails": "الرجاء إدخال بياناتك"
   }
 }
