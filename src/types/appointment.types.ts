@@ -9,7 +9,7 @@ export interface Appointment {
   end_time: string;
   is_all_day: boolean;
   status: AppointmentStatus;
-  assignee_id?: string | null;
+  assignee_id: string | null;
   created_at: string;
   updated_at: string;
 }
