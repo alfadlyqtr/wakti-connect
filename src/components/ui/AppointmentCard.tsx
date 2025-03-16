@@ -10,15 +10,19 @@ import { format } from "date-fns";
 export interface AppointmentCardProps {
   id: string;
   title: string;
-  startTime: string;
-  endTime: string;
+  startTime: Date;
+  endTime: Date;
   location?: string;
   isAllDay?: boolean;
   status?: "upcoming" | "completed" | "cancelled";
+  description?: string;
+  userRole?: "free" | "individual" | "business";
+  isAssigned?: boolean;
+  isShared?: boolean;
   onClick?: () => void;
 }
 
-const AppointmentCard: React.FC<AppointmentCardProps> = ({
+export const AppointmentCard: React.FC<AppointmentCardProps> = ({
   title,
   startTime,
   endTime,
@@ -27,9 +31,6 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
   status = "upcoming",
   onClick,
 }) => {
-  const startDate = new Date(startTime);
-  const endDate = new Date(endTime);
-  
   const statusColors = {
     upcoming: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
     completed: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
@@ -50,13 +51,13 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
         <div className="space-y-2">
           <div className="flex items-center text-sm">
             <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-            <span>{format(startDate, "MMMM d, yyyy")}</span>
+            <span>{format(startTime, "MMMM d, yyyy")}</span>
           </div>
           {!isAllDay && (
             <div className="flex items-center text-sm">
               <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
               <span>
-                {format(startDate, "h:mm a")} - {format(endDate, "h:mm a")}
+                {format(startTime, "h:mm a")} - {format(endTime, "h:mm a")}
               </span>
             </div>
           )}
