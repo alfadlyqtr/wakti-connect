@@ -35,7 +35,10 @@ const BusinessPlanCard = ({
   };
 
   return (
-    <Card className={selectedPlan === "business" ? "border-wakti-blue shadow-md" : ""}>
+    <Card className={`${selectedPlan === "business" ? "border-wakti-blue shadow-md" : ""} relative overflow-hidden`}>
+      <div className="absolute top-0 right-0 bg-wakti-blue text-white px-3 py-1 text-xs font-medium">
+        Popular
+      </div>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">

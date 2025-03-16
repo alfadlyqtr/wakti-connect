@@ -76,7 +76,7 @@ export const usePricingPlans = () => {
       ],
       buttonText: "Start 3-Day Trial",
       buttonLink: "/auth?tab=register&plan=individual",
-      highlight: true,
+      highlight: false,
     },
     {
       name: "Business",
@@ -94,7 +94,7 @@ export const usePricingPlans = () => {
       ],
       buttonText: "Start 3-Day Trial",
       buttonLink: "/auth?tab=register&plan=business",
-      highlight: false,
+      highlight: true,
     },
   ];
 

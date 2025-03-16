@@ -36,8 +36,8 @@ const Pricing = () => {
       ],
       buttonText: "Start 3-Day Trial",
       buttonLink: "/auth?tab=register&plan=individual",
-      variant: "default",
-      popular: true,
+      variant: "outline",
+      popular: false,
       delay: "100ms"
     },
     {
@@ -54,8 +54,8 @@ const Pricing = () => {
       ],
       buttonText: "Start 3-Day Trial",
       buttonLink: "/auth?tab=register&plan=business",
-      variant: "outline",
-      popular: false,
+      variant: "default",
+      popular: true,
       delay: "200ms"
     }
   ];

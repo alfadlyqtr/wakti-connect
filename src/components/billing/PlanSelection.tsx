@@ -79,11 +79,14 @@ const PlanSelection = ({ selectedPlan, setSelectedPlan }: PlanSelectionProps) =>
           </div>
           
           <div 
-            className={`border rounded-lg p-4 cursor-pointer transition-all ${
+            className={`border rounded-lg p-4 cursor-pointer transition-all relative overflow-hidden ${
               selectedPlan === "business" ? "border-wakti-blue bg-wakti-blue/5" : "hover:border-input"
             }`}
             onClick={() => setSelectedPlan("business")}
           >
+            <div className="absolute top-0 right-0 bg-wakti-blue text-white px-3 py-1 text-xs font-medium">
+              Popular
+            </div>
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="font-medium text-lg">Business</h3>
