@@ -19,66 +19,66 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
   
   const userRole = profileData?.account_type || "free";
   
-  // Declare query result variables outside the switch to avoid deep type instantiation
-  let queryResult;
+  // Declare variable to hold query results
+  let data;
   
   // Use switch case to handle all tab values properly
   switch (tab) {
     case "my-tasks": {
       // User's own tasks
-      queryResult = await supabase
+      const { data: tasksData, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('user_id', session.user.id)
         .order('due_date', { ascending: true });
+        
+      if (error) throw error;
+      data = tasksData || [];
       break;
     }
     
     case "shared-tasks": {
       // Tasks shared with the user
-      queryResult = await supabase
+      const { data: sharedTasksData, error } = await supabase
         .from('shared_tasks')
         .select('task_id, tasks(*)')
         .eq('shared_with', session.user.id)
         .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      data = sharedTasksData ? sharedTasksData.map(item => item.tasks) : [];
       break;
     }
     
     case "assigned-tasks": {
       // Tasks assigned to the user (for staff members)
-      queryResult = await supabase
+      const { data: assignedTasksData, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('assignee_id', session.user.id)
         .order('due_date', { ascending: true });
+        
+      if (error) throw error;
+      data = assignedTasksData || [];
       break;
     }
     
     default: {
       // Fallback to my-tasks if an invalid tab is provided
-      queryResult = await supabase
+      const { data: defaultTasksData, error } = await supabase
         .from('tasks')
         .select('*')
         .eq('user_id', session.user.id)
         .order('due_date', { ascending: true });
+        
+      if (error) throw error;
+      data = defaultTasksData || [];
       break;
     }
   }
   
-  if (queryResult.error) {
-    console.error(`Error fetching ${tab}:`, queryResult.error);
-    throw queryResult.error;
-  }
-  
-  let tasks = queryResult.data || [];
-  
-  // Transform shared tasks data if needed
-  if (tab === "shared-tasks") {
-    tasks = tasks.map((item: any) => item.tasks);
-  }
-  
   return { 
-    tasks: tasks,
+    tasks: data,
     userRole: userRole as "free" | "individual" | "business"
   };
 }

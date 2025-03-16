@@ -17,86 +17,96 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
   
   const userRole = profileData?.account_type || "free";
   
-  // Declare query result variables outside the switch to avoid deep type instantiation
-  let queryResult;
+  // Declare variable to hold query results
+  let data;
   
   // Use switch case to handle all tab values properly
   switch (tab) {
     case "upcoming": {
-      queryResult = await supabase
+      const { data: appointmentsData, error } = await supabase
         .from('appointments')
         .select('*')
         .eq('user_id', session.user.id)
         .gte('start_time', new Date().toISOString())
         .order('start_time', { ascending: true });
+        
+      if (error) throw error;
+      data = appointmentsData || [];
       break;
     }
     case "past": {
-      queryResult = await supabase
+      const { data: appointmentsData, error } = await supabase
         .from('appointments')
         .select('*')
         .eq('user_id', session.user.id)
         .lt('start_time', new Date().toISOString())
         .order('start_time', { ascending: false });
+        
+      if (error) throw error;
+      data = appointmentsData || [];
       break;
     }
     case "invitations": {
-      queryResult = await supabase
+      const { data: invitationsData, error } = await supabase
         .from('appointment_invitations')
         .select('appointment_id, appointments(*)')
         .eq('invitee_id', session.user.id)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      data = invitationsData ? invitationsData.map(item => item.appointments) : [];
       break;
     }
     case "my-appointments": {
-      queryResult = await supabase
+      const { data: appointmentsData, error } = await supabase
         .from('appointments')
         .select('*')
         .eq('user_id', session.user.id)
         .order('start_time', { ascending: true });
+        
+      if (error) throw error;
+      data = appointmentsData || [];
       break;
     }
     case "shared-appointments": {
-      queryResult = await supabase
+      const { data: sharedAppointmentsData, error } = await supabase
         .from('appointment_invitations')
         .select('appointment_id, appointments(*)')
         .eq('invitee_id', session.user.id)
         .eq('status', 'accepted')
         .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      data = sharedAppointmentsData ? sharedAppointmentsData.map(item => item.appointments) : [];
       break;
     }
     case "assigned-appointments": {
-      queryResult = await supabase
+      const { data: assignedAppointmentsData, error } = await supabase
         .from('appointments')
         .select('*')
         .eq('assignee_id', session.user.id)
         .order('start_time', { ascending: true });
+        
+      if (error) throw error;
+      data = assignedAppointmentsData || [];
       break;
     }
     default: {
-      queryResult = await supabase
+      const { data: defaultAppointmentsData, error } = await supabase
         .from('appointments')
         .select('*')
         .eq('user_id', session.user.id)
         .order('start_time', { ascending: true });
+        
+      if (error) throw error;
+      data = defaultAppointmentsData || [];
       break;
     }
   }
   
-  if (queryResult.error) {
-    throw queryResult.error;
-  }
-  
-  let appointments = queryResult.data || [];
-  
-  // Transform invitations data if needed
-  if (tab === "invitations" || tab === "shared-appointments") {
-    appointments = appointments.map((item: any) => item.appointments);
-  }
-  
   return { 
-    appointments: appointments,
+    appointments: data,
     userRole: userRole as "free" | "individual" | "business"
   };
 }
