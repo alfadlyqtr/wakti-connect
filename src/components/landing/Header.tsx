@@ -1,23 +1,15 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Moon, Sun, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
-
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
 const Header = () => {
-  const { theme, setTheme } = useTheme();
-
-  return (
-    <header className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
+  const {
+    theme,
+    setTheme
+  } = useTheme();
+  return <header className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
@@ -38,18 +30,8 @@ const Header = () => {
           <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors">
             Contact
           </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            className="text-foreground hover:text-foreground"
-          >
-            {theme === "dark" ? (
-              <Sun className="h-[1.2rem] w-[1.2rem]" />
-            ) : (
-              <Moon className="h-[1.2rem] w-[1.2rem]" />
-            )}
+          <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} className="text-foreground hover:text-foreground">
+            {theme === "dark" ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
           </Button>
           <Button asChild size="sm" className="ml-2">
             <Link to="/auth">Get Started</Link>
@@ -62,18 +44,8 @@ const Header = () => {
         </div>
         
         <div className="md:hidden flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            className="text-foreground hover:text-foreground"
-          >
-            {theme === "dark" ? (
-              <Sun className="h-[1.2rem] w-[1.2rem]" />
-            ) : (
-              <Moon className="h-[1.2rem] w-[1.2rem]" />
-            )}
+          <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} className="text-foreground hover:text-foreground">
+            {theme === "dark" ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
           </Button>
           <NavigationMenu>
             <NavigationMenuList>
@@ -114,11 +86,7 @@ const Header = () => {
           </NavigationMenu>
         </div>
       </div>
-      <div className="text-center text-xs text-muted-foreground py-1 border-t border-border/50">
-        Designed and made by <a href="https://tmw.qa/" target="_blank" rel="noopener noreferrer" className="text-wakti-blue hover:underline">TMW</a>
-      </div>
-    </header>
-  );
+      
+    </header>;
 };
-
 export default Header;
