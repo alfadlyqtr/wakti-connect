@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 
+// Define explicit interface to avoid deep type instantiation
 export interface Task {
   id: string;
   title: string;
@@ -31,7 +32,7 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
 
   // Fetch tasks with React Query
   const { 
-    data: tasks, 
+    data, 
     isLoading, 
     error, 
     refetch 
@@ -130,7 +131,7 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
         priority: taskData.priority || "normal",
         due_date: taskData.due_date || new Date(Date.now() + 86400000).toISOString(), // Tomorrow
         assignee_id: taskData.assignee_id || null
-      } as any; // Using 'as any' to bypass the type check for now
+      };
 
       const { data, error } = await supabase
         .from('tasks')
@@ -161,7 +162,7 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
 
   // Filter tasks based on search and filters
   const getFilteredTasks = () => {
-    const taskList = tasks?.tasks || [];
+    const taskList = data?.tasks || [];
     
     return taskList.filter((task) => {
       // Search filter
@@ -235,8 +236,8 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
   };
 
   return {
-    tasks: tasks?.tasks || [],
-    userRole: tasks?.userRole || "free",
+    tasks: data?.tasks || [],
+    userRole: data?.userRole || "free",
     filteredTasks: getFilteredTasks(),
     isLoading,
     error,

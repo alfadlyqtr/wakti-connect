@@ -4,15 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 
+// Define explicit interface to avoid deep type instantiation
 export interface Appointment {
   id: string;
-  user_id: string;
   title: string;
   description: string | null;
   start_time: string;
   end_time: string;
   location: string | null;
   is_all_day: boolean;
+  status: "upcoming" | "completed" | "cancelled";
+  user_id: string;
   assignee_id?: string | null;
   created_at: string;
   updated_at: string;
@@ -20,36 +22,39 @@ export interface Appointment {
 
 export type AppointmentTab = "my-appointments" | "shared-appointments" | "assigned-appointments";
 
-interface AppointmentResult {
+interface AppointmentsResult {
   appointments: Appointment[];
   userRole: "free" | "individual" | "business";
 }
 
 export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterDate, setFilterDate] = useState<Date | null>(null);
 
   // Fetch appointments with React Query
   const { 
-    data: appointmentsData,
-    isLoading,
-    error,
-    refetch
-  } = useQuery<AppointmentResult>({
+    data, 
+    isLoading, 
+    error, 
+    refetch 
+  } = useQuery<AppointmentsResult>({
     queryKey: ['appointments', tab],
     queryFn: async () => {
-      // Get current session
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) {
         throw new Error("No active session");
       }
       
-      // Fetch user's account type
+      // Get user profile to check account type
       const { data: profileData } = await supabase
         .from('profiles')
         .select('account_type')
         .eq('id', session.user.id)
         .single();
+      
+      const userRole = profileData?.account_type || "free";
       
       let query;
       
@@ -66,14 +71,14 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
         case "shared-appointments":
           // Appointments shared with the user
           query = supabase
-            .from('appointment_invitations')
+            .from('shared_appointments')
             .select('appointment_id, appointments(*)')
-            .eq('invited_user_id', session.user.id)
+            .eq('shared_with', session.user.id)
             .order('created_at', { ascending: false });
           break;
           
         case "assigned-appointments":
-          // Appointments assigned to the user (for staff)
+          // Appointments assigned to the user (for staff members)
           query = supabase
             .from('appointments')
             .select('*')
@@ -82,29 +87,30 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
           break;
       }
       
-      const { data, error } = await query;
+      const { data: appointmentsData, error } = await query;
       
       if (error) {
         console.error(`Error fetching ${tab}:`, error);
         throw error;
       }
       
-      // Transform data if needed
+      // Transform shared appointments data if needed
       let transformedData;
       if (tab === "shared-appointments") {
-        transformedData = data.map((item: any) => item.appointments);
+        transformedData = appointmentsData.map((item: any) => item.appointments);
       } else {
-        transformedData = data;
+        transformedData = appointmentsData;
       }
-        
-      return {
+      
+      return { 
         appointments: transformedData as Appointment[],
-        userRole: profileData?.account_type || "free"
+        userRole
       };
     },
     refetchOnWindowFocus: false,
   });
 
+  // Create a new appointment
   const createAppointment = async (appointmentData: Partial<Appointment>) => {
     try {
       // Get current user
@@ -119,27 +125,19 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
         return;
       }
 
-      // Create the appointment
-      const startTime = appointmentData.start_time 
-        ? new Date(appointmentData.start_time) 
-        : new Date();
-      
-      const endTime = appointmentData.end_time 
-        ? new Date(appointmentData.end_time) 
-        : new Date(startTime.getTime() + 3600000); // 1 hour later
-      
       const newAppointment = {
         user_id: session.user.id,
         title: appointmentData.title || "New Appointment",
         description: appointmentData.description || "",
-        start_time: startTime.toISOString(),
-        end_time: endTime.toISOString(),
-        location: appointmentData.location || "",
+        start_time: appointmentData.start_time || new Date().toISOString(),
+        end_time: appointmentData.end_time || new Date(Date.now() + 3600000).toISOString(), // 1 hour later
+        location: appointmentData.location || null,
         is_all_day: appointmentData.is_all_day || false,
+        status: appointmentData.status || "upcoming",
         assignee_id: appointmentData.assignee_id || null
-      } as any; // Using 'as any' to bypass the type check for now
+      };
 
-      const { error, data } = await supabase
+      const { data, error } = await supabase
         .from('appointments')
         .insert(newAppointment)
         .select();
@@ -166,94 +164,40 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
     }
   };
 
-  // Share an appointment with another user
-  const shareAppointment = async (appointmentId: string, email: string) => {
-    try {
-      // First check if the email exists in profiles
-      const { data: userData } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .single();
-      
-      const inviteData = {
-        appointment_id: appointmentId,
-        invited_user_id: userData?.id || null,
-        email: email
-      };
-      
-      const { error } = await supabase
-        .from('appointment_invitations')
-        .insert(inviteData);
-
-      if (error) throw error;
-
-      toast({
-        title: "Appointment Shared",
-        description: "Appointment invitation has been sent",
-      });
-
-      return true;
-    } catch (error: any) {
-      toast({
-        title: "Failed to share appointment",
-        description: error.message || "An unexpected error occurred",
-        variant: "destructive",
-      });
-      return false;
-    }
-  };
-
-  // Assign an appointment to a staff member
-  const assignAppointment = async (appointmentId: string, staffId: string) => {
-    try {
-      const { error } = await supabase
-        .from('appointments')
-        .update({ assignee_id: staffId })
-        .eq('id', appointmentId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Appointment Assigned",
-        description: "Appointment has been assigned successfully",
-      });
-
-      return true;
-    } catch (error: any) {
-      toast({
-        title: "Failed to assign appointment",
-        description: error.message || "An unexpected error occurred",
-        variant: "destructive",
-      });
-      return false;
-    }
-  };
-
-  // Filter appointments based on search
+  // Filter appointments based on search and filters
   const getFilteredAppointments = () => {
-    const appointments = appointmentsData?.appointments || [];
+    const appointmentList = data?.appointments || [];
     
-    return appointments.filter((appointment) => {
-      return searchQuery 
+    return appointmentList.filter((appointment) => {
+      // Search filter
+      const matchesSearch = searchQuery 
         ? appointment.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (appointment.description && appointment.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
-          (appointment.location && appointment.location.toLowerCase().includes(searchQuery.toLowerCase()))
+          (appointment.description && appointment.description.toLowerCase().includes(searchQuery.toLowerCase()))
         : true;
+      
+      // Status filter
+      const matchesStatus = filterStatus === "all" ? true : appointment.status === filterStatus;
+      
+      // Date filter
+      const matchesDate = !filterDate ? true : new Date(appointment.start_time).toDateString() === filterDate.toDateString();
+      
+      return matchesSearch && matchesStatus && matchesDate;
     });
   };
 
   return {
-    appointmentsData,
-    userRole: appointmentsData?.userRole || "free",
+    appointments: data?.appointments || [],
+    userRole: data?.userRole || "free",
     filteredAppointments: getFilteredAppointments(),
     isLoading,
     error,
     searchQuery,
     setSearchQuery,
+    filterStatus,
+    setFilterStatus,
+    filterDate,
+    setFilterDate,
     createAppointment,
-    shareAppointment,
-    assignAppointment,
     refetch
   };
 };
