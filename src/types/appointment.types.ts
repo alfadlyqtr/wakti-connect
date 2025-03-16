@@ -15,7 +15,8 @@ export interface Appointment {
 
 export type AppointmentStatus = "scheduled" | "cancelled" | "completed";
 
-export type AppointmentTab = "upcoming" | "past" | "invitations";
+// Update AppointmentTab to match the expected values used in the components
+export type AppointmentTab = "my-appointments" | "shared-appointments" | "assigned-appointments" | "upcoming" | "past" | "invitations";
 
 export interface AppointmentFormData {
   title: string;

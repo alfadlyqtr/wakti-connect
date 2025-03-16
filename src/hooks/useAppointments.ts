@@ -8,7 +8,7 @@ import { Appointment, AppointmentTab, AppointmentFormData } from "@/types/appoin
 
 export type { Appointment, AppointmentTab, AppointmentFormData } from "@/types/appointment.types";
 
-export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
+export const useAppointments = (tab: AppointmentTab = "upcoming") => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterDate, setFilterDate] = useState<Date | null>(null);

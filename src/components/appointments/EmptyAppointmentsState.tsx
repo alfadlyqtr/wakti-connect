@@ -2,7 +2,7 @@
 import React from "react";
 import { Calendar, Plus, Share2, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AppointmentTab } from "@/hooks/useAppointments";
+import { AppointmentTab } from "@/types/appointment.types";
 
 interface EmptyAppointmentsStateProps {
   isPaidAccount: boolean;
@@ -12,7 +12,7 @@ interface EmptyAppointmentsStateProps {
 
 const EmptyAppointmentsState = ({ isPaidAccount, onCreateAppointment, tab }: EmptyAppointmentsStateProps) => {
   // Different content based on the current tab
-  const content = {
+  const content: Record<string, { icon: JSX.Element, title: string, description: string, buttonText: string }> = {
     "my-appointments": {
       icon: <Calendar className="h-12 w-12 text-muted-foreground" />,
       title: "No Appointments Created Yet",
@@ -30,25 +30,45 @@ const EmptyAppointmentsState = ({ isPaidAccount, onCreateAppointment, tab }: Emp
       title: "No Assigned Appointments",
       description: "You don't have any appointments assigned to you yet.",
       buttonText: "Assign Appointment"
+    },
+    "upcoming": {
+      icon: <Calendar className="h-12 w-12 text-muted-foreground" />,
+      title: "No Upcoming Appointments",
+      description: "You don't have any upcoming appointments scheduled.",
+      buttonText: "Create Appointment"
+    },
+    "past": {
+      icon: <Calendar className="h-12 w-12 text-muted-foreground" />,
+      title: "No Past Appointments",
+      description: "You don't have any past appointments to review.",
+      buttonText: "Create Appointment"
+    },
+    "invitations": {
+      icon: <Share2 className="h-12 w-12 text-muted-foreground" />,
+      title: "No Appointment Invitations",
+      description: "You don't have any pending appointment invitations.",
+      buttonText: "Create Appointment"
     }
   };
   
+  const tabContent = content[tab] || content["my-appointments"];
+  
   return (
     <div className="py-12 flex flex-col items-center justify-center text-center">
-      {content[tab].icon}
+      {tabContent.icon}
       
       <h3 className="mt-4 text-lg font-semibold">
-        {content[tab].title}
+        {tabContent.title}
       </h3>
       
       <p className="mt-2 text-muted-foreground max-w-sm">
-        {content[tab].description}
+        {tabContent.description}
       </p>
       
       {isPaidAccount && (
         <Button onClick={onCreateAppointment} className="mt-6">
           <Plus className="h-4 w-4 mr-2" />
-          {content[tab].buttonText}
+          {tabContent.buttonText}
         </Button>
       )}
       

@@ -19,7 +19,7 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
   
   const userRole = profileData?.account_type || "free";
   
-  // Use explicit function signatures to avoid deep instantiations
+  // Use switch case to avoid deep instantiations
   let query;
   
   switch (tab) {
@@ -79,7 +79,7 @@ export async function createTask(taskData: TaskFormData): Promise<Task> {
   }
 
   // Prepare the new task object with basic properties
-  const newTask = {
+  const newTask: Record<string, any> = {
     user_id: session.user.id,
     title: taskData.title,
     description: taskData.description || null,
@@ -88,13 +88,15 @@ export async function createTask(taskData: TaskFormData): Promise<Task> {
     due_date: taskData.due_date || null
   };
 
+  // Add assignee_id if provided
+  if (taskData.assignee_id) {
+    newTask.assignee_id = taskData.assignee_id;
+  }
+
   // Handle insertion with proper types
   const { data, error } = await supabase
     .from('tasks')
-    .insert({ 
-      ...newTask,
-      ...(taskData.assignee_id ? { assignee_id: taskData.assignee_id } : {})
-    })
+    .insert(newTask)
     .select();
 
   if (error) {
