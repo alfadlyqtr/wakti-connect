@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import { BusinessPageSection } from "@/types/business.types";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
@@ -16,7 +16,7 @@ interface SectionEditorContextProps {
   isNewSection: () => boolean;
 }
 
-const SectionEditorContext = createContext<SectionEditorContextProps | undefined>(undefined);
+export const SectionEditorContext = createContext<SectionEditorContextProps | undefined>(undefined);
 
 export const SectionEditorProvider: React.FC<{
   children: React.ReactNode;
@@ -86,12 +86,4 @@ export const SectionEditorProvider: React.FC<{
       {children}
     </SectionEditorContext.Provider>
   );
-};
-
-export const useSectionEditor = () => {
-  const context = useContext(SectionEditorContext);
-  if (context === undefined) {
-    throw new Error("useSectionEditor must be used within a SectionEditorProvider");
-  }
-  return context;
 };

@@ -6,6 +6,7 @@ import SectionEditorHeader from "./SectionEditorHeader";
 import SectionEditorFields from "./SectionEditorFields";
 import SectionEditorControls from "./SectionEditorControls";
 import SectionTemplateDialog from "./SectionTemplateDialog";
+import { useSectionEditor } from "@/hooks/useSectionEditor";
 
 interface SectionEditorProps {
   section: BusinessPageSection;
@@ -34,7 +35,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section }) => {
           onSelect={(templateContent) => {
             // This callback needs to be implemented here at the top level
             // because we need access to the section state which is managed by the context
-            const context = require("./SectionEditorContext").useSectionEditor();
+            const context = useSectionEditor();
             context.setContentData(templateContent);
             context.setIsDirty(true);
             context.updateSection.mutate({

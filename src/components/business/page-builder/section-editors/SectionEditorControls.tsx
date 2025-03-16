@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useSectionEditor } from "./SectionEditorContext";
+import { useSectionEditor } from "@/hooks/useSectionEditor";
 import { Button } from "@/components/ui/button";
 import { Save, Loader2, LayoutTemplate } from "lucide-react";
 

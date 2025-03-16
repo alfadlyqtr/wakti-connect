@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useSectionEditor } from "./SectionEditorContext";
+import { useSectionEditor } from "@/hooks/useSectionEditor";
 import HeaderEditor from "./HeaderEditor";
 import ContactEditor from "./ContactEditor";
 import HoursEditor from "./HoursEditor";
