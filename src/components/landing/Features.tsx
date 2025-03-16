@@ -1,28 +1,8 @@
 
 import React from "react";
 import { CheckCircle, Calendar, Users, MessageSquare, BarChart4, Sparkles } from "lucide-react";
-
-interface FeatureCardProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  delay?: string;
-}
-
-const FeatureCard = ({ icon, title, description, delay }: FeatureCardProps) => {
-  return (
-    <div 
-      className="bg-card p-6 rounded-lg border border-border hover:shadow-md transition-all duration-300 animate-slide-in"
-      style={{ animationDelay: delay }}
-    >
-      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-        {icon}
-      </div>
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-muted-foreground">{description}</p>
-    </div>
-  );
-};
+import FeatureCard from "./FeatureCard";
+import FeaturesHeading from "./FeaturesHeading";
 
 const Features = () => {
   const features = [
@@ -67,12 +47,10 @@ const Features = () => {
   return (
     <section id="features" className="py-16 md:py-24 px-4 bg-muted/30">
       <div className="container mx-auto max-w-5xl">
-        <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Everything You Need</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Discover the powerful features that help streamline your workflow and boost productivity.
-          </p>
-        </div>
+        <FeaturesHeading 
+          title="Everything You Need" 
+          subtitle="Discover the powerful features that help streamline your workflow and boost productivity."
+        />
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
