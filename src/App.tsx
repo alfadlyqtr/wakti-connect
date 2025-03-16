@@ -11,6 +11,7 @@ import DashboardRoutes from "./routes/dashboardRoutes";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import VerificationPage from "./pages/auth/VerificationPage";
+import Header from "./components/landing/Header";
 
 const queryClient = new QueryClient();
 
@@ -22,8 +23,13 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Public routes - using exact path for the root */}
-            <Route path="/" element={<PublicRoutes />} />
+            {/* Public routes */}
+            <Route path="/*" element={
+              <>
+                <Header />
+                <PublicRoutes />
+              </>
+            } />
             
             {/* Auth routes */}
             <Route path="/auth/*" element={<AuthRoutes />} />

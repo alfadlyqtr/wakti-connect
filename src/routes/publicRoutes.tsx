@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Route, Routes } from "react-router-dom";
-import Index from "@/pages/Index";
+import LandingPage from "@/pages/public/LandingPage";
 import NotFound from "@/pages/NotFound";
 import PricingPage from "@/pages/public/PricingPage";
 import FeaturesPage from "@/pages/public/FeaturesPage";
@@ -14,7 +14,7 @@ import PrivacyPage from "@/pages/public/PrivacyPage";
 const PublicRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Index />} />
+      <Route index element={<LandingPage />} />
       <Route path="pricing" element={<PricingPage />} />
       <Route path="features" element={<FeaturesPage />} />
       <Route path="contact" element={<ContactPage />} />

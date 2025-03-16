@@ -20,10 +20,12 @@ const Header = () => {
     <header className="bg-background border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-md bg-wakti-blue flex items-center justify-center">
-            <span className="text-white font-bold text-lg">W</span>
-          </div>
-          <span className="font-bold text-xl">Wakti</span>
+          <Link to="/" className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-md bg-wakti-blue flex items-center justify-center">
+              <span className="text-white font-bold text-lg">W</span>
+            </div>
+            <span className="font-bold text-xl">Wakti</span>
+          </Link>
         </div>
         
         <div className="hidden md:flex items-center space-x-4">

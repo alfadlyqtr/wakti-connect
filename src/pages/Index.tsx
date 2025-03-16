@@ -1,26 +1,10 @@
 
 import React from "react";
-import { ThemeProvider } from "@/hooks/use-theme";
-import Header from "@/components/landing/Header";
-import Hero from "@/components/landing/Hero";
-import DashboardPreview from "@/components/landing/DashboardPreview";
-import Features from "@/components/landing/Features";
-import Pricing from "@/components/landing/Pricing";
-import CTA from "@/components/landing/CTA";
-import Footer from "@/components/landing/Footer";
+import { Navigate } from "react-router-dom";
+import LandingPage from "./public/LandingPage";
 
 const Index = () => {
-  return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <Hero />
-      <DashboardPreview />
-      <Features />
-      <Pricing />
-      <CTA />
-      <Footer />
-    </div>
-  );
+  return <LandingPage />;
 };
 
 export default Index;
