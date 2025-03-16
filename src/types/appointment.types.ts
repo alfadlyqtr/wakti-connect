@@ -8,15 +8,14 @@ export interface Appointment {
   start_time: string;
   end_time: string;
   is_all_day: boolean;
-  status: AppointmentStatus;
-  assignee_id: string | null;
+  status?: AppointmentStatus;
+  assignee_id?: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export type AppointmentStatus = "scheduled" | "cancelled" | "completed";
 
-// Update AppointmentTab to match the expected values used in the components
 export type AppointmentTab = "my-appointments" | "shared-appointments" | "assigned-appointments" | "upcoming" | "past" | "invitations";
 
 export interface AppointmentFormData {
