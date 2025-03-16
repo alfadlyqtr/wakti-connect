@@ -4,7 +4,7 @@ import { useBusinessPage } from "@/hooks/useBusinessPage";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CreateBusinessPageForm from "./CreateBusinessPageForm";
-import PageSectionsTab from "./PageSectionsTab";
+import { PageSectionsTab } from "./sections";
 import PageSettingsTab from "./PageSettingsTab";
 import PagePreviewTab from "./PagePreviewTab";
 
