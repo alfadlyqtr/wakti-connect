@@ -2,7 +2,7 @@
 import React from "react";
 import { Currency } from "@/components/pricing/usePricingPlans";
 import { Button } from "@/components/ui/button";
-import { Flag } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface CurrencyToggleProps {
   currency: Currency;
@@ -13,6 +13,9 @@ const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
   currency, 
   setCurrency 
 }) => {
+  const { i18n } = useTranslation();
+  const isRtl = i18n.language === 'ar';
+
   return (
     <div className="flex items-center justify-center gap-2 mt-4">
       <Button
@@ -33,7 +36,7 @@ const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
             }}
           ></div>
         </div>
-        QAR
+        {isRtl ? 'ر.ق' : 'QAR'}
       </Button>
       <Button
         variant={currency === "USD" ? "default" : "outline"}
@@ -54,7 +57,7 @@ const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
             }}
           ></div>
         </div>
-        USD
+        {isRtl ? '$' : 'USD'}
       </Button>
     </div>
   );

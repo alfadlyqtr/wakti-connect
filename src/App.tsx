@@ -13,6 +13,9 @@ import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import VerificationPage from "./pages/auth/VerificationPage";
 import Header from "./components/landing/Header";
 
+// Import i18n
+import "./i18n/i18n";
+
 const queryClient = new QueryClient();
 
 const App = () => (

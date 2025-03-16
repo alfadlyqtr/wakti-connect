@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/integrations/supabase/client";
+import LanguageSwitcher from "@/components/ui/language-switcher";
+import { useTranslation } from "react-i18next";
 
 interface NavbarProps {
   toggleSidebar: () => void;
@@ -32,6 +34,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
   const { theme, setTheme } = useTheme();
   const [searchOpen, setSearchOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Check if user is authenticated
@@ -78,7 +81,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
             <div className="w-8 h-8 rounded-md bg-wakti-blue flex items-center justify-center">
               <span className="text-white font-bold">W</span>
             </div>
-            <span className="font-bold text-lg hidden md:block">Wakti</span>
+            <span className="font-bold text-lg hidden md:block">{t('common.wakti')}</span>
           </Link>
         </div>
 
@@ -89,7 +92,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <input 
               type="text"
-              placeholder="Search tasks, appointments, contacts..."
+              placeholder={t('common.search')}
               className="w-full h-10 pl-10 pr-4 rounded-md border border-input bg-background focus:ring-2 focus:ring-ring focus:outline-none transition-all"
             />
             <Button 
@@ -114,6 +117,8 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
             <Search className="h-5 w-5" />
           </Button>
 
+          <LanguageSwitcher />
+
           <Button
             variant="ghost"
             size="icon"
@@ -135,7 +140,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[300px]">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('dashboard.notifications')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div className="py-6 text-center text-muted-foreground">
                 <p>No new notifications</p>
@@ -156,17 +161,17 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
                 <Link to="/profile">Profile</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/settings">Settings</Link>
+                <Link to="/settings">{t('dashboard.settings')}</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {isAuthenticated ? (
                 <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                   <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
+                  {t('common.logOut')}
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem asChild>
-                  <Link to="/auth">Login / Sign Up</Link>
+                  <Link to="/auth">{t('common.logIn')} / {t('common.signUp')}</Link>
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>

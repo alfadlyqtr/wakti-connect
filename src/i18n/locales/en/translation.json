@@ -1,0 +1,145 @@
+
+{
+  "common": {
+    "wakti": "Wakti",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success!",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "search": "Search",
+    "add": "Add",
+    "remove": "Remove",
+    "details": "Details",
+    "viewDetails": "View Details",
+    "seeAll": "See All",
+    "signUp": "Sign Up",
+    "logIn": "Log In",
+    "logOut": "Log Out",
+    "getStarted": "Get Started"
+  },
+  "header": {
+    "pricing": "Pricing",
+    "features": "Features",
+    "contact": "Contact",
+    "lightMode": "Light Mode",
+    "darkMode": "Dark Mode",
+    "menu": "Menu",
+    "signIn": "Sign In"
+  },
+  "hero": {
+    "tagline": "Task Management. Simplified.",
+    "title": "Manage Your Tasks & Appointments Efficiently",
+    "description": "Wakti helps individuals and businesses organize their schedule, manage tasks, and coordinate appointments—all in one simple platform.",
+    "startForFree": "Start for Free",
+    "seeFeatures": "See Features",
+    "noCreditCard": "No credit card required • Free plan available"
+  },
+  "features": {
+    "title": "Everything You Need",
+    "subtitle": "Discover the powerful features that help streamline your workflow and boost productivity.",
+    "taskManagement": {
+      "title": "Task Management",
+      "description": "Create, organize, and track your tasks with ease. Set priorities and deadlines to stay on top of your work."
+    },
+    "appointmentBooking": {
+      "title": "Appointment Booking",
+      "description": "Schedule and manage appointments. Send invites and get confirmations in real-time."
+    },
+    "teamCollaboration": {
+      "title": "Team Collaboration",
+      "description": "Assign tasks, share calendars, and coordinate team activities efficiently."
+    },
+    "messaging": {
+      "title": "Messaging",
+      "description": "Communicate with team members and clients without leaving the platform."
+    },
+    "analytics": {
+      "title": "Analytics",
+      "description": "Track productivity metrics, task completion rates, and team performance."
+    },
+    "aiIntegration": {
+      "title": "AI Integration",
+      "description": "AI-powered chatbot to assist with task scheduling and management (Business plan)."
+    }
+  },
+  "pricing": {
+    "title": "Choose Your Plan",
+    "subtitle": "Select the perfect plan that fits your needs, from individual users to large businesses.",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "month": "month",
+    "year": "year",
+    "save": "Save",
+    "perMonth": "/month",
+    "perYear": "/year",
+    "popular": "Popular",
+    "forever": "forever",
+    "plans": {
+      "free": {
+        "title": "Free",
+        "description": "For basic access",
+        "buttonText": "Sign Up Free",
+        "features": [
+          "1 task/month",
+          "View appointments & tasks",
+          "Message individual users (1 per month)",
+          "Accept invitations",
+          "View notifications"
+        ]
+      },
+      "individual": {
+        "title": "Individual",
+        "description": "For personal productivity",
+        "buttonText": "Start 3-Day Trial",
+        "features": [
+          "Unlimited tasks",
+          "Create & manage appointments",
+          "Message individual users",
+          "Custom event creation & sharing",
+          "Full contact management",
+          "Priority support"
+        ]
+      },
+      "business": {
+        "title": "Business",
+        "description": "For teams and businesses",
+        "buttonText": "Start 3-Day Trial",
+        "features": [
+          "All Individual features",
+          "Business profile page",
+          "Customer booking system",
+          "Staff management (up to 6 staff)",
+          "TMW AI Chatbot Integration",
+          "Business analytics"
+        ]
+      }
+    }
+  },
+  "cta": {
+    "title": "Ready to Get Started?",
+    "description": "Join thousands of individuals and businesses who have already streamlined their tasks and appointments with Wakti.",
+    "button": "Sign Up for Free"
+  },
+  "dashboard": {
+    "tasks": "Tasks",
+    "appointments": "Appointments",
+    "messages": "Messages",
+    "notifications": "Notifications",
+    "contacts": "Contacts",
+    "staffManagement": "Staff Management",
+    "workLogs": "Work Logs",
+    "services": "Services",
+    "businessReports": "Business Reports",
+    "analytics": "Analytics",
+    "billing": "Billing & Subscription",
+    "settings": "Settings",
+    "home": "Home",
+    "viewOnly": "View Only"
+  }
+}

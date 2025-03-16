@@ -1,5 +1,6 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Red+Rose:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -96,8 +97,27 @@
     @apply bg-background text-foreground antialiased;
   }
 
+  /* RTL language support */
+  html[dir="rtl"] * {
+    @apply font-cairo;
+  }
+
+  /* Flip icons for RTL */
+  html[dir="rtl"] .icon-flip-rtl {
+    transform: scaleX(-1);
+  }
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-redrose font-semibold;
+  }
+
+  html[dir="rtl"] h1, 
+  html[dir="rtl"] h2, 
+  html[dir="rtl"] h3, 
+  html[dir="rtl"] h4, 
+  html[dir="rtl"] h5, 
+  html[dir="rtl"] h6 {
+    @apply font-cairo;
   }
 
   h1 {
@@ -142,6 +162,25 @@
     @apply animate-fade-in animate-slide-in;
   }
 }
+
+/* RTL support for common components */
+html[dir="rtl"] .mr-1 { margin-right: 0; margin-left: 0.25rem; }
+html[dir="rtl"] .mr-2 { margin-right: 0; margin-left: 0.5rem; }
+html[dir="rtl"] .mr-3 { margin-right: 0; margin-left: 0.75rem; }
+html[dir="rtl"] .mr-4 { margin-right: 0; margin-left: 1rem; }
+html[dir="rtl"] .ml-1 { margin-left: 0; margin-right: 0.25rem; }
+html[dir="rtl"] .ml-2 { margin-left: 0; margin-right: 0.5rem; }
+html[dir="rtl"] .ml-3 { margin-left: 0; margin-right: 0.75rem; }
+html[dir="rtl"] .ml-4 { margin-left: 0; margin-right: 1rem; }
+
+html[dir="rtl"] .pl-1 { padding-left: 0; padding-right: 0.25rem; }
+html[dir="rtl"] .pl-2 { padding-left: 0; padding-right: 0.5rem; }
+html[dir="rtl"] .pl-3 { padding-left: 0; padding-right: 0.75rem; }
+html[dir="rtl"] .pl-4 { padding-left: 0; padding-right: 1rem; }
+html[dir="rtl"] .pr-1 { padding-right: 0; padding-left: 0.25rem; }
+html[dir="rtl"] .pr-2 { padding-right: 0; padding-left: 0.5rem; }
+html[dir="rtl"] .pr-3 { padding-right: 0; padding-left: 0.75rem; }
+html[dir="rtl"] .pr-4 { padding-right: 0; padding-left: 1rem; }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {

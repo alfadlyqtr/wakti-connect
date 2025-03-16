@@ -2,57 +2,40 @@
 import React from "react";
 import PriceCard from "./PriceCard";
 import PricingHeading from "./PricingHeading";
+import { useTranslation } from "react-i18next";
 
 const Pricing = () => {
+  const { t } = useTranslation();
+  
   const plans = [
     {
-      title: "Free",
-      price: "Free",
-      description: "Basic access for personal use",
-      features: [
-        "1 task/month",
-        "View appointments & tasks",
-        "Message individual users (1 per month)",
-        "Accept invitations",
-        "View notifications"
-      ],
-      buttonText: "Sign Up Free",
+      title: t('pricing.plans.free.title'),
+      price: t('pricing.plans.free.title'),
+      description: t('pricing.plans.free.description'),
+      features: t('pricing.plans.free.features', { returnObjects: true }) as string[],
+      buttonText: t('pricing.plans.free.buttonText'),
       buttonLink: "/auth?tab=register&plan=free",
       variant: "outline",
       popular: false,
       delay: "0ms"
     },
     {
-      title: "Individual",
+      title: t('pricing.plans.individual.title'),
       price: "QAR 20",
-      description: "Full access for individual professionals",
-      features: [
-        "Unlimited tasks",
-        "Create & manage appointments",
-        "Message individual users",
-        "Custom event creation & sharing",
-        "Full contact management",
-        "Priority support"
-      ],
-      buttonText: "Start 3-Day Trial",
+      description: t('pricing.plans.individual.description'),
+      features: t('pricing.plans.individual.features', { returnObjects: true }) as string[],
+      buttonText: t('pricing.plans.individual.buttonText'),
       buttonLink: "/auth?tab=register&plan=individual",
       variant: "outline",
       popular: false,
       delay: "100ms"
     },
     {
-      title: "Business",
+      title: t('pricing.plans.business.title'),
       price: "QAR 45",
-      description: "Advanced features for businesses",
-      features: [
-        "All Individual features",
-        "Business profile page",
-        "Customer booking system",
-        "Staff management (up to 6 staff)",
-        "TMW AI Chatbot Integration",
-        "Business analytics"
-      ],
-      buttonText: "Start 3-Day Trial",
+      description: t('pricing.plans.business.description'),
+      features: t('pricing.plans.business.features', { returnObjects: true }) as string[],
+      buttonText: t('pricing.plans.business.buttonText'),
       buttonLink: "/auth?tab=register&plan=business",
       variant: "default",
       popular: true,
@@ -64,8 +47,8 @@ const Pricing = () => {
     <section id="pricing" className="py-16 md:py-24 px-4">
       <div className="container mx-auto max-w-5xl">
         <PricingHeading 
-          title="Choose Your Plan" 
-          subtitle="Select the perfect plan that fits your needs, from individual users to large businesses."
+          title={t('pricing.title')} 
+          subtitle={t('pricing.subtitle')}
         />
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

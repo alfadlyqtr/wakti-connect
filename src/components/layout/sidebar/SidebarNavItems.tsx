@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "react-i18next";
 
 // Define types for menu items
 export interface SidebarMenuItem {
@@ -33,87 +34,87 @@ interface SidebarNavItemsProps {
   userRole: "free" | "individual" | "business";
 }
 
-export const getMenuItems = (userRole: "free" | "individual" | "business"): SidebarMenuItem[] => {
+export const getMenuItems = (userRole: "free" | "individual" | "business", t: any): SidebarMenuItem[] => {
   const isPaidAccount = userRole === "individual" || userRole === "business";
 
   return [
     {
-      title: "Home",
+      title: t('dashboard.home'),
       icon: <Home size={20} />,
       path: "/dashboard",
       roles: ["free", "individual", "business"],
     },
     {
-      title: "Tasks",
+      title: t('dashboard.tasks'),
       icon: <CheckSquare size={20} />,
       path: "/dashboard/tasks",
       roles: ["free", "individual", "business"],
-      badge: !isPaidAccount ? "View Only" : null,
+      badge: !isPaidAccount ? t('dashboard.viewOnly') : null,
     },
     {
-      title: "Appointments",
+      title: t('dashboard.appointments'),
       icon: <Calendar size={20} />,
       path: "/dashboard/appointments",
       roles: ["free", "individual", "business"],
-      badge: !isPaidAccount ? "View Only" : null,
+      badge: !isPaidAccount ? t('dashboard.viewOnly') : null,
     },
     {
-      title: "Messages",
+      title: t('dashboard.messages'),
       icon: <MessageSquare size={20} />,
       path: "/dashboard/messages",
       roles: ["individual", "business"],
     },
     {
-      title: "Notifications",
+      title: t('dashboard.notifications'),
       icon: <Bell size={20} />,
       path: "/dashboard/notifications",
       roles: ["free", "individual", "business"],
-      badge: !isPaidAccount ? "View Only" : null,
+      badge: !isPaidAccount ? t('dashboard.viewOnly') : null,
     },
     {
-      title: "Contacts",
+      title: t('dashboard.contacts'),
       icon: <Users size={20} />,
       path: "/dashboard/contacts",
       roles: ["individual", "business"],
     },
     {
-      title: "Staff Management",
+      title: t('dashboard.staffManagement'),
       icon: <UserCog size={20} />,
       path: "/dashboard/staff",
       roles: ["business"],
     },
     {
-      title: "Work Logs",
+      title: t('dashboard.workLogs'),
       icon: <Clock size={20} />,
       path: "/dashboard/work-logs",
       roles: ["business"],
     },
     {
-      title: "Services",
+      title: t('dashboard.services'),
       icon: <Briefcase size={20} />,
       path: "/dashboard/services",
       roles: ["business"],
     },
     {
-      title: "Business Reports",
+      title: t('dashboard.businessReports'),
       icon: <FileSpreadsheet size={20} />,
       path: "/dashboard/reports",
       roles: ["business"],
     },
     {
-      title: "Analytics",
+      title: t('dashboard.analytics'),
       icon: <TrendingUp size={20} />,
       path: "/dashboard/analytics",
       roles: ["business"],
     },
     {
-      title: "Billing & Subscription",
+      title: t('dashboard.billing'),
       icon: <CreditCard size={20} />,
       path: "/dashboard/billing",
       roles: ["free", "individual", "business"],
     },
     {
-      title: "Settings",
+      title: t('dashboard.settings'),
       icon: <Settings size={20} />,
       path: "/dashboard/settings",
       roles: ["free", "individual", "business"],
@@ -122,8 +123,10 @@ export const getMenuItems = (userRole: "free" | "individual" | "business"): Side
 };
 
 const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({ userRole }) => {
+  const { t } = useTranslation();
+  
   // Filter items based on user role
-  const filteredItems = getMenuItems(userRole).filter(item => 
+  const filteredItems = getMenuItems(userRole, t).filter(item => 
     item.roles.includes(userRole)
   );
 

@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export type BillingCycle = "monthly" | "yearly";
 export type Currency = "QAR" | "USD";
@@ -19,6 +20,8 @@ export interface PricingPlan {
 export const usePricingPlans = () => {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
   const [currency, setCurrency] = useState<Currency>("QAR");
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.language === 'ar';
 
   const getQarPrice = (basePrice: number) => {
     return billingCycle === "yearly" ? (basePrice * 10).toFixed(2) : basePrice.toFixed(2);
@@ -41,58 +44,57 @@ export const usePricingPlans = () => {
     }
   };
 
-  const getCurrencyPrefix = () => currency === "QAR" ? "QAR" : "$";
+  const getCurrencyPrefix = () => {
+    if (isRtl) {
+      return currency === "QAR" ? "ر.ق" : "$";
+    }
+    return currency === "QAR" ? "QAR" : "$";
+  };
+
+  const formatPrice = (price: string) => {
+    if (isRtl && currency === "QAR") {
+      // For Arabic, display QAR price with Arabic numerals
+      return price.replace(/[0-9]/g, (digit) => 
+        String.fromCharCode(digit.charCodeAt(0) + 1584)
+      );
+    }
+    return price;
+  };
 
   const pricingPlans: PricingPlan[] = [
     {
-      name: "Free",
-      description: "For basic access",
+      name: t('pricing.plans.free.title'),
+      description: t('pricing.plans.free.description'),
       price: "0",
-      period: "forever",
-      features: [
-        "1 task/month",
-        "View appointments & tasks",
-        "Message individual users (1 per month)",
-        "Accept invitations",
-        "View notifications"
-      ],
-      buttonText: "Sign Up Free",
+      period: t('pricing.forever'),
+      features: t('pricing.plans.free.features', { returnObjects: true }) as string[],
+      buttonText: t('pricing.plans.free.buttonText'),
       buttonLink: "/auth?tab=register&plan=free",
       highlight: false,
     },
     {
-      name: "Individual",
-      description: "For personal productivity",
-      price: billingCycle === "monthly" ? getPrice(20) : getPrice(20),
-      period: billingCycle === "monthly" ? "per month" : "per year",
-      savings: billingCycle === "yearly" ? `Save ${getCurrencyPrefix()} ${getSavings(20)}/year` : null,
-      features: [
-        "Unlimited tasks",
-        "Create & manage appointments",
-        "Message individual users",
-        "Custom event creation & sharing",
-        "Full contact management",
-        "Priority support"
-      ],
-      buttonText: "Start 3-Day Trial",
+      name: t('pricing.plans.individual.title'),
+      description: t('pricing.plans.individual.description'),
+      price: billingCycle === "monthly" 
+        ? `${getCurrencyPrefix()} ${formatPrice(getPrice(20))}` 
+        : `${getCurrencyPrefix()} ${formatPrice(getPrice(20))}`,
+      period: billingCycle === "monthly" ? t('pricing.perMonth') : t('pricing.perYear'),
+      savings: billingCycle === "yearly" ? `${t('pricing.save')} ${getCurrencyPrefix()} ${formatPrice(getSavings(20))}/${t('pricing.year')}` : null,
+      features: t('pricing.plans.individual.features', { returnObjects: true }) as string[],
+      buttonText: t('pricing.plans.individual.buttonText'),
       buttonLink: "/auth?tab=register&plan=individual",
       highlight: false,
     },
     {
-      name: "Business",
-      description: "For teams and businesses",
-      price: billingCycle === "monthly" ? getPrice(45) : getPrice(45),
-      period: billingCycle === "monthly" ? "per month" : "per year",
-      savings: billingCycle === "yearly" ? `Save ${getCurrencyPrefix()} ${getSavings(45)}/year` : null,
-      features: [
-        "All Individual features",
-        "Business profile page",
-        "Customer booking system",
-        "Staff management (up to 6 staff)",
-        "TMW AI Chatbot Integration",
-        "Business analytics"
-      ],
-      buttonText: "Start 3-Day Trial",
+      name: t('pricing.plans.business.title'),
+      description: t('pricing.plans.business.description'),
+      price: billingCycle === "monthly" 
+        ? `${getCurrencyPrefix()} ${formatPrice(getPrice(45))}` 
+        : `${getCurrencyPrefix()} ${formatPrice(getPrice(45))}`,
+      period: billingCycle === "monthly" ? t('pricing.perMonth') : t('pricing.perYear'),
+      savings: billingCycle === "yearly" ? `${t('pricing.save')} ${getCurrencyPrefix()} ${formatPrice(getSavings(45))}/${t('pricing.year')}` : null,
+      features: t('pricing.plans.business.features', { returnObjects: true }) as string[],
+      buttonText: t('pricing.plans.business.buttonText'),
       buttonLink: "/auth?tab=register&plan=business",
       highlight: true,
     },
