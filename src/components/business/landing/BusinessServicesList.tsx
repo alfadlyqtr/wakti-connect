@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -94,7 +93,7 @@ const BusinessServicesList = ({ section, businessId }: BusinessServicesListProps
       <p className="text-muted-foreground mb-6">{description}</p>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {services.map((service) => (
+        {services && services.map((service) => (
           <Card key={service.id} className="overflow-hidden">
             <CardHeader>
               <CardTitle>{service.name}</CardTitle>

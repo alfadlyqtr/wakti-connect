@@ -14,9 +14,8 @@ export const useBusinessPage = (pageSlug?: string) => {
     queryFn: async () => {
       if (!pageSlug) return null;
       
-      const { data, error } = await supabase
-        .from('business_pages')
-        .select('*')
+      const { data, error } = await fromTable<BusinessPage>('business_pages')
+        .select()
         .eq('page_slug', pageSlug)
         .eq('is_published', true)
         .single();
@@ -41,9 +40,8 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw new Error("No active session");
       }
       
-      const { data, error } = await supabase
-        .from('business_pages')
-        .select('*')
+      const { data, error } = await fromTable<BusinessPage>('business_pages')
+        .select()
         .eq('business_id', session.user.id)
         .single();
       
@@ -64,9 +62,8 @@ export const useBusinessPage = (pageSlug?: string) => {
       const pageId = businessPage?.id || ownerBusinessPage?.id;
       if (!pageId) return [];
       
-      const { data, error } = await supabase
-        .from('business_page_sections')
-        .select('*')
+      const { data, error } = await fromTable<BusinessPageSection>('business_page_sections')
+        .select()
         .eq('page_id', pageId)
         .order('section_order', { ascending: true });
       
@@ -87,9 +84,8 @@ export const useBusinessPage = (pageSlug?: string) => {
       const businessId = businessPage?.business_id || ownerBusinessPage?.business_id;
       if (!businessId) return [];
       
-      const { data, error } = await supabase
-        .from('business_social_links')
-        .select('*')
+      const { data, error } = await fromTable<BusinessSocialLink>('business_social_links')
+        .select()
         .eq('business_id', businessId);
       
       if (error) {
@@ -116,11 +112,8 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw new Error("No business page found");
       }
       
-      const { data, error } = await supabase
-        .from('business_pages')
-        .update(updates)
-        .eq('id', pageId)
-        .eq('business_id', session.user.id) // Ensure owner
+      const { data, error } = await fromTable<BusinessPage>('business_pages')
+        .update(updates, { id: pageId, business_id: session.user.id }) // Ensure owner
         .select()
         .single();
       

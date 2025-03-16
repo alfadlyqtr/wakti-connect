@@ -11,7 +11,7 @@ import { toast } from "@/components/ui/use-toast";
 import { Loader2, Plus, Save, Trash2, ArrowDown, ArrowUp, Eye, EyeOff, Globe } from "lucide-react";
 import { SectionType } from "@/types/business.types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/helper";
 import SectionEditor from "./SectionEditor";
 
 const BusinessPageBuilder = () => {
@@ -79,8 +79,7 @@ const BusinessPageBuilder = () => {
       
       const nextOrder = highestOrder + 1;
       
-      const { data, error } = await supabase
-        .from('business_page_sections')
+      const { data, error } = await fromTable('business_page_sections')
         .insert({
           page_id: ownerBusinessPage.id,
           section_type: sectionType,
@@ -117,10 +116,8 @@ const BusinessPageBuilder = () => {
   
   const updateSectionOrder = useMutation({
     mutationFn: async ({ sectionId, newOrder }: { sectionId: string, newOrder: number }) => {
-      const { data, error } = await supabase
-        .from('business_page_sections')
-        .update({ section_order: newOrder })
-        .eq('id', sectionId)
+      const { data, error } = await fromTable('business_page_sections')
+        .update({ section_order: newOrder }, { id: sectionId })
         .select()
         .single();
       
@@ -145,10 +142,8 @@ const BusinessPageBuilder = () => {
   
   const toggleSectionVisibility = useMutation({
     mutationFn: async ({ sectionId, isVisible }: { sectionId: string, isVisible: boolean }) => {
-      const { data, error } = await supabase
-        .from('business_page_sections')
-        .update({ is_visible: isVisible })
-        .eq('id', sectionId)
+      const { data, error } = await fromTable('business_page_sections')
+        .update({ is_visible: isVisible }, { id: sectionId })
         .select()
         .single();
       
@@ -173,10 +168,8 @@ const BusinessPageBuilder = () => {
   
   const deleteSection = useMutation({
     mutationFn: async (sectionId: string) => {
-      const { error } = await supabase
-        .from('business_page_sections')
-        .delete()
-        .eq('id', sectionId);
+      const { error } = await fromTable('business_page_sections')
+        .delete({ id: sectionId });
       
       if (error) {
         console.error("Error deleting section:", error);

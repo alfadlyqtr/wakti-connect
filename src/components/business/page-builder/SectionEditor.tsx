@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BusinessPageSection } from "@/types/business.types";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Save, Loader2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/helper";
 import { toast } from "@/components/ui/use-toast";
 
 interface SectionEditorProps {
@@ -25,12 +24,10 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section }) => {
   
   const updateSection = useMutation({
     mutationFn: async (updates: any) => {
-      const { data, error } = await supabase
-        .from('business_page_sections')
+      const { data, error } = await fromTable('business_page_sections')
         .update({
           section_content: updates
-        })
-        .eq('id', section.id)
+        }, { id: section.id })
         .select()
         .single();
       
