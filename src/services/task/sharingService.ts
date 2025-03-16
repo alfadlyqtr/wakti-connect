@@ -44,7 +44,7 @@ export async function shareTask(taskId: string, userId: string): Promise<boolean
       description: error instanceof Error ? error.message : "An unknown error occurred",
       variant: "destructive",
     });
-    throw error;
+    return false;
   }
 }
 
@@ -64,12 +64,13 @@ export async function assignTask(taskId: string, staffId: string): Promise<boole
     const { error } = await supabase
       .from('tasks')
       .update({ 
-        status: taskData.status,
+        assignee_id: staffId,
+        // Include existing values to avoid losing data
         title: taskData.title,
         description: taskData.description,
-        due_date: taskData.due_date,
+        status: taskData.status,
         priority: taskData.priority,
-        assignee_id: staffId  // This is the field we're actually changing
+        due_date: taskData.due_date
       })
       .eq('id', taskId);
 
@@ -88,7 +89,7 @@ export async function assignTask(taskId: string, staffId: string): Promise<boole
       description: error instanceof Error ? error.message : "An unknown error occurred",
       variant: "destructive",
     });
-    throw error;
+    return false;
   }
 }
 
@@ -116,6 +117,6 @@ export async function unshareTask(taskId: string, userId: string): Promise<boole
       description: error instanceof Error ? error.message : "An unknown error occurred",
       variant: "destructive",
     });
-    throw error;
+    return false;
   }
 }

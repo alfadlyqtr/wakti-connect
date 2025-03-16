@@ -18,7 +18,7 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
   const userRole = profileData?.account_type || "free";
   
   // Declare variable to hold appointments data
-  let appointmentsData: any[] = [];
+  let appointmentsData: Appointment[] = [];
   
   // Use switch case to handle all tab values properly
   switch (tab) {
@@ -61,8 +61,8 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
       if (data && data.length > 0) {
         for (const item of data) {
           if (item.appointments) {
-            // Create a new object with explicit properties instead of object spread
-            const appointmentCopy = {
+            // Use explicit property assignments with default values as needed
+            appointmentsData.push({
               id: item.appointments.id,
               user_id: item.appointments.user_id,
               title: item.appointments.title,
@@ -70,14 +70,12 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
               location: item.appointments.location,
               start_time: item.appointments.start_time,
               end_time: item.appointments.end_time,
-              is_all_day: item.appointments.is_all_day,
-              // Use default values for potentially missing fields
+              is_all_day: item.appointments.is_all_day || false,
               status: item.appointments.status || "scheduled",
               assignee_id: item.appointments.assignee_id || null,
               created_at: item.appointments.created_at,
               updated_at: item.appointments.updated_at
-            };
-            appointmentsData.push(appointmentCopy);
+            });
           }
         }
       }
@@ -109,8 +107,8 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
       if (data && data.length > 0) {
         for (const item of data) {
           if (item.appointments) {
-            // Create a new object with explicit properties instead of object spread
-            const appointmentCopy = {
+            // Use explicit property assignments with default values as needed
+            appointmentsData.push({
               id: item.appointments.id,
               user_id: item.appointments.user_id,
               title: item.appointments.title,
@@ -118,14 +116,12 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
               location: item.appointments.location,
               start_time: item.appointments.start_time,
               end_time: item.appointments.end_time,
-              is_all_day: item.appointments.is_all_day,
-              // Use default values for potentially missing fields
+              is_all_day: item.appointments.is_all_day || false,
               status: item.appointments.status || "scheduled",
               assignee_id: item.appointments.assignee_id || null,
               created_at: item.appointments.created_at,
               updated_at: item.appointments.updated_at
-            };
-            appointmentsData.push(appointmentCopy);
+            });
           }
         }
       }
