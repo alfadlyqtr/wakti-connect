@@ -6,7 +6,8 @@ export type {
   TaskFormData, 
   TasksResult,
   TaskStatus,
-  TaskPriority 
+  TaskPriority,
+  SubTask
 } from "@/types/task.types";
 
 // Re-export any additional types needed specifically for services

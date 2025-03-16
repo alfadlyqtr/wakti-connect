@@ -19,7 +19,7 @@ import { TaskFormValues, taskFormSchema } from "./TaskFormSchema";
 import TaskFormFields from "./TaskFormFields";
 import RecurringFormFields from "@/components/recurring/RecurringFormFields";
 import { toast } from "@/components/ui/use-toast";
-import { TaskFormData } from "@/types/task.types";
+import { TaskFormData, SubTask } from "@/types/task.types";
 import { RecurringFormData } from "@/types/recurring.types";
 
 interface CreateTaskDialogProps {
@@ -69,13 +69,21 @@ export function CreateTaskDialog({
         dueDateTime.setHours(hours, minutes);
       }
       
+      // Ensure subtasks all have content property set (not optional)
+      const validSubtasks: SubTask[] = values.subtasks
+        .filter(item => item.content && item.content.trim() !== '')
+        .map(item => ({
+          content: item.content,
+          is_completed: item.is_completed || false
+        }));
+      
       const taskData: TaskFormData = {
         title: values.title,
         description: values.description,
         priority: values.priority,
         due_date: dueDateTime.toISOString(),
         status: "pending",
-        subtasks: values.subtasks
+        subtasks: validSubtasks
       };
       
       const recurringData = values.isRecurring ? values.recurring as RecurringFormData : undefined;

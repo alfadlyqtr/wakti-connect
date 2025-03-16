@@ -64,7 +64,12 @@ const TaskCard = ({
           </div>
           <h3 className="text-base font-semibold leading-tight">{title}</h3>
         </div>
-        <TaskActionsMenu taskId={id} userRole={userRole} status={status} />
+        <TaskActionsMenu 
+          status={status} 
+          userRole={userRole || "free"} 
+          isShared={isShared} 
+          isAssigned={isAssigned} 
+        />
       </CardHeader>
       
       <CardContent className="pb-3">
