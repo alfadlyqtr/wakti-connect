@@ -17,7 +17,7 @@ const Header = () => {
   const { theme, setTheme } = useTheme();
 
   return (
-    <header className="bg-background border-b border-border sticky top-0 z-50">
+    <header className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
@@ -51,7 +51,10 @@ const Header = () => {
               <Moon className="h-[1.2rem] w-[1.2rem]" />
             )}
           </Button>
-          <Button asChild variant="ghost" size="icon" className="rounded-full bg-muted text-foreground">
+          <Button asChild size="sm" className="ml-2">
+            <Link to="/auth">Get Started</Link>
+          </Button>
+          <Button asChild variant="ghost" size="icon" className="rounded-full bg-muted text-foreground ml-2">
             <Link to="/auth" aria-label="Sign in">
               <User className="h-[1.2rem] w-[1.2rem]" />
             </Link>
@@ -99,6 +102,11 @@ const Header = () => {
                         Sign In
                       </Link>
                     </NavigationMenuLink>
+                    <div className="pt-2 mt-2 border-t border-border">
+                      <Button asChild size="sm" className="w-full">
+                        <Link to="/auth">Get Started</Link>
+                      </Button>
+                    </div>
                   </div>
                 </NavigationMenuContent>
               </NavigationMenuItem>
