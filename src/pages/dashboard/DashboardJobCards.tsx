@@ -1,15 +1,17 @@
 
-import React, { useState } from "react";
-import { useStaffWorkLogs } from "@/hooks/useStaffWorkLogs";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PlusCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
 import CreateJobCardDialog from "@/components/jobs/CreateJobCardDialog";
 import JobCardsList from "@/components/jobs/JobCardsList";
-import { StaffWorkSessionTable } from "@/components/staff/StaffWorkSessionTable";
+import WorkStatusCard from "@/components/staff/WorkStatusCard";
+import WorkHistory from "@/components/staff/WorkHistory";
+import ActiveWorkSession from "@/components/staff/ActiveWorkSession";
 
 const DashboardJobCards = () => {
   const { toast } = useToast();
@@ -18,7 +20,7 @@ const DashboardJobCards = () => {
   const [activeWorkSession, setActiveWorkSession] = useState<any | null>(null);
   
   // Fetch staff relation ID for the current user
-  React.useEffect(() => {
+  useEffect(() => {
     const getStaffRelation = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -137,51 +139,12 @@ const DashboardJobCards = () => {
       
       {staffRelationId ? (
         <>
-          <Card className="bg-muted/50">
-            <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <div className="flex items-center gap-3">
-                  <Clock className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <h3 className="font-medium">Work Status</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {activeWorkSession 
-                        ? `Currently working since ${new Date(activeWorkSession.start_time).toLocaleTimeString()}` 
-                        : "Not currently working"}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-2 sm:ml-auto">
-                  {activeWorkSession ? (
-                    <>
-                      <Button
-                        onClick={() => setIsCreateOpen(true)}
-                        className="flex-1 sm:flex-auto"
-                      >
-                        <PlusCircle className="h-4 w-4 mr-2" />
-                        Create Job Card
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={endWorkDay}
-                        className="flex-1 sm:flex-auto"
-                      >
-                        End Work Day
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      onClick={startWorkDay}
-                      className="w-full sm:w-auto"
-                    >
-                      Start Work Day
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <WorkStatusCard 
+            activeWorkSession={activeWorkSession}
+            onStartWorkDay={startWorkDay}
+            onEndWorkDay={endWorkDay}
+            onCreateJobCard={() => setIsCreateOpen(true)}
+          />
           
           <Tabs defaultValue="job-cards">
             <TabsList className="grid w-full grid-cols-2">
@@ -205,16 +168,7 @@ const DashboardJobCards = () => {
             <TabsContent value="work-history" className="mt-6">
               <div className="space-y-6">
                 <h3 className="font-medium text-lg">Work Session History</h3>
-                {activeWorkSession && (
-                  <Card className="bg-muted/50 mb-4">
-                    <CardContent className="p-4">
-                      <p className="font-medium">Active Session</p>
-                      <p className="text-sm text-muted-foreground">
-                        Started at {new Date(activeWorkSession.start_time).toLocaleString()}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
+                <ActiveWorkSession session={activeWorkSession} />
                 <WorkHistory staffRelationId={staffRelationId} />
               </div>
             </TabsContent>
@@ -238,62 +192,6 @@ const DashboardJobCards = () => {
       )}
     </div>
   );
-};
-
-// Inline WorkHistory component
-const WorkHistory = ({ staffRelationId }: { staffRelationId: string }) => {
-  const [workSessions, setWorkSessions] = React.useState<any[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-  
-  React.useEffect(() => {
-    const fetchWorkSessions = async () => {
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase
-          .from('staff_work_logs')
-          .select('*')
-          .eq('staff_relation_id', staffRelationId)
-          .order('start_time', { ascending: false });
-          
-        if (error) throw error;
-        
-        // Transform the sessions to include a date field
-        const formattedSessions = (data || []).map(session => ({
-          ...session,
-          date: new Date(session.start_time).toISOString().split('T')[0]
-        }));
-        
-        setWorkSessions(formattedSessions);
-      } catch (error) {
-        console.error("Error fetching work sessions:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchWorkSessions();
-  }, [staffRelationId]);
-  
-  if (isLoading) {
-    return (
-      <div className="flex justify-center p-8">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-      </div>
-    );
-  }
-  
-  if (workSessions.length === 0) {
-    return (
-      <div className="text-center p-6 border rounded-lg border-dashed">
-        <h3 className="text-lg font-medium mb-2">No work history</h3>
-        <p className="text-muted-foreground">
-          Your work history will appear here once you start recording work sessions
-        </p>
-      </div>
-    );
-  }
-  
-  return <StaffWorkSessionTable sessions={workSessions} />;
 };
 
 export default DashboardJobCards;

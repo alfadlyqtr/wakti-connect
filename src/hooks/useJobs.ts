@@ -33,9 +33,20 @@ export const useJobs = () => {
   // Create a new job
   const createJob = useMutation({
     mutationFn: async (jobData: JobFormData) => {
+      // Get the current user (business)
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        throw new Error("User not authenticated");
+      }
+      
+      const businessId = userData.user.id;
+      
       const { data, error } = await supabase
         .from('jobs')
-        .insert([jobData])
+        .insert([{
+          ...jobData,
+          business_id: businessId
+        }])
         .select()
         .single();
         

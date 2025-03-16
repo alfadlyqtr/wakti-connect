@@ -16,9 +16,11 @@ export interface WorkSession {
   start_time: string;
   end_time: string | null;
   date: string;
-  earnings: number;
-  notes: string;
-  status: 'active' | 'completed' | 'cancelled'; // Added status field
+  earnings: number | null;
+  notes: string | null;
+  status: 'active' | 'completed' | 'cancelled';
+  created_at: string;
+  updated_at: string;
 }
 
 export interface StaffWithSessions extends Staff {
@@ -90,10 +92,16 @@ export const useStaffWorkLogs = () => {
             }
             
             // Transform the sessions to include a date field
-            const formattedSessions = (sessions || []).map(session => ({
-              ...session,
-              date: new Date(session.start_time).toISOString().split('T')[0]
-            }));
+            const formattedSessions = (sessions || []).map(session => {
+              // Make sure to properly type the status field
+              const typedStatus = (session.status as string || 'active') as 'active' | 'completed' | 'cancelled';
+              
+              return {
+                ...session,
+                date: new Date(session.start_time).toISOString().split('T')[0],
+                status: typedStatus
+              } as WorkSession;
+            });
             
             staffWithSessions.push({
               ...staff,
@@ -143,7 +151,14 @@ export const useStaffWorkLogs = () => {
         description: "Your work day has been started successfully",
       });
       
-      return data as WorkSession;
+      // Add the date field
+      const session = {
+        ...data,
+        date: new Date(data.start_time).toISOString().split('T')[0],
+        status: data.status as 'active' | 'completed' | 'cancelled'
+      } as WorkSession;
+      
+      return session;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staffWithSessions'] });
@@ -179,7 +194,14 @@ export const useStaffWorkLogs = () => {
         description: "Your work day has been ended successfully",
       });
       
-      return data as WorkSession;
+      // Add the date field
+      const session = {
+        ...data,
+        date: new Date(data.start_time).toISOString().split('T')[0],
+        status: data.status as 'active' | 'completed' | 'cancelled'
+      } as WorkSession;
+      
+      return session;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staffWithSessions'] });

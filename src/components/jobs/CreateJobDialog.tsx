@@ -34,9 +34,17 @@ const CreateJobDialog: React.FC<CreateJobDialogProps> = ({ open, onOpenChange })
     }
   });
   
-  const onSubmit = async (data: JobFormValues) => {
+  const onSubmit = async (values: JobFormValues) => {
     try {
-      await createJob.mutateAsync(data);
+      // Make sure required fields are present
+      const jobData: JobFormData = {
+        name: values.name,
+        description: values.description || "",
+        duration: values.duration,
+        default_price: values.default_price
+      };
+      
+      await createJob.mutateAsync(jobData);
       form.reset();
       onOpenChange(false);
     } catch (error) {

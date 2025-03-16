@@ -54,3 +54,10 @@ export const formatPrice = (amount: number, currency: string = "QAR") => {
     ? `QAR ${amount.toFixed(2)}` 
     : `$${amount.toFixed(2)}`;
 };
+
+/**
+ * Format currency with appropriate formatting
+ */
+export const formatCurrency = (amount: number, currency: string = "QAR") => {
+  return formatPrice(amount, currency);
+};
