@@ -61,7 +61,22 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
       if (data && data.length > 0) {
         for (const item of data) {
           if (item.appointments) {
-            appointmentsData.push({...item.appointments});
+            // Create a new object instead of passing the reference
+            const appointmentCopy = {
+              id: item.appointments.id,
+              user_id: item.appointments.user_id,
+              title: item.appointments.title,
+              description: item.appointments.description,
+              location: item.appointments.location,
+              start_time: item.appointments.start_time,
+              end_time: item.appointments.end_time,
+              is_all_day: item.appointments.is_all_day,
+              status: item.appointments.status,
+              assignee_id: item.appointments.assignee_id,
+              created_at: item.appointments.created_at,
+              updated_at: item.appointments.updated_at
+            };
+            appointmentsData.push(appointmentCopy);
           }
         }
       }
@@ -93,7 +108,22 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
       if (data && data.length > 0) {
         for (const item of data) {
           if (item.appointments) {
-            appointmentsData.push({...item.appointments});
+            // Create a new object instead of passing the reference
+            const appointmentCopy = {
+              id: item.appointments.id,
+              user_id: item.appointments.user_id,
+              title: item.appointments.title,
+              description: item.appointments.description,
+              location: item.appointments.location,
+              start_time: item.appointments.start_time,
+              end_time: item.appointments.end_time,
+              is_all_day: item.appointments.is_all_day,
+              status: item.appointments.status,
+              assignee_id: item.appointments.assignee_id,
+              created_at: item.appointments.created_at,
+              updated_at: item.appointments.updated_at
+            };
+            appointmentsData.push(appointmentCopy);
           }
         }
       }

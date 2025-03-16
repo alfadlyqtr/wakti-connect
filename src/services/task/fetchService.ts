@@ -52,7 +52,20 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
       if (data && data.length > 0) {
         for (const item of data) {
           if (item.tasks) {
-            tasksData.push({...item.tasks});
+            // Create a new object instead of passing the reference
+            const taskCopy = { 
+              id: item.tasks.id,
+              title: item.tasks.title,
+              description: item.tasks.description,
+              status: item.tasks.status,
+              priority: item.tasks.priority,
+              due_date: item.tasks.due_date,
+              user_id: item.tasks.user_id,
+              assignee_id: item.tasks.assignee_id,
+              created_at: item.tasks.created_at,
+              updated_at: item.tasks.updated_at
+            };
+            tasksData.push(taskCopy);
           }
         }
       }
