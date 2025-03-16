@@ -21,15 +21,18 @@ const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
         onClick={() => setCurrency("QAR")}
         className="text-sm px-4 flex items-center gap-1.5"
       >
-        <Flag 
-          className="h-3.5 w-3.5" 
-          strokeWidth={0}
-          fill="#8d1b3d" 
-          style={{ 
-            background: 'white',
-            borderRadius: '2px'
-          }}
-        /> 
+        <div className="h-3.5 w-5 relative overflow-hidden" style={{ borderRadius: '2px' }}>
+          {/* Qatar flag: white left side, maroon right side with serrated dividing line */}
+          <div className="absolute inset-0" style={{ background: 'white' }}></div>
+          <div 
+            className="absolute top-0 bottom-0 right-0" 
+            style={{ 
+              background: '#8d1b3d', 
+              width: '70%',
+              clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%, 11% 90%, 0 80%, 11% 70%, 0 60%, 11% 50%, 0 40%, 11% 30%, 0 20%, 11% 10%)'
+            }}
+          ></div>
+        </div>
         QAR
       </Button>
       <Button
@@ -38,15 +41,19 @@ const CurrencyToggle: React.FC<CurrencyToggleProps> = ({
         onClick={() => setCurrency("USD")}
         className="text-sm px-4 flex items-center gap-1.5"
       >
-        <Flag 
-          className="h-3.5 w-3.5" 
-          strokeWidth={0}
-          fill="#002868" 
-          style={{ 
-            background: 'linear-gradient(180deg, #bf0a30 0%, #bf0a30 16.66%, white 16.66%, white 33.33%, #bf0a30 33.33%, #bf0a30 50%, white 50%, white 66.66%, #bf0a30 66.66%, #bf0a30 83.33%, white 83.33%, white 100%)',
-            borderRadius: '2px'
-          }}
-        /> 
+        <div className="h-3.5 w-5 relative overflow-hidden" style={{ borderRadius: '2px' }}>
+          {/* USA flag: stripes and blue rectangle */}
+          <div className="absolute inset-0" style={{ 
+            background: 'linear-gradient(180deg, #bf0a30 0%, #bf0a30 15.38%, white 15.38%, white 30.77%, #bf0a30 30.77%, #bf0a30 46.15%, white 46.15%, white 61.54%, #bf0a30 61.54%, #bf0a30 76.92%, white 76.92%, white 92.31%, #bf0a30 92.31%, #bf0a30 100%)'
+          }}></div>
+          <div 
+            className="absolute top-0 left-0 bottom-0" 
+            style={{ 
+              background: '#002868',
+              width: '40%'
+            }}
+          ></div>
+        </div>
         USD
       </Button>
     </div>
