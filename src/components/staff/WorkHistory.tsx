@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { StaffWorkSessionTable } from "@/components/staff/StaffWorkSessionTable";
 import { Card, CardContent } from "@/components/ui/card";
+import { format } from "date-fns";
 
 interface WorkHistoryProps {
   staffRelationId: string;
@@ -26,11 +27,17 @@ const WorkHistory: React.FC<WorkHistoryProps> = ({ staffRelationId }) => {
           
         if (error) throw error;
         
-        // Transform the sessions to include a date field
-        const formattedSessions = (data || []).map(session => ({
-          ...session,
-          date: new Date(session.start_time).toISOString().split('T')[0]
-        }));
+        // Transform the sessions to include a date field and calculate earnings
+        const formattedSessions = (data || []).map(session => {
+          // Parse session date for display
+          const sessionDate = new Date(session.start_time);
+          
+          return {
+            ...session,
+            date: sessionDate.toISOString().split('T')[0],
+            earnings: session.earnings || 0
+          };
+        });
         
         setWorkSessions(formattedSessions);
       } catch (error) {
@@ -45,7 +52,9 @@ const WorkHistory: React.FC<WorkHistoryProps> = ({ staffRelationId }) => {
       }
     };
     
-    fetchWorkSessions();
+    if (staffRelationId) {
+      fetchWorkSessions();
+    }
   }, [staffRelationId, toast]);
   
   if (isLoading) {
@@ -67,7 +76,12 @@ const WorkHistory: React.FC<WorkHistoryProps> = ({ staffRelationId }) => {
     );
   }
   
-  return <StaffWorkSessionTable sessions={workSessions} />;
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium">Work Session History</h3>
+      <StaffWorkSessionTable sessions={workSessions} />
+    </div>
+  );
 };
 
 export default WorkHistory;

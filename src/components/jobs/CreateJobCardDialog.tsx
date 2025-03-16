@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { 
@@ -31,7 +32,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { formatCurrency } from "@/utils/formatUtils";
+import { DatePicker } from "@/components/ui/date-picker";
+import { formatCurrency, formatDateTimeToISO } from "@/utils/formatUtils";
 
 interface CreateJobCardDialogProps {
   open: boolean;
@@ -46,6 +48,9 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
 }) => {
   const { jobs } = useJobs();
   const { createJobCard } = useJobCards(staffRelationId);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [startTime, setStartTime] = useState<string>("09:00");
+  const [endTime, setEndTime] = useState<string>("10:00");
   
   const form = useForm<JobCardFormValues>({
     resolver: zodResolver(jobCardFormSchema),
@@ -53,7 +58,9 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
       job_id: "",
       payment_method: "none",
       payment_amount: 0,
-      notes: ""
+      notes: "",
+      start_time: "",
+      end_time: ""
     }
   });
   
@@ -71,15 +78,16 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
   
   const onSubmit = async (data: JobCardFormValues) => {
     try {
-      const now = new Date().toISOString();
+      // Convert the selected date and times to ISO format
+      const timeData = formatDateTimeToISO(selectedDate, startTime, endTime);
       
       // Make sure required fields are present
       const jobCardData: JobCardFormData = {
-        job_id: data.job_id, // Ensure this is required and present
+        job_id: data.job_id,
         payment_method: data.payment_method,
         payment_amount: data.payment_amount,
-        start_time: data.start_time || now,
-        end_time: data.end_time || now,
+        start_time: timeData.start_time,
+        end_time: timeData.end_time,
         notes: data.notes
       };
       
@@ -139,6 +147,36 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
                 </FormItem>
               )}
             />
+            
+            <div className="space-y-4">
+              <FormItem>
+                <FormLabel>Date</FormLabel>
+                <DatePicker 
+                  date={selectedDate} 
+                  setDate={setSelectedDate}
+                />
+              </FormItem>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormItem>
+                  <FormLabel>Start Time</FormLabel>
+                  <Input 
+                    type="time" 
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                  />
+                </FormItem>
+                
+                <FormItem>
+                  <FormLabel>End Time</FormLabel>
+                  <Input 
+                    type="time" 
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                  />
+                </FormItem>
+              </div>
+            </div>
             
             <FormField
               control={form.control}
