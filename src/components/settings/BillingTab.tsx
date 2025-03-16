@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { CreditCard } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "@/components/ui/use-toast";
-import { useRouter } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface BillingTabProps {
   profile?: (Tables<"profiles"> & {
@@ -15,10 +15,10 @@ interface BillingTabProps {
 }
 
 const BillingTab: React.FC<BillingTabProps> = ({ profile }) => {
-  const router = useRouter();
+  const navigate = useNavigate();
   
   const handleUpgradePlan = () => {
-    router.navigate("/dashboard/upgrade");
+    navigate("/dashboard/upgrade");
     toast({
       title: "Redirecting to plan selection",
       description: "You'll now be able to choose your preferred plan."
