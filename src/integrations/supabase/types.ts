@@ -98,6 +98,98 @@ export type Database = {
         }
         Relationships: []
       }
+      business_page_sections: {
+        Row: {
+          created_at: string
+          id: string
+          is_visible: boolean | null
+          page_id: string
+          section_content: Json | null
+          section_order: number
+          section_title: string | null
+          section_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_visible?: boolean | null
+          page_id: string
+          section_content?: Json | null
+          section_order: number
+          section_title?: string | null
+          section_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_visible?: boolean | null
+          page_id?: string
+          section_content?: Json | null
+          section_order?: number
+          section_title?: string | null
+          section_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_page_sections_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "business_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_pages: {
+        Row: {
+          banner_url: string | null
+          business_id: string
+          chatbot_enabled: boolean | null
+          created_at: string
+          description: string | null
+          id: string
+          is_published: boolean | null
+          logo_url: string | null
+          page_slug: string
+          page_title: string
+          primary_color: string | null
+          secondary_color: string | null
+          updated_at: string
+        }
+        Insert: {
+          banner_url?: string | null
+          business_id: string
+          chatbot_enabled?: boolean | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean | null
+          logo_url?: string | null
+          page_slug: string
+          page_title: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string
+        }
+        Update: {
+          banner_url?: string | null
+          business_id?: string
+          chatbot_enabled?: boolean | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean | null
+          logo_url?: string | null
+          page_slug?: string
+          page_title?: string
+          primary_color?: string | null
+          secondary_color?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       business_services: {
         Row: {
           business_id: string
@@ -128,6 +220,33 @@ export type Database = {
           name?: string
           price?: number | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      business_social_links: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          platform: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          platform: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          platform?: string
+          updated_at?: string
+          url?: string
         }
         Relationships: []
       }
@@ -713,6 +832,12 @@ export type Database = {
           user_uuid: string
         }
         Returns: boolean
+      }
+      generate_unique_business_slug: {
+        Args: {
+          business_name: string
+        }
+        Returns: string
       }
       get_auth_user_account_type: {
         Args: Record<PropertyKey, never>

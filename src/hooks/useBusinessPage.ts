@@ -25,7 +25,6 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
-      // Safe type assertion since we know the structure
       return data as BusinessPage;
     },
     enabled: !!pageSlug
@@ -46,15 +45,13 @@ export const useBusinessPage = (pageSlug?: string) => {
         .eq('business_id', session.user.id)
         .single();
       
-      if (error) {
+      if (error && error.code !== 'PGRST116') { // Not found is okay
         console.error("Error fetching owner's business page:", error);
         throw error;
       }
       
-      // Safe type assertion since we know the structure
-      return data as BusinessPage;
-    },
-    enabled: !pageSlug // Only fetch when not viewing a specific page by slug
+      return data as BusinessPage || null;
+    }
   });
 
   // Fetch page sections
@@ -74,8 +71,7 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
-      // Safe type assertion since we know the structure
-      return data as BusinessPageSection[];
+      return data as BusinessPageSection[] || [];
     },
     enabled: !!(businessPage?.id || ownerBusinessPage?.id)
   });
@@ -96,10 +92,49 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
-      // Safe type assertion since we know the structure
-      return data as BusinessSocialLink[];
+      return data as BusinessSocialLink[] || [];
     },
     enabled: !!(businessPage?.business_id || ownerBusinessPage?.business_id)
+  });
+
+  // Create business page
+  const createPage = useMutation({
+    mutationFn: async (pageData: Partial<BusinessPage>) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        throw new Error("No active session");
+      }
+      
+      const { data, error } = await fromTable('business_pages')
+        .insert({
+          ...pageData,
+          business_id: session.user.id
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error("Error creating business page:", error);
+        throw error;
+      }
+      
+      return data as BusinessPage;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Page created",
+        description: "Your business page has been created successfully."
+      });
+      queryClient.invalidateQueries({ queryKey: ['ownerBusinessPage'] });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to create page",
+        description: error.message
+      });
+    }
   });
 
   // Update business page
@@ -111,13 +146,14 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw new Error("No active session");
       }
       
-      const pageId = ownerBusinessPage?.id;
-      if (!pageId) {
+      if (!ownerBusinessPage?.id) {
         throw new Error("No business page found");
       }
       
       const { data, error } = await fromTable('business_pages')
-        .update(updates, { id: pageId, business_id: session.user.id }) // Ensure owner
+        .update(updates)
+        .eq('id', ownerBusinessPage.id)
+        .eq('business_id', session.user.id) // Ensure owner
         .select()
         .single();
       
@@ -126,7 +162,6 @@ export const useBusinessPage = (pageSlug?: string) => {
         throw error;
       }
       
-      // Safe type assertion since we know the structure
       return data as BusinessPage;
     },
     onSuccess: () => {
@@ -161,6 +196,7 @@ export const useBusinessPage = (pageSlug?: string) => {
     linksLoading,
     
     // Mutations
+    createPage,
     updatePage,
     
     // Loading state

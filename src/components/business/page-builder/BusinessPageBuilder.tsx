@@ -20,7 +20,8 @@ const BusinessPageBuilder = () => {
     ownerBusinessPage, 
     pageSections, 
     socialLinks, 
-    updatePage, 
+    updatePage,
+    createPage,
     isLoading
   } = useBusinessPage();
   
@@ -60,9 +61,11 @@ const BusinessPageBuilder = () => {
   };
   
   const handleSavePageSettings = () => {
-    if (!ownerBusinessPage) return;
-    
-    updatePage.mutate(pageData);
+    if (ownerBusinessPage) {
+      updatePage.mutate(pageData);
+    } else {
+      createPage.mutate(pageData);
+    }
   };
   
   // Section handling
@@ -117,7 +120,8 @@ const BusinessPageBuilder = () => {
   const updateSectionOrder = useMutation({
     mutationFn: async ({ sectionId, newOrder }: { sectionId: string, newOrder: number }) => {
       const { data, error } = await fromTable('business_page_sections')
-        .update({ section_order: newOrder }, { id: sectionId })
+        .update({ section_order: newOrder })
+        .eq('id', sectionId)
         .select()
         .single();
       
@@ -143,7 +147,8 @@ const BusinessPageBuilder = () => {
   const toggleSectionVisibility = useMutation({
     mutationFn: async ({ sectionId, isVisible }: { sectionId: string, isVisible: boolean }) => {
       const { data, error } = await fromTable('business_page_sections')
-        .update({ is_visible: isVisible }, { id: sectionId })
+        .update({ is_visible: isVisible })
+        .eq('id', sectionId)
         .select()
         .single();
       
@@ -169,7 +174,8 @@ const BusinessPageBuilder = () => {
   const deleteSection = useMutation({
     mutationFn: async (sectionId: string) => {
       const { error } = await fromTable('business_page_sections')
-        .delete({ id: sectionId });
+        .delete()
+        .eq('id', sectionId);
       
       if (error) {
         console.error("Error deleting section:", error);
@@ -257,11 +263,77 @@ const BusinessPageBuilder = () => {
   
   if (!ownerBusinessPage) {
     return (
-      <div className="text-center py-12">
-        <h1 className="text-2xl font-bold mb-4">Business Page Not Found</h1>
-        <p className="text-muted-foreground mb-6">
-          You don't have a business page set up yet.
-        </p>
+      <div className="container mx-auto px-4 py-6">
+        <h1 className="text-3xl font-bold mb-6">Create Your Business Landing Page</h1>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Create Your Business Page</CardTitle>
+            <CardDescription>
+              Set up your business landing page to showcase your services and information
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="page_title">Business Name</Label>
+              <Input
+                id="page_title"
+                name="page_title"
+                value={pageData.page_title}
+                onChange={handlePageDataChange}
+                placeholder="My Business"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="page_slug">
+                Page URL Slug
+                <span className="text-xs text-muted-foreground ml-2">
+                  (e.g. my-business)
+                </span>
+              </Label>
+              <div className="flex items-center">
+                <div className="text-sm text-muted-foreground mr-2">
+                  /business/
+                </div>
+                <Input
+                  id="page_slug"
+                  name="page_slug"
+                  value={pageData.page_slug}
+                  onChange={handlePageDataChange}
+                  placeholder="my-business"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="description">Business Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={pageData.description || ""}
+                onChange={handlePageDataChange}
+                placeholder="Describe your business in a few sentences"
+                rows={3}
+              />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={handleSavePageSettings} disabled={createPage.isPending}>
+              {createPage.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Page...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Create Business Page
+                </>
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     );
   }
