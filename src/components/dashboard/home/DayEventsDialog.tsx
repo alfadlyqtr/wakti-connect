@@ -15,43 +15,31 @@ import {
   Building 
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
-
-interface CalendarEvent {
-  id: string;
-  title: string;
-  date: Date;
-  type: "task" | "appointment" | "booking";
-}
+import { CalendarEvent } from "@/types/calendar.types";
 
 interface DayEventsDialogProps {
-  date: Date;
+  date: Date | null;
   events: CalendarEvent[];
   isOpen: boolean;
   onClose: () => void;
+  groupedEvents: {
+    tasks: CalendarEvent[];
+    appointments: CalendarEvent[];
+    bookings: CalendarEvent[];
+  };
 }
 
 const DayEventsDialog: React.FC<DayEventsDialogProps> = ({
   date,
   events,
   isOpen,
-  onClose
+  onClose,
+  groupedEvents
 }) => {
-  // Group events by type
-  const tasks = events.filter(event => event.type === "task");
-  const appointments = events.filter(event => event.type === "appointment");
-  const bookings = events.filter(event => event.type === "booking");
+  // Extract grouped events
+  const { tasks, appointments, bookings } = groupedEvents;
   
-  // Get event icon based on type
-  const getEventIcon = (type: "task" | "appointment" | "booking") => {
-    switch (type) {
-      case "task":
-        return <CheckCircle className="h-4 w-4 text-amber-500" />;
-      case "appointment":
-        return <CalendarIcon className="h-4 w-4 text-blue-500" />;
-      case "booking":
-        return <Building className="h-4 w-4 text-green-500" />;
-    }
-  };
+  if (!date) return null;
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

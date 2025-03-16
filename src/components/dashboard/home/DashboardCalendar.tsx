@@ -8,10 +8,10 @@ import { useCalendarEvents } from "@/hooks/useCalendarEvents";
 import { useCalendarEventUtils } from "@/hooks/useCalendarEventUtils";
 import CalendarDayCell from "./CalendarDayCell";
 import { DayProps } from "react-day-picker";
+import { useDayEventsDialog } from "@/hooks/useDayEventsDialog";
 
 export function DashboardCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(startOfToday());
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   // Fetch calendar events (tasks, appointments, bookings)
   const { data: calendarEvents, isLoading } = useCalendarEvents();
@@ -19,11 +19,19 @@ export function DashboardCalendar() {
   // Get event utilities
   const { getEventsForDate, getEventTypesForDate } = useCalendarEventUtils(calendarEvents);
   
+  // Use the day events dialog hook
+  const {
+    isOpen,
+    openDialog,
+    closeDialog,
+    dialogEvents
+  } = useDayEventsDialog();
+  
   // Handle date selection
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      setIsDialogOpen(true);
+      openDialog(date, getEventsForDate(date));
     }
   };
 
@@ -82,8 +90,9 @@ export function DashboardCalendar() {
         <DayEventsDialog
           date={selectedDate}
           events={getEventsForDate(selectedDate)}
-          isOpen={isDialogOpen}
-          onClose={() => setIsDialogOpen(false)}
+          isOpen={isOpen}
+          onClose={closeDialog}
+          groupedEvents={dialogEvents}
         />
       )}
     </>
