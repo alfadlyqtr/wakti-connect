@@ -55,9 +55,16 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         .order('created_at', { ascending: false });
         
       if (error) throw error;
-      // Extract just the appointments objects from the response  
-      const extractedAppointments = data?.map(item => item.appointments) || [];
-      appointmentsData = extractedAppointments;
+      
+      // Extract just the appointments objects from the response
+      appointmentsData = [];
+      if (data && data.length > 0) {
+        for (const item of data) {
+          if (item.appointments) {
+            appointmentsData.push(item.appointments);
+          }
+        }
+      }
       break;
     }
     case "my-appointments": {
@@ -80,9 +87,16 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         .order('created_at', { ascending: false });
         
       if (error) throw error;
+      
       // Extract just the appointments objects from the response
-      const extractedAppointments = data?.map(item => item.appointments) || [];
-      appointmentsData = extractedAppointments;
+      appointmentsData = [];
+      if (data && data.length > 0) {
+        for (const item of data) {
+          if (item.appointments) {
+            appointmentsData.push(item.appointments);
+          }
+        }
+      }
       break;
     }
     case "assigned-appointments": {

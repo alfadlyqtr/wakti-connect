@@ -46,9 +46,16 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
         .order('created_at', { ascending: false });
         
       if (error) throw error;
+      
       // Extract just the tasks objects from the response
-      const extractedTasks = data?.map(item => item.tasks) || [];
-      tasksData = extractedTasks;
+      tasksData = [];
+      if (data && data.length > 0) {
+        for (const item of data) {
+          if (item.tasks) {
+            tasksData.push(item.tasks);
+          }
+        }
+      }
       break;
     }
     
