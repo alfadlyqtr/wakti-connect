@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
@@ -14,6 +13,7 @@ import {
 import { SectionContainer } from "@/components/ui/section-container";
 import { FaqSection, FaqItem } from "@/components/ui/faq-section";
 import BillingCycleToggle from "@/components/billing/BillingCycleToggle";
+import FeatureDetail from "@/components/features/FeatureDetail";
 
 const PricingPage = () => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
@@ -29,14 +29,14 @@ const PricingPage = () => {
   const pricingPlans = [
     {
       name: "Free",
-      description: "For individuals just getting started",
-      price: "$0",
+      description: "For basic access",
+      price: "0",
       period: "forever",
       features: [
-        "View-only access to tasks",
-        "View-only access to appointments",
+        "1 task/month",
+        "View appointments & tasks",
+        "Message individual users (1 per month)",
         "Accept invitations",
-        "Subscribe to 1 business",
         "View notifications"
       ],
       buttonText: "Sign Up Free",
@@ -46,16 +46,14 @@ const PricingPage = () => {
     {
       name: "Individual",
       description: "For personal productivity",
-      price: `$${getPrice(9.99)}`,
+      price: billingCycle === "monthly" ? "20" : "200",
       period: billingCycle === "monthly" ? "per month" : "per year",
-      savings: billingCycle === "yearly" ? `Save $${getSavings(9.99)}/year` : null,
+      savings: billingCycle === "yearly" ? "Save QAR 40/year" : null,
       features: [
-        "Create, edit, and delete tasks",
-        "Share tasks with other users",
-        "Create and send invitations",
-        "Full appointment scheduling",
-        "Unlimited contacts",
-        "Message individuals & businesses",
+        "Unlimited tasks",
+        "Create & manage appointments",
+        "Message individual users",
+        "Full contact management",
         "Priority support"
       ],
       buttonText: "Start 14-Day Trial",
@@ -65,19 +63,16 @@ const PricingPage = () => {
     {
       name: "Business",
       description: "For teams and businesses",
-      price: `$${getPrice(29.99)}`,
+      price: billingCycle === "monthly" ? "45" : "400",
       period: billingCycle === "monthly" ? "per month" : "per year",
-      savings: billingCycle === "yearly" ? `Save $${getSavings(29.99)}/year` : null,
+      savings: billingCycle === "yearly" ? "Save QAR 140/year" : null,
       features: [
         "All Individual features",
-        "Assign tasks to staff",
-        "Track staff logins & hours",
-        "Public booking system",
-        "Staff management",
-        "Service management",
-        "Business analytics",
-        "Customizable business profile",
-        "Premium support"
+        "Business profile page",
+        "Customer booking system",
+        "Staff management (up to 6 staff)",
+        "TMW AI Chatbot Integration",
+        "Business analytics"
       ],
       buttonText: "Start 14-Day Trial",
       buttonLink: "/auth?tab=register&plan=business",
@@ -162,7 +157,9 @@ const PricingPage = () => {
               </CardHeader>
               <CardContent className="flex-1">
                 <div className="mb-6">
-                  <span className="text-4xl font-bold">{plan.price}</span>
+                  <span className="text-4xl font-bold">
+                    {plan.price === "0" ? "Free" : `QAR ${plan.price}`}
+                  </span>
                   <span className="text-muted-foreground ml-2">
                     {plan.period}
                   </span>
@@ -172,14 +169,7 @@ const PricingPage = () => {
                     </div>
                   )}
                 </div>
-                <ul className="space-y-2">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start">
-                      <Check className="h-5 w-5 text-wakti-blue shrink-0 mr-2" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                <FeatureDetail features={plan.features} />
               </CardContent>
               <CardFooter>
                 <Button
@@ -216,9 +206,9 @@ const PricingPage = () => {
               </tr>
               <tr className="border-b">
                 <td className="py-4 px-6">Create & Edit Tasks</td>
-                <td className="py-4 px-6 text-center">View Only</td>
-                <td className="py-4 px-6 text-center">✓</td>
-                <td className="py-4 px-6 text-center">✓</td>
+                <td className="py-4 px-6 text-center">1/month</td>
+                <td className="py-4 px-6 text-center">Unlimited</td>
+                <td className="py-4 px-6 text-center">Unlimited</td>
               </tr>
               <tr className="border-b">
                 <td className="py-4 px-6">Task Prioritization</td>
@@ -253,8 +243,8 @@ const PricingPage = () => {
               <tr className="border-b">
                 <td className="py-4 px-6">Booking Page</td>
                 <td className="py-4 px-6 text-center">—</td>
-                <td className="py-4 px-6 text-center">Basic</td>
-                <td className="py-4 px-6 text-center">Custom</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">✓</td>
               </tr>
               <tr className="border-b">
                 <td className="py-4 px-6">Service Management</td>
@@ -275,10 +265,16 @@ const PricingPage = () => {
                 <td className="py-4 px-6 text-center">✓</td>
               </tr>
               <tr className="border-b">
-                <td className="py-4 px-6">Analytics</td>
+                <td className="py-4 px-6">Business Profile</td>
                 <td className="py-4 px-6 text-center">—</td>
-                <td className="py-4 px-6 text-center">Basic</td>
-                <td className="py-4 px-6 text-center">Advanced</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">✓</td>
+              </tr>
+              <tr className="border-b">
+                <td className="py-4 px-6">TMW AI Chatbot</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">✓</td>
               </tr>
               <tr className="border-b">
                 <td className="py-4 px-6">Support</td>

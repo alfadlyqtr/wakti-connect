@@ -7,12 +7,13 @@ const Pricing = () => {
   const plans = [
     {
       title: "Free",
-      price: "$0",
+      price: "Free",
       description: "Basic access for personal use",
       features: [
+        "1 task/month",
         "View appointments & tasks",
+        "Message individual users (1 per month)",
         "Accept invitations",
-        "Subscribe to 1 business",
         "View notifications"
       ],
       buttonText: "Sign Up Free",
@@ -23,14 +24,14 @@ const Pricing = () => {
     },
     {
       title: "Individual",
-      price: "$9.99",
+      price: "QAR 20",
       description: "Full access for individual professionals",
       features: [
-        "Create, edit, and delete tasks",
-        "Share tasks with other users",
-        "Create and send invitations",
-        "Unlimited contacts",
-        "Message individuals & businesses"
+        "Unlimited tasks",
+        "Create & manage appointments",
+        "Message individual users",
+        "Full contact management",
+        "Priority support"
       ],
       buttonText: "Start 14-Day Trial",
       buttonLink: "/auth?tab=register&plan=individual",
@@ -40,13 +41,14 @@ const Pricing = () => {
     },
     {
       title: "Business",
-      price: "$29.99",
+      price: "QAR 45",
       description: "Advanced features for businesses",
       features: [
         "All Individual features",
-        "Assign tasks to staff",
-        "Track staff logins & hours",
-        "Public booking system",
+        "Business profile page",
+        "Customer booking system",
+        "Staff management (up to 6 staff)",
+        "TMW AI Chatbot Integration",
         "Business analytics"
       ],
       buttonText: "Start 14-Day Trial",
