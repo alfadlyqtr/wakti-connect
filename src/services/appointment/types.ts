@@ -1,9 +1,38 @@
 
-// Re-export appointment types to ensure consistent imports
-export type { 
-  Appointment, 
-  AppointmentTab, 
-  AppointmentFormData, 
-  AppointmentsResult,
-  AppointmentStatus 
-} from "@/types/appointment.types";
+export interface Appointment {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  start_time: string;
+  end_time: string;
+  is_all_day: boolean;
+  status: AppointmentStatus;
+  assignee_id: string | null;
+  created_at: string;
+  updated_at: string;
+  is_recurring_instance?: boolean;
+  parent_recurring_id?: string | null;
+}
+
+export type AppointmentStatus = "scheduled" | "cancelled" | "completed";
+
+export type AppointmentTab = "my-appointments" | "shared-appointments" | "assigned-appointments" | "upcoming" | "past" | "invitations";
+
+export interface AppointmentFormData {
+  title: string;
+  description?: string;
+  location?: string;
+  status?: AppointmentStatus;
+  start_time: string;
+  end_time: string;
+  is_all_day?: boolean;
+  invitees?: string[];
+  assignee_id?: string | null;
+}
+
+export interface AppointmentsResult {
+  appointments: Appointment[];
+  userRole: "free" | "individual" | "business";
+}

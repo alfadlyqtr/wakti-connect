@@ -718,6 +718,12 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_user_appointments_access: {
+        Args: {
+          appointment_uid: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       account_type: "free" | "individual" | "business"
