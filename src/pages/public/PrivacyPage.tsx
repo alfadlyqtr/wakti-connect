@@ -120,16 +120,22 @@ const PrivacyPage = () => {
             <h2 className="text-2xl font-semibold mt-8 mb-4">8. International Data Transfers</h2>
             
             <p>
-              We may transfer information that we collect about you to affiliated entities, or to other third parties across borders and from your country or jurisdiction to other countries or jurisdictions. If you are located in the European Union or other regions with laws governing data collection and use that may differ from U.S. law, please note that we may transfer information to a country that does not have the same data protection laws as your jurisdiction.
+              We may transfer information that we collect about you to affiliated entities, or to other third parties across borders and from your country or jurisdiction to other countries or jurisdictions. If you are located in the European Union or other regions with laws governing data collection and use that may differ from Qatar law, please note that we may transfer information to a country that does not have the same data protection laws as your jurisdiction.
             </p>
             
-            <h2 className="text-2xl font-semibold mt-8 mb-4">9. Changes to This Privacy Policy</h2>
+            <h2 className="text-2xl font-semibold mt-8 mb-4">9. Qatar Data Protection Law Compliance</h2>
+            
+            <p>
+              We comply with Qatar's data protection laws, including the Personal Data Privacy Protection Law No. 13 of 2016. Under these laws, you have the right to access, correct, and delete your personal information, as well as the right to object to or restrict certain types of processing of your personal information.
+            </p>
+            
+            <h2 className="text-2xl font-semibold mt-8 mb-4">10. Changes to This Privacy Policy</h2>
             
             <p>
               We may update this privacy policy from time to time. We will notify you of any changes by posting the new privacy policy on this page and updating the "Last Updated" date. You are advised to review this privacy policy periodically for any changes.
             </p>
             
-            <h2 className="text-2xl font-semibold mt-8 mb-4">10. Contact Us</h2>
+            <h2 className="text-2xl font-semibold mt-8 mb-4">11. Contact Us</h2>
             
             <p>
               If you have any questions about this Privacy Policy, please <Link to="/contact" className="text-wakti-blue hover:underline">contact us</Link>.

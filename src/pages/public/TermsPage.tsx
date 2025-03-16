@@ -116,7 +116,17 @@ const TermsPage = () => {
               By continuing to access or use our Service after those revisions become effective, you agree to be bound by the revised terms. If you do not agree to the new terms, please stop using the Service.
             </p>
             
-            <h2 className="text-2xl font-semibold mt-8 mb-4">8. Contact Us</h2>
+            <h2 className="text-2xl font-semibold mt-8 mb-4">8. Governing Law</h2>
+            
+            <p>
+              These Terms shall be governed and construed in accordance with the laws of the State of Qatar, without regard to its conflict of law provisions.
+            </p>
+            
+            <p>
+              Our failure to enforce any right or provision of these Terms will not be considered a waiver of those rights. If any provision of these Terms is held to be invalid or unenforceable by a court, the remaining provisions of these Terms will remain in effect.
+            </p>
+            
+            <h2 className="text-2xl font-semibold mt-8 mb-4">9. Contact Us</h2>
             
             <p>
               If you have any questions about these Terms, please <Link to="/contact" className="text-wakti-blue hover:underline">contact us</Link>.
