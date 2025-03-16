@@ -13,6 +13,8 @@ import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import VerificationPage from "./pages/auth/VerificationPage";
 import Header from "./components/landing/Header";
 import ScrollToTop from "./components/ui/scroll-to-top";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import DashboardLayout from "./components/dashboard/DashboardLayout";
 
 // Import i18n
 import "./i18n/i18n";
@@ -46,11 +48,15 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/verify-email" element={<VerificationPage />} />
             
-            {/* Dashboard routes */}
+            {/* Dashboard routes - wrapped in ProtectedRoute */}
             <Route path="/dashboard/*" element={
-              <Routes>
-                {DashboardRoutes}
-              </Routes>
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Routes>
+                    {DashboardRoutes}
+                  </Routes>
+                </DashboardLayout>
+              </ProtectedRoute>
             } />
           </Routes>
         </BrowserRouter>

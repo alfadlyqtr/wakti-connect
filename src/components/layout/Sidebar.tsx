@@ -73,9 +73,6 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
     };
     
     handleRouteChange();
-    return () => {
-      // Cleanup
-    };
   }, [location.pathname]);
 
   return (

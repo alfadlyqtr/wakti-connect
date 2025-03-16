@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
@@ -43,24 +42,14 @@ const LoginForm = ({ setError }: LoginFormProps) => {
         // This is handled by Supabase automatically based on the rememberMe option
       }
 
-      // Get user profile to redirect based on account type
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('account_type')
-        .eq('id', data.user?.id)
-        .single();
-
       toast({
         title: "Success!",
         description: "You have been logged in successfully.",
       });
 
-      // Redirect based on account type
-      if (profileData?.account_type) {
-        navigate(`/dashboard/${profileData.account_type}`);
-      } else {
-        navigate('/dashboard');
-      }
+      // Simply redirect to dashboard - we'll handle the routing there
+      navigate('/dashboard');
+
     } catch (error: any) {
       setError(error.message || "Failed to log in. Please try again.");
       toast({

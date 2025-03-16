@@ -23,9 +23,9 @@ interface ProfileData {
 
 const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Fetch user profile data for the dashboard
   const { data: profileData, isLoading: profileLoading } = useQuery({
     queryKey: ['dashboardUserProfile'],
     queryFn: async () => {
@@ -75,6 +75,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         return null;
       }
     },
+    retry: 1,
   });
 
   // Set theme based on user preference
@@ -85,31 +86,10 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     }
   }, [profileData?.theme_preference]);
 
+  // Setup auth listener
   useEffect(() => {
-    const checkAuth = async () => {
-      setLoading(true);
-      try {
-        const { data } = await supabase.auth.getSession();
-        
-        if (!data.session) {
-          navigate("/auth");
-        }
-      } catch (error) {
-        console.error("Error checking auth:", error);
-        navigate("/auth");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (!propUserRole) {
-      checkAuth();
-    } else {
-      setLoading(false);
-    }
-    
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event);
+      console.log("Auth state changed in dashboard layout:", event);
       
       if (event === 'SIGNED_OUT') {
         navigate("/auth");
@@ -119,7 +99,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, [propUserRole, navigate]);
+  }, [navigate]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -136,7 +116,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         
         <main className="flex-1 overflow-y-auto pt-4 px-4 pb-12 lg:pl-64 transition-all duration-300">
           <div className="container mx-auto animate-in">
-            {loading || profileLoading ? (
+            {profileLoading ? (
               <div className="flex items-center justify-center h-[calc(100vh-100px)]">
                 <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
               </div>
