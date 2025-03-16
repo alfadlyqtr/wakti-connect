@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Bell, 
   Search, 
@@ -9,7 +9,10 @@ import {
   Moon, 
   Sun, 
   User,
-  LogOut
+  LogOut,
+  MessageSquare,
+  Users,
+  HeartHandshake,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +27,8 @@ import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/integrations/supabase/client";
 import LanguageSwitcher from "@/components/ui/language-switcher";
 import { useTranslation } from "react-i18next";
+import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
 
 interface NavbarProps {
   toggleSidebar: () => void;
@@ -35,6 +40,41 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  // Get unread notifications count
+  const { data: unreadNotifications = [] } = useQuery({
+    queryKey: ['unreadNotifications'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return [];
+      
+      const { data } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('is_read', false);
+        
+      return data || [];
+    },
+  });
+
+  // Get unread messages count
+  const { data: unreadMessages = [] } = useQuery({
+    queryKey: ['unreadMessages'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return [];
+      
+      const { data } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('recipient_id', session.user.id)
+        .eq('is_read', false);
+        
+      return data || [];
+    },
+  });
 
   useEffect(() => {
     // Check if user is authenticated
@@ -58,6 +98,34 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
   };
+
+  const navItems = [
+    { 
+      icon: MessageSquare, 
+      label: 'Messages', 
+      path: '/dashboard/messages', 
+      badge: unreadMessages.length > 0 ? unreadMessages.length : null 
+    },
+    { 
+      icon: Users, 
+      label: 'Contacts', 
+      path: '/dashboard/contacts', 
+      badge: null 
+    },
+    { 
+      icon: HeartHandshake, 
+      label: 'Subscribers', 
+      path: '/dashboard/subscribers', 
+      badge: null,
+      showForBusiness: true
+    },
+    { 
+      icon: Bell, 
+      label: 'Notifications', 
+      path: '/dashboard/notifications', 
+      badge: unreadNotifications.length > 0 ? unreadNotifications.length : null
+    },
+  ];
 
   return (
     <header className="w-full bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
@@ -117,6 +185,37 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
             <Search className="h-5 w-5" />
           </Button>
 
+          {/* Navigation Icons */}
+          <div className="hidden md:flex items-center gap-2">
+            {navItems.map((item, index) => {
+              // Skip subscribers icon for non-business users
+              if (item.showForBusiness && !localStorage.getItem('userRole')?.includes('business')) {
+                return null;
+              }
+              
+              return (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  size="icon"
+                  className="relative"
+                  onClick={() => navigate(item.path)}
+                  aria-label={item.label}
+                >
+                  <item.icon className="h-5 w-5" />
+                  {item.badge && (
+                    <Badge 
+                      variant="destructive" 
+                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]"
+                    >
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </Badge>
+                  )}
+                </Button>
+              );
+            })}
+          </div>
+
           <LanguageSwitcher />
 
           <Button
@@ -132,21 +231,6 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
               <Moon className="h-[1.2rem] w-[1.2rem]" />
             )}
           </Button>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Notifications">
-                <Bell className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[300px]">
-              <DropdownMenuLabel>{t('dashboard.notifications')}</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <div className="py-6 text-center text-muted-foreground">
-                <p>No new notifications</p>
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -157,11 +241,32 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              
+              {/* Mobile menu items - only visible on small screens */}
+              <div className="md:hidden">
+                {navItems.map((item, index) => (
+                  <DropdownMenuItem key={`mobile-${index}`} asChild>
+                    <Link to={item.path} className="flex items-center justify-between w-full">
+                      <div className="flex items-center">
+                        <item.icon className="h-4 w-4 mr-2" />
+                        {item.label}
+                      </div>
+                      {item.badge && (
+                        <Badge variant="destructive" className="ml-2">
+                          {item.badge}
+                        </Badge>
+                      )}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+              </div>
+              
               <DropdownMenuItem asChild>
-                <Link to="/profile">Profile</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/settings">{t('dashboard.settings')}</Link>
+                <Link to="/dashboard/settings">
+                  <Settings className="h-4 w-4 mr-2" />
+                  {t('dashboard.settings')}
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {isAuthenticated ? (

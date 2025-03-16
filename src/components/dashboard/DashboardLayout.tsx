@@ -53,6 +53,9 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           return null;
         }
         
+        // Store user role in localStorage for use in other components
+        localStorage.setItem('userRole', data.account_type);
+        
         if (data.account_type === 'business' && !data.business_name) {
           // If business account but no business name is set, inform the user
           toast({
@@ -61,7 +64,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
             action: (
               <button 
                 className="bg-primary text-white px-3 py-1 rounded-md text-xs"
-                onClick={() => navigate("/dashboard/profile")}
+                onClick={() => navigate("/dashboard/settings")}
               >
                 Update Profile
               </button>
@@ -92,6 +95,8 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       console.log("Auth state changed in dashboard layout:", event);
       
       if (event === 'SIGNED_OUT') {
+        // Clear stored user role on sign out
+        localStorage.removeItem('userRole');
         navigate("/auth");
       }
     });
