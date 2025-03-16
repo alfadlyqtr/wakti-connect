@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { AppointmentTab, AppointmentsResult } from "./types";
+import { AppointmentTab, AppointmentsResult, Appointment } from "./types";
 
 export async function fetchAppointments(tab: AppointmentTab): Promise<AppointmentsResult> {
   const { data: { session } } = await supabase.auth.getSession();
@@ -18,12 +18,12 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
   const userRole = profileData?.account_type || "free";
   
   // Declare variable to hold query results
-  let data;
+  let appointmentsData: Appointment[] = [];
   
   // Use switch case to handle all tab values properly
   switch (tab) {
     case "upcoming": {
-      const { data: appointmentsData, error } = await supabase
+      const { data, error } = await supabase
         .from('appointments')
         .select('*')
         .eq('user_id', session.user.id)
@@ -31,11 +31,11 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         .order('start_time', { ascending: true });
         
       if (error) throw error;
-      data = appointmentsData || [];
+      appointmentsData = data || [];
       break;
     }
     case "past": {
-      const { data: appointmentsData, error } = await supabase
+      const { data, error } = await supabase
         .from('appointments')
         .select('*')
         .eq('user_id', session.user.id)
@@ -43,11 +43,11 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         .order('start_time', { ascending: false });
         
       if (error) throw error;
-      data = appointmentsData || [];
+      appointmentsData = data || [];
       break;
     }
     case "invitations": {
-      const { data: invitationsData, error } = await supabase
+      const { data, error } = await supabase
         .from('appointment_invitations')
         .select('appointment_id, appointments(*)')
         .eq('invitee_id', session.user.id)
@@ -55,22 +55,22 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         .order('created_at', { ascending: false });
         
       if (error) throw error;
-      data = invitationsData ? invitationsData.map(item => item.appointments) : [];
+      appointmentsData = data ? data.map(item => item.appointments as Appointment) : [];
       break;
     }
     case "my-appointments": {
-      const { data: appointmentsData, error } = await supabase
+      const { data, error } = await supabase
         .from('appointments')
         .select('*')
         .eq('user_id', session.user.id)
         .order('start_time', { ascending: true });
         
       if (error) throw error;
-      data = appointmentsData || [];
+      appointmentsData = data || [];
       break;
     }
     case "shared-appointments": {
-      const { data: sharedAppointmentsData, error } = await supabase
+      const { data, error } = await supabase
         .from('appointment_invitations')
         .select('appointment_id, appointments(*)')
         .eq('invitee_id', session.user.id)
@@ -78,35 +78,35 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         .order('created_at', { ascending: false });
         
       if (error) throw error;
-      data = sharedAppointmentsData ? sharedAppointmentsData.map(item => item.appointments) : [];
+      appointmentsData = data ? data.map(item => item.appointments as Appointment) : [];
       break;
     }
     case "assigned-appointments": {
-      const { data: assignedAppointmentsData, error } = await supabase
+      const { data, error } = await supabase
         .from('appointments')
         .select('*')
         .eq('assignee_id', session.user.id)
         .order('start_time', { ascending: true });
         
       if (error) throw error;
-      data = assignedAppointmentsData || [];
+      appointmentsData = data || [];
       break;
     }
     default: {
-      const { data: defaultAppointmentsData, error } = await supabase
+      const { data, error } = await supabase
         .from('appointments')
         .select('*')
         .eq('user_id', session.user.id)
         .order('start_time', { ascending: true });
         
       if (error) throw error;
-      data = defaultAppointmentsData || [];
+      appointmentsData = data || [];
       break;
     }
   }
   
   return { 
-    appointments: data,
+    appointments: appointmentsData,
     userRole: userRole as "free" | "individual" | "business"
   };
 }
