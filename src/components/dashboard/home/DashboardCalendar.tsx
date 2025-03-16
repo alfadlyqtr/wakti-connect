@@ -60,11 +60,15 @@ export function DashboardCalendar() {
       let events: CalendarEvent[] = [];
       
       // 1. Fetch tasks (all account types)
-      const { data: tasksData } = await supabase
+      const { data: tasksData, error: tasksError } = await supabase
         .from('tasks')
         .select('id, title, due_date')
         .eq('user_id', session.user.id)
         .not('due_date', 'is', null);
+      
+      if (tasksError) {
+        console.error("Error fetching tasks:", tasksError);
+      }
       
       if (tasksData) {
         const taskEvents = tasksData.map(task => ({
@@ -78,13 +82,18 @@ export function DashboardCalendar() {
       
       // 2. Fetch appointments (individual and business accounts)
       if (userRole === 'individual' || userRole === 'business') {
-        const { data: appointmentsData } = await supabase
+        // Get my appointments
+        const { data: myAppointmentsData, error: myAppointmentsError } = await supabase
           .from('appointments')
           .select('id, title, start_time')
           .eq('user_id', session.user.id);
         
-        if (appointmentsData) {
-          const appointmentEvents = appointmentsData.map(appointment => ({
+        if (myAppointmentsError) {
+          console.error("Error fetching my appointments:", myAppointmentsError);
+        }
+        
+        if (myAppointmentsData) {
+          const appointmentEvents = myAppointmentsData.map(appointment => ({
             id: appointment.id,
             title: appointment.title,
             date: new Date(appointment.start_time),
@@ -92,17 +101,63 @@ export function DashboardCalendar() {
           }));
           events = [...events, ...appointmentEvents];
         }
+        
+        // Get appointments assigned to me
+        const { data: assignedAppointmentsData, error: assignedAppointmentsError } = await supabase
+          .from('appointments')
+          .select('id, title, start_time')
+          .eq('assignee_id', session.user.id);
+        
+        if (assignedAppointmentsError) {
+          console.error("Error fetching assigned appointments:", assignedAppointmentsError);
+        }
+        
+        if (assignedAppointmentsData) {
+          const assignedEvents = assignedAppointmentsData.map(appointment => ({
+            id: appointment.id,
+            title: appointment.title,
+            date: new Date(appointment.start_time),
+            type: 'appointment' as const
+          }));
+          events = [...events, ...assignedEvents];
+        }
+        
+        // Get appointments I'm invited to and accepted
+        const { data: invitedAppointmentsData, error: invitedAppointmentsError } = await supabase
+          .from('appointment_invitations')
+          .select('appointment_id, appointments(id, title, start_time)')
+          .eq('invited_user_id', session.user.id)
+          .eq('status', 'accepted');
+        
+        if (invitedAppointmentsError) {
+          console.error("Error fetching invited appointments:", invitedAppointmentsError);
+        }
+        
+        if (invitedAppointmentsData) {
+          const invitedEvents = invitedAppointmentsData
+            .filter(invitation => invitation.appointments !== null)
+            .map(invitation => ({
+              id: invitation.appointments.id,
+              title: invitation.appointments.title,
+              date: new Date(invitation.appointments.start_time),
+              type: 'appointment' as const
+            }));
+          events = [...events, ...invitedEvents];
+        }
       }
       
       // 3. Fetch bookings (business accounts only)
       if (userRole === 'business') {
-        // In this case, bookings would be appointments where the business is the provider
-        // This is simplified - the actual logic depends on your database structure
-        const { data: bookingsData } = await supabase
+        // For business accounts, we'll consider bookings as a special type of appointment
+        // where the business is providing a service
+        const { data: bookingsData, error: bookingsError } = await supabase
           .from('appointments')
           .select('id, title, start_time')
-          .eq('user_id', session.user.id)
-          .eq('status', 'scheduled'); // Or another condition that identifies bookings
+          .eq('status', 'scheduled'); // Or use another condition to identify bookings
+        
+        if (bookingsError) {
+          console.error("Error fetching bookings:", bookingsError);
+        }
         
         if (bookingsData) {
           const bookingEvents = bookingsData.map(booking => ({
