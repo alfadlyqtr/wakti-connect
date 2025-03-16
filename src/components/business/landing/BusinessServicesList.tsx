@@ -1,7 +1,6 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { BusinessPageSection } from "@/types/business.types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -50,7 +49,7 @@ const BusinessServicesList = ({ section, businessId }: BusinessServicesListProps
   const { data: services, isLoading } = useQuery({
     queryKey: ['businessServices', businessId],
     queryFn: async () => {
-      const { data, error } = await fromTable('business_services')
+      const { data, error } = await fromTable<BusinessService>('business_services')
         .select('*')
         .eq('business_id', businessId);
       

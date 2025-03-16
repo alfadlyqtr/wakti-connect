@@ -2,7 +2,7 @@
 import React from "react";
 import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 
 interface SubscribersListProps {
