@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Clock, Calendar, User, ChevronDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Staff {
   id: string;
@@ -16,7 +17,7 @@ interface Staff {
 
 interface WorkSession {
   id: string;
-  staff_id: string;
+  staff_relation_id: string;
   start_time: string;
   end_time: string | null;
   date: string;
@@ -30,6 +31,7 @@ interface StaffWithSessions extends Staff {
 
 const DashboardWorkLogs = () => {
   const [expandedStaff, setExpandedStaff] = useState<string[]>([]);
+  const { toast } = useToast();
 
   const toggleStaffExpansion = (staffId: string) => {
     if (expandedStaff.includes(staffId)) {
@@ -43,34 +45,69 @@ const DashboardWorkLogs = () => {
   const { data: staffData, isLoading } = useQuery({
     queryKey: ['staffWithSessions'],
     queryFn: async () => {
-      // First, get all staff
-      const { data: staffMembers, error: staffError } = await supabase.rpc('get_business_staff_with_details');
-      
-      if (staffError) {
-        throw new Error(`Error fetching staff: ${staffError.message}`);
-      }
-      
-      // For each staff member, get their work sessions
-      const staffWithSessions: StaffWithSessions[] = [];
-      
-      for (const staff of (staffMembers as Staff[] || [])) {
-        const { data: sessions, error: sessionsError } = await supabase
-          .from('work_sessions')
-          .select('*')
-          .eq('staff_id', staff.id)
-          .order('date', { ascending: false });
-          
-        if (sessionsError) {
-          console.error(`Error fetching sessions for staff ${staff.id}:`, sessionsError);
+      try {
+        // First, get all business staff relationships
+        const { data: staffRelations, error: staffError } = await supabase
+          .from('business_staff')
+          .select('*, profiles(id, full_name, account_type)');
+        
+        if (staffError) {
+          throw new Error(`Error fetching staff: ${staffError.message}`);
         }
         
-        staffWithSessions.push({
-          ...staff,
-          sessions: sessions || []
+        // Transform staff data into the format we need
+        const staffMembers: Staff[] = (staffRelations || []).map(relation => ({
+          id: relation.staff_id,
+          name: relation.profiles?.full_name || 'Unknown User',
+          role: relation.role,
+          email: ''  // We don't have direct access to email
+        }));
+        
+        // For each staff member, get their work sessions
+        const staffWithSessions: StaffWithSessions[] = [];
+        
+        for (const staff of staffMembers) {
+          // Find the staff_relation_id
+          const relation = staffRelations.find(r => r.staff_id === staff.id);
+          
+          if (relation) {
+            const { data: sessions, error: sessionsError } = await supabase
+              .from('staff_work_logs')
+              .select('*')
+              .eq('staff_relation_id', relation.id);
+              
+            if (sessionsError) {
+              console.error(`Error fetching sessions for staff ${staff.id}:`, sessionsError);
+              toast({
+                title: "Error fetching work logs",
+                description: sessionsError.message,
+                variant: "destructive"
+              });
+            }
+            
+            // Transform the sessions to include a date field
+            const formattedSessions = (sessions || []).map(session => ({
+              ...session,
+              date: new Date(session.start_time).toISOString().split('T')[0]
+            }));
+            
+            staffWithSessions.push({
+              ...staff,
+              sessions: formattedSessions
+            });
+          }
+        }
+        
+        return staffWithSessions;
+      } catch (error) {
+        console.error("Error in staffWithSessions query:", error);
+        toast({
+          title: "Error loading staff data",
+          description: error instanceof Error ? error.message : "Unknown error occurred",
+          variant: "destructive"
         });
+        return [];
       }
-      
-      return staffWithSessions;
     }
   });
 
