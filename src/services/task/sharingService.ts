@@ -19,7 +19,9 @@ export async function shareTask(taskId: string, userId: string): Promise<boolean
 export async function assignTask(taskId: string, staffId: string): Promise<boolean> {
   const { error } = await supabase
     .from('tasks')
-    .update({ assignee_id: staffId })
+    .update({ 
+      assignee_id: staffId 
+    })
     .eq('id', taskId);
 
   if (error) throw error;

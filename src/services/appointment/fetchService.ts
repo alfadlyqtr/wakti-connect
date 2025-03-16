@@ -56,7 +56,8 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         
       if (error) throw error;
       // Extract just the appointments objects from the response  
-      appointmentsData = data?.map(item => item.appointments) || [];
+      const extractedAppointments = data?.map(item => item.appointments) || [];
+      appointmentsData = extractedAppointments;
       break;
     }
     case "my-appointments": {
@@ -80,7 +81,8 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         
       if (error) throw error;
       // Extract just the appointments objects from the response
-      appointmentsData = data?.map(item => item.appointments) || [];
+      const extractedAppointments = data?.map(item => item.appointments) || [];
+      appointmentsData = extractedAppointments;
       break;
     }
     case "assigned-appointments": {
@@ -108,23 +110,27 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
   }
   
   // Process and normalize the appointments with default values for missing fields
-  const appointments = appointmentsData.map(appointment => ({
-    id: appointment.id,
-    user_id: appointment.user_id,
-    title: appointment.title,
-    description: appointment.description,
-    location: appointment.location,
-    start_time: appointment.start_time,
-    end_time: appointment.end_time,
-    is_all_day: appointment.is_all_day || false,
-    status: appointment.status || "scheduled",
-    assignee_id: appointment.assignee_id || null,
-    created_at: appointment.created_at,
-    updated_at: appointment.updated_at
-  })) as Appointment[];
+  const normalizedAppointments: Appointment[] = [];
+  
+  for (const appointment of appointmentsData) {
+    normalizedAppointments.push({
+      id: appointment.id,
+      user_id: appointment.user_id,
+      title: appointment.title,
+      description: appointment.description,
+      location: appointment.location,
+      start_time: appointment.start_time,
+      end_time: appointment.end_time,
+      is_all_day: appointment.is_all_day || false,
+      status: appointment.status || "scheduled",
+      assignee_id: appointment.assignee_id || null,
+      created_at: appointment.created_at,
+      updated_at: appointment.updated_at
+    });
+  }
   
   return { 
-    appointments,
+    appointments: normalizedAppointments,
     userRole: userRole as "free" | "individual" | "business"
   };
 }

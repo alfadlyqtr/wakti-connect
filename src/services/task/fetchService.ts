@@ -47,7 +47,8 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
         
       if (error) throw error;
       // Extract just the tasks objects from the response
-      tasksData = data?.map(item => item.tasks) || [];
+      const extractedTasks = data?.map(item => item.tasks) || [];
+      tasksData = extractedTasks;
       break;
     }
     
@@ -79,21 +80,25 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
   }
   
   // Process and normalize the tasks with default values for missing fields
-  const tasks = tasksData.map(task => ({
-    id: task.id,
-    title: task.title,
-    description: task.description,
-    status: task.status || "pending",
-    priority: task.priority || "normal",
-    due_date: task.due_date,
-    user_id: task.user_id,
-    assignee_id: task.assignee_id || null,
-    created_at: task.created_at,
-    updated_at: task.updated_at
-  })) as Task[];
+  const normalizedTasks: Task[] = [];
+  
+  for (const task of tasksData) {
+    normalizedTasks.push({
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      status: task.status || "pending",
+      priority: task.priority || "normal",
+      due_date: task.due_date,
+      user_id: task.user_id,
+      assignee_id: task.assignee_id || null,
+      created_at: task.created_at,
+      updated_at: task.updated_at
+    });
+  }
   
   return { 
-    tasks,
+    tasks: normalizedTasks,
     userRole: userRole as "free" | "individual" | "business"
   };
 }
