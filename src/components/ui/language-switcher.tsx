@@ -38,12 +38,34 @@ export function LanguageSwitcher() {
           onClick={() => changeLanguage('en')}
           className={i18n.language === 'en' ? 'bg-muted' : ''}
         >
+          <div className="h-4 w-6 relative overflow-hidden mr-2 rounded-sm" style={{ 
+            background: 'linear-gradient(180deg, #bf0a30 0%, #bf0a30 15.38%, white 15.38%, white 30.77%, #bf0a30 30.77%, #bf0a30 46.15%, white 46.15%, white 61.54%, #bf0a30 61.54%, #bf0a30 76.92%, white 76.92%, white 92.31%, #bf0a30 92.31%, #bf0a30 100%)'
+          }}>
+            <div 
+              className="absolute top-0 left-0 bottom-0" 
+              style={{ 
+                background: '#002868',
+                width: '40%'
+              }}
+            ></div>
+          </div>
           English
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => changeLanguage('ar')}
           className={i18n.language === 'ar' ? 'bg-muted' : ''}
         >
+          <div className="h-4 w-6 relative overflow-hidden mr-2 rounded-sm">
+            <div className="absolute inset-0" style={{ background: 'white' }}></div>
+            <div 
+              className="absolute top-0 bottom-0 right-0" 
+              style={{ 
+                background: '#8d1b3d', 
+                width: '70%',
+                clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%, 11% 90%, 0 80%, 11% 70%, 0 60%, 11% 50%, 0 40%, 11% 30%, 0 20%, 11% 10%)'
+              }}
+            ></div>
+          </div>
           العربية
         </DropdownMenuItem>
       </DropdownMenuContent>
