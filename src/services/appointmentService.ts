@@ -59,12 +59,9 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
   }
   
   // Transform shared appointments data if needed
-  let transformedData: Appointment[];
-  if (tab === "shared-appointments") {
-    transformedData = data.map((item: any) => item.appointments) as Appointment[];
-  } else {
-    transformedData = data as Appointment[];
-  }
+  const transformedData: Appointment[] = tab === "shared-appointments" 
+    ? data.map((item: any) => item.appointments) 
+    : data;
   
   return { 
     appointments: transformedData,
@@ -89,9 +86,13 @@ export async function createAppointment(appointmentData: AppointmentFormData): P
     end_time: appointmentData.end_time,
     location: appointmentData.location || null,
     is_all_day: appointmentData.is_all_day || false,
-    status: appointmentData.status || "upcoming",
-    assignee_id: appointmentData.assignee_id || null
+    status: appointmentData.status || "upcoming"
   };
+
+  // If assignee_id is provided and valid, add it to the appointment
+  if (appointmentData.assignee_id) {
+    Object.assign(newAppointment, { assignee_id: appointmentData.assignee_id });
+  }
 
   const { data, error } = await supabase
     .from('appointments')

@@ -58,16 +58,13 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
   }
   
   // Transform shared tasks data if needed
-  let transformedData;
-  if (tab === "shared-tasks") {
-    transformedData = data.map((item: any) => item.tasks);
-  } else {
-    transformedData = data;
-  }
+  const transformedData: Task[] = tab === "shared-tasks" 
+    ? data.map((item: any) => item.tasks) 
+    : data;
   
   return { 
-    tasks: transformedData as Task[],
-    userRole
+    tasks: transformedData,
+    userRole: userRole as "free" | "individual" | "business"
   };
 }
 
@@ -82,13 +79,17 @@ export async function createTask(taskData: TaskFormData): Promise<Task> {
 
   const newTask = {
     user_id: session.user.id,
-    title: taskData.title || "New Task",
-    description: taskData.description || "",
+    title: taskData.title,
+    description: taskData.description || null,
     status: taskData.status || "pending",
     priority: taskData.priority || "normal",
-    due_date: taskData.due_date || new Date(Date.now() + 86400000).toISOString(), // Tomorrow
-    assignee_id: taskData.assignee_id || null
+    due_date: taskData.due_date || null
   };
+
+  // If assignee_id is provided and valid, add it to the task
+  if (taskData.assignee_id) {
+    Object.assign(newTask, { assignee_id: taskData.assignee_id });
+  }
 
   const { data, error } = await supabase
     .from('tasks')
