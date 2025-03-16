@@ -11,6 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { SectionContainer } from "@/components/ui/section-container";
+import { FaqSection, FaqItem } from "@/components/ui/faq-section";
 
 const PricingPage = () => {
   const pricingPlans = [
@@ -22,11 +24,12 @@ const PricingPage = () => {
       features: [
         "View-only access to tasks",
         "View-only access to appointments",
-        "Limited notifications",
-        "Basic dashboard",
+        "Accept invitations",
+        "Subscribe to 1 business",
+        "View notifications"
       ],
       buttonText: "Sign Up Free",
-      buttonLink: "/auth",
+      buttonLink: "/auth?tab=register&plan=free",
       highlight: false,
     },
     {
@@ -35,15 +38,16 @@ const PricingPage = () => {
       price: "$9.99",
       period: "per month",
       features: [
-        "Full task management",
+        "Create, edit, and delete tasks",
+        "Share tasks with other users",
+        "Create and send invitations",
         "Full appointment scheduling",
-        "Messaging capabilities",
-        "Contact management",
-        "Full notifications",
-        "Priority support",
+        "Unlimited contacts",
+        "Message individuals & businesses",
+        "Priority support"
       ],
-      buttonText: "Get Started",
-      buttonLink: "/auth",
+      buttonText: "Start 14-Day Trial",
+      buttonLink: "/auth?tab=register&plan=individual",
       highlight: true,
     },
     {
@@ -52,31 +56,73 @@ const PricingPage = () => {
       price: "$29.99",
       period: "per month",
       features: [
-        "Everything in Individual",
-        "Team task assignments",
-        "Business-wide appointments",
+        "All Individual features",
+        "Assign tasks to staff",
+        "Track staff logins & hours",
+        "Public booking system",
         "Staff management",
-        "Work logs & tracking",
         "Service management",
-        "Business analytics & reports",
-        "Premium support",
+        "Business analytics",
+        "Customizable business profile",
+        "Premium support"
       ],
-      buttonText: "Contact Sales",
-      buttonLink: "/contact",
+      buttonText: "Start 14-Day Trial",
+      buttonLink: "/auth?tab=register&plan=business",
       highlight: false,
     },
   ];
 
-  return (
-    <div className="min-h-screen py-16 px-4">
-      <div className="container mx-auto">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold mb-4">Transparent Pricing for Everyone</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Choose the plan that fits your needs. Start with our free tier and upgrade as you grow.
-          </p>
-        </div>
+  const pricingFaqs: FaqItem[] = [
+    {
+      question: "Can I upgrade or downgrade my plan at any time?",
+      answer: (
+        <p>
+          Yes, you can upgrade or downgrade your plan at any time. The changes will take effect at
+          the start of your next billing cycle. If you upgrade mid-cycle, you'll be charged a prorated
+          amount for the remainder of the current billing period.
+        </p>
+      ),
+    },
+    {
+      question: "Are there any long-term contracts?",
+      answer: (
+        <p>
+          No, all WAKTI plans are billed monthly with no long-term commitment. You can cancel at
+          any time. We also offer annual billing options with a discount for those who prefer to pay yearly.
+        </p>
+      ),
+    },
+    {
+      question: "What payment methods do you accept?",
+      answer: (
+        <p>
+          We accept all major credit cards including Visa, Mastercard, and American Express. For Business
+          plans, we also offer invoice billing with net-30 terms. Contact our sales team for more information.
+        </p>
+      ),
+    },
+    {
+      question: "Is there a free trial available?",
+      answer: (
+        <p>
+          Yes, both our Individual and Business plans come with a 14-day free trial. You'll need to provide
+          payment information to start the trial, but you won't be charged until the trial period ends.
+          You can cancel anytime during the trial period.
+        </p>
+      ),
+    },
+  ];
 
+  return (
+    <div className="min-h-screen py-16">
+      <SectionContainer className="text-center mb-8">
+        <h1 className="text-4xl font-bold mb-4">Transparent Pricing for Everyone</h1>
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          Choose the plan that fits your needs. Start with our free tier and upgrade as you grow.
+        </p>
+      </SectionContainer>
+
+      <SectionContainer className="mb-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {pricingPlans.map((plan) => (
             <Card
@@ -125,22 +171,120 @@ const PricingPage = () => {
             </Card>
           ))}
         </div>
+      </SectionContainer>
 
-        <div className="mt-20 text-center">
-          <h2 className="text-2xl font-bold mb-4">Frequently Asked Questions</h2>
-          <p className="text-muted-foreground mb-8">
-            Have more questions? Visit our{" "}
-            <Link to="/faq" className="text-wakti-blue hover:underline">
-              FAQ page
-            </Link>{" "}
-            or{" "}
+      <SectionContainer className="mb-12 bg-muted/30 py-16">
+        <h2 className="text-3xl font-bold text-center mb-10">Compare Plans in Detail</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b">
+                <th className="py-4 px-6 text-left">Feature</th>
+                <th className="py-4 px-6 text-center">Free</th>
+                <th className="py-4 px-6 text-center">Individual</th>
+                <th className="py-4 px-6 text-center">Business</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b">
+                <td className="py-4 px-6 font-medium" colSpan={4}>
+                  <span className="font-bold">Task Management</span>
+                </td>
+              </tr>
+              <tr className="border-b">
+                <td className="py-4 px-6">Create & Edit Tasks</td>
+                <td className="py-4 px-6 text-center">View Only</td>
+                <td className="py-4 px-6 text-center">✓</td>
+                <td className="py-4 px-6 text-center">✓</td>
+              </tr>
+              <tr className="border-b">
+                <td className="py-4 px-6">Task Prioritization</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">✓</td>
+                <td className="py-4 px-6 text-center">✓</td>
+              </tr>
+              <tr className="border-b">
+                <td className="py-4 px-6">Share Tasks</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">✓</td>
+                <td className="py-4 px-6 text-center">✓</td>
+              </tr>
+              <tr className="border-b">
+                <td className="py-4 px-6">Assign Tasks to Team</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">✓</td>
+              </tr>
+              
+              <tr className="border-b">
+                <td className="py-4 px-6 font-medium" colSpan={4}>
+                  <span className="font-bold">Appointments</span>
+                </td>
+              </tr>
+              <tr className="border-b">
+                <td className="py-4 px-6">Schedule Appointments</td>
+                <td className="py-4 px-6 text-center">View Only</td>
+                <td className="py-4 px-6 text-center">✓</td>
+                <td className="py-4 px-6 text-center">✓</td>
+              </tr>
+              <tr className="border-b">
+                <td className="py-4 px-6">Booking Page</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">Basic</td>
+                <td className="py-4 px-6 text-center">Custom</td>
+              </tr>
+              <tr className="border-b">
+                <td className="py-4 px-6">Service Management</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">✓</td>
+              </tr>
+              
+              <tr className="border-b">
+                <td className="py-4 px-6 font-medium" colSpan={4}>
+                  <span className="font-bold">Team & Business</span>
+                </td>
+              </tr>
+              <tr className="border-b">
+                <td className="py-4 px-6">Staff Management</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">✓</td>
+              </tr>
+              <tr className="border-b">
+                <td className="py-4 px-6">Analytics</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">Basic</td>
+                <td className="py-4 px-6 text-center">Advanced</td>
+              </tr>
+              <tr className="border-b">
+                <td className="py-4 px-6">Support</td>
+                <td className="py-4 px-6 text-center">Email</td>
+                <td className="py-4 px-6 text-center">Priority</td>
+                <td className="py-4 px-6 text-center">Premium</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </SectionContainer>
+
+      <SectionContainer>
+        <FaqSection 
+          title="Frequently Asked Questions" 
+          subtitle="Have more questions about our pricing plans? Here are some answers."
+          faqs={pricingFaqs} 
+        />
+        
+        <div className="mt-12 text-center">
+          <p className="text-muted-foreground mb-6">
+            Still have questions about our pricing?{" "}
             <Link to="/contact" className="text-wakti-blue hover:underline">
-              contact us
-            </Link>
-            .
+              Contact us
+            </Link>{" "}
+            for more information.
           </p>
         </div>
-      </div>
+      </SectionContainer>
     </div>
   );
 };

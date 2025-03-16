@@ -16,6 +16,7 @@ import {
   LayoutDashboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SectionContainer } from "@/components/ui/section-container";
 
 const FeatureSection = ({ 
   icon, 
@@ -34,6 +35,20 @@ const FeatureSection = ({
     </div>
     <h3 className="text-xl font-semibold">{title}</h3>
     <p className="text-muted-foreground">{description}</p>
+  </div>
+);
+
+const FeatureDetail = ({ title, features }: { title: string; features: string[] }) => (
+  <div className="mb-8">
+    <h3 className="text-xl font-semibold mb-4">{title}</h3>
+    <ul className="space-y-2">
+      {features.map((feature, index) => (
+        <li key={index} className="flex items-start">
+          <span className="text-green-500 mr-2">✅</span>
+          <span>{feature}</span>
+        </li>
+      ))}
+    </ul>
   </div>
 );
 
@@ -113,43 +128,104 @@ const FeaturesPage = () => {
     }
   ];
 
+  const taskManagementFeatures = [
+    "Daily, Weekly, Monthly, and Quarterly Task Views",
+    "Drag & Drop Sorting Between Categories",
+    "Priority-Based Task Colors (High, Urgent, Medium, Normal)",
+    "To-Do List (Subtasks for Each Task)",
+    "Team Task Assignment",
+    "Task History & Visual Charts"
+  ];
+
+  const appointmentFeatures = [
+    "Create and Manage Services",
+    "Shareable Booking Pages (Custom Branding, Logo, Colors, Fonts)",
+    "Manage & Assign Appointments",
+    "Automatic Appointment Reminders"
+  ];
+
+  const dashboardFeatures = [
+    "Dashboard with Task & Appointment Summary",
+    "User Role Management (Individuals, Businesses, Staff)",
+    "Dark Mode & Light Mode Switcher",
+    "Bilingual Support (Arabic & English)"
+  ];
+
   return (
-    <div className="min-h-screen py-16">
-      <div className="container mx-auto">
-        {/* Hero Section */}
-        <section className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">Powerful Features for Everyone</h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Discover how WAKTI helps individuals and businesses manage tasks, appointments, 
-            and communications all in one place.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Button size="lg" asChild>
-              <Link to="/auth">Try For Free</Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link to="/pricing">View Pricing</Link>
-            </Button>
-          </div>
-        </section>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <SectionContainer className="text-center mb-16">
+        <h1 className="text-4xl md:text-5xl font-bold mb-6">Powerful Features for Everyone</h1>
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+          Discover how WAKTI helps individuals and businesses manage tasks, appointments, 
+          and communications all in one place.
+        </p>
+        <div className="flex flex-wrap justify-center gap-4">
+          <Button size="lg" asChild>
+            <Link to="/auth">Try For Free</Link>
+          </Button>
+          <Button size="lg" variant="outline" asChild>
+            <Link to="/pricing">View Pricing</Link>
+          </Button>
+        </div>
+      </SectionContainer>
 
-        {/* Feature Grid */}
-        <section className="mb-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
-              <FeatureSection
-                key={index}
-                icon={feature.icon}
-                title={feature.title}
-                description={feature.description}
-                color={feature.color}
-              />
-            ))}
+      {/* Feature Detail Section */}
+      <SectionContainer className="bg-muted/30 mb-12">
+        <h2 className="text-3xl font-bold mb-8">Core Features</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-wakti-blue/10 p-3 rounded-full text-wakti-blue">
+                <ClipboardCheck size={28} />
+              </div>
+              <h2 className="text-2xl font-bold">Task Management</h2>
+            </div>
+            <FeatureDetail title="" features={taskManagementFeatures} />
           </div>
-        </section>
+          
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-green-500/10 p-3 rounded-full text-green-500">
+                <Calendar size={28} />
+              </div>
+              <h2 className="text-2xl font-bold">Appointment Scheduling</h2>
+            </div>
+            <FeatureDetail title="" features={appointmentFeatures} />
+          </div>
+          
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-purple-500/10 p-3 rounded-full text-purple-500">
+                <LayoutDashboard size={28} />
+              </div>
+              <h2 className="text-2xl font-bold">Dashboard & User Management</h2>
+            </div>
+            <FeatureDetail title="" features={dashboardFeatures} />
+          </div>
+        </div>
+      </SectionContainer>
 
-        {/* CTA Section */}
-        <section className="text-center py-16 px-4 rounded-xl bg-gradient-to-r from-wakti-blue to-blue-600 text-white mb-12">
+      {/* All Features Grid */}
+      <SectionContainer className="mb-12">
+        <h2 className="text-3xl font-bold text-center mb-12">All Features</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {features.map((feature, index) => (
+            <FeatureSection
+              key={index}
+              icon={feature.icon}
+              title={feature.title}
+              description={feature.description}
+              color={feature.color}
+            />
+          ))}
+        </div>
+      </SectionContainer>
+
+      {/* CTA Section */}
+      <section className="py-16 px-4 rounded-xl bg-gradient-to-r from-wakti-blue to-blue-600 text-white mb-12">
+        <div className="container mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
           <p className="text-lg opacity-90 max-w-2xl mx-auto mb-8">
             Join thousands of individuals and businesses who use WAKTI to streamline their productivity.
@@ -162,62 +238,62 @@ const FeaturesPage = () => {
               <Link to="/contact">Contact Sales</Link>
             </Button>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Feature Comparison */}
-        <section className="mb-20">
-          <h2 className="text-3xl font-bold text-center mb-10">Compare Plans</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b">
-                  <th className="py-4 px-6 text-left">Feature</th>
-                  <th className="py-4 px-6 text-center">Free</th>
-                  <th className="py-4 px-6 text-center">Individual</th>
-                  <th className="py-4 px-6 text-center">Business</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b">
-                  <td className="py-4 px-6 font-medium">Task Management</td>
-                  <td className="py-4 px-6 text-center">View Only</td>
-                  <td className="py-4 px-6 text-center">Full Access</td>
-                  <td className="py-4 px-6 text-center">Team Access</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-4 px-6 font-medium">Appointment Booking</td>
-                  <td className="py-4 px-6 text-center">View Only</td>
-                  <td className="py-4 px-6 text-center">Full Access</td>
-                  <td className="py-4 px-6 text-center">Business-wide</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-4 px-6 font-medium">Messaging</td>
-                  <td className="py-4 px-6 text-center">—</td>
-                  <td className="py-4 px-6 text-center">Limited</td>
-                  <td className="py-4 px-6 text-center">Full Access</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-4 px-6 font-medium">Business Dashboard</td>
-                  <td className="py-4 px-6 text-center">—</td>
-                  <td className="py-4 px-6 text-center">—</td>
-                  <td className="py-4 px-6 text-center">Full Access</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-4 px-6 font-medium">Staff Management</td>
-                  <td className="py-4 px-6 text-center">—</td>
-                  <td className="py-4 px-6 text-center">—</td>
-                  <td className="py-4 px-6 text-center">Full Access</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div className="text-center mt-8">
-            <Button asChild>
-              <Link to="/pricing">View Full Pricing Details</Link>
-            </Button>
-          </div>
-        </section>
-      </div>
+      {/* Feature Comparison */}
+      <SectionContainer className="mb-12">
+        <h2 className="text-3xl font-bold text-center mb-10">Compare Plans</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b">
+                <th className="py-4 px-6 text-left">Feature</th>
+                <th className="py-4 px-6 text-center">Free</th>
+                <th className="py-4 px-6 text-center">Individual</th>
+                <th className="py-4 px-6 text-center">Business</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b">
+                <td className="py-4 px-6 font-medium">Task Management</td>
+                <td className="py-4 px-6 text-center">View Only</td>
+                <td className="py-4 px-6 text-center">Full Access</td>
+                <td className="py-4 px-6 text-center">Team Access</td>
+              </tr>
+              <tr className="border-b">
+                <td className="py-4 px-6 font-medium">Appointment Booking</td>
+                <td className="py-4 px-6 text-center">View Only</td>
+                <td className="py-4 px-6 text-center">Full Access</td>
+                <td className="py-4 px-6 text-center">Business-wide</td>
+              </tr>
+              <tr className="border-b">
+                <td className="py-4 px-6 font-medium">Messaging</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">Limited</td>
+                <td className="py-4 px-6 text-center">Full Access</td>
+              </tr>
+              <tr className="border-b">
+                <td className="py-4 px-6 font-medium">Business Dashboard</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">Full Access</td>
+              </tr>
+              <tr className="border-b">
+                <td className="py-4 px-6 font-medium">Staff Management</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">—</td>
+                <td className="py-4 px-6 text-center">Full Access</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="text-center mt-8">
+          <Button asChild>
+            <Link to="/pricing">View Full Pricing Details</Link>
+          </Button>
+        </div>
+      </SectionContainer>
     </div>
   );
 };

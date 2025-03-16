@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import {
@@ -36,12 +36,6 @@ const Header = () => {
           <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors">
             Contact
           </Link>
-          <Link to="/about" className="text-sm font-medium hover:text-primary transition-colors">
-            About
-          </Link>
-          <Link to="/faq" className="text-sm font-medium hover:text-primary transition-colors">
-            FAQ
-          </Link>
           <Button
             variant="ghost"
             size="icon"
@@ -55,8 +49,10 @@ const Header = () => {
               <Moon className="h-[1.2rem] w-[1.2rem]" />
             )}
           </Button>
-          <Button asChild size="sm">
-            <Link to="/auth?tab=register">Get Started</Link>
+          <Button asChild variant="ghost" size="icon" className="rounded-full bg-muted text-foreground">
+            <Link to="/auth" aria-label="Sign in">
+              <User className="h-[1.2rem] w-[1.2rem]" />
+            </Link>
           </Button>
         </div>
         
@@ -96,18 +92,11 @@ const Header = () => {
                       </Link>
                     </NavigationMenuLink>
                     <NavigationMenuLink asChild>
-                      <Link to="/about" className="block py-2 px-3 hover:bg-muted rounded-md">
-                        About
+                      <Link to="/auth" className="flex items-center py-2 px-3 hover:bg-muted rounded-md">
+                        <User className="h-4 w-4 mr-2" />
+                        Sign In
                       </Link>
                     </NavigationMenuLink>
-                    <NavigationMenuLink asChild>
-                      <Link to="/faq" className="block py-2 px-3 hover:bg-muted rounded-md">
-                        FAQ
-                      </Link>
-                    </NavigationMenuLink>
-                    <Button asChild size="sm" className="mt-2">
-                      <Link to="/auth">Get Started</Link>
-                    </Button>
                   </div>
                 </NavigationMenuContent>
               </NavigationMenuItem>
