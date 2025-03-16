@@ -13,6 +13,14 @@ interface DashboardLayoutProps {
   userRole?: "free" | "individual" | "business";
 }
 
+interface ProfileData {
+  account_type: "free" | "individual" | "business";
+  display_name: string | null;
+  business_name: string | null;
+  full_name: string | null;
+  theme_preference: string | null;
+}
+
 const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -45,7 +53,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           return null;
         }
         
-        return data;
+        return data as ProfileData;
       } catch (error) {
         console.error("Error fetching user profile:", error);
         return null;

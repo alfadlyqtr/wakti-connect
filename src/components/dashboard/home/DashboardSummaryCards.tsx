@@ -3,12 +3,16 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, CheckCircle, BellRing, Clock } from "lucide-react";
 
+interface ProfileDataType {
+  account_type: "free" | "individual" | "business";
+  display_name?: string | null;
+  full_name?: string | null;
+  business_name?: string | null;
+  occupation?: string | null;
+}
+
 interface DashboardSummaryCardsProps {
-  profileData: {
-    account_type: "free" | "individual" | "business";
-    display_name?: string | null;
-    full_name?: string | null;
-  };
+  profileData: ProfileDataType;
   todayTasks: any[];
   upcomingAppointments: any[];
   unreadNotifications: any[];

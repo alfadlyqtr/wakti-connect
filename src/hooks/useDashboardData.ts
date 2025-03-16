@@ -1,6 +1,16 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+
+// Define proper type for the profile data
+interface ProfileData {
+  full_name: string | null;
+  account_type: "free" | "individual" | "business";
+  display_name: string | null;
+  business_name: string | null;
+  occupation: string | null;
+  avatar_url: string | null;
+  theme_preference: string | null;
+}
 
 export const useDashboardData = () => {
   // Fetch user profile data
@@ -24,7 +34,7 @@ export const useDashboardData = () => {
         throw error;
       }
       
-      return data;
+      return data as ProfileData;
     },
   });
 

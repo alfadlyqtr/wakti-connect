@@ -3,14 +3,9 @@ import React, { useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SidebarNavItems } from "./sidebar/SidebarNavItems";
-import { SidebarUpgradeBanner } from "./sidebar/SidebarUpgradeBanner";
+import SidebarUpgradeBanner from "./sidebar/SidebarUpgradeBanner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-
-interface SidebarProps {
-  isOpen: boolean;
-  userRole: "free" | "individual" | "business";
-}
 
 // Define profile type to ensure TypeScript knows about our new columns
 interface SidebarProfileData {
@@ -20,6 +15,11 @@ interface SidebarProfileData {
   business_name: string | null;
   account_type: "free" | "individual" | "business";
   avatar_url: string | null;
+}
+
+interface SidebarProps {
+  isOpen: boolean;
+  userRole: "free" | "individual" | "business";
 }
 
 const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
