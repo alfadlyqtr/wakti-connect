@@ -23,7 +23,7 @@ const AboutStory = () => {
               WAKTI was born from a simple observation: people and businesses in Qatar needed better tools to manage their daily productivity and appointments.
             </p>
             <p>
-              Founded in 2022, our team of entrepreneurs and developers set out to create an application that would solve the fragmented nature of productivity and business management software.
+              Built in 2025, WAKTI is proudly developed by TMW, combining innovation and simplicity to revolutionize productivity, communication, and business management.
             </p>
             <p>
               We recognized that existing tools often required users to juggle multiple applications for tasks, scheduling, and team management. Our vision was to create a unified platform where all these essential functions could live together seamlessly.
