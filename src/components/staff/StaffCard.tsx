@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { User, ChevronDown } from "lucide-react";
@@ -28,6 +28,7 @@ export const StaffCard = ({ staff, isExpanded, onToggle }: StaffCardProps) => {
             variant="ghost" 
             size="icon"
             onClick={onToggle}
+            aria-label={isExpanded ? "Collapse" : "Expand"}
           >
             <ChevronDown className={`h-5 w-5 transition-transform ${
               isExpanded ? 'rotate-180' : ''
