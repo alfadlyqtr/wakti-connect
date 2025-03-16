@@ -1,445 +1,366 @@
 
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Clock, DollarSign, Filter, Plus, Search } from "lucide-react";
-import { format, startOfDay, endOfDay, parseISO } from "date-fns";
-import { toast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon, Clock, DollarSign } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-interface WorkLog {
-  id: string;
-  staff_relation_id: string;
-  start_time: string;
-  end_time: string;
-  earnings: number;
-  notes: string;
-  created_at: string;
-  updated_at: string;
-  staff?: {
-    profile?: {
-      full_name: string;
-    };
-  };
-}
-
-interface StaffMember {
+type WorkLog = {
   id: string;
   staff_id: string;
-  business_id: string;
-  role: string;
+  start_time: string;
+  end_time: string | null;
+  earnings: number | null;
+  notes: string | null;
   created_at: string;
-  profile?: {
-    full_name: string;
-    avatar_url: string;
-  } | null;
-}
+  date: string;
+};
+
+type Staff = {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+};
 
 const DashboardWorkLogs = () => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [newLogOpen, setNewLogOpen] = useState(false);
-  const [staffMember, setStaffMember] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [earnings, setEarnings] = useState("");
-  const [notes, setNotes] = useState("");
+  const [date, setDate] = useState<Date>(new Date());
+  const [selectedStaff, setSelectedStaff] = useState<string>("");
+  const [earnings, setEarnings] = useState<string>("");
+  const [notes, setNotes] = useState<string>("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Fetch work logs
-  const { data: workLogs, isLoading: logsLoading, refetch: refetchLogs } = useQuery({
-    queryKey: ['workLogs', selectedDate],
+  // Load staff members data
+  const { data: staffMembers, isLoading: staffLoading } = useQuery({
+    queryKey: ['staff'],
     queryFn: async () => {
       const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user) throw new Error('Not authenticated');
-
-      const startDate = startOfDay(selectedDate).toISOString();
-      const endDate = endOfDay(selectedDate).toISOString();
-
-      // Fetch work logs for the selected date
+      
+      if (!session?.session?.user) {
+        throw new Error('Not authenticated');
+      }
+      
       const { data, error } = await supabase
-        .from('work_logs')
+        .from('business_staff')
         .select(`
           id,
-          staff_relation_id,
-          start_time,
-          end_time,
-          earnings,
-          notes,
-          created_at,
-          updated_at,
-          staff:staff_relation_id(
-            profile:staff_id(
-              full_name
-            )
-          )
+          name,
+          role,
+          email
         `)
-        .eq('business_id', session.session.user.id)
-        .gte('start_time', startDate)
-        .lte('end_time', endDate);
-
+        .eq('business_id', session.session.user.id);
+        
       if (error) throw error;
-
-      // Transform data to handle potentially missing staff property
-      const transformedData: WorkLog[] = data.map(log => {
-        // If staff property is missing, create a fallback
-        if (!log.staff) {
-          return {
-            ...log, 
-            staff: { 
-              profile: { 
-                full_name: "Unknown Staff" 
-              } 
-            }
-          };
-        }
-        return log;
-      });
-
-      return transformedData;
+      
+      return (data || []) as Staff[];
     }
   });
 
-  // Fetch staff members
-  const { data: staffMembers, isLoading: staffLoading } = useQuery({
-    queryKey: ['staffMembers'],
+  // Load work logs for the selected date
+  const { data: workLogs, isLoading: logsLoading } = useQuery({
+    queryKey: ['workLogs', date],
     queryFn: async () => {
       const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user) throw new Error('Not authenticated');
+      
+      if (!session?.session?.user) {
+        throw new Error('Not authenticated');
+      }
+      
+      // Note: Assuming a 'work_logs' table exists in your database
+      // If it doesn't, you'll need to create it or modify this query
+      const formattedDate = format(date, 'yyyy-MM-dd');
+      
+      // Using a custom query instead of the from() method to avoid type errors
+      const { data, error } = await supabase.rpc('get_work_logs', {
+        business_id_param: session.session.user.id,
+        date_param: formattedDate
+      });
+      
+      if (error) throw error;
+      
+      // Map staff names to work logs
+      const logsWithStaffDetails = (data || []).map((log: any) => {
+        const staffMember = staffMembers?.find(staff => staff.id === log.staff_id);
+        return {
+          ...log,
+          staffName: staffMember ? staffMember.name : 'Unknown'
+        };
+      });
+      
+      return logsWithStaffDetails;
+    },
+    enabled: !!staffMembers // Only run this query when staffMembers are loaded
+  });
 
-      const { data: staffData, error: staffError } = await supabase
-        .from('business_staff')
-        .select('id, staff_id, business_id, role, created_at')
-        .eq('business_id', session.session.user.id);
-
-      if (staffError) throw staffError;
-
-      // Now we need to fetch profiles for each staff member
-      const staffWithProfiles: StaffMember[] = await Promise.all(
-        staffData.map(async (staff) => {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('full_name, avatar_url')
-            .eq('id', staff.staff_id)
-            .single();
-
-          if (profileError) {
-            console.error('Error fetching profile:', profileError);
-            return {
-              ...staff,
-              profile: null
-            };
-          }
-
-          return {
-            ...staff,
-            profile: profileData
-          };
-        })
-      );
-
-      return staffWithProfiles;
+  // Start day mutation
+  const startDayMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedStaff) {
+        throw new Error('Please select a staff member');
+      }
+      
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        throw new Error('Not authenticated');
+      }
+      
+      const formattedDate = format(date, 'yyyy-MM-dd');
+      const now = new Date().toISOString();
+      
+      // Using rpc to handle custom work log creation
+      const { data, error } = await supabase.rpc('create_work_log', {
+        staff_id_param: selectedStaff,
+        business_id_param: session.session.user.id, 
+        date_param: formattedDate,
+        start_time_param: now
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Day Started",
+        description: "Work log has been started successfully."
+      });
+      queryClient.invalidateQueries({ queryKey: ['workLogs'] });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to start work log."
+      });
     }
   });
 
-  const handleAddWorkLog = async () => {
-    try {
+  // End day mutation
+  const endDayMutation = useMutation({
+    mutationFn: async (logId: string) => {
       const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user) throw new Error('Not authenticated');
-
-      // Validate inputs
-      if (!staffMember || !startTime || !endTime) {
-        toast({
-          title: "Missing information",
-          description: "Please fill in all required fields",
-          variant: "destructive"
-        });
-        return;
+      
+      if (!session?.session?.user) {
+        throw new Error('Not authenticated');
       }
-
-      // Format the start and end times
-      const formattedStartTime = `${format(selectedDate, 'yyyy-MM-dd')}T${startTime}:00`;
-      const formattedEndTime = `${format(selectedDate, 'yyyy-MM-dd')}T${endTime}:00`;
-
-      // Insert work log
-      const { error } = await supabase
-        .from('work_logs')
-        .insert({
-          business_id: session.session.user.id,
-          staff_relation_id: staffMember,
-          start_time: formattedStartTime,
-          end_time: formattedEndTime,
-          earnings: parseFloat(earnings) || 0,
-          notes
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Work log added",
-        description: "The work log has been successfully recorded"
+      
+      const now = new Date().toISOString();
+      const earningsValue = earnings ? parseFloat(earnings) : null;
+      
+      // Using rpc to handle work log updates
+      const { data, error } = await supabase.rpc('update_work_log', {
+        log_id_param: logId,
+        end_time_param: now,
+        earnings_param: earningsValue,
+        notes_param: notes
       });
-
-      // Reset form and close dialog
-      setStaffMember("");
-      setStartTime("");
-      setEndTime("");
-      setEarnings("");
-      setNotes("");
-      setNewLogOpen(false);
-
-      // Refetch work logs
-      refetchLogs();
-    } catch (error) {
-      console.error("Error adding work log:", error);
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
       toast({
+        title: "Day Ended",
+        description: "Work log has been updated successfully."
+      });
+      queryClient.invalidateQueries({ queryKey: ['workLogs'] });
+      setEarnings('');
+      setNotes('');
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
         title: "Error",
-        description: "Failed to add work log. Please try again.",
-        variant: "destructive"
+        description: error instanceof Error ? error.message : "Failed to update work log."
       });
     }
+  });
+
+  const handleStartDay = () => {
+    startDayMutation.mutate();
   };
 
-  // Calculate total earnings for the day
-  const totalEarnings = workLogs ? workLogs.reduce((sum, log) => sum + (log.earnings || 0), 0) : 0;
-
-  // Format time from ISO string to readable format
-  const formatTime = (isoTime: string) => {
-    try {
-      return format(parseISO(isoTime), 'h:mm a');
-    } catch (error) {
-      return "Invalid time";
-    }
+  const handleEndDay = (logId: string) => {
+    endDayMutation.mutate(logId);
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold mb-2">Work Logs</h1>
-        <p className="text-muted-foreground">Track your staff working hours and earnings.</p>
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Staff Work Logs</h1>
+        <p className="text-muted-foreground">Track staff working hours and daily earnings.</p>
       </div>
 
-      <div className="flex flex-col md:flex-row justify-between gap-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <DatePicker
-            date={selectedDate}
-            setDate={setSelectedDate}
-            className="w-full sm:w-[240px]"
-          />
-          <div className="relative w-full sm:w-[300px]">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search logs..."
-              className="pl-9"
-            />
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
-          <Dialog open={newLogOpen} onOpenChange={setNewLogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Log
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Work Log</DialogTitle>
-                <DialogDescription>
-                  Record a staff member's work hours and earnings for {format(selectedDate, 'MMMM d, yyyy')}.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="staff">Staff Member</Label>
-                  <select
-                    id="staff"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    value={staffMember}
-                    onChange={(e) => setStaffMember(e.target.value)}
-                  >
-                    <option value="">Select staff member</option>
-                    {staffMembers?.map((staff) => (
-                      <option key={staff.id} value={staff.id}>
-                        {staff.profile?.full_name || "Unknown"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="startTime">Start Time</Label>
-                    <Input
-                      id="startTime"
-                      type="time"
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="endTime">End Time</Label>
-                    <Input
-                      id="endTime"
-                      type="time"
-                      value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="earnings">Earnings (optional)</Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="earnings"
-                      type="number"
-                      placeholder="0.00"
-                      className="pl-9"
-                      value={earnings}
-                      onChange={(e) => setEarnings(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes (optional)</Label>
-                  <Textarea
-                    id="notes"
-                    placeholder="Add any additional information here..."
-                    className="min-h-[80px]"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setNewLogOpen(false)}>Cancel</Button>
-                <Button onClick={handleAddWorkLog}>Save Log</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center">
-              <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-              Total Hours
-            </CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <CardTitle>Log Work</CardTitle>
+            <CardDescription>
+              Record staff working hours and earnings
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {logsLoading ? (
-                <div className="h-7 w-16 animate-pulse bg-muted rounded"></div>
-              ) : workLogs?.length ? (
-                workLogs.reduce((total, log) => {
-                  const start = new Date(log.start_time).getTime();
-                  const end = new Date(log.end_time).getTime();
-                  return total + (end - start) / (1000 * 60 * 60);
-                }, 0).toFixed(1)
-              ) : (
-                "0.0"
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Hours worked on {format(selectedDate, 'MMM d, yyyy')}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center">
-              <DollarSign className="mr-2 h-4 w-4 text-muted-foreground" />
-              Total Earnings
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {logsLoading ? (
-                <div className="h-7 w-20 animate-pulse bg-muted rounded"></div>
-              ) : (
-                `$${totalEarnings.toFixed(2)}`
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Earnings on {format(selectedDate, 'MMM d, yyyy')}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Staff Work Logs</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {logsLoading ? (
+          <CardContent className="space-y-4">
             <div className="space-y-2">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="w-full h-12 bg-muted animate-pulse rounded"></div>
-              ))}
+              <Label htmlFor="date">Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(date, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={(newDate) => newDate && setDate(newDate)}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
-          ) : workLogs?.length === 0 ? (
-            <div className="text-center py-8">
-              <Clock className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">No work logs</h3>
-              <p className="text-muted-foreground">
-                There are no work logs recorded for {format(selectedDate, 'MMMM d, yyyy')}.
-              </p>
-              <Button 
-                className="mt-4" 
-                onClick={() => setNewLogOpen(true)}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add First Log
-              </Button>
+
+            <div className="space-y-2">
+              <Label htmlFor="staff">Staff Member</Label>
+              <Select value={selectedStaff} onValueChange={setSelectedStaff}>
+                <SelectTrigger id="staff">
+                  <SelectValue placeholder="Select staff member" />
+                </SelectTrigger>
+                <SelectContent>
+                  {staffLoading ? (
+                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                  ) : staffMembers && staffMembers.length > 0 ? (
+                    staffMembers.map((staff) => (
+                      <SelectItem key={staff.id} value={staff.id}>
+                        {staff.name} ({staff.role})
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>No staff members found</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Staff Member</TableHead>
-                  <TableHead>Start Time</TableHead>
-                  <TableHead>End Time</TableHead>
-                  <TableHead>Hours</TableHead>
-                  <TableHead>Earnings</TableHead>
-                  <TableHead>Notes</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {workLogs?.map((log) => {
-                  const startDate = new Date(log.start_time);
-                  const endDate = new Date(log.end_time);
-                  const hours = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
-                  
-                  return (
-                    <TableRow key={log.id}>
-                      <TableCell className="font-medium">
-                        {log.staff?.profile?.full_name || "Unknown Staff"}
-                      </TableCell>
-                      <TableCell>{formatTime(log.start_time)}</TableCell>
-                      <TableCell>{formatTime(log.end_time)}</TableCell>
-                      <TableCell>{hours.toFixed(1)}</TableCell>
-                      <TableCell>${log.earnings?.toFixed(2) || "0.00"}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">{log.notes || "-"}</TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+
+            <div className="space-y-2">
+              <Label htmlFor="earnings">Earnings (Optional)</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="earnings"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="0.00"
+                  className="pl-10"
+                  value={earnings}
+                  onChange={(e) => setEarnings(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes (Optional)</Label>
+              <Input
+                id="notes"
+                placeholder="Add any additional notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </div>
+
+            <Button 
+              className="w-full" 
+              onClick={handleStartDay} 
+              disabled={!selectedStaff || startDayMutation.isPending}
+            >
+              <Clock className="mr-2 h-4 w-4" />
+              Start Day
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Today's Logs</CardTitle>
+            <CardDescription>
+              {format(date, "PPP")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {logsLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
+              </div>
+            ) : workLogs && workLogs.length > 0 ? (
+              <div className="space-y-4">
+                {workLogs.map((log: any) => (
+                  <Card key={log.id} className="overflow-hidden">
+                    <div className={cn(
+                      "px-6 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4",
+                      log.end_time ? "bg-muted/50" : "bg-muted-foreground/5"
+                    )}>
+                      <div>
+                        <h3 className="font-medium">{log.staffName}</h3>
+                        <div className="flex items-center mt-1 text-sm text-muted-foreground">
+                          <Clock className="mr-1 h-3.5 w-3.5" />
+                          {log.start_time ? format(new Date(log.start_time), "h:mm a") : "N/A"}
+                          {log.end_time && (
+                            <> - {format(new Date(log.end_time), "h:mm a")}</>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        {log.earnings && (
+                          <div className="text-sm font-medium text-green-600 flex items-center">
+                            <DollarSign className="mr-1 h-3.5 w-3.5" />
+                            {parseFloat(log.earnings).toFixed(2)}
+                          </div>
+                        )}
+                        
+                        {!log.end_time && (
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleEndDay(log.id)}
+                            disabled={endDayMutation.isPending}
+                          >
+                            End Day
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {log.notes && (
+                      <div className="px-6 py-2 border-t text-sm">
+                        <p className="text-muted-foreground">{log.notes}</p>
+                      </div>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No work logs found for this date</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
