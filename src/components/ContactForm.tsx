@@ -1,9 +1,9 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { MailIcon } from "lucide-react";
+import { Loader2, MailIcon, CheckCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Form validation schema
 const formSchema = z.object({
@@ -44,6 +53,9 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const ContactForm = () => {
+  const [isSubmitSuccessful, setIsSubmitSuccessful] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -54,17 +66,36 @@ const ContactForm = () => {
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    // In a real app, this would send the form data to your backend
-    console.log("Form submitted:", data);
-    
-    toast({
-      title: "Message sent!",
-      description: "Thank you for reaching out. We'll get back to you shortly.",
-    });
-    
-    // Reset form
-    form.reset();
+  const { isSubmitting } = form.formState;
+
+  const onSubmit = async (data: FormValues) => {
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // In a real app, this would send the form data to your backend
+      console.log("Form submitted:", data);
+      
+      setIsSubmitSuccessful(true);
+      setShowSuccessDialog(true);
+      
+      // Show toast notification
+      toast({
+        title: "Message sent!",
+        description: "Thank you for reaching out. We'll get back to you shortly.",
+        variant: "default",
+      });
+      
+      // Reset form
+      form.reset();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast({
+        title: "Something went wrong",
+        description: "Your message couldn't be sent. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -81,7 +112,11 @@ const ContactForm = () => {
                 <FormItem>
                   <FormLabel>Full Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input 
+                      placeholder="John Doe" 
+                      {...field} 
+                      disabled={isSubmitting}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -95,7 +130,12 @@ const ContactForm = () => {
                 <FormItem>
                   <FormLabel>Email Address</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="john@example.com" {...field} />
+                    <Input 
+                      type="email" 
+                      placeholder="john@example.com" 
+                      {...field} 
+                      disabled={isSubmitting}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -112,6 +152,7 @@ const ContactForm = () => {
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  disabled={isSubmitting}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -142,6 +183,7 @@ const ContactForm = () => {
                     placeholder="How can we help you?"
                     rows={6}
                     {...field}
+                    disabled={isSubmitting}
                   />
                 </FormControl>
                 <FormMessage />
@@ -152,11 +194,12 @@ const ContactForm = () => {
           <Button 
             type="submit" 
             className="w-full md:w-auto"
-            disabled={form.formState.isSubmitting}
+            disabled={isSubmitting}
           >
-            {form.formState.isSubmitting ? (
+            {isSubmitting ? (
               <>
-                <span className="animate-pulse">Sending...</span>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Sending...
               </>
             ) : (
               <>
@@ -167,6 +210,24 @@ const ContactForm = () => {
           </Button>
         </form>
       </Form>
+
+      {/* Success Dialog */}
+      <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center">
+              <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+              Message Sent Successfully
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Thank you for contacting us! Our team will review your message and get back to you as soon as possible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>Close</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
