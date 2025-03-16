@@ -2,326 +2,441 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-  Clock, 
-  DollarSign, 
-  Calendar, 
-  Plus, 
-  Search,
-  FileText
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Clock, DollarSign, Filter, Plus, Search } from "lucide-react";
+import { format, startOfDay, endOfDay, parseISO } from "date-fns";
 import { toast } from "@/components/ui/use-toast";
 
 interface WorkLog {
   id: string;
   staff_relation_id: string;
   start_time: string;
-  end_time: string | null;
-  earnings: number | null;
-  notes: string | null;
+  end_time: string;
+  earnings: number;
+  notes: string;
   created_at: string;
   updated_at: string;
   staff?: {
     profile?: {
-      full_name: string | null;
-    }
-  }
+      full_name: string;
+    };
+  };
+}
+
+interface StaffMember {
+  id: string;
+  staff_id: string;
+  business_id: string;
+  role: string;
+  created_at: string;
+  profile?: {
+    full_name: string;
+    avatar_url: string;
+  } | null;
 }
 
 const DashboardWorkLogs = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [openAddLog, setOpenAddLog] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [newLogOpen, setNewLogOpen] = useState(false);
+  const [staffMember, setStaffMember] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [earnings, setEarnings] = useState("");
+  const [notes, setNotes] = useState("");
 
   // Fetch work logs
-  const { data: workLogs, isLoading, error } = useQuery({
-    queryKey: ['workLogs'],
+  const { data: workLogs, isLoading: logsLoading, refetch: refetchLogs } = useQuery({
+    queryKey: ['workLogs', selectedDate],
     queryFn: async () => {
       const { data: session } = await supabase.auth.getSession();
-      
-      if (!session?.session?.user) {
-        throw new Error('Not authenticated');
-      }
-      
-      // Fetch staff relations first to get IDs
-      const { data: staffRelations, error: staffError } = await supabase
-        .from('business_staff')
-        .select('id, staff_id')
-        .eq('business_id', session.session.user.id);
-        
-      if (staffError) throw staffError;
-      
-      if (!staffRelations?.length) {
-        return [];
-      }
-      
-      // Get all staff relation IDs
-      const staffRelationIds = staffRelations.map(relation => relation.id);
-      
-      // Fetch all work logs for this business's staff
-      const { data: logs, error: logsError } = await supabase
-        .from('staff_work_logs')
-        .select('*')
-        .in('staff_relation_id', staffRelationIds)
-        .order('start_time', { ascending: false });
-        
-      if (logsError) throw logsError;
-      
-      // Fetch staff names
-      const logsWithStaffNames = await Promise.all(logs.map(async (log) => {
-        // Find the staff relation
-        const staffRelation = staffRelations.find(rel => rel.id === log.staff_relation_id);
-        
-        if (staffRelation) {
-          // Get the staff profile
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', staffRelation.staff_id)
-            .single();
-            
+      if (!session?.session?.user) throw new Error('Not authenticated');
+
+      const startDate = startOfDay(selectedDate).toISOString();
+      const endDate = endOfDay(selectedDate).toISOString();
+
+      // Fetch work logs for the selected date
+      const { data, error } = await supabase
+        .from('work_logs')
+        .select(`
+          id,
+          staff_relation_id,
+          start_time,
+          end_time,
+          earnings,
+          notes,
+          created_at,
+          updated_at,
+          staff:staff_relation_id(
+            profile:staff_id(
+              full_name
+            )
+          )
+        `)
+        .eq('business_id', session.session.user.id)
+        .gte('start_time', startDate)
+        .lte('end_time', endDate);
+
+      if (error) throw error;
+
+      // Transform data to handle potentially missing staff property
+      const transformedData: WorkLog[] = data.map(log => {
+        // If staff property is missing, create a fallback
+        if (!log.staff) {
           return {
-            ...log,
-            staff: {
-              profile: profileData
+            ...log, 
+            staff: { 
+              profile: { 
+                full_name: "Unknown Staff" 
+              } 
             }
           };
         }
-        
         return log;
-      }));
-      
-      return logsWithStaffNames;
+      });
+
+      return transformedData;
     }
   });
 
-  // Filter logs based on search query
-  const filteredLogs = workLogs?.filter(log => {
-    const staffName = log.staff?.profile?.full_name || "";
-    const notes = log.notes || "";
-    
-    return staffName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           notes.toLowerCase().includes(searchQuery.toLowerCase());
+  // Fetch staff members
+  const { data: staffMembers, isLoading: staffLoading } = useQuery({
+    queryKey: ['staffMembers'],
+    queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user) throw new Error('Not authenticated');
+
+      const { data: staffData, error: staffError } = await supabase
+        .from('business_staff')
+        .select('id, staff_id, business_id, role, created_at')
+        .eq('business_id', session.session.user.id);
+
+      if (staffError) throw staffError;
+
+      // Now we need to fetch profiles for each staff member
+      const staffWithProfiles: StaffMember[] = await Promise.all(
+        staffData.map(async (staff) => {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('full_name, avatar_url')
+            .eq('id', staff.staff_id)
+            .single();
+
+          if (profileError) {
+            console.error('Error fetching profile:', profileError);
+            return {
+              ...staff,
+              profile: null
+            };
+          }
+
+          return {
+            ...staff,
+            profile: profileData
+          };
+        })
+      );
+
+      return staffWithProfiles;
+    }
   });
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+  const handleAddWorkLog = async () => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user) throw new Error('Not authenticated');
+
+      // Validate inputs
+      if (!staffMember || !startTime || !endTime) {
+        toast({
+          title: "Missing information",
+          description: "Please fill in all required fields",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Format the start and end times
+      const formattedStartTime = `${format(selectedDate, 'yyyy-MM-dd')}T${startTime}:00`;
+      const formattedEndTime = `${format(selectedDate, 'yyyy-MM-dd')}T${endTime}:00`;
+
+      // Insert work log
+      const { error } = await supabase
+        .from('work_logs')
+        .insert({
+          business_id: session.session.user.id,
+          staff_relation_id: staffMember,
+          start_time: formattedStartTime,
+          end_time: formattedEndTime,
+          earnings: parseFloat(earnings) || 0,
+          notes
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Work log added",
+        description: "The work log has been successfully recorded"
+      });
+
+      // Reset form and close dialog
+      setStaffMember("");
+      setStartTime("");
+      setEndTime("");
+      setEarnings("");
+      setNotes("");
+      setNewLogOpen(false);
+
+      // Refetch work logs
+      refetchLogs();
+    } catch (error) {
+      console.error("Error adding work log:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add work log. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  // Format time for display
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString(undefined, {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  // Calculate total earnings for the day
+  const totalEarnings = workLogs ? workLogs.reduce((sum, log) => sum + (log.earnings || 0), 0) : 0;
 
-  // Calculate duration between start and end time
-  const calculateDuration = (startTime: string, endTime: string | null) => {
-    if (!endTime) return "In progress";
-    
-    const start = new Date(startTime).getTime();
-    const end = new Date(endTime).getTime();
-    const durationMs = end - start;
-    
-    const hours = Math.floor(durationMs / (1000 * 60 * 60));
-    const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
-    
-    return `${hours}h ${minutes}m`;
-  };
-
-  const handleAddWorkLog = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Implementation would go here
-    setOpenAddLog(false);
-    toast({
-      title: "Work log added",
-      description: "The work log has been added successfully.",
-    });
+  // Format time from ISO string to readable format
+  const formatTime = (isoTime: string) => {
+    try {
+      return format(parseISO(isoTime), 'h:mm a');
+    } catch (error) {
+      return "Invalid time";
+    }
   };
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold mb-2">Work Logs</h1>
+        <p className="text-muted-foreground">Track your staff working hours and earnings.</p>
+      </div>
+
       <div className="flex flex-col md:flex-row justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Work Logs</h1>
-          <p className="text-muted-foreground">Track and manage staff working hours and earnings.</p>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <DatePicker
+            date={selectedDate}
+            setDate={setSelectedDate}
+            className="w-full sm:w-[240px]"
+          />
+          <div className="relative w-full sm:w-[300px]">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search logs..."
+              className="pl-9"
+            />
+          </div>
         </div>
         <div className="flex gap-2">
-          <Dialog open={openAddLog} onOpenChange={setOpenAddLog}>
+          <Button variant="outline" size="icon">
+            <Filter className="h-4 w-4" />
+          </Button>
+          <Dialog open={newLogOpen} onOpenChange={setNewLogOpen}>
             <DialogTrigger asChild>
-              <Button className="md:self-start">
+              <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Add Work Log
+                Add Log
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <form onSubmit={handleAddWorkLog}>
-                <DialogHeader>
-                  <DialogTitle>Add New Work Log</DialogTitle>
-                  <DialogDescription>
-                    Add a new work log for your staff member.
-                  </DialogDescription>
-                </DialogHeader>
-                
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="staff" className="text-right">
-                      Staff Member
-                    </Label>
-                    <select
-                      id="staff"
-                      className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-                      required
-                    >
-                      <option value="" disabled selected>Select staff member</option>
-                      {/* Staff options would be populated here */}
-                    </select>
+              <DialogHeader>
+                <DialogTitle>Add Work Log</DialogTitle>
+                <DialogDescription>
+                  Record a staff member's work hours and earnings for {format(selectedDate, 'MMMM d, yyyy')}.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="staff">Staff Member</Label>
+                  <select
+                    id="staff"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={staffMember}
+                    onChange={(e) => setStaffMember(e.target.value)}
+                  >
+                    <option value="">Select staff member</option>
+                    {staffMembers?.map((staff) => (
+                      <option key={staff.id} value={staff.id}>
+                        {staff.profile?.full_name || "Unknown"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="startTime">Start Time</Label>
+                    <Input
+                      id="startTime"
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                    />
                   </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="startDate" className="text-right">
-                      Start Date
-                    </Label>
-                    <div className="col-span-3">
-                      <Input id="startDate" type="datetime-local" required />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="endTime">End Time</Label>
+                    <Input
+                      id="endTime"
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                    />
                   </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="endDate" className="text-right">
-                      End Date
-                    </Label>
-                    <div className="col-span-3">
-                      <Input id="endDate" type="datetime-local" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="earnings" className="text-right">
-                      Earnings
-                    </Label>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="earnings">Earnings (optional)</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="earnings"
                       type="number"
                       placeholder="0.00"
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="notes" className="text-right">
-                      Notes
-                    </Label>
-                    <textarea
-                      id="notes"
-                      placeholder="Add any additional notes..."
-                      className="col-span-3 min-h-[80px] flex w-full rounded-md border border-input bg-background px-3 py-2"
+                      className="pl-9"
+                      value={earnings}
+                      onChange={(e) => setEarnings(e.target.value)}
                     />
                   </div>
                 </div>
-                
-                <DialogFooter>
-                  <Button type="submit">Save Work Log</Button>
-                </DialogFooter>
-              </form>
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes (optional)</Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="Add any additional information here..."
+                    className="min-h-[80px]"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setNewLogOpen(false)}>Cancel</Button>
+                <Button onClick={handleAddWorkLog}>Save Log</Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search by staff or notes..." 
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center">
+              <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+              Total Hours
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {logsLoading ? (
+                <div className="h-7 w-16 animate-pulse bg-muted rounded"></div>
+              ) : workLogs?.length ? (
+                workLogs.reduce((total, log) => {
+                  const start = new Date(log.start_time).getTime();
+                  const end = new Date(log.end_time).getTime();
+                  return total + (end - start) / (1000 * 60 * 60);
+                }, 0).toFixed(1)
+              ) : (
+                "0.0"
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Hours worked on {format(selectedDate, 'MMM d, yyyy')}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center">
+              <DollarSign className="mr-2 h-4 w-4 text-muted-foreground" />
+              Total Earnings
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {logsLoading ? (
+                <div className="h-7 w-20 animate-pulse bg-muted rounded"></div>
+              ) : (
+                `$${totalEarnings.toFixed(2)}`
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Earnings on {format(selectedDate, 'MMM d, yyyy')}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Staff Work Logs</CardTitle>
-          <CardDescription>
-            Track staff working hours and earnings
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center p-8">
-              <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
+          {logsLoading ? (
+            <div className="space-y-2">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="w-full h-12 bg-muted animate-pulse rounded"></div>
+              ))}
             </div>
-          ) : error ? (
-            <div className="text-center py-8 text-destructive">
-              <p>Error loading work logs</p>
-            </div>
-          ) : filteredLogs?.length === 0 ? (
+          ) : workLogs?.length === 0 ? (
             <div className="text-center py-8">
-              <Clock className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Work Logs</h3>
-              <p className="text-muted-foreground mb-4">No work logs found for your staff.</p>
-              <Button onClick={() => setOpenAddLog(true)}>
+              <Clock className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-semibold">No work logs</h3>
+              <p className="text-muted-foreground">
+                There are no work logs recorded for {format(selectedDate, 'MMMM d, yyyy')}.
+              </p>
+              <Button 
+                className="mt-4" 
+                onClick={() => setNewLogOpen(true)}
+              >
                 <Plus className="mr-2 h-4 w-4" />
-                Add Work Log
+                Add First Log
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
-              {filteredLogs?.map((log) => (
-                <div key={log.id} className="border rounded-md p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="flex items-center">
-                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span className="font-medium">
-                        {formatDate(log.start_time)}
-                      </span>
-                    </div>
-                    <Badge variant={log.end_time ? "outline" : "secondary"}>
-                      {log.end_time ? "Completed" : "In Progress"}
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Staff Member</p>
-                      <p className="font-medium">{log.staff?.profile?.full_name || "Unknown Staff"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Time Period</p>
-                      <p>{formatTime(log.start_time)} - {log.end_time ? formatTime(log.end_time) : "Ongoing"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Duration</p>
-                      <p>{calculateDuration(log.start_time, log.end_time)}</p>
-                    </div>
-                  </div>
-                  {log.earnings !== null && (
-                    <div className="mt-3 flex items-center">
-                      <DollarSign className="h-4 w-4 mr-1 text-green-500" />
-                      <span className="font-medium">${log.earnings.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {log.notes && (
-                    <div className="mt-3 bg-muted/50 p-2 rounded-md">
-                      <div className="flex items-center gap-1 mb-1">
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm font-medium">Notes</span>
-                      </div>
-                      <p className="text-sm">{log.notes}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Staff Member</TableHead>
+                  <TableHead>Start Time</TableHead>
+                  <TableHead>End Time</TableHead>
+                  <TableHead>Hours</TableHead>
+                  <TableHead>Earnings</TableHead>
+                  <TableHead>Notes</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {workLogs?.map((log) => {
+                  const startDate = new Date(log.start_time);
+                  const endDate = new Date(log.end_time);
+                  const hours = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
+                  
+                  return (
+                    <TableRow key={log.id}>
+                      <TableCell className="font-medium">
+                        {log.staff?.profile?.full_name || "Unknown Staff"}
+                      </TableCell>
+                      <TableCell>{formatTime(log.start_time)}</TableCell>
+                      <TableCell>{formatTime(log.end_time)}</TableCell>
+                      <TableCell>{hours.toFixed(1)}</TableCell>
+                      <TableCell>${log.earnings?.toFixed(2) || "0.00"}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{log.notes || "-"}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>

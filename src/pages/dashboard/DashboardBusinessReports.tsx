@@ -14,12 +14,12 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  PieChart,
-  Pie,
+  PieChart as RechartsPieChart,
+  Pie as RechartsPie,
   Cell
 } from "recharts";
 import { 
-  ChartContainer, 
+  ChartContainer,
   ChartTooltip, 
   ChartTooltipContent 
 } from "@/components/ui/chart";
@@ -218,8 +218,10 @@ const DashboardBusinessReports = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
-                    <ChartTooltip 
-                      content={<ChartTooltipContent />}
+                    <Tooltip 
+                      content={
+                        <ChartTooltipContent />
+                      }
                     />
                     <Bar dataKey="subscribers" fill="var(--color-subscribers)" barSize={30} radius={[4, 4, 0, 0]} />
                   </BarChart>
@@ -264,8 +266,10 @@ const DashboardBusinessReports = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
-                    <ChartTooltip 
-                      content={<ChartTooltipContent />}
+                    <Tooltip 
+                      content={
+                        <ChartTooltipContent />
+                      }
                     />
                     <Bar dataKey="bookings" fill="var(--color-bookings)" barSize={30} radius={[4, 4, 0, 0]} />
                   </BarChart>
@@ -290,8 +294,8 @@ const DashboardBusinessReports = () => {
             </CardHeader>
             <CardContent className="h-80 flex justify-center">
               <ResponsiveContainer width="80%" height="100%">
-                <PieChart>
-                  <Pie
+                <RechartsPieChart>
+                  <RechartsPie
                     data={servicePopularityData}
                     cx="50%"
                     cy="50%"
@@ -304,9 +308,9 @@ const DashboardBusinessReports = () => {
                     {servicePopularityData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
-                  </Pie>
+                  </RechartsPie>
                   <Tooltip formatter={(value) => [`${value} bookings`, 'Bookings']} />
-                </PieChart>
+                </RechartsPieChart>
               </ResponsiveContainer>
             </CardContent>
             <CardFooter>

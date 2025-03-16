@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,9 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
-// Placeholder data for charts
 const getChartData = () => {
-  // Appointments data by month
   const appointmentsData = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
     datasets: [
@@ -32,7 +29,6 @@ const getChartData = () => {
     ]
   };
   
-  // Staff activity data
   const staffData = {
     labels: ['Alice', 'Bob', 'Charlie', 'Dana', 'Edward'],
     datasets: [
@@ -58,7 +54,6 @@ const getChartData = () => {
     ]
   };
   
-  // Growth trend data
   const growthData = {
     labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'],
     datasets: [
@@ -79,7 +74,6 @@ const getChartData = () => {
     ]
   };
   
-  // Service distribution data
   const serviceData = {
     labels: ['Haircut', 'Coloring', 'Styling', 'Spa', 'Nails'],
     datasets: [
@@ -112,7 +106,6 @@ const DashboardBusinessAnalytics = () => {
   const [timeRange, setTimeRange] = useState<"week" | "month" | "year">("month");
   const { appointmentsData, staffData, growthData, serviceData } = getChartData();
 
-  // Fetch analytics data
   const { data: analyticsData, isLoading, error } = useQuery({
     queryKey: ['businessAnalytics', timeRange],
     queryFn: async () => {
@@ -122,8 +115,6 @@ const DashboardBusinessAnalytics = () => {
         throw new Error('Not authenticated');
       }
       
-      // In a real app, this would fetch actual analytical data from Supabase
-      // For now, we'll return placeholder data
       return {
         subscriberCount: 157,
         appointmentCount: 352,
