@@ -1,7 +1,19 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { AppointmentTab, AppointmentsResult, Appointment, AppointmentStatus } from "./types";
+import { AppointmentTab, AppointmentsResult } from "./types";
+import {
+  fetchUpcomingAppointments,
+  fetchPastAppointments,
+  fetchInvitationAppointments,
+  fetchMyAppointments,
+  fetchSharedAppointments,
+  fetchAssignedAppointments,
+  fetchDefaultAppointments
+} from "./fetchers";
 
+/**
+ * Main function to fetch appointments based on the selected tab
+ */
 export async function fetchAppointments(tab: AppointmentTab): Promise<AppointmentsResult> {
   const { data: { session } } = await supabase.auth.getSession();
   
@@ -17,230 +29,48 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
   
   const userRole = profileData?.account_type || "free";
   
-  // Declare variable to hold appointments data
-  let appointmentsData: Appointment[] = [];
-  
-  // Use switch case to handle all tab values properly
+  // Fetch appointments based on the selected tab
   switch (tab) {
-    case "upcoming": {
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .gte('start_time', new Date().toISOString())
-        .order('start_time', { ascending: true });
-        
-      if (error) throw error;
-      
-      // Transform data ensuring proper type casting for status
-      appointmentsData = (data || []).map(item => ({
-        id: item.id,
-        user_id: item.user_id,
-        title: item.title,
-        description: item.description,
-        location: item.location,
-        start_time: item.start_time,
-        end_time: item.end_time,
-        is_all_day: item.is_all_day || false,
-        status: validateAppointmentStatus(item.status),
-        assignee_id: item.assignee_id || null,
-        created_at: item.created_at,
-        updated_at: item.updated_at
-      }));
-      break;
-    }
-    case "past": {
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .lt('start_time', new Date().toISOString())
-        .order('start_time', { ascending: false });
-        
-      if (error) throw error;
-      
-      // Transform data with proper typing
-      appointmentsData = (data || []).map(item => ({
-        id: item.id,
-        user_id: item.user_id,
-        title: item.title,
-        description: item.description,
-        location: item.location,
-        start_time: item.start_time,
-        end_time: item.end_time,
-        is_all_day: item.is_all_day || false,
-        status: validateAppointmentStatus(item.status),
-        assignee_id: item.assignee_id || null,
-        created_at: item.created_at,
-        updated_at: item.updated_at
-      }));
-      break;
-    }
-    case "invitations": {
-      const { data, error } = await supabase
-        .from('appointment_invitations')
-        .select('appointment_id, appointments(*)')
-        .eq('invited_user_id', session.user.id)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      
-      // Extract just the appointments objects from the response
-      appointmentsData = [];
-      if (data && data.length > 0) {
-        for (const item of data) {
-          if (item.appointments) {
-            const appt = item.appointments;
-            // Create a new object with explicit property assignments and proper type casting
-            appointmentsData.push({
-              id: appt.id,
-              user_id: appt.user_id,
-              title: appt.title,
-              description: appt.description,
-              location: appt.location,
-              start_time: appt.start_time,
-              end_time: appt.end_time,
-              is_all_day: appt.is_all_day || false,
-              status: validateAppointmentStatus(appt.status),
-              assignee_id: appt.assignee_id || null,
-              created_at: appt.created_at,
-              updated_at: appt.updated_at
-            });
-          }
-        }
-      }
-      break;
-    }
-    case "my-appointments": {
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('start_time', { ascending: true });
-        
-      if (error) throw error;
-      
-      // Transform data with proper typing
-      appointmentsData = (data || []).map(item => ({
-        id: item.id,
-        user_id: item.user_id,
-        title: item.title,
-        description: item.description,
-        location: item.location,
-        start_time: item.start_time,
-        end_time: item.end_time,
-        is_all_day: item.is_all_day || false,
-        status: validateAppointmentStatus(item.status),
-        assignee_id: item.assignee_id || null,
-        created_at: item.created_at,
-        updated_at: item.updated_at
-      }));
-      break;
-    }
-    case "shared-appointments": {
-      const { data, error } = await supabase
-        .from('appointment_invitations')
-        .select('appointment_id, appointments(*)')
-        .eq('invited_user_id', session.user.id)
-        .eq('status', 'accepted')
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      
-      // Extract appointments with proper typing
-      appointmentsData = [];
-      if (data && data.length > 0) {
-        for (const item of data) {
-          if (item.appointments) {
-            const appt = item.appointments;
-            appointmentsData.push({
-              id: appt.id,
-              user_id: appt.user_id,
-              title: appt.title,
-              description: appt.description,
-              location: appt.location,
-              start_time: appt.start_time,
-              end_time: appt.end_time,
-              is_all_day: appt.is_all_day || false,
-              status: validateAppointmentStatus(appt.status),
-              assignee_id: appt.assignee_id || null,
-              created_at: appt.created_at,
-              updated_at: appt.updated_at
-            });
-          }
-        }
-      }
-      break;
-    }
-    case "assigned-appointments": {
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('assignee_id', session.user.id)
-        .order('start_time', { ascending: true });
-        
-      if (error) throw error;
-      
-      // Transform data with proper typing
-      appointmentsData = (data || []).map(item => ({
-        id: item.id,
-        user_id: item.user_id,
-        title: item.title,
-        description: item.description,
-        location: item.location,
-        start_time: item.start_time,
-        end_time: item.end_time,
-        is_all_day: item.is_all_day || false,
-        status: validateAppointmentStatus(item.status),
-        assignee_id: item.assignee_id || null,
-        created_at: item.created_at,
-        updated_at: item.updated_at
-      }));
-      break;
-    }
-    default: {
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('start_time', { ascending: true });
-        
-      if (error) throw error;
-      
-      // Transform data with proper typing
-      appointmentsData = (data || []).map(item => ({
-        id: item.id,
-        user_id: item.user_id,
-        title: item.title,
-        description: item.description,
-        location: item.location,
-        start_time: item.start_time,
-        end_time: item.end_time,
-        is_all_day: item.is_all_day || false,
-        status: validateAppointmentStatus(item.status),
-        assignee_id: item.assignee_id || null,
-        created_at: item.created_at,
-        updated_at: item.updated_at
-      }));
-      break;
-    }
+    case "upcoming":
+      return {
+        appointments: await fetchUpcomingAppointments(session.user.id),
+        userRole: userRole as "free" | "individual" | "business"
+      };
+    
+    case "past":
+      return {
+        appointments: await fetchPastAppointments(session.user.id),
+        userRole: userRole as "free" | "individual" | "business"
+      };
+    
+    case "invitations":
+      return {
+        appointments: await fetchInvitationAppointments(session.user.id),
+        userRole: userRole as "free" | "individual" | "business"
+      };
+    
+    case "my-appointments":
+      return {
+        appointments: await fetchMyAppointments(session.user.id),
+        userRole: userRole as "free" | "individual" | "business"
+      };
+    
+    case "shared-appointments":
+      return {
+        appointments: await fetchSharedAppointments(session.user.id),
+        userRole: userRole as "free" | "individual" | "business"
+      };
+    
+    case "assigned-appointments":
+      return {
+        appointments: await fetchAssignedAppointments(session.user.id),
+        userRole: userRole as "free" | "individual" | "business"
+      };
+    
+    default:
+      return {
+        appointments: await fetchDefaultAppointments(session.user.id),
+        userRole: userRole as "free" | "individual" | "business"
+      };
   }
-  
-  return { 
-    appointments: appointmentsData,
-    userRole: userRole as "free" | "individual" | "business"
-  };
-}
-
-// Helper function to validate appointment status
-function validateAppointmentStatus(status: any): AppointmentStatus {
-  const validStatuses: AppointmentStatus[] = ["scheduled", "cancelled", "completed"];
-  
-  if (status && validStatuses.includes(status as AppointmentStatus)) {
-    return status as AppointmentStatus;
-  }
-  
-  // Default to "scheduled" if status is invalid
-  return "scheduled";
 }
