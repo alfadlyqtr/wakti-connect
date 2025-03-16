@@ -19,10 +19,11 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
   
   const userRole = profileData?.account_type || "free";
   
-  let data;
-  let error;
+  // Declare variables for query result outside the switch
+  let data: any[] = [];
+  let error: any = null;
   
-  // Use switch case to avoid deep type instantiation
+  // Use switch case to handle all tab values properly
   switch (tab) {
     case "my-tasks": {
       // User's own tasks
@@ -32,7 +33,7 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
         .eq('user_id', session.user.id)
         .order('due_date', { ascending: true });
       
-      data = result.data;
+      data = result.data || [];
       error = result.error;
       break;
     }
@@ -45,7 +46,7 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
         .eq('shared_with', session.user.id)
         .order('created_at', { ascending: false });
       
-      data = result.data;
+      data = result.data || [];
       error = result.error;
       break;
     }
@@ -58,7 +59,7 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
         .eq('assignee_id', session.user.id)
         .order('due_date', { ascending: true });
       
-      data = result.data;
+      data = result.data || [];
       error = result.error;
       break;
     }
@@ -71,7 +72,7 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
         .eq('user_id', session.user.id)
         .order('due_date', { ascending: true });
       
-      data = result.data;
+      data = result.data || [];
       error = result.error;
       break;
     }
@@ -83,9 +84,12 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
   }
   
   // Transform shared tasks data if needed
-  const transformedData = tab === "shared-tasks" 
-    ? data.map((item: any) => item.tasks) 
-    : data;
+  let transformedData;
+  if (tab === "shared-tasks") {
+    transformedData = data.map((item: any) => item.tasks);
+  } else {
+    transformedData = data;
+  }
   
   return { 
     tasks: transformedData || [],

@@ -8,3 +8,5 @@ export type {
   TaskStatus,
   TaskPriority 
 } from "@/types/task.types";
+
+// Re-export any additional types needed specifically for services

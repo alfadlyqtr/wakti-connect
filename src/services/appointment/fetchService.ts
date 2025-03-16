@@ -17,11 +17,11 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
   
   const userRole = profileData?.account_type || "free";
   
-  // Declare variable for query result
+  // Declare variables for query result outside the switch
   let data: any[] = [];
   let error: any = null;
   
-  // Use switch case to handle all tab values properly and avoid deep type instantiation
+  // Use switch case to handle all tab values properly
   switch (tab) {
     case "upcoming": {
       const result = await supabase
