@@ -18,6 +18,8 @@ interface AppointmentCardProps {
   isRecurring?: boolean;
   recurringFrequency?: string;
   isRecurringInstance?: boolean;
+  isAssigned?: boolean;
+  isShared?: boolean;
 }
 
 const AppointmentCard = ({
@@ -31,7 +33,9 @@ const AppointmentCard = ({
   status,
   isRecurring = false,
   recurringFrequency,
-  isRecurringInstance = false
+  isRecurringInstance = false,
+  isAssigned = false,
+  isShared = false
 }: AppointmentCardProps) => {
   // Format the dates
   const startDate = format(startTime, "MMM d, yyyy");
@@ -62,6 +66,16 @@ const AppointmentCard = ({
                 frequency={recurringFrequency} 
                 isRecurringInstance={isRecurringInstance} 
               />
+            )}
+            {isAssigned && (
+              <Badge variant="outline" className="font-normal bg-purple-500/10 text-purple-500 border-purple-500/20">
+                Assigned
+              </Badge>
+            )}
+            {isShared && (
+              <Badge variant="outline" className="font-normal bg-green-500/10 text-green-500 border-green-500/20">
+                Shared
+              </Badge>
             )}
           </div>
           <div className="flex items-center">
