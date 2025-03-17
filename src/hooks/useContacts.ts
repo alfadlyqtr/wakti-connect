@@ -1,5 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { UserContact } from "@/types/invitation.types";
 import { toast } from "@/components/ui/use-toast";
 import { 
@@ -8,9 +9,15 @@ import {
   sendContactRequest as sendRequest,
   respondToContactRequest as respondToRequest
 } from "@/services/contacts/contactsService";
+import {
+  fetchAutoApproveSetting,
+  updateAutoApproveContacts
+} from "@/services/contacts/contactOperations";
 
 export const useContacts = () => {
   const queryClient = useQueryClient();
+  const [autoApprove, setAutoApprove] = useState<boolean>(false);
+  const [isUpdatingAutoApprove, setIsUpdatingAutoApprove] = useState<boolean>(false);
 
   // Fetch user's contacts
   const { 
@@ -21,6 +28,25 @@ export const useContacts = () => {
     queryKey: ['contacts'],
     queryFn: fetchContacts
   });
+
+  // Get pending contact requests
+  const { 
+    data: pendingRequests, 
+    isLoading: isLoadingRequests 
+  } = useQuery({
+    queryKey: ['contactRequests'],
+    queryFn: fetchPendingRequests
+  });
+
+  // Fetch auto-approve setting
+  useEffect(() => {
+    const getAutoApproveSetting = async () => {
+      const setting = await fetchAutoApproveSetting();
+      setAutoApprove(setting);
+    };
+    
+    getAutoApproveSetting();
+  }, []);
 
   // Send contact request
   const sendContactRequest = useMutation({
@@ -68,14 +94,32 @@ export const useContacts = () => {
     }
   });
 
-  // Get pending contact requests
-  const { 
-    data: pendingRequests, 
-    isLoading: isLoadingRequests 
-  } = useQuery({
-    queryKey: ['contactRequests'],
-    queryFn: fetchPendingRequests
-  });
+  // Handle toggling auto-approve setting
+  const handleToggleAutoApprove = async () => {
+    setIsUpdatingAutoApprove(true);
+    try {
+      const success = await updateAutoApproveContacts(!autoApprove);
+      
+      if (success) {
+        setAutoApprove(!autoApprove);
+        toast({
+          title: "Setting Updated",
+          description: !autoApprove 
+            ? "Contact requests will now be automatically approved" 
+            : "Contact requests will now require manual approval"
+        });
+      }
+    } catch (error) {
+      console.error("Error updating auto-approve setting:", error);
+      toast({
+        title: "Update Failed",
+        description: "Could not update auto-approve setting",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdatingAutoApprove(false);
+    }
+  };
 
   return {
     contacts,
@@ -83,7 +127,10 @@ export const useContacts = () => {
     error,
     pendingRequests,
     isLoadingRequests,
+    autoApprove,
+    isUpdatingAutoApprove,
     sendContactRequest,
-    respondToContactRequest
+    respondToContactRequest,
+    handleToggleAutoApprove
   };
 };

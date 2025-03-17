@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useContacts } from "@/hooks/useContacts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,11 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { UserSearch, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { updateAutoApproveContacts } from "@/services/contacts/contactsService";
-import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
-// Import the newly created components
+// Import the components
 import ContactsList from "@/components/contacts/ContactsList";
 import PendingRequestsList from "@/components/contacts/PendingRequestsList";
 import AddContactDialog from "@/components/contacts/AddContactDialog";
@@ -23,49 +20,18 @@ const DashboardContacts = () => {
     isLoading, 
     pendingRequests, 
     isLoadingRequests,
+    autoApprove,
+    isUpdatingAutoApprove,
     sendContactRequest,
-    respondToContactRequest
+    respondToContactRequest,
+    handleToggleAutoApprove
   } = useContacts();
   
   const [searchQuery, setSearchQuery] = useState("");
-  const [autoApprove, setAutoApprove] = useState(false);
   const [isAddContactOpen, setIsAddContactOpen] = useState(false);
-  const [isUpdatingAutoApprove, setIsUpdatingAutoApprove] = useState(false);
-
-  // Fetch user's auto-approve setting
-  useEffect(() => {
-    const fetchAutoApproveSetting = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user?.id) {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('auto_approve_contacts')
-            .eq('id', session.user.id)
-            .single();
-            
-          if (error) throw error;
-          
-          if (data) {
-            setAutoApprove(!!data.auto_approve_contacts);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching auto-approve setting:", error);
-      }
-    };
-    
-    fetchAutoApproveSetting();
-  }, []);
 
   const handleAddContact = async (contactId: string) => {
     if (!contactId.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid user ID",
-        variant: "destructive"
-      });
       return;
     }
     
@@ -82,32 +48,6 @@ const DashboardContacts = () => {
       await respondToContactRequest.mutateAsync({ requestId, accept });
     } catch (error) {
       console.error("Error responding to request:", error);
-    }
-  };
-
-  const handleToggleAutoApprove = async () => {
-    setIsUpdatingAutoApprove(true);
-    try {
-      const success = await updateAutoApproveContacts(!autoApprove);
-      
-      if (success) {
-        setAutoApprove(!autoApprove);
-        toast({
-          title: "Setting Updated",
-          description: !autoApprove 
-            ? "Contact requests will now be automatically approved" 
-            : "Contact requests will now require manual approval"
-        });
-      }
-    } catch (error) {
-      console.error("Error updating auto-approve setting:", error);
-      toast({
-        title: "Update Failed",
-        description: "Could not update auto-approve setting",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUpdatingAutoApprove(false);
     }
   };
 
