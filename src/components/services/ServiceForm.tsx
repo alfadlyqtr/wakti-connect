@@ -71,7 +71,10 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
   const handleSubmit = (values: ServiceFormSchemaType) => {
     // Include the selected staff IDs and convert to ServiceFormValues
     const formValues: ServiceFormValues = {
-      ...values,
+      name: values.name,
+      description: values.description || "",
+      price: values.price || "",
+      duration: values.duration,
       staff_ids: selectedStaff
     };
     onSubmit(formValues);
