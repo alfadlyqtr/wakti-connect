@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment } from "../types";
+import { validateAppointmentStatus } from "../utils/statusValidator";
 
 /**
  * Fetches appointments shared with the current user
@@ -36,7 +37,11 @@ export const fetchSharedAppointments = async (
     // Map the nested appointment data
     return (appointments || [])
       .map(invitation => invitation.appointment)
-      .filter(Boolean);
+      .filter(Boolean)
+      .map(appt => ({
+        ...appt,
+        status: validateAppointmentStatus(appt.status)
+      }));
   } catch (error) {
     console.error("Error in fetchSharedAppointments:", error);
     return [];

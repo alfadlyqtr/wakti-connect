@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment } from "../types";
+import { validateAppointmentStatus } from "../utils/statusValidator";
 
 /**
  * Fetches appointments for which the current user has pending invitations
@@ -37,9 +38,10 @@ export const fetchInvitationAppointments = async (
     return (appointments || [])
       .map(invitation => {
         if (invitation.appointment) {
-          // Add the invitation to the appointment object
+          // Add the invitation to the appointment object and validate status
           return {
             ...invitation.appointment,
+            status: validateAppointmentStatus(invitation.appointment.status),
             invitations: [invitation]
           };
         }

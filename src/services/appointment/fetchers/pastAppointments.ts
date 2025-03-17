@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment } from "../types";
+import { validateAppointmentStatus } from "../utils/statusValidator";
 
 /**
  * Fetches past appointments for the current user
@@ -31,7 +32,11 @@ export const fetchPastAppointments = async (
       throw new Error(`Failed to fetch past appointments: ${error.message}`);
     }
     
-    return appointments || [];
+    // Map the database records to the Appointment type with validated status
+    return (appointments || []).map(appt => ({
+      ...appt,
+      status: validateAppointmentStatus(appt.status)
+    }));
   } catch (error) {
     console.error("Error in fetchPastAppointments:", error);
     return [];

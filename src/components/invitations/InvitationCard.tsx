@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { MapPin, Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { InvitationStyle } from "@/types/invitation.types";
 import { Appointment } from "@/types/appointment.types";
-import { respondToInvitation } from "@/services/invitation";
+import { respondToInvitationUpdate } from "@/services/invitation";
 
 interface InvitationCardProps {
   appointment: Appointment;
@@ -35,7 +36,7 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
   
   const handleRespond = async (response: 'accepted' | 'declined') => {
     try {
-      await respondToInvitation(invitationId, response);
+      await respondToInvitationUpdate(invitationId, response);
       if (onRespond) {
         onRespond(response);
       }
