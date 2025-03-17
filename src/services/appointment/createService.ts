@@ -16,20 +16,16 @@ export async function createAppointment(formData: AppointmentFormData, recurring
       throw new Error("No active session");
     }
     
-    // Check user's account type
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('account_type')
-      .eq('id', session.user.id)
-      .maybeSingle();
+    // Check user's permission to create appointments using the security definer function
+    const { data: canCreate, error: permissionError } = await supabase
+      .rpc('can_create_appointments', { user_uid: session.user.id });
     
-    if (profileError) {
-      console.error("Error checking user account type:", profileError);
+    if (permissionError) {
+      console.error("Error checking permission to create appointments:", permissionError);
       throw new Error("Unable to verify account permissions");
     }
     
-    // Only allow paid accounts to create appointments
-    if (!profileData || profileData.account_type === 'free') {
+    if (!canCreate) {
       toast({
         title: "Premium Feature",
         description: "Creating appointments is only available for paid accounts. Please upgrade your plan.",
@@ -54,15 +50,44 @@ export async function createAppointment(formData: AppointmentFormData, recurring
     // Log the data being inserted
     console.log("Creating appointment with data:", appointmentData);
     
-    // Insert appointment
-    const { data, error } = await supabase
-      .from('appointments')
-      .insert(appointmentData)
-      .select()
-      .single();
+    // Insert appointment with retry logic
+    let retries = 0;
+    const maxRetries = 3;
+    let data = null;
+    let error = null;
+    
+    while (retries < maxRetries) {
+      try {
+        const result = await supabase
+          .from('appointments')
+          .insert(appointmentData)
+          .select()
+          .single();
+        
+        data = result.data;
+        error = result.error;
+        
+        if (error) {
+          console.error(`Attempt ${retries + 1} - Error inserting appointment:`, error);
+          retries++;
+          
+          if (retries >= maxRetries) {
+            throw error;
+          }
+          
+          // Wait before retry with exponential backoff
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
+        } else {
+          // Success, exit the retry loop
+          break;
+        }
+      } catch (e) {
+        console.error(`Unexpected error in createAppointment:`, e);
+        throw e;
+      }
+    }
     
     if (error) {
-      console.error("Error inserting appointment:", error);
       throw new Error(error.message || "Failed to create appointment");
     }
     
@@ -84,15 +109,38 @@ export async function createAppointment(formData: AppointmentFormData, recurring
           end_date: recurringData.end_date,
           max_occurrences: recurringData.max_occurrences
         });
-      } catch (recurringError) {
+      } catch (recurringError: any) {
         console.error("Error creating recurring settings:", recurringError);
         // Don't fail the whole operation if just the recurring part fails
+        toast({
+          title: "Warning",
+          description: "Appointment created but recurring settings couldn't be applied",
+          variant: "warning",
+        });
       }
     }
     
     return data;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating appointment:", error);
+    
+    // Handle specific error messages
+    if (error.message === "This feature is only available for paid accounts") {
+      // This is already handled with a toast earlier
+    } else if (error.message?.includes("violates row-level security policy")) {
+      toast({
+        title: "Permission Error",
+        description: "You don't have permission to create appointments. Please check your account type.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Failed to create appointment",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+    
     throw error;
   }
 }

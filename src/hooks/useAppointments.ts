@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 import { 
@@ -18,18 +18,29 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterDate, setFilterDate] = useState<Date | null>(null);
+  const [localUserRole, setLocalUserRole] = useState<"free" | "individual" | "business">("free");
+
+  // Initialize user role from localStorage if available
+  useEffect(() => {
+    const storedRole = localStorage.getItem('userRole') as "free" | "individual" | "business" | null;
+    if (storedRole) {
+      setLocalUserRole(storedRole);
+    }
+  }, []);
 
   // Fetch appointments with React Query
   const { 
     data, 
     isLoading, 
     error, 
-    refetch 
+    refetch,
+    isError
   } = useQuery({
     queryKey: ['appointments', tab],
     queryFn: () => fetchAppointments(tab),
     refetchOnWindowFocus: false,
-    retry: 1,
+    retry: 2,
+    retryDelay: attemptIndex => Math.min(1000 * Math.pow(2, attemptIndex), 30000),
     meta: {
       onError: (err: any) => {
         console.error("Appointment fetch error:", err);
@@ -41,6 +52,27 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
       }
     }
   });
+
+  // Update local user role when data changes
+  useEffect(() => {
+    if (data?.userRole) {
+      setLocalUserRole(data.userRole);
+      // Also update localStorage for future use
+      localStorage.setItem('userRole', data.userRole);
+    }
+  }, [data?.userRole]);
+
+  // Auto-retry in case of an error
+  useEffect(() => {
+    if (isError) {
+      const timer = setTimeout(() => {
+        console.log("Auto-retrying appointment fetch after error");
+        refetch();
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isError, refetch]);
 
   // Create a new appointment
   const createAppointment = async (appointmentData: Partial<AppointmentFormData>, recurringData?: RecurringFormData) => {
@@ -61,19 +93,7 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
     } catch (error: any) {
       console.error("Error creating appointment:", error);
       
-      if (error.message === "This feature is only available for paid accounts") {
-        toast({
-          title: "Premium Feature",
-          description: "Creating appointments is only available for paid accounts",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Failed to create appointment",
-          description: error.message || "An unexpected error occurred",
-          variant: "destructive",
-        });
-      }
+      // Error is already handled in the service, no need for additional toast here
       throw error;
     }
   };
@@ -84,8 +104,8 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
     return filterAppointments(appointmentList, searchQuery, filterStatus, filterDate);
   };
 
-  // Get the actual user role from data, with a fallback
-  const userRole = data?.userRole || localStorage.getItem('userRole') as "free" | "individual" | "business" || "free";
+  // Get the actual user role from data, with a fallback to the state
+  const userRole = data?.userRole || localUserRole;
   
   // Log the user role to help with debugging
   console.log("useAppointments hook - user role:", userRole);
