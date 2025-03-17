@@ -13,9 +13,9 @@ export const getUnreadMessagesCount = async (): Promise<number> => {
       return 0;
     }
     
-    // Use count() method with correct syntax
+    // Fix: The correct way to get a count with Supabase
     const { count, error } = await fromTable('messages')
-      .select('*', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('recipient_id', session.user.id)
       .eq('is_read', false);
     

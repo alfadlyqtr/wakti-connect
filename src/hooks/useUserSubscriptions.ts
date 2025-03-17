@@ -48,7 +48,7 @@ export const useUserSubscriptions = () => {
   });
 
   // Get the count of subscriptions
-  const subscriptionCount = subscriptions?.length ||, undefined
+  const subscriptionCount = subscriptions?.length || 0;
 
   // Unsubscribe from a business
   const unsubscribe = useMutation({
