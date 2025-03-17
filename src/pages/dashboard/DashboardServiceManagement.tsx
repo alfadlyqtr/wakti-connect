@@ -7,9 +7,13 @@ import { Plus, Search } from "lucide-react";
 import ServiceForm from "@/components/services/ServiceForm";
 import ServiceList from "@/components/services/ServiceList";
 import { useServices } from "@/hooks/useServices";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { Service } from "@/types/service.types";
 
 const DashboardServiceManagement = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { 
     services,
     isLoading,
@@ -30,6 +34,17 @@ const DashboardServiceManagement = () => {
   const handleCancelDialog = () => {
     setOpenAddService(false);
     setEditingService(null);
+  };
+
+  const handleDeleteClick = (service: Service) => {
+    setServiceToDelete(service);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (serviceToDelete) {
+      handleDeleteService(serviceToDelete.id);
+    }
   };
 
   return (
@@ -78,9 +93,18 @@ const DashboardServiceManagement = () => {
         error={error}
         onAddService={() => setOpenAddService(true)}
         onEditService={handleEditService}
-        onDeleteService={handleDeleteService}
+        onDeleteService={handleDeleteClick}
         isDeleting={isPendingDelete}
         staffAssignments={staffAssignments}
+      />
+
+      <ConfirmationDialog
+        title="Delete Service"
+        description={`Are you sure you want to delete "${serviceToDelete?.name}"? This action cannot be undone.`}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        isLoading={isPendingDelete}
       />
     </div>
   );

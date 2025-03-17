@@ -3,13 +3,13 @@ import React from "react";
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Users, Edit, Trash2, AlertCircle } from "lucide-react";
+import { Clock, Users, Edit, Trash2 } from "lucide-react";
 import { Service } from "@/types/service.types";
 
 interface ServiceCardProps {
   service: Service;
   onEdit: (service: Service) => void;
-  onDelete: (id: string) => void;
+  onDelete: (service: Service) => void;
   isDeleting: boolean;
   staffCount?: number;
 }
@@ -58,7 +58,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         <Button 
           variant="destructive" 
           size="sm" 
-          onClick={() => onDelete(service.id)}
+          onClick={() => onDelete(service)}
           disabled={isDeleting}
         >
           <Trash2 className="h-4 w-4 mr-2" />

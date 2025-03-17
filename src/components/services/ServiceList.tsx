@@ -13,7 +13,7 @@ interface ServiceListProps {
   error: Error | null;
   onAddService: () => void;
   onEditService: (service: Service) => void;
-  onDeleteService: (id: string) => void;
+  onDeleteService: (service: Service) => void;
   isDeleting: boolean;
   staffAssignments?: Record<string, number>;
 }
@@ -76,7 +76,7 @@ const ServiceList: React.FC<ServiceListProps> = ({
           key={service.id} 
           service={service} 
           onEdit={onEditService} 
-          onDelete={onDeleteService}
+          onDelete={() => onDeleteService(service)}
           isDeleting={isDeleting}
           staffCount={staffAssignments[service.id] || 0}
         />
