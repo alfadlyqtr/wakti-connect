@@ -2,16 +2,32 @@
 import React from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { UsersRound, Calendar, TrendingUp } from "lucide-react";
+import { BusinessAnalyticsData } from "@/hooks/useBusinessAnalytics";
 
-interface AnalyticsData {
-  subscriberCount: number;
-  appointmentCount: number;
-  staffCount: number;
-  taskCompletionRate: number;
-  timeRange: "week" | "month" | "year";
+interface AnalyticsSummaryCardsProps {
+  isLoading: boolean;
+  data: BusinessAnalyticsData;
 }
 
-export const AnalyticsSummaryCards = ({ data }: { data: AnalyticsData }) => {
+export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ isLoading, data }) => {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Loading...</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">-</div>
+              <p className="text-xs text-muted-foreground">Loading data...</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <Card>

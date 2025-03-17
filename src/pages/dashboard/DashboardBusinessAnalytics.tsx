@@ -5,16 +5,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { SectionContainer } from "@/components/ui/section-container";
 import { useTranslation } from "react-i18next";
 import { AlertCircle } from "lucide-react";
-import AnalyticsSummaryCards from "@/components/business/analytics/AnalyticsSummaryCards";
-import ServiceDistributionChart from "@/components/business/analytics/ServiceDistributionChart";
-import GrowthChart from "@/components/business/analytics/GrowthChart";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useBusinessAnalytics } from "@/hooks/useBusinessAnalytics";
+import { AnalyticsSummaryCards } from "@/components/business/analytics/AnalyticsSummaryCards";
+import { ServiceDistributionChart } from "@/components/business/analytics/ServiceDistributionChart";
+import { GrowthChart } from "@/components/business/analytics/GrowthChart";
 
 const DashboardBusinessAnalytics = () => {
   const { t } = useTranslation();
   const [tab, setTab] = useState<string>("overview");
-  const { isLoading, error, analytics } = useBusinessAnalytics();
+  const { isLoading, error, data } = useBusinessAnalytics("month");
 
   return (
     <div className="container py-6 space-y-8">
@@ -41,7 +41,13 @@ const DashboardBusinessAnalytics = () => {
         <TabsContent value="overview" className="space-y-6 mt-6">
           <AnalyticsSummaryCards 
             isLoading={isLoading} 
-            analytics={analytics} 
+            data={data || { 
+              subscriberCount: 0, 
+              appointmentCount: 0, 
+              staffCount: 0, 
+              taskCompletionRate: 0, 
+              timeRange: "month" 
+            }} 
           />
 
           <div className="grid gap-6 md:grid-cols-2">
@@ -50,7 +56,7 @@ const DashboardBusinessAnalytics = () => {
                 <h3 className="text-lg font-medium mb-4">Growth Trends</h3>
                 <GrowthChart 
                   isLoading={isLoading} 
-                  data={analytics?.growth || []} 
+                  data={data?.growth || []} 
                 />
               </CardContent>
             </Card>
@@ -65,7 +71,7 @@ const DashboardBusinessAnalytics = () => {
                   <h3 className="text-lg font-medium mb-4">Service Distribution</h3>
                   <ServiceDistributionChart 
                     isLoading={isLoading} 
-                    data={analytics?.serviceDistribution || []} 
+                    data={data?.serviceDistribution || []} 
                   />
                 </CardContent>
               </Card>

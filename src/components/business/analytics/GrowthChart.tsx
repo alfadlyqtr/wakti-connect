@@ -1,21 +1,29 @@
 
 import React from "react";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { LineChart } from "@/components/ui/chart";
 import { getGrowthTrendsData } from "@/utils/businessAnalyticsUtils";
+import { Card, CardContent } from "@/components/ui/card";
 
-export const GrowthChart = () => {
+interface GrowthChartProps {
+  isLoading: boolean;
+  data: any[];
+}
+
+export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => {
   const growthData = getGrowthTrendsData();
+  
+  // Use the provided data if available, otherwise fallback to the utility data
+  if (data && data.length > 0) {
+    growthData.datasets[0].data = data;
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Growth Metrics</CardTitle>
-        <CardDescription>
-          Subscriber growth and task completion
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="h-[400px]">
+    <div className="h-[300px] w-full">
+      {isLoading ? (
+        <div className="h-full w-full flex items-center justify-center">
+          <p>Loading growth data...</p>
+        </div>
+      ) : (
         <LineChart 
           data={growthData} 
           options={{
@@ -23,7 +31,7 @@ export const GrowthChart = () => {
             maintainAspectRatio: false,
           }} 
         />
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };

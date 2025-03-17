@@ -1,21 +1,28 @@
 
 import React from "react";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
 import { PieChart } from "@/components/ui/chart";
 import { getServiceDistributionData } from "@/utils/businessAnalyticsUtils";
 
-export const ServiceDistributionChart = () => {
+interface ServiceDistributionChartProps {
+  isLoading: boolean;
+  data: any[];
+}
+
+export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> = ({ isLoading, data }) => {
   const serviceData = getServiceDistributionData();
+  
+  // Use the provided data if available, otherwise fallback to the utility data
+  if (data && data.length > 0) {
+    serviceData.datasets[0].data = data;
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Service Distribution</CardTitle>
-        <CardDescription>
-          Breakdown of service bookings
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="h-[400px] flex justify-center">
+    <div className="h-[300px] w-full flex justify-center">
+      {isLoading ? (
+        <div className="h-full w-full flex items-center justify-center">
+          <p>Loading service data...</p>
+        </div>
+      ) : (
         <div className="h-full w-full max-w-[500px]">
           <PieChart 
             data={serviceData} 
@@ -25,7 +32,7 @@ export const ServiceDistributionChart = () => {
             }} 
           />
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };

@@ -4,8 +4,9 @@ export * from './templates';
 export * from './customization';
 export { 
   sendInvitation, 
-  deleteInvitation, 
-  getUserInvitations 
+  recallInvitation, 
+  listSentInvitations,
+  listReceivedInvitations 
 } from './invitations';
 // Export the responses functions with explicit renaming to avoid conflicts
-export { respondToInvitation as respondToInvitationUpdate } from './responses';
+export { respondToInvitation, getInvitationById } from './responses';
