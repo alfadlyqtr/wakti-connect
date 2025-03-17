@@ -7,7 +7,6 @@ import { DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/co
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Service, ServiceFormValues } from "@/types/service.types";
 import { useStaffData } from "@/hooks/useStaffData";
@@ -20,6 +19,8 @@ const serviceFormSchema = z.object({
   duration: z.string().min(1, "Duration is required"),
   staff_ids: z.array(z.string()).optional()
 });
+
+type ServiceFormSchemaType = z.infer<typeof serviceFormSchema>;
 
 interface ServiceFormProps {
   onSubmit: (values: ServiceFormValues) => void;
@@ -38,7 +39,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
   const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
 
   // Setup form
-  const form = useForm<ServiceFormValues>({
+  const form = useForm<ServiceFormSchemaType>({
     resolver: zodResolver(serviceFormSchema),
     defaultValues: {
       name: editingService?.name || "",
@@ -67,10 +68,13 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
     form.setValue('staff_ids', updatedStaff);
   };
 
-  const handleSubmit = (values: ServiceFormValues) => {
-    // Include the selected staff IDs
-    values.staff_ids = selectedStaff;
-    onSubmit(values);
+  const handleSubmit = (values: ServiceFormSchemaType) => {
+    // Include the selected staff IDs and convert to ServiceFormValues
+    const formValues: ServiceFormValues = {
+      ...values,
+      staff_ids: selectedStaff
+    };
+    onSubmit(formValues);
   };
 
   return (
