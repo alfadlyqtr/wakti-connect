@@ -1,95 +1,67 @@
-
 import React from "react";
+import { BusinessProfile } from "@/types/business.types";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { BusinessPage } from "@/types/business.types";
+import { Link } from "react-router-dom";
+import { Pencil, Plus } from "lucide-react";
+import BusinessSubscribeButton from "./BusinessSubscribeButton";
 
 interface BusinessPageHeaderProps {
-  businessPage: BusinessPage;
-  isPreviewMode: boolean;
-  isAuthenticated: boolean | null;
-  isSubscribed: boolean;
-  subscriptionId: string | null;
-  checkingSubscription: boolean;
-  subscribe: any;
-  unsubscribe: any;
+  business: BusinessProfile;
+  isOwner?: boolean;
 }
 
-const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
-  businessPage,
-  isPreviewMode,
-  isAuthenticated,
-  isSubscribed,
-  subscriptionId,
-  checkingSubscription,
-  subscribe,
-  unsubscribe
-}) => {
-  const handleSubscribe = () => {
-    if (!businessPage?.business_id) return;
-    subscribe.mutate(businessPage.business_id);
-  };
-  
-  const handleUnsubscribe = () => {
-    if (!subscriptionId) return;
-    unsubscribe.mutate(subscriptionId);
-  };
-
+const BusinessPageHeader = ({ business, isOwner }: BusinessPageHeaderProps) => {
   return (
-    <div className="sticky top-0 z-10 bg-background border-b shadow-sm">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <div className="flex items-center space-x-3">
-          {businessPage.logo_url ? (
-            <img 
-              src={businessPage.logo_url} 
-              alt={`${businessPage.page_title} logo`}
-              className="h-8 w-auto"
-            />
-          ) : null}
-          <span className="font-medium">{businessPage.page_title}</span>
+    <header className="relative">
+      <div
+        className="absolute inset-0 h-48 bg-muted rounded-md"
+        style={{
+          backgroundImage: `url(${business.avatar_url})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className="absolute inset-0 bg-black/20 rounded-md" />
+      </div>
+      
+      <div className="container px-4 sm:px-6 pt-6 pb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
+        <div className="flex items-center gap-4">
+          <Avatar className="h-16 w-16">
+            <AvatarImage src={business.avatar_url} alt={business.business_name} />
+            <AvatarFallback>{business.business_name?.slice(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div>
+            <h1 className="text-2xl font-bold text-white">{business.business_name}</h1>
+            <p className="text-muted-foreground text-sm">
+              {business.account_type} account
+            </p>
+          </div>
         </div>
         
-        <div>
-          {!isPreviewMode && isAuthenticated !== null && (
-            checkingSubscription ? (
-              <Button variant="outline" disabled size="sm">
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Loading...
-              </Button>
-            ) : isSubscribed ? (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleUnsubscribe}
-                disabled={unsubscribe.isPending}
-              >
-                {unsubscribe.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : null}
-                Unsubscribe
-              </Button>
-            ) : (
-              <Button 
-                size="sm"
-                onClick={handleSubscribe}
-                disabled={subscribe.isPending}
-              >
-                {subscribe.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : null}
-                Subscribe
-              </Button>
-            )
-          )}
+        <div className="flex gap-2">
+          {/* Add Subscribe button */}
+          <BusinessSubscribeButton businessId={business.id} />
           
-          {isPreviewMode && (
-            <div className="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 text-xs px-3 py-1 rounded-full font-medium">
-              Preview Mode
-            </div>
+          {isOwner && (
+            <>
+              <Button asChild variant="outline">
+                <Link to="/dashboard/business/page">
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit Page
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link to="/dashboard/business/page/section/new">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Section
+                </Link>
+              </Button>
+            </>
           )}
         </div>
       </div>
-    </div>
+    </header>
   );
 };
 
