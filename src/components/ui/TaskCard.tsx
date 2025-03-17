@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import TaskStatusIcon from "@/components/tasks/TaskStatusIcon";
 import TaskBadges from "@/components/tasks/TaskBadges";
 import TaskActionsMenu from "@/components/tasks/TaskActionsMenu";
-import { RecurringBadge } from "@/components/ui/RecurringBadge";
+import RecurringBadge from "@/components/ui/RecurringBadge";
 import { TaskPriority, TaskStatus } from "@/types/task.types";
 
 interface TaskCardProps {
