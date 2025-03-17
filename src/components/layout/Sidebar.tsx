@@ -26,12 +26,12 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true); // Default to collapsed
   
   // Check local storage for saved sidebar state
   useEffect(() => {
     const savedState = localStorage.getItem('sidebarCollapsed');
-    if (savedState) {
+    if (savedState !== null) {
       setCollapsed(savedState === 'true');
     }
   }, []);
