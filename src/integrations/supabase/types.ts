@@ -1040,12 +1040,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
-      check_appointment_access: {
-        Args: {
-          appointment_id: string
-        }
-        Returns: boolean
-      }
       check_if_task_shared_with_user: {
         Args: {
           task_id: string
@@ -1062,12 +1056,6 @@ export type Database = {
       get_auth_user_account_type: {
         Args: Record<PropertyKey, never>
         Returns: string
-      }
-      get_user_appointments_access: {
-        Args: {
-          appointment_uid: string
-        }
-        Returns: boolean
       }
     }
     Enums: {
