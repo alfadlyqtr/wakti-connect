@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   fetchInvitationTemplates, 
   createInvitationCustomization 
-} from "@/services/invitation/invitationService";
+} from "@/services/invitation"; // Updated import
 import { 
   InvitationTemplate, 
   InvitationCustomization, 

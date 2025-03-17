@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { MapPin, Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { InvitationStyle } from "@/types/invitation.types";
 import { Appointment } from "@/types/appointment.types";
-import { respondToInvitation } from "@/services/invitation/invitationService";
+import { respondToInvitation } from "@/services/invitation";
 
 interface InvitationCardProps {
   appointment: Appointment;
@@ -34,11 +33,8 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
   const startDate = new Date(appointment.start_time);
   const endDate = new Date(appointment.end_time);
   
-  // Handle response to invitation
   const handleRespond = async (response: 'accepted' | 'declined') => {
     try {
-      // Fix the issue: respondToInvitation expects a boolean as second parameter
-      // Convert 'accepted' string to true and 'declined' to false
       const accepted = response === 'accepted';
       await respondToInvitation(invitationId, accepted);
       if (onRespond) {
@@ -49,7 +45,6 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
     }
   };
   
-  // Generate background style
   const getBackgroundStyle = () => {
     const { type, value } = style.background;
     
@@ -66,7 +61,6 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
     }
   };
   
-  // Get font sizes based on layout size
   const getFontSizes = () => {
     switch (layoutSize) {
       case 'small':
@@ -79,7 +73,6 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
     }
   };
   
-  // Get padding based on layout size
   const getPadding = () => {
     switch (layoutSize) {
       case 'small':
@@ -95,7 +88,6 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
   const fontSizes = getFontSizes();
   const padding = getPadding();
   
-  // Shadow effect
   const shadowClass = style.shadow ? 'shadow-lg' : '';
   
   return (
@@ -107,7 +99,6 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
         ...getBackgroundStyle()
       }}
     >
-      {/* Header/Banner */}
       {(headerImage || style.headerStyle === 'banner') && (
         <div 
           className="w-full h-32 bg-cover bg-center" 
@@ -117,9 +108,7 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
         />
       )}
       
-      {/* Content */}
       <div className={`${padding} space-y-4`}>
-        {/* Title */}
         <h3 
           className={`font-bold ${fontSizes.title} leading-tight`}
           style={{ color: style.background.type === 'solid' ? undefined : '#ffffff' }}
@@ -139,7 +128,6 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
           </p>
         )}
         
-        {/* Date & Time */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 flex-shrink-0" />
@@ -163,7 +151,6 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
           )}
         </div>
         
-        {/* Map Location */}
         {mapLocation && (
           <div className="mt-3 rounded overflow-hidden">
             <iframe
@@ -177,7 +164,6 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
           </div>
         )}
         
-        {/* Response Buttons */}
         {showRespond && (
           <div className="flex justify-center gap-3 pt-3">
             <Button

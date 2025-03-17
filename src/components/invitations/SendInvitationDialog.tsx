@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -16,7 +15,7 @@ import { toast } from "@/components/ui/use-toast";
 import { InvitationRecipient } from "@/types/invitation.types";
 import InvitationBuilderDialog from "./InvitationBuilderDialog";
 import RecipientSelector from "./RecipientSelector";
-import { createInvitation } from "@/services/invitation/invitationService";
+import { createInvitation } from "@/services/invitation";
 
 interface SendInvitationDialogProps {
   open: boolean;
@@ -115,7 +114,6 @@ const SendInvitationDialog: React.FC<SendInvitationDialogProps> = ({
   };
   
   const handleClose = () => {
-    // Reset state when closing
     if (isSent) {
       setCustomizationId(null);
       setSelectedRecipients([]);
