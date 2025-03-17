@@ -36,12 +36,23 @@ export const createEvent = async (
       console.error("No authenticated user for event creation");
       throw new Error("Authentication required to create events");
     }
+
+    // Ensure start_time and end_time are present
+    if (!eventData.start_time || !eventData.end_time) {
+      throw new Error("Event must have start and end times");
+    }
     
     // Add the user_id to the event data
     const completeEventData = {
-      ...eventData,
       user_id: session.user.id,
-      status: eventData.status || 'draft'
+      title: eventData.title,
+      description: eventData.description,
+      location: eventData.location,
+      start_time: eventData.start_time,
+      end_time: eventData.end_time,
+      is_all_day: eventData.is_all_day || false,
+      status: eventData.status || 'draft',
+      customization: eventData.customization
     };
 
     const { data: event, error } = await supabase

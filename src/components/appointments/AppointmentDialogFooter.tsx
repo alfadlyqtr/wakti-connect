@@ -9,12 +9,14 @@ interface AppointmentDialogFooterProps {
   isSubmitting: boolean;
   isPaidAccount: boolean;
   hasAttemptedSubmit: boolean;
+  hasReachedMonthlyLimit?: boolean;
 }
 
 export function AppointmentDialogFooter({
   isSubmitting,
   isPaidAccount,
-  hasAttemptedSubmit
+  hasAttemptedSubmit,
+  hasReachedMonthlyLimit = false
 }: AppointmentDialogFooterProps) {
   return (
     <DialogFooter className="pt-4">
@@ -23,7 +25,7 @@ export function AppointmentDialogFooter({
       </DialogClose>
       <Button 
         type="submit" 
-        disabled={!isPaidAccount || isSubmitting}
+        disabled={!isPaidAccount || isSubmitting || hasReachedMonthlyLimit}
         className={!isPaidAccount ? "opacity-50 cursor-not-allowed" : ""}
       >
         {isSubmitting ? (
@@ -39,6 +41,12 @@ export function AppointmentDialogFooter({
       {hasAttemptedSubmit && !isPaidAccount && (
         <p className="text-destructive text-sm mt-2">
           This feature is only available for Individual and Business plans. Please upgrade to create appointments.
+        </p>
+      )}
+      
+      {hasAttemptedSubmit && hasReachedMonthlyLimit && (
+        <p className="text-destructive text-sm mt-2">
+          You've reached your monthly limit of 1 appointment. Upgrade to create more.
         </p>
       )}
     </DialogFooter>

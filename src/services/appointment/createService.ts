@@ -41,10 +41,22 @@ export const createAppointment = async (
       throw new Error("Authentication required to create appointments");
     }
     
+    // Ensure start_time and end_time are present
+    if (!appointmentData.start_time || !appointmentData.end_time) {
+      throw new Error("Appointment must have start and end times");
+    }
+    
     // Add the user_id and default appointment_type to the appointment data
     const completeAppointmentData = {
-      ...appointmentData,
       user_id: session.user.id,
+      title: appointmentData.title,
+      description: appointmentData.description,
+      location: appointmentData.location,
+      status: appointmentData.status || "scheduled",
+      is_all_day: appointmentData.is_all_day || false,
+      assignee_id: appointmentData.assignee_id,
+      start_time: appointmentData.start_time,
+      end_time: appointmentData.end_time,
       appointment_type: appointmentData.appointment_type || 'appointment'
     };
 

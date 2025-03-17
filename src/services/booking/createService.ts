@@ -37,11 +37,24 @@ export const createBooking = async (
       throw new Error("Authentication required to create bookings");
     }
     
+    // Ensure start_time and end_time are present
+    if (!bookingData.start_time || !bookingData.end_time) {
+      throw new Error("Booking must have start and end times");
+    }
+    
     // Add the business_id to the booking data
     const completeBookingData = {
-      ...bookingData,
       business_id: session.user.id,
-      status: bookingData.status || 'pending'
+      title: bookingData.title,
+      description: bookingData.description,
+      service_id: bookingData.service_id,
+      customer_id: bookingData.customer_id,
+      customer_email: bookingData.customer_email,
+      customer_name: bookingData.customer_name,
+      start_time: bookingData.start_time,
+      end_time: bookingData.end_time,
+      status: bookingData.status || 'pending',
+      staff_assigned_id: bookingData.staff_assigned_id
     };
 
     const { data: booking, error } = await supabase

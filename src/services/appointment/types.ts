@@ -26,14 +26,23 @@ export interface AppointmentFormData {
   description?: string;
   location?: string;
   status?: AppointmentStatus;
-  start_time: string;
-  end_time: string;
+  start_time?: string;
+  end_time?: string;
   is_all_day?: boolean;
   invitees?: string[];
   assignee_id?: string | null;
+  appointment_type?: string;
 }
 
 export interface AppointmentsResult {
   appointments: Appointment[];
   userRole: "free" | "individual" | "business";
+  monthlyUsage?: MonthlyUsage;
+}
+
+export interface MonthlyUsage {
+  appointments_created: number;
+  events_created: number;
+  month: number;
+  year: number;
 }
