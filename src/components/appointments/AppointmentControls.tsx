@@ -1,91 +1,81 @@
 
 import React from "react";
-import { Plus, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppointmentTab } from "@/types/appointment.types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Plus, Search, Calendar, Users, UserCheck, ClipboardList } from "lucide-react";
 
 interface AppointmentControlsProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   onCreateAppointment: () => void;
-  currentTab: AppointmentTab;
-  onTabChange: (tab: AppointmentTab) => void;
   isPaidAccount: boolean;
+  currentTab: AppointmentTab;
+  onTabChange: (value: AppointmentTab) => void;
   userRole: "free" | "individual" | "business";
-  availableTabs?: AppointmentTab[];
+  availableTabs: AppointmentTab[];
+  hasReachedMonthlyLimit?: boolean;
 }
 
-const AppointmentControls = ({
+const AppointmentControls: React.FC<AppointmentControlsProps> = ({
   searchQuery,
   onSearchChange,
   onCreateAppointment,
+  isPaidAccount,
   currentTab,
   onTabChange,
-  isPaidAccount,
   userRole,
-  availableTabs = ["my-appointments", "shared-appointments", "team-appointments"]
-}: AppointmentControlsProps) => {
-  // Explicitly log user role for debugging
-  console.log("AppointmentControls - isPaidAccount:", isPaidAccount, "userRole:", userRole);
-  
+  availableTabs,
+  hasReachedMonthlyLimit = false
+}) => {
+  const isTabAvailable = (tab: AppointmentTab) => {
+    return availableTabs.includes(tab);
+  };
+
+  const handleTabChange = (value: string) => {
+    onTabChange(value as AppointmentTab);
+  };
+
+  const tabOptions = [
+    { id: "my-appointments", label: "My Appointments", icon: <Calendar className="h-4 w-4 mr-2" /> },
+    { id: "shared-appointments", label: "Shared", icon: <Users className="h-4 w-4 mr-2" /> },
+    { id: "assigned-appointments", label: "Assigned to Me", icon: <UserCheck className="h-4 w-4 mr-2" /> },
+    { id: "team-appointments", label: "Team", icon: <ClipboardList className="h-4 w-4 mr-2" /> },
+    { id: "invitations", label: "Invitations", icon: <Calendar className="h-4 w-4 mr-2" /> }
+  ];
+
   return (
-    <div className="space-y-4">
-      {isPaidAccount && (
-        <Tabs 
-          defaultValue={currentTab} 
-          onValueChange={(value) => onTabChange(value as AppointmentTab)}
-          className="w-full"
-        >
-          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${availableTabs.length}, 1fr)` }}>
-            {availableTabs.includes("my-appointments") && (
-              <TabsTrigger value="my-appointments">My Appointments</TabsTrigger>
-            )}
-            {availableTabs.includes("shared-appointments") && (
-              <TabsTrigger value="shared-appointments">Shared Appointments</TabsTrigger>
-            )}
-            {availableTabs.includes("team-appointments") && (
-              <TabsTrigger value="team-appointments">
-                {userRole === "business" ? "Team Appointments" : "Assigned Appointments"}
-              </TabsTrigger>
-            )}
-            {availableTabs.includes("invitations") && (
-              <TabsTrigger value="invitations">Invitations</TabsTrigger>
-            )}
-          </TabsList>
-        </Tabs>
-      )}
-      
-      <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
+    <div className="space-y-2">
+      <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search appointments..." 
-            className="pl-9"
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search appointments..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-8"
           />
         </div>
-        
         <Button 
           onClick={onCreateAppointment} 
-          className="flex items-center gap-2"
-          disabled={!isPaidAccount}
+          disabled={!isPaidAccount || hasReachedMonthlyLimit}
+          className="shrink-0"
         >
-          <Plus size={16} />
-          <span className="hidden sm:inline">
-            {currentTab === "team-appointments" && userRole === "business" 
-              ? "Assign Appointment" 
-              : "Create Appointment"}
-          </span>
-          <span className="inline sm:hidden">
-            {currentTab === "team-appointments" && userRole === "business" 
-              ? "Assign" 
-              : "Create"}
-          </span>
+          <Plus className="mr-2 h-4 w-4" /> 
+          New Appointment
         </Button>
       </div>
+
+      <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="w-full sm:w-auto overflow-x-auto">
+          {tabOptions.filter(tab => isTabAvailable(tab.id as AppointmentTab)).map((tab) => (
+            <TabsTrigger key={tab.id} value={tab.id} className="flex items-center whitespace-nowrap">
+              {tab.icon} {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
     </div>
   );
 };

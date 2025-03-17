@@ -15,21 +15,25 @@ import { AppointmentFormContent } from "./AppointmentFormContent";
 import { AppointmentDialogFooter } from "./AppointmentDialogFooter";
 import { AppointmentFormData } from "@/types/appointment.types";
 import { RecurringFormData } from "@/types/recurring.types";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowUpRight } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 interface CreateAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreateAppointment: (appointment: AppointmentFormData, recurringData?: RecurringFormData) => Promise<any>;
   userRole: "free" | "individual" | "business";
+  hasReachedMonthlyLimit?: boolean;
 }
 
 export function CreateAppointmentDialog({ 
   open, 
   onOpenChange, 
   onCreateAppointment,
-  userRole
+  userRole,
+  hasReachedMonthlyLimit = false
 }: CreateAppointmentDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
@@ -44,13 +48,21 @@ export function CreateAppointmentDialog({
   const handleSubmit = async (values: AppointmentFormValues) => {
     setHasAttemptedSubmit(true);
     
-    if (!isPaidAccount) {
+    if (!isPaidAccount && hasReachedMonthlyLimit) {
       toast({
-        title: "Premium Feature",
-        description: "Creating appointments is only available for paid accounts. Please upgrade your plan.",
+        title: "Monthly Limit Reached",
+        description: "Free accounts can only create one appointment per month. Upgrade for unlimited appointments.",
         variant: "destructive"
       });
       return;
+    }
+    
+    if (!isPaidAccount && !hasReachedMonthlyLimit) {
+      toast({
+        title: "Free Account",
+        description: "You're creating your appointment for this month. Free accounts are limited to 1 appointment per month.",
+        variant: "default"
+      });
     }
     
     setIsSubmitting(true);
@@ -66,6 +78,7 @@ export function CreateAppointmentDialog({
         location: location || undefined,
         is_all_day: isAllDay,
         status: "scheduled",
+        appointment_type: "appointment"
       };
       
       // Add date/time information
@@ -114,15 +127,38 @@ export function CreateAppointmentDialog({
       });
     } catch (error: any) {
       console.error("Error in handleSubmit:", error);
-      toast({
-        title: "Error creating appointment",
-        description: error.message || "An unexpected error occurred",
-        variant: "destructive"
-      });
+      // Don't show toast here as it's already shown in the service
     } finally {
       setIsSubmitting(false);
     }
   };
+  
+  // If user has reached monthly limit and is on a free plan, show upgrade message
+  if (userRole === "free" && hasReachedMonthlyLimit && open) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Monthly Limit Reached</DialogTitle>
+            <DialogDescription>
+              Free accounts can only create one appointment per month. Upgrade to an Individual or Business plan for unlimited appointments.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex flex-col space-y-4 mt-4">
+            <Button asChild>
+              <Link to="/dashboard/upgrade">
+                Upgrade Now <ArrowUpRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Maybe Later
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -131,6 +167,11 @@ export function CreateAppointmentDialog({
           <DialogTitle>Create New Appointment</DialogTitle>
           <DialogDescription>
             Fill in the details to create a new appointment.
+            {userRole === "free" && !hasReachedMonthlyLimit && (
+              <span className="block text-xs mt-1 text-wakti-blue">
+                Free accounts can create 1 appointment per month.
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
         
@@ -147,6 +188,7 @@ export function CreateAppointmentDialog({
               isSubmitting={isSubmitting}
               isPaidAccount={isPaidAccount}
               hasAttemptedSubmit={hasAttemptedSubmit}
+              hasReachedMonthlyLimit={hasReachedMonthlyLimit && userRole === "free"}
             />
           </form>
         </Form>

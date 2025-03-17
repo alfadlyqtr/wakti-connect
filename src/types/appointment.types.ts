@@ -15,6 +15,7 @@ export interface Appointment {
   is_recurring_instance?: boolean;
   parent_recurring_id?: string | null;
   invitations?: AppointmentInvitation[];
+  appointment_type?: string;
 }
 
 export type AppointmentStatus = "scheduled" | "cancelled" | "completed";
@@ -31,6 +32,7 @@ export interface AppointmentFormData {
   is_all_day?: boolean;
   invitees?: string[];
   assignee_id?: string | null;
+  appointment_type?: string;
   
   // Form-specific fields (used in form UI but transformed before API calls)
   date?: Date;
@@ -42,6 +44,7 @@ export interface AppointmentFormData {
 export interface AppointmentsResult {
   appointments: Appointment[];
   userRole: "free" | "individual" | "business";
+  monthlyUsage?: MonthlyUsage;
 }
 
 export interface AppointmentInvitation {
@@ -54,4 +57,11 @@ export interface AppointmentInvitation {
   updated_at: string;
   shared_as_link: boolean;
   customization?: any;
+}
+
+export interface MonthlyUsage {
+  appointments_created: number;
+  events_created: number;
+  month: number;
+  year: number;
 }

@@ -25,6 +25,8 @@ const DashboardAppointments = () => {
     setSearchQuery,
     createAppointment,
     userRole,
+    monthlyUsage,
+    hasReachedMonthlyLimit,
     refetch
   } = useAppointments(activeTab as any);
 
@@ -122,6 +124,7 @@ const DashboardAppointments = () => {
         onTabChange={handleTabChange}
         userRole={userRole}
         availableTabs={getAvailableTabs()}
+        hasReachedMonthlyLimit={hasReachedMonthlyLimit}
       />
       
       <AppointmentContent 
@@ -130,6 +133,8 @@ const DashboardAppointments = () => {
         tab={activeTab}
         onCreateAppointment={() => setCreateDialogOpen(true)}
         isPaidAccount={isPaidAccount}
+        monthlyUsage={monthlyUsage}
+        hasReachedMonthlyLimit={hasReachedMonthlyLimit}
       />
       
       <CreateAppointmentDialog
@@ -137,6 +142,7 @@ const DashboardAppointments = () => {
         onOpenChange={setCreateDialogOpen}
         onCreateAppointment={handleCreateAppointment}
         userRole={userRole}
+        hasReachedMonthlyLimit={hasReachedMonthlyLimit}
       />
     </div>
   );

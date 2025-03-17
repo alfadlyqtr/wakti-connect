@@ -6,16 +6,16 @@ import { RecurringFormData } from "@/types/recurring.types";
 import { generateRecurringDates } from "../recurring/recurringService";
 
 /**
- * Creates a new appointment
+ * Creates a new appointment with account type permission checking
  */
 export const createAppointment = async (
   appointmentData: AppointmentFormData,
   recurringData?: RecurringFormData
 ) => {
   try {
-    // First, check if the user can create appointments
-    const { data: permissionData, error: permissionError } = await supabase.rpc(
-      "get_auth_user_account_type"
+    // Check if the user can create appointments using our can_create_appointment function
+    const { data: canCreate, error: permissionError } = await supabase.rpc(
+      "can_create_appointment"
     );
 
     if (permissionError) {
@@ -23,14 +23,14 @@ export const createAppointment = async (
       throw new Error(`Permission check failed: ${permissionError.message}`);
     }
 
-    if (!permissionData || permissionData === "free") {
+    if (!canCreate) {
       // User doesn't have permission to create appointments
       toast({
-        title: "Subscription Required",
-        description: "Creating appointments requires an Individual or Business subscription",
+        title: "Monthly Limit Reached",
+        description: "Free accounts can only create one appointment per month. Please upgrade for unlimited appointments.",
         variant: "destructive",
       });
-      throw new Error("Subscription required to create appointments");
+      throw new Error("Monthly appointment limit reached for free account");
     }
     
     // Get the current user's ID
@@ -41,10 +41,11 @@ export const createAppointment = async (
       throw new Error("Authentication required to create appointments");
     }
     
-    // Add the user_id to the appointment data
+    // Add the user_id and default appointment_type to the appointment data
     const completeAppointmentData = {
       ...appointmentData,
-      user_id: session.user.id
+      user_id: session.user.id,
+      appointment_type: appointmentData.appointment_type || 'appointment'
     };
 
     // Explicit logging and error handling for the insert operation

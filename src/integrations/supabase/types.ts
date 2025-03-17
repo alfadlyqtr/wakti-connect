@@ -49,6 +49,7 @@ export type Database = {
       }
       appointments: {
         Row: {
+          appointment_type: string | null
           assignee_id: string | null
           created_at: string
           description: string | null
@@ -65,6 +66,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          appointment_type?: string | null
           assignee_id?: string | null
           created_at?: string
           description?: string | null
@@ -81,6 +83,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          appointment_type?: string | null
           assignee_id?: string | null
           created_at?: string
           description?: string | null
@@ -95,6 +98,57 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      bookings: {
+        Row: {
+          business_id: string
+          created_at: string | null
+          customer_email: string | null
+          customer_id: string | null
+          customer_name: string | null
+          description: string | null
+          end_time: string
+          id: string
+          service_id: string | null
+          staff_assigned_id: string | null
+          start_time: string
+          status: Database["public"]["Enums"]["booking_status"] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string | null
+          customer_email?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          description?: string | null
+          end_time: string
+          id?: string
+          service_id?: string | null
+          staff_assigned_id?: string | null
+          start_time: string
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string | null
+          customer_email?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          description?: string | null
+          end_time?: string
+          id?: string
+          service_id?: string | null
+          staff_assigned_id?: string | null
+          start_time?: string
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -351,6 +405,95 @@ export type Database = {
           id?: string
           status?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      event_invitations: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          event_id: string | null
+          id: string
+          invited_user_id: string | null
+          shared_as_link: boolean | null
+          status: Database["public"]["Enums"]["invitation_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          event_id?: string | null
+          id?: string
+          invited_user_id?: string | null
+          shared_as_link?: boolean | null
+          status?: Database["public"]["Enums"]["invitation_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          event_id?: string | null
+          id?: string
+          invited_user_id?: string | null
+          shared_as_link?: boolean | null
+          status?: Database["public"]["Enums"]["invitation_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_invitations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string | null
+          customization: Json | null
+          description: string | null
+          end_time: string
+          id: string
+          is_all_day: boolean | null
+          is_recalled: boolean | null
+          location: string | null
+          start_time: string
+          status: Database["public"]["Enums"]["event_status"] | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          customization?: Json | null
+          description?: string | null
+          end_time: string
+          id?: string
+          is_all_day?: boolean | null
+          is_recalled?: boolean | null
+          location?: string | null
+          start_time: string
+          status?: Database["public"]["Enums"]["event_status"] | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          customization?: Json | null
+          description?: string | null
+          end_time?: string
+          id?: string
+          is_all_day?: boolean | null
+          is_recalled?: boolean | null
+          location?: string | null
+          start_time?: string
+          status?: Database["public"]["Enums"]["event_status"] | null
+          title?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -854,11 +997,49 @@ export type Database = {
           },
         ]
       }
+      user_monthly_usage: {
+        Row: {
+          appointments_created: number
+          events_created: number
+          id: string
+          month: number
+          updated_at: string | null
+          user_id: string
+          year: number
+        }
+        Insert: {
+          appointments_created?: number
+          events_created?: number
+          id?: string
+          month: number
+          updated_at?: string | null
+          user_id: string
+          year: number
+        }
+        Update: {
+          appointments_created?: number
+          events_created?: number
+          id?: string
+          month?: number
+          updated_at?: string | null
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      can_create_appointment: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      can_create_event: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       check_if_task_shared_with_user: {
         Args: {
           task_id: string
@@ -885,6 +1066,10 @@ export type Database = {
     }
     Enums: {
       account_type: "free" | "individual" | "business"
+      appointment_status: "scheduled" | "cancelled" | "completed"
+      booking_status: "pending" | "confirmed" | "cancelled" | "completed"
+      event_status: "draft" | "sent" | "accepted" | "declined" | "recalled"
+      invitation_status: "pending" | "accepted" | "declined"
     }
     CompositeTypes: {
       [_ in never]: never

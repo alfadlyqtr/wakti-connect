@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { AppointmentTab, Appointment, AppointmentsResult } from "./types";
+import { AppointmentTab, Appointment, AppointmentsResult, MonthlyUsage } from "./types";
 import {
   fetchMyAppointments,
   fetchSharedAppointments,
@@ -10,6 +10,33 @@ import {
   fetchPastAppointments,
   fetchInvitationAppointments
 } from "./fetchers";
+
+/**
+ * Fetches the current user's monthly usage data (relevant for free accounts)
+ */
+const fetchMonthlyUsage = async (): Promise<MonthlyUsage | null> => {
+  const currentMonth = new Date().getMonth() + 1; // JS months are 0-indexed
+  const currentYear = new Date().getFullYear();
+  
+  try {
+    const { data: usageData, error } = await supabase
+      .from('user_monthly_usage')
+      .select('*')
+      .eq('month', currentMonth)
+      .eq('year', currentYear)
+      .maybeSingle();
+    
+    if (error) {
+      console.error("Error fetching monthly usage:", error);
+      return null;
+    }
+    
+    return usageData;
+  } catch (error) {
+    console.error("Error in fetchMonthlyUsage:", error);
+    return null;
+  }
+};
 
 /**
  * Fetches appointments based on the selected tab
@@ -45,6 +72,12 @@ export const fetchAppointments = async (
     
     // Store user role in localStorage for access in components
     localStorage.setItem('userRole', userRole);
+
+    // Get monthly usage if user is on a free plan
+    let monthlyUsage: MonthlyUsage | null = null;
+    if (userRole === 'free') {
+      monthlyUsage = await fetchMonthlyUsage();
+    }
 
     // Use the appropriate fetcher for the current tab
     try {
@@ -91,10 +124,11 @@ export const fetchAppointments = async (
       appointments = [];
     }
 
-    // Return both the appointments and the user's role
+    // Return the appointments, user role, and monthly usage information
     return {
       appointments,
-      userRole
+      userRole,
+      monthlyUsage: monthlyUsage || undefined
     };
   } catch (error: any) {
     console.error("Error in fetchAppointments:", error);

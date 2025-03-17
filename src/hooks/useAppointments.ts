@@ -7,7 +7,8 @@ import {
   createAppointment as createAppointmentService,
   Appointment,
   AppointmentTab,
-  AppointmentFormData
+  AppointmentFormData,
+  MonthlyUsage
 } from "@/services/appointment";
 import { filterAppointments } from "@/utils/appointmentUtils";
 import { RecurringFormData } from "@/types/recurring.types";
@@ -19,6 +20,7 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterDate, setFilterDate] = useState<Date | null>(null);
   const [localUserRole, setLocalUserRole] = useState<"free" | "individual" | "business">("free");
+  const [monthlyUsage, setMonthlyUsage] = useState<MonthlyUsage | null>(null);
 
   // Initialize user role from localStorage if available
   useEffect(() => {
@@ -60,7 +62,12 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
       setLocalUserRole(data.userRole);
       localStorage.setItem('userRole', data.userRole);
     }
-  }, [data?.userRole]);
+    
+    // Update monthly usage data
+    if (data?.monthlyUsage) {
+      setMonthlyUsage(data.monthlyUsage);
+    }
+  }, [data?.userRole, data?.monthlyUsage]);
 
   // Auto-retry in case of an error - but only once
   useEffect(() => {
@@ -105,12 +112,7 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
     } catch (error: any) {
       console.error("Error creating appointment:", error);
       
-      toast({
-        title: "Failed to create appointment",
-        description: error?.message || "An unexpected error occurred",
-        variant: "destructive",
-      });
-      
+      // Don't toast here as the service already does
       throw error;
     }
   };
@@ -124,10 +126,21 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
   // Get the actual user role from data, with a fallback to the state
   const userRole = data?.userRole || localUserRole;
 
+  // Calculate if the user has reached their monthly limit (for free accounts)
+  const hasReachedMonthlyLimit = (): boolean => {
+    if (userRole !== 'free' || !monthlyUsage) {
+      return false;
+    }
+    
+    return monthlyUsage.appointments_created >= 1;
+  };
+
   return {
     appointments: data?.appointments || [],
     userRole: userRole,
     filteredAppointments: getFilteredAppointments(),
+    monthlyUsage,
+    hasReachedMonthlyLimit: hasReachedMonthlyLimit(),
     isLoading,
     error,
     searchQuery,
