@@ -22,6 +22,7 @@ const dashboardRoutes = (
     <Route path="" element={<DashboardHome />} />
     <Route path="tasks" element={<DashboardTasks />} />
     <Route path="messages" element={<DashboardMessages />} />
+    <Route path="messages/:userId" element={<DashboardMessages />} />
     <Route path="contacts" element={<DashboardContacts />} />
     
     {/* Routes that require business account */}

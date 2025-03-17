@@ -957,6 +957,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      expire_old_messages: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generate_unique_business_slug: {
         Args: {
           business_name: string

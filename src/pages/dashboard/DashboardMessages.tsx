@@ -1,42 +1,134 @@
-
 import React from "react";
+import { Routes, Route, useNavigate, useParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import ConversationsList from "@/components/messages/ConversationsList";
+import ChatInterface from "@/components/messages/ChatInterface";
+import EmptyMessagesState from "@/components/messages/EmptyMessagesState";
+import { useMessaging } from "@/hooks/useMessaging";
 
-const DashboardMessages = () => {
+const DashboardMessagesHome = () => {
+  const navigate = useNavigate();
+  const { conversations } = useMessaging();
+  
+  const { data: userProfile } = useQuery({
+    queryKey: ['currentUserProfile'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('account_type')
+        .eq('id', session.user.id)
+        .single();
+        
+      return data;
+    },
+  });
+  
+  const canSendMessages = userProfile?.account_type !== 'free';
+  
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Messages</h1>
-        <p className="text-muted-foreground">
-          View and manage your messages.
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Messages</h1>
+          <p className="text-muted-foreground">
+            {canSendMessages 
+              ? "Connect with others through messaging. Messages expire after 24 hours."
+              : "Free accounts cannot send messages. Upgrade to start messaging."}
+          </p>
+        </div>
+        
+        {canSendMessages && (
+          <Button 
+            onClick={() => navigate('/dashboard/contacts')}
+            className="flex items-center gap-1"
+          >
+            <PlusCircle className="h-4 w-4" />
+            <span>New Message</span>
+          </Button>
+        )}
       </div>
       
-      <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-        <div className="flex flex-col items-center justify-center space-y-3 py-12">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-muted-foreground"
-          >
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
-          <h3 className="text-lg font-semibold">No messages yet</h3>
-          <p className="text-center text-sm text-muted-foreground max-w-xs">
-            You haven't received or sent any messages. Start a conversation to connect with others.
-          </p>
-          <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-            New Message
-          </button>
+      <div className="grid h-[calc(100vh-220px)] grid-cols-1 md:grid-cols-3 gap-4 rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
+        <div className="border-r md:col-span-1 overflow-hidden flex flex-col">
+          <div className="p-4 border-b">
+            <h2 className="font-semibold">Conversations</h2>
+          </div>
+          <div className="overflow-y-auto flex-1">
+            {conversations?.length > 0 ? (
+              <ConversationsList />
+            ) : (
+              <div className="p-6 text-center">
+                <p className="text-muted-foreground text-sm">No conversations yet</p>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="md:col-span-2 overflow-hidden flex flex-col">
+          {conversations?.length > 0 ? (
+            <div className="text-center text-muted-foreground flex items-center justify-center h-full">
+              <p>Select a conversation to view messages</p>
+            </div>
+          ) : (
+            <EmptyMessagesState 
+              canSendMessages={canSendMessages} 
+              userType={userProfile?.account_type || 'free'}
+            />
+          )}
         </div>
       </div>
     </div>
+  );
+};
+
+const DashboardMessageChat = () => {
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Messages</h1>
+          <p className="text-muted-foreground">
+            Messages expire after 24 hours and are limited to 20 characters.
+          </p>
+        </div>
+      </div>
+      
+      <div className="grid h-[calc(100vh-220px)] grid-cols-1 md:grid-cols-3 gap-4 rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
+        <div className="hidden md:flex border-r md:col-span-1 overflow-hidden flex-col">
+          <div className="p-4 border-b">
+            <h2 className="font-semibold">Conversations</h2>
+          </div>
+          <div className="overflow-y-auto flex-1">
+            <ConversationsList />
+          </div>
+        </div>
+        
+        <div className="md:col-span-2 overflow-hidden flex flex-col">
+          <ChatInterface />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const DashboardMessages = () => {
+  const { userId } = useParams();
+  
+  if (userId) {
+    return <DashboardMessageChat />;
+  }
+  
+  return (
+    <Routes>
+      <Route path="/" element={<DashboardMessagesHome />} />
+      <Route path="/:userId" element={<DashboardMessageChat />} />
+    </Routes>
   );
 };
 
