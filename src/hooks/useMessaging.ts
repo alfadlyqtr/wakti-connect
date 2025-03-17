@@ -7,7 +7,7 @@ import {
   fetchConversations,
   canMessageUser,
   getUnreadMessagesCount
-} from "@/services/messages/messagesService";
+} from "@/services/messages";
 
 export const useMessaging = (otherUserId?: string) => {
   const queryClient = useQueryClient();
