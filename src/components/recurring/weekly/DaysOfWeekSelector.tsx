@@ -4,21 +4,12 @@ import { UseFormReturn } from 'react-hook-form';
 import { FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { DAYS_OF_WEEK } from '../constants';
 
 interface DaysOfWeekSelectorProps {
   form: UseFormReturn<any>;
   disabled?: boolean;
 }
-
-const DAYS_OF_WEEK = [
-  { label: 'Mon', value: 'monday' },
-  { label: 'Tue', value: 'tuesday' },
-  { label: 'Wed', value: 'wednesday' },
-  { label: 'Thu', value: 'thursday' },
-  { label: 'Fri', value: 'friday' },
-  { label: 'Sat', value: 'saturday' },
-  { label: 'Sun', value: 'sunday' },
-];
 
 const DaysOfWeekSelector: React.FC<DaysOfWeekSelectorProps> = ({ form, disabled = false }) => {
   return (
