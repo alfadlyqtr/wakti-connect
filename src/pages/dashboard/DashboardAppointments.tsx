@@ -28,7 +28,7 @@ const DashboardAppointments = () => {
     monthlyUsage,
     hasReachedMonthlyLimit,
     refetch
-  } = useAppointments(activeTab as any);
+  } = useAppointments();
 
   // Determine if this is a paid account
   const isPaidAccount = userRole === "individual" || userRole === "business";
@@ -81,10 +81,10 @@ const DashboardAppointments = () => {
     }
   }, [userRole, activeTab, isBusinessAccount]);
 
-  const handleCreateAppointment = async (appointmentData: any, recurringData?: any) => {
+  const handleCreateAppointment = async (appointmentData: any) => {
     try {
       console.log("Creating appointment with data:", appointmentData);
-      await createAppointment(appointmentData, recurringData);
+      await createAppointment(appointmentData);
       setCreateDialogOpen(false);
       
       // Refresh after creation with appropriate delay

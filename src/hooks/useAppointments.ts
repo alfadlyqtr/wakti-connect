@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { MonthlyUsage } from "@/services/appointment";
 
 // Appointment system has been deprecated
 // This hook is maintained as a placeholder to prevent import errors
@@ -19,6 +20,8 @@ export interface Appointment {
   assignee_id: string | null;
   created_at: string;
   updated_at: string;
+  is_recurring_instance?: boolean;
+  parent_recurring_id?: string | null;
 }
 
 export interface AppointmentFormData {
@@ -28,6 +31,7 @@ export interface AppointmentFormData {
   start_time?: string;
   end_time?: string;
   is_all_day?: boolean;
+  appointment_type?: string;
 }
 
 export const useAppointments = () => {
@@ -47,11 +51,17 @@ export const useAppointments = () => {
     setFilterStatus: () => {},
     filterDate: null,
     setFilterDate: () => {},
-    createAppointment: async () => {
+    createAppointment: async (appointmentData: any) => {
       console.warn("The appointments system has been deprecated");
       return null;
     },
     refetch: () => {},
-    hasReachedMonthlyLimit: false
+    hasReachedMonthlyLimit: false,
+    monthlyUsage: {
+      appointments_created: 0,
+      events_created: 0,
+      month: new Date().getMonth() + 1,
+      year: new Date().getFullYear()
+    }
   };
 };

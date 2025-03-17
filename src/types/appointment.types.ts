@@ -1,3 +1,4 @@
+
 // The appointment system has been deprecated
 // These types are kept as placeholders to prevent import errors
 
@@ -14,6 +15,9 @@ export interface Appointment {
   assignee_id: string | null;
   created_at: string;
   updated_at: string;
+  is_recurring_instance?: boolean;
+  parent_recurring_id?: string | null;
+  appointment_type?: string;
 }
 
 export type AppointmentStatus = "scheduled" | "cancelled" | "completed";
@@ -28,9 +32,17 @@ export interface AppointmentFormData {
   start_time?: string;
   end_time?: string;
   is_all_day?: boolean;
+  appointment_type?: string;
 }
 
 export interface AppointmentsResult {
   appointments: Appointment[];
   userRole: "free" | "individual" | "business";
+}
+
+export interface MonthlyUsage {
+  appointments_created: number;
+  events_created: number;
+  month: number;
+  year: number;
 }
