@@ -84,7 +84,7 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
   
   const getSubtitle = () => {
     if (profileData?.account_type === 'business') {
-      return profileData?.full_name ? `${profileData.full_name} • Admin` : 'Account Admin'; 
+      return profileData?.full_name ? `${profileData.full_name}` : 'Account Admin'; 
     }
     return `${profileData?.account_type || 'Free'} Plan`;
   };
@@ -107,7 +107,7 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
       id="sidebar"
       className={`fixed top-[70px] left-0 z-40 h-[calc(100vh-70px)] bg-card border-r shadow-sm pt-5 transition-all duration-300 lg:translate-x-0 ${
         isOpen ? 'sidebar-open' : 'sidebar-closed'
-      } ${collapsed ? 'w-[70px]' : 'w-56'}`}
+      } ${collapsed ? 'w-[70px]' : 'w-52'}`}
     >
       <div className="h-full flex flex-col relative">
         {/* Toggle collapse button - Only visible on desktop */}
@@ -135,9 +135,14 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
             </Avatar>
             {!collapsed && (
               <div className="overflow-hidden">
-                <p className="font-medium text-sm truncate max-w-[140px]">{getDisplayName()}</p>
+                <p className="font-medium text-sm truncate max-w-[130px]">{getDisplayName()}</p>
                 <div className="flex items-center gap-1">
-                  <p className="text-xs text-muted-foreground truncate max-w-[120px]">{getSubtitle()}</p>
+                  <p className="text-xs text-muted-foreground truncate max-w-[100px]">{getSubtitle()}</p>
+                  {profileData?.account_type === 'business' && (
+                    <Badge variant="outline" className="text-[10px] py-0 h-4 px-1 border-wakti-blue text-wakti-blue">
+                      Admin
+                    </Badge>
+                  )}
                 </div>
               </div>
             )}

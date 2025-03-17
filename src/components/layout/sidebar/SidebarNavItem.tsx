@@ -35,19 +35,19 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
       size={isMobile || isCollapsed ? "icon" : "default"}
       asChild
       className={cn(
-        "justify-start",
+        "justify-start w-full",
         (isMobile || isCollapsed) && "h-10 w-10 flex items-center justify-center",
         isActive && "bg-wakti-blue text-white hover:bg-wakti-blue/90"
       )}
       onClick={() => onClick(item.path)}
     >
       <Link to={`/dashboard/${item.path}`} className="flex items-center justify-center w-full">
-        <Icon className={cn("h-5 w-5", !isCollapsed && !isMobile && "mr-2")} />
+        <Icon className={cn("h-4 w-4", !isCollapsed && !isMobile && "mr-2")} />
         {!isMobile && !isCollapsed && (
-          <span>{item.label}</span>
+          <span className="text-sm">{item.label}</span>
         )}
         {item.badge && !isMobile && !isCollapsed && (
-          <Badge variant="secondary" className="ml-auto">
+          <Badge variant="secondary" className="ml-auto text-xs h-5 min-w-5 flex items-center justify-center">
             {item.badge}
           </Badge>
         )}
@@ -64,12 +64,14 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
             {buttonContent}
           </TooltipTrigger>
           <TooltipContent side="right">
-            <p>{item.label}</p>
-            {item.badge && (
-              <Badge variant="secondary" className="ml-2">
-                {item.badge}
-              </Badge>
-            )}
+            <div className="flex items-center gap-2">
+              <p>{item.label}</p>
+              {item.badge && (
+                <Badge variant="secondary" className="text-xs h-5 min-w-5 flex items-center justify-center">
+                  {item.badge}
+                </Badge>
+              )}
+            </div>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

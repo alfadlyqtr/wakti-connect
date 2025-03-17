@@ -19,7 +19,7 @@
 /* Mobile sidebar open/closed classes */
 .sidebar-open {
   @apply translate-x-0;
-  width: 14rem; /* Reduced width */
+  width: 12rem; /* Reduced width from 14rem */
 }
 
 .sidebar-closed {

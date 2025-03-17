@@ -40,7 +40,7 @@ const SidebarNavItems = ({ onNavClick, isCollapsed = false }: SidebarNavItemsPro
   };
 
   return (
-    <div className="flex flex-col gap-2 p-2">
+    <div className="flex flex-col gap-1 px-2">
       {navItems.map((item, index) => {
         // Skip if section or item should not be shown for current user type
         if (!isItemVisible(item)) {
