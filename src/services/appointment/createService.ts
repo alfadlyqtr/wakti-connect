@@ -52,67 +52,63 @@ export const createAppointment = async (
     // Log the data we're about to submit
     console.log("Creating appointment with data:", JSON.stringify(completeAppointmentData));
 
-    // Insert the appointment
-    const { data: appointment, error } = await supabase
-      .from("appointments")
-      .insert(completeAppointmentData)
-      .select()
-      .single();
+    // Insert the appointment with explicit error handling
+    try {
+      const { data: appointment, error } = await supabase
+        .from("appointments")
+        .insert(completeAppointmentData)
+        .select()
+        .single();
 
-    if (error) {
-      console.error("Error creating appointment:", error);
-      toast({
-        title: "Failed to create appointment",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw new Error(`Failed to create appointment: ${error.message}`);
-    }
+      if (error) {
+        console.error("Supabase Error creating appointment:", error);
+        throw error;
+      }
 
-    console.log("Appointment created successfully:", appointment);
-    
-    // Verify the created appointment data to ensure it was saved correctly
-    if (appointment) {
+      if (!appointment) {
+        console.error("No appointment data returned after insert");
+        throw new Error("Failed to create appointment: No data returned");
+      }
+
+      console.log("Appointment created successfully:", appointment);
+      
+      // Verify the created appointment data
       console.log("Appointment creation verification:", {
         title_submitted: completeAppointmentData.title,
         title_saved: appointment.title,
         matches: completeAppointmentData.title === appointment.title
       });
-      
-      if (completeAppointmentData.title !== appointment.title) {
-        console.warn("Warning: Appointment title mismatch between submission and saved data");
-      }
-    }
 
-    // If this is a recurring appointment, create the recurrences
-    if (recurringData && appointment) {
-      try {
-        // Generate dates based on the recurring pattern
-        const recurringDates = generateRecurringDates(
-          new Date(appointment.start_time),
-          recurringData
-        );
-        
-        // Create recurring instances - this would be implemented in a separate function
-        console.log("Would create recurring instances for dates:", recurringDates);
-        
-        // For now, we'll just log this as a placeholder until the full recurring functionality is implemented
-        toast({
-          title: "Recurring Pattern Created",
-          description: `Generated ${recurringDates.length} future occurrences`,
-        });
-      } catch (recurringError: any) {
-        // Log the error but don't fail the whole operation
-        console.error("Error creating recurring instances:", recurringError);
-        toast({
-          title: "Appointment Created",
-          description: "Appointment was created, but there was an issue with recurring settings.",
-          variant: "destructive",
-        });
+      // If this is a recurring appointment, create the recurrences
+      if (recurringData && appointment) {
+        try {
+          // Generate dates based on the recurring pattern
+          const recurringDates = generateRecurringDates(
+            new Date(appointment.start_time),
+            recurringData
+          );
+          
+          console.log("Would create recurring instances for dates:", recurringDates);
+          
+          toast({
+            title: "Recurring Pattern Created",
+            description: `Generated ${recurringDates.length} future occurrences`,
+          });
+        } catch (recurringError: any) {
+          console.error("Error creating recurring instances:", recurringError);
+          toast({
+            title: "Appointment Created",
+            description: "Appointment was created, but there was an issue with recurring settings.",
+            variant: "destructive",
+          });
+        }
       }
-    }
 
-    return appointment;
+      return appointment;
+    } catch (insertError: any) {
+      console.error("Insert operation failed:", insertError);
+      throw new Error(`Database insert failed: ${insertError.message}`);
+    }
   } catch (error: any) {
     console.error("Error in createAppointment:", error);
     

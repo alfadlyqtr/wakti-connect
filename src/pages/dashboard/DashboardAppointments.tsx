@@ -15,6 +15,7 @@ const DashboardAppointments = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState<string>("Loading appointments...");
   const [userId, setUserId] = useState<string | null>(null);
+  const [attemptedRefreshes, setAttemptedRefreshes] = useState(0);
   
   // Get the current user's ID for diagnosis
   useEffect(() => {
@@ -24,6 +25,9 @@ const DashboardAppointments = () => {
         if (session?.user?.id) {
           setUserId(session.user.id);
           localStorage.setItem('userId', session.user.id);
+          console.log("Current user identified:", session.user.id);
+        } else {
+          console.warn("No authenticated session found");
         }
       } catch (error) {
         console.error("Error checking auth:", error);
@@ -34,7 +38,6 @@ const DashboardAppointments = () => {
   }, []);
   
   // We need to ensure the AppointmentTab from types and services match
-  // Convert the type from types to the one accepted by the service
   const { 
     filteredAppointments, 
     appointments,
@@ -45,7 +48,7 @@ const DashboardAppointments = () => {
     createAppointment,
     userRole,
     refetch
-  } = useAppointments(activeTab as any); // Using 'any' to bridge the type mismatch temporarily
+  } = useAppointments(activeTab as any);
 
   // Explicitly log user role and data for debugging
   console.log("DashboardAppointments - user role:", userRole);
@@ -59,34 +62,36 @@ const DashboardAppointments = () => {
 
   // More aggressive refresh strategy
   const refreshAppointments = useCallback(() => {
-    console.log("Refreshing appointments data");
-    setLoadingMessage("Refreshing data...");
+    console.log(`Refreshing appointments data (attempt ${attemptedRefreshes + 1})`);
+    setLoadingMessage(`Refreshing data (attempt ${attemptedRefreshes + 1})...`);
     refetch();
+    setAttemptedRefreshes(prev => prev + 1);
+    
     // Add delay to ensure UI shows loading state
     setTimeout(() => {
-      if (appointments.length === 0) {
-        setLoadingMessage("Still loading... checking database");
+      if (appointments.length === 0 && attemptedRefreshes < 3) {
+        setLoadingMessage(`Still loading... checking database (attempt ${attemptedRefreshes + 1})`);
       }
-    }, 2000);
-  }, [refetch, appointments.length]);
+    }, 1000);
+  }, [refetch, appointments.length, attemptedRefreshes]);
 
   // Force refresh on initial load and periodically
   useEffect(() => {
     // Immediate refresh on mount
     refreshAppointments();
     
-    // Then set up a timer to refresh every few seconds until we get data
+    // Set up periodic refreshes
     const timer = setInterval(() => {
-      if (filteredAppointments.length === 0) {
-        console.log("Automatic refresh - no appointments yet");
+      if (appointments.length === 0 && attemptedRefreshes < 5) {
+        console.log(`Automatic refresh attempt ${attemptedRefreshes + 1} - no appointments yet`);
         refreshAppointments();
       } else {
         clearInterval(timer);
       }
-    }, 3000);
+    }, 2500);
     
     return () => clearInterval(timer);
-  }, [refreshAppointments, filteredAppointments.length]);
+  }, [refreshAppointments, appointments.length, attemptedRefreshes]);
 
   // Show error toast if query fails
   useEffect(() => {
@@ -131,17 +136,17 @@ const DashboardAppointments = () => {
       await createAppointment(appointmentData, recurringData);
       setCreateDialogOpen(false);
       
-      // Immediately refresh after creation
+      // Immediate refresh after creation
       refreshAppointments();
       
-      // And also after a delay to ensure we catch server-side updates
-      setTimeout(() => refreshAppointments(), 1000);
-      
-      // And once more after a longer delay
-      setTimeout(() => {
-        console.log("Final refresh to ensure data is up-to-date");
-        refreshAppointments();
-      }, 3000);
+      // Multiple refreshes to ensure we catch updates
+      const refreshIntervals = [800, 2000, 4000];
+      refreshIntervals.forEach(interval => {
+        setTimeout(() => {
+          console.log(`Refresh at T+${interval}ms to ensure data is up-to-date`);
+          refreshAppointments();
+        }, interval);
+      });
     } catch (error) {
       console.error("Error in handleCreateAppointment:", error);
       // Toast is already handled in the useAppointments hook
@@ -150,6 +155,8 @@ const DashboardAppointments = () => {
 
   const handleTabChange = (newTab: AppointmentTab) => {
     setActiveTab(newTab);
+    // Reset refresh attempts when changing tabs
+    setAttemptedRefreshes(0);
     // Refresh when changing tabs
     setTimeout(() => refreshAppointments(), 100);
   };
@@ -175,6 +182,15 @@ const DashboardAppointments = () => {
               <div className="text-sm text-muted-foreground">
                 User ID: {userId.substring(0, 8)}...
               </div>
+            )}
+            
+            {attemptedRefreshes > 2 && (
+              <button 
+                className="mt-4 px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600"
+                onClick={refreshAppointments}
+              >
+                Retry Manually
+              </button>
             )}
           </div>
         </div>
@@ -219,6 +235,18 @@ const DashboardAppointments = () => {
             {userId && (
               <div className="text-xs text-muted-foreground text-center mt-4">
                 User ID: {userId} | Role: {userRole} | Tab: {activeTab}
+              </div>
+            )}
+            
+            {attemptedRefreshes > 0 && (
+              <div className="text-xs text-muted-foreground text-center">
+                Refresh attempts: {attemptedRefreshes}
+                <button 
+                  className="ml-2 px-2 py-1 rounded text-xs bg-blue-500 text-white hover:bg-blue-600"
+                  onClick={refreshAppointments}
+                >
+                  Refresh Again
+                </button>
               </div>
             )}
           </div>

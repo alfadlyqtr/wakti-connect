@@ -38,11 +38,11 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
   } = useQuery({
     queryKey: ['appointments', tab],
     queryFn: () => fetchAppointments(tab),
-    refetchOnWindowFocus: true, // Changed to true to refresh when focus returns
+    refetchOnWindowFocus: true,
     retry: 3,
     retryDelay: attemptIndex => Math.min(1000 * Math.pow(2, attemptIndex), 30000),
-    staleTime: 10 * 1000, // 10 seconds before data is considered stale
-    refetchInterval: 30 * 1000, // Refetch every 30 seconds
+    staleTime: 5 * 1000,  // Consider data stale after 5 seconds
+    refetchInterval: 20 * 1000, // Refetch every 20 seconds
     meta: {
       onError: (err: any) => {
         console.error("Appointment fetch error:", err);
@@ -59,7 +59,6 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
   useEffect(() => {
     if (data?.userRole) {
       setLocalUserRole(data.userRole);
-      // Also update localStorage for future use
       localStorage.setItem('userRole', data.userRole);
     }
   }, [data?.userRole]);
@@ -70,44 +69,51 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
       const timer = setTimeout(() => {
         console.log("Auto-retrying appointment fetch after error");
         refetch();
-      }, 5000);
+      }, 3000);
       
       return () => clearTimeout(timer);
     }
   }, [isError, refetch]);
 
-  // Create a new appointment
+  // Create a new appointment with enhanced error handling
   const createAppointment = async (appointmentData: Partial<AppointmentFormData>, recurringData?: RecurringFormData) => {
     try {
-      // Log the appointment data before sending
       console.log("Creating appointment in useAppointments hook:", appointmentData);
+      
+      if (!appointmentData.title) {
+        throw new Error("Appointment title is required");
+      }
+      
+      if (!appointmentData.start_time && !appointmentData.end_time) {
+        throw new Error("Appointment must have start and end times");
+      }
       
       const result = await createAppointmentService(appointmentData as AppointmentFormData, recurringData);
       
       toast({
         title: recurringData ? "Recurring Appointment Created" : "Appointment Created",
-        description: recurringData 
-          ? "New recurring appointment has been created successfully" 
-          : "New appointment has been created successfully",
+        description: "Your appointment has been created successfully",
       });
 
-      // Explicitly log the created appointment
       console.log("Appointment created successfully:", result);
 
-      // Refetch appointments to update the list
+      // Multiple refetches to ensure data is updated
       refetch();
       
-      // Do a second refetch after a delay to ensure data is updated
       setTimeout(() => {
         console.log("Secondary refetch to ensure data is up-to-date");
         refetch();
-      }, 1000);
+      }, 500);
+      
+      setTimeout(() => {
+        console.log("Final refetch to ensure data is up-to-date");
+        refetch();
+      }, 1500);
       
       return result;
     } catch (error: any) {
       console.error("Error creating appointment:", error);
       
-      // Display more detailed error information
       toast({
         title: "Failed to create appointment",
         description: error?.message || "An unexpected error occurred",
@@ -123,7 +129,6 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
     const appointmentList = data?.appointments || [];
     console.log(`Filtering ${appointmentList.length} appointments with search: "${searchQuery}"`);
     
-    // Log sample appointment data if available
     if (appointmentList.length > 0) {
       console.log("Sample appointment data:", {
         id: appointmentList[0].id,
@@ -139,7 +144,6 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
   // Get the actual user role from data, with a fallback to the state
   const userRole = data?.userRole || localUserRole;
   
-  // Log the user role to help with debugging
   console.log("useAppointments hook - user role:", userRole);
   console.log("useAppointments hook - appointments count:", data?.appointments?.length || 0);
 

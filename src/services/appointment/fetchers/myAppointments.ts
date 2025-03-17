@@ -27,7 +27,7 @@ export const fetchMyAppointments = async (
     
     console.log("Fetching my appointments for user ID:", userId);
     
-    // Query appointments created by the user with detailed logging
+    // Use a simpler direct query to avoid RLS issues
     const { data: appointments, error } = await supabase
       .from('appointments')
       .select('*')
