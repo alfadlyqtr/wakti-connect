@@ -1,7 +1,15 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { AppointmentTab, Appointment, AppointmentsResult } from "./types";
-import { fetchers } from "./fetchers";
+import {
+  fetchMyAppointments,
+  fetchSharedAppointments,
+  fetchAssignedAppointments,
+  fetchDefaultAppointments,
+  fetchUpcomingAppointments,
+  fetchPastAppointments,
+  fetchInvitationAppointments
+} from "./fetchers";
 
 /**
  * Fetches appointments based on the selected tab
@@ -13,7 +21,7 @@ export const fetchAppointments = async (
     let appointments: Appointment[] = [];
 
     // Get the user's account type (free, individual, business)
-    const { data: userRole, error: roleError } = await supabase.rpc(
+    const { data: userRoleData, error: roleError } = await supabase.rpc(
       "get_auth_user_account_type"
     );
 
@@ -21,37 +29,41 @@ export const fetchAppointments = async (
       throw new Error(`Failed to check user role: ${roleError.message}`);
     }
 
+    // Make sure userRole is one of the allowed values
+    const userRole = (userRoleData as string) === "individual" ? "individual" :
+                      (userRoleData as string) === "business" ? "business" : "free";
+
     // Use the appropriate fetcher for the current tab
     switch (tab) {
       case "my-appointments":
-        appointments = await fetchers.myAppointments();
+        appointments = await fetchMyAppointments();
         break;
       case "shared-appointments":
-        appointments = await fetchers.sharedAppointments();
+        appointments = await fetchSharedAppointments();
         break;
       case "assigned-appointments":
-        appointments = await fetchers.assignedAppointments();
+        appointments = await fetchAssignedAppointments();
         break;
       case "team-appointments":
-        appointments = await fetchers.defaultAppointments();
+        appointments = await fetchDefaultAppointments();
         break;
       case "upcoming":
-        appointments = await fetchers.upcomingAppointments();
+        appointments = await fetchUpcomingAppointments();
         break;
       case "past":
-        appointments = await fetchers.pastAppointments();
+        appointments = await fetchPastAppointments();
         break;
       case "invitations":
-        appointments = await fetchers.invitationAppointments();
+        appointments = await fetchInvitationAppointments();
         break;
       default:
-        appointments = await fetchers.defaultAppointments();
+        appointments = await fetchDefaultAppointments();
     }
 
     // Return both the appointments and the user's role
     return {
       appointments,
-      userRole: userRole || "free",
+      userRole
     };
   } catch (error: any) {
     console.error("Error fetching appointments:", error);

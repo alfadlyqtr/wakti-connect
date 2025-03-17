@@ -2,9 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { 
   InvitationRequest, 
-  InvitationResponse, 
-  InvitationTarget,
-  InvitationCustomization
+  InvitationResponse
 } from "@/types/invitation.types";
 import { toast } from "@/components/ui/use-toast";
 

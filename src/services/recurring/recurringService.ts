@@ -1,165 +1,122 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { RecurringSettings, RecurringFormData, EntityType } from "@/types/recurring.types";
+import { 
+  RecurringFormData,
+  RecurrenceFrequency
+} from "@/types/recurring.types";
+import { addDays, addWeeks, addMonths, addYears, setDate } from "date-fns";
 
-// Create recurring settings for a task or appointment
-export async function createRecurringSetting(data: {
+/**
+ * Creates recurring settings for an entity (task or appointment)
+ */
+export const createRecurringSetting = async (recurringData: {
   entity_id: string;
-  entity_type: EntityType;
+  entity_type: 'task' | 'appointment';
   created_by: string;
-  frequency: string;
+  frequency: RecurrenceFrequency;
   interval: number;
   days_of_week?: string[];
   day_of_month?: number;
-  end_date?: Date;
+  end_date?: Date | null;
   max_occurrences?: number;
-}): Promise<RecurringSettings> {
-  const settingsData = {
-    entity_id: data.entity_id,
-    entity_type: data.entity_type,
-    frequency: data.frequency,
-    interval: data.interval,
-    days_of_week: data.days_of_week,
-    day_of_month: data.day_of_month,
-    end_date: data.end_date ? data.end_date.toISOString() : null,
-    max_occurrences: data.max_occurrences,
-    created_by: data.created_by
-  };
-  
-  const { data: response, error } = await supabase
-    .from('recurring_settings')
-    .insert(settingsData)
-    .select()
-    .single();
-    
-  if (error) {
-    if (error.code === '42501') {
-      throw new Error("This feature is only available for paid accounts");
-    }
-    throw error;
+}) => {
+  // Get the user's account type to check permissions
+  const { data: userRole, error: roleError } = await supabase.rpc(
+    "get_auth_user_account_type"
+  );
+
+  if (roleError) {
+    throw new Error(`Failed to check user role: ${roleError.message}`);
   }
-  
-  return response as RecurringSettings;
-}
 
-// Update recurring settings
-export async function updateRecurringSetting(
-  id: string,
-  recurringData: Partial<RecurringFormData>
-): Promise<RecurringSettings> {
-  const { data, error } = await supabase
-    .from('recurring_settings')
-    .update({
-      frequency: recurringData.frequency,
-      interval: recurringData.interval,
-      days_of_week: recurringData.days_of_week,
-      day_of_month: recurringData.day_of_month,
-      end_date: recurringData.end_date ? recurringData.end_date.toISOString() : null,
-      max_occurrences: recurringData.max_occurrences,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', id)
-    .select()
-    .single();
-    
-  if (error) throw error;
-  
-  return data as RecurringSettings;
-}
+  if (userRole === "free") {
+    throw new Error("This feature is only available for paid accounts");
+  }
 
-// Delete recurring settings
-export async function deleteRecurringSetting(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('recurring_settings')
-    .delete()
-    .eq('id', id);
-    
-  if (error) throw error;
-}
+  // Prepare the data for insertion
+  const data = {
+    entity_id: recurringData.entity_id,
+    entity_type: recurringData.entity_type,
+    frequency: recurringData.frequency,
+    interval: recurringData.interval,
+    days_of_week: recurringData.days_of_week || null,
+    day_of_month: recurringData.day_of_month || null,
+    end_date: recurringData.end_date ? recurringData.end_date.toISOString() : null,
+    max_occurrences: recurringData.max_occurrences || null,
+    created_by: recurringData.created_by
+  };
 
-// Get recurring settings for an entity
-export async function getRecurringSettings(
-  entityId: string,
-  entityType: EntityType
-): Promise<RecurringSettings | null> {
-  const { data, error } = await supabase
-    .from('recurring_settings')
-    .select('*')
-    .eq('entity_id', entityId)
-    .eq('entity_type', entityType)
-    .maybeSingle();
-    
-  if (error) throw error;
-  
-  return data as RecurringSettings | null;
-}
+  const { error } = await supabase.from("recurring_settings").insert(data);
 
-// Generate dates for recurring entities
-export function generateRecurringDates(
+  if (error) {
+    throw new Error(`Failed to create recurring settings: ${error.message}`);
+  }
+
+  return true;
+};
+
+/**
+ * Generates dates based on recurring settings
+ */
+export const generateRecurringDates = (
   startDate: Date,
-  settings: RecurringSettings,
-  count: number = 10
-): Date[] {
+  recurringData: RecurringFormData,
+  limit: number = 10
+): Date[] => {
   const dates: Date[] = [];
-  let currentDate = new Date(startDate);
+  const { frequency, interval, days_of_week, day_of_month, end_date, max_occurrences } = recurringData;
   
-  for (let i = 0; i < count; i++) {
-    // Skip the first date as it's the original entity date
-    if (i > 0) {
-      const nextDate = calculateNextDate(currentDate, settings);
-      if (nextDate) {
-        // Check if we've reached the end date
-        if (settings.end_date && new Date(nextDate) > new Date(settings.end_date)) {
+  // Set maximum dates to generate based on max_occurrences or default limit
+  const maxDates = max_occurrences || limit;
+  
+  let currentDate = new Date(startDate);
+  let count = 0;
+  
+  while (count < maxDates) {
+    // Skip the first date since it's the original appointment/task date
+    if (count > 0) {
+      // Handle different frequency types
+      switch (frequency) {
+        case 'daily':
+          currentDate = addDays(currentDate, interval);
           break;
-        }
-        
-        // Check if we've reached max occurrences
-        if (settings.max_occurrences && i >= settings.max_occurrences) {
+          
+        case 'weekly':
+          // For weekly, we'll add weeks and then handle days_of_week if specified
+          if (!days_of_week || days_of_week.length === 0) {
+            // Simple weekly recurrence
+            currentDate = addWeeks(currentDate, interval);
+          } else {
+            // Skip this implementation for now - it's more complex
+            currentDate = addWeeks(currentDate, interval);
+          }
           break;
-        }
-        
-        dates.push(nextDate);
-        currentDate = nextDate;
-      } else {
+          
+        case 'monthly':
+          // For monthly, we'll either use the same day of month or a specific one
+          if (day_of_month) {
+            currentDate = addMonths(currentDate, interval);
+            currentDate = setDate(currentDate, day_of_month);
+          } else {
+            currentDate = addMonths(currentDate, interval);
+          }
+          break;
+          
+        case 'yearly':
+          currentDate = addYears(currentDate, interval);
+          break;
+      }
+      
+      // Stop if we've reached the end date
+      if (end_date && currentDate > end_date) {
         break;
       }
-    } else {
-      dates.push(currentDate);
+      
+      dates.push(new Date(currentDate));
     }
+    
+    count++;
   }
   
   return dates;
-}
-
-// Helper to calculate the next date based on frequency and interval
-function calculateNextDate(date: Date, settings: RecurringSettings): Date {
-  const nextDate = new Date(date);
-  
-  switch (settings.frequency) {
-    case 'daily':
-      nextDate.setDate(nextDate.getDate() + settings.interval);
-      break;
-      
-    case 'weekly':
-      nextDate.setDate(nextDate.getDate() + (settings.interval * 7));
-      break;
-      
-    case 'monthly':
-      nextDate.setMonth(nextDate.getMonth() + settings.interval);
-      if (settings.day_of_month) {
-        nextDate.setDate(Math.min(settings.day_of_month, getDaysInMonth(nextDate.getFullYear(), nextDate.getMonth())));
-      }
-      break;
-      
-    case 'yearly':
-      nextDate.setFullYear(nextDate.getFullYear() + settings.interval);
-      break;
-  }
-  
-  return nextDate;
-}
-
-// Helper to get days in a month
-function getDaysInMonth(year: number, month: number): number {
-  return new Date(year, month + 1, 0).getDate();
-}
+};

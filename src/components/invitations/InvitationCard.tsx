@@ -35,8 +35,7 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
   
   const handleRespond = async (response: 'accepted' | 'declined') => {
     try {
-      const accepted = response === 'accepted';
-      await respondToInvitation(invitationId, accepted);
+      await respondToInvitation(invitationId, response);
       if (onRespond) {
         onRespond(response);
       }

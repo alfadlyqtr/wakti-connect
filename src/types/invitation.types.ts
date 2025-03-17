@@ -94,3 +94,21 @@ export interface InvitationRecipient {
   email?: string;
   type: 'contact' | 'email';
 }
+
+// Adding the missing types for invitation service
+export interface InvitationTarget {
+  type: 'user' | 'email';
+  id: string;
+}
+
+export interface InvitationRequest {
+  target: InvitationTarget;
+  shared_as_link: boolean;
+  customization: any | null;
+}
+
+export interface InvitationResponse {
+  id: string;
+  status: 'sent' | 'failed';
+  created_at: string;
+}

@@ -1,12 +1,12 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { RecipientSelector } from "./RecipientSelector";
+import RecipientSelector from "./RecipientSelector";
 import { Loader2 } from "lucide-react";
 import { sendInvitation } from "@/services/invitation/invitations";
 import { toast } from "@/components/ui/use-toast";
 
-// Using sendInvitation instead of createInvitation which doesn't exist
 interface SendInvitationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

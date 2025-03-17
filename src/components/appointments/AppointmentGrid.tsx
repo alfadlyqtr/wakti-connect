@@ -1,10 +1,9 @@
-
 import React, { useState } from "react";
 import AppointmentCard from "@/components/ui/AppointmentCard";
 import { Button } from "@/components/ui/button";
 import { Appointment, AppointmentTab } from "@/types/appointment.types";
 import { Send } from "lucide-react";
-import SendInvitationDialog from "@/components/invitations/SendInvitationDialog";
+import { SendInvitationDialog } from "@/components/invitations/SendInvitationDialog";
 
 interface AppointmentGridProps {
   appointments: Appointment[];
@@ -81,8 +80,8 @@ const AppointmentGrid: React.FC<AppointmentGridProps> = ({
         <SendInvitationDialog
           open={isInvitationDialogOpen}
           onOpenChange={setIsInvitationDialogOpen}
-          appointment={selectedAppointment}
-          onInvitationsSent={() => {}}
+          appointmentId={selectedAppointment.id}
+          onInvitationSent={() => {}}
         />
       )}
     </div>
