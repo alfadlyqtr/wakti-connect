@@ -76,7 +76,7 @@ const BusinessLandingPageComponent = () => {
       className="min-h-screen pb-16"
     >
       <BusinessPageHeader 
-        businessPage={businessPage}
+        business={businessPage} // Fixed: changed businessPage to business to match the prop type
         isPreviewMode={isPreviewMode}
         isAuthenticated={isAuthenticated}
         isSubscribed={isSubscribed}

@@ -7,19 +7,19 @@ import { supabase } from "@/integrations/supabase/client";
 export const getUnreadMessagesCount = async (userId?: string) => {
   if (!userId) {
     const { data } = await supabase.auth.getSession();
-    userId = data.session?.user.id;
+    userId = data.session?.user?.id;
   }
 
   if (!userId) {
     return 0;
   }
 
-  // Use the correct count syntax for Supabase
+  // Fix: Use the correct count syntax for Supabase
   const { count, error } = await supabase
     .from('messages')
     .select('*', { count: 'exact', head: true })
     .eq('recipient_id', userId)
-    .eq('read', false);
+    .eq('is_read', false);
 
   if (error) {
     console.error('Error getting unread message count:', error);
@@ -33,14 +33,14 @@ export const getUnreadMessagesCount = async (userId?: string) => {
  * Gets the latest notifications for the user
  */
 export const getLatestNotifications = async (limit = 5) => {
-  const { data: session } = await supabase.auth.getSession();
-  const userId = session?.user?.id;
+  const { data } = await supabase.auth.getSession();
+  const userId = data.session?.user?.id;
 
   if (!userId) {
     return [];
   }
 
-  const { data, error } = await supabase
+  const { data: notifications, error } = await supabase
     .from('notifications')
     .select('*')
     .eq('user_id', userId)
@@ -52,7 +52,7 @@ export const getLatestNotifications = async (limit = 5) => {
     return [];
   }
 
-  return data || [];
+  return notifications || [];
 };
 
 /**
@@ -61,7 +61,7 @@ export const getLatestNotifications = async (limit = 5) => {
 export const markNotificationAsRead = async (notificationId: string) => {
   const { error } = await supabase
     .from('notifications')
-    .update({ read: true })
+    .update({ is_read: true }) // Fixed: changed 'read' to 'is_read'
     .eq('id', notificationId);
 
   if (error) {
@@ -76,8 +76,8 @@ export const markNotificationAsRead = async (notificationId: string) => {
  * Marks all notifications as read for the user
  */
 export const markAllNotificationsAsRead = async () => {
-  const { data: session } = await supabase.auth.getSession();
-  const userId = session?.user?.id;
+  const { data } = await supabase.auth.getSession();
+  const userId = data.session?.user?.id;
 
   if (!userId) {
     return false;
@@ -85,9 +85,9 @@ export const markAllNotificationsAsRead = async () => {
 
   const { error } = await supabase
     .from('notifications')
-    .update({ read: true })
+    .update({ is_read: true }) // Fixed: changed 'read' to 'is_read'
     .eq('user_id', userId)
-    .eq('read', false);
+    .eq('is_read', false);
 
   if (error) {
     console.error('Error marking all notifications as read:', error);

@@ -65,12 +65,12 @@ export const useMessaging = (otherUserId?: string) => {
     enabled: !!otherUserId
   });
 
-  // Get unread messages count
+  // Get unread messages count - Fixed: removed the direct function reference and used inline function
   const { 
     data: unreadCount = 0
   } = useQuery({
     queryKey: ['unreadMessages'],
-    queryFn: getUnreadMessagesCount,
+    queryFn: () => getUnreadMessagesCount(),
     refetchInterval: 15000 // Auto-refresh every 15 seconds
   });
 
