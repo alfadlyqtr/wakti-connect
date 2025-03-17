@@ -38,9 +38,11 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
   } = useQuery({
     queryKey: ['appointments', tab],
     queryFn: () => fetchAppointments(tab),
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true, // Changed to true to refresh when focus returns
     retry: 3,
     retryDelay: attemptIndex => Math.min(1000 * Math.pow(2, attemptIndex), 30000),
+    staleTime: 10 * 1000, // 10 seconds before data is considered stale
+    refetchInterval: 30 * 1000, // Refetch every 30 seconds
     meta: {
       onError: (err: any) => {
         console.error("Appointment fetch error:", err);
@@ -77,6 +79,9 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
   // Create a new appointment
   const createAppointment = async (appointmentData: Partial<AppointmentFormData>, recurringData?: RecurringFormData) => {
     try {
+      // Log the appointment data before sending
+      console.log("Creating appointment in useAppointments hook:", appointmentData);
+      
       const result = await createAppointmentService(appointmentData as AppointmentFormData, recurringData);
       
       toast({
@@ -86,8 +91,17 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
           : "New appointment has been created successfully",
       });
 
+      // Explicitly log the created appointment
+      console.log("Appointment created successfully:", result);
+
       // Refetch appointments to update the list
       refetch();
+      
+      // Do a second refetch after a delay to ensure data is updated
+      setTimeout(() => {
+        console.log("Secondary refetch to ensure data is up-to-date");
+        refetch();
+      }, 1000);
       
       return result;
     } catch (error: any) {
@@ -108,6 +122,17 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
   const getFilteredAppointments = () => {
     const appointmentList = data?.appointments || [];
     console.log(`Filtering ${appointmentList.length} appointments with search: "${searchQuery}"`);
+    
+    // Log sample appointment data if available
+    if (appointmentList.length > 0) {
+      console.log("Sample appointment data:", {
+        id: appointmentList[0].id,
+        title: appointmentList[0].title,
+        user_id: appointmentList[0].user_id,
+        start_time: appointmentList[0].start_time
+      });
+    }
+    
     return filterAppointments(appointmentList, searchQuery, filterStatus, filterDate);
   };
 

@@ -8,15 +8,36 @@ import AppointmentControls from "@/components/appointments/AppointmentControls";
 import EmptyAppointmentsState from "@/components/appointments/EmptyAppointmentsState";
 import AppointmentGrid from "@/components/appointments/AppointmentGrid";
 import { CreateAppointmentDialog } from "@/components/appointments/CreateAppointmentDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 const DashboardAppointments = () => {
   const [activeTab, setActiveTab] = useState<AppointmentTab>("my-appointments");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState<string>("Loading appointments...");
+  const [userId, setUserId] = useState<string | null>(null);
+  
+  // Get the current user's ID for diagnosis
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          setUserId(session.user.id);
+          localStorage.setItem('userId', session.user.id);
+        }
+      } catch (error) {
+        console.error("Error checking auth:", error);
+      }
+    };
+    
+    checkAuth();
+  }, []);
   
   // We need to ensure the AppointmentTab from types and services match
   // Convert the type from types to the one accepted by the service
   const { 
     filteredAppointments, 
+    appointments,
     isLoading, 
     error, 
     searchQuery, 
@@ -26,20 +47,28 @@ const DashboardAppointments = () => {
     refetch
   } = useAppointments(activeTab as any); // Using 'any' to bridge the type mismatch temporarily
 
-  // Explicitly log user role for debugging
+  // Explicitly log user role and data for debugging
   console.log("DashboardAppointments - user role:", userRole);
+  console.log("DashboardAppointments - userId:", userId);
+  console.log("DashboardAppointments - all appointments:", appointments?.length || 0);
   console.log("DashboardAppointments - filtered appointments:", filteredAppointments?.length || 0);
 
   // Determine if this is a paid account
   const isPaidAccount = userRole === "individual" || userRole === "business";
   const isBusinessAccount = userRole === "business";
-  console.log("DashboardAppointments - isPaidAccount:", isPaidAccount);
 
   // More aggressive refresh strategy
   const refreshAppointments = useCallback(() => {
     console.log("Refreshing appointments data");
+    setLoadingMessage("Refreshing data...");
     refetch();
-  }, [refetch]);
+    // Add delay to ensure UI shows loading state
+    setTimeout(() => {
+      if (appointments.length === 0) {
+        setLoadingMessage("Still loading... checking database");
+      }
+    }, 2000);
+  }, [refetch, appointments.length]);
 
   // Force refresh on initial load and periodically
   useEffect(() => {
@@ -107,6 +136,12 @@ const DashboardAppointments = () => {
       
       // And also after a delay to ensure we catch server-side updates
       setTimeout(() => refreshAppointments(), 1000);
+      
+      // And once more after a longer delay
+      setTimeout(() => {
+        console.log("Final refresh to ensure data is up-to-date");
+        refreshAppointments();
+      }, 3000);
     } catch (error) {
       console.error("Error in handleCreateAppointment:", error);
       // Toast is already handled in the useAppointments hook
@@ -130,9 +165,17 @@ const DashboardAppointments = () => {
         </div>
         
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-wakti-blue" />
-            <span className="ml-2">Loading appointments...</span>
+          <div className="flex flex-col items-center justify-center py-8 space-y-4">
+            <div className="flex items-center">
+              <Loader2 className="h-8 w-8 animate-spin text-wakti-blue mr-2" />
+              <span>{loadingMessage}</span>
+            </div>
+            
+            {userId && (
+              <div className="text-sm text-muted-foreground">
+                User ID: {userId.substring(0, 8)}...
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -167,11 +210,18 @@ const DashboardAppointments = () => {
             tab={activeTab}
           />
         ) : (
-          <EmptyAppointmentsState 
-            isPaidAccount={isPaidAccount} 
-            onCreateAppointment={() => setCreateDialogOpen(true)} 
-            tab={activeTab}
-          />
+          <div className="space-y-4">
+            <EmptyAppointmentsState 
+              isPaidAccount={isPaidAccount} 
+              onCreateAppointment={() => setCreateDialogOpen(true)} 
+              tab={activeTab}
+            />
+            {userId && (
+              <div className="text-xs text-muted-foreground text-center mt-4">
+                User ID: {userId} | Role: {userRole} | Tab: {activeTab}
+              </div>
+            )}
+          </div>
         )}
       </div>
       

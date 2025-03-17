@@ -49,7 +49,8 @@ export const createAppointment = async (
       user_id: session.user.id
     };
 
-    console.log("Creating appointment with data:", completeAppointmentData);
+    // Log the data we're about to submit
+    console.log("Creating appointment with data:", JSON.stringify(completeAppointmentData));
 
     // Insert the appointment
     const { data: appointment, error } = await supabase
@@ -69,6 +70,19 @@ export const createAppointment = async (
     }
 
     console.log("Appointment created successfully:", appointment);
+    
+    // Verify the created appointment data to ensure it was saved correctly
+    if (appointment) {
+      console.log("Appointment creation verification:", {
+        title_submitted: completeAppointmentData.title,
+        title_saved: appointment.title,
+        matches: completeAppointmentData.title === appointment.title
+      });
+      
+      if (completeAppointmentData.title !== appointment.title) {
+        console.warn("Warning: Appointment title mismatch between submission and saved data");
+      }
+    }
 
     // If this is a recurring appointment, create the recurrences
     if (recurringData && appointment) {
