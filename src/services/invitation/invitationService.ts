@@ -1,21 +1,22 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { InvitationTemplate, InvitationCustomization, InvitationLink, InvitationRecipient } from "@/types/invitation.types";
-import { toast } from "@/components/ui/use-toast";
+import { InvitationTemplate, InvitationStyle, InvitationCustomization, InvitationRecipient } from "@/types/invitation.types";
+import { Appointment } from "@/types/appointment.types";
 import { generateRandomString } from "@/utils/stringUtils";
+import { fromTable } from "@/integrations/supabase/helper";
 
 /**
  * Fetch available invitation templates
  */
-export async function fetchInvitationTemplates(): Promise<InvitationTemplate[]> {
+export const fetchInvitationTemplates = async (): Promise<InvitationTemplate[]> => {
   try {
-    const { data, error } = await supabase
-      .from('invitation_templates')
-      .select('*')
-      .order('name');
-    
-    if (error) throw error;
-    
+    const { data, error } = await fromTable('invitation_templates')
+      .select('*');
+
+    if (error) {
+      throw error;
+    }
+
     return data.map(template => ({
       id: template.id,
       name: template.name,
@@ -27,174 +28,160 @@ export async function fetchInvitationTemplates(): Promise<InvitationTemplate[]> 
     console.error("Error fetching invitation templates:", error);
     return [];
   }
-}
+};
 
 /**
- * Create invitation for an appointment
+ * Create a new invitation for an appointment
  */
-export async function createInvitation(
-  appointmentId: string, 
+export const createInvitation = async (
+  appointmentId: string,
   recipients: InvitationRecipient[],
   customizationId?: string
-) {
+): Promise<{ success: boolean; errors?: string[] }> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
-      throw new Error("No active session");
+      throw new Error("No authenticated user");
     }
+
+    const errors: string[] = [];
     
-    // Check user's account type
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('account_type')
-      .eq('id', session.user.id)
-      .maybeSingle();
+    // Filter recipients to contacts vs. external emails
+    const contactRecipients = recipients.filter(r => r.type === 'contact');
+    const emailRecipients = recipients.filter(r => r.type === 'email');
     
-    if (profileError) {
-      console.error("Error checking user account type:", profileError);
-      throw new Error("Unable to verify account permissions");
-    }
-    
-    // Only allow paid accounts to create invitations
-    if (!profileData || profileData.account_type === 'free') {
-      toast({
-        title: "Premium Feature",
-        description: "Creating invitations is only available for paid accounts. Please upgrade your plan.",
-        variant: "destructive",
-      });
-      throw new Error("This feature is only available for paid accounts");
-    }
-    
-    // Process each recipient
-    const invitationResults = [];
-    
-    for (const recipient of recipients) {
-      let invitationData: any = {
+    // Create invitations for contacts
+    if (contactRecipients.length > 0) {
+      const contactInvitations = contactRecipients.map(contact => ({
         appointment_id: appointmentId,
+        invited_user_id: contact.id,
         status: 'pending'
-      };
+      }));
       
-      if (recipient.type === 'contact' && recipient.id) {
-        // For contacts (other WAKTI users)
-        invitationData.invited_user_id = recipient.id;
+      const { error } = await supabase
+        .from('appointment_invitations')
+        .insert(contactInvitations);
+      
+      if (error) {
+        errors.push(`Error creating contact invitations: ${error.message}`);
+      }
+    }
+    
+    // Create invitations for emails
+    if (emailRecipients.length > 0) {
+      // Check if the user can send email invitations (has paid account)
+      const { data: userPrefs } = await fromTable('user_invitation_preferences')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+      
+      // Create email invitations
+      const emailInvitationsPromises = emailRecipients.map(async (recipient) => {
+        // Create an invitation record
+        const { data: invitation, error: invError } = await supabase
+          .from('appointment_invitations')
+          .insert({
+            appointment_id: appointmentId,
+            email: recipient.email,
+            status: 'pending',
+            shared_as_link: true
+          })
+          .select()
+          .single();
         
-        // Check if user wants to receive invitations
-        const { data: prefData } = await supabase
-          .from('user_invitation_preferences')
-          .select('can_receive_invitations')
-          .eq('user_id', recipient.id)
-          .maybeSingle();
-        
-        // Skip if they have explicitly opted out
-        if (prefData && prefData.can_receive_invitations === false) {
-          continue;
+        if (invError) {
+          errors.push(`Error creating email invitation: ${invError.message}`);
+          return;
         }
         
-      } else if (recipient.type === 'email' && recipient.email) {
-        // For external recipients
-        invitationData.email = recipient.email;
-        invitationData.shared_as_link = true;
-      } else {
-        continue; // Skip invalid recipients
-      }
-      
-      // Create the invitation
-      const { data: invitation, error: invitationError } = await supabase
-        .from('appointment_invitations')
-        .insert(invitationData)
-        .select()
-        .single();
-      
-      if (invitationError) {
-        console.error("Error creating invitation:", invitationError);
-        continue;
-      }
-      
-      // Apply customization if provided
-      if (customizationId && invitation) {
-        await supabase
-          .from('invitation_customizations')
-          .update({ invitation_id: invitation.id })
-          .eq('id', customizationId);
-      }
-      
-      // Create external link if needed
-      if (invitation && recipient.type === 'email' && recipient.email) {
-        const token = generateRandomString(32);
+        // Create a link for the invitation
+        const accessToken = generateRandomString(24);
         
-        await supabase
-          .from('invitation_links')
+        const { error: linkError } = await fromTable('invitation_links')
           .insert({
             invitation_id: invitation.id,
-            external_access_token: token,
-            recipient_email: recipient.email,
+            recipient_email: recipient.email || '',
+            external_access_token: accessToken,
             status: 'pending'
           });
-      }
+        
+        if (linkError) {
+          errors.push(`Error creating invitation link: ${linkError.message}`);
+          return;
+        }
+        
+        // Associate customization with invitation if provided
+        if (customizationId) {
+          await fromTable('invitation_customizations')
+            .update({ invitation_id: invitation.id })
+            .eq('id', customizationId);
+        }
+      });
       
-      if (invitation) {
-        invitationResults.push(invitation);
-      }
+      await Promise.all(emailInvitationsPromises);
     }
     
-    return invitationResults;
-  } catch (error) {
-    console.error("Error creating invitations:", error);
-    throw error;
+    return {
+      success: errors.length === 0,
+      errors: errors.length > 0 ? errors : undefined
+    };
+  } catch (error: any) {
+    console.error("Error creating invitation:", error);
+    return {
+      success: false,
+      errors: [error.message || "Unknown error creating invitation"]
+    };
   }
-}
+};
 
 /**
- * Create a custom invitation style
+ * Create a customization for an invitation
  */
-export async function createInvitationCustomization(
+export const createInvitationCustomization = async (
   templateId: string,
-  customizations: Partial<InvitationCustomization>
-): Promise<InvitationCustomization> {
+  customizationData: Partial<InvitationCustomization>
+): Promise<InvitationCustomization | null> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
-      throw new Error("No active session");
+      throw new Error("No authenticated user");
     }
     
-    // First get the template default styles
-    const { data: template, error: templateError } = await supabase
-      .from('invitation_templates')
-      .select('default_styles')
+    // Get the template default styles
+    const { data: template } = await fromTable('invitation_templates')
+      .select('*')
       .eq('id', templateId)
       .single();
     
-    if (templateError) {
-      throw templateError;
+    if (!template) {
+      throw new Error("Template not found");
     }
     
-    // Prepare customization data using template defaults with overrides
-    const defaultStyles = template.default_styles;
-    
-    const customizationData = {
+    // Create a customization with template defaults + custom overrides
+    const newCustomization = {
       creator_id: session.user.id,
-      background_type: customizations.backgroundType || defaultStyles.background.type,
-      background_value: customizations.backgroundValue || defaultStyles.background.value,
-      font_family: customizations.fontFamily || defaultStyles.fontFamily,
-      font_size: customizations.fontSize || defaultStyles.fontSize,
-      text_align: customizations.textAlign || defaultStyles.textAlign,
-      button_styles: customizations.buttonStyles || defaultStyles.buttons,
-      layout_size: customizations.layoutSize || 'medium',
-      header_image: customizations.headerImage,
-      map_location: customizations.mapLocation,
-      custom_effects: customizations.customEffects || { shadow: defaultStyles.shadow }
+      background_type: customizationData.backgroundType || template.default_styles.background.type,
+      background_value: customizationData.backgroundValue || template.default_styles.background.value,
+      font_family: customizationData.fontFamily || template.default_styles.fontFamily,
+      font_size: customizationData.fontSize || template.default_styles.fontSize,
+      text_align: customizationData.textAlign || template.default_styles.textAlign,
+      button_styles: customizationData.buttonStyles || template.default_styles.buttons,
+      layout_size: customizationData.layoutSize || 'medium',
+      header_image: customizationData.headerImage || null,
+      map_location: customizationData.mapLocation || null,
+      custom_effects: customizationData.customEffects || null
     };
     
-    // Insert the customization
-    const { data, error } = await supabase
-      .from('invitation_customizations')
-      .insert(customizationData)
+    const { data, error } = await fromTable('invitation_customizations')
+      .insert(newCustomization)
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
     
     return {
       id: data.id,
@@ -203,10 +190,10 @@ export async function createInvitationCustomization(
       backgroundType: data.background_type,
       backgroundValue: data.background_value,
       fontFamily: data.font_family,
-      fontSize: data.font_size as 'small' | 'medium' | 'large',
-      textAlign: data.text_align as 'left' | 'center' | 'right',
+      fontSize: data.font_size,
+      textAlign: data.text_align,
       buttonStyles: data.button_styles,
-      layoutSize: data.layout_size as 'small' | 'medium' | 'large',
+      layoutSize: data.layout_size,
       headerImage: data.header_image,
       mapLocation: data.map_location,
       customEffects: data.custom_effects,
@@ -215,24 +202,23 @@ export async function createInvitationCustomization(
     };
   } catch (error) {
     console.error("Error creating invitation customization:", error);
-    throw error;
+    return null;
   }
-}
+};
 
 /**
  * Get customization for an invitation
  */
-export async function getInvitationCustomization(invitationId: string): Promise<InvitationCustomization | null> {
+export const getInvitationCustomization = async (invitationId: string): Promise<InvitationCustomization | null> => {
   try {
-    const { data, error } = await supabase
-      .from('invitation_customizations')
+    const { data, error } = await fromTable('invitation_customizations')
       .select('*')
       .eq('invitation_id', invitationId)
       .maybeSingle();
     
-    if (error) throw error;
-    
-    if (!data) return null;
+    if (error || !data) {
+      return null;
+    }
     
     return {
       id: data.id,
@@ -241,10 +227,10 @@ export async function getInvitationCustomization(invitationId: string): Promise<
       backgroundType: data.background_type,
       backgroundValue: data.background_value,
       fontFamily: data.font_family,
-      fontSize: data.font_size as 'small' | 'medium' | 'large',
-      textAlign: data.text_align as 'left' | 'center' | 'right',
+      fontSize: data.font_size,
+      textAlign: data.text_align,
       buttonStyles: data.button_styles,
-      layoutSize: data.layout_size as 'small' | 'medium' | 'large',
+      layoutSize: data.layout_size,
       headerImage: data.header_image,
       mapLocation: data.map_location,
       customEffects: data.custom_effects,
@@ -252,46 +238,43 @@ export async function getInvitationCustomization(invitationId: string): Promise<
       updatedAt: data.updated_at
     };
   } catch (error) {
-    console.error("Error fetching invitation customization:", error);
+    console.error("Error getting invitation customization:", error);
     return null;
   }
-}
+};
 
 /**
  * Respond to an invitation
  */
-export async function respondToInvitation(
-  invitationId: string, 
-  response: 'accepted' | 'declined'
-): Promise<boolean> {
+export const respondToInvitation = async (
+  invitationId: string,
+  accept: boolean
+): Promise<{ success: boolean; error?: string }> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
-    if (!session) {
-      throw new Error("Authentication required");
+    if (!session?.user) {
+      throw new Error("No authenticated user");
     }
     
     const { error } = await supabase
       .from('appointment_invitations')
-      .update({ status: response })
+      .update({
+        status: accept ? 'accepted' : 'declined'
+      })
       .eq('id', invitationId)
       .eq('invited_user_id', session.user.id);
     
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
     
-    toast({
-      title: `Invitation ${response}`,
-      description: `You have ${response} the appointment invitation.`
-    });
-    
-    return true;
-  } catch (error) {
+    return { success: true };
+  } catch (error: any) {
     console.error("Error responding to invitation:", error);
-    toast({
-      title: "Failed to respond to invitation",
-      description: error instanceof Error ? error.message : "An unknown error occurred",
-      variant: "destructive",
-    });
-    return false;
+    return {
+      success: false,
+      error: error.message || "Unknown error responding to invitation"
+    };
   }
-}
+};

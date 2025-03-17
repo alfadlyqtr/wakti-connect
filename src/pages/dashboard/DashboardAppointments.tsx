@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { useAppointments, AppointmentTab } from "@/hooks/useAppointments";
+import { useAppointments } from "@/hooks/useAppointments";
+import { AppointmentTab } from "@/types/appointment.types";
 import AppointmentControls from "@/components/appointments/AppointmentControls";
 import EmptyAppointmentsState from "@/components/appointments/EmptyAppointmentsState";
 import AppointmentGrid from "@/components/appointments/AppointmentGrid";
@@ -54,6 +55,17 @@ const DashboardAppointments = () => {
     }
   }, [error, refetch]);
 
+  // Define available tabs based on user role
+  const getAvailableTabs = () => {
+    const tabs: AppointmentTab[] = ["my-appointments", "shared-appointments", "invitations"];
+    
+    if (isBusinessAccount) {
+      tabs.push("team-appointments");
+    }
+    
+    return tabs;
+  };
+
   // Reset to default tab when role changes
   useEffect(() => {
     if (activeTab === "team-appointments" && !isBusinessAccount) {
@@ -73,17 +85,6 @@ const DashboardAppointments = () => {
 
   const handleTabChange = (newTab: AppointmentTab) => {
     setActiveTab(newTab);
-  };
-
-  // Define available tabs based on user role
-  const getAvailableTabs = () => {
-    const tabs: AppointmentTab[] = ["my-appointments", "shared-appointments", "invitations"];
-    
-    if (isBusinessAccount) {
-      tabs.push("team-appointments");
-    }
-    
-    return tabs;
   };
 
   if (isLoading) {

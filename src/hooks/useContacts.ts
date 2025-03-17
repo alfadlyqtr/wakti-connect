@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { UserContact } from "@/types/invitation.types";
 import { toast } from "@/components/ui/use-toast";
+import { fromTable } from "@/integrations/supabase/helper";
 
 export const useContacts = () => {
   const queryClient = useQueryClient();
@@ -19,8 +20,7 @@ export const useContacts = () => {
         }
         
         // Get contacts where the user is either the requester or recipient
-        const { data, error } = await supabase
-          .from('user_contacts')
+        const { data, error } = await fromTable('user_contacts')
           .select(`
             id, 
             user_id,
@@ -69,8 +69,7 @@ export const useContacts = () => {
       }
 
       // Check if a contact relationship already exists
-      const { data: existingContact } = await supabase
-        .from('user_contacts')
+      const { data: existingContact } = await fromTable('user_contacts')
         .select('id, status')
         .or(`and(user_id.eq.${session.user.id},contact_id.eq.${userId}),and(user_id.eq.${userId},contact_id.eq.${session.user.id})`)
         .maybeSingle();
@@ -84,8 +83,7 @@ export const useContacts = () => {
       }
 
       // Create new contact request
-      const { error } = await supabase
-        .from('user_contacts')
+      const { error } = await fromTable('user_contacts')
         .insert({
           user_id: session.user.id,
           contact_id: userId,
@@ -123,8 +121,7 @@ export const useContacts = () => {
         throw new Error("No active session");
       }
 
-      const { error } = await supabase
-        .from('user_contacts')
+      const { error } = await fromTable('user_contacts')
         .update({
           status: accept ? 'accepted' : 'rejected'
         })
@@ -166,8 +163,7 @@ export const useContacts = () => {
           throw new Error("No active session");
         }
         
-        const { data, error } = await supabase
-          .from('user_contacts')
+        const { data, error } = await fromTable('user_contacts')
           .select(`
             id, 
             user_id,

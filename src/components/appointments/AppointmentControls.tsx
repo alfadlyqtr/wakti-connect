@@ -14,6 +14,7 @@ interface AppointmentControlsProps {
   onTabChange: (tab: AppointmentTab) => void;
   isPaidAccount: boolean;
   userRole: "free" | "individual" | "business";
+  availableTabs?: AppointmentTab[];
 }
 
 const AppointmentControls = ({
@@ -23,7 +24,8 @@ const AppointmentControls = ({
   currentTab,
   onTabChange,
   isPaidAccount,
-  userRole
+  userRole,
+  availableTabs = ["my-appointments", "shared-appointments", "assigned-appointments"]
 }: AppointmentControlsProps) => {
   // Explicitly log user role for debugging
   console.log("AppointmentControls - isPaidAccount:", isPaidAccount, "userRole:", userRole);
@@ -39,7 +41,7 @@ const AppointmentControls = ({
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="my-appointments">My Appointments</TabsTrigger>
             <TabsTrigger value="shared-appointments">Shared Appointments</TabsTrigger>
-            <TabsTrigger value="assigned-appointments">
+            <TabsTrigger value="team-appointments">
               {userRole === "business" ? "Team Appointments" : "Assigned Appointments"}
             </TabsTrigger>
           </TabsList>
@@ -64,12 +66,12 @@ const AppointmentControls = ({
         >
           <Plus size={16} />
           <span className="hidden sm:inline">
-            {currentTab === "assigned-appointments" && userRole === "business" 
+            {currentTab === "team-appointments" && userRole === "business" 
               ? "Assign Appointment" 
               : "Create Appointment"}
           </span>
           <span className="inline sm:hidden">
-            {currentTab === "assigned-appointments" && userRole === "business" 
+            {currentTab === "team-appointments" && userRole === "business" 
               ? "Assign" 
               : "Create"}
           </span>
