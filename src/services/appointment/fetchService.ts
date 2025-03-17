@@ -22,85 +22,85 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
       throw new Error("No active session");
     }
     
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('account_type')
-      .eq('id', session.user.id)
-      .single();
-    
-    if (profileError) {
-      console.error("Error fetching profile for appointment access:", profileError);
-      throw profileError;
-    }
-    
-    // Explicitly log the user role to debug
-    const userRole = profileData?.account_type || "free";
-    console.log("User role for appointments:", userRole);
-    
-    // Return early with empty data if there was a profile error
-    if (!profileData) {
-      console.warn("No profile data found, returning empty appointments");
-      return {
-        appointments: [],
-        userRole: "free"
-      };
-    }
-    
-    // Fetch appointments based on the selected tab
+    // Attempt to get user profile data
     try {
-      switch (tab) {
-        case "upcoming":
-          return {
-            appointments: await fetchUpcomingAppointments(session.user.id),
-            userRole: userRole as "free" | "individual" | "business"
-          };
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('account_type')
+        .eq('id', session.user.id)
+        .single();
+      
+      if (profileError) {
+        console.error("Error fetching profile for appointment access:", profileError);
+        // Don't throw here, fall back to localStorage or default
+      }
+      
+      // Get user role from profile data, localStorage, or default to "free"
+      const userRole = profileData?.account_type || 
+        localStorage.getItem('userRole') as "free" | "individual" | "business" || 
+        "free";
+      
+      // Explicitly log the user role for debugging
+      console.log("Fetching appointments for user role:", userRole);
+      
+      // Fetch appointments based on the selected tab
+      try {
+        let appointments = [];
         
-        case "past":
-          return {
-            appointments: await fetchPastAppointments(session.user.id),
-            userRole: userRole as "free" | "individual" | "business"
-          };
+        switch (tab) {
+          case "upcoming":
+            appointments = await fetchUpcomingAppointments(session.user.id);
+            break;
+          
+          case "past":
+            appointments = await fetchPastAppointments(session.user.id);
+            break;
+          
+          case "invitations":
+            appointments = await fetchInvitationAppointments(session.user.id);
+            break;
+          
+          case "my-appointments":
+            appointments = await fetchMyAppointments(session.user.id);
+            break;
+          
+          case "shared-appointments":
+            appointments = await fetchSharedAppointments(session.user.id);
+            break;
+          
+          case "assigned-appointments":
+            appointments = await fetchAssignedAppointments(session.user.id);
+            break;
+          
+          default:
+            appointments = await fetchDefaultAppointments(session.user.id);
+            break;
+        }
         
-        case "invitations":
-          return {
-            appointments: await fetchInvitationAppointments(session.user.id),
-            userRole: userRole as "free" | "individual" | "business"
-          };
-        
-        case "my-appointments":
-          return {
-            appointments: await fetchMyAppointments(session.user.id),
-            userRole: userRole as "free" | "individual" | "business"
-          };
-        
-        case "shared-appointments":
-          return {
-            appointments: await fetchSharedAppointments(session.user.id),
-            userRole: userRole as "free" | "individual" | "business"
-          };
-        
-        case "assigned-appointments":
-          return {
-            appointments: await fetchAssignedAppointments(session.user.id),
-            userRole: userRole as "free" | "individual" | "business"
-          };
-        
-        default:
-          return {
-            appointments: await fetchDefaultAppointments(session.user.id),
-            userRole: userRole as "free" | "individual" | "business"
-          };
+        // Return the fetched appointments and the user role
+        return {
+          appointments: appointments,
+          userRole: userRole as "free" | "individual" | "business"
+        };
+      } catch (error) {
+        console.error(`Error fetching ${tab} appointments:`, error);
+        // Return empty appointments but preserve the user role
+        return {
+          appointments: [],
+          userRole: userRole as "free" | "individual" | "business"
+        };
       }
     } catch (error) {
-      console.error(`Error fetching ${tab} appointments:`, error);
-      // Return empty appointments but preserve the user role
+      console.error("Error in profile fetch within fetchAppointments:", error);
+      // Fall back to localStorage or default "free"
+      const fallbackRole = localStorage.getItem('userRole') as "free" | "individual" | "business" || "free";
       return {
         appointments: [],
-        userRole: userRole as "free" | "individual" | "business"
+        userRole: fallbackRole
       };
     }
   } catch (error) {
-    console.error("Error in fetchAppointments:", error);
+    console.error("Error in fetchAppointments auth check:", error);
     throw error;
   }
 }

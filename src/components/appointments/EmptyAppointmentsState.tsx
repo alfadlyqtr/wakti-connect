@@ -16,7 +16,9 @@ const EmptyAppointmentsState = ({ isPaidAccount, onCreateAppointment, tab }: Emp
     "my-appointments": {
       icon: <Calendar className="h-12 w-12 text-muted-foreground" />,
       title: "No Appointments Created Yet",
-      description: "Create your first appointment to get started with scheduling.",
+      description: isPaidAccount 
+        ? "Create your first appointment to get started with scheduling."
+        : "Upgrade to create and manage appointments.",
       buttonText: "Create Appointment"
     },
     "shared-appointments": {

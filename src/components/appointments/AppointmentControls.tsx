@@ -25,9 +25,9 @@ const AppointmentControls = ({
   isPaidAccount,
   userRole
 }: AppointmentControlsProps) => {
+  // Explicitly log user role for debugging
   console.log("AppointmentControls - isPaidAccount:", isPaidAccount, "userRole:", userRole);
   
-  // Don't return null for free accounts, but show limited controls
   return (
     <div className="space-y-4">
       {isPaidAccount && (
@@ -67,6 +67,11 @@ const AppointmentControls = ({
             {currentTab === "assigned-appointments" && userRole === "business" 
               ? "Assign Appointment" 
               : "Create Appointment"}
+          </span>
+          <span className="inline sm:hidden">
+            {currentTab === "assigned-appointments" && userRole === "business" 
+              ? "Assign" 
+              : "Create"}
           </span>
         </Button>
       </div>

@@ -59,6 +59,8 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
       
       return result;
     } catch (error: any) {
+      console.error("Error creating appointment:", error);
+      
       if (error.message !== "This feature is only available for paid accounts") {
         toast({
           title: "Failed to create appointment",

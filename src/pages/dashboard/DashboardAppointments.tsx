@@ -19,7 +19,8 @@ const DashboardAppointments = () => {
     searchQuery, 
     setSearchQuery,
     createAppointment,
-    userRole
+    userRole,
+    refetch
   } = useAppointments(activeTab);
 
   // Explicitly log user role for debugging
@@ -40,9 +41,26 @@ const DashboardAppointments = () => {
     }
   }, [error]);
 
+  // Auto-retry fetching on errors
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        console.log("Auto-retrying appointment fetch after error");
+        refetch();
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [error, refetch]);
+
   const handleCreateAppointment = async (appointmentData: any) => {
-    await createAppointment(appointmentData);
-    setCreateDialogOpen(false);
+    try {
+      await createAppointment(appointmentData);
+      setCreateDialogOpen(false);
+    } catch (error) {
+      console.error("Error in handleCreateAppointment:", error);
+      // Toast is already handled in the useAppointments hook
+    }
   };
 
   const handleTabChange = (newTab: AppointmentTab) => {
