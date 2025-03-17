@@ -28,11 +28,23 @@ const DashboardAppointments = () => {
 
   // Explicitly log user role for debugging
   console.log("DashboardAppointments - user role:", userRole);
+  console.log("DashboardAppointments - filtered appointments:", filteredAppointments?.length || 0);
 
   // Determine if this is a paid account
   const isPaidAccount = userRole === "individual" || userRole === "business";
   const isBusinessAccount = userRole === "business";
   console.log("DashboardAppointments - isPaidAccount:", isPaidAccount);
+
+  // Force refresh on initial load
+  useEffect(() => {
+    // Small delay to let authentication settle
+    const timer = setTimeout(() => {
+      console.log("Initial refetch of appointments");
+      refetch();
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [refetch]);
 
   // Show error toast if query fails
   useEffect(() => {
@@ -79,6 +91,8 @@ const DashboardAppointments = () => {
     try {
       await createAppointment(appointmentData);
       setCreateDialogOpen(false);
+      // Force a refresh after creation
+      setTimeout(() => refetch(), 500);
     } catch (error) {
       console.error("Error in handleCreateAppointment:", error);
       // Toast is already handled in the useAppointments hook

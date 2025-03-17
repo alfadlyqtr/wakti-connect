@@ -39,7 +39,7 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
     queryKey: ['appointments', tab],
     queryFn: () => fetchAppointments(tab),
     refetchOnWindowFocus: false,
-    retry: 2,
+    retry: 3,
     retryDelay: attemptIndex => Math.min(1000 * Math.pow(2, attemptIndex), 30000),
     meta: {
       onError: (err: any) => {
@@ -93,7 +93,13 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
     } catch (error: any) {
       console.error("Error creating appointment:", error);
       
-      // Error is already handled in the service, no need for additional toast here
+      // Display more detailed error information
+      toast({
+        title: "Failed to create appointment",
+        description: error?.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+      
       throw error;
     }
   };
@@ -101,6 +107,7 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
   // Filter appointments based on search and filters
   const getFilteredAppointments = () => {
     const appointmentList = data?.appointments || [];
+    console.log(`Filtering ${appointmentList.length} appointments with search: "${searchQuery}"`);
     return filterAppointments(appointmentList, searchQuery, filterStatus, filterDate);
   };
 
@@ -109,6 +116,7 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
   
   // Log the user role to help with debugging
   console.log("useAppointments hook - user role:", userRole);
+  console.log("useAppointments hook - appointments count:", data?.appointments?.length || 0);
 
   return {
     appointments: data?.appointments || [],

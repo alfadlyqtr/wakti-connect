@@ -19,6 +19,11 @@ export const fetchMyAppointments = async (
     
     const userId = session.user.id;
     
+    // Store user ID in localStorage for use in components
+    localStorage.setItem('userId', userId);
+    
+    console.log("Fetching my appointments for user ID:", userId);
+    
     // Query appointments created by the user
     const { data: appointments, error } = await supabase
       .from('appointments')
@@ -27,8 +32,11 @@ export const fetchMyAppointments = async (
       .order('start_time', { ascending: true });
     
     if (error) {
+      console.error("Error fetching my appointments:", error);
       throw new Error(`Failed to fetch my appointments: ${error.message}`);
     }
+    
+    console.log("My appointments fetched:", appointments?.length || 0);
     
     // Map the database records to the Appointment type with validated status
     return (appointments || []).map(appt => ({

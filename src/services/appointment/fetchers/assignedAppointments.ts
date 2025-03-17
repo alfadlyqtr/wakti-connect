@@ -18,6 +18,7 @@ export const fetchAssignedAppointments = async (
     }
     
     const userId = session.user.id;
+    console.log("Fetching assigned appointments for user ID:", userId);
     
     // Query appointments assigned to the user
     const { data: appointments, error } = await supabase
@@ -27,8 +28,11 @@ export const fetchAssignedAppointments = async (
       .order('start_time', { ascending: true });
     
     if (error) {
+      console.error("Error fetching assigned appointments:", error);
       throw new Error(`Failed to fetch assigned appointments: ${error.message}`);
     }
+    
+    console.log("Assigned appointments fetched:", appointments?.length || 0);
     
     // Map the database records to the Appointment type with validated status
     return (appointments || []).map(appt => ({
