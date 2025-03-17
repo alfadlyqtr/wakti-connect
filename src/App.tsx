@@ -3,11 +3,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useRoutes } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/use-theme";
 import PublicRoutes from "./routes/publicRoutes";
 import AuthRoutes from "./routes/authRoutes";
-import DashboardRoutes from "./routes/dashboardRoutes";
+import dashboardRoutes from "./routes/dashboardRoutes";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import VerificationPage from "./pages/auth/VerificationPage";
@@ -22,6 +22,12 @@ import { TaskProvider } from "@/contexts/TaskContext";
 import "./i18n/i18n";
 
 const queryClient = new QueryClient();
+
+// Dashboard Routes Component
+const DashboardRoutes = () => {
+  const routes = useRoutes(dashboardRoutes);
+  return routes;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -56,9 +62,7 @@ const App = () => (
                 <Route path="/dashboard/*" element={
                   <ProtectedRoute>
                     <DashboardLayout>
-                      <Routes>
-                        {DashboardRoutes}
-                      </Routes>
+                      <DashboardRoutes />
                     </DashboardLayout>
                   </ProtectedRoute>
                 } />

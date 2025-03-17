@@ -3,7 +3,7 @@ import React from "react";
 import { useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { navItems, NavItem, NavSection } from "./sidebarNavConfig";
+import { navItems, NavItem, NavSection, SidebarNavItem as SidebarNavItemType } from "./sidebarNavConfig";
 import { useSidebarData } from "./useSidebarData";
 import SidebarNavItem from "./SidebarNavItem";
 import SidebarSectionHeader from "./SidebarSectionHeader";
@@ -20,7 +20,11 @@ const SidebarNavItems = ({ onNavClick, isCollapsed = false }: SidebarNavItemsPro
   const queryClient = useQueryClient();
 
   const isActive = (path: string) => {
-    return location.pathname.startsWith('/dashboard/' + path);
+    // Handle root dashboard path
+    if (path === '' && location.pathname === '/dashboard') {
+      return true;
+    }
+    return path ? location.pathname.startsWith('/dashboard/' + path) : false;
   };
 
   const handleNavClick = (path: string) => {
@@ -34,15 +38,20 @@ const SidebarNavItems = ({ onNavClick, isCollapsed = false }: SidebarNavItemsPro
     }
   };
 
-  const isItemVisible = (item: NavItem | NavSection) => {
+  const isItemVisible = (item: SidebarNavItemType) => {
     if (!userData) return false;
-    return item.showFor.includes(userData.accountType as 'free' | 'individual' | 'business');
+    
+    if ('section' in item) {
+      return item.showFor.includes(userData.accountType as 'free' | 'individual' | 'business');
+    } else {
+      return item.showFor.includes(userData.accountType as 'free' | 'individual' | 'business');
+    }
   };
 
   return (
     <div className="flex flex-col gap-1 px-2">
       {navItems.map((item, index) => {
-        // Skip if section or item should not be shown for current user type
+        // Skip if item should not be shown for current user type
         if (!isItemVisible(item)) {
           return null;
         }
@@ -58,8 +67,8 @@ const SidebarNavItems = ({ onNavClick, isCollapsed = false }: SidebarNavItemsPro
         }
 
         // Navigation item with badge for messages
-        const navItem = {
-          ...item,
+        const navItem: NavItem = {
+          ...item as NavItem,
           badge: item.path === 'messages' ? unreadMessagesCount > 0 ? unreadMessagesCount : null : null
         };
 
@@ -67,7 +76,7 @@ const SidebarNavItems = ({ onNavClick, isCollapsed = false }: SidebarNavItemsPro
         return (
           <SidebarNavItem
             key={item.path}
-            item={navItem as NavItem}
+            item={navItem}
             isActive={isActive(item.path)}
             isMobile={isMobile}
             isCollapsed={isCollapsed}

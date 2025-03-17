@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   Users,
@@ -14,133 +15,141 @@ import {
   Heart,
 } from "lucide-react";
 
-export type SidebarItem = {
-  title: string;
-  href: string;
+export type NavItem = {
+  label: string;
+  path: string;
   icon: any;
-  disabled?: boolean;
-  accountTypes: string[];
+  badge?: number | null;
+  showFor: Array<'free' | 'individual' | 'business'>;
 };
 
-export const sidebarNavItems: SidebarItem[] = [
+export type NavSection = {
+  section: string;
+  showFor: Array<'free' | 'individual' | 'business'>;
+};
+
+// Combined type for sidebar items
+export type SidebarNavItem = NavItem | NavSection;
+
+// Main navigation items
+export const navItems: SidebarNavItem[] = [
+  // Main section
   {
-    title: "Main",
-    items: [
-      {
-        title: "Dashboard",
-        href: "/dashboard",
-        icon: LayoutDashboard,
-        accountTypes: ["individual", "business"],
-      },
-    ],
+    section: "Main",
+    showFor: ['free', 'individual', 'business'],
   },
   {
-    title: "Business Tools",
-    items: [
-      {
-        title: "Business Page",
-        href: "/dashboard/business-page",
-        icon: Building2,
-        accountTypes: ["business"],
-      },
-      {
-        title: "Bookings",
-        href: "/dashboard/bookings",
-        icon: Calendar,
-        accountTypes: ["business"],
-      },
-      {
-        title: "Services",
-        href: "/dashboard/services",
-        icon: ListChecks,
-        accountTypes: ["business"],
-      },
-      {
-        title: "Staff",
-        href: "/dashboard/staff",
-        icon: UserPlus,
-        accountTypes: ["business"],
-      },
-      {
-        title: "Jobs",
-        href: "/dashboard/jobs",
-        icon: KanbanSquare,
-        accountTypes: ["business"],
-      },
-    ],
+    label: "Dashboard",
+    path: "",
+    icon: LayoutDashboard,
+    showFor: ['free', 'individual', 'business'],
+  },
+  
+  // Business Tools section
+  {
+    section: "Business Tools",
+    showFor: ['business'],
   },
   {
-    title: "Tasks & Projects",
-    items: [
-      {
-        title: "Tasks",
-        href: "/dashboard/tasks",
-        icon: ListChecks,
-        accountTypes: ["individual", "business"],
-      },
-      {
-        title: "Documents",
-        href: "/dashboard/documents",
-        icon: FileText,
-        accountTypes: ["individual", "business"],
-      },
-    ],
+    label: "Business Page",
+    path: "business-page",
+    icon: Building2,
+    showFor: ['business'],
   },
   {
-    title: "Communication",
-    items: [
-      {
-        title: "Messages",
-        href: "/dashboard/messages",
-        icon: Mail,
-        accountTypes: ["individual", "business"],
-      },
-      {
-        title: "Contacts",
-        href: "/dashboard/contacts",
-        icon: Contact2,
-        accountTypes: ["individual", "business"],
-      },
-    ],
+    label: "Bookings",
+    path: "bookings",
+    icon: Calendar,
+    showFor: ['business'],
   },
   {
-    title: "Contacts & Community",
-    items: [
-      {
-        title: "Contacts",
-        href: "/dashboard/contacts",
-        icon: Users,
-        accountTypes: ["individual", "business"],
-      },
-      {
-        title: "My Subscribers",
-        href: "/dashboard/subscribers",
-        icon: Users,
-        accountTypes: ["business"],
-      },
-      {
-        title: "My Subscriptions",
-        href: "/dashboard/subscriptions",
-        icon: Heart,
-        accountTypes: ["individual", "free"],
-      },
-    ],
+    label: "Services",
+    path: "services",
+    icon: ListChecks,
+    showFor: ['business'],
   },
   {
-    title: "Settings",
-    items: [
-      {
-        title: "Settings",
-        href: "/dashboard/settings",
-        icon: Settings,
-        accountTypes: ["individual", "business"],
-      },
-      {
-        title: "Help",
-        href: "/dashboard/help",
-        icon: HelpCircle,
-        accountTypes: ["individual", "business"],
-      },
-    ],
+    label: "Staff",
+    path: "staff",
+    icon: UserPlus,
+    showFor: ['business'],
+  },
+  {
+    label: "Jobs",
+    path: "jobs",
+    icon: KanbanSquare,
+    showFor: ['business'],
+  },
+  
+  // Tasks & Projects section
+  {
+    section: "Tasks & Projects",
+    showFor: ['free', 'individual', 'business'],
+  },
+  {
+    label: "Tasks",
+    path: "tasks",
+    icon: ListChecks,
+    showFor: ['free', 'individual', 'business'],
+  },
+  {
+    label: "Documents",
+    path: "documents",
+    icon: FileText,
+    showFor: ['free', 'individual', 'business'],
+  },
+  
+  // Communication section
+  {
+    section: "Communication",
+    showFor: ['free', 'individual', 'business'],
+  },
+  {
+    label: "Messages",
+    path: "messages",
+    icon: Mail,
+    showFor: ['free', 'individual', 'business'],
+  },
+  
+  // Contacts & Community section
+  {
+    section: "Contacts & Community",
+    showFor: ['free', 'individual', 'business'],
+  },
+  {
+    label: "Contacts",
+    path: "contacts",
+    icon: Contact2,
+    showFor: ['free', 'individual', 'business'],
+  },
+  {
+    label: "My Subscribers",
+    path: "subscribers",
+    icon: Users,
+    showFor: ['business'],
+  },
+  {
+    label: "My Subscriptions",
+    path: "subscriptions",
+    icon: Heart,
+    showFor: ['free', 'individual'],
+  },
+  
+  // Settings section
+  {
+    section: "Settings",
+    showFor: ['free', 'individual', 'business'],
+  },
+  {
+    label: "Settings",
+    path: "settings",
+    icon: Settings,
+    showFor: ['free', 'individual', 'business'],
+  },
+  {
+    label: "Help",
+    path: "help",
+    icon: HelpCircle,
+    showFor: ['free', 'individual', 'business'],
   },
 ];

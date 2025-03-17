@@ -28,3 +28,58 @@ export interface BusinessSubscription {
   created_at: string;
   business_profile: BusinessProfile | null;
 }
+
+// Business Page Types
+export interface BusinessPage {
+  id: string;
+  business_id: string;
+  page_title: string;
+  page_slug: string;
+  description?: string;
+  logo_url?: string;
+  primary_color?: string;
+  secondary_color?: string;
+  is_published: boolean;
+  chatbot_enabled?: boolean;
+  chatbot_code?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BusinessPageSection {
+  id: string;
+  page_id: string;
+  section_type: SectionType;
+  section_order: number;
+  section_content: any;
+  is_visible: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type SectionType = 
+  | 'header'
+  | 'about'
+  | 'services'
+  | 'contact'
+  | 'gallery'
+  | 'hours'
+  | 'testimonials';
+
+export interface BusinessSocialLink {
+  id: string;
+  business_id: string;
+  platform: SocialPlatform;
+  url: string;
+  created_at?: string;
+}
+
+export type SocialPlatform = 
+  | 'facebook'
+  | 'instagram'
+  | 'twitter'
+  | 'linkedin'
+  | 'youtube'
+  | 'tiktok'
+  | 'pinterest'
+  | 'website';
