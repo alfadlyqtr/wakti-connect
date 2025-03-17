@@ -26,6 +26,7 @@ export const useProfileSettings = () => {
       id: session.user.id,
       account_type: 'free',
       is_searchable: true,
+      auto_approve_contacts: false,
       avatar_url: '',
       business_name: '',
       created_at: new Date().toISOString(),

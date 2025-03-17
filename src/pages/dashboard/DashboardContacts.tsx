@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { UserContact } from "@/types/invitation.types";
 import { updateAutoApproveContacts } from "@/services/contacts/contactsService";
 import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const DashboardContacts = () => {
   const { 
