@@ -13,6 +13,5 @@ export type EventType = "task";
 
 export interface DayEventTypes {
   hasTasks: boolean;
-  hasAppointments?: boolean;
   hasBookings?: boolean;
 }
