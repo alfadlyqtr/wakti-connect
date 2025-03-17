@@ -10,6 +10,7 @@ import BusinessSocialLinks from "./BusinessSocialLinks";
 import BusinessPageHeader from "./BusinessPageHeader";
 import BusinessPageSections from "./BusinessPageSections";
 import BusinessPageNotFound from "./BusinessPageNotFound";
+import { BusinessProfile } from "@/types/business.types";
 
 const BusinessLandingPageComponent = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -66,6 +67,13 @@ const BusinessLandingPageComponent = () => {
   if (!businessPage) {
     return <BusinessPageNotFound />;
   }
+
+  // Create a BusinessProfile object from businessPage
+  const businessProfile: BusinessProfile = {
+    id: businessPage.business_id,
+    business_name: businessPage.page_title || "Business",
+    account_type: "business"
+  };
   
   return (
     <div 
@@ -76,7 +84,7 @@ const BusinessLandingPageComponent = () => {
       className="min-h-screen pb-16"
     >
       <BusinessPageHeader 
-        business={businessPage} // Fixed: changed businessPage to business to match the prop type
+        business={businessProfile}
         isPreviewMode={isPreviewMode}
         isAuthenticated={isAuthenticated}
         isSubscribed={isSubscribed}
