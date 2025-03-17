@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment } from "../types";
-import { validateAppointmentStatus } from "../utils/statusValidator";
+import { mapToAppointment } from "../utils/mappers";
 
 /**
  * Fetches default appointments list based on user role
@@ -40,23 +40,8 @@ export const fetchDefaultAppointments = async (
       throw new Error(`Failed to fetch default appointments: ${error.message}`);
     }
     
-    // Map to properly typed Appointment objects
-    return (appointments || []).map(appt => ({
-      ...appt,
-      status: validateAppointmentStatus(appt.status),
-      // Format user data properly
-      user: appt.user ? {
-        id: String(appt.user.id || ''),
-        email: String(appt.user.email || ''),
-        display_name: appt.user.display_name || null
-      } : null,
-      // Format assignee data properly
-      assignee: appt.assignee ? {
-        id: String(appt.assignee.id || ''),
-        email: String(appt.assignee.email || ''),
-        display_name: appt.assignee.display_name || null
-      } : null
-    })) as Appointment[];
+    // Map to properly typed Appointment objects using our mapper function
+    return (appointments || []).map(appt => mapToAppointment(appt));
   } catch (error) {
     console.error("Error in fetchDefaultAppointments:", error);
     return [];

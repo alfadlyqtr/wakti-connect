@@ -3,6 +3,7 @@
 export * from './types';
 export * from './fetchService';
 export * from './baseService';
+export * from './createService';
 export * from './invitationService';
 export * from './utils/statusValidator';
 

@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 import { 
   fetchAppointments, 
-  createAppointment as createAppointmentService,
+  createNewAppointment,
   Appointment,
   AppointmentTab,
   AppointmentFormData,
@@ -94,7 +93,7 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
         throw new Error("Appointment must have start and end times");
       }
       
-      const result = await createAppointmentService(appointmentData as AppointmentFormData, recurringData);
+      const result = await createNewAppointment(appointmentData as AppointmentFormData);
       
       // Refetch with a delay to ensure the database has time to update
       setTimeout(() => {
