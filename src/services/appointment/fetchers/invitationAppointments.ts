@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment } from "../types";
 import { validateAppointmentStatus } from "../utils/statusValidator";
+import { mapUserProfile } from "../utils/mappers";
 
 /**
  * Fetches appointments for which the current user has pending invitations
@@ -54,18 +55,10 @@ export const fetchInvitationAppointments = async (
           return {
             ...invitation.appointment,
             status: validateAppointmentStatus(invitation.appointment.status),
-            // Format user data properly, ensuring we handle potential nulls or errors
-            user: invitation.appointment.user && typeof invitation.appointment.user === 'object' ? {
-              id: String(invitation.appointment.user.id || ''),
-              email: String(invitation.appointment.user.email || ''),
-              display_name: invitation.appointment.user.display_name || null
-            } : null,
-            // Format assignee data properly, ensuring we handle potential nulls or errors
-            assignee: invitation.appointment.assignee && typeof invitation.appointment.assignee === 'object' ? {
-              id: String(invitation.appointment.assignee.id || ''),
-              email: String(invitation.appointment.assignee.email || ''),
-              display_name: invitation.appointment.assignee.display_name || null
-            } : null,
+            // Use mapUserProfile to safely handle user data
+            user: mapUserProfile(invitation.appointment.user),
+            // Use mapUserProfile to safely handle assignee data
+            assignee: mapUserProfile(invitation.appointment.assignee),
             invitations: [invitation]
           };
         }

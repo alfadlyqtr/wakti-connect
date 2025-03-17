@@ -4,11 +4,16 @@ import { validateAppointmentStatus } from './statusValidator';
 
 /**
  * Helper function to safely access nested user/assignee properties
- * and handle possible SelectQueryError objects
+ * and handle possible SelectQueryError objects or null values
  */
 export const mapUserProfile = (userData: any): UserProfile | null => {
-  // Handle case when there's an error or undefined data
-  if (!userData || userData.error === true) {
+  // Handle case when there's null, undefined, error data, or it's not an object
+  if (!userData || typeof userData !== 'object' || userData.error === true) {
+    return null;
+  }
+  
+  // Make sure all required properties exist
+  if (userData.id === undefined && userData.email === undefined) {
     return null;
   }
   

@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment } from "../types";
 import { validateAppointmentStatus } from "../utils/statusValidator";
+import { mapUserProfile } from "../utils/mappers";
 
 /**
  * Fetches appointments created by the current user
@@ -64,18 +65,10 @@ export const fetchMyAppointments = async (
       return {
         ...appt,
         status: validateAppointmentStatus(appt.status),
-        // Format user data properly, ensuring we handle potential nulls or errors
-        user: appt.user && typeof appt.user === 'object' ? {
-          id: String(appt.user.id || ''),
-          email: String(appt.user.email || ''),
-          display_name: appt.user.display_name || null
-        } : null,
-        // Format assignee data properly, ensuring we handle potential nulls or errors
-        assignee: appt.assignee && typeof appt.assignee === 'object' ? {
-          id: String(appt.assignee.id || ''),
-          email: String(appt.assignee.email || ''),
-          display_name: appt.assignee.display_name || null
-        } : null
+        // Use mapUserProfile to safely handle user data
+        user: mapUserProfile(appt.user),
+        // Use mapUserProfile to safely handle assignee data
+        assignee: mapUserProfile(appt.assignee)
       } as Appointment;
     });
   } catch (error) {
