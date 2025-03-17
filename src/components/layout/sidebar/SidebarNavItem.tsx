@@ -41,10 +41,10 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
       )}
       onClick={() => onClick(item.path)}
     >
-      <Link to={`/dashboard/${item.path}`} className="flex items-center justify-center">
-        <Icon className="h-5 w-5" />
+      <Link to={`/dashboard/${item.path}`} className="flex items-center justify-center w-full">
+        <Icon className={cn("h-5 w-5", !isCollapsed && !isMobile && "mr-2")} />
         {!isMobile && !isCollapsed && (
-          <span className="ml-2">{item.label}</span>
+          <span>{item.label}</span>
         )}
         {item.badge && !isMobile && !isCollapsed && (
           <Badge variant="secondary" className="ml-auto">

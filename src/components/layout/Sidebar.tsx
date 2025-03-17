@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 // Define profile type to ensure TypeScript knows about our new columns
 interface SidebarProfileData {
@@ -83,7 +84,7 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
   
   const getSubtitle = () => {
     if (profileData?.account_type === 'business') {
-      return profileData?.display_name || 'Account Admin'; 
+      return profileData?.full_name ? `${profileData.full_name} • Admin` : 'Account Admin'; 
     }
     return `${profileData?.account_type || 'Free'} Plan`;
   };
@@ -135,7 +136,9 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
             {!collapsed && (
               <div className="overflow-hidden">
                 <p className="font-medium text-sm truncate max-w-[140px]">{getDisplayName()}</p>
-                <p className="text-xs text-muted-foreground capitalize">{getSubtitle()}</p>
+                <div className="flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground truncate max-w-[120px]">{getSubtitle()}</p>
+                </div>
               </div>
             )}
           </NavLink>
