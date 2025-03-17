@@ -4,13 +4,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Service, ServiceFormValues } from "@/types/service.types";
 import { toast } from "@/components/ui/use-toast";
-import { useServiceStaffAssignments } from './useServiceStaffAssignments';
+import { useServiceStaffMutations } from './useServiceStaffMutations';
 
 export const useServiceMutations = () => {
   const queryClient = useQueryClient();
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [openAddService, setOpenAddService] = useState(false);
-  const { assignStaffToService } = useServiceStaffAssignments();
+  const { assignStaffToService } = useServiceStaffMutations();
 
   // Add service mutation
   const addServiceMutation = useMutation({
