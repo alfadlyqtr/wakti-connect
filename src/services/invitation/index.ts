@@ -2,6 +2,10 @@
 // Re-export all invitation service functions for easy imports
 export * from './templates';
 export * from './customization';
-export * from './invitations';
-// We'll exclude the respondToInvitation from responses since it conflicts with invitations
-export * from './responses';
+export { 
+  sendInvitation, 
+  deleteInvitation, 
+  getUserInvitations 
+} from './invitations';
+// Export the responses functions with explicit renaming to avoid conflicts
+export { respondToInvitation as respondToInvitationUpdate } from './responses';

@@ -30,34 +30,40 @@ export const fetchAppointments = async (
     }
 
     // Make sure userRole is one of the allowed values
-    const userRole = (userRoleData as string) === "individual" ? "individual" :
-                      (userRoleData as string) === "business" ? "business" : "free";
+    let userRole: "free" | "individual" | "business";
+    if (userRoleData === "individual") {
+      userRole = "individual";
+    } else if (userRoleData === "business") {
+      userRole = "business";
+    } else {
+      userRole = "free";
+    }
 
     // Use the appropriate fetcher for the current tab
     switch (tab) {
       case "my-appointments":
-        appointments = await fetchMyAppointments();
+        appointments = await fetchMyAppointments(userRole);
         break;
       case "shared-appointments":
-        appointments = await fetchSharedAppointments();
+        appointments = await fetchSharedAppointments(userRole);
         break;
       case "assigned-appointments":
-        appointments = await fetchAssignedAppointments();
+        appointments = await fetchAssignedAppointments(userRole);
         break;
       case "team-appointments":
-        appointments = await fetchDefaultAppointments();
+        appointments = await fetchDefaultAppointments(userRole);
         break;
       case "upcoming":
-        appointments = await fetchUpcomingAppointments();
+        appointments = await fetchUpcomingAppointments(userRole);
         break;
       case "past":
-        appointments = await fetchPastAppointments();
+        appointments = await fetchPastAppointments(userRole);
         break;
       case "invitations":
-        appointments = await fetchInvitationAppointments();
+        appointments = await fetchInvitationAppointments(userRole);
         break;
       default:
-        appointments = await fetchDefaultAppointments();
+        appointments = await fetchDefaultAppointments(userRole);
     }
 
     // Return both the appointments and the user's role

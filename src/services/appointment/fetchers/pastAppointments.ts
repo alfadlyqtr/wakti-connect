@@ -1,34 +1,39 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment } from "../types";
-import { validateAppointmentStatus } from "../utils/statusValidator";
 
 /**
  * Fetches past appointments for the current user
  */
-export async function fetchPastAppointments(userId: string): Promise<Appointment[]> {
-  const { data, error } = await supabase
-    .from('appointments')
-    .select('*')
-    .eq('user_id', userId)
-    .lt('start_time', new Date().toISOString())
-    .order('start_time', { ascending: false });
+export const fetchPastAppointments = async (
+  userRole: "free" | "individual" | "business"
+): Promise<Appointment[]> => {
+  try {
+    // Get current user ID
+    const { data: { session } } = await supabase.auth.getSession();
     
-  if (error) throw error;
-  
-  // Transform data with proper typing
-  return (data || []).map(item => ({
-    id: item.id,
-    user_id: item.user_id,
-    title: item.title,
-    description: item.description,
-    location: item.location,
-    start_time: item.start_time,
-    end_time: item.end_time,
-    is_all_day: item.is_all_day || false,
-    status: validateAppointmentStatus(item.status),
-    assignee_id: item.assignee_id || null,
-    created_at: item.created_at,
-    updated_at: item.updated_at
-  }));
-}
+    if (!session?.user) {
+      throw new Error("No authenticated user");
+    }
+    
+    const userId = session.user.id;
+    const now = new Date().toISOString();
+    
+    // Query user's past appointments
+    const { data: appointments, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('user_id', userId)
+      .lt('end_time', now)
+      .order('start_time', { ascending: false });
+    
+    if (error) {
+      throw new Error(`Failed to fetch past appointments: ${error.message}`);
+    }
+    
+    return appointments || [];
+  } catch (error) {
+    console.error("Error in fetchPastAppointments:", error);
+    return [];
+  }
+};

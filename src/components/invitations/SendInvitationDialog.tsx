@@ -6,6 +6,7 @@ import RecipientSelector from "./RecipientSelector";
 import { Loader2 } from "lucide-react";
 import { sendInvitation } from "@/services/invitation/invitations";
 import { toast } from "@/components/ui/use-toast";
+import { InvitationRecipient } from "@/types/invitation.types";
 
 interface SendInvitationDialogProps {
   open: boolean;
@@ -21,13 +22,13 @@ export const SendInvitationDialog: React.FC<SendInvitationDialogProps> = ({
   onInvitationSent
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [recipient, setRecipient] = useState<{ type: 'user' | 'email'; id: string } | null>(null);
+  const [selectedRecipients, setSelectedRecipients] = useState<InvitationRecipient[]>([]);
 
   const handleSendInvitation = async () => {
-    if (!recipient) {
+    if (selectedRecipients.length === 0) {
       toast({
         title: "Missing Recipient",
-        description: "Please select a recipient to send the invitation to.",
+        description: "Please select at least one recipient to send the invitation to.",
         variant: "destructive",
       });
       return;
@@ -35,15 +36,21 @@ export const SendInvitationDialog: React.FC<SendInvitationDialogProps> = ({
 
     setIsLoading(true);
     try {
+      // For now we'll just send to the first recipient, but in future we could send to multiple
+      const firstRecipient = selectedRecipients[0];
+      
       await sendInvitation(appointmentId, {
-        target: recipient,
+        target: {
+          type: firstRecipient.type === 'contact' ? 'user' : 'email',
+          id: firstRecipient.id || firstRecipient.email || ''
+        },
         shared_as_link: false,
         customization: null
       });
 
       toast({
         title: "Invitation Sent",
-        description: `Invitation sent successfully to ${recipient.id}`,
+        description: `Invitation sent successfully to ${firstRecipient.name}`,
       });
 
       onInvitationSent?.();
@@ -59,6 +66,14 @@ export const SendInvitationDialog: React.FC<SendInvitationDialogProps> = ({
     }
   };
 
+  const handleAddRecipient = (recipient: InvitationRecipient) => {
+    setSelectedRecipients(prev => [...prev, recipient]);
+  };
+
+  const handleRemoveRecipient = (index: number) => {
+    setSelectedRecipients(prev => prev.filter((_, i) => i !== index));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -67,14 +82,18 @@ export const SendInvitationDialog: React.FC<SendInvitationDialogProps> = ({
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
-          <RecipientSelector onRecipientSelect={setRecipient} />
+          <RecipientSelector 
+            selectedRecipients={selectedRecipients}
+            onAddRecipient={handleAddRecipient}
+            onRemoveRecipient={handleRemoveRecipient}
+          />
         </div>
 
         <DialogFooter>
           <Button type="button" variant="secondary" onClick={() => onOpenChange(false)} disabled={isLoading}>
             Cancel
           </Button>
-          <Button type="submit" onClick={handleSendInvitation} disabled={isLoading || !recipient}>
+          <Button type="submit" onClick={handleSendInvitation} disabled={isLoading || selectedRecipients.length === 0}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

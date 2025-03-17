@@ -1,43 +1,44 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment } from "../types";
-import { validateAppointmentStatus } from "../utils/statusValidator";
 
 /**
  * Fetches appointments shared with the current user
  */
-export async function fetchSharedAppointments(userId: string): Promise<Appointment[]> {
-  const { data, error } = await supabase
-    .from('appointment_invitations')
-    .select('appointment_id, appointments(*)')
-    .eq('invited_user_id', userId)
-    .eq('status', 'accepted')
-    .order('created_at', { ascending: false });
+export const fetchSharedAppointments = async (
+  userRole: "free" | "individual" | "business"
+): Promise<Appointment[]> => {
+  try {
+    // Get current user ID
+    const { data: { session } } = await supabase.auth.getSession();
     
-  if (error) throw error;
-  
-  // Extract appointments with proper typing
-  const appointmentsData: Appointment[] = [];
-  if (data && data.length > 0) {
-    for (const item of data) {
-      if (item.appointments) {
-        const appt = item.appointments;
-        appointmentsData.push({
-          id: appt.id,
-          user_id: appt.user_id,
-          title: appt.title,
-          description: appt.description,
-          location: appt.location,
-          start_time: appt.start_time,
-          end_time: appt.end_time,
-          is_all_day: appt.is_all_day || false,
-          status: validateAppointmentStatus(appt.status),
-          assignee_id: appt.assignee_id || null,
-          created_at: appt.created_at,
-          updated_at: appt.updated_at
-        });
-      }
+    if (!session?.user) {
+      throw new Error("No authenticated user");
     }
+    
+    const userId = session.user.id;
+    
+    // Query appointments shared with the user through invitation
+    const { data: appointments, error } = await supabase
+      .from('appointment_invitations')
+      .select(`
+        *,
+        appointment:appointment_id (*)
+      `)
+      .eq('invited_user_id', userId)
+      .eq('status', 'accepted')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      throw new Error(`Failed to fetch shared appointments: ${error.message}`);
+    }
+    
+    // Map the nested appointment data
+    return (appointments || [])
+      .map(invitation => invitation.appointment)
+      .filter(Boolean);
+  } catch (error) {
+    console.error("Error in fetchSharedAppointments:", error);
+    return [];
   }
-  return appointmentsData;
-}
+};
