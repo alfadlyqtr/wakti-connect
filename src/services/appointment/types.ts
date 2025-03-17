@@ -14,6 +14,7 @@ export interface Appointment {
   updated_at: string;
   is_recurring_instance?: boolean;
   parent_recurring_id?: string | null;
+  appointment_type?: string;
 }
 
 export type AppointmentStatus = "scheduled" | "cancelled" | "completed";

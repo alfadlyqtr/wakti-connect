@@ -77,6 +77,7 @@ export const fetchAppointments = async (
     let monthlyUsage: MonthlyUsage | null = null;
     if (userRole === 'free') {
       monthlyUsage = await fetchMonthlyUsage();
+      console.log("Monthly usage data:", monthlyUsage);
     }
 
     // Use the appropriate fetcher for the current tab

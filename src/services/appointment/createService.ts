@@ -13,6 +13,8 @@ export const createAppointment = async (
   recurringData?: RecurringFormData
 ) => {
   try {
+    console.log("Starting appointment creation process...");
+    
     // Check if the user can create appointments using our can_create_appointment function
     const { data: canCreate, error: permissionError } = await supabase.rpc(
       "can_create_appointment"
@@ -32,6 +34,8 @@ export const createAppointment = async (
       });
       throw new Error("Monthly appointment limit reached for free account");
     }
+    
+    console.log("Permission check passed, proceeding with appointment creation");
     
     // Get the current user's ID
     const { data: { session } } = await supabase.auth.getSession();
@@ -60,6 +64,8 @@ export const createAppointment = async (
       appointment_type: appointmentData.appointment_type || 'appointment'
     };
 
+    console.log("Sending appointment data to database:", completeAppointmentData);
+
     // Explicit logging and error handling for the insert operation
     const { data: appointment, error } = await supabase
       .from("appointments")
@@ -69,12 +75,24 @@ export const createAppointment = async (
 
     if (error) {
       console.error("Supabase Error creating appointment:", error);
+      
+      // Specific error message for RLS violations
+      if (error.code === '42501') {
+        toast({
+          title: "Permission Error",
+          description: "You don't have permission to create this appointment. This may be due to Row Level Security policies.",
+          variant: "destructive",
+        });
+      }
+      
       throw new Error(`Database error: ${error.message}`);
     }
 
     if (!appointment) {
       throw new Error("Failed to create appointment: No data returned");
     }
+
+    console.log("Appointment created successfully:", appointment);
 
     // If this is a recurring appointment, create the recurrences
     if (recurringData && appointment) {
@@ -101,9 +119,25 @@ export const createAppointment = async (
       }
     }
 
+    // Success toast notification
+    toast({
+      title: "Appointment Created",
+      description: "Your appointment has been successfully created.",
+    });
+
     return appointment;
   } catch (error: any) {
     console.error("Error in createAppointment:", error);
+    
+    // Only show toast if it's not already handled
+    if (!error.message.includes("Monthly appointment limit")) {
+      toast({
+        title: "Failed to Create Appointment",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+    
     throw error;
   }
 };

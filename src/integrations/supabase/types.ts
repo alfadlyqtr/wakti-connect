@@ -1040,6 +1040,12 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      check_appointment_access: {
+        Args: {
+          appointment_id: string
+        }
+        Returns: boolean
+      }
       check_if_task_shared_with_user: {
         Args: {
           task_id: string
