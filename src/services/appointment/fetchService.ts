@@ -28,7 +28,7 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
         .from('profiles')
         .select('account_type')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
       
       if (profileError) {
         console.error("Error fetching profile for appointment access:", profileError);

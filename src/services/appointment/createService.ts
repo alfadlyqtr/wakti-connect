@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppointmentFormData } from "../appointment/types";
 import { RecurringFormData } from "@/types/recurring.types";
 import { createRecurringSetting } from "../recurring/recurringService";
+import { toast } from "@/components/ui/use-toast";
 
 /**
  * Create a new appointment
@@ -20,7 +21,7 @@ export async function createAppointment(formData: AppointmentFormData, recurring
       .from('profiles')
       .select('account_type')
       .eq('id', session.user.id)
-      .single();
+      .maybeSingle();
     
     if (profileError) {
       console.error("Error checking user account type:", profileError);
@@ -29,6 +30,11 @@ export async function createAppointment(formData: AppointmentFormData, recurring
     
     // Only allow paid accounts to create appointments
     if (!profileData || profileData.account_type === 'free') {
+      toast({
+        title: "Premium Feature",
+        description: "Creating appointments is only available for paid accounts. Please upgrade your plan.",
+        variant: "destructive",
+      });
       throw new Error("This feature is only available for paid accounts");
     }
     

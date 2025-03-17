@@ -56,6 +56,16 @@ export function CreateAppointmentDialog({
   const handleSubmit = async (values: AppointmentFormValues) => {
     setIsSubmitting(true);
     try {
+      if (!isPaidAccount) {
+        toast({
+          title: "Premium Feature",
+          description: "Creating appointments is only available for paid accounts. Please upgrade your plan.",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
       // Combine date and time values
       const startDate = new Date(values.date);
       const endDate = new Date(values.date);
@@ -92,7 +102,7 @@ export function CreateAppointmentDialog({
       if (error.message === "This feature is only available for paid accounts") {
         toast({
           title: "Premium Feature",
-          description: "Recurring appointments are only available for paid accounts. Please upgrade your plan.",
+          description: "Appointments are only available for paid accounts. Please upgrade your plan.",
           variant: "destructive"
         });
       } else {
