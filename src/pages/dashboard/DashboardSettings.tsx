@@ -12,6 +12,7 @@ import useIsMobile from "@/hooks/use-mobile";
 const DashboardSettings = () => {
   const { data: profile } = useProfileSettings();
   const isMobile = useIsMobile();
+  const isBusinessAccount = profile?.account_type === 'business';
 
   return (
     <div className="space-y-6">
@@ -30,7 +31,9 @@ const DashboardSettings = () => {
           </TabsTrigger>
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <UserCircle className="h-4 w-4" />
-            <span className={isMobile ? "hidden" : "hidden sm:inline"}>Profile</span>
+            <span className={isMobile ? "hidden" : "hidden sm:inline"}>
+              {isBusinessAccount ? "Business" : "Profile"}
+            </span>
           </TabsTrigger>
           <TabsTrigger value="billing" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />

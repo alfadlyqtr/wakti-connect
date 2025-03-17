@@ -70,14 +70,22 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
 
   // Determine display name for profile
   const getDisplayName = () => {
+    if (profileData?.account_type === 'business') {
+      return profileData?.business_name || 'Business Account';
+    }
     if (profileData?.display_name) return profileData.display_name;
-    if (profileData?.business_name) return profileData.business_name;
     if (profileData?.full_name) return profileData.full_name;
     
     // Provide role-based fallback
-    if (profileData?.account_type === 'business') return 'Business Admin';
-    if (profileData?.account_type === 'individual') return 'Professional';
+    if (profileData?.account_type === 'individual') return 'Individual Account';
     return 'User';
+  };
+  
+  const getSubtitle = () => {
+    if (profileData?.account_type === 'business') {
+      return profileData?.display_name || 'Account Admin'; 
+    }
+    return `${profileData?.account_type || 'Free'} Plan`;
   };
   
   // Close sidebar on route change for mobile
@@ -98,7 +106,7 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
       id="sidebar"
       className={`fixed top-[70px] left-0 z-40 h-[calc(100vh-70px)] bg-card border-r shadow-sm pt-5 transition-all duration-300 lg:translate-x-0 ${
         isOpen ? 'sidebar-open' : 'sidebar-closed'
-      } ${collapsed ? 'w-[70px]' : 'w-64'}`}
+      } ${collapsed ? 'w-[70px]' : 'w-56'}`}
     >
       <div className="h-full flex flex-col relative">
         {/* Toggle collapse button - Only visible on desktop */}
@@ -120,14 +128,14 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
           <NavLink to="/dashboard/profile" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <Avatar className="h-10 w-10">
               <AvatarImage src={profileData?.avatar_url || undefined} />
-              <AvatarFallback className="bg-primary/10">
+              <AvatarFallback className="bg-wakti-blue/10 text-wakti-blue">
                 {getDisplayName().charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             {!collapsed && (
               <div className="overflow-hidden">
                 <p className="font-medium text-sm truncate max-w-[140px]">{getDisplayName()}</p>
-                <p className="text-xs text-muted-foreground capitalize">{userRole} Plan</p>
+                <p className="text-xs text-muted-foreground capitalize">{getSubtitle()}</p>
               </div>
             )}
           </NavLink>

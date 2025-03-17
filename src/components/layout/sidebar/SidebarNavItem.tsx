@@ -31,12 +31,13 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
   
   const buttonContent = (
     <Button
-      variant={isActive ? "secondary" : "ghost"}
+      variant={isActive ? "default" : "ghost"}
       size={isMobile || isCollapsed ? "icon" : "default"}
       asChild
       className={cn(
         "justify-start",
-        (isMobile || isCollapsed) && "h-10 w-10"
+        (isMobile || isCollapsed) && "h-10 w-10",
+        isActive && "bg-wakti-blue text-white hover:bg-wakti-blue/90"
       )}
       onClick={() => onClick(item.path)}
     >

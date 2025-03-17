@@ -16,6 +16,8 @@ interface ProfileFormProps {
 }
 
 const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
+  const isBusinessAccount = profile?.account_type === 'business';
+
   const { register, handleSubmit, formState: { isSubmitting } } = useForm({
     defaultValues: {
       display_name: profile?.display_name || '',
@@ -37,14 +39,16 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
       });
       
       toast({
-        title: "Profile updated",
-        description: "Your profile information has been updated successfully."
+        title: isBusinessAccount ? "Business info updated" : "Profile updated",
+        description: isBusinessAccount 
+          ? "Your business information has been updated successfully."
+          : "Your profile information has been updated successfully."
       });
     } catch (error) {
       console.error("Error updating profile:", error);
       toast({
         title: "Update failed",
-        description: "There was a problem updating your profile.",
+        description: "There was a problem updating your information.",
         variant: "destructive"
       });
     }
@@ -53,42 +57,65 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="displayName">Display Name</Label>
-          <Input 
-            id="displayName" 
-            placeholder="Display name" 
-            {...register("display_name")} 
-          />
-        </div>
-        
-        {profile?.account_type === 'business' && (
-          <div className="space-y-2">
-            <Label htmlFor="businessName">Business Name</Label>
-            <Input 
-              id="businessName" 
-              placeholder="Business name" 
-              {...register("business_name")}
-            />
-          </div>
+        {isBusinessAccount ? (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="displayName">Position</Label>
+              <Input 
+                id="displayName" 
+                placeholder="Account Admin" 
+                {...register("display_name")} 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="businessName">Business Name</Label>
+              <Input 
+                id="businessName" 
+                placeholder="Your business name" 
+                {...register("business_name")}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="bio">Business Description</Label>
+              <Textarea
+                id="bio"
+                className="w-full min-h-[100px]"
+                placeholder="Tell us about your business"
+                {...register("occupation")}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="displayName">Username</Label>
+              <Input 
+                id="displayName" 
+                placeholder="Username" 
+                {...register("display_name")} 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="bio">Bio</Label>
+              <Textarea
+                id="bio"
+                className="w-full min-h-[100px]"
+                placeholder="Tell us about yourself"
+                {...register("occupation")}
+              />
+            </div>
+          </>
         )}
-        
-        <div className="space-y-2">
-          <Label htmlFor="bio">Bio</Label>
-          <Textarea
-            id="bio"
-            className="w-full min-h-[100px]"
-            placeholder="Tell us about yourself"
-            {...register("occupation")}
-          />
-        </div>
         
         <Button 
           type="submit"
-          className="w-full sm:w-auto"
+          className="w-full sm:w-auto bg-wakti-blue hover:bg-wakti-blue/90"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Saving..." : "Save Profile"}
+          {isSubmitting ? "Saving..." : (isBusinessAccount ? "Save Business Info" : "Save Profile")}
         </Button>
       </div>
     </form>

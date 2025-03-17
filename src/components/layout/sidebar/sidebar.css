@@ -5,7 +5,7 @@
 }
 
 .sidebar-item.active {
-  @apply bg-primary/10 text-primary;
+  @apply bg-wakti-blue/10 text-wakti-blue;
 }
 
 .sidebar-item svg {
@@ -13,13 +13,13 @@
 }
 
 .sidebar-item.active svg {
-  @apply text-primary;
+  @apply text-wakti-blue;
 }
 
 /* Mobile sidebar open/closed classes */
 .sidebar-open {
   @apply translate-x-0;
-  width: 16rem;
+  width: 14rem; /* Reduced width from 16rem */
 }
 
 .sidebar-closed {

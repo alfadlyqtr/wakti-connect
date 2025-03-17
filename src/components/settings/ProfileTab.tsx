@@ -19,19 +19,23 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile }) => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Profile Information</CardTitle>
+          <CardTitle>Business Info</CardTitle>
           <CardDescription>Loading profile information...</CardDescription>
         </CardHeader>
       </Card>
     );
   }
   
+  const isBusinessAccount = profile.account_type === 'business';
+  
   return (
     <Card>
       <CardHeader className="px-4 sm:px-6">
-        <CardTitle>Profile Information</CardTitle>
+        <CardTitle>{isBusinessAccount ? "Business Info" : "Profile Information"}</CardTitle>
         <CardDescription>
-          Update your public profile information
+          {isBusinessAccount
+            ? "Update your business profile information"
+            : "Update your public profile information"}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5 px-4 sm:px-6">
