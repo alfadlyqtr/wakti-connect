@@ -1,27 +1,17 @@
 
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { 
-  User, 
-  LogOut, 
-  Settings,
-  MessageSquare, 
-  Users, 
-  HeartHandshake,
-  Bell,
-} from "lucide-react";
+import { MessageSquare, Users, HeartHandshake, Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "react-i18next";
-import { supabase } from "@/integrations/supabase/client";
+import MobileNavItems from "./MobileNavItems";
+import AccountMenuItems from "./AccountMenuItems";
 
 interface UserMenuProps {
   isAuthenticated: boolean;
@@ -31,7 +21,6 @@ interface UserMenuProps {
 
 const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: UserMenuProps) => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   
   const navItems = [
     { 
@@ -60,10 +49,6 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
       badge: unreadNotifications.length > 0 ? unreadNotifications.length : null
     },
   ];
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-  };
   
   // Filter for business-only items
   const filteredNavItems = navItems.filter(item => {
@@ -86,41 +71,11 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
         
         {/* Mobile menu items - only visible on small screens */}
         <div className="md:hidden">
-          {filteredNavItems.map((item, index) => (
-            <DropdownMenuItem key={`mobile-${index}`} asChild>
-              <Link to={item.path} className="flex items-center justify-between w-full">
-                <div className="flex items-center">
-                  <item.icon className="h-4 w-4 mr-2" />
-                  {item.label}
-                </div>
-                {item.badge && (
-                  <Badge variant="destructive" className="ml-2">
-                    {item.badge}
-                  </Badge>
-                )}
-              </Link>
-            </DropdownMenuItem>
-          ))}
+          <MobileNavItems filteredNavItems={filteredNavItems} />
           <DropdownMenuSeparator />
         </div>
         
-        <DropdownMenuItem asChild>
-          <Link to="/dashboard/settings">
-            <Settings className="h-4 w-4 mr-2" />
-            {t('dashboard.settings')}
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        {isAuthenticated ? (
-          <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-            <LogOut className="h-4 w-4 mr-2" />
-            {t('common.logOut')}
-          </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem asChild>
-            <Link to="/auth">{t('common.logIn')} / {t('common.signUp')}</Link>
-          </DropdownMenuItem>
-        )}
+        <AccountMenuItems isAuthenticated={isAuthenticated} />
       </DropdownMenuContent>
     </DropdownMenu>
   );
