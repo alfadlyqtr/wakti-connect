@@ -1,8 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment } from "../types";
-import { validateAppointmentStatus } from "../utils/statusValidator";
-import { mapUserProfile } from "../utils/mappers";
+import { mapToAppointment } from "../utils/mappers";
 
 /**
  * Fetches appointments shared with the current user
@@ -51,18 +50,11 @@ export const fetchSharedAppointments = async (
       throw new Error(`Failed to fetch shared appointments: ${error.message}`);
     }
     
-    // Extract appointments from invitations and validate their status
+    // Extract appointments from invitations and validate their status using mapToAppointment
     return (invitations || [])
       .map(invitation => invitation.appointment)
       .filter(Boolean)
-      .map(appt => ({
-        ...appt,
-        status: validateAppointmentStatus(appt.status),
-        // Use mapUserProfile to safely handle user data
-        user: mapUserProfile(appt.user),
-        // Use mapUserProfile to safely handle assignee data
-        assignee: mapUserProfile(appt.assignee)
-      })) as Appointment[];
+      .map(appt => mapToAppointment(appt));
   } catch (error) {
     console.error("Error in fetchSharedAppointments:", error);
     return [];

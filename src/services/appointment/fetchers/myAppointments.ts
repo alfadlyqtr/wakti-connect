@@ -1,8 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment } from "../types";
-import { validateAppointmentStatus } from "../utils/statusValidator";
-import { mapUserProfile } from "../utils/mappers";
+import { mapToAppointment } from "../utils/mappers";
 
 /**
  * Fetches appointments created by the current user
@@ -15,17 +14,16 @@ export const fetchMyAppointments = async (
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
-      console.error("fetchMyAppointments: No authenticated user found");
       throw new Error("No authenticated user");
     }
     
     const userId = session.user.id;
     
-    // Store user ID in localStorage for use in components
+    // Store user ID in localStorage for use in the UI
     localStorage.setItem('userId', userId);
     
-    // Build query based on user role
-    const query = supabase
+    // Query appointments created by the user
+    const { data: appointments, error } = await supabase
       .from('appointments')
       .select(`
         *,
@@ -43,37 +41,17 @@ export const fetchMyAppointments = async (
       .eq('user_id', userId)
       .order('start_time', { ascending: true });
     
-    // For free users, limit the results
-    if (userRole === "free") {
-      query.limit(5);
-    }
-    
-    const { data: appointments, error } = await query;
-    
     if (error) {
       console.error("Error fetching my appointments:", error);
       throw new Error(`Failed to fetch my appointments: ${error.message}`);
     }
     
-    if (!appointments || appointments.length === 0) {
-      console.log("No appointments found for the current user");
-      return [];
-    }
+    console.log("My appointments fetched:", appointments?.length || 0);
     
-    // Map the database records to properly typed Appointment objects
-    return appointments.map(appt => {
-      return {
-        ...appt,
-        status: validateAppointmentStatus(appt.status),
-        // Use mapUserProfile to safely handle user data
-        user: mapUserProfile(appt.user),
-        // Use mapUserProfile to safely handle assignee data
-        assignee: mapUserProfile(appt.assignee)
-      } as Appointment;
-    });
+    // Use the mapToAppointment utility to safely handle user and assignee data
+    return (appointments || []).map(appt => mapToAppointment(appt));
   } catch (error) {
     console.error("Error in fetchMyAppointments:", error);
-    // Return empty array instead of throwing to prevent UI crashes
     return [];
   }
 };

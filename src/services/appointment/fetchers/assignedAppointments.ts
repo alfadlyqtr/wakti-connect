@@ -1,8 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment } from "../types";
-import { validateAppointmentStatus } from "../utils/statusValidator";
-import { mapUserProfile } from "../utils/mappers";
+import { mapToAppointment } from "../utils/mappers";
 
 /**
  * Fetches appointments assigned to the current user
@@ -51,15 +50,8 @@ export const fetchAssignedAppointments = async (
     
     console.log("Assigned appointments fetched:", appointments?.length || 0);
     
-    // Map to properly typed Appointment objects
-    return (appointments || []).map(appt => ({
-      ...appt,
-      status: validateAppointmentStatus(appt.status),
-      // Use the mapUserProfile helper to safely handle user data
-      user: mapUserProfile(appt.user),
-      // Use the mapUserProfile helper to safely handle assignee data
-      assignee: mapUserProfile(appt.assignee)
-    })) as Appointment[];
+    // Map to properly typed Appointment objects using the mapToAppointment utility
+    return (appointments || []).map(appt => mapToAppointment(appt));
   } catch (error) {
     console.error("Error in fetchAssignedAppointments:", error);
     return [];

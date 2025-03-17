@@ -1,11 +1,10 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment } from "../types";
-import { validateAppointmentStatus } from "../utils/statusValidator";
-import { mapUserProfile } from "../utils/mappers";
+import { mapToAppointment } from "../utils/mappers";
 
 /**
- * Fetches appointments for which the current user has pending invitations
+ * Fetches appointments with pending invitations
  */
 export const fetchInvitationAppointments = async (
   userRole: "free" | "individual" | "business"
@@ -20,7 +19,7 @@ export const fetchInvitationAppointments = async (
     
     const userId = session.user.id;
     
-    // Query appointments with pending invitations for the user
+    // Query appointments with pending invitations
     const { data: invitations, error } = await supabase
       .from('appointment_invitations')
       .select(`
@@ -47,24 +46,11 @@ export const fetchInvitationAppointments = async (
       throw new Error(`Failed to fetch invitation appointments: ${error.message}`);
     }
     
-    // Map the nested appointment data
+    // Extract appointments from invitations and map them
     return (invitations || [])
-      .map(invitation => {
-        if (invitation.appointment) {
-          // Add the invitation to the appointment object
-          return {
-            ...invitation.appointment,
-            status: validateAppointmentStatus(invitation.appointment.status),
-            // Use mapUserProfile to safely handle user data
-            user: mapUserProfile(invitation.appointment.user),
-            // Use mapUserProfile to safely handle assignee data
-            assignee: mapUserProfile(invitation.appointment.assignee),
-            invitations: [invitation]
-          };
-        }
-        return null;
-      })
-      .filter(Boolean) as Appointment[];
+      .map(invitation => invitation.appointment)
+      .filter(Boolean)
+      .map(appt => mapToAppointment(appt));
   } catch (error) {
     console.error("Error in fetchInvitationAppointments:", error);
     return [];
