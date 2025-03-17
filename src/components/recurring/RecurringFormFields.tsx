@@ -1,27 +1,16 @@
-import React from "react";
-import { UseFormReturn } from "react-hook-form";
-import { 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormControl, 
-  FormMessage,
-  FormDescription
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  RecurrenceFrequency 
-} from "@/types/recurring.types";
 
+import React, { useEffect } from 'react';
+import { UseFormReturn } from 'react-hook-form';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
+import { Card, CardContent } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { format, addDays } from 'date-fns';
+
+// Define interface for RecurringFormFields props
 interface RecurringFormFieldsProps {
   form: UseFormReturn<any>;
   userRole: "free" | "individual" | "business";
@@ -29,213 +18,222 @@ interface RecurringFormFieldsProps {
 }
 
 const DAYS_OF_WEEK = [
-  { value: "monday", label: "Monday" },
-  { value: "tuesday", label: "Tuesday" },
-  { value: "wednesday", label: "Wednesday" },
-  { value: "thursday", label: "Thursday" },
-  { value: "friday", label: "Friday" },
-  { value: "saturday", label: "Saturday" },
-  { value: "sunday", label: "Sunday" },
+  { label: 'Mon', value: 'monday' },
+  { label: 'Tue', value: 'tuesday' },
+  { label: 'Wed', value: 'wednesday' },
+  { label: 'Thu', value: 'thursday' },
+  { label: 'Fri', value: 'friday' },
+  { label: 'Sat', value: 'saturday' },
+  { label: 'Sun', value: 'sunday' },
 ];
 
 const RecurringFormFields: React.FC<RecurringFormFieldsProps> = ({ form, userRole, disabled = false }) => {
-  const isPaidAccount = userRole === "individual" || userRole === "business";
-  const watchFrequency = form.watch("recurring.frequency");
-  const watchIsRecurring = form.watch("isRecurring");
+  const frequency = form.watch('recurring.frequency');
+  const selectedDays = form.watch('recurring.days_of_week') || [];
   
-  if (!isPaidAccount) {
-    return (
-      <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
-        <h4 className="font-medium text-amber-800 dark:text-amber-500">Premium Feature</h4>
-        <p className="text-sm text-amber-700 dark:text-amber-400">
-          Recurring tasks and appointments are available on paid plans only. Upgrade to Individual or Business plans to access this feature.
-        </p>
-      </div>
-    );
-  }
-  
-  if (!watchIsRecurring) {
-    return null;
-  }
-  
+  // Set default end date when component mounts (30 days from now)
+  useEffect(() => {
+    const defaultEndDate = addDays(new Date(), 30);
+    if (!form.getValues('recurring.end_date')) {
+      form.setValue('recurring.end_date', defaultEndDate);
+    }
+  }, [form]);
+
+  // Handle frequency change side effects
+  useEffect(() => {
+    if (frequency === 'weekly' && (!selectedDays || selectedDays.length === 0)) {
+      // Default to current day of week if none selected
+      const today = new Date();
+      const dayIndex = today.getDay(); // 0 is Sunday, 1 is Monday, etc.
+      const dayValue = DAYS_OF_WEEK[dayIndex === 0 ? 6 : dayIndex - 1].value; // Adjust for our array which starts with Monday
+      form.setValue('recurring.days_of_week', [dayValue]);
+    }
+  }, [frequency, selectedDays, form]);
+
   return (
-    <div className="space-y-4 border-t pt-4 mt-4">
-      <h3 className="text-lg font-medium">Recurring Settings</h3>
-      <p className="text-sm text-muted-foreground">Configure how often this item repeats</p>
-      
-      <FormField
-        control={form.control}
-        name="recurring.frequency"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Frequency</FormLabel>
-            <Select
-              onValueChange={field.onChange}
-              defaultValue={field.value}
-              disabled={disabled}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select frequency" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="yearly">Yearly</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
-      <FormField
-        control={form.control}
-        name="recurring.interval"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Interval</FormLabel>
-            <FormControl>
-              <Input 
-                type="number" 
-                min={1} 
-                {...field} 
-                onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                disabled={disabled}
-              />
-            </FormControl>
-            <FormDescription>
-              {watchFrequency === "daily" && "Repeat every X days"}
-              {watchFrequency === "weekly" && "Repeat every X weeks"}
-              {watchFrequency === "monthly" && "Repeat every X months"}
-              {watchFrequency === "yearly" && "Repeat every X years"}
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      
-      {watchFrequency === "weekly" && (
+    <Card className="mt-4">
+      <CardContent className="pt-6 space-y-4">
         <FormField
           control={form.control}
-          name="recurring.days_of_week"
-          render={() => (
-            <FormItem>
-              <FormLabel>Days of Week</FormLabel>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {DAYS_OF_WEEK.map((day) => (
-                  <FormField
-                    key={day.value}
-                    control={form.control}
-                    name="recurring.days_of_week"
-                    render={({ field }) => {
-                      return (
-                        <FormItem
-                          key={day.value}
-                          className="flex flex-row items-center space-x-2 space-y-0"
-                        >
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes(day.value)}
-                              onCheckedChange={(checked) => {
-                                const current = field.value || [];
-                                const newValue = checked
-                                  ? [...current, day.value]
-                                  : current.filter((val: string) => val !== day.value);
-                                field.onChange(newValue);
-                              }}
-                              disabled={disabled}
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm font-normal cursor-pointer">
-                            {day.label}
-                          </FormLabel>
-                        </FormItem>
-                      );
-                    }}
-                  />
-                ))}
-              </div>
+          name="recurring.frequency"
+          render={({ field }) => (
+            <FormItem className="space-y-3">
+              <FormLabel>Repeat Frequency</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  className="flex flex-col space-y-1"
+                  disabled={disabled}
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="daily" id="daily" />
+                    <Label htmlFor="daily">Daily</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="weekly" id="weekly" />
+                    <Label htmlFor="weekly">Weekly</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="monthly" id="monthly" />
+                    <Label htmlFor="monthly">Monthly</Label>
+                  </div>
+                  {userRole === 'business' && (
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="yearly" id="yearly" />
+                      <Label htmlFor="yearly">Yearly</Label>
+                    </div>
+                  )}
+                </RadioGroup>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-      )}
-      
-      {watchFrequency === "monthly" && (
+
+        {/* Interval - how often the event repeats */}
         <FormField
           control={form.control}
-          name="recurring.day_of_month"
+          name="recurring.interval"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Day of Month</FormLabel>
+              <FormLabel>Repeat every</FormLabel>
               <FormControl>
-                <Input 
-                  type="number" 
-                  min={1} 
-                  max={31} 
-                  {...field} 
-                  onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                <div className="flex items-center space-x-2">
+                  <Input
+                    type="number"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                    min={1}
+                    max={userRole === 'business' ? 99 : 12}
+                    className="w-16"
+                    disabled={disabled}
+                  />
+                  <span>
+                    {frequency === 'daily' ? 'day(s)' :
+                     frequency === 'weekly' ? 'week(s)' :
+                     frequency === 'monthly' ? 'month(s)' : 'year(s)'}
+                  </span>
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Days of week selection for weekly frequency */}
+        {frequency === 'weekly' && (
+          <FormField
+            control={form.control}
+            name="recurring.days_of_week"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Repeat on</FormLabel>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {DAYS_OF_WEEK.map((day) => (
+                    <div key={day.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`day-${day.value}`}
+                        checked={field.value?.includes(day.value)}
+                        onCheckedChange={(checked) => {
+                          const currentValues = field.value || [];
+                          const newValues = checked
+                            ? [...currentValues, day.value]
+                            : currentValues.filter((value: string) => value !== day.value);
+                          field.onChange(newValues);
+                        }}
+                        disabled={disabled}
+                      />
+                      <Label htmlFor={`day-${day.value}`}>{day.label}</Label>
+                    </div>
+                  ))}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {/* Day of month selection for monthly frequency */}
+        {frequency === 'monthly' && (
+          <FormField
+            control={form.control}
+            name="recurring.day_of_month"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Day of month</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                    min={1}
+                    max={31}
+                    className="w-20"
+                    disabled={disabled}
+                  />
+                </FormControl>
+                <FormDescription>
+                  The appointment will repeat on this day each month
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {/* End date selection */}
+        <FormField
+          control={form.control}
+          name="recurring.end_date"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>End date</FormLabel>
+              <FormControl>
+                <DatePicker
+                  date={field.value}
+                  setDate={field.onChange}
+                  className="w-full"
                   disabled={disabled}
                 />
               </FormControl>
               <FormDescription>
-                Choose which day of the month (1-31)
+                The recurring appointments will end on this date
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-      )}
-      
-      <FormField
-        control={form.control}
-        name="recurring.end_date"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>End Date (Optional)</FormLabel>
-            <FormControl>
-              <DatePicker 
-                date={field.value} 
-                setDate={field.onChange}
-                className="w-full"
-                disabled={disabled}
-              />
-            </FormControl>
-            <FormDescription>
-              Leave empty to repeat indefinitely
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
+
+        {/* Max occurrences for business accounts */}
+        {userRole === 'business' && (
+          <FormField
+            control={form.control}
+            name="recurring.max_occurrences"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Maximum occurrences</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                    min={1}
+                    max={100}
+                    placeholder="No limit"
+                    disabled={disabled}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Optional: limit the number of recurring appointments
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         )}
-      />
-      
-      <FormField
-        control={form.control}
-        name="recurring.max_occurrences"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Maximum Occurrences (Optional)</FormLabel>
-            <FormControl>
-              <Input 
-                type="number" 
-                min={1} 
-                {...field} 
-                value={field.value || ""}
-                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                disabled={disabled}
-              />
-            </FormControl>
-            <FormDescription>
-              Leave empty for no limit
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,188 +1,416 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { InvitationRecipient } from "@/types/invitation.types";
-import { generateRandomString } from "@/utils/stringUtils";
-import { fromTable } from "@/integrations/supabase/helper";
 import { toast } from "@/components/ui/use-toast";
+import { AppointmentInvitation } from "@/types/appointment.types";
 
 /**
- * Create a new invitation for an appointment
+ * Get all invitations for the current user
  */
-export const createInvitation = async (
-  appointmentId: string,
-  recipients: InvitationRecipient[],
-  customizationId?: string
-): Promise<{ success: boolean; errors?: string[] }> => {
+export const getUserInvitations = async (): Promise<AppointmentInvitation[]> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
-      throw new Error("No authenticated user");
-    }
-
-    const errors: string[] = [];
-    
-    // Filter recipients to contacts vs. external emails
-    const contactRecipients = recipients.filter(r => r.type === 'contact');
-    const emailRecipients = recipients.filter(r => r.type === 'email');
-    
-    // Create invitations for contacts with retry logic
-    if (contactRecipients.length > 0) {
-      await createContactInvitations(contactRecipients, appointmentId, errors);
+      throw new Error("No active session");
     }
     
-    // Create invitations for emails with retry logic
-    if (emailRecipients.length > 0) {
-      await createEmailInvitations(emailRecipients, appointmentId, customizationId, session.user.id, errors);
+    const { data, error } = await supabase
+      .from('appointment_invitations')
+      .select(`
+        *,
+        appointments:appointment_id (
+          id,
+          title,
+          description,
+          location,
+          start_time,
+          end_time,
+          is_all_day,
+          status
+        ),
+        profiles:invited_by (
+          id,
+          display_name,
+          full_name,
+          avatar_url
+        )
+      `)
+      .eq('invited_user_id', session.user.id)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error("Error fetching user invitations:", error);
+      throw error;
     }
     
-    return {
-      success: errors.length === 0,
-      errors: errors.length > 0 ? errors : undefined
-    };
+    return data as AppointmentInvitation[];
   } catch (error: any) {
-    console.error("Error creating invitation:", error);
-    return {
-      success: false,
-      errors: [error.message || "Unknown error creating invitation"]
-    };
+    console.error("Error in getUserInvitations:", error);
+    throw error;
   }
 };
 
-// Helper function to create contact invitations with retry
-async function createContactInvitations(
-  contactRecipients: InvitationRecipient[],
+/**
+ * Send an invitation to a user for an appointment
+ */
+export const sendAppointmentInvitation = async (
   appointmentId: string,
-  errors: string[]
-): Promise<void> {
-  const contactInvitations = contactRecipients.map(contact => ({
-    appointment_id: appointmentId,
-    invited_user_id: contact.id,
-    status: 'pending',
-    shared_as_link: false
-  }));
-  
-  let retries = 0;
-  const maxRetries = 3;
-  
-  while (retries < maxRetries) {
-    try {
-      const { error } = await supabase
-        .from('appointment_invitations')
-        .insert(contactInvitations);
-      
-      if (error) {
-        console.error(`Attempt ${retries + 1} - Error creating contact invitations:`, error);
-        retries++;
-        
-        if (retries >= maxRetries) {
-          errors.push(`Failed to create contact invitations after ${maxRetries} attempts: ${error.message}`);
-        }
-        
-        // Wait before retry with exponential backoff
-        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
-      } else {
-        // Success, exit the loop
-        break;
-      }
-    } catch (e: any) {
-      console.error(`Unexpected error in createContactInvitations:`, e);
-      errors.push(e.message || "Unknown error creating contact invitations");
-      break;
-    }
-  }
-}
-
-// Helper function to create email invitations with retry
-async function createEmailInvitations(
-  emailRecipients: InvitationRecipient[],
-  appointmentId: string,
-  customizationId: string | undefined,
-  userId: string,
-  errors: string[]
-): Promise<void> {
+  invitedUserId: string
+): Promise<AppointmentInvitation> => {
   try {
-    // Check if the user can send email invitations (has paid account)
-    const { data: userAccountType } = await supabase.rpc('get_auth_user_account_type');
+    const { data: { session } } = await supabase.auth.getSession();
     
-    const isPaidAccount = userAccountType !== 'free';
+    if (!session?.user) {
+      throw new Error("No active session");
+    }
     
-    if (!isPaidAccount) {
-      errors.push("Email invitations are only available for paid accounts");
+    // Check if user can send invitations
+    const { canSendInvitations } = await getUserRoleForInvitationCapability();
+    
+    if (!canSendInvitations) {
       toast({
         title: "Premium Feature",
-        description: "Email invitations are only available for paid accounts",
-        variant: "destructive"
+        description: "Sending invitations is only available for paid accounts. Please upgrade your plan.",
+        variant: "destructive",
       });
-      return;
+      throw new Error("This feature is only available for paid accounts");
     }
     
-    // Process each email recipient
-    for (const recipient of emailRecipients) {
-      let retries = 0;
-      const maxRetries = 3;
-      
-      while (retries < maxRetries) {
-        try {
-          // Create an invitation record
-          const { data: invitation, error: invError } = await supabase
-            .from('appointment_invitations')
-            .insert({
-              appointment_id: appointmentId,
-              email: recipient.email,
-              status: 'pending',
-              shared_as_link: true
-            })
-            .select()
-            .single();
-          
-          if (invError) {
-            console.error(`Attempt ${retries + 1} - Error creating email invitation:`, invError);
-            retries++;
-            
-            if (retries >= maxRetries) {
-              errors.push(`Failed to create email invitation after ${maxRetries} attempts: ${invError.message}`);
-            }
-            
-            // Wait before retry with exponential backoff
-            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
-            continue;
-          }
-          
-          // Create a link for the invitation
-          const accessToken = generateRandomString(24);
-          
-          const { error: linkError } = await fromTable('invitation_links')
-            .insert({
-              invitation_id: invitation.id,
-              recipient_email: recipient.email || '',
-              external_access_token: accessToken,
-              status: 'pending'
-            });
-          
-          if (linkError) {
-            errors.push(`Error creating invitation link: ${linkError.message}`);
-            continue;
-          }
-          
-          // Associate customization with invitation if provided
-          if (customizationId) {
-            await fromTable('invitation_customizations')
-              .update({ invitation_id: invitation.id })
-              .eq('id', customizationId);
-          }
-          
-          // Success, exit the retry loop
-          break;
-        } catch (e: any) {
-          console.error(`Unexpected error in createEmailInvitations:`, e);
-          errors.push(e.message || "Unknown error creating email invitation");
-          break;
-        }
-      }
+    // Check if invitation already exists
+    const { data: existingInvitation, error: checkError } = await supabase
+      .from('appointment_invitations')
+      .select('id')
+      .eq('appointment_id', appointmentId)
+      .eq('invited_user_id', invitedUserId)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error("Error checking existing invitation:", checkError);
+      throw checkError;
+    }
+    
+    if (existingInvitation) {
+      toast({
+        title: "Invitation Already Sent",
+        description: "This user has already been invited to this appointment.",
+        variant: "default",
+      });
+      throw new Error("Invitation already exists");
+    }
+    
+    // Create the invitation
+    const { data, error } = await supabase
+      .from('appointment_invitations')
+      .insert({
+        appointment_id: appointmentId,
+        invited_user_id: invitedUserId,
+        invited_by: session.user.id,
+        status: 'pending'
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error sending invitation:", error);
+      throw error;
+    }
+    
+    return data as AppointmentInvitation;
+  } catch (error: any) {
+    console.error("Error in sendAppointmentInvitation:", error);
+    
+    // Only show toast if not already handled
+    if (error.message !== "This feature is only available for paid accounts" &&
+        error.message !== "Invitation already exists") {
+      toast({
+        title: "Failed to Send Invitation",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+    
+    throw error;
+  }
+};
+
+/**
+ * Update an invitation status (accept/decline)
+ */
+export const updateInvitationStatus = async (
+  invitationId: string,
+  status: 'accepted' | 'declined'
+): Promise<AppointmentInvitation> => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
+      throw new Error("No active session");
+    }
+    
+    const { data, error } = await supabase
+      .from('appointment_invitations')
+      .update({ 
+        status,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', invitationId)
+      .eq('invited_user_id', session.user.id) // Security check
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error updating invitation status:", error);
+      throw error;
+    }
+    
+    return data as AppointmentInvitation;
+  } catch (error: any) {
+    console.error("Error in updateInvitationStatus:", error);
+    toast({
+      title: "Failed to Update Invitation",
+      description: error.message || "An unexpected error occurred",
+      variant: "destructive",
+    });
+    throw error;
+  }
+};
+
+/**
+ * Delete an invitation
+ */
+export const deleteInvitation = async (invitationId: string): Promise<void> => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
+      throw new Error("No active session");
+    }
+    
+    const { error } = await supabase
+      .from('appointment_invitations')
+      .delete()
+      .eq('id', invitationId)
+      .or(`invited_user_id.eq.${session.user.id},invited_by.eq.${session.user.id}`); // Can be deleted by sender or recipient
+    
+    if (error) {
+      console.error("Error deleting invitation:", error);
+      throw error;
     }
   } catch (error: any) {
-    console.error("Error in createEmailInvitations:", error);
-    errors.push(error.message || "Unknown error processing email invitations");
+    console.error("Error in deleteInvitation:", error);
+    toast({
+      title: "Failed to Delete Invitation",
+      description: error.message || "An unexpected error occurred",
+      variant: "destructive",
+    });
+    throw error;
   }
-}
+};
+
+/**
+ * Check if the current user can send invitations based on their account type
+ */
+export const getUserRoleForInvitationCapability = async () => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
+      return { canSendInvitations: false, role: 'free' };
+    }
+    
+    const { data: accountType, error } = await supabase
+      .rpc('get_auth_user_account_type', { user_uid: session.user.id });
+    
+    if (error) {
+      console.error("Error checking user account type:", error);
+      return { canSendInvitations: false, role: 'free' };
+    }
+    
+    return {
+      canSendInvitations: accountType !== 'free',
+      role: accountType
+    };
+  } catch (error) {
+    console.error("Error in getUserRoleForInvitationCapability:", error);
+    return { canSendInvitations: false, role: 'free' };
+  }
+};
+
+/**
+ * Send an invitation via email
+ */
+export const sendEmailInvitation = async (
+  appointmentId: string,
+  email: string,
+  customMessage?: string
+): Promise<AppointmentInvitation> => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
+      throw new Error("No active session");
+    }
+    
+    // Check if user can send invitations
+    const { canSendInvitations } = await getUserRoleForInvitationCapability();
+    
+    if (!canSendInvitations) {
+      toast({
+        title: "Premium Feature",
+        description: "Sending email invitations is only available for paid accounts. Please upgrade your plan.",
+        variant: "destructive",
+      });
+      throw new Error("This feature is only available for paid accounts");
+    }
+    
+    // Check if invitation already exists
+    const { data: existingInvitation, error: checkError } = await supabase
+      .from('appointment_invitations')
+      .select('id')
+      .eq('appointment_id', appointmentId)
+      .eq('email', email)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error("Error checking existing invitation:", checkError);
+      throw checkError;
+    }
+    
+    if (existingInvitation) {
+      toast({
+        title: "Invitation Already Sent",
+        description: "An invitation has already been sent to this email address.",
+        variant: "default",
+      });
+      throw new Error("Invitation already exists");
+    }
+    
+    // Create the invitation
+    const { data, error } = await supabase
+      .from('appointment_invitations')
+      .insert({
+        appointment_id: appointmentId,
+        email: email,
+        invited_by: session.user.id,
+        status: 'pending',
+        customization: customMessage ? { message: customMessage } : null
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error sending email invitation:", error);
+      throw error;
+    }
+    
+    // Trigger email sending via edge function or server action
+    // This would typically call a serverless function to send the actual email
+    
+    return data as AppointmentInvitation;
+  } catch (error: any) {
+    console.error("Error in sendEmailInvitation:", error);
+    
+    // Only show toast if not already handled
+    if (error.message !== "This feature is only available for paid accounts" &&
+        error.message !== "Invitation already exists") {
+      toast({
+        title: "Failed to Send Email Invitation",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+    
+    throw error;
+  }
+};
+
+/**
+ * Create a shareable link invitation
+ */
+export const createShareableInvitation = async (
+  appointmentId: string
+): Promise<{ invitationId: string; shareableLink: string }> => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
+      throw new Error("No active session");
+    }
+    
+    // Check if user can create shareable links
+    const { canSendInvitations, role } = await getUserRoleForInvitationCapability();
+    
+    if (!canSendInvitations) {
+      toast({
+        title: "Premium Feature",
+        description: "Creating shareable links is only available for paid accounts. Please upgrade your plan.",
+        variant: "destructive",
+      });
+      throw new Error("This feature is only available for paid accounts");
+    }
+    
+    // Business accounts can have multiple shareable links, individual accounts can only have one
+    if (role !== 'business') {
+      // Check if a shareable link already exists
+      const { data: existingLink, error: checkError } = await supabase
+        .from('appointment_invitations')
+        .select('id')
+        .eq('appointment_id', appointmentId)
+        .eq('shared_as_link', true)
+        .maybeSingle();
+      
+      if (checkError) {
+        console.error("Error checking existing shareable link:", checkError);
+        throw checkError;
+      }
+      
+      if (existingLink) {
+        toast({
+          title: "Link Already Exists",
+          description: "A shareable link for this appointment already exists. Please use the existing link.",
+          variant: "default",
+        });
+        throw new Error("Shareable link already exists");
+      }
+    }
+    
+    // Create the shareable link invitation
+    const { data, error } = await supabase
+      .from('appointment_invitations')
+      .insert({
+        appointment_id: appointmentId,
+        invited_by: session.user.id,
+        status: 'pending',
+        shared_as_link: true
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error creating shareable link:", error);
+      throw error;
+    }
+    
+    // Generate the shareable link
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.example.com';
+    const shareableLink = `${baseUrl}/invitations/join/${data.id}`;
+    
+    return {
+      invitationId: data.id,
+      shareableLink
+    };
+  } catch (error: any) {
+    console.error("Error in createShareableInvitation:", error);
+    
+    // Only show toast if not already handled
+    if (error.message !== "This feature is only available for paid accounts" &&
+        error.message !== "Shareable link already exists") {
+      toast({
+        title: "Failed to Create Shareable Link",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+    
+    throw error;
+  }
+};

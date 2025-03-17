@@ -12,14 +12,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { AppointmentFormFields } from "./AppointmentFormFields";
 import { AppointmentFormValues, appointmentFormSchema, getDefaultFormValues } from "./AppointmentFormSchema";
-import RecurringFormFields from "@/components/recurring/RecurringFormFields";
-import { toast } from "@/components/ui/use-toast";
 import { AppointmentFormData } from "@/types/appointment.types";
 import { RecurringFormData } from "@/types/recurring.types";
+import { AppointmentFormContent } from "./AppointmentFormContent";
+import { AppointmentDialogFooter } from "./AppointmentDialogFooter";
 import { Loader2 } from "lucide-react";
 
 interface CreateAppointmentDialogProps {
@@ -35,7 +32,6 @@ export function CreateAppointmentDialog({
   onCreateAppointment,
   userRole
 }: CreateAppointmentDialogProps) {
-  const [isRecurring, setIsRecurring] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   
@@ -57,7 +53,6 @@ export function CreateAppointmentDialog({
   useEffect(() => {
     if (open) {
       form.reset(getDefaultFormValues());
-      setIsRecurring(false);
       setHasAttemptedSubmit(false);
     }
   }, [open, form]);
@@ -139,7 +134,6 @@ export function CreateAppointmentDialog({
       
       onOpenChange(false);
       form.reset();
-      setIsRecurring(false);
       setHasAttemptedSubmit(false);
       
       return result;
@@ -171,50 +165,18 @@ export function CreateAppointmentDialog({
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <AppointmentFormFields form={form} disabled={!isPaidAccount || isSubmitting} />
+            <AppointmentFormContent 
+              form={form} 
+              isPaidAccount={isPaidAccount}
+              isSubmitting={isSubmitting}
+              userRole={userRole}
+            />
             
-            <div className="flex items-center space-x-2 pt-4 border-t">
-              <Switch
-                id="recurring-appointment"
-                checked={isRecurring}
-                onCheckedChange={(checked) => {
-                  setIsRecurring(checked);
-                  form.setValue("isRecurring", checked);
-                }}
-                disabled={!isPaidAccount || isSubmitting}
-              />
-              <Label htmlFor="recurring-appointment">
-                Make this a recurring appointment {!isPaidAccount && "(Premium)"}
-              </Label>
-            </div>
-            
-            {isRecurring && <RecurringFormFields form={form} userRole={userRole} disabled={isSubmitting} />}
-            
-            <DialogFooter className="pt-4">
-              <DialogClose asChild>
-                <Button type="button" variant="outline" disabled={isSubmitting}>Cancel</Button>
-              </DialogClose>
-              <Button 
-                type="submit" 
-                disabled={!isPaidAccount || isSubmitting}
-                className={!isPaidAccount ? "opacity-50 cursor-not-allowed" : ""}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  "Create Appointment"
-                )}
-              </Button>
-              
-              {hasAttemptedSubmit && !isPaidAccount && (
-                <p className="text-destructive text-sm mt-2">
-                  This feature is only available for Individual and Business plans. Please upgrade to create appointments.
-                </p>
-              )}
-            </DialogFooter>
+            <AppointmentDialogFooter
+              isSubmitting={isSubmitting}
+              isPaidAccount={isPaidAccount}
+              hasAttemptedSubmit={hasAttemptedSubmit}
+            />
           </form>
         </Form>
       </DialogContent>

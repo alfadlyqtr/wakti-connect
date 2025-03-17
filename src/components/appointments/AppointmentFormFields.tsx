@@ -11,7 +11,7 @@ import { AppointmentFormValues } from "./AppointmentFormSchema";
 
 interface AppointmentFormFieldsProps {
   form: UseFormReturn<AppointmentFormValues>;
-  disabled?: boolean; // Add disabled prop
+  disabled?: boolean;
 }
 
 export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({ form, disabled = false }) => {

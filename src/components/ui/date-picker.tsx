@@ -13,9 +13,10 @@ interface DatePickerProps {
   date?: Date;
   setDate?: (date: Date | undefined) => void;
   className?: string;
+  disabled?: boolean; // Added disabled prop
 }
 
-export function DatePicker({ date, setDate, className }: DatePickerProps) {
+export function DatePicker({ date, setDate, className, disabled = false }: DatePickerProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -26,6 +27,7 @@ export function DatePicker({ date, setDate, className }: DatePickerProps) {
             !date && "text-muted-foreground",
             className
           )}
+          disabled={disabled}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
           {date ? format(date, "PPP") : <span>Pick a date</span>}

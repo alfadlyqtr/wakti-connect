@@ -18,14 +18,14 @@ export async function createAppointment(formData: AppointmentFormData, recurring
     
     // Check user's permission to create appointments using the security definer function
     const { data: canCreate, error: permissionError } = await supabase
-      .rpc('can_create_appointments', { user_uid: session.user.id });
+      .rpc('get_auth_user_account_type', { user_uid: session.user.id });
     
     if (permissionError) {
       console.error("Error checking permission to create appointments:", permissionError);
       throw new Error("Unable to verify account permissions");
     }
     
-    if (!canCreate) {
+    if (canCreate === 'free') {
       toast({
         title: "Premium Feature",
         description: "Creating appointments is only available for paid accounts. Please upgrade your plan.",
@@ -115,7 +115,7 @@ export async function createAppointment(formData: AppointmentFormData, recurring
         toast({
           title: "Warning",
           description: "Appointment created but recurring settings couldn't be applied",
-          variant: "destructive", // Changed from "warning" to "destructive"
+          variant: "destructive",
         });
       }
     }
