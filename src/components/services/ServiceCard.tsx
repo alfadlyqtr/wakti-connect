@@ -20,21 +20,21 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   isDeleting
 }) => {
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader className="pb-2">
-        <div className="flex justify-between">
-          <CardTitle>{service.name}</CardTitle>
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-xl">{service.name}</CardTitle>
           {service.price && (
             <Badge variant="secondary" className="ml-2">
-              ${service.price.toFixed(2)}
+              QAR {service.price.toFixed(2)}
             </Badge>
           )}
         </div>
-        <CardDescription>
+        <CardDescription className="line-clamp-2">
           {service.description || "No description provided"}
         </CardDescription>
       </CardHeader>
-      <CardContent className="pb-2">
+      <CardContent className="pb-2 flex-grow">
         <div className="flex items-center mb-2">
           <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
           <span>{service.duration} minutes</span>
@@ -44,7 +44,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           <span>0 staff assigned</span>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex justify-between pt-4 border-t">
         <Button variant="outline" size="sm" onClick={() => onEdit(service)}>
           <Edit className="h-4 w-4 mr-2" />
           Edit

@@ -44,7 +44,7 @@ const ServiceList: React.FC<ServiceListProps> = ({
   if (error) {
     return (
       <div className="text-center py-8 text-destructive">
-        <p>Error loading services</p>
+        <p>Error loading services: {error.message}</p>
       </div>
     );
   }
@@ -52,15 +52,15 @@ const ServiceList: React.FC<ServiceListProps> = ({
   if (filteredServices.length === 0) {
     return (
       <Card className="text-center py-8">
-        <CardContent>
-          <DollarSign className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No Services</h3>
-          <p className="text-muted-foreground mb-4">
+        <CardContent className="pt-6">
+          <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-xl font-semibold mb-2">No Services</h3>
+          <p className="text-muted-foreground mb-6">
             {searchQuery ? "No services match your search." : "You haven't added any services yet."}
           </p>
-          <Button onClick={onAddService}>
+          <Button onClick={onAddService} size="lg">
             <Plus className="mr-2 h-4 w-4" />
-            Add Service
+            Add Your First Service
           </Button>
         </CardContent>
       </Card>
