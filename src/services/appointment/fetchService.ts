@@ -5,6 +5,7 @@ import {
   fetchMyAppointments,
   fetchSharedAppointments,
   fetchAssignedAppointments,
+  fetchTeamAppointments,
   fetchDefaultAppointments,
   fetchUpcomingAppointments,
   fetchPastAppointments,
@@ -95,7 +96,7 @@ export const fetchAppointments = async (
           appointments = await fetchAssignedAppointments(userRole);
           break;
         case "team-appointments":
-          appointments = await fetchDefaultAppointments(userRole);
+          appointments = await fetchTeamAppointments(userRole);
           break;
         case "upcoming":
           appointments = await fetchUpcomingAppointments(userRole);
