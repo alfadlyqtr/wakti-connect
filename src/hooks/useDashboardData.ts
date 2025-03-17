@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -72,40 +73,6 @@ export const useDashboardData = () => {
     },
   });
 
-  // Fetch upcoming appointments
-  const { data: upcomingAppointments, isLoading: appointmentsLoading } = useQuery({
-    queryKey: ['upcomingAppointments'],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.user) {
-        throw new Error("No active session");
-      }
-      
-      // Get current time
-      const now = new Date();
-      
-      // Get future appointments (next 7 days)
-      const sevenDaysLater = new Date(now);
-      sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
-      
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .gte('start_time', now.toISOString())
-        .lte('start_time', sevenDaysLater.toISOString())
-        .order('start_time', { ascending: true });
-      
-      if (error) {
-        console.error("Error fetching upcoming appointments:", error);
-        throw error;
-      }
-      
-      return data;
-    },
-  });
-
   // Fetch unread notifications count
   const { data: unreadNotifications, isLoading: notificationsLoading } = useQuery({
     queryKey: ['unreadNotifications'],
@@ -134,8 +101,7 @@ export const useDashboardData = () => {
   return {
     profileData,
     todayTasks,
-    upcomingAppointments,
     unreadNotifications,
-    isLoading: profileLoading || tasksLoading || appointmentsLoading || notificationsLoading
+    isLoading: profileLoading || tasksLoading || notificationsLoading
   };
 };

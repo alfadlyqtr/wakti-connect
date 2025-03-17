@@ -1,139 +1,146 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  InvitationRequest, 
-  InvitationResponse
-} from "@/types/invitation.types";
-import { toast } from "@/components/ui/use-toast";
+import { InvitationTarget, InvitationRequest, InvitationResponse } from "@/types/invitation.types";
+import { fromTable } from "@/integrations/supabase/helper";
 
 /**
- * Creates a new invitation for an appointment
+ * Send an invitation to a user or email
  */
 export const sendInvitation = async (
-  appointmentId: string,
-  invitationData: InvitationRequest
+  eventId: string,
+  target: InvitationTarget,
+  customization: any = null,
+  sharedAsLink: boolean = false
 ): Promise<InvitationResponse> => {
   try {
-    // Create the invitation in the database
-    const { data, error } = await supabase
-      .from('appointment_invitations')
-      .insert({
-        appointment_id: appointmentId,
-        invited_user_id: invitationData.target.type === 'user' ? invitationData.target.id : null,
-        email: invitationData.target.type === 'email' ? invitationData.target.id : null,
-        status: 'pending',
-        shared_as_link: invitationData.shared_as_link || false,
-        customization: invitationData.customization || null
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error creating invitation:", error);
-      throw new Error(`Failed to create invitation: ${error.message}`);
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error("No active session");
     }
-
+    
+    const { data, error } = await supabase
+      .from('event_invitations')
+      .insert({
+        event_id: eventId,
+        invited_user_id: target.type === 'user' ? target.id : null,
+        email: target.type === 'email' ? target.id : null, 
+        shared_as_link: sharedAsLink,
+        status: 'pending'
+      })
+      .select('id, created_at')
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
     return {
       id: data.id,
       status: 'sent',
       created_at: data.created_at
     };
-  } catch (error: any) {
-    console.error("Error sending invitation:", error);
+  } catch (error) {
+    console.error('Error sending invitation:', error);
     throw error;
   }
 };
 
 /**
- * Updates an invitation's status (accept/decline)
+ * Recall an invitation that was previously sent
  */
-export const respondToInvitation = async (
-  invitationId: string,
-  response: 'accepted' | 'declined'
-): Promise<{ success: boolean }> => {
+export const recallInvitation = async (invitationId: string): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('appointment_invitations')
-      .update({ status: response })
-      .eq('id', invitationId);
-
-    if (error) {
-      console.error("Error responding to invitation:", error);
-      throw new Error(`Failed to respond to invitation: ${error.message}`);
-    }
-
-    return { success: true };
-  } catch (error: any) {
-    console.error("Error responding to invitation:", error);
-    throw error;
-  }
-};
-
-/**
- * Deletes an invitation
- */
-export const deleteInvitation = async (
-  invitationId: string
-): Promise<{ success: boolean }> => {
-  try {
-    const { error } = await supabase
-      .from('appointment_invitations')
+    const { data, error } = await supabase
+      .from('event_invitations')
       .delete()
       .eq('id', invitationId);
-
+    
     if (error) {
-      console.error("Error deleting invitation:", error);
-      throw new Error(`Failed to delete invitation: ${error.message}`);
+      throw error;
     }
-
-    return { success: true };
-  } catch (error: any) {
-    console.error("Error deleting invitation:", error);
+    
+    return true;
+  } catch (error) {
+    console.error('Error recalling invitation:', error);
     throw error;
   }
 };
 
 /**
- * Get all invitations for the current user
+ * List all sent invitations for an event
  */
-export const getUserInvitations = async () => {
+export const listSentInvitations = async (eventId: string) => {
   try {
-    // Get the user's account type to check permissions
-    const { data: userRole, error: roleError } = await supabase.rpc(
-      "get_auth_user_account_type"
-    );
-
-    if (roleError) {
-      throw new Error(`Failed to check user role: ${roleError.message}`);
-    }
-
-    // Only fetch if user has a paid account
-    if (userRole === "free") {
-      toast({
-        title: "Premium Feature",
-        description: "Invitations are only available for paid accounts",
-        variant: "destructive",
-      });
-      return [];
-    }
-
-    // Get invitations where the current user is invited
     const { data, error } = await supabase
-      .from('appointment_invitations')
+      .from('event_invitations')
       .select(`
-        *,
-        appointments:appointment_id (*)
+        id, 
+        status,
+        shared_as_link,
+        created_at,
+        invited_user_id,
+        email,
+        profiles:invited_user_id (
+          full_name, 
+          display_name,
+          avatar_url
+        )
       `)
-      .eq('status', 'pending');
-
+      .eq('event_id', eventId);
+    
     if (error) {
-      console.error("Error fetching invitations:", error);
-      throw new Error(`Failed to fetch invitations: ${error.message}`);
+      throw error;
     }
+    
+    return data;
+  } catch (error) {
+    console.error('Error listing invitations:', error);
+    throw error;
+  }
+};
 
-    return data || [];
-  } catch (error: any) {
-    console.error("Error fetching invitations:", error);
+/**
+ * List all invitations received by the current user
+ */
+export const listReceivedInvitations = async () => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error("No active session");
+    }
+    
+    const { data, error } = await supabase
+      .from('event_invitations')
+      .select(`
+        id,
+        status,
+        created_at,
+        events (
+          id,
+          title,
+          description,
+          start_time,
+          end_time,
+          customization,
+          user_id,
+          profiles:user_id (
+            full_name,
+            display_name,
+            avatar_url
+          )
+        )
+      `)
+      .eq('invited_user_id', session.user.id);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error listing received invitations:', error);
     throw error;
   }
 };
