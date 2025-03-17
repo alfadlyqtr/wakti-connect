@@ -115,7 +115,7 @@ export async function createAppointment(formData: AppointmentFormData, recurring
         toast({
           title: "Warning",
           description: "Appointment created but recurring settings couldn't be applied",
-          variant: "warning",
+          variant: "destructive", // Changed from "warning" to "destructive"
         });
       }
     }

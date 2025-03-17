@@ -7,9 +7,10 @@ import { AppointmentFormValues } from "./AppointmentFormSchema";
 
 interface AppointmentTimeFieldsProps {
   form: UseFormReturn<AppointmentFormValues>;
+  disabled?: boolean; // Add disabled prop
 }
 
-export const AppointmentTimeFields: React.FC<AppointmentTimeFieldsProps> = ({ form }) => {
+export const AppointmentTimeFields: React.FC<AppointmentTimeFieldsProps> = ({ form, disabled = false }) => {
   return (
     <div className="grid grid-cols-2 gap-4">
       <FormField
@@ -22,6 +23,7 @@ export const AppointmentTimeFields: React.FC<AppointmentTimeFieldsProps> = ({ fo
               <Input 
                 type="time" 
                 {...field} 
+                disabled={disabled}
               />
             </FormControl>
             <FormMessage />
@@ -39,6 +41,7 @@ export const AppointmentTimeFields: React.FC<AppointmentTimeFieldsProps> = ({ fo
               <Input 
                 type="time" 
                 {...field} 
+                disabled={disabled}
               />
             </FormControl>
             <FormMessage />

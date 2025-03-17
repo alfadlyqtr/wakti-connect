@@ -103,7 +103,7 @@ async function createEmailInvitations(
 ): Promise<void> {
   try {
     // Check if the user can send email invitations (has paid account)
-    const { data: userAccountType } = await supabase.rpc('get_user_account_type', { user_uid: userId });
+    const { data: userAccountType } = await supabase.rpc('get_auth_user_account_type');
     
     const isPaidAccount = userAccountType !== 'free';
     

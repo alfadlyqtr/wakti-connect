@@ -11,9 +11,10 @@ import { AppointmentFormValues } from "./AppointmentFormSchema";
 
 interface AppointmentFormFieldsProps {
   form: UseFormReturn<AppointmentFormValues>;
+  disabled?: boolean; // Add disabled prop
 }
 
-export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({ form }) => {
+export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({ form, disabled = false }) => {
   const watchIsAllDay = form.watch("isAllDay");
 
   return (
@@ -25,7 +26,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({ fo
           <FormItem>
             <FormLabel>Title</FormLabel>
             <FormControl>
-              <Input placeholder="Enter appointment title..." {...field} required />
+              <Input placeholder="Enter appointment title..." {...field} required disabled={disabled} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -43,6 +44,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({ fo
                 placeholder="Enter appointment details..." 
                 {...field} 
                 className="min-h-[80px]"
+                disabled={disabled}
               />
             </FormControl>
             <FormMessage />
@@ -57,7 +59,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({ fo
           <FormItem>
             <FormLabel>Location</FormLabel>
             <FormControl>
-              <Input placeholder="Enter location..." {...field} />
+              <Input placeholder="Enter location..." {...field} disabled={disabled} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -75,6 +77,7 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({ fo
                 date={field.value} 
                 setDate={field.onChange}
                 className="w-full"
+                disabled={disabled}
               />
             </FormControl>
             <FormMessage />
@@ -97,13 +100,14 @@ export const AppointmentFormFields: React.FC<AppointmentFormFieldsProps> = ({ fo
               <Switch
                 checked={field.value}
                 onCheckedChange={field.onChange}
+                disabled={disabled}
               />
             </FormControl>
           </FormItem>
         )}
       />
       
-      {!watchIsAllDay && <AppointmentTimeFields form={form} />}
+      {!watchIsAllDay && <AppointmentTimeFields form={form} disabled={disabled} />}
     </>
   );
 };

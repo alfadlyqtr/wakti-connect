@@ -1,4 +1,3 @@
-
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { 
@@ -26,9 +25,9 @@ import {
 interface RecurringFormFieldsProps {
   form: UseFormReturn<any>;
   userRole: "free" | "individual" | "business";
+  disabled?: boolean;
 }
 
-// Day of the week options
 const DAYS_OF_WEEK = [
   { value: "monday", label: "Monday" },
   { value: "tuesday", label: "Tuesday" },
@@ -39,7 +38,7 @@ const DAYS_OF_WEEK = [
   { value: "sunday", label: "Sunday" },
 ];
 
-const RecurringFormFields: React.FC<RecurringFormFieldsProps> = ({ form, userRole }) => {
+const RecurringFormFields: React.FC<RecurringFormFieldsProps> = ({ form, userRole, disabled = false }) => {
   const isPaidAccount = userRole === "individual" || userRole === "business";
   const watchFrequency = form.watch("recurring.frequency");
   const watchIsRecurring = form.watch("isRecurring");
@@ -73,6 +72,7 @@ const RecurringFormFields: React.FC<RecurringFormFieldsProps> = ({ form, userRol
             <Select
               onValueChange={field.onChange}
               defaultValue={field.value}
+              disabled={disabled}
             >
               <FormControl>
                 <SelectTrigger>
@@ -103,6 +103,7 @@ const RecurringFormFields: React.FC<RecurringFormFieldsProps> = ({ form, userRol
                 min={1} 
                 {...field} 
                 onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                disabled={disabled}
               />
             </FormControl>
             <FormDescription>
@@ -145,6 +146,7 @@ const RecurringFormFields: React.FC<RecurringFormFieldsProps> = ({ form, userRol
                                   : current.filter((val: string) => val !== day.value);
                                 field.onChange(newValue);
                               }}
+                              disabled={disabled}
                             />
                           </FormControl>
                           <FormLabel className="text-sm font-normal cursor-pointer">
@@ -176,6 +178,7 @@ const RecurringFormFields: React.FC<RecurringFormFieldsProps> = ({ form, userRol
                   max={31} 
                   {...field} 
                   onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                  disabled={disabled}
                 />
               </FormControl>
               <FormDescription>
@@ -198,6 +201,7 @@ const RecurringFormFields: React.FC<RecurringFormFieldsProps> = ({ form, userRol
                 date={field.value} 
                 setDate={field.onChange}
                 className="w-full"
+                disabled={disabled}
               />
             </FormControl>
             <FormDescription>
@@ -221,6 +225,7 @@ const RecurringFormFields: React.FC<RecurringFormFieldsProps> = ({ form, userRol
                 {...field} 
                 value={field.value || ""}
                 onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                disabled={disabled}
               />
             </FormControl>
             <FormDescription>
