@@ -3,8 +3,9 @@ import React from "react";
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Users, Edit, Trash2 } from "lucide-react";
+import { Clock, Edit, Trash2 } from "lucide-react";
 import { Service } from "@/types/service.types";
+import StaffAssignmentButton from "./StaffAssignmentButton";
 
 interface ServiceCardProps {
   service: Service;
@@ -36,20 +37,20 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           {service.description || "No description provided"}
         </CardDescription>
       </CardHeader>
-      <CardContent className="pb-2 flex-grow">
-        <div className="flex items-center mb-2">
+      
+      <CardContent className="pb-2 flex-grow space-y-4">
+        <div className="flex items-center">
           <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
           <span>{service.duration} minutes</span>
         </div>
-        <div className="flex items-center">
-          <Users className="h-4 w-4 mr-2 text-muted-foreground" />
-          <span>
-            {staffCount > 0 
-              ? `${staffCount} staff assigned` 
-              : "No staff assigned"}
-          </span>
-        </div>
+        
+        <StaffAssignmentButton 
+          serviceId={service.id} 
+          serviceName={service.name}
+          staffCount={staffCount}
+        />
       </CardContent>
+      
       <CardFooter className="flex justify-between pt-4 border-t">
         <Button variant="outline" size="sm" onClick={() => onEdit(service)}>
           <Edit className="h-4 w-4 mr-2" />

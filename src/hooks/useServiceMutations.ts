@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +9,6 @@ export const useServiceMutations = () => {
   const queryClient = useQueryClient();
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [openAddService, setOpenAddService] = useState(false);
-  const { assignStaffToService } = useServiceStaffMutations();
 
   // Add service mutation
   const addServiceMutation = useMutation({
@@ -35,12 +33,6 @@ export const useServiceMutations = () => {
         .single();
 
       if (serviceError) throw serviceError;
-
-      // Handle staff assignments if provided and not empty
-      if (formData.staff_ids && formData.staff_ids.length > 0) {
-        await assignStaffToService(serviceData.id, formData.staff_ids);
-      }
-
       return serviceData;
     },
     onSuccess: () => {
@@ -78,12 +70,6 @@ export const useServiceMutations = () => {
         .single();
 
       if (error) throw error;
-
-      // Handle staff assignments - if staff_ids is provided (even if empty)
-      if (formData.staff_ids !== undefined) {
-        await assignStaffToService(id, formData.staff_ids || []);
-      }
-
       return data;
     },
     onSuccess: () => {
@@ -107,15 +93,6 @@ export const useServiceMutations = () => {
   // Delete service mutation
   const deleteServiceMutation = useMutation({
     mutationFn: async (id: string) => {
-      // First delete staff assignments
-      const { error: assignmentError } = await supabase
-        .from('staff_service_assignments')
-        .delete()
-        .eq('service_id', id);
-
-      if (assignmentError) throw assignmentError;
-
-      // Then delete the service
       const { error } = await supabase
         .from('business_services')
         .delete()
