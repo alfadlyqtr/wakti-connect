@@ -1,5 +1,4 @@
 
-export * from './fetchProfileService';
-export * from './fetchTasksService';
-export * from './fetchAppointmentsService';
-export * from './fetchBookingsService';
+// Re-export calendar service functions
+export { fetchProfile } from "./fetchProfileService";
+export { fetchTasks } from "./fetchTasksService";

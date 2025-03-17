@@ -1,6 +1,6 @@
 
 export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
-export type EntityType = 'task' | 'appointment';
+export type EntityType = 'task';
 
 export interface RecurringSettings {
   id: string;
@@ -31,6 +31,5 @@ export interface RecurringInstance {
   parent_recurring_id?: string;
 }
 
-// Extended types for tasks and appointments with recurring properties
+// Extended types for tasks with recurring properties
 export type RecurringTask = import('./task.types').Task & RecurringInstance;
-export type RecurringAppointment = import('./appointment.types').Appointment & RecurringInstance;

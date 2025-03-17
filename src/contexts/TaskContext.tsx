@@ -36,6 +36,9 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
             priority: "high",
             due_date: new Date().toISOString(),
             created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            user_id: "user-1",
+            assignee_id: null
           },
           {
             id: "2",
@@ -45,6 +48,9 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
             priority: "medium",
             due_date: new Date(Date.now() + 86400000).toISOString(),
             created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            user_id: "user-1",
+            assignee_id: null
           },
           {
             id: "3",
@@ -54,6 +60,9 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
             priority: "high",
             due_date: new Date(Date.now() - 86400000).toISOString(),
             created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            user_id: "user-1",
+            assignee_id: null
           }
         ];
         

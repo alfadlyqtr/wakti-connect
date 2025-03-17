@@ -2,7 +2,7 @@
 import React from "react";
 import { format, isSameMonth, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
-import EventDot from "./EventDot";
+import { EventDot } from "./EventDot";
 import { DayEventTypes } from "@/types/calendar.types";
 
 interface CalendarDayCellProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onSelect'> {
@@ -42,8 +42,6 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
       {(eventTypes.hasTasks || eventTypes.hasAppointments || eventTypes.hasBookings) && (
         <div className="absolute bottom-1 left-0 right-0 flex justify-center space-x-1">
           {eventTypes.hasTasks && <EventDot type="task" />}
-          {eventTypes.hasAppointments && <EventDot type="appointment" />}
-          {eventTypes.hasBookings && <EventDot type="booking" />}
         </div>
       )}
     </div>

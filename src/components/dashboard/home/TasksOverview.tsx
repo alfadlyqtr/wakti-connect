@@ -2,6 +2,7 @@
 import React from "react";
 import { TaskList } from "./TaskList";
 import { Task } from "@/types/task.types";
+import { CalendarEvent } from "@/types/calendar.types";
 
 interface TasksOverviewProps {
   tasks: Task[];
@@ -16,6 +17,17 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
   // Calculate percentages
   const totalTasks = tasks.length;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks.length / totalTasks) * 100) : 0;
+  
+  // Convert Task[] to CalendarEvent[] for TaskList which expects CalendarEvent[]
+  const taskEvents: CalendarEvent[] = tasks.map(task => ({
+    id: task.id,
+    title: task.title,
+    date: new Date(task.due_date || Date.now()),
+    type: "task",
+    status: task.status,
+    isCompleted: task.status === "completed",
+    priority: task.priority
+  }));
   
   return (
     <div className="space-y-4">
@@ -35,7 +47,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
       </div>
       
       <div className="max-h-[300px] overflow-y-auto">
-        <TaskList tasks={tasks} />
+        <TaskList tasks={taskEvents} />
       </div>
     </div>
   );

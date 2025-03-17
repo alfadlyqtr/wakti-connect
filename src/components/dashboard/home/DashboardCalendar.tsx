@@ -55,10 +55,10 @@ export function DashboardCalendar({ events, isCompact = false }: DashboardCalend
         onSelect={setSelectedDate}
         className="border rounded-md"
         components={{
-          DayContent: (props) => (
+          DayContent: ({ date }) => (
             <>
-              {props.children}
-              {renderDayContent(props.date)}
+              {format(date, 'd')}
+              {renderDayContent(date)}
             </>
           ),
         }}
@@ -93,4 +93,11 @@ export function DashboardCalendar({ events, isCompact = false }: DashboardCalend
       </div>
     </div>
   );
+}
+
+// Add missing function
+function format(date: Date, format: string): string {
+  return new Intl.DateTimeFormat('en', { 
+    day: 'numeric' 
+  }).format(date);
 }

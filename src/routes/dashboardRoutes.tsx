@@ -3,7 +3,6 @@ import React from 'react';
 import { Route } from 'react-router-dom';
 import DashboardHome from '@/pages/dashboard/DashboardHome';
 import DashboardTasks from '@/pages/dashboard/DashboardTasks';
-import DashboardAppointments from '@/pages/dashboard/DashboardAppointments';
 import DashboardMessages from '@/pages/dashboard/DashboardMessages';
 import DashboardContacts from '@/pages/dashboard/DashboardContacts';
 import DashboardServices from '@/pages/dashboard/DashboardServiceManagement';
@@ -21,7 +20,6 @@ const dashboardRoutes = (
   <>
     <Route path="" element={<DashboardHome />} />
     <Route path="tasks" element={<DashboardTasks />} />
-    <Route path="appointments" element={<DashboardAppointments />} />
     <Route path="messages" element={<DashboardMessages />} />
     <Route path="contacts" element={<DashboardContacts />} />
     <Route path="services" element={<DashboardServices />} />
