@@ -30,13 +30,15 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
     queryFn: () => fetchAppointments(tab),
     refetchOnWindowFocus: false,
     retry: 1,
-    onError: (err: any) => {
-      console.error("Appointment fetch error:", err);
-      toast({
-        title: "Failed to load appointments",
-        description: err.message || "An unexpected error occurred",
-        variant: "destructive",
-      });
+    meta: {
+      onError: (err: any) => {
+        console.error("Appointment fetch error:", err);
+        toast({
+          title: "Failed to load appointments",
+          description: err.message || "An unexpected error occurred",
+          variant: "destructive",
+        });
+      }
     }
   });
 
