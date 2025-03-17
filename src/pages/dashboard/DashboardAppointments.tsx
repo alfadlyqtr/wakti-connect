@@ -28,6 +28,7 @@ const DashboardAppointments = () => {
 
   // Determine if this is a paid account
   const isPaidAccount = userRole === "individual" || userRole === "business";
+  const isBusinessAccount = userRole === "business";
   console.log("DashboardAppointments - isPaidAccount:", isPaidAccount);
 
   // Show error toast if query fails
@@ -53,6 +54,13 @@ const DashboardAppointments = () => {
     }
   }, [error, refetch]);
 
+  // Reset to default tab when role changes
+  useEffect(() => {
+    if (activeTab === "team-appointments" && !isBusinessAccount) {
+      setActiveTab("my-appointments");
+    }
+  }, [userRole, activeTab, isBusinessAccount]);
+
   const handleCreateAppointment = async (appointmentData: any) => {
     try {
       await createAppointment(appointmentData);
@@ -65,6 +73,17 @@ const DashboardAppointments = () => {
 
   const handleTabChange = (newTab: AppointmentTab) => {
     setActiveTab(newTab);
+  };
+
+  // Define available tabs based on user role
+  const getAvailableTabs = () => {
+    const tabs: AppointmentTab[] = ["my-appointments", "shared-appointments", "invitations"];
+    
+    if (isBusinessAccount) {
+      tabs.push("team-appointments");
+    }
+    
+    return tabs;
   };
 
   if (isLoading) {
@@ -104,6 +123,7 @@ const DashboardAppointments = () => {
         currentTab={activeTab}
         onTabChange={handleTabChange}
         userRole={userRole}
+        availableTabs={getAvailableTabs()}
       />
       
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">

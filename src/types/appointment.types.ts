@@ -12,11 +12,14 @@ export interface Appointment {
   assignee_id: string | null;
   created_at: string;
   updated_at: string;
+  is_recurring_instance?: boolean;
+  parent_recurring_id?: string | null;
+  invitations?: AppointmentInvitation[];
 }
 
 export type AppointmentStatus = "scheduled" | "cancelled" | "completed";
 
-export type AppointmentTab = "my-appointments" | "shared-appointments" | "assigned-appointments" | "upcoming" | "past" | "invitations";
+export type AppointmentTab = "my-appointments" | "shared-appointments" | "assigned-appointments" | "team-appointments" | "upcoming" | "past" | "invitations";
 
 export interface AppointmentFormData {
   title: string;
@@ -39,4 +42,16 @@ export interface AppointmentFormData {
 export interface AppointmentsResult {
   appointments: Appointment[];
   userRole: "free" | "individual" | "business";
+}
+
+export interface AppointmentInvitation {
+  id: string;
+  appointment_id: string;
+  invited_user_id?: string;
+  email?: string;
+  status: 'pending' | 'accepted' | 'declined';
+  created_at: string;
+  updated_at: string;
+  shared_as_link: boolean;
+  customization?: any;
 }
