@@ -249,21 +249,30 @@ export type Database = {
         Row: {
           business_id: string
           created_at: string
+          email: string | null
           id: string
+          name: string | null
+          position: string | null
           role: string
           staff_id: string
         }
         Insert: {
           business_id: string
           created_at?: string
+          email?: string | null
           id?: string
+          name?: string | null
+          position?: string | null
           role?: string
           staff_id: string
         }
         Update: {
           business_id?: string
           created_at?: string
+          email?: string | null
           id?: string
+          name?: string | null
+          position?: string | null
           role?: string
           staff_id?: string
         }
@@ -690,19 +699,19 @@ export type Database = {
           created_at: string
           id: string
           service_id: string
-          staff_relation_id: string
+          staff_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           service_id: string
-          staff_relation_id: string
+          staff_id: string
         }
         Update: {
           created_at?: string
           id?: string
           service_id?: string
-          staff_relation_id?: string
+          staff_id?: string
         }
         Relationships: [
           {
@@ -713,8 +722,8 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "staff_service_assignments_staff_relation_id_fkey"
-            columns: ["staff_relation_id"]
+            foreignKeyName: "staff_service_assignments_staff_id_fkey"
+            columns: ["staff_id"]
             isOneToOne: false
             referencedRelation: "business_staff"
             referencedColumns: ["id"]
@@ -957,6 +966,18 @@ export type Database = {
       get_auth_user_account_type: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      user_owns_service: {
+        Args: {
+          service_id: string
+        }
+        Returns: boolean
+      }
+      user_owns_staff: {
+        Args: {
+          staff_id: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

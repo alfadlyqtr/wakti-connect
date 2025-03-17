@@ -19,57 +19,27 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         .select(`
           id,
           service_id,
-          staff_relation_id,
-          business_staff(
+          staff_id,
+          business_staff:staff_id(
             id,
-            staff_id
+            name,
+            role
           )
         `)
         .eq('service_id', serviceId);
         
       if (error) throw error;
       
-      // After getting the staff assignments, fetch the profile data separately for each staff
-      const enhancedData = await Promise.all(
-        data.map(async (assignment) => {
-          // Check if business_staff exists and has a staff_id
-          if (!assignment.business_staff || !assignment.business_staff.staff_id) {
-            return {
-              id: assignment.id,
-              serviceId: assignment.service_id,
-              staffRelationId: assignment.staff_relation_id,
-              staffId: null,
-              staffName: 'Unknown'
-            };
-          }
-          
-          // Get profile information for this staff
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', assignment.business_staff.staff_id)
-            .single();
-            
-          if (profileError) {
-            console.error("Error fetching staff profile:", profileError);
-            return {
-              id: assignment.id,
-              serviceId: assignment.service_id,
-              staffRelationId: assignment.staff_relation_id,
-              staffId: assignment.business_staff.staff_id,
-              staffName: 'Unknown'
-            };
-          }
-          
-          return {
-            id: assignment.id,
-            serviceId: assignment.service_id,
-            staffRelationId: assignment.staff_relation_id,
-            staffId: assignment.business_staff.staff_id,
-            staffName: profileData?.full_name || 'Unknown'
-          };
-        })
-      );
+      // Map the data to a more usable format
+      const enhancedData = data.map(assignment => {
+        return {
+          id: assignment.id,
+          serviceId: assignment.service_id,
+          staffId: assignment.staff_id,
+          staffName: assignment.business_staff?.name || 'Unknown',
+          staffRole: assignment.business_staff?.role || 'staff'
+        };
+      });
       
       return enhancedData;
     },

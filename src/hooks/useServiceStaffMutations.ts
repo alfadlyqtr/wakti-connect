@@ -8,14 +8,6 @@ export const useServiceStaffMutations = () => {
 
   // Mutation to assign staff to a service
   const assignStaffToService = async (serviceId: string, staffIds: string[]) => {
-    // Get business_staff records for the selected staff IDs
-    const { data: staffRelations, error: staffError } = await supabase
-      .from('business_staff')
-      .select('id, staff_id')
-      .in('staff_id', staffIds);
-
-    if (staffError) throw staffError;
-
     // Delete existing assignments
     const { error: deleteError } = await supabase
       .from('staff_service_assignments')
@@ -26,9 +18,9 @@ export const useServiceStaffMutations = () => {
 
     // Create new assignments if there are any
     if (staffIds.length > 0) {
-      const assignments = staffRelations.map(relation => ({
+      const assignments = staffIds.map(staffId => ({
         service_id: serviceId,
-        staff_relation_id: relation.id
+        staff_id: staffId
       }));
 
       if (assignments.length > 0) {

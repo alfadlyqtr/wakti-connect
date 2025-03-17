@@ -31,15 +31,11 @@ export const useServiceQueries = () => {
         .from('staff_service_assignments')
         .select(`
           service_id,
-          staff_relation_id,
-          business_staff(
+          staff_id,
+          business_staff:staff_id(
             id,
-            role,
-            staff_id,
-            profiles:staff_id(
-              id,
-              full_name
-            )
+            name,
+            role
           )
         `);
 
@@ -53,9 +49,9 @@ export const useServiceQueries = () => {
 
         // Map staff assignments to staff members
         const assignedStaff = serviceAssignments.map((assignment: any) => ({
-          id: assignment.business_staff.staff_id,
-          name: assignment.business_staff.profiles.full_name,
-          role: assignment.business_staff.role
+          id: assignment.staff_id,
+          name: assignment.business_staff?.name || 'Unknown',
+          role: assignment.business_staff?.role || 'staff'
         }));
 
         return {
