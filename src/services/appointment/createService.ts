@@ -83,6 +83,12 @@ export const createAppointment = async (
           description: "You don't have permission to create this appointment. This may be due to Row Level Security policies.",
           variant: "destructive",
         });
+      } else {
+        toast({
+          title: "Failed to Create Appointment",
+          description: error.message || "Database error occurred",
+          variant: "destructive",
+        });
       }
       
       throw new Error(`Database error: ${error.message}`);
@@ -105,10 +111,13 @@ export const createAppointment = async (
         
         console.log("Would create recurring instances for dates:", recurringDates);
         
+        // Show success message with recurring info
         toast({
-          title: "Recurring Pattern Created",
-          description: `Generated ${recurringDates.length} future occurrences`,
+          title: "Recurring Appointment Created",
+          description: `Created with ${recurringDates.length} future occurrences`,
         });
+        
+        return appointment;
       } catch (recurringError: any) {
         console.error("Error creating recurring instances:", recurringError);
         toast({
@@ -116,10 +125,12 @@ export const createAppointment = async (
           description: "Appointment was created, but there was an issue with recurring settings.",
           variant: "destructive",
         });
+        
+        return appointment;
       }
     }
 
-    // Success toast notification
+    // Success toast notification for regular appointments
     toast({
       title: "Appointment Created",
       description: "Your appointment has been successfully created.",
