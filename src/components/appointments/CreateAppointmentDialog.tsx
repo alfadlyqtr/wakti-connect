@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { 
@@ -6,18 +7,16 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogDescription,
-  DialogFooter,
-  DialogClose
+  DialogDescription
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { AppointmentFormValues, appointmentFormSchema, getDefaultFormValues } from "./AppointmentFormSchema";
-import { AppointmentFormData } from "@/types/appointment.types";
-import { RecurringFormData } from "@/types/recurring.types";
 import { AppointmentFormContent } from "./AppointmentFormContent";
 import { AppointmentDialogFooter } from "./AppointmentDialogFooter";
+import { AppointmentFormData } from "@/types/appointment.types";
+import { RecurringFormData } from "@/types/recurring.types";
 import { Loader2 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 interface CreateAppointmentDialogProps {
   open: boolean;
@@ -39,23 +38,8 @@ export function CreateAppointmentDialog({
   
   const form = useForm<AppointmentFormValues>({
     resolver: zodResolver(appointmentFormSchema),
-    defaultValues: {
-      ...getDefaultFormValues(),
-      isRecurring: false,
-      recurring: {
-        frequency: "daily",
-        interval: 1,
-        days_of_week: [],
-      }
-    }
+    defaultValues: getDefaultFormValues()
   });
-  
-  useEffect(() => {
-    if (open) {
-      form.reset(getDefaultFormValues());
-      setHasAttemptedSubmit(false);
-    }
-  }, [open, form]);
   
   const handleSubmit = async (values: AppointmentFormValues) => {
     setHasAttemptedSubmit(true);
@@ -70,79 +54,66 @@ export function CreateAppointmentDialog({
     }
     
     setIsSubmitting(true);
-    
     try {
-      const startDate = new Date(values.date);
-      const endDate = new Date(values.date);
-      
-      if (!values.isAllDay && values.startTime && values.endTime) {
-        const [startHours, startMinutes] = values.startTime.split(':').map(Number);
-        const [endHours, endMinutes] = values.endTime.split(':').map(Number);
-        
-        startDate.setHours(startHours, startMinutes, 0);
-        endDate.setHours(endHours, endMinutes, 0);
-      } else {
-        startDate.setHours(0, 0, 0, 0);
-        endDate.setHours(23, 59, 59, 999);
-      }
+      // Format the date and time information
+      const { date, startTime, endTime, isAllDay, title, description, location, isRecurring } = values;
       
       const appointmentData: AppointmentFormData = {
-        title: values.title,
-        description: values.description,
-        location: values.location,
-        start_time: startDate.toISOString(),
-        end_time: endDate.toISOString(),
-        is_all_day: values.isAllDay
+        title,
+        description: description || undefined,
+        location: location || undefined,
+        is_all_day: isAllDay,
+        status: "scheduled",
       };
       
-      const recurringData = values.isRecurring ? values.recurring as RecurringFormData : undefined;
-      
-      let retries = 0;
-      const maxRetries = 3;
-      let result = null;
-      
-      while (retries < maxRetries) {
-        try {
-          result = await onCreateAppointment(appointmentData, recurringData);
-          break;
-        } catch (createError: any) {
-          console.error(`Attempt ${retries + 1} - Error creating appointment:`, createError);
-          
-          if (
-            createError.message?.includes("violates row-level security policy") || 
-            createError.message?.includes("connection error") ||
-            createError.message?.includes("timeout")
-          ) {
-            retries++;
-            
-            if (retries >= maxRetries) {
-              throw createError;
-            }
-            
-            const delay = 1000 * Math.pow(2, retries);
-            toast({
-              title: "Retrying...",
-              description: `Attempt ${retries} of ${maxRetries}. Please wait.`,
-            });
-            
-            await new Promise(resolve => setTimeout(resolve, delay));
-          } else {
-            throw createError;
-          }
+      // Add date/time information
+      if (isAllDay) {
+        // For all-day events, set times to start of day and end of day
+        const startDate = new Date(date);
+        startDate.setHours(0, 0, 0, 0);
+        
+        const endDate = new Date(date);
+        endDate.setHours(23, 59, 59, 999);
+        
+        appointmentData.start_time = startDate.toISOString();
+        appointmentData.end_time = endDate.toISOString();
+      } else {
+        // For timed events, combine the date with the selected times
+        if (startTime) {
+          const [startHours, startMinutes] = startTime.split(':').map(Number);
+          const startDate = new Date(date);
+          startDate.setHours(startHours, startMinutes);
+          appointmentData.start_time = startDate.toISOString();
+        }
+        
+        if (endTime) {
+          const [endHours, endMinutes] = endTime.split(':').map(Number);
+          const endDate = new Date(date);
+          endDate.setHours(endHours, endMinutes);
+          appointmentData.end_time = endDate.toISOString();
         }
       }
       
-      onOpenChange(false);
-      form.reset();
+      // Get recurring data if appointment is recurring
+      const recurringData = isRecurring ? values.recurring as RecurringFormData : undefined;
+      
+      await onCreateAppointment(appointmentData, recurringData);
+      
+      // Reset form and close dialog
+      form.reset(getDefaultFormValues());
       setHasAttemptedSubmit(false);
+      onOpenChange(false);
       
-      return result;
+      toast({
+        title: "Appointment Created",
+        description: "Your appointment has been successfully created.",
+      });
     } catch (error: any) {
-      console.error("Error in CreateAppointmentDialog:", error);
-      
-      // Error toasts are already handled in the service layer
-      
-      // Keep the dialog open so the user can see the error and potentially retry
+      toast({
+        title: "Error creating appointment",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -154,12 +125,7 @@ export function CreateAppointmentDialog({
         <DialogHeader>
           <DialogTitle>Create New Appointment</DialogTitle>
           <DialogDescription>
-            Fill in the details to create a new appointment or event.
-            {!isPaidAccount && (
-              <div className="mt-2 text-destructive font-medium">
-                Creating appointments is a premium feature. Please upgrade your plan.
-              </div>
-            )}
+            Fill in the details to create a new appointment.
           </DialogDescription>
         </DialogHeader>
         
@@ -167,7 +133,7 @@ export function CreateAppointmentDialog({
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <AppointmentFormContent 
               form={form} 
-              isPaidAccount={isPaidAccount}
+              isPaidAccount={isPaidAccount} 
               isSubmitting={isSubmitting}
               userRole={userRole}
             />

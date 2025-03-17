@@ -38,19 +38,19 @@ export async function fetchAppointments(tab: AppointmentTab): Promise<Appointmen
     while (retries < maxRetries) {
       try {
         if (tab === 'my-appointments') {
-          appointments = await fetchers.myAppointments();
+          appointments = await fetchers.fetchMyAppointments();
         } else if (tab === 'shared-appointments') {
-          appointments = await fetchers.sharedAppointments();
+          appointments = await fetchers.fetchSharedAppointments();
         } else if (tab === 'upcoming') {
-          appointments = await fetchers.upcomingAppointments();
+          appointments = await fetchers.fetchUpcomingAppointments();
         } else if (tab === 'past') {
-          appointments = await fetchers.pastAppointments();
+          appointments = await fetchers.fetchPastAppointments();
         } else if (tab === 'invitations') {
-          appointments = await fetchers.invitationAppointments();
+          appointments = await fetchers.fetchInvitationAppointments();
         } else if (tab === 'assigned-appointments' || tab === 'team-appointments') {
-          appointments = await fetchers.assignedAppointments();
+          appointments = await fetchers.fetchAssignedAppointments();
         } else {
-          appointments = await fetchers.defaultAppointments();
+          appointments = await fetchers.fetchDefaultAppointments();
         }
         break;
       } catch (error: any) {
