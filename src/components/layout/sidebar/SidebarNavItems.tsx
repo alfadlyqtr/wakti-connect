@@ -10,9 +10,10 @@ import SidebarSectionHeader from "./SidebarSectionHeader";
 
 interface SidebarNavItemsProps {
   onNavClick?: () => void;
+  isCollapsed?: boolean;
 }
 
-const SidebarNavItems = ({ onNavClick }: SidebarNavItemsProps) => {
+const SidebarNavItems = ({ onNavClick, isCollapsed = false }: SidebarNavItemsProps) => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const { userData, unreadMessagesCount } = useSidebarData();
@@ -46,14 +47,14 @@ const SidebarNavItems = ({ onNavClick }: SidebarNavItemsProps) => {
           return null;
         }
 
-        // Section header
+        // Section header (only show when not collapsed)
         if ('section' in item) {
-          return (
+          return !isCollapsed ? (
             <SidebarSectionHeader 
               key={`section-${index}`} 
               title={item.section} 
             />
-          );
+          ) : null;
         }
 
         // Navigation item with badge for messages
@@ -69,6 +70,7 @@ const SidebarNavItems = ({ onNavClick }: SidebarNavItemsProps) => {
             item={navItem as NavItem}
             isActive={isActive(item.path)}
             isMobile={isMobile}
+            isCollapsed={isCollapsed}
             onClick={handleNavClick}
           />
         );

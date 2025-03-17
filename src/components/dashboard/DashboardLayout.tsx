@@ -7,6 +7,7 @@ import { toast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import "@/components/layout/sidebar/sidebar.css";
 import { useQuery } from "@tanstack/react-query";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -23,6 +24,7 @@ interface ProfileData {
 
 const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
 
   // Fetch user profile data for the dashboard
@@ -106,11 +108,39 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     };
   }, [navigate]);
 
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isMobile && isSidebarOpen) {
+        const sidebar = document.getElementById('sidebar');
+        const navbarToggle = document.getElementById('sidebar-toggle');
+        
+        if (sidebar && 
+            !sidebar.contains(event.target as Node) && 
+            navbarToggle && 
+            !navbarToggle.contains(event.target as Node)) {
+          setIsSidebarOpen(false);
+        }
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobile, isSidebarOpen]);
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  // Get the correct user role
   const userRoleValue = profileData?.account_type || propUserRole || "free";
+
+  // Calculate main content padding based on sidebar state
+  const mainContentClass = isMobile 
+    ? "transition-all duration-300" 
+    : "lg:pl-[70px] transition-all duration-300";
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -119,7 +149,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       <div className="flex flex-1 overflow-hidden">
         <Sidebar isOpen={isSidebarOpen} userRole={userRoleValue as "free" | "individual" | "business"} />
         
-        <main className="flex-1 overflow-y-auto pt-4 px-4 pb-12 lg:pl-64 transition-all duration-300">
+        <main className={`flex-1 overflow-y-auto pt-4 px-4 pb-12 ${mainContentClass}`}>
           <div className="container mx-auto animate-in">
             {profileLoading ? (
               <div className="flex items-center justify-center h-[calc(100vh-100px)]">

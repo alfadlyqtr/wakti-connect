@@ -15,3 +15,25 @@
 .sidebar-item.active svg {
   @apply text-primary;
 }
+
+/* Mobile sidebar open/closed classes */
+.sidebar-open {
+  @apply translate-x-0;
+  width: 16rem;
+}
+
+.sidebar-closed {
+  @apply -translate-x-full;
+  width: 0;
+}
+
+/* Transition for sidebar opening/closing */
+#sidebar {
+  transition: all 0.3s ease-in-out;
+}
+
+@media (min-width: 1024px) {
+  .sidebar-closed {
+    @apply translate-x-0;
+  }
+}

@@ -4,12 +4,19 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 import { NavItem } from "./sidebarNavConfig";
 
 interface SidebarNavItemProps {
   item: NavItem;
   isActive: boolean;
   isMobile: boolean;
+  isCollapsed?: boolean;
   onClick: (path: string) => void;
 }
 
@@ -17,27 +24,28 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
   item,
   isActive,
   isMobile,
+  isCollapsed = false,
   onClick
 }) => {
   const Icon = item.icon;
   
-  return (
+  const buttonContent = (
     <Button
       variant={isActive ? "secondary" : "ghost"}
-      size={isMobile ? "icon" : "default"}
+      size={isMobile || isCollapsed ? "icon" : "default"}
       asChild
       className={cn(
         "justify-start",
-        isMobile && "h-12 w-12"
+        (isMobile || isCollapsed) && "h-10 w-10"
       )}
       onClick={() => onClick(item.path)}
     >
       <Link to={`/dashboard/${item.path}`}>
         <Icon className="h-5 w-5" />
-        {!isMobile && (
+        {!isMobile && !isCollapsed && (
           <span className="ml-2">{item.label}</span>
         )}
-        {item.badge && !isMobile && (
+        {item.badge && !isMobile && !isCollapsed && (
           <Badge variant="secondary" className="ml-auto">
             {item.badge}
           </Badge>
@@ -45,6 +53,29 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
       </Link>
     </Button>
   );
+  
+  // When collapsed, wrap in tooltip
+  if (isCollapsed && !isMobile) {
+    return (
+      <TooltipProvider delayDuration={300}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {buttonContent}
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>{item.label}</p>
+            {item.badge && (
+              <Badge variant="secondary" className="ml-2">
+                {item.badge}
+              </Badge>
+            )}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+  
+  return buttonContent;
 };
 
 export default SidebarNavItem;
