@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,20 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, DollarSign, Plus, Search, Users, Edit, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+// Define service form schema
+const serviceFormSchema = z.object({
+  name: z.string().min(1, "Service name is required"),
+  description: z.string().optional(),
+  price: z.string().optional().transform(val => val ? parseFloat(val) : null),
+  duration: z.string().min(1, "Duration is required").transform(val => parseInt(val)),
+});
+
+type ServiceFormValues = z.infer<typeof serviceFormSchema>;
 
 interface Service {
   id: string;
@@ -22,12 +36,45 @@ interface Service {
 }
 
 const DashboardServiceManagement = () => {
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [openAddService, setOpenAddService] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
 
+  // Setup form
+  const form = useForm<ServiceFormValues>({
+    resolver: zodResolver(serviceFormSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      price: "",
+      duration: "60",
+    }
+  });
+
+  // Reset form when dialog opens/closes or when editing service changes
+  React.useEffect(() => {
+    if (openAddService) {
+      if (editingService) {
+        form.reset({
+          name: editingService.name,
+          description: editingService.description || "",
+          price: editingService.price?.toString() || "",
+          duration: editingService.duration.toString(),
+        });
+      } else {
+        form.reset({
+          name: "",
+          description: "",
+          price: "",
+          duration: "60",
+        });
+      }
+    }
+  }, [openAddService, editingService, form]);
+
   // Fetch services
-  const { data: services, isLoading, error, refetch } = useQuery({
+  const { data: services, isLoading, error } = useQuery({
     queryKey: ['businessServices'],
     queryFn: async () => {
       const { data: session } = await supabase.auth.getSession();
@@ -39,11 +86,115 @@ const DashboardServiceManagement = () => {
       const { data, error } = await supabase
         .from('business_services')
         .select('*')
-        .eq('business_id', session.session.user.id)
         .order('name');
         
       if (error) throw error;
       return data as Service[];
+    }
+  });
+
+  // Add service mutation
+  const addServiceMutation = useMutation({
+    mutationFn: async (formData: ServiceFormValues) => {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        throw new Error('Not authenticated');
+      }
+
+      const { data, error } = await supabase
+        .from('business_services')
+        .insert({
+          name: formData.name,
+          description: formData.description || null,
+          price: formData.price || null,
+          duration: formData.duration,
+          business_id: session.session.user.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['businessServices'] });
+      toast({
+        title: "Service added",
+        description: "The service has been added successfully.",
+      });
+      setOpenAddService(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add service",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Update service mutation
+  const updateServiceMutation = useMutation({
+    mutationFn: async ({ id, formData }: { id: string, formData: ServiceFormValues }) => {
+      const { data, error } = await supabase
+        .from('business_services')
+        .update({
+          name: formData.name,
+          description: formData.description || null,
+          price: formData.price || null,
+          duration: formData.duration,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['businessServices'] });
+      toast({
+        title: "Service updated",
+        description: "The service has been updated successfully.",
+      });
+      setOpenAddService(false);
+      setEditingService(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update service",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete service mutation
+  const deleteServiceMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('business_services')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['businessServices'] });
+      toast({
+        title: "Service deleted",
+        description: "The service has been deleted successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete service",
+        variant: "destructive"
+      });
     }
   });
 
@@ -53,15 +204,12 @@ const DashboardServiceManagement = () => {
     (service.description && service.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const handleAddService = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Implementation would go here
-    setOpenAddService(false);
-    toast({
-      title: "Service added",
-      description: "The service has been added successfully.",
-    });
-    refetch();
+  const handleSubmit = (values: ServiceFormValues) => {
+    if (editingService) {
+      updateServiceMutation.mutate({ id: editingService.id, formData: values });
+    } else {
+      addServiceMutation.mutate(values);
+    }
   };
 
   const handleEditService = (service: Service) => {
@@ -70,12 +218,9 @@ const DashboardServiceManagement = () => {
   };
 
   const handleDeleteService = (id: string) => {
-    // Implementation would go here
-    toast({
-      title: "Service deleted",
-      description: "The service has been deleted successfully.",
-    });
-    refetch();
+    if (confirm("Are you sure you want to delete this service?")) {
+      deleteServiceMutation.mutate(id);
+    }
   };
 
   return (
@@ -94,77 +239,93 @@ const DashboardServiceManagement = () => {
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <form onSubmit={handleAddService}>
-                <DialogHeader>
-                  <DialogTitle>{editingService ? "Edit Service" : "Add New Service"}</DialogTitle>
-                  <DialogDescription>
-                    {editingService 
-                      ? "Edit the details of your existing service." 
-                      : "Create a new service for your business."}
-                  </DialogDescription>
-                </DialogHeader>
-                
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">
-                      Service Name
-                    </Label>
-                    <Input
-                      id="name"
-                      placeholder="Service name"
-                      className="col-span-3"
-                      defaultValue={editingService?.name || ""}
-                      required
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleSubmit)}>
+                  <DialogHeader>
+                    <DialogTitle>{editingService ? "Edit Service" : "Add New Service"}</DialogTitle>
+                    <DialogDescription>
+                      {editingService 
+                        ? "Edit the details of your existing service." 
+                        : "Create a new service for your business."}
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="grid gap-4 py-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Service Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Service name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <textarea
+                              className="min-h-[80px] flex w-full rounded-md border border-input bg-background px-3 py-2"
+                              placeholder="Service description"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="price"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Price ($)</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="duration"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Duration (min)</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="60" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="description" className="text-right">
-                      Description
-                    </Label>
-                    <textarea
-                      id="description"
-                      placeholder="Service description"
-                      className="col-span-3 min-h-[80px] flex w-full rounded-md border border-input bg-background px-3 py-2"
-                      defaultValue={editingService?.description || ""}
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="price" className="text-right">
-                      Price ($)
-                    </Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      className="col-span-3"
-                      defaultValue={editingService?.price || ""}
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="duration" className="text-right">
-                      Duration (min)
-                    </Label>
-                    <Input
-                      id="duration"
-                      type="number"
-                      placeholder="60"
-                      className="col-span-3"
-                      defaultValue={editingService?.duration || ""}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setOpenAddService(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">
-                    {editingService ? "Update Service" : "Add Service"}
-                  </Button>
-                </DialogFooter>
-              </form>
+                  
+                  <DialogFooter>
+                    <Button type="button" variant="outline" onClick={() => {
+                      setOpenAddService(false);
+                      setEditingService(null);
+                    }}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={addServiceMutation.isPending || updateServiceMutation.isPending}>
+                      {(addServiceMutation.isPending || updateServiceMutation.isPending) ? "Saving..." : 
+                        (editingService ? "Update Service" : "Add Service")}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
             </DialogContent>
           </Dialog>
         </div>
@@ -236,7 +397,12 @@ const DashboardServiceManagement = () => {
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
                 </Button>
-                <Button variant="destructive" size="sm" onClick={() => handleDeleteService(service.id)}>
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={() => handleDeleteService(service.id)}
+                  disabled={deleteServiceMutation.isPending}
+                >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </Button>
