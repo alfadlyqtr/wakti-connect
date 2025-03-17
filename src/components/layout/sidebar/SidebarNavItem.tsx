@@ -36,12 +36,12 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
       asChild
       className={cn(
         "justify-start",
-        (isMobile || isCollapsed) && "h-10 w-10",
+        (isMobile || isCollapsed) && "h-10 w-10 flex items-center justify-center",
         isActive && "bg-wakti-blue text-white hover:bg-wakti-blue/90"
       )}
       onClick={() => onClick(item.path)}
     >
-      <Link to={`/dashboard/${item.path}`}>
+      <Link to={`/dashboard/${item.path}`} className="flex items-center justify-center">
         <Icon className="h-5 w-5" />
         {!isMobile && !isCollapsed && (
           <span className="ml-2">{item.label}</span>

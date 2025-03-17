@@ -1,6 +1,6 @@
 
 .sidebar-item {
-  @apply flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors;
+  @apply flex items-center justify-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors;
   @apply text-muted-foreground hover:bg-muted/50 hover:text-foreground;
 }
 
@@ -19,7 +19,7 @@
 /* Mobile sidebar open/closed classes */
 .sidebar-open {
   @apply translate-x-0;
-  width: 14rem; /* Reduced width from 16rem */
+  width: 14rem; /* Reduced width */
 }
 
 .sidebar-closed {

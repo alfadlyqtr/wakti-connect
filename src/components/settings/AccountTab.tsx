@@ -26,6 +26,8 @@ const accountFormSchema = z.object({
 type AccountFormValues = z.infer<typeof accountFormSchema>;
 
 const AccountTab: React.FC<AccountTabProps> = ({ profile }) => {
+  const isBusinessAccount = profile?.account_type === 'business';
+  
   const form = useForm<AccountFormValues>({
     resolver: zodResolver(accountFormSchema),
     defaultValues: {
@@ -137,9 +139,16 @@ const AccountTab: React.FC<AccountTabProps> = ({ profile }) => {
                 name="full_name"
                 render={({ field }) => (
                   <FormItem className="space-y-2">
-                    <FormLabel>Name</FormLabel>
+                    <div className="flex flex-row items-center justify-between">
+                      <FormLabel>{isBusinessAccount ? "Admin Name" : "Name"}</FormLabel>
+                      {isBusinessAccount && (
+                        <span className="text-xs bg-wakti-blue/10 text-wakti-blue px-2 py-1 rounded-full">
+                          Admin
+                        </span>
+                      )}
+                    </div>
                     <FormControl>
-                      <Input {...field} placeholder="Your name" />
+                      <Input {...field} placeholder={isBusinessAccount ? "Admin name" : "Your name"} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -162,7 +171,7 @@ const AccountTab: React.FC<AccountTabProps> = ({ profile }) => {
               
               <Button 
                 type="submit" 
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto bg-wakti-blue hover:bg-wakti-blue/90"
                 disabled={form.formState.isSubmitting}
               >
                 {form.formState.isSubmitting ? "Saving..." : "Save Changes"}
