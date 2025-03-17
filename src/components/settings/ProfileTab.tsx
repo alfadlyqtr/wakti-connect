@@ -8,8 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tables } from "@/integrations/supabase/types";
 import useIsMobile from "@/hooks/use-mobile";
 import { useForm } from "react-hook-form";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { updateProfileAvatar, updateProfileData } from "@/services/profile/updateProfileService";
 
 interface ProfileTabProps {
   profile?: (Tables<"profiles"> & {
@@ -20,6 +20,7 @@ interface ProfileTabProps {
 const ProfileTab: React.FC<ProfileTabProps> = ({ profile }) => {
   const isMobile = useIsMobile();
   const [isUploading, setIsUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null);
   
   const { register, handleSubmit, formState: { isSubmitting } } = useForm({
     defaultValues: {
@@ -31,17 +32,15 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile }) => {
   
   const onSubmit = async (data: any) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          display_name: data.display_name,
-          business_name: data.business_name,
-          occupation: data.occupation,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', profile?.id);
-      
-      if (error) throw error;
+      if (!profile?.id) {
+        throw new Error("Profile ID is missing");
+      }
+
+      const updatedProfile = await updateProfileData(profile.id, {
+        display_name: data.display_name,
+        business_name: data.business_name,
+        occupation: data.occupation
+      });
       
       toast({
         title: "Profile updated",
@@ -63,42 +62,13 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile }) => {
     
     try {
       setIsUploading(true);
-      
-      // Create a unique file path
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${profile.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-      
-      // Upload the file to Supabase storage
-      const { error: uploadError } = await supabase.storage
-        .from('profile_images')
-        .upload(filePath, file);
-      
-      if (uploadError) throw uploadError;
-      
-      // Get the public URL
-      const { data: urlData } = supabase.storage
-        .from('profile_images')
-        .getPublicUrl(filePath);
-      
-      if (!urlData.publicUrl) throw new Error("Failed to get public URL");
-      
-      // Update the user's profile with the new avatar URL
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-          avatar_url: urlData.publicUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', profile.id);
-      
-      if (updateError) throw updateError;
+      const newAvatarUrl = await updateProfileAvatar(profile.id, file);
+      setAvatarUrl(newAvatarUrl);
       
       toast({
         title: "Avatar updated",
         description: "Your profile picture has been updated successfully."
       });
-      
     } catch (error) {
       console.error("Error uploading avatar:", error);
       toast({
@@ -123,7 +93,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile }) => {
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className={`${isMobile ? 'flex flex-col' : 'flex items-center'} gap-4 mb-5`}>
             <Avatar className="w-20 h-20">
-              <AvatarImage src={profile?.avatar_url || ''} />
+              <AvatarImage src={avatarUrl || profile?.avatar_url || ''} />
               <AvatarFallback>
                 {profile?.display_name?.charAt(0) || profile?.full_name?.charAt(0) || 'U'}
               </AvatarFallback>

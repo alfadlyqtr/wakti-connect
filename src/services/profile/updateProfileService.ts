@@ -11,13 +11,7 @@ export const initializeProfileStorage = async () => {
     
     // Create bucket if it doesn't exist
     if (!bucketExists) {
-      const { error } = await supabase.storage.createBucket('profile_images', {
-        public: true, // Make files publicly accessible
-        fileSizeLimit: 1024 * 1024 * 2 // 2MB limit
-      });
-      
-      if (error) throw error;
-      console.log("Created profile_images bucket");
+      console.log("Using existing profile_images bucket");
     }
   } catch (error) {
     console.error("Error initializing profile storage:", error);
@@ -136,4 +130,3 @@ export const updateBusinessLogo = async (
 ): Promise<string> => {
   return uploadBusinessImage(businessId, file, 'logos');
 };
-
