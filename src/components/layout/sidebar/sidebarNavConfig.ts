@@ -1,8 +1,7 @@
 
 import {
-  CalendarDays,
-  CheckSquare,
   BarChart2,
+  CheckSquare,
   Settings,
   UserCircle,
   Globe,
@@ -38,12 +37,6 @@ export const navItems: SidebarNavItemType[] = [
     path: 'tasks', 
     label: 'Tasks', 
     icon: CheckSquare, 
-    showFor: ['free', 'individual', 'business'] 
-  },
-  { 
-    path: 'appointments', 
-    label: 'Appointments', 
-    icon: CalendarDays, 
     showFor: ['free', 'individual', 'business'] 
   },
   // Business sections

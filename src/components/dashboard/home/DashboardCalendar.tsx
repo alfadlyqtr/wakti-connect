@@ -1,100 +1,96 @@
 
 import React, { useState } from "react";
-import { startOfToday } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import { Loader2 } from "lucide-react";
-import DayEventsDialog from "./DayEventsDialog";
-import { useCalendarEvents } from "@/hooks/useCalendarEvents";
-import { useCalendarEventUtils } from "@/hooks/useCalendarEventUtils";
-import CalendarDayCell from "./CalendarDayCell";
-import { DayProps } from "react-day-picker";
-import { useDayEventsDialog } from "@/hooks/useDayEventsDialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
+import { CalendarEvent } from "@/types/calendar.types";
+import { isSameDay } from "date-fns";
+import { TaskList } from "./TaskList";
 
-export function DashboardCalendar() {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(startOfToday());
-  
-  // Fetch calendar events (tasks, appointments, bookings)
-  const { data: calendarEvents, isLoading } = useCalendarEvents();
-  
-  // Get event utilities
-  const { getEventsForDate, getEventTypesForDate } = useCalendarEventUtils(calendarEvents);
-  
-  // Use the day events dialog hook
-  const {
-    isOpen,
-    openDialog,
-    closeDialog,
-    dialogEvents
-  } = useDayEventsDialog();
-  
-  // Handle date selection
-  const handleDateSelect = (date: Date | undefined) => {
-    if (date) {
-      setSelectedDate(date);
-      openDialog(date, getEventsForDate(date));
-    }
+interface DashboardCalendarProps {
+  events: CalendarEvent[];
+  isCompact?: boolean;
+}
+
+export function DashboardCalendar({ events, isCompact = false }: DashboardCalendarProps) {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const navigate = useNavigate();
+
+  // Helper to check if a date has events
+  const hasEventsOnDate = (date: Date) => {
+    return events.some(event => isSameDay(new Date(event.date), date));
   };
 
-  // Custom day renderer for the calendar
-  const renderDay = (day: DayProps) => {
-    // Extract the date from the day props
-    const { date } = day;
-    
-    // Skip rendering if the date is undefined
-    if (!date) {
-      return <div />;
-    }
-    
-    // Check if this date is selected
-    const isSelected = selectedDate && 
-      selectedDate.getDate() === date.getDate() && 
-      selectedDate.getMonth() === date.getMonth() &&
-      selectedDate.getFullYear() === date.getFullYear();
-    
-    // Get event types for this date
-    const eventTypes = getEventTypesForDate(date);
-    
-    return (
-      <CalendarDayCell
-        date={date}
-        selected={isSelected}
-        eventTypes={eventTypes}
-        onSelect={handleDateSelect}
-        {...day}
-      />
-    );
+  // Filter events for selected date
+  const getEventsForSelectedDate = (): CalendarEvent[] => {
+    if (!selectedDate) return [];
+    return events.filter(event => isSameDay(new Date(event.date), selectedDate));
   };
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-6 min-h-[300px]">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-    );
-  }
-  
+
+  // Create an object grouped by type for the selected date
+  const groupedEvents = {
+    tasks: getEventsForSelectedDate().filter(event => event.type === "task")
+  };
+
+  // Function to render the day content with badges for events
+  const renderDayContent = (day: Date) => {
+    const eventsOnDay = hasEventsOnDate(day);
+
+    if (eventsOnDay) {
+      return (
+        <div className="relative w-full h-full flex items-center justify-center">
+          <Badge variant="outline" className="absolute bottom-0 w-1 h-1 rounded-full bg-primary" />
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <>
+    <div className="space-y-4">
       <Calendar
         mode="single"
         selected={selectedDate}
         onSelect={setSelectedDate}
-        className="border rounded-md p-3 w-full pointer-events-auto"
+        className="border rounded-md"
         components={{
-          Day: renderDay
+          DayContent: (props) => (
+            <>
+              {props.children}
+              {renderDayContent(props.date)}
+            </>
+          ),
         }}
       />
-      
-      {/* Dialog for showing events on selected date */}
-      {selectedDate && (
-        <DayEventsDialog
-          date={selectedDate}
-          events={getEventsForDate(selectedDate)}
-          isOpen={isOpen}
-          onClose={closeDialog}
-          groupedEvents={dialogEvents}
-        />
-      )}
-    </>
+
+      <div className="mt-4 space-y-4">
+        {selectedDate && getEventsForSelectedDate().length > 0 ? (
+          <>
+            {groupedEvents.tasks.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium">Tasks</h3>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => navigate('/dashboard/tasks')}
+                  >
+                    View All
+                  </Button>
+                </div>
+                <TaskList tasks={groupedEvents.tasks} />
+              </div>
+            )}
+          </>
+        ) : (
+          selectedDate && (
+            <div className="text-center py-4 text-muted-foreground">
+              No events scheduled for this day
+            </div>
+          )
+        )}
+      </div>
+    </div>
   );
 }

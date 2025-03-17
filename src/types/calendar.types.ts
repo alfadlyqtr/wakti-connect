@@ -3,11 +3,10 @@ export interface CalendarEvent {
   id: string;
   title: string;
   date: Date;
-  type: "task" | "appointment" | "booking";
+  type: "task";
+  status?: string;
+  isCompleted?: boolean;
+  priority?: string;
 }
 
-export interface DayEventTypes {
-  hasTasks: boolean;
-  hasAppointments: boolean;
-  hasBookings: boolean;
-}
+export type EventType = "task";
