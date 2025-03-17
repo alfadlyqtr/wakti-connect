@@ -20,9 +20,7 @@ export const createAppointment = async (
 
     if (permissionError) {
       console.error("Permission check failed:", permissionError);
-      throw new Error(
-        `Permission check failed: ${permissionError.message}`
-      );
+      throw new Error(`Permission check failed: ${permissionError.message}`);
     }
 
     if (!permissionData || permissionData === "free") {
@@ -49,77 +47,50 @@ export const createAppointment = async (
       user_id: session.user.id
     };
 
-    // Log the data we're about to submit
-    console.log("Creating appointment with data:", JSON.stringify(completeAppointmentData));
+    // Explicit logging and error handling for the insert operation
+    const { data: appointment, error } = await supabase
+      .from("appointments")
+      .insert(completeAppointmentData)
+      .select()
+      .single();
 
-    // Insert the appointment with explicit error handling
-    try {
-      const { data: appointment, error } = await supabase
-        .from("appointments")
-        .insert(completeAppointmentData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Supabase Error creating appointment:", error);
-        throw error;
-      }
-
-      if (!appointment) {
-        console.error("No appointment data returned after insert");
-        throw new Error("Failed to create appointment: No data returned");
-      }
-
-      console.log("Appointment created successfully:", appointment);
-      
-      // Verify the created appointment data
-      console.log("Appointment creation verification:", {
-        title_submitted: completeAppointmentData.title,
-        title_saved: appointment.title,
-        matches: completeAppointmentData.title === appointment.title
-      });
-
-      // If this is a recurring appointment, create the recurrences
-      if (recurringData && appointment) {
-        try {
-          // Generate dates based on the recurring pattern
-          const recurringDates = generateRecurringDates(
-            new Date(appointment.start_time),
-            recurringData
-          );
-          
-          console.log("Would create recurring instances for dates:", recurringDates);
-          
-          toast({
-            title: "Recurring Pattern Created",
-            description: `Generated ${recurringDates.length} future occurrences`,
-          });
-        } catch (recurringError: any) {
-          console.error("Error creating recurring instances:", recurringError);
-          toast({
-            title: "Appointment Created",
-            description: "Appointment was created, but there was an issue with recurring settings.",
-            variant: "destructive",
-          });
-        }
-      }
-
-      return appointment;
-    } catch (insertError: any) {
-      console.error("Insert operation failed:", insertError);
-      throw new Error(`Database insert failed: ${insertError.message}`);
+    if (error) {
+      console.error("Supabase Error creating appointment:", error);
+      throw new Error(`Database error: ${error.message}`);
     }
+
+    if (!appointment) {
+      throw new Error("Failed to create appointment: No data returned");
+    }
+
+    // If this is a recurring appointment, create the recurrences
+    if (recurringData && appointment) {
+      try {
+        // Generate dates based on the recurring pattern
+        const recurringDates = generateRecurringDates(
+          new Date(appointment.start_time),
+          recurringData
+        );
+        
+        console.log("Would create recurring instances for dates:", recurringDates);
+        
+        toast({
+          title: "Recurring Pattern Created",
+          description: `Generated ${recurringDates.length} future occurrences`,
+        });
+      } catch (recurringError: any) {
+        console.error("Error creating recurring instances:", recurringError);
+        toast({
+          title: "Appointment Created",
+          description: "Appointment was created, but there was an issue with recurring settings.",
+          variant: "destructive",
+        });
+      }
+    }
+
+    return appointment;
   } catch (error: any) {
     console.error("Error in createAppointment:", error);
-    
-    // If we haven't already shown a toast for this error
-    if (!error.message?.includes("Subscription required")) {
-      toast({
-        title: "Error creating appointment",
-        description: error.message || "An unexpected error occurred",
-        variant: "destructive",
-      });
-    }
     throw error;
   }
 };

@@ -39,10 +39,9 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
     queryKey: ['appointments', tab],
     queryFn: () => fetchAppointments(tab),
     refetchOnWindowFocus: true,
-    retry: 3,
+    retry: 2,
     retryDelay: attemptIndex => Math.min(1000 * Math.pow(2, attemptIndex), 30000),
-    staleTime: 5 * 1000,  // Consider data stale after 5 seconds
-    refetchInterval: 20 * 1000, // Refetch every 20 seconds
+    staleTime: 30 * 1000,  // Consider data stale after 30 seconds
     meta: {
       onError: (err: any) => {
         console.error("Appointment fetch error:", err);
@@ -63,7 +62,7 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
     }
   }, [data?.userRole]);
 
-  // Auto-retry in case of an error
+  // Auto-retry in case of an error - but only once
   useEffect(() => {
     if (isError) {
       const timer = setTimeout(() => {
@@ -84,7 +83,7 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
         throw new Error("Appointment title is required");
       }
       
-      if (!appointmentData.start_time && !appointmentData.end_time) {
+      if (!appointmentData.start_time || !appointmentData.end_time) {
         throw new Error("Appointment must have start and end times");
       }
       
@@ -96,19 +95,11 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
       });
 
       console.log("Appointment created successfully:", result);
-
-      // Multiple refetches to ensure data is updated
-      refetch();
       
+      // Refetch with a delay to ensure the database has time to update
       setTimeout(() => {
-        console.log("Secondary refetch to ensure data is up-to-date");
         refetch();
       }, 500);
-      
-      setTimeout(() => {
-        console.log("Final refetch to ensure data is up-to-date");
-        refetch();
-      }, 1500);
       
       return result;
     } catch (error: any) {
@@ -127,25 +118,11 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
   // Filter appointments based on search and filters
   const getFilteredAppointments = () => {
     const appointmentList = data?.appointments || [];
-    console.log(`Filtering ${appointmentList.length} appointments with search: "${searchQuery}"`);
-    
-    if (appointmentList.length > 0) {
-      console.log("Sample appointment data:", {
-        id: appointmentList[0].id,
-        title: appointmentList[0].title,
-        user_id: appointmentList[0].user_id,
-        start_time: appointmentList[0].start_time
-      });
-    }
-    
     return filterAppointments(appointmentList, searchQuery, filterStatus, filterDate);
   };
 
   // Get the actual user role from data, with a fallback to the state
   const userRole = data?.userRole || localUserRole;
-  
-  console.log("useAppointments hook - user role:", userRole);
-  console.log("useAppointments hook - appointments count:", data?.appointments?.length || 0);
 
   return {
     appointments: data?.appointments || [],

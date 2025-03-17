@@ -8,34 +8,11 @@ import AppointmentControls from "@/components/appointments/AppointmentControls";
 import EmptyAppointmentsState from "@/components/appointments/EmptyAppointmentsState";
 import AppointmentGrid from "@/components/appointments/AppointmentGrid";
 import { CreateAppointmentDialog } from "@/components/appointments/CreateAppointmentDialog";
-import { supabase } from "@/integrations/supabase/client";
 
 const DashboardAppointments = () => {
   const [activeTab, setActiveTab] = useState<AppointmentTab>("my-appointments");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState<string>("Loading appointments...");
-  const [userId, setUserId] = useState<string | null>(null);
-  const [attemptedRefreshes, setAttemptedRefreshes] = useState(0);
-  
-  // Get the current user's ID for diagnosis
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.id) {
-          setUserId(session.user.id);
-          localStorage.setItem('userId', session.user.id);
-          console.log("Current user identified:", session.user.id);
-        } else {
-          console.warn("No authenticated session found");
-        }
-      } catch (error) {
-        console.error("Error checking auth:", error);
-      }
-    };
-    
-    checkAuth();
-  }, []);
   
   // We need to ensure the AppointmentTab from types and services match
   const { 
@@ -50,48 +27,30 @@ const DashboardAppointments = () => {
     refetch
   } = useAppointments(activeTab as any);
 
-  // Explicitly log user role and data for debugging
-  console.log("DashboardAppointments - user role:", userRole);
-  console.log("DashboardAppointments - userId:", userId);
-  console.log("DashboardAppointments - all appointments:", appointments?.length || 0);
-  console.log("DashboardAppointments - filtered appointments:", filteredAppointments?.length || 0);
-
   // Determine if this is a paid account
   const isPaidAccount = userRole === "individual" || userRole === "business";
   const isBusinessAccount = userRole === "business";
 
-  // More aggressive refresh strategy
+  // More focused refresh strategy with limited attempts
   const refreshAppointments = useCallback(() => {
-    console.log(`Refreshing appointments data (attempt ${attemptedRefreshes + 1})`);
-    setLoadingMessage(`Refreshing data (attempt ${attemptedRefreshes + 1})...`);
+    setLoadingMessage(`Loading appointments...`);
     refetch();
-    setAttemptedRefreshes(prev => prev + 1);
-    
-    // Add delay to ensure UI shows loading state
-    setTimeout(() => {
-      if (appointments.length === 0 && attemptedRefreshes < 3) {
-        setLoadingMessage(`Still loading... checking database (attempt ${attemptedRefreshes + 1})`);
-      }
-    }, 1000);
-  }, [refetch, appointments.length, attemptedRefreshes]);
+  }, [refetch]);
 
-  // Force refresh on initial load and periodically
+  // Initial load and one retry if needed
   useEffect(() => {
     // Immediate refresh on mount
     refreshAppointments();
     
-    // Set up periodic refreshes
-    const timer = setInterval(() => {
-      if (appointments.length === 0 && attemptedRefreshes < 5) {
-        console.log(`Automatic refresh attempt ${attemptedRefreshes + 1} - no appointments yet`);
+    // One additional refresh after a short delay
+    const timer = setTimeout(() => {
+      if (appointments.length === 0) {
         refreshAppointments();
-      } else {
-        clearInterval(timer);
       }
-    }, 2500);
+    }, 1500);
     
-    return () => clearInterval(timer);
-  }, [refreshAppointments, appointments.length, attemptedRefreshes]);
+    return () => clearTimeout(timer);
+  }, [refreshAppointments, appointments.length]);
 
   // Show error toast if query fails
   useEffect(() => {
@@ -103,7 +62,7 @@ const DashboardAppointments = () => {
         variant: "destructive",
       });
       
-      // Auto-retry on error
+      // Auto-retry on error, but just once
       const timer = setTimeout(() => {
         refreshAppointments();
       }, 2000);
@@ -136,17 +95,9 @@ const DashboardAppointments = () => {
       await createAppointment(appointmentData, recurringData);
       setCreateDialogOpen(false);
       
-      // Immediate refresh after creation
-      refreshAppointments();
-      
-      // Multiple refreshes to ensure we catch updates
-      const refreshIntervals = [800, 2000, 4000];
-      refreshIntervals.forEach(interval => {
-        setTimeout(() => {
-          console.log(`Refresh at T+${interval}ms to ensure data is up-to-date`);
-          refreshAppointments();
-        }, interval);
-      });
+      // Refresh after creation with appropriate delay
+      setTimeout(() => refreshAppointments(), 500);
+      setTimeout(() => refreshAppointments(), 2000);
     } catch (error) {
       console.error("Error in handleCreateAppointment:", error);
       // Toast is already handled in the useAppointments hook
@@ -155,8 +106,6 @@ const DashboardAppointments = () => {
 
   const handleTabChange = (newTab: AppointmentTab) => {
     setActiveTab(newTab);
-    // Reset refresh attempts when changing tabs
-    setAttemptedRefreshes(0);
     // Refresh when changing tabs
     setTimeout(() => refreshAppointments(), 100);
   };
@@ -177,21 +126,6 @@ const DashboardAppointments = () => {
               <Loader2 className="h-8 w-8 animate-spin text-wakti-blue mr-2" />
               <span>{loadingMessage}</span>
             </div>
-            
-            {userId && (
-              <div className="text-sm text-muted-foreground">
-                User ID: {userId.substring(0, 8)}...
-              </div>
-            )}
-            
-            {attemptedRefreshes > 2 && (
-              <button 
-                className="mt-4 px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600"
-                onClick={refreshAppointments}
-              >
-                Retry Manually
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -226,30 +160,11 @@ const DashboardAppointments = () => {
             tab={activeTab}
           />
         ) : (
-          <div className="space-y-4">
-            <EmptyAppointmentsState 
-              isPaidAccount={isPaidAccount} 
-              onCreateAppointment={() => setCreateDialogOpen(true)} 
-              tab={activeTab}
-            />
-            {userId && (
-              <div className="text-xs text-muted-foreground text-center mt-4">
-                User ID: {userId} | Role: {userRole} | Tab: {activeTab}
-              </div>
-            )}
-            
-            {attemptedRefreshes > 0 && (
-              <div className="text-xs text-muted-foreground text-center">
-                Refresh attempts: {attemptedRefreshes}
-                <button 
-                  className="ml-2 px-2 py-1 rounded text-xs bg-blue-500 text-white hover:bg-blue-600"
-                  onClick={refreshAppointments}
-                >
-                  Refresh Again
-                </button>
-              </div>
-            )}
-          </div>
+          <EmptyAppointmentsState 
+            isPaidAccount={isPaidAccount} 
+            onCreateAppointment={() => setCreateDialogOpen(true)} 
+            tab={activeTab}
+          />
         )}
       </div>
       
