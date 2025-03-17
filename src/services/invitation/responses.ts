@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const respondToInvitation = async (
   invitationId: string,
-  accept: boolean
+  response: 'accepted' | 'declined'
 ): Promise<{ success: boolean; error?: string }> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
@@ -18,7 +18,7 @@ export const respondToInvitation = async (
     const { error } = await supabase
       .from('appointment_invitations')
       .update({
-        status: accept ? 'accepted' : 'declined'
+        status: response
       })
       .eq('id', invitationId)
       .eq('invited_user_id', session.user.id);
