@@ -1,79 +1,60 @@
 
-import { AppointmentsResult, AppointmentTab } from './types';
 import { supabase } from "@/integrations/supabase/client";
-import { fromTable } from "@/integrations/supabase/helper";
-import * as fetchers from './fetchers';
+import { AppointmentTab, Appointment, AppointmentsResult } from "./types";
+import { fetchers } from "./fetchers";
 
 /**
- * Main function to fetch appointments based on the tab selection
+ * Fetches appointments based on the selected tab
  */
-export async function fetchAppointments(tab: AppointmentTab): Promise<AppointmentsResult> {
-  console.log("Fetching appointments for tab:", tab);
-  
+export const fetchAppointments = async (
+  tab: AppointmentTab
+): Promise<AppointmentsResult> => {
   try {
-    // First, get the user's session
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.user) {
-      throw new Error("No active session. Please log in to view appointments.");
+    let appointments: Appointment[] = [];
+
+    // Get the user's account type (free, individual, business)
+    const { data: userRole, error: roleError } = await supabase.rpc(
+      "get_auth_user_account_type"
+    );
+
+    if (roleError) {
+      throw new Error(`Failed to check user role: ${roleError.message}`);
     }
-    
-    // Get user account type for permission checks
-    console.log("Checking user account type...");
-    const { data: accountType, error: accountTypeError } = await supabase
-      .rpc('get_auth_user_account_type', { user_uid: session.user.id });
-    
-    if (accountTypeError) {
-      console.error("Error fetching account type:", accountTypeError);
-      throw new Error(`Unable to verify account permissions: ${accountTypeError.message}`);
-    }
-    
-    console.log("Fetching appointments for user role:", accountType);
-    
-    // Use the appropriate fetcher based on the tab
-    let appointments = [];
-    let retries = 0;
-    const maxRetries = 3;
-    
-    while (retries < maxRetries) {
-      try {
-        if (tab === 'my-appointments') {
-          appointments = await fetchers.fetchMyAppointments();
-        } else if (tab === 'shared-appointments') {
-          appointments = await fetchers.fetchSharedAppointments();
-        } else if (tab === 'upcoming') {
-          appointments = await fetchers.fetchUpcomingAppointments();
-        } else if (tab === 'past') {
-          appointments = await fetchers.fetchPastAppointments();
-        } else if (tab === 'invitations') {
-          appointments = await fetchers.fetchInvitationAppointments();
-        } else if (tab === 'assigned-appointments' || tab === 'team-appointments') {
-          appointments = await fetchers.fetchAssignedAppointments();
-        } else {
-          appointments = await fetchers.fetchDefaultAppointments();
-        }
+
+    // Use the appropriate fetcher for the current tab
+    switch (tab) {
+      case "my-appointments":
+        appointments = await fetchers.myAppointments();
         break;
-      } catch (error: any) {
-        console.error(`Attempt ${retries + 1} - Error fetching ${tab} appointments:`, error);
-        retries++;
-        
-        if (retries >= maxRetries) {
-          console.error(`Failed to fetch ${tab} appointments after ${maxRetries} attempts`);
-          throw error;
-        }
-        
-        // Exponential backoff
-        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
-      }
+      case "shared-appointments":
+        appointments = await fetchers.sharedAppointments();
+        break;
+      case "assigned-appointments":
+        appointments = await fetchers.assignedAppointments();
+        break;
+      case "team-appointments":
+        appointments = await fetchers.defaultAppointments();
+        break;
+      case "upcoming":
+        appointments = await fetchers.upcomingAppointments();
+        break;
+      case "past":
+        appointments = await fetchers.pastAppointments();
+        break;
+      case "invitations":
+        appointments = await fetchers.invitationAppointments();
+        break;
+      default:
+        appointments = await fetchers.defaultAppointments();
     }
-    
-    // Return appointments with the user's account type
+
+    // Return both the appointments and the user's role
     return {
       appointments,
-      userRole: accountType as "free" | "individual" | "business"
+      userRole: userRole || "free",
     };
   } catch (error: any) {
-    console.error("Error in fetchAppointments:", error);
+    console.error("Error fetching appointments:", error);
     throw error;
   }
-}
+};

@@ -1,114 +1,81 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { AppointmentFormData } from "../../types/appointment.types";
-import { RecurringFormData } from "../../types/recurring.types";
-import { createRecurringSetting } from "../recurring/recurringService";
 import { toast } from "@/components/ui/use-toast";
+import { AppointmentFormData } from "./types";
+import { RecurringFormData } from "@/types/recurring.types";
+import { createRecurringAppointments } from "../recurring/recurringService";
 
 /**
  * Creates a new appointment
  */
-export async function createAppointment(formData: AppointmentFormData, recurring?: RecurringFormData): Promise<string> {
+export const createAppointment = async (
+  appointmentData: AppointmentFormData,
+  recurringData?: RecurringFormData
+) => {
   try {
-    // Get the current user's session
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      throw new Error("You must be logged in to create appointments");
-    }
-    
-    // Check if the user can create appointments (paid accounts only)
-    const { data: canCreate, error: permissionError } = await supabase
-      .rpc('get_user_appointments_access', { user_uid: session.user.id });
-    
+    // First, check if the user can create appointments
+    const { data: permissionData, error: permissionError } = await supabase.rpc(
+      "get_auth_user_account_type"
+    );
+
     if (permissionError) {
-      console.error("Error checking appointment creation permission:", permissionError);
-      throw new Error(`Permission check failed: ${permissionError.message}`);
+      throw new Error(
+        `Permission check failed: ${permissionError.message}`
+      );
     }
-    
-    if (!canCreate) {
-      throw new Error("This feature is only available for paid accounts");
+
+    if (!permissionData || permissionData === "free") {
+      // User doesn't have permission to create appointments
+      toast({
+        title: "Subscription Required",
+        description: "Creating appointments requires an Individual or Business subscription",
+        variant: "destructive",
+      });
+      throw new Error("Subscription required to create appointments");
     }
-    
-    // Prepare the appointment data
-    const appointmentData = {
-      user_id: session.user.id,
-      title: formData.title,
-      description: formData.description || null,
-      location: formData.location || null,
-      start_time: formData.start_time,
-      end_time: formData.end_time,
-      is_all_day: formData.is_all_day || false,
-      status: formData.status || 'scheduled',
-      assignee_id: formData.assignee_id || null
-    };
-    
+
     // Insert the appointment
-    const { data: appointment, error: insertError } = await supabase
-      .from('appointments')
+    const { data: appointment, error } = await supabase
+      .from("appointments")
       .insert(appointmentData)
       .select()
       .single();
-    
-    if (insertError) {
-      console.error("Error creating appointment:", insertError);
-      throw new Error(`Failed to create appointment: ${insertError.message}`);
+
+    if (error) {
+      console.error("Error creating appointment:", error);
+      toast({
+        title: "Failed to create appointment",
+        description: error.message,
+        variant: "destructive",
+      });
+      throw new Error(`Failed to create appointment: ${error.message}`);
     }
-    
-    // If this is a recurring appointment, create the recurring settings
-    if (recurring) {
+
+    // If this is a recurring appointment, create the recurrences
+    if (recurringData && appointment) {
       try {
-        await createRecurringSetting({
-          entity_id: appointment.id,
-          entity_type: 'appointment',
-          created_by: session.user.id,
-          frequency: recurring.frequency,
-          interval: recurring.interval || 1,
-          days_of_week: recurring.days_of_week,
-          day_of_month: recurring.day_of_month,
-          end_date: recurring.end_date,
-          max_occurrences: recurring.max_occurrences
-        });
+        await createRecurringAppointments(appointment.id, recurringData);
       } catch (recurringError: any) {
-        // If creating recurring settings fails, we'll show a warning but not fail the appointment creation
-        console.error("Error creating recurring settings:", recurringError);
+        // Log the error but don't fail the whole operation
+        console.error("Error creating recurring instances:", recurringError);
         toast({
           title: "Appointment Created",
-          description: "Appointment was created, but recurring settings could not be applied. Try updating the appointment later.",
-          variant: "destructive"
-        });
-        
-        return appointment.id;
-      }
-    }
-    
-    // If there are invitees, create invitations
-    if (formData.invitees && formData.invitees.length > 0) {
-      const invitationData = formData.invitees.map(inviteeId => ({
-        appointment_id: appointment.id,
-        invited_user_id: inviteeId,
-        status: 'pending',
-        created_by: session.user.id
-      }));
-      
-      const { error: invitationError } = await supabase
-        .from('appointment_invitations')
-        .insert(invitationData);
-      
-      if (invitationError) {
-        console.error("Error creating invitations:", invitationError);
-        // Don't throw here, just show a warning
-        toast({
-          title: "Invitation Error",
-          description: "Appointment was created, but invitations could not be sent. You can retry sending invitations later.",
-          variant: "destructive"
+          description: "Appointment was created, but there was an issue with recurring settings.",
+          variant: "destructive",
         });
       }
     }
-    
-    return appointment.id;
+
+    return appointment;
   } catch (error: any) {
-    console.error("Error in createAppointment:", error);
+    // If we haven't already shown a toast for this error
+    if (!error.message?.includes("Subscription required")) {
+      toast({
+        title: "Error creating appointment",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
     throw error;
   }
-}
+};
