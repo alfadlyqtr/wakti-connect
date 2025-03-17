@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Users, Edit, Trash2 } from "lucide-react";
+import { Clock, Users, Edit, Trash2, AlertCircle } from "lucide-react";
 import { Service } from "@/types/service.types";
 
 interface ServiceCardProps {
@@ -43,7 +43,11 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         </div>
         <div className="flex items-center">
           <Users className="h-4 w-4 mr-2 text-muted-foreground" />
-          <span>{staffCount} staff assigned</span>
+          <span>
+            {staffCount > 0 
+              ? `${staffCount} staff assigned` 
+              : "No staff assigned"}
+          </span>
         </div>
       </CardContent>
       <CardFooter className="flex justify-between pt-4 border-t">

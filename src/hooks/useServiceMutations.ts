@@ -36,7 +36,7 @@ export const useServiceMutations = () => {
 
       if (serviceError) throw serviceError;
 
-      // Handle staff assignments if provided
+      // Handle staff assignments if provided and not empty
       if (formData.staff_ids && formData.staff_ids.length > 0) {
         await assignStaffToService(serviceData.id, formData.staff_ids);
       }
@@ -79,7 +79,7 @@ export const useServiceMutations = () => {
 
       if (error) throw error;
 
-      // Handle staff assignments
+      // Handle staff assignments - if staff_ids is provided (even if empty)
       if (formData.staff_ids !== undefined) {
         await assignStaffToService(id, formData.staff_ids || []);
       }
