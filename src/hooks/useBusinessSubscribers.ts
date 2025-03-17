@@ -93,7 +93,8 @@ export const useBusinessSubscribers = (businessId?: string) => {
   const unsubscribe = useMutation({
     mutationFn: async (subscriptionId: string) => {
       const { error } = await fromTable('business_subscribers')
-        .delete({ id: subscriptionId });
+        .delete()
+        .eq('id', subscriptionId);
       
       if (error) {
         console.error("Error unsubscribing from business:", error);
@@ -133,18 +134,14 @@ export const useBusinessSubscribers = (businessId?: string) => {
           .select('id')
           .eq('business_id', businessId)
           .eq('subscriber_id', session.user.id)
-          .single();
+          .maybeSingle();
         
         if (error) {
-          if (error.code === 'PGRST116') {
-            // No subscription found
-            return { subscribed: false, subscriptionId: null };
-          }
           console.error("Error checking subscription:", error);
           throw error;
         }
         
-        return { subscribed: true, subscriptionId: data.id };
+        return { subscribed: !!data, subscriptionId: data?.id || null };
       } catch (error) {
         console.error("Error in subscription check:", error);
         return { subscribed: false, subscriptionId: null };
