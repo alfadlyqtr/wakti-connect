@@ -1,19 +1,15 @@
 
 import { useCallback } from "react";
-import { AppointmentTab } from "@/types/appointment.types";
 
-export const useAppointmentTabs = (userRole: "free" | "individual" | "business") => {
-  const isBusinessAccount = userRole === "business";
+export type AppointmentTab = "my-appointments" | "shared-appointments" | "assigned-appointments" | "team-appointments" | "upcoming" | "past" | "invitations";
+
+export const useAppointmentTabs = () => {
+  // Appointment system has been deprecated
   
   const getAvailableTabs = useCallback((): AppointmentTab[] => {
-    const tabs: AppointmentTab[] = ["my-appointments", "shared-appointments", "invitations"];
-    
-    if (isBusinessAccount) {
-      tabs.push("team-appointments");
-    }
-    
-    return tabs;
-  }, [isBusinessAccount]);
+    console.warn("The appointments system has been deprecated");
+    return [];
+  }, []);
   
-  return { getAvailableTabs, isBusinessAccount };
+  return { getAvailableTabs, isBusinessAccount: false };
 };

@@ -6,7 +6,7 @@ const AppointmentHeader: React.FC = () => {
     <div className="flex flex-col gap-2">
       <h1 className="text-3xl font-bold tracking-tight">Appointments</h1>
       <p className="text-muted-foreground">
-        Schedule and manage your appointments.
+        The appointments system has been deprecated and will be replaced with a new system soon.
       </p>
     </div>
   );

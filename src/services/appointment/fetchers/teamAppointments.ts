@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment } from "../types";
 import { mapToAppointment } from "../utils/mappers";

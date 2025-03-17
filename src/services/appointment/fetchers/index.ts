@@ -1,4 +1,3 @@
-
 export { fetchMyAppointments } from './myAppointments';
 export { fetchSharedAppointments } from './sharedAppointments';
 export { fetchAssignedAppointments } from './assignedAppointments';
