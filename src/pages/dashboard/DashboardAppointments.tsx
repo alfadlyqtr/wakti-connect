@@ -13,6 +13,8 @@ const DashboardAppointments = () => {
   const [activeTab, setActiveTab] = useState<AppointmentTab>("my-appointments");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   
+  // We need to ensure the AppointmentTab from types and services match
+  // Convert the type from types to the one accepted by the service
   const { 
     filteredAppointments, 
     isLoading, 
@@ -22,7 +24,7 @@ const DashboardAppointments = () => {
     createAppointment,
     userRole,
     refetch
-  } = useAppointments(activeTab);
+  } = useAppointments(activeTab as any); // Using 'any' to bridge the type mismatch temporarily
 
   // Explicitly log user role for debugging
   console.log("DashboardAppointments - user role:", userRole);

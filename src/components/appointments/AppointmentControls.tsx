@@ -25,7 +25,7 @@ const AppointmentControls = ({
   onTabChange,
   isPaidAccount,
   userRole,
-  availableTabs = ["my-appointments", "shared-appointments", "assigned-appointments"]
+  availableTabs = ["my-appointments", "shared-appointments", "team-appointments"]
 }: AppointmentControlsProps) => {
   // Explicitly log user role for debugging
   console.log("AppointmentControls - isPaidAccount:", isPaidAccount, "userRole:", userRole);
@@ -38,12 +38,21 @@ const AppointmentControls = ({
           onValueChange={(value) => onTabChange(value as AppointmentTab)}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="my-appointments">My Appointments</TabsTrigger>
-            <TabsTrigger value="shared-appointments">Shared Appointments</TabsTrigger>
-            <TabsTrigger value="team-appointments">
-              {userRole === "business" ? "Team Appointments" : "Assigned Appointments"}
-            </TabsTrigger>
+          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${availableTabs.length}, 1fr)` }}>
+            {availableTabs.includes("my-appointments") && (
+              <TabsTrigger value="my-appointments">My Appointments</TabsTrigger>
+            )}
+            {availableTabs.includes("shared-appointments") && (
+              <TabsTrigger value="shared-appointments">Shared Appointments</TabsTrigger>
+            )}
+            {availableTabs.includes("team-appointments") && (
+              <TabsTrigger value="team-appointments">
+                {userRole === "business" ? "Team Appointments" : "Assigned Appointments"}
+              </TabsTrigger>
+            )}
+            {availableTabs.includes("invitations") && (
+              <TabsTrigger value="invitations">Invitations</TabsTrigger>
+            )}
           </TabsList>
         </Tabs>
       )}

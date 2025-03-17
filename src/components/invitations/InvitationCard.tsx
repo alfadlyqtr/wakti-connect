@@ -37,7 +37,10 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
   // Handle response to invitation
   const handleRespond = async (response: 'accepted' | 'declined') => {
     try {
-      await respondToInvitation(invitationId, response);
+      // Fix the issue: respondToInvitation expects a boolean as second parameter
+      // Convert 'accepted' string to true and 'declined' to false
+      const accepted = response === 'accepted';
+      await respondToInvitation(invitationId, accepted);
       if (onRespond) {
         onRespond(response);
       }

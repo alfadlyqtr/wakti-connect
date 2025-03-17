@@ -18,7 +18,8 @@ export interface Appointment {
 
 export type AppointmentStatus = "scheduled" | "cancelled" | "completed";
 
-export type AppointmentTab = "my-appointments" | "shared-appointments" | "assigned-appointments" | "upcoming" | "past" | "invitations";
+// Update the AppointmentTab type to include "team-appointments" and match the one in types/appointment.types.ts
+export type AppointmentTab = "my-appointments" | "shared-appointments" | "assigned-appointments" | "team-appointments" | "upcoming" | "past" | "invitations";
 
 export interface AppointmentFormData {
   title: string;
