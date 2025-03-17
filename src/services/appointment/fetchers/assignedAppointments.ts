@@ -9,6 +9,10 @@ import { validateAppointmentStatus } from "../utils/statusValidator";
 export const fetchAssignedAppointments = async (
   userRole: "free" | "individual" | "business"
 ): Promise<Appointment[]> => {
+  if (userRole === "free") {
+    return []; // Free users can't have assigned appointments
+  }
+  
   try {
     // Get current user ID
     const { data: { session } } = await supabase.auth.getSession();
@@ -23,7 +27,19 @@ export const fetchAssignedAppointments = async (
     // Query appointments assigned to the user
     const { data: appointments, error } = await supabase
       .from('appointments')
-      .select('*')
+      .select(`
+        *,
+        user:user_id (
+          id,
+          email,
+          display_name
+        ),
+        assignee:assignee_id (
+          id,
+          email,
+          display_name
+        )
+      `)
       .eq('assignee_id', userId)
       .order('start_time', { ascending: true });
     
@@ -34,11 +50,23 @@ export const fetchAssignedAppointments = async (
     
     console.log("Assigned appointments fetched:", appointments?.length || 0);
     
-    // Map the database records to the Appointment type with validated status
+    // Map to properly typed Appointment objects
     return (appointments || []).map(appt => ({
       ...appt,
-      status: validateAppointmentStatus(appt.status)
-    }));
+      status: validateAppointmentStatus(appt.status),
+      // Format user data properly
+      user: appt.user ? {
+        id: String(appt.user.id || ''),
+        email: String(appt.user.email || ''),
+        display_name: appt.user.display_name || null
+      } : null,
+      // Format assignee data properly
+      assignee: appt.assignee ? {
+        id: String(appt.assignee.id || ''),
+        email: String(appt.assignee.email || ''),
+        display_name: appt.assignee.display_name || null
+      } : null
+    })) as Appointment[];
   } catch (error) {
     console.error("Error in fetchAssignedAppointments:", error);
     return [];

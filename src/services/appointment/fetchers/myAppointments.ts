@@ -23,12 +23,31 @@ export const fetchMyAppointments = async (
     // Store user ID in localStorage for use in components
     localStorage.setItem('userId', userId);
     
-    // Direct query for appointment data
-    const { data: appointments, error } = await supabase
+    // Build query based on user role
+    const query = supabase
       .from('appointments')
-      .select('*')
+      .select(`
+        *,
+        user:user_id (
+          id,
+          email,
+          display_name
+        ),
+        assignee:assignee_id (
+          id,
+          email,
+          display_name
+        )
+      `)
       .eq('user_id', userId)
       .order('start_time', { ascending: true });
+    
+    // For free users, limit the results
+    if (userRole === "free") {
+      query.limit(5);
+    }
+    
+    const { data: appointments, error } = await query;
     
     if (error) {
       console.error("Error fetching my appointments:", error);
@@ -40,11 +59,25 @@ export const fetchMyAppointments = async (
       return [];
     }
     
-    // Map the database records to the Appointment type with validated status
-    return appointments.map(appt => ({
-      ...appt,
-      status: validateAppointmentStatus(appt.status)
-    }));
+    // Map the database records to properly typed Appointment objects
+    return appointments.map(appt => {
+      return {
+        ...appt,
+        status: validateAppointmentStatus(appt.status),
+        // Format user data properly
+        user: appt.user ? {
+          id: String(appt.user.id || ''),
+          email: String(appt.user.email || ''),
+          display_name: appt.user.display_name || null
+        } : null,
+        // Format assignee data properly
+        assignee: appt.assignee ? {
+          id: String(appt.assignee.id || ''),
+          email: String(appt.assignee.email || ''),
+          display_name: appt.assignee.display_name || null
+        } : null
+      } as Appointment;
+    });
   } catch (error) {
     console.error("Error in fetchMyAppointments:", error);
     // Return empty array instead of throwing to prevent UI crashes
