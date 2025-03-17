@@ -1,0 +1,111 @@
+
+import { fetchPastAppointments } from "../fetchers/pastAppointments";
+import { supabase } from "@/integrations/supabase/client";
+import { createMockAppointment } from "./utils/testHelpers";
+import { mapToAppointment } from "../utils/mappers";
+
+jest.mock("@/integrations/supabase/client");
+jest.mock("../utils/mappers");
+
+describe("fetchPastAppointments", () => {
+  const userId = "user-123";
+  
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (mapToAppointment as jest.Mock).mockImplementation((appt) => appt);
+    
+    // Setup auth mock
+    (supabase.auth.getSession as jest.Mock).mockResolvedValue({
+      data: { session: { user: { id: userId } } }
+    });
+  });
+
+  it("should fetch past appointments for the current user", async () => {
+    // Setup mock data
+    const mockAppointments = [
+      createMockAppointment({ id: "1" }),
+      createMockAppointment({ id: "2" })
+    ];
+    
+    // Mock Supabase response
+    const mockSelect = jest.fn().mockReturnThis();
+    const mockEq = jest.fn().mockReturnThis();
+    const mockLt = jest.fn().mockReturnThis();
+    const mockOrder = jest.fn().mockReturnThis();
+    const mockThen = jest.fn().mockResolvedValue({ data: mockAppointments, error: null });
+    
+    (supabase.from as jest.Mock).mockReturnValue({
+      select: mockSelect
+    });
+    mockSelect.mockReturnValue({ eq: mockEq });
+    mockEq.mockReturnValue({ lt: mockLt });
+    mockLt.mockReturnValue({ order: mockOrder });
+    mockOrder.mockReturnValue({ then: mockThen });
+    
+    // Call the function
+    const result = await fetchPastAppointments("individual");
+    
+    // Verify the response
+    expect(mockEq).toHaveBeenCalledWith('user_id', userId);
+    expect(mockLt).toHaveBeenCalled(); // checking that lt was called with the current date
+    expect(mockOrder).toHaveBeenCalledWith('start_time', { ascending: false });
+    expect(result).toEqual(mockAppointments);
+    expect(mapToAppointment).toHaveBeenCalledTimes(mockAppointments.length);
+  });
+  
+  it("should limit results for free users", async () => {
+    // Mock Supabase response
+    const mockSelect = jest.fn().mockReturnThis();
+    const mockEq = jest.fn().mockReturnThis();
+    const mockLt = jest.fn().mockReturnThis();
+    const mockOrder = jest.fn().mockReturnThis();
+    const mockLimit = jest.fn().mockReturnThis();
+    const mockThen = jest.fn().mockResolvedValue({ data: [], error: null });
+    
+    (supabase.from as jest.Mock).mockReturnValue({
+      select: mockSelect
+    });
+    mockSelect.mockReturnValue({ eq: mockEq });
+    mockEq.mockReturnValue({ lt: mockLt });
+    mockLt.mockReturnValue({ order: mockOrder });
+    mockOrder.mockReturnValue({ limit: mockLimit, then: mockThen });
+    mockLimit.mockReturnValue({ then: mockThen });
+    
+    // Call the function with a free user
+    await fetchPastAppointments("free");
+    
+    // Verify limit was called
+    expect(mockLimit).toHaveBeenCalledWith(3);
+  });
+  
+  it("should handle database error gracefully", async () => {
+    // Mock database error
+    const mockError = new Error("Database error");
+    const mockSelect = jest.fn().mockReturnThis();
+    const mockEq = jest.fn().mockReturnThis();
+    const mockLt = jest.fn().mockReturnThis();
+    const mockOrder = jest.fn().mockReturnThis();
+    const mockThen = jest.fn().mockResolvedValue({ data: null, error: mockError });
+    
+    (supabase.from as jest.Mock).mockReturnValue({
+      select: mockSelect
+    });
+    mockSelect.mockReturnValue({ eq: mockEq });
+    mockEq.mockReturnValue({ lt: mockLt });
+    mockLt.mockReturnValue({ order: mockOrder });
+    mockOrder.mockReturnValue({ then: mockThen });
+    
+    // Spy on console.error
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    
+    // Call the function
+    const result = await fetchPastAppointments("individual");
+    
+    // Verify error handling
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(result).toEqual([]);
+    
+    // Restore console.error
+    consoleErrorSpy.mockRestore();
+  });
+});
