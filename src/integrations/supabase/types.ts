@@ -581,6 +581,7 @@ export type Database = {
       profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
+          auto_approve_contacts: boolean
           avatar_url: string | null
           business_name: string | null
           created_at: string
@@ -594,6 +595,7 @@ export type Database = {
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["account_type"]
+          auto_approve_contacts?: boolean
           avatar_url?: string | null
           business_name?: string | null
           created_at?: string
@@ -607,6 +609,7 @@ export type Database = {
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"]
+          auto_approve_contacts?: boolean
           avatar_url?: string | null
           business_name?: string | null
           created_at?: string
@@ -913,6 +916,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_contacts: {
+        Row: {
+          contact_id: string
+          created_at: string | null
+          id: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_monthly_usage: {
         Row: {

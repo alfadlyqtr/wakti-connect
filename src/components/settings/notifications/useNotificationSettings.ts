@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
@@ -10,6 +10,7 @@ export interface NotificationSettings {
   message_notifications: boolean;
   dark_mode: boolean;
   compact_view: boolean;
+  auto_approve_contacts: boolean;
 }
 
 export const useNotificationSettings = () => {
@@ -19,10 +20,45 @@ export const useNotificationSettings = () => {
     appointment_alerts: true,
     message_notifications: true,
     dark_mode: false,
-    compact_view: false
+    compact_view: false,
+    auto_approve_contacts: false
   });
   
   const [loading, setLoading] = useState(false);
+  
+  // Fetch the user's current settings when the component mounts
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        setLoading(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user?.id) {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('theme_preference, auto_approve_contacts')
+            .eq('id', session.user.id)
+            .single();
+            
+          if (error) throw error;
+          
+          if (data) {
+            setSettings(prev => ({
+              ...prev,
+              dark_mode: data.theme_preference === 'dark',
+              auto_approve_contacts: !!data.auto_approve_contacts
+            }));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching notification settings:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchSettings();
+  }, []);
   
   const handleToggle = (key: keyof NotificationSettings) => {
     setSettings(prev => ({
@@ -35,25 +71,20 @@ export const useNotificationSettings = () => {
     try {
       setLoading(true);
       
-      // In production, this would save to a notifications_settings table
-      // For now, we'll just show a success toast
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network request
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (settings.dark_mode) {
-        // Update theme_preference in profiles table
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user?.id) {
-          const { error } = await supabase
-            .from('profiles')
-            .update({ 
-              theme_preference: 'dark',
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', session.user.id);
-            
-          if (error) throw error;
-        }
+      if (session?.user?.id) {
+        // Update theme_preference and auto_approve_contacts in profiles table
+        const { error } = await supabase
+          .from('profiles')
+          .update({ 
+            theme_preference: settings.dark_mode ? 'dark' : 'light',
+            auto_approve_contacts: settings.auto_approve_contacts,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', session.user.id);
+          
+        if (error) throw error;
       }
       
       toast({

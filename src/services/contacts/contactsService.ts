@@ -77,7 +77,7 @@ export const sendContactRequest = async (userId: string): Promise<boolean> => {
     }
   }
 
-  // Create new contact request
+  // Create new contact request - auto-approval is handled by the trigger
   const { error } = await fromTable('user_contacts')
     .insert({
       user_id: session.user.id,
@@ -105,7 +105,8 @@ export const respondToContactRequest = async (
 
   const { error } = await fromTable('user_contacts')
     .update({
-      status: accept ? 'accepted' : 'rejected'
+      status: accept ? 'accepted' : 'rejected',
+      updated_at: new Date().toISOString()
     })
     .eq('id', requestId)
     .eq('contact_id', session.user.id);
@@ -161,5 +162,32 @@ export const fetchPendingRequests = async (): Promise<UserContact[]> => {
   } catch (error) {
     console.error("Error fetching contact requests:", error);
     return [];
+  }
+};
+
+/**
+ * Updates auto-approve contacts setting
+ */
+export const updateAutoApproveContacts = async (autoApprove: boolean): Promise<boolean> => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
+      throw new Error("No active session");
+    }
+    
+    const { error } = await fromTable('profiles')
+      .update({ 
+        auto_approve_contacts: autoApprove,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', session.user.id);
+    
+    if (error) throw error;
+    
+    return true;
+  } catch (error) {
+    console.error("Error updating auto approve setting:", error);
+    return false;
   }
 };

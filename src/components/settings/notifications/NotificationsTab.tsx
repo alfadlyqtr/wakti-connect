@@ -33,6 +33,15 @@ const NotificationsTab: React.FC = () => {
     }
   ];
   
+  const contactSettings = [
+    {
+      key: "auto_approve_contacts",
+      title: "Auto-Approve Contacts",
+      description: "Automatically accept all contact requests",
+      checked: settings.auto_approve_contacts
+    }
+  ];
+  
   const appearanceSettings = [
     {
       key: "dark_mode",
@@ -54,6 +63,15 @@ const NotificationsTab: React.FC = () => {
         title="Notification Preferences"
         description="Manage how and when you receive notifications."
         settings={notificationSettings}
+        onToggle={handleToggle}
+        onSave={saveNotificationSettings}
+        loading={loading}
+      />
+      
+      <NotificationSettingsCard
+        title="Contact Settings"
+        description="Manage how contact requests are handled."
+        settings={contactSettings}
         onToggle={handleToggle}
         onSave={saveNotificationSettings}
         loading={loading}

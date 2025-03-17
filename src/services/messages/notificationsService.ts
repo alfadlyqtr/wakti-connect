@@ -13,13 +13,11 @@ export const getUnreadMessagesCount = async (): Promise<number> => {
       return 0;
     }
     
-    // The issue is in this line - select() method expects a single string argument
-    // for the query, not a second options object
+    // Use count() method to get the number of unread messages
     const { count, error } = await fromTable('messages')
-      .select('*, count')
+      .select('*', { count: 'exact' })
       .eq('recipient_id', session.user.id)
-      .eq('is_read', false)
-      .count('exact');
+      .eq('is_read', false);
     
     if (error) throw error;
     
