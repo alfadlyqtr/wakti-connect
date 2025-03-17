@@ -1,14 +1,8 @@
 
-import { Appointment, UserProfile } from "../../types";
+import { Appointment, AppointmentStatus } from "@/types/appointment.types";
 
 // Create a mock appointment for testing
 export const createMockAppointment = (overrides?: Partial<Appointment>): Appointment => {
-  const defaultUser: UserProfile = {
-    id: "user-123",
-    email: "test@example.com",
-    display_name: "Test User"
-  };
-  
   return {
     id: "appt-123",
     user_id: "user-123",
@@ -18,79 +12,41 @@ export const createMockAppointment = (overrides?: Partial<Appointment>): Appoint
     start_time: new Date().toISOString(),
     end_time: new Date(Date.now() + 3600000).toISOString(),
     is_all_day: false,
-    status: "scheduled",
+    status: "scheduled" as AppointmentStatus,
     assignee_id: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    user: defaultUser,
-    assignee: null,
     ...overrides
   };
 };
 
+// Mock localStorage for testing
+Object.defineProperty(window, 'localStorage', {
+  value: {
+    getItem: jest.fn(() => null),
+    setItem: jest.fn(() => null),
+    removeItem: jest.fn(() => null),
+    clear: jest.fn(() => null),
+  },
+  writable: true
+});
+
 // Mock the Supabase client
 jest.mock("@/integrations/supabase/client", () => ({
   supabase: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          gte: jest.fn(() => ({
-            lt: jest.fn(() => ({
-              order: jest.fn(() => ({
-                limit: jest.fn(() => ({
-                  maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
-                  then: jest.fn().mockResolvedValue({ data: [], error: null })
-                })),
-                then: jest.fn().mockResolvedValue({ data: [], error: null })
-              })),
-              order: jest.fn(() => ({
-                limit: jest.fn(() => ({
-                  then: jest.fn().mockResolvedValue({ data: [], error: null })
-                })),
-                then: jest.fn().mockResolvedValue({ data: [], error: null })
-              }))
-            })),
-            order: jest.fn(() => ({
-              limit: jest.fn(() => ({
-                then: jest.fn().mockResolvedValue({ data: [], error: null })
-              })),
-              then: jest.fn().mockResolvedValue({ data: [], error: null })
-            }))
-          })),
-          lt: jest.fn(() => ({
-            order: jest.fn(() => ({
-              limit: jest.fn(() => ({
-                then: jest.fn().mockResolvedValue({ data: [], error: null })
-              })),
-              then: jest.fn().mockResolvedValue({ data: [], error: null })
-            }))
-          })),
-          order: jest.fn(() => ({
-            limit: jest.fn(() => ({
-              then: jest.fn().mockResolvedValue({ data: [], error: null })
-            })),
-            then: jest.fn().mockResolvedValue({ data: [], error: null })
-          }))
-        })),
-        order: jest.fn(() => ({
-          limit: jest.fn(() => ({
-            then: jest.fn().mockResolvedValue({ data: [], error: null })
-          })),
-          then: jest.fn().mockResolvedValue({ data: [], error: null })
-        }))
-      })),
-      rpc: jest.fn(() => ({
-        then: jest.fn().mockResolvedValue({ data: "free", error: null })
-      })),
-      auth: {
-        getSession: jest.fn().mockResolvedValue({
-          data: {
-            session: {
-              user: { id: "user-123" }
-            }
-          }
-        })
-      }
-    })
+    from: jest.fn(),
+    auth: {
+      getSession: jest.fn()
+    }
   }
+}));
+
+// Initialize validateAppointmentStatus mock
+jest.mock("../utils/statusValidator", () => ({
+  validateAppointmentStatus: jest.fn((status) => status)
+}));
+
+// Initialize mapToAppointment mock
+jest.mock("../utils/mappers", () => ({
+  mapToAppointment: jest.fn((appt) => appt)
 }));
