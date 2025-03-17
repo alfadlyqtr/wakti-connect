@@ -150,25 +150,53 @@ export const fetchConversations = async () => {
     }
     
     // Get the latest message for each unique conversation partner
-    const { data, error } = await supabase.rpc('get_latest_conversations', {
-      current_user_id: session.user.id
-    });
-    
+    // Instead of using RPC, we'll query manually
+    const { data: messages, error } = await supabase
+      .from('messages')
+      .select(`
+        id,
+        content,
+        sender_id,
+        recipient_id,
+        is_read,
+        created_at
+      `)
+      .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
+      .order('created_at', { ascending: false });
+      
     if (error) throw error;
     
+    if (!messages || messages.length === 0) {
+      return [];
+    }
+    
+    // Process messages to find the latest message for each unique conversation partner
+    const conversationPartners = new Map();
+    
+    messages.forEach(message => {
+      const partnerId = message.sender_id === session.user.id 
+        ? message.recipient_id 
+        : message.sender_id;
+        
+      if (!conversationPartners.has(partnerId)) {
+        conversationPartners.set(partnerId, message);
+      }
+    });
+    
     // Get profile data for conversation partners
-    const userIds = data.map(item => 
-      item.sender_id === session.user.id ? item.recipient_id : item.sender_id
-    );
+    const partnerIds = Array.from(conversationPartners.keys());
+    
+    if (partnerIds.length === 0) {
+      return [];
+    }
     
     const { data: profiles } = await fromTable('profiles')
       .select('id, display_name, full_name, avatar_url, account_type, business_name')
-      .in('id', userIds);
+      .in('id', partnerIds);
       
     // Combine message data with profile data
-    return data.map(message => {
-      const otherUserId = message.sender_id === session.user.id ? message.recipient_id : message.sender_id;
-      const profile = profiles?.find(p => p.id === otherUserId);
+    return Array.from(conversationPartners.entries()).map(([partnerId, message]) => {
+      const profile = profiles?.find(p => p.id === partnerId);
       
       let displayName = 'Unknown User';
       if (profile) {
@@ -183,7 +211,7 @@ export const fetchConversations = async () => {
       
       return {
         id: message.id,
-        userId: otherUserId,
+        userId: partnerId,
         displayName,
         avatar: profile?.avatar_url,
         lastMessage: message.content,
