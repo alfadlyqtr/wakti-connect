@@ -1,13 +1,14 @@
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useAppointments } from "@/hooks/useAppointments";
 import { AppointmentTab } from "@/types/appointment.types";
 import AppointmentControls from "@/components/appointments/AppointmentControls";
-import EmptyAppointmentsState from "@/components/appointments/EmptyAppointmentsState";
-import AppointmentGrid from "@/components/appointments/AppointmentGrid";
 import { CreateAppointmentDialog } from "@/components/appointments/CreateAppointmentDialog";
+import AppointmentLoadingState from "@/components/appointments/AppointmentLoadingState";
+import AppointmentHeader from "@/components/appointments/AppointmentHeader";
+import AppointmentContent from "@/components/appointments/AppointmentContent";
+import { useAppointmentTabs } from "@/hooks/useAppointmentTabs";
 
 const DashboardAppointments = () => {
   const [activeTab, setActiveTab] = useState<AppointmentTab>("my-appointments");
@@ -29,7 +30,7 @@ const DashboardAppointments = () => {
 
   // Determine if this is a paid account
   const isPaidAccount = userRole === "individual" || userRole === "business";
-  const isBusinessAccount = userRole === "business";
+  const { getAvailableTabs, isBusinessAccount } = useAppointmentTabs(userRole);
 
   // More focused refresh strategy with limited attempts
   const refreshAppointments = useCallback(() => {
@@ -71,17 +72,6 @@ const DashboardAppointments = () => {
     }
   }, [error, refreshAppointments]);
 
-  // Define available tabs based on user role
-  const getAvailableTabs = () => {
-    const tabs: AppointmentTab[] = ["my-appointments", "shared-appointments", "invitations"];
-    
-    if (isBusinessAccount) {
-      tabs.push("team-appointments");
-    }
-    
-    return tabs;
-  };
-
   // Reset to default tab when role changes
   useEffect(() => {
     if (activeTab === "team-appointments" && !isBusinessAccount) {
@@ -113,33 +103,15 @@ const DashboardAppointments = () => {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">Appointments</h1>
-          <p className="text-muted-foreground">
-            Schedule and manage your appointments.
-          </p>
-        </div>
-        
-        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-          <div className="flex flex-col items-center justify-center py-8 space-y-4">
-            <div className="flex items-center">
-              <Loader2 className="h-8 w-8 animate-spin text-wakti-blue mr-2" />
-              <span>{loadingMessage}</span>
-            </div>
-          </div>
-        </div>
+        <AppointmentHeader />
+        <AppointmentLoadingState message={loadingMessage} />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Appointments</h1>
-        <p className="text-muted-foreground">
-          Schedule and manage your appointments.
-        </p>
-      </div>
+      <AppointmentHeader />
       
       <AppointmentControls
         searchQuery={searchQuery}
@@ -152,21 +124,13 @@ const DashboardAppointments = () => {
         availableTabs={getAvailableTabs()}
       />
       
-      <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-        {filteredAppointments.length > 0 ? (
-          <AppointmentGrid 
-            appointments={filteredAppointments} 
-            userRole={userRole} 
-            tab={activeTab}
-          />
-        ) : (
-          <EmptyAppointmentsState 
-            isPaidAccount={isPaidAccount} 
-            onCreateAppointment={() => setCreateDialogOpen(true)} 
-            tab={activeTab}
-          />
-        )}
-      </div>
+      <AppointmentContent 
+        appointments={filteredAppointments}
+        userRole={userRole}
+        tab={activeTab}
+        onCreateAppointment={() => setCreateDialogOpen(true)}
+        isPaidAccount={isPaidAccount}
+      />
       
       <CreateAppointmentDialog
         open={createDialogOpen}
