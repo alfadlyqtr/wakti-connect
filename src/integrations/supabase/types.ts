@@ -9,106 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      appointment_invitations: {
-        Row: {
-          appointment_id: string
-          created_at: string
-          email: string | null
-          id: string
-          invited_user_id: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          appointment_id: string
-          created_at?: string
-          email?: string | null
-          id?: string
-          invited_user_id?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          appointment_id?: string
-          created_at?: string
-          email?: string | null
-          id?: string
-          invited_user_id?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "appointment_invitations_appointment_id_fkey"
-            columns: ["appointment_id"]
-            isOneToOne: false
-            referencedRelation: "appointments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      appointments: {
-        Row: {
-          appointment_type: string | null
-          assignee_id: string | null
-          created_at: string
-          description: string | null
-          end_time: string
-          id: string
-          is_all_day: boolean
-          is_recurring_instance: boolean | null
-          location: string | null
-          parent_recurring_id: string | null
-          start_time: string
-          status: string
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          appointment_type?: string | null
-          assignee_id?: string | null
-          created_at?: string
-          description?: string | null
-          end_time: string
-          id?: string
-          is_all_day?: boolean
-          is_recurring_instance?: boolean | null
-          location?: string | null
-          parent_recurring_id?: string | null
-          start_time: string
-          status?: string
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          appointment_type?: string | null
-          assignee_id?: string | null
-          created_at?: string
-          description?: string | null
-          end_time?: string
-          id?: string
-          is_all_day?: boolean
-          is_recurring_instance?: boolean | null
-          location?: string | null
-          parent_recurring_id?: string | null
-          start_time?: string
-          status?: string
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "appointments_assignee_id_fkey"
-            columns: ["assignee_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       bookings: {
         Row: {
           business_id: string
@@ -1007,7 +907,6 @@ export type Database = {
       }
       user_monthly_usage: {
         Row: {
-          appointments_created: number
           events_created: number
           id: string
           month: number
@@ -1016,7 +915,6 @@ export type Database = {
           year: number
         }
         Insert: {
-          appointments_created?: number
           events_created?: number
           id?: string
           month: number
@@ -1025,7 +923,6 @@ export type Database = {
           year: number
         }
         Update: {
-          appointments_created?: number
           events_created?: number
           id?: string
           month?: number
@@ -1040,10 +937,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_create_appointment: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
       can_create_event: {
         Args: Record<PropertyKey, never>
         Returns: boolean

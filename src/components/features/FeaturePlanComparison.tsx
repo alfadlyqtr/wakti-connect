@@ -28,12 +28,6 @@ const FeaturePlanComparison = () => {
       business: true,
     },
     {
-      name: "Appointment Scheduling",
-      free: "View Only",
-      individual: true,
-      business: true,
-    },
-    {
       name: "Custom Event Creation",
       free: false,
       individual: true,
