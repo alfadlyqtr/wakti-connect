@@ -11,13 +11,15 @@ interface ServiceCardProps {
   onEdit: (service: Service) => void;
   onDelete: (id: string) => void;
   isDeleting: boolean;
+  staffCount?: number;
 }
 
 const ServiceCard: React.FC<ServiceCardProps> = ({ 
   service, 
   onEdit, 
   onDelete,
-  isDeleting
+  isDeleting,
+  staffCount = 0
 }) => {
   return (
     <Card className="h-full flex flex-col">
@@ -41,7 +43,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         </div>
         <div className="flex items-center">
           <Users className="h-4 w-4 mr-2 text-muted-foreground" />
-          <span>0 staff assigned</span>
+          <span>{staffCount} staff assigned</span>
         </div>
       </CardContent>
       <CardFooter className="flex justify-between pt-4 border-t">

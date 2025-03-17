@@ -23,7 +23,8 @@ const DashboardServiceManagement = () => {
     handleDeleteService,
     isPendingAdd,
     isPendingUpdate,
-    isPendingDelete
+    isPendingDelete,
+    staffAssignments
   } = useServices();
 
   const handleCancelDialog = () => {
@@ -79,6 +80,7 @@ const DashboardServiceManagement = () => {
         onEditService={handleEditService}
         onDeleteService={handleDeleteService}
         isDeleting={isPendingDelete}
+        staffAssignments={staffAssignments}
       />
     </div>
   );

@@ -8,6 +8,13 @@ export interface Service {
   created_at: string;
   updated_at: string;
   business_id?: string;
+  assigned_staff?: StaffMember[];
+}
+
+export interface StaffMember {
+  id: string;
+  name: string;
+  role: string;
 }
 
 export interface ServiceFormValues {
@@ -15,4 +22,5 @@ export interface ServiceFormValues {
   description: string;
   price: string; // String for form handling, will be converted to number
   duration: string; // String for form handling, will be converted to number
+  staff_ids?: string[]; // Optional array of staff IDs
 }

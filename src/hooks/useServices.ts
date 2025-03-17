@@ -4,13 +4,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Service, ServiceFormValues } from "@/types/service.types";
 import { toast } from "@/components/ui/use-toast";
+import { useStaffData } from "./useStaffData";
 
 export const useServices = () => {
   const queryClient = useQueryClient();
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [openAddService, setOpenAddService] = useState(false);
+  const { data: staffData } = useStaffData();
 
-  // Fetch services
+  // Fetch services with staff assignments
   const { 
     data: services, 
     isLoading, 
@@ -24,15 +26,61 @@ export const useServices = () => {
         throw new Error('Not authenticated');
       }
       
-      const { data, error } = await supabase
+      // Fetch services
+      const { data: servicesData, error: servicesError } = await supabase
         .from('business_services')
         .select('*')
         .order('name');
         
-      if (error) throw error;
-      return data as Service[];
+      if (servicesError) throw servicesError;
+
+      // Fetch service staff assignments
+      const { data: assignmentsData, error: assignmentsError } = await supabase
+        .from('staff_service_assignments')
+        .select(`
+          service_id,
+          staff_relation_id,
+          business_staff(
+            id,
+            role,
+            staff_id,
+            profiles:staff_id(
+              id,
+              full_name
+            )
+          )
+        `);
+
+      if (assignmentsError) throw assignmentsError;
+
+      // Map staff assignments to services
+      const servicesWithStaff = servicesData.map((service: Service) => {
+        const serviceAssignments = assignmentsData.filter(
+          (assignment: any) => assignment.service_id === service.id
+        );
+
+        // Map staff assignments to staff members
+        const assignedStaff = serviceAssignments.map((assignment: any) => ({
+          id: assignment.business_staff.staff_id,
+          name: assignment.business_staff.profiles.full_name,
+          role: assignment.business_staff.role
+        }));
+
+        return {
+          ...service,
+          assigned_staff: assignedStaff
+        };
+      });
+
+      return servicesWithStaff as Service[];
     }
   });
+
+  // Get staff assignments count by service
+  const staffAssignments = services?.reduce((acc, service) => {
+    acc[service.id] = service.assigned_staff?.length || 0;
+    return acc;
+  }, {} as Record<string, number>) || {};
 
   // Add service mutation
   const addServiceMutation = useMutation({
@@ -43,7 +91,8 @@ export const useServices = () => {
         throw new Error('Not authenticated');
       }
 
-      const { data, error } = await supabase
+      // Insert the service
+      const { data: serviceData, error: serviceError } = await supabase
         .from('business_services')
         .insert({
           name: formData.name,
@@ -55,8 +104,35 @@ export const useServices = () => {
         .select()
         .single();
 
-      if (error) throw error;
-      return data;
+      if (serviceError) throw serviceError;
+
+      // If staff assignments were provided
+      if (formData.staff_ids && formData.staff_ids.length > 0) {
+        // Get business_staff records for the selected staff IDs
+        const staffIds = formData.staff_ids;
+        const { data: staffRelations, error: staffError } = await supabase
+          .from('business_staff')
+          .select('id, staff_id')
+          .in('staff_id', staffIds);
+
+        if (staffError) throw staffError;
+
+        // Create assignments
+        const assignments = staffRelations.map(relation => ({
+          service_id: serviceData.id,
+          staff_relation_id: relation.id
+        }));
+
+        if (assignments.length > 0) {
+          const { error: assignError } = await supabase
+            .from('staff_service_assignments')
+            .insert(assignments);
+
+          if (assignError) throw assignError;
+        }
+      }
+
+      return serviceData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['businessServices'] });
@@ -78,6 +154,7 @@ export const useServices = () => {
   // Update service mutation
   const updateServiceMutation = useMutation({
     mutationFn: async ({ id, formData }: { id: string, formData: ServiceFormValues }) => {
+      // Update the service
       const { data, error } = await supabase
         .from('business_services')
         .update({
@@ -92,6 +169,43 @@ export const useServices = () => {
         .single();
 
       if (error) throw error;
+
+      // Handle staff assignments
+      if (formData.staff_ids !== undefined) {
+        // First, get business_staff records for the staff IDs
+        const staffIds = formData.staff_ids || [];
+        const { data: staffRelations, error: staffError } = await supabase
+          .from('business_staff')
+          .select('id, staff_id')
+          .in('staff_id', staffIds);
+          
+        if (staffError) throw staffError;
+        
+        // Delete existing assignments
+        const { error: deleteError } = await supabase
+          .from('staff_service_assignments')
+          .delete()
+          .eq('service_id', id);
+          
+        if (deleteError) throw deleteError;
+
+        // Create new assignments if there are any
+        if (staffIds.length > 0) {
+          const assignments = staffRelations.map(relation => ({
+            service_id: id,
+            staff_relation_id: relation.id
+          }));
+
+          if (assignments.length > 0) {
+            const { error: assignError } = await supabase
+              .from('staff_service_assignments')
+              .insert(assignments);
+
+            if (assignError) throw assignError;
+          }
+        }
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -115,6 +229,15 @@ export const useServices = () => {
   // Delete service mutation
   const deleteServiceMutation = useMutation({
     mutationFn: async (id: string) => {
+      // First delete staff assignments
+      const { error: assignmentError } = await supabase
+        .from('staff_service_assignments')
+        .delete()
+        .eq('service_id', id);
+
+      if (assignmentError) throw assignmentError;
+
+      // Then delete the service
       const { error } = await supabase
         .from('business_services')
         .delete()
@@ -171,6 +294,7 @@ export const useServices = () => {
     handleDeleteService,
     isPendingAdd: addServiceMutation.isPending,
     isPendingUpdate: updateServiceMutation.isPending,
-    isPendingDelete: deleteServiceMutation.isPending
+    isPendingDelete: deleteServiceMutation.isPending,
+    staffAssignments
   };
 };

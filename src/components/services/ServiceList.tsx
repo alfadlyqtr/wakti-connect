@@ -15,6 +15,7 @@ interface ServiceListProps {
   onEditService: (service: Service) => void;
   onDeleteService: (id: string) => void;
   isDeleting: boolean;
+  staffAssignments?: Record<string, number>;
 }
 
 const ServiceList: React.FC<ServiceListProps> = ({ 
@@ -25,7 +26,8 @@ const ServiceList: React.FC<ServiceListProps> = ({
   onAddService, 
   onEditService, 
   onDeleteService,
-  isDeleting
+  isDeleting,
+  staffAssignments = {}
 }) => {
   // Filter services based on search query
   const filteredServices = services.filter(service => 
@@ -76,6 +78,7 @@ const ServiceList: React.FC<ServiceListProps> = ({
           onEdit={onEditService} 
           onDelete={onDeleteService}
           isDeleting={isDeleting}
+          staffCount={staffAssignments[service.id] || 0}
         />
       ))}
     </div>

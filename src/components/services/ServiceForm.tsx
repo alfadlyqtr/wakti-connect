@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,7 +7,10 @@ import { DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "@/co
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Service, ServiceFormValues } from "@/types/service.types";
+import { useStaffData } from "@/hooks/useStaffData";
 
 // Define service form schema
 const serviceFormSchema = z.object({
@@ -15,6 +18,7 @@ const serviceFormSchema = z.object({
   description: z.string().optional(),
   price: z.string().optional(),
   duration: z.string().min(1, "Duration is required"),
+  staff_ids: z.array(z.string()).optional()
 });
 
 interface ServiceFormProps {
@@ -30,6 +34,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
   editingService, 
   isPending 
 }) => {
+  const { data: staffData, isLoading: isStaffLoading } = useStaffData();
+  const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
+
   // Setup form
   const form = useForm<ServiceFormValues>({
     resolver: zodResolver(serviceFormSchema),
@@ -38,10 +45,31 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
       description: editingService?.description || "",
       price: editingService?.price?.toString() || "",
       duration: editingService?.duration?.toString() || "60",
+      staff_ids: []
     }
   });
 
+  // Load assigned staff when editing
+  useEffect(() => {
+    if (editingService && editingService.assigned_staff) {
+      const staffIds = editingService.assigned_staff.map(staff => staff.id);
+      setSelectedStaff(staffIds);
+      form.setValue('staff_ids', staffIds);
+    }
+  }, [editingService, form]);
+
+  const handleStaffToggle = (staffId: string) => {
+    const updatedStaff = selectedStaff.includes(staffId)
+      ? selectedStaff.filter(id => id !== staffId)
+      : [...selectedStaff, staffId];
+    
+    setSelectedStaff(updatedStaff);
+    form.setValue('staff_ids', updatedStaff);
+  };
+
   const handleSubmit = (values: ServiceFormValues) => {
+    // Include the selected staff IDs
+    values.staff_ids = selectedStaff;
     onSubmit(values);
   };
 
@@ -95,7 +123,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
             name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Price ($)</FormLabel>
+                <FormLabel>Price (QAR)</FormLabel>
                 <FormControl>
                   <Input type="number" step="0.01" placeholder="0.00" {...field} />
                 </FormControl>
@@ -117,6 +145,34 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
               </FormItem>
             )}
           />
+
+          {/* Staff Assignment Section */}
+          <div className="space-y-3">
+            <FormLabel>Assign Staff</FormLabel>
+            {isStaffLoading ? (
+              <div className="text-sm text-muted-foreground">Loading staff members...</div>
+            ) : staffData && staffData.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {staffData.map((staff) => (
+                  <div key={staff.id} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`staff-${staff.id}`} 
+                      checked={selectedStaff.includes(staff.id)} 
+                      onCheckedChange={() => handleStaffToggle(staff.id)}
+                    />
+                    <label 
+                      htmlFor={`staff-${staff.id}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {staff.name} ({staff.role})
+                    </label>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">No staff members found. Add staff in the Staff Management section.</div>
+            )}
+          </div>
         </div>
         
         <DialogFooter>
