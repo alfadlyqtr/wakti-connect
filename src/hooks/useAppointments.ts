@@ -6,6 +6,7 @@ import { MonthlyUsage } from "@/services/appointment";
 // This hook is maintained as a placeholder to prevent import errors
 
 export type AppointmentTab = "my-appointments" | "shared-appointments" | "assigned-appointments" | "team-appointments" | "upcoming" | "past" | "invitations";
+export type UserRole = "free" | "individual" | "business";
 
 export interface Appointment {
   id: string;
@@ -42,7 +43,7 @@ export const useAppointments = () => {
   return {
     appointments: [],
     filteredAppointments: [],
-    userRole: "free" as const,
+    userRole: "free" as UserRole,
     isLoading: false,
     error: null,
     searchQuery,

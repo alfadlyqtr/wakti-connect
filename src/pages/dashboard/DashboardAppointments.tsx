@@ -30,8 +30,8 @@ const DashboardAppointments = () => {
     refetch
   } = useAppointments();
 
-  // Determine if this is a paid account
-  const isPaidAccount = userRole === "individual" || userRole === "business";
+  // Determine if this is a paid account - fixing the type comparison issue
+  const isPaidAccount = userRole !== "free";
   const { getAvailableTabs, isBusinessAccount } = useAppointmentTabs(userRole);
 
   // More focused refresh strategy with limited attempts

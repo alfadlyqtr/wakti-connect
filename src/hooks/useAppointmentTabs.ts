@@ -1,5 +1,6 @@
 
 import { useCallback } from "react";
+import { UserRole } from "./useAppointments";
 
 export type AppointmentTab = "my-appointments" | "shared-appointments" | "assigned-appointments" | "team-appointments" | "upcoming" | "past" | "invitations";
 
