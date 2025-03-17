@@ -39,7 +39,7 @@ const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
       <time dateTime={format(date, 'yyyy-MM-dd')}>{format(date, 'd')}</time>
       
       {/* Event indicators */}
-      {(eventTypes.hasTasks || eventTypes.hasAppointments || eventTypes.hasBookings) && (
+      {(eventTypes.hasTasks) && (
         <div className="absolute bottom-1 left-0 right-0 flex justify-center space-x-1">
           {eventTypes.hasTasks && <EventDot type="task" />}
         </div>

@@ -43,10 +43,11 @@ const DashboardBusinessAnalytics = () => {
             isLoading={isLoading} 
             data={data || { 
               subscriberCount: 0, 
-              appointmentCount: 0, 
               staffCount: 0, 
               taskCompletionRate: 0, 
-              timeRange: "month" 
+              timeRange: "month",
+              growth: [],
+              serviceDistribution: []
             }} 
           />
 

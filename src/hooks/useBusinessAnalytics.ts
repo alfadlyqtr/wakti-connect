@@ -7,7 +7,6 @@ type AnalyticsTimeRange = "week" | "month" | "year";
 
 export interface BusinessAnalyticsData {
   subscriberCount: number;
-  appointmentCount: number;
   staffCount: number;
   taskCompletionRate: number;
   timeRange: AnalyticsTimeRange;
@@ -32,7 +31,6 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
       
       return {
         subscriberCount: 157,
-        appointmentCount: 352,
         staffCount: 5,
         taskCompletionRate: 87,
         timeRange,
