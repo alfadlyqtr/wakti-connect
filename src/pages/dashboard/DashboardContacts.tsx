@@ -1,20 +1,21 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useContacts } from "@/hooks/useContacts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { UserSearch, Users, CheckCircle, XCircle, UserPlus, AlertCircle } from "lucide-react";
+import { UserSearch, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { UserContact } from "@/types/invitation.types";
 import { updateAutoApproveContacts } from "@/services/contacts/contactsService";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+
+// Import the newly created components
+import ContactsList from "@/components/contacts/ContactsList";
+import PendingRequestsList from "@/components/contacts/PendingRequestsList";
+import AddContactDialog from "@/components/contacts/AddContactDialog";
+import AutoApproveToggle from "@/components/contacts/AutoApproveToggle";
 
 const DashboardContacts = () => {
   const { 
@@ -27,13 +28,12 @@ const DashboardContacts = () => {
   } = useContacts();
   
   const [searchQuery, setSearchQuery] = useState("");
-  const [newContactId, setNewContactId] = useState("");
   const [autoApprove, setAutoApprove] = useState(false);
   const [isAddContactOpen, setIsAddContactOpen] = useState(false);
   const [isUpdatingAutoApprove, setIsUpdatingAutoApprove] = useState(false);
 
   // Fetch user's auto-approve setting
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchAutoApproveSetting = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -59,8 +59,8 @@ const DashboardContacts = () => {
     fetchAutoApproveSetting();
   }, []);
 
-  const handleAddContact = async () => {
-    if (!newContactId.trim()) {
+  const handleAddContact = async (contactId: string) => {
+    if (!contactId.trim()) {
       toast({
         title: "Error",
         description: "Please enter a valid user ID",
@@ -70,8 +70,7 @@ const DashboardContacts = () => {
     }
     
     try {
-      await sendContactRequest.mutateAsync(newContactId);
-      setNewContactId("");
+      await sendContactRequest.mutateAsync(contactId);
       setIsAddContactOpen(false);
     } catch (error) {
       console.error("Error adding contact:", error);
@@ -112,101 +111,6 @@ const DashboardContacts = () => {
     }
   };
 
-  const renderContactList = (contactList: UserContact[]) => {
-    if (contactList.length === 0) {
-      return (
-        <div className="py-10 text-center">
-          <Users className="mx-auto h-10 w-10 text-muted-foreground" />
-          <p className="mt-2 text-sm text-muted-foreground">No contacts found</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-4">
-        {contactList.map((contact) => (
-          <div key={contact.id} className="flex items-center justify-between p-3 rounded-lg border">
-            <div className="flex items-center gap-3">
-              <Avatar>
-                <AvatarImage src={contact.contactProfile?.avatarUrl || ''} />
-                <AvatarFallback>
-                  {contact.contactProfile?.displayName?.charAt(0) || 
-                   contact.contactProfile?.fullName?.charAt(0) || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">
-                  {contact.contactProfile?.displayName || 
-                   contact.contactProfile?.fullName || 'Unknown User'}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {contact.contactId}
-                </p>
-              </div>
-            </div>
-            <Badge>{contact.status}</Badge>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const renderPendingRequests = () => {
-    if (!pendingRequests || pendingRequests.length === 0) {
-      return (
-        <div className="py-10 text-center">
-          <AlertCircle className="mx-auto h-10 w-10 text-muted-foreground" />
-          <p className="mt-2 text-sm text-muted-foreground">No pending requests</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-4">
-        {pendingRequests.map((request) => (
-          <div key={request.id} className="flex items-center justify-between p-3 rounded-lg border">
-            <div className="flex items-center gap-3">
-              <Avatar>
-                <AvatarImage src={request.contactProfile?.avatarUrl || ''} />
-                <AvatarFallback>
-                  {request.contactProfile?.displayName?.charAt(0) || 
-                   request.contactProfile?.fullName?.charAt(0) || 'U'}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">
-                  {request.contactProfile?.displayName || 
-                   request.contactProfile?.fullName || 'Unknown User'}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {request.userId}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => handleRespondToRequest(request.id, true)}
-              >
-                <CheckCircle className="h-4 w-4 mr-1" />
-                Accept
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => handleRespondToRequest(request.id, false)}
-              >
-                <XCircle className="h-4 w-4 mr-1" />
-                Reject
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
@@ -230,15 +134,11 @@ const DashboardContacts = () => {
           </Button>
         </div>
         
-        <div className="flex items-center space-x-2">
-          <Switch 
-            id="auto-approve" 
-            checked={autoApprove} 
-            onCheckedChange={handleToggleAutoApprove}
-            disabled={isUpdatingAutoApprove}
-          />
-          <Label htmlFor="auto-approve">Auto-approve contact requests</Label>
-        </div>
+        <AutoApproveToggle 
+          autoApprove={autoApprove}
+          isUpdating={isUpdatingAutoApprove}
+          onToggle={handleToggleAutoApprove}
+        />
       </div>
       
       <Tabs defaultValue="contacts">
@@ -258,13 +158,10 @@ const DashboardContacts = () => {
               <CardDescription>View and manage your contacts.</CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
-                <div className="py-10 text-center">
-                  <p>Loading contacts...</p>
-                </div>
-              ) : (
-                renderContactList(contacts || [])
-              )}
+              <ContactsList 
+                contacts={contacts || []} 
+                isLoading={isLoading} 
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -275,47 +172,21 @@ const DashboardContacts = () => {
               <CardDescription>Review and respond to contact requests.</CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoadingRequests ? (
-                <div className="py-10 text-center">
-                  <p>Loading requests...</p>
-                </div>
-              ) : (
-                renderPendingRequests()
-              )}
+              <PendingRequestsList 
+                pendingRequests={pendingRequests || []} 
+                isLoading={isLoadingRequests}
+                onRespondToRequest={handleRespondToRequest}
+              />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
       
-      <Dialog open={isAddContactOpen} onOpenChange={setIsAddContactOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Contact</DialogTitle>
-            <DialogDescription>
-              Enter the user ID of the person you want to add.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="contact-id">User ID</Label>
-              <Input
-                id="contact-id"
-                placeholder="Enter user ID"
-                value={newContactId}
-                onChange={(e) => setNewContactId(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddContactOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddContact}>
-              Send Request
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AddContactDialog
+        isOpen={isAddContactOpen}
+        onOpenChange={setIsAddContactOpen}
+        onAddContact={handleAddContact}
+      />
     </div>
   );
 };

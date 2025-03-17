@@ -15,7 +15,7 @@ export const getUnreadMessagesCount = async (): Promise<number> => {
     
     // Use count() method to get the number of unread messages
     const { count, error } = await fromTable('messages')
-      .select('*', { count: 'exact' })
+      .select('*', { count: 'exact', head: false })
       .eq('recipient_id', session.user.id)
       .eq('is_read', false);
     
