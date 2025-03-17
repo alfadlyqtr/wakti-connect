@@ -12,7 +12,7 @@ export interface Staff {
 
 export interface WorkSession {
   id: string;
-  staff_id: string;
+  staff_relation_id: string;
   start_time: string;
   end_time: string | null;
   date: string;
@@ -61,7 +61,7 @@ export const useStaffData = () => {
           const { data: sessions, error: sessionsError } = await supabase
             .from('staff_work_logs')
             .select('*')
-            .eq('staff_id', staff.id);
+            .eq('staff_relation_id', staff.id);
               
           if (sessionsError) {
             console.error(`Error fetching sessions for staff ${staff.id}:`, sessionsError);

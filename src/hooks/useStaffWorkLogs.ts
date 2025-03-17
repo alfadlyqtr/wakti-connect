@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface StaffWorkLog {
   id: string;
-  staff_id: string;
+  staff_relation_id: string;
   start_time: string;
   end_time: string | null;
   earnings: number | null;
@@ -43,7 +43,7 @@ export const useStaffWorkLogs = () => {
         
         // Map staff with their sessions
         const staffWithSessions: StaffWithSessions[] = staffData.map(staff => {
-          const staffLogs = logsData.filter(log => log.staff_id === staff.id);
+          const staffLogs = logsData.filter(log => log.staff_relation_id === staff.id);
           
           return {
             id: staff.id,

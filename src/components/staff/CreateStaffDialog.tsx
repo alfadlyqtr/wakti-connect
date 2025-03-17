@@ -48,9 +48,17 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
   
   const onSubmit = async (values: StaffFormValues) => {
     try {
+      // Get the current user's ID (the business ID)
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        throw new Error('Not authenticated');
+      }
+      
       const { error } = await supabase
         .from('business_staff')
         .insert({
+          business_id: session.session.user.id,
           name: values.name,
           email: values.email || null,
           role: values.role,
