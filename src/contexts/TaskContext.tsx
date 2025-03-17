@@ -1,8 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Task } from "@/types/task.types";
+import { Task, TaskStatus, TaskPriority } from "@/types/task.types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { validateTaskStatus, validateTaskPriority } from "@/services/task/utils/statusValidator";
 
 interface TaskContextType {
   tasks: Task[];
@@ -36,17 +37,23 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         // First check if the tasks table exists
-        const { error: tableCheckError } = await supabase
-          .from('tasks')
-          .select('count')
-          .limit(1)
-          .catch(error => {
-            // If the table doesn't exist yet, we'll return mock data
-            console.log("Tasks table might not exist yet:", error);
-            return { error: new Error("Tasks table not ready") };
-          });
+        let tableExists = true;
+        try {
+          const { error: tableCheckError } = await supabase
+            .from('tasks')
+            .select('count')
+            .limit(1);
+            
+          if (tableCheckError) {
+            console.log("Tasks table might not exist yet:", tableCheckError);
+            tableExists = false;
+          }
+        } catch (error) {
+          console.log("Error checking tasks table:", error);
+          tableExists = false;
+        }
           
-        if (tableCheckError) {
+        if (!tableExists) {
           console.log("Using mock task data until table is created");
           // Fall back to mock tasks if table doesn't exist
           const mockTasks = getMockTasks();
@@ -67,7 +74,14 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
           throw error;
         }
         
-        setTasks(data || []);
+        // Transform the data to ensure it conforms to the Task type
+        const typedTasks: Task[] = (data || []).map(task => ({
+          ...task,
+          status: validateTaskStatus(task.status),
+          priority: validateTaskPriority(task.priority)
+        }));
+        
+        setTasks(typedTasks);
       } catch (err) {
         console.error("Failed to fetch tasks:", err);
         setError(err instanceof Error ? err : new Error('An unknown error occurred'));
@@ -107,8 +121,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: "1",
         title: "Complete project proposal",
         description: "Write up project proposal for client review",
-        status: "pending",
-        priority: "high",
+        status: "pending" as TaskStatus,
+        priority: "high" as TaskPriority,
         due_date: new Date().toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -119,8 +133,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: "2",
         title: "Review team updates",
         description: "Check weekly updates from the team and provide feedback",
-        status: "in-progress",
-        priority: "medium",
+        status: "in-progress" as TaskStatus,
+        priority: "medium" as TaskPriority,
         due_date: new Date(Date.now() + 86400000).toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -131,8 +145,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: "3",
         title: "Prepare client meeting",
         description: "Create slides and agenda for the upcoming client meeting",
-        status: "completed",
-        priority: "high",
+        status: "completed" as TaskStatus,
+        priority: "high" as TaskPriority,
         due_date: new Date(Date.now() - 86400000).toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -153,6 +167,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const newTask = {
         ...task,
         user_id: session.user.id,
+        status: validateTaskStatus(task.status),
+        priority: validateTaskPriority(task.priority),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -167,7 +183,15 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
         if (error) throw error;
         
-        setTasks(prev => [data, ...prev]);
+        // Ensure the returned task matches our Task type
+        const typedTask: Task = {
+          ...data,
+          status: validateTaskStatus(data.status),
+          priority: validateTaskPriority(data.priority)
+        };
+        
+        setTasks(prev => [typedTask, ...prev]);
+        
         toast({
           title: "Task created",
           description: "Your task has been created successfully.",
@@ -179,7 +203,9 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Fall back to client-side-only for development
         const mockTask: Task = {
           ...newTask,
-          id: `task-${Date.now()}`
+          id: `task-${Date.now()}`,
+          status: validateTaskStatus(newTask.status),
+          priority: validateTaskPriority(newTask.priority)
         };
         
         setTasks(prev => [mockTask, ...prev]);
@@ -202,21 +228,26 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
     try {
+      // Ensure the status and priority values are validated
+      const validatedUpdates = {
+        ...updates,
+        status: updates.status ? validateTaskStatus(updates.status) : undefined,
+        priority: updates.priority ? validateTaskPriority(updates.priority) : undefined,
+        updated_at: new Date().toISOString()
+      };
+
       // Try to update in Supabase first
       try {
         const { error } = await supabase
           .from('tasks')
-          .update({
-            ...updates,
-            updated_at: new Date().toISOString()
-          })
+          .update(validatedUpdates)
           .eq('id', id);
           
         if (error) throw error;
         
         setTasks(prev => 
           prev.map(task => 
-            task.id === id ? { ...task, ...updates, updated_at: new Date().toISOString() } : task
+            task.id === id ? { ...task, ...validatedUpdates } : task
           )
         );
         
@@ -231,7 +262,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Fall back to client-side-only for development
         setTasks(prev => 
           prev.map(task => 
-            task.id === id ? { ...task, ...updates, updated_at: new Date().toISOString() } : task
+            task.id === id ? { ...task, ...validatedUpdates } : task
           )
         );
         
@@ -296,7 +327,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const completeTask = async (id: string) => {
     try {
       await updateTask(id, { 
-        status: "completed",
+        status: "completed" as TaskStatus,
         updated_at: new Date().toISOString()
       });
       

@@ -35,3 +35,18 @@ export const getServiceDistributionData = () => {
     ]
   };
 };
+
+// Generate sample staff performance data for business dashboard analytics
+export const getStaffPerformanceData = () => {
+  // Sample data for staff performance
+  return {
+    labels: ['John Doe', 'Jane Smith', 'Bob Johnson', 'Alice Williams', 'Tom Brown'],
+    datasets: [
+      {
+        label: 'Hours Worked',
+        data: [37, 42, 35, 28, 40],
+        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+      }
+    ]
+  };
+};
