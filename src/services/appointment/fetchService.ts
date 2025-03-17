@@ -15,62 +15,92 @@ import {
  * Main function to fetch appointments based on the selected tab
  */
 export async function fetchAppointments(tab: AppointmentTab): Promise<AppointmentsResult> {
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  if (!session?.user) {
-    throw new Error("No active session");
-  }
-  
-  const { data: profileData } = await supabase
-    .from('profiles')
-    .select('account_type')
-    .eq('id', session.user.id)
-    .single();
-  
-  const userRole = profileData?.account_type || "free";
-  
-  // Fetch appointments based on the selected tab
-  switch (tab) {
-    case "upcoming":
-      return {
-        appointments: await fetchUpcomingAppointments(session.user.id),
-        userRole: userRole as "free" | "individual" | "business"
-      };
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
     
-    case "past":
-      return {
-        appointments: await fetchPastAppointments(session.user.id),
-        userRole: userRole as "free" | "individual" | "business"
-      };
+    if (!session?.user) {
+      throw new Error("No active session");
+    }
     
-    case "invitations":
-      return {
-        appointments: await fetchInvitationAppointments(session.user.id),
-        userRole: userRole as "free" | "individual" | "business"
-      };
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('account_type')
+      .eq('id', session.user.id)
+      .single();
     
-    case "my-appointments":
-      return {
-        appointments: await fetchMyAppointments(session.user.id),
-        userRole: userRole as "free" | "individual" | "business"
-      };
+    if (profileError) {
+      console.error("Error fetching profile for appointment access:", profileError);
+      throw profileError;
+    }
     
-    case "shared-appointments":
-      return {
-        appointments: await fetchSharedAppointments(session.user.id),
-        userRole: userRole as "free" | "individual" | "business"
-      };
+    // Explicitly log the user role to debug
+    const userRole = profileData?.account_type || "free";
+    console.log("User role for appointments:", userRole);
     
-    case "assigned-appointments":
+    // Return early with empty data if there was a profile error
+    if (!profileData) {
+      console.warn("No profile data found, returning empty appointments");
       return {
-        appointments: await fetchAssignedAppointments(session.user.id),
-        userRole: userRole as "free" | "individual" | "business"
+        appointments: [],
+        userRole: "free"
       };
+    }
     
-    default:
+    // Fetch appointments based on the selected tab
+    try {
+      switch (tab) {
+        case "upcoming":
+          return {
+            appointments: await fetchUpcomingAppointments(session.user.id),
+            userRole: userRole as "free" | "individual" | "business"
+          };
+        
+        case "past":
+          return {
+            appointments: await fetchPastAppointments(session.user.id),
+            userRole: userRole as "free" | "individual" | "business"
+          };
+        
+        case "invitations":
+          return {
+            appointments: await fetchInvitationAppointments(session.user.id),
+            userRole: userRole as "free" | "individual" | "business"
+          };
+        
+        case "my-appointments":
+          return {
+            appointments: await fetchMyAppointments(session.user.id),
+            userRole: userRole as "free" | "individual" | "business"
+          };
+        
+        case "shared-appointments":
+          return {
+            appointments: await fetchSharedAppointments(session.user.id),
+            userRole: userRole as "free" | "individual" | "business"
+          };
+        
+        case "assigned-appointments":
+          return {
+            appointments: await fetchAssignedAppointments(session.user.id),
+            userRole: userRole as "free" | "individual" | "business"
+          };
+        
+        default:
+          return {
+            appointments: await fetchDefaultAppointments(session.user.id),
+            userRole: userRole as "free" | "individual" | "business"
+          };
+      }
+    } catch (error) {
+      console.error(`Error fetching ${tab} appointments:`, error);
+      // Return empty appointments but preserve the user role
       return {
-        appointments: await fetchDefaultAppointments(session.user.id),
+        appointments: [],
         userRole: userRole as "free" | "individual" | "business"
       };
+    }
+  } catch (error) {
+    console.error("Error in fetchAppointments:", error);
+    throw error;
   }
 }

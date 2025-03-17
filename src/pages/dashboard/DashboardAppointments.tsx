@@ -22,6 +22,13 @@ const DashboardAppointments = () => {
     userRole
   } = useAppointments(activeTab);
 
+  // Explicitly log user role for debugging
+  console.log("DashboardAppointments - user role:", userRole);
+
+  // Determine if this is a paid account
+  const isPaidAccount = userRole === "individual" || userRole === "business";
+  console.log("DashboardAppointments - isPaidAccount:", isPaidAccount);
+
   // Show error toast if query fails
   useEffect(() => {
     if (error) {
@@ -32,8 +39,6 @@ const DashboardAppointments = () => {
       });
     }
   }, [error]);
-
-  const isPaidAccount = userRole === "individual" || userRole === "business";
 
   const handleCreateAppointment = async (appointmentData: any) => {
     await createAppointment(appointmentData);

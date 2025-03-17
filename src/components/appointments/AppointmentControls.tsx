@@ -25,23 +25,26 @@ const AppointmentControls = ({
   isPaidAccount,
   userRole
 }: AppointmentControlsProps) => {
-  if (!isPaidAccount) return null;
-
+  console.log("AppointmentControls - isPaidAccount:", isPaidAccount, "userRole:", userRole);
+  
+  // Don't return null for free accounts, but show limited controls
   return (
     <div className="space-y-4">
-      <Tabs 
-        defaultValue={currentTab} 
-        onValueChange={(value) => onTabChange(value as AppointmentTab)}
-        className="w-full"
-      >
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="my-appointments">My Appointments</TabsTrigger>
-          <TabsTrigger value="shared-appointments">Shared Appointments</TabsTrigger>
-          <TabsTrigger value="assigned-appointments">
-            {userRole === "business" ? "Team Appointments" : "Assigned Appointments"}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      {isPaidAccount && (
+        <Tabs 
+          defaultValue={currentTab} 
+          onValueChange={(value) => onTabChange(value as AppointmentTab)}
+          className="w-full"
+        >
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="my-appointments">My Appointments</TabsTrigger>
+            <TabsTrigger value="shared-appointments">Shared Appointments</TabsTrigger>
+            <TabsTrigger value="assigned-appointments">
+              {userRole === "business" ? "Team Appointments" : "Assigned Appointments"}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
       
       <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
         <div className="relative w-full sm:w-64">
@@ -54,7 +57,11 @@ const AppointmentControls = ({
           />
         </div>
         
-        <Button onClick={onCreateAppointment} className="flex items-center gap-2">
+        <Button 
+          onClick={onCreateAppointment} 
+          className="flex items-center gap-2"
+          disabled={!isPaidAccount}
+        >
           <Plus size={16} />
           <span className="hidden sm:inline">
             {currentTab === "assigned-appointments" && userRole === "business" 

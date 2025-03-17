@@ -22,17 +22,37 @@ export const useSidebarData = () => {
             .single();
 
           if (error) {
-            console.error("Error fetching user data:", error);
+            console.error("Error fetching user data for sidebar:", error);
           } else if (data) {
+            // Log fetched account type for debugging
+            console.log("Sidebar - fetched account type:", data.account_type);
+            
+            // Store in localStorage for backup access
+            localStorage.setItem('userRole', data.account_type);
+            
             setUserData({ accountType: data.account_type });
           }
         }
       } catch (error) {
-        console.error("Failed to fetch user data:", error);
+        console.error("Failed to fetch sidebar user data:", error);
       }
     };
 
     fetchUserData();
+    
+    // Set up auth state listener
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        fetchUserData();
+      } else {
+        setUserData(null);
+        localStorage.removeItem('userRole');
+      }
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
 
   return {

@@ -14,7 +14,7 @@ import { RecurringFormData } from "@/types/recurring.types";
 
 export type { Appointment, AppointmentTab, AppointmentFormData } from "@/services/appointment";
 
-export const useAppointments = (tab: AppointmentTab = "upcoming") => {
+export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterDate, setFilterDate] = useState<Date | null>(null);
@@ -29,6 +29,15 @@ export const useAppointments = (tab: AppointmentTab = "upcoming") => {
     queryKey: ['appointments', tab],
     queryFn: () => fetchAppointments(tab),
     refetchOnWindowFocus: false,
+    retry: 1,
+    onError: (err: any) => {
+      console.error("Appointment fetch error:", err);
+      toast({
+        title: "Failed to load appointments",
+        description: err.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
   });
 
   // Create a new appointment
@@ -65,9 +74,15 @@ export const useAppointments = (tab: AppointmentTab = "upcoming") => {
     return filterAppointments(appointmentList, searchQuery, filterStatus, filterDate);
   };
 
+  // Get the actual user role from data, with a fallback
+  const userRole = data?.userRole || localStorage.getItem('userRole') as "free" | "individual" | "business" || "free";
+  
+  // Log the user role to help with debugging
+  console.log("useAppointments hook - user role:", userRole);
+
   return {
     appointments: data?.appointments || [],
-    userRole: data?.userRole || "free",
+    userRole: userRole,
     filteredAppointments: getFilteredAppointments(),
     isLoading,
     error,
