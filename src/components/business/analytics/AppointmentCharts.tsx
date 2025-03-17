@@ -1,42 +1,74 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // Sample data for demonstration
 const appointmentData = [
-  { month: 'Jan', Scheduled: 12, Completed: 10, Cancelled: 2 },
-  { month: 'Feb', Scheduled: 19, Completed: 15, Cancelled: 4 },
-  { month: 'Mar', Scheduled: 15, Completed: 13, Cancelled: 2 },
-  { month: 'Apr', Scheduled: 25, Completed: 20, Cancelled: 5 },
-  { month: 'May', Scheduled: 22, Completed: 18, Cancelled: 4 },
-  { month: 'Jun', Scheduled: 30, Completed: 25, Cancelled: 5 },
+  { month: 'Jan', appointments: 20, bookings: 15 },
+  { month: 'Feb', appointments: 30, bookings: 22 },
+  { month: 'Mar', appointments: 25, bookings: 18 },
+  { month: 'Apr', appointments: 40, bookings: 30 },
+  { month: 'May', appointments: 35, bookings: 28 },
+  { month: 'Jun', appointments: 45, bookings: 40 },
 ];
 
-export const AppointmentCharts = () => {
+const statusData = [
+  { status: 'Completed', value: 45 },
+  { status: 'Cancelled', value: 15 },
+  { status: 'Scheduled', value: 30 },
+  { status: 'Confirmed', value: 10 },
+];
+
+export function AppointmentCharts() {
   return (
-    <div className="grid grid-cols-1 gap-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Appointment Statistics</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={appointmentData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="Scheduled" fill="#3b82f6" />
-              <Bar dataKey="Completed" fill="#22c55e" />
-              <Bar dataKey="Cancelled" fill="#ef4444" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-    </div>
+    <Tabs defaultValue="appointments" className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="appointments">Appointments</TabsTrigger>
+        <TabsTrigger value="status">Status Distribution</TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="appointments" className="pt-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Appointments vs Bookings</CardTitle>
+          </CardHeader>
+          <CardContent className="h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={appointmentData}>
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="appointments" fill="#4f46e5" name="Appointments" />
+                <Bar dataKey="bookings" fill="#10b981" name="Bookings" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </TabsContent>
+      
+      <TabsContent value="status" className="pt-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Appointment Status Distribution</CardTitle>
+          </CardHeader>
+          <CardContent className="h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={statusData} layout="vertical">
+                <XAxis type="number" />
+                <YAxis type="category" dataKey="status" />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="value" fill="#8884d8" name="Appointments" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
   );
-};
+}
 
 export default AppointmentCharts;

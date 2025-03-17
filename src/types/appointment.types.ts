@@ -13,7 +13,7 @@ export interface Appointment {
   end_time: string;
   is_all_day: boolean;
   status: AppointmentStatus;
-  appointment_type: AppointmentType;
+  appointment_type: AppointmentType; // Required field
   user_id: string;
   assignee_id?: string | null;
   created_at: string;
@@ -35,6 +35,6 @@ export interface AppointmentFormData {
   end_time: string;
   is_all_day: boolean;
   status?: AppointmentStatus;
-  appointment_type?: AppointmentType;
+  appointment_type: AppointmentType; // Required field
   assignee_id?: string | null;
 }

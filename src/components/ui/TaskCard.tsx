@@ -1,12 +1,10 @@
-
-import React from "react";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import TaskStatusIcon from "@/components/tasks/TaskStatusIcon";
-import TaskBadges from "@/components/tasks/TaskBadges";
-import TaskActionsMenu from "@/components/tasks/TaskActionsMenu";
-import RecurringBadge from "@/components/ui/RecurringBadge";
-import { TaskPriority, TaskStatus } from "@/types/task.types";
+import React from 'react';
+import { CalendarIcon, ChevronRightIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import RecurringBadge from '@/components/ui/RecurringBadge';
 
 interface TaskCardProps {
   id: string;

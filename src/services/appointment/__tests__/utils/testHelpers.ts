@@ -1,5 +1,5 @@
 
-import { Appointment, AppointmentStatus } from "@/services/appointment/types";
+import { Appointment, AppointmentStatus, AppointmentType } from "@/types/appointment.types";
 
 // Create a mock appointment for testing
 export const createMockAppointment = (overrides?: Partial<Appointment>): Appointment => {
@@ -13,6 +13,7 @@ export const createMockAppointment = (overrides?: Partial<Appointment>): Appoint
     end_time: new Date(Date.now() + 3600000).toISOString(),
     is_all_day: false,
     status: "scheduled" as AppointmentStatus,
+    appointment_type: "appointment" as AppointmentType, // Set a default
     assignee_id: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),

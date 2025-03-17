@@ -8,11 +8,27 @@ import { RecurrenceFrequency } from '@/types/recurring.types';
 
 interface RecurringFormFieldsProps {
   form: any;
+  userRole?: "free" | "individual" | "business";
   isRecurring?: boolean;
 }
 
-const RecurringFormFields: React.FC<RecurringFormFieldsProps> = ({ form, isRecurring = false }) => {
+const RecurringFormFields: React.FC<RecurringFormFieldsProps> = ({ 
+  form, 
+  userRole = "free",
+  isRecurring = false 
+}) => {
   if (!isRecurring) return null;
+
+  const isPaidAccount = userRole === "individual" || userRole === "business";
+  if (!isPaidAccount) {
+    return (
+      <div className="p-4 border rounded-md bg-muted/20">
+        <p className="text-sm text-muted-foreground">
+          Recurring tasks are only available for paid accounts. Please upgrade your plan to access this feature.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 border rounded-md p-4 mt-4">

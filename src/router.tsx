@@ -94,7 +94,9 @@ export const router = createBrowserRouter([
   },
   {
     path: "/auth",
-    element: <AuthShell />,
+    element: <AuthShell>
+      <Suspense fallback={<div>Loading...</div>} />
+    </AuthShell>,
     children: [
       {
         path: "",
@@ -178,7 +180,9 @@ export const router = createBrowserRouter([
     path: "/dashboard",
     element: (
       <ProtectedRoute>
-        <DashboardShell />
+        <DashboardShell>
+          <Suspense fallback={<div>Loading dashboard...</div>} />
+        </DashboardShell>
       </ProtectedRoute>
     ),
     children: [
@@ -246,7 +250,9 @@ export const router = createBrowserRouter([
   },
   {
     path: "/business/:businessId",
-    element: <BusinessShell />,
+    element: <BusinessShell>
+      <Suspense fallback={<div>Loading business...</div>} />
+    </BusinessShell>,
     children: [
       {
         path: "",
