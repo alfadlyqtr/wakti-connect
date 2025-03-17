@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Route } from 'react-router-dom';
+import { Route, Navigate } from 'react-router-dom';
 import DashboardHome from '@/pages/dashboard/DashboardHome';
 import DashboardTasks from '@/pages/dashboard/DashboardTasks';
 import DashboardMessages from '@/pages/dashboard/DashboardMessages';
@@ -15,6 +15,7 @@ import DashboardSubscribers from '@/pages/dashboard/DashboardSubscribers';
 import DashboardWorkManagement from '@/pages/dashboard/DashboardWorkManagement';
 import DashboardTeamManagement from '@/pages/dashboard/DashboardTeamManagement';
 import DashboardAnalyticsHub from '@/pages/dashboard/DashboardAnalyticsHub';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 const dashboardRoutes = (
   <>
@@ -22,16 +23,47 @@ const dashboardRoutes = (
     <Route path="tasks" element={<DashboardTasks />} />
     <Route path="messages" element={<DashboardMessages />} />
     <Route path="contacts" element={<DashboardContacts />} />
-    <Route path="services" element={<DashboardServices />} />
-    <Route path="work-management" element={<DashboardWorkManagement />} />
-    <Route path="team-management" element={<DashboardTeamManagement />} />
-    <Route path="analytics-hub" element={<DashboardAnalyticsHub />} />
+    
+    {/* Routes that require business account */}
+    <Route path="services" element={
+      <ProtectedRoute requiredRole="business">
+        <DashboardServices />
+      </ProtectedRoute>
+    } />
+    <Route path="work-management" element={
+      <ProtectedRoute requiredRole="business">
+        <DashboardWorkManagement />
+      </ProtectedRoute>
+    } />
+    <Route path="team-management" element={
+      <ProtectedRoute requiredRole="business">
+        <DashboardTeamManagement />
+      </ProtectedRoute>
+    } />
+    <Route path="analytics-hub" element={
+      <ProtectedRoute requiredRole="business">
+        <DashboardAnalyticsHub />
+      </ProtectedRoute>
+    } />
+    <Route path="business-page" element={
+      <ProtectedRoute requiredRole="business">
+        <DashboardBusinessPage />
+      </ProtectedRoute>
+    } />
+    <Route path="subscribers" element={
+      <ProtectedRoute requiredRole="business">
+        <DashboardSubscribers />
+      </ProtectedRoute>
+    } />
+    
+    {/* General routes accessible to all account types */}
     <Route path="upgrade" element={<DashboardUpgrade />} />
     <Route path="payment-confirmation" element={<DashboardPaymentConfirmation />} />
     <Route path="settings" element={<DashboardSettings />} />
     <Route path="notifications" element={<DashboardNotifications />} />
-    <Route path="business-page" element={<DashboardBusinessPage />} />
-    <Route path="subscribers" element={<DashboardSubscribers />} />
+    
+    {/* Catch-all redirect for invalid dashboard routes */}
+    <Route path="*" element={<Navigate to="/dashboard" replace />} />
   </>
 );
 

@@ -9,7 +9,7 @@ export interface CalendarEvent {
   priority?: string;
 }
 
-export type EventType = "task";
+export type EventType = "task" | "booking";
 
 export interface DayEventTypes {
   hasTasks: boolean;

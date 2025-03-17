@@ -15,6 +15,8 @@ import Header from "./components/landing/Header";
 import ScrollToTop from "./components/ui/scroll-to-top";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
+import { AuthProvider } from "@/hooks/useAuth";
+import { TaskProvider } from "@/contexts/TaskContext";
 
 // Import i18n
 import "./i18n/i18n";
@@ -24,43 +26,47 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="system">
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <ScrollToTop />
-          <Routes>
-            {/* Public routes */}
-            <Route path="/*" element={
-              <>
-                <Header />
-                <Routes>
-                  {PublicRoutes}
-                </Routes>
-              </>
-            } />
-            
-            {/* Auth routes */}
-            <Route path="/auth/*" element={<AuthRoutes />} />
-            
-            {/* Direct auth-related pages for deep linking */}
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/verify-email" element={<VerificationPage />} />
-            
-            {/* Dashboard routes - wrapped in ProtectedRoute */}
-            <Route path="/dashboard/*" element={
-              <ProtectedRoute>
-                <DashboardLayout>
-                  <Routes>
-                    {DashboardRoutes}
-                  </Routes>
-                </DashboardLayout>
-              </ProtectedRoute>
-            } />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <AuthProvider>
+        <TaskProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ScrollToTop />
+              <Routes>
+                {/* Public routes */}
+                <Route path="/*" element={
+                  <>
+                    <Header />
+                    <Routes>
+                      {PublicRoutes}
+                    </Routes>
+                  </>
+                } />
+                
+                {/* Auth routes */}
+                <Route path="/auth/*" element={<AuthRoutes />} />
+                
+                {/* Direct auth-related pages for deep linking */}
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/verify-email" element={<VerificationPage />} />
+                
+                {/* Dashboard routes - wrapped in ProtectedRoute */}
+                <Route path="/dashboard/*" element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Routes>
+                        {DashboardRoutes}
+                      </Routes>
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                } />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </TaskProvider>
+      </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

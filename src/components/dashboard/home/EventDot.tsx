@@ -1,37 +1,24 @@
 
 import React from "react";
-import { cn } from "@/lib/utils";
+import { EventType } from "@/types/calendar.types";
 
 interface EventDotProps {
-  type: "task";
-  isCompleted?: boolean;
-  priority?: string;
+  type: EventType;
 }
 
-export const EventDot: React.FC<EventDotProps> = ({ type, isCompleted, priority }) => {
-  // Base classes
-  const baseClasses = "h-2 w-2 rounded-full";
-  
-  // Get color based on type and status
-  const getColorClass = () => {
-    if (type === "task") {
-      if (isCompleted) return "bg-green-500";
-      
-      // If not completed, use priority color
-      switch (priority) {
-        case "high":
-          return "bg-red-500";
-        case "medium":
-          return "bg-amber-500";
-        case "low":
-          return "bg-green-500";
-        default:
-          return "bg-blue-500";
-      }
+export const EventDot: React.FC<EventDotProps> = ({ type }) => {
+  const getDotColor = () => {
+    switch (type) {
+      case "task":
+        return "bg-amber-500";
+      case "booking":
+        return "bg-green-500";
+      default:
+        return "bg-slate-400";
     }
-    
-    return "bg-slate-500";
   };
-  
-  return <div className={cn(baseClasses, getColorClass())} />;
+
+  return (
+    <div className={`h-1.5 w-1.5 rounded-full ${getDotColor()}`} />
+  );
 };
