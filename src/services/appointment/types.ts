@@ -15,11 +15,22 @@ export interface Appointment {
   is_recurring_instance?: boolean;
   parent_recurring_id?: string | null;
   appointment_type?: string;
+  
+  // Join data that may be included
+  user?: {
+    id: string;
+    email: string;
+    display_name: string | null;
+  };
+  assignee?: {
+    id: string;
+    email: string;
+    display_name: string | null;
+  };
 }
 
 export type AppointmentStatus = "scheduled" | "cancelled" | "completed";
 
-// Update the AppointmentTab type to include "team-appointments" and match the one in types/appointment.types.ts
 export type AppointmentTab = "my-appointments" | "shared-appointments" | "assigned-appointments" | "team-appointments" | "upcoming" | "past" | "invitations";
 
 export interface AppointmentFormData {

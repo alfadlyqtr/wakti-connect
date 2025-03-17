@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Appointment } from "./types";
+import { Appointment, AppointmentStatus } from "./types";
+import { validateAppointmentStatus } from "./utils/statusValidator";
 
 // Base query to fetch appointments with all needed fields
 const getBaseAppointmentQuery = () => {
@@ -27,6 +28,14 @@ const handleAppointmentFetchError = (error: any, tabName: string) => {
   return [];
 };
 
+// Helper to map database results to Appointment type with valid status
+const mapToAppointments = (data: any[]): Appointment[] => {
+  return (data || []).map(item => ({
+    ...item,
+    status: validateAppointmentStatus(item.status)
+  }));
+};
+
 /**
  * Fetches the current user's appointments
  */
@@ -47,7 +56,7 @@ export const fetchMyAppointments = async (
       throw error;
     }
     
-    return data || [];
+    return mapToAppointments(data || []);
   } catch (error) {
     return handleAppointmentFetchError(error, "my");
   }
@@ -65,7 +74,7 @@ export const fetchSharedAppointments = async (
   
   try {
     const { data, error } = await supabase
-      .from("appointment_sharing")
+      .from("appointment_invitations")
       .select(`
         appointment:appointment_id (
           *,
@@ -87,10 +96,14 @@ export const fetchSharedAppointments = async (
       throw error;
     }
     
-    // Extract the appointment from each sharing record
+    // Extract the appointment from each invitation record and ensure valid status
     return (data || [])
       .map(record => record.appointment)
-      .filter(Boolean);
+      .filter(Boolean)
+      .map(appt => ({
+        ...appt,
+        status: validateAppointmentStatus(appt.status)
+      }));
   } catch (error) {
     return handleAppointmentFetchError(error, "shared");
   }
@@ -115,7 +128,7 @@ export const fetchAssignedAppointments = async (
       throw error;
     }
     
-    return data || [];
+    return mapToAppointments(data || []);
   } catch (error) {
     return handleAppointmentFetchError(error, "assigned");
   }
@@ -140,7 +153,7 @@ export const fetchDefaultAppointments = async (
       throw error;
     }
     
-    return data || [];
+    return mapToAppointments(data || []);
   } catch (error) {
     return handleAppointmentFetchError(error, "default");
   }
@@ -168,7 +181,7 @@ export const fetchUpcomingAppointments = async (
       throw error;
     }
     
-    return data || [];
+    return mapToAppointments(data || []);
   } catch (error) {
     return handleAppointmentFetchError(error, "upcoming");
   }
@@ -196,7 +209,7 @@ export const fetchPastAppointments = async (
       throw error;
     }
     
-    return data || [];
+    return mapToAppointments(data || []);
   } catch (error) {
     return handleAppointmentFetchError(error, "past");
   }
@@ -233,10 +246,14 @@ export const fetchInvitationAppointments = async (
       throw error;
     }
     
-    // Extract the appointment from each invitation record
+    // Extract the appointment from each invitation record and validate status
     return (data || [])
       .map(record => record.appointment)
-      .filter(Boolean);
+      .filter(Boolean)
+      .map(appt => ({
+        ...appt,
+        status: validateAppointmentStatus(appt.status)
+      }));
   } catch (error) {
     return handleAppointmentFetchError(error, "invitation");
   }

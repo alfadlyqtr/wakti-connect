@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { AppointmentFormData } from "./types";
+import { AppointmentFormData, AppointmentStatus } from "./types";
 
 /**
  * Basic appointment creation function without permission checks
@@ -25,12 +25,19 @@ export const createNewAppointment = async (appointmentData: AppointmentFormData)
       throw new Error("Appointment must have start and end times");
     }
     
-    // Prepare the appointment data
+    // Prepare the appointment data - ensure all required fields are present
+    // and properly typed for the database
     const completeAppointmentData = {
-      ...appointmentData,
       user_id: session.user.id,
-      status: appointmentData.status || "scheduled",
-      appointment_type: appointmentData.appointment_type || "appointment",
+      title: appointmentData.title,
+      description: appointmentData.description || null,
+      location: appointmentData.location || null,
+      start_time: appointmentData.start_time,
+      end_time: appointmentData.end_time,
+      is_all_day: !!appointmentData.is_all_day,
+      status: (appointmentData.status || "scheduled") as AppointmentStatus,
+      assignee_id: appointmentData.assignee_id || null,
+      appointment_type: appointmentData.appointment_type || "appointment"
     };
     
     // Insert the appointment

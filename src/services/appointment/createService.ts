@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { AppointmentFormData } from "./types";
+import { AppointmentFormData, AppointmentStatus } from "./types";
 import { RecurringFormData } from "@/types/recurring.types";
 import { generateRecurringDates } from "../recurring/recurringService";
 
@@ -51,14 +51,15 @@ export const createAppointment = async (
     }
     
     // Add the user_id and default appointment_type to the appointment data
+    // Make sure all required fields are included and properly typed
     const completeAppointmentData = {
       user_id: session.user.id,
       title: appointmentData.title,
-      description: appointmentData.description,
-      location: appointmentData.location,
-      status: appointmentData.status || "scheduled",
+      description: appointmentData.description || null,
+      location: appointmentData.location || null,
+      status: (appointmentData.status || "scheduled") as AppointmentStatus,
       is_all_day: appointmentData.is_all_day || false,
-      assignee_id: appointmentData.assignee_id,
+      assignee_id: appointmentData.assignee_id || null,
       start_time: appointmentData.start_time,
       end_time: appointmentData.end_time,
       appointment_type: appointmentData.appointment_type || 'appointment'

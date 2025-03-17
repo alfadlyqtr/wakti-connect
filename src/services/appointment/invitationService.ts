@@ -22,7 +22,7 @@ export const respondToInvitation = async (
       .from("appointment_invitations")
       .update({ status: response })
       .eq("appointment_id", appointmentId)
-      .eq("invitee_id", session.user.id);
+      .eq("invited_user_id", session.user.id);
     
     if (error) {
       console.error("Error responding to invitation:", error);
