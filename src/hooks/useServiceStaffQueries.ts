@@ -39,7 +39,7 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         serviceId: assignment.service_id,
         staffRelationId: assignment.staff_relation_id,
         staffId: assignment.business_staff.staff_id,
-        staffName: assignment.business_staff.profiles.full_name
+        staffName: assignment.business_staff.profiles?.full_name || 'Unknown'
       }));
     },
     enabled: !!serviceId // Only run the query if serviceId is provided
