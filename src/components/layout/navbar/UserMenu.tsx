@@ -12,6 +12,8 @@ import {
 import { useTranslation } from "react-i18next";
 import MobileNavItems from "./MobileNavItems";
 import AccountMenuItems from "./AccountMenuItems";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UserMenuProps {
   isAuthenticated: boolean;
@@ -21,6 +23,39 @@ interface UserMenuProps {
 
 const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: UserMenuProps) => {
   const { t } = useTranslation();
+  
+  // Fetch user profile data for displaying name
+  const { data: profileData } = useQuery({
+    queryKey: ['userMenuProfile'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('display_name, business_name, full_name, account_type')
+        .eq('id', session.user.id)
+        .single();
+        
+      return data;
+    },
+    enabled: isAuthenticated,
+  });
+  
+  // Determine the display name based on account type
+  const getDisplayName = () => {
+    if (!profileData) return t('common.account');
+    
+    if (profileData.account_type === 'business' && profileData.business_name) {
+      return profileData.business_name;
+    } else if (profileData.display_name) {
+      return profileData.display_name;
+    } else if (profileData.full_name) {
+      return profileData.full_name;
+    } else {
+      return t('common.account');
+    }
+  };
   
   const navItems = [
     { 
@@ -66,7 +101,7 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>{t('common.myAccount')}</DropdownMenuLabel>
+        <DropdownMenuLabel>{getDisplayName()}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         
         {/* Mobile menu items - only visible on small screens */}

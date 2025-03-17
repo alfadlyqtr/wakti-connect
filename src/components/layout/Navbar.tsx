@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import LanguageSwitcher from "@/components/ui/language-switcher";
+import { Separator } from "@/components/ui/separator";
 
-// Import the new components
+// Import the components
 import BrandLogo from "./navbar/BrandLogo";
 import MobileSearch from "./navbar/MobileSearch";
 import NavItems from "./navbar/NavItems";
 import UserMenu from "./navbar/UserMenu";
 import ThemeToggle from "./navbar/ThemeToggle";
+import NavDateTime from "./navbar/NavDateTime";
 
 interface NavbarProps {
   toggleSidebar: () => void;
@@ -99,6 +101,12 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
         <MobileSearch searchOpen={searchOpen} setSearchOpen={setSearchOpen} />
 
         <div className="flex items-center gap-2">
+          {/* Date and Time display */}
+          <NavDateTime className="mr-3" />
+          
+          {/* Add a subtle separator before other icons (only visible on md+ screens) */}
+          <Separator orientation="vertical" className="h-8 hidden md:block" />
+          
           <Button 
             variant="ghost" 
             size="icon" 
