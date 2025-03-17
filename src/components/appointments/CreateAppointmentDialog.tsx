@@ -120,11 +120,6 @@ export function CreateAppointmentDialog({
       form.reset(getDefaultFormValues());
       setHasAttemptedSubmit(false);
       onOpenChange(false);
-      
-      toast({
-        title: "Appointment Created",
-        description: "Your appointment has been successfully created.",
-      });
     } catch (error: any) {
       console.error("Error in handleSubmit:", error);
       // Don't show toast here as it's already shown in the service

@@ -96,13 +96,6 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
       
       const result = await createAppointmentService(appointmentData as AppointmentFormData, recurringData);
       
-      toast({
-        title: recurringData ? "Recurring Appointment Created" : "Appointment Created",
-        description: "Your appointment has been created successfully",
-      });
-
-      console.log("Appointment created successfully:", result);
-      
       // Refetch with a delay to ensure the database has time to update
       setTimeout(() => {
         refetch();
@@ -111,7 +104,6 @@ export const useAppointments = (tab: AppointmentTab = "my-appointments") => {
       return result;
     } catch (error: any) {
       console.error("Error creating appointment:", error);
-      
       // Don't toast here as the service already does
       throw error;
     }
