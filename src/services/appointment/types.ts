@@ -16,17 +16,16 @@ export interface Appointment {
   parent_recurring_id?: string | null;
   appointment_type?: string;
   
-  // Join data that may be included
-  user?: {
-    id: string;
-    email: string;
-    display_name: string | null;
-  };
-  assignee?: {
-    id: string;
-    email: string;
-    display_name: string | null;
-  };
+  // Define proper interfaces for joined data
+  user?: UserProfile | null;
+  assignee?: UserProfile | null;
+}
+
+// Define interface for user/assignee data
+export interface UserProfile {
+  id: string;
+  email: string;
+  display_name: string | null;
 }
 
 export type AppointmentStatus = "scheduled" | "cancelled" | "completed";

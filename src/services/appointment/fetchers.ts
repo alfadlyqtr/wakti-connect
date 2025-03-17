@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Appointment, AppointmentStatus } from "./types";
+import { Appointment, AppointmentStatus, UserProfile } from "./types";
 import { validateAppointmentStatus } from "./utils/statusValidator";
 
 // Base query to fetch appointments with all needed fields
@@ -28,12 +28,28 @@ const handleAppointmentFetchError = (error: any, tabName: string) => {
   return [];
 };
 
-// Helper to map database results to Appointment type with valid status
+// Helper to map database results to Appointment type with valid status and properly formatted user/assignee
 const mapToAppointments = (data: any[]): Appointment[] => {
-  return (data || []).map(item => ({
-    ...item,
-    status: validateAppointmentStatus(item.status)
-  }));
+  return (data || []).map(item => {
+    // Create a properly typed Appointment object
+    const appointment: Appointment = {
+      ...item,
+      status: validateAppointmentStatus(item.status),
+      // Make sure user and assignee are properly formatted or null
+      user: item.user ? {
+        id: item.user.id || '',
+        email: item.user.email || '',
+        display_name: item.user.display_name
+      } as UserProfile : null,
+      assignee: item.assignee ? {
+        id: item.assignee.id || '',
+        email: item.assignee.email || '',
+        display_name: item.assignee.display_name
+      } as UserProfile : null
+    };
+    
+    return appointment;
+  });
 };
 
 /**
@@ -97,13 +113,25 @@ export const fetchSharedAppointments = async (
     }
     
     // Extract the appointment from each invitation record and ensure valid status
-    return (data || [])
+    const appointments = (data || [])
       .map(record => record.appointment)
       .filter(Boolean)
       .map(appt => ({
         ...appt,
-        status: validateAppointmentStatus(appt.status)
+        status: validateAppointmentStatus(appt.status),
+        user: appt.user ? {
+          id: appt.user.id || '',
+          email: appt.user.email || '',
+          display_name: appt.user.display_name
+        } : null,
+        assignee: appt.assignee ? {
+          id: appt.assignee.id || '',
+          email: appt.assignee.email || '',
+          display_name: appt.assignee.display_name
+        } : null
       }));
+    
+    return appointments;
   } catch (error) {
     return handleAppointmentFetchError(error, "shared");
   }
@@ -247,13 +275,25 @@ export const fetchInvitationAppointments = async (
     }
     
     // Extract the appointment from each invitation record and validate status
-    return (data || [])
+    const appointments = (data || [])
       .map(record => record.appointment)
       .filter(Boolean)
       .map(appt => ({
         ...appt,
-        status: validateAppointmentStatus(appt.status)
+        status: validateAppointmentStatus(appt.status),
+        user: appt.user ? {
+          id: appt.user.id || '',
+          email: appt.user.email || '',
+          display_name: appt.user.display_name
+        } : null,
+        assignee: appt.assignee ? {
+          id: appt.assignee.id || '',
+          email: appt.assignee.email || '',
+          display_name: appt.assignee.display_name
+        } : null
       }));
+    
+    return appointments;
   } catch (error) {
     return handleAppointmentFetchError(error, "invitation");
   }

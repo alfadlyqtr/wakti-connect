@@ -2,17 +2,17 @@
 import { AppointmentStatus } from "../types";
 
 /**
- * Validates and normalizes appointment status values
- * @param status Any potential status value
- * @returns Valid AppointmentStatus or "scheduled" as default
+ * Validates and normalizes the appointment status to ensure it matches
+ * the allowed values in the AppointmentStatus type
  */
-export function validateAppointmentStatus(status: any): AppointmentStatus {
+export const validateAppointmentStatus = (status: string): AppointmentStatus => {
   const validStatuses: AppointmentStatus[] = ["scheduled", "cancelled", "completed"];
   
-  if (status && validStatuses.includes(status as AppointmentStatus)) {
+  if (validStatuses.includes(status as AppointmentStatus)) {
     return status as AppointmentStatus;
   }
   
-  // Default to "scheduled" if status is invalid
+  // Default to "scheduled" if an invalid status is provided
+  console.warn(`Invalid appointment status: ${status}, defaulting to "scheduled"`);
   return "scheduled";
-}
+};
