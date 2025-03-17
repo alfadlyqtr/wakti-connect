@@ -62,7 +62,8 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
           name: values.name,
           email: values.email || null,
           role: values.role,
-          position: values.position || 'staff'
+          position: values.position || 'staff',
+          staff_id: session.session.user.id // Using business owner's ID as staff_id for now
         });
         
       if (error) throw error;
