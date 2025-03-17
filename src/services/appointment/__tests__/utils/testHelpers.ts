@@ -1,5 +1,5 @@
 
-import { Appointment, AppointmentStatus } from "@/types/appointment.types";
+import { Appointment, AppointmentStatus } from "@/services/appointment/types";
 
 // Create a mock appointment for testing
 export const createMockAppointment = (overrides?: Partial<Appointment>): Appointment => {

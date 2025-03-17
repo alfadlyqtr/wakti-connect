@@ -64,14 +64,14 @@ export const fetchMyAppointments = async (
       return {
         ...appt,
         status: validateAppointmentStatus(appt.status),
-        // Format user data properly
-        user: appt.user ? {
+        // Format user data properly, ensuring we handle potential nulls or errors
+        user: appt.user && typeof appt.user === 'object' ? {
           id: String(appt.user.id || ''),
           email: String(appt.user.email || ''),
           display_name: appt.user.display_name || null
         } : null,
-        // Format assignee data properly
-        assignee: appt.assignee ? {
+        // Format assignee data properly, ensuring we handle potential nulls or errors
+        assignee: appt.assignee && typeof appt.assignee === 'object' ? {
           id: String(appt.assignee.id || ''),
           email: String(appt.assignee.email || ''),
           display_name: appt.assignee.display_name || null

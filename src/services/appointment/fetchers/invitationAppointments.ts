@@ -54,14 +54,14 @@ export const fetchInvitationAppointments = async (
           return {
             ...invitation.appointment,
             status: validateAppointmentStatus(invitation.appointment.status),
-            // Format user data properly
-            user: invitation.appointment.user ? {
+            // Format user data properly, ensuring we handle potential nulls or errors
+            user: invitation.appointment.user && typeof invitation.appointment.user === 'object' ? {
               id: String(invitation.appointment.user.id || ''),
               email: String(invitation.appointment.user.email || ''),
               display_name: invitation.appointment.user.display_name || null
             } : null,
-            // Format assignee data properly
-            assignee: invitation.appointment.assignee ? {
+            // Format assignee data properly, ensuring we handle potential nulls or errors
+            assignee: invitation.appointment.assignee && typeof invitation.appointment.assignee === 'object' ? {
               id: String(invitation.appointment.assignee.id || ''),
               email: String(invitation.appointment.assignee.email || ''),
               display_name: invitation.appointment.assignee.display_name || null
