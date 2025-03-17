@@ -58,8 +58,10 @@ export function CreateAppointmentDialog({
       // Format the date and time information
       const { date, startTime, endTime, isAllDay, title, description, location, isRecurring } = values;
       
+      console.log("Form values being submitted:", values);
+      
       const appointmentData: AppointmentFormData = {
-        title,
+        title: title.trim(),  // Make sure we're trimming the title
         description: description || undefined,
         location: location || undefined,
         is_all_day: isAllDay,
@@ -94,6 +96,8 @@ export function CreateAppointmentDialog({
         }
       }
       
+      console.log("Appointment data being sent to the service:", appointmentData);
+      
       // Get recurring data if appointment is recurring
       const recurringData = isRecurring ? values.recurring as RecurringFormData : undefined;
       
@@ -109,6 +113,7 @@ export function CreateAppointmentDialog({
         description: "Your appointment has been successfully created.",
       });
     } catch (error: any) {
+      console.error("Error in handleSubmit:", error);
       toast({
         title: "Error creating appointment",
         description: error.message || "An unexpected error occurred",

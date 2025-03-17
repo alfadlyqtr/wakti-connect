@@ -19,6 +19,7 @@ export const createAppointment = async (
     );
 
     if (permissionError) {
+      console.error("Permission check failed:", permissionError);
       throw new Error(
         `Permission check failed: ${permissionError.message}`
       );
@@ -38,6 +39,7 @@ export const createAppointment = async (
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user?.id) {
+      console.error("No authenticated user for appointment creation");
       throw new Error("Authentication required to create appointments");
     }
     
@@ -46,6 +48,8 @@ export const createAppointment = async (
       ...appointmentData,
       user_id: session.user.id
     };
+
+    console.log("Creating appointment with data:", completeAppointmentData);
 
     // Insert the appointment
     const { data: appointment, error } = await supabase
@@ -63,6 +67,8 @@ export const createAppointment = async (
       });
       throw new Error(`Failed to create appointment: ${error.message}`);
     }
+
+    console.log("Appointment created successfully:", appointment);
 
     // If this is a recurring appointment, create the recurrences
     if (recurringData && appointment) {
@@ -94,6 +100,8 @@ export const createAppointment = async (
 
     return appointment;
   } catch (error: any) {
+    console.error("Error in createAppointment:", error);
+    
     // If we haven't already shown a toast for this error
     if (!error.message?.includes("Subscription required")) {
       toast({

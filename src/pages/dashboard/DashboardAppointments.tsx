@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useAppointments } from "@/hooks/useAppointments";
@@ -35,39 +35,48 @@ const DashboardAppointments = () => {
   const isBusinessAccount = userRole === "business";
   console.log("DashboardAppointments - isPaidAccount:", isPaidAccount);
 
-  // Force refresh on initial load
-  useEffect(() => {
-    // Small delay to let authentication settle
-    const timer = setTimeout(() => {
-      console.log("Initial refetch of appointments");
-      refetch();
-    }, 500);
-    
-    return () => clearTimeout(timer);
+  // More aggressive refresh strategy
+  const refreshAppointments = useCallback(() => {
+    console.log("Refreshing appointments data");
+    refetch();
   }, [refetch]);
+
+  // Force refresh on initial load and periodically
+  useEffect(() => {
+    // Immediate refresh on mount
+    refreshAppointments();
+    
+    // Then set up a timer to refresh every few seconds until we get data
+    const timer = setInterval(() => {
+      if (filteredAppointments.length === 0) {
+        console.log("Automatic refresh - no appointments yet");
+        refreshAppointments();
+      } else {
+        clearInterval(timer);
+      }
+    }, 3000);
+    
+    return () => clearInterval(timer);
+  }, [refreshAppointments, filteredAppointments.length]);
 
   // Show error toast if query fails
   useEffect(() => {
     if (error) {
+      console.error("Error in appointments page:", error);
       toast({
         title: "Failed to load appointments",
         description: error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive",
       });
-    }
-  }, [error]);
-
-  // Auto-retry fetching on errors
-  useEffect(() => {
-    if (error) {
+      
+      // Auto-retry on error
       const timer = setTimeout(() => {
-        console.log("Auto-retrying appointment fetch after error");
-        refetch();
-      }, 3000);
+        refreshAppointments();
+      }, 2000);
       
       return () => clearTimeout(timer);
     }
-  }, [error, refetch]);
+  }, [error, refreshAppointments]);
 
   // Define available tabs based on user role
   const getAvailableTabs = () => {
@@ -87,12 +96,17 @@ const DashboardAppointments = () => {
     }
   }, [userRole, activeTab, isBusinessAccount]);
 
-  const handleCreateAppointment = async (appointmentData: any) => {
+  const handleCreateAppointment = async (appointmentData: any, recurringData?: any) => {
     try {
-      await createAppointment(appointmentData);
+      console.log("Creating appointment with data:", appointmentData);
+      await createAppointment(appointmentData, recurringData);
       setCreateDialogOpen(false);
-      // Force a refresh after creation
-      setTimeout(() => refetch(), 500);
+      
+      // Immediately refresh after creation
+      refreshAppointments();
+      
+      // And also after a delay to ensure we catch server-side updates
+      setTimeout(() => refreshAppointments(), 1000);
     } catch (error) {
       console.error("Error in handleCreateAppointment:", error);
       // Toast is already handled in the useAppointments hook
@@ -101,6 +115,8 @@ const DashboardAppointments = () => {
 
   const handleTabChange = (newTab: AppointmentTab) => {
     setActiveTab(newTab);
+    // Refresh when changing tabs
+    setTimeout(() => refreshAppointments(), 100);
   };
 
   if (isLoading) {

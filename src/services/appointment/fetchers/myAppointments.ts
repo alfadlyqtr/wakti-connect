@@ -14,6 +14,7 @@ export const fetchMyAppointments = async (
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
+      console.error("fetchMyAppointments: No authenticated user found");
       throw new Error("No authenticated user");
     }
     
@@ -36,7 +37,14 @@ export const fetchMyAppointments = async (
       throw new Error(`Failed to fetch my appointments: ${error.message}`);
     }
     
-    console.log("My appointments fetched:", appointments?.length || 0);
+    console.log("My appointments fetched:", appointments?.length || 0, "appointments");
+    if (appointments && appointments.length > 0) {
+      console.log("First appointment sample:", {
+        id: appointments[0].id,
+        title: appointments[0].title,
+        user_id: appointments[0].user_id
+      });
+    }
     
     // Map the database records to the Appointment type with validated status
     return (appointments || []).map(appt => ({

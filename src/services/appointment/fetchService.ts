@@ -42,9 +42,14 @@ export const fetchAppointments = async (
     } else {
       userRole = "free";
     }
+    
+    // Store user role in localStorage for access in components
+    localStorage.setItem('userRole', userRole);
 
     // Use the appropriate fetcher for the current tab
     try {
+      console.log(`Using fetcher for tab "${tab}" with userRole "${userRole}"`);
+      
       switch (tab) {
         case "my-appointments":
           appointments = await fetchMyAppointments(userRole);
@@ -72,6 +77,14 @@ export const fetchAppointments = async (
       }
       
       console.log(`Fetched ${appointments.length} appointments for tab "${tab}"`);
+      if (appointments.length > 0) {
+        console.log("First appointment sample:", {
+          id: appointments[0].id,
+          title: appointments[0].title,
+          user_id: appointments[0].user_id,
+          start_time: appointments[0].start_time
+        });
+      }
     } catch (fetchError: any) {
       console.error(`Error fetching appointments for tab "${tab}":`, fetchError);
       // Return empty array but don't throw, so UI can still render
