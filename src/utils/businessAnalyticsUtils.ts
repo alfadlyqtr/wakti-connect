@@ -66,3 +66,33 @@ export const getCustomerGrowthData = () => {
     ],
   };
 };
+
+// Add these two functions for business analytics
+export const getGrowthTrendsData = () => {
+  return {
+    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+    datasets: [
+      {
+        label: "Subscribers Growth",
+        data: [10, 15, 22, 35, 45, 58],
+        borderColor: "#0053c3",
+        backgroundColor: "rgba(0, 83, 195, 0.1)",
+        tension: 0.3,
+        fill: true,
+      }
+    ],
+  };
+};
+
+export const getServiceDistributionData = () => {
+  return {
+    labels: ["Product A", "Product B", "Product C", "Product D"],
+    datasets: [
+      {
+        data: [35, 25, 20, 20],
+        backgroundColor: ["#0053c3", "#ffc529", "#22c55e", "#8b5cf6"],
+        borderWidth: 0,
+      }
+    ],
+  };
+};
