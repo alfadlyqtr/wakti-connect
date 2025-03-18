@@ -20,10 +20,24 @@ export const useAISettings = () => {
       
       if (canUseAIError) {
         console.error("Error checking AI access:", canUseAIError);
-        return null;
-      }
-      
-      if (!canUseAI) {
+        // Fallback to direct profile check
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("account_type")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Error checking profile:", profileError);
+          return null;
+        }
+
+        if (profile.account_type !== "business" && profile.account_type !== "individual") {
+          console.log("User account type not eligible:", profile.account_type);
+          return null;
+        }
+      } else if (!canUseAI) {
+        console.log("RPC check says user cannot use AI");
         return null;
       }
 
@@ -102,6 +116,9 @@ export const useAISettings = () => {
           return false;
         }
 
+        // Log the account type for debugging
+        console.log("Account type for AI access check:", profile?.account_type);
+        
         return profile?.account_type === "business" || profile?.account_type === "individual";
       } catch (error) {
         console.error("Error checking AI access:", error);

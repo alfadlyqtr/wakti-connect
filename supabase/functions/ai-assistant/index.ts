@@ -43,7 +43,8 @@ serve(async (req) => {
       );
     }
     
-    // Check if user is on a paid plan using RPC function
+    // Check if user is on a paid plan (business or individual)
+    // First try with RPC function
     const { data: canUseAI, error: canUseAIError } = await supabaseClient.rpc(
       "can_use_ai_assistant"
     );

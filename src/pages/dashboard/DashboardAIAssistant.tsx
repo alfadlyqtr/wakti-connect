@@ -11,6 +11,7 @@ import { AIAssistantUpgradeCard } from "@/components/ai/AIAssistantUpgradeCard";
 import { AIAssistantMessage } from "@/components/ai/message";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 const DashboardAIAssistant = () => {
   const { user } = useAuth();
@@ -18,7 +19,7 @@ const DashboardAIAssistant = () => {
     messages, 
     sendMessage, 
     isLoading, 
-    canUseAI, 
+    canUseAI: hookCanUseAI, 
     clearMessages 
   } = useAIAssistant();
   const [inputMessage, setInputMessage] = useState("");
@@ -40,6 +41,7 @@ const DashboardAIAssistant = () => {
         const { data: canUse, error: rpcError } = await supabase.rpc("can_use_ai_assistant");
         
         if (!rpcError && canUse !== null) {
+          console.log("RPC check result:", canUse);
           setCanAccess(canUse);
           setIsChecking(false);
           return;
@@ -54,13 +56,19 @@ const DashboardAIAssistant = () => {
 
         if (profileError) {
           console.error("Error checking access:", profileError);
+          toast({
+            title: "Error checking access",
+            description: "Could not verify your account type. Please try again.",
+            variant: "destructive",
+          });
           setCanAccess(false);
         } else {
           // Check the account type
-          setCanAccess(profile?.account_type === "business" || profile?.account_type === "individual");
+          const hasAccess = profile?.account_type === "business" || profile?.account_type === "individual";
+          setCanAccess(hasAccess);
           
           // Log the account type for debugging
-          console.log("Account type:", profile?.account_type);
+          console.log("Account type:", profile?.account_type, "Has access:", hasAccess);
         }
       } catch (error) {
         console.error("Error checking AI access:", error);
@@ -72,6 +80,17 @@ const DashboardAIAssistant = () => {
 
     checkAccess();
   }, [user]);
+
+  // Also use the hook's canUseAI value as a backup
+  useEffect(() => {
+    if (hookCanUseAI !== undefined && !isChecking) {
+      console.log("Hook canUseAI value:", hookCanUseAI);
+      // Only update if our direct check said false but hook says true
+      if (!canAccess && hookCanUseAI) {
+        setCanAccess(hookCanUseAI);
+      }
+    }
+  }, [hookCanUseAI, isChecking, canAccess]);
 
   // Scroll to bottom of messages
   useEffect(() => {
