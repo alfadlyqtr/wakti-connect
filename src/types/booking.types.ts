@@ -1,47 +1,44 @@
 
-export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled";
-
 export interface Booking {
   id: string;
-  title: string;
-  description?: string;
-  customer_name?: string;
-  customer_email?: string;
-  customer_id?: string;
   business_id: string;
   service_id?: string;
+  customer_id?: string;
+  customer_email?: string;
+  customer_name?: string;
+  title: string;
+  description: string | null;
   start_time: string;
   end_time: string;
   status: BookingStatus;
   staff_assigned_id?: string;
-  created_at?: string;
-  updated_at?: string;
-  business_services?: {
-    name: string;
-    price: number;
-    duration: number;
-  } | null;
-  business_staff?: {
-    name: string;
-  } | null;
+  created_at: string;
+  updated_at: string;
 }
+
+export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
 
 export type BookingTab = "all-bookings" | "pending-bookings" | "staff-bookings";
 
 export interface BookingFormData {
   title: string;
   description?: string;
-  customer_name?: string;
-  customer_email?: string;
-  customer_id?: string;
   service_id?: string;
-  start_time: string;
-  end_time: string;
+  customer_id?: string;
+  customer_email?: string;
+  customer_name?: string;
   status?: BookingStatus;
+  start_time?: string;
+  end_time?: string;
   staff_assigned_id?: string;
+  
+  // Form-specific fields (used in form UI but transformed before API calls)
+  date?: Date;
+  startTime?: string;
+  endTime?: string;
 }
 
 export interface BookingsResult {
   bookings: Booking[];
-  userRole: "business" | "individual";
+  userRole: "business";
 }

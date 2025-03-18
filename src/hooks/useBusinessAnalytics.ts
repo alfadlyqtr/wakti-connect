@@ -1,122 +1,42 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getGrowthTrendsData, getServiceDistributionData } from "@/utils/businessAnalyticsUtils";
+
+type AnalyticsTimeRange = "week" | "month" | "year";
 
 export interface BusinessAnalyticsData {
   subscriberCount: number;
   staffCount: number;
   taskCompletionRate: number;
-  timeRange: "day" | "week" | "month" | "year";
-  growth: {
-    date: string;
-    subscribers: number;
-    bookings: number;
-  }[];
-  serviceDistribution: {
-    name: string;
-    value: number;
-  }[];
+  timeRange: AnalyticsTimeRange;
+  growth: any[];
+  serviceDistribution: any[];
 }
 
-export const useBusinessAnalytics = (timeRange: "day" | "week" | "month" | "year") => {
-  const { data, isLoading, error } = useQuery({
+export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") => {
+  return useQuery({
     queryKey: ['businessAnalytics', timeRange],
-    queryFn: async (): Promise<BusinessAnalyticsData> => {
+    queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) {
-        throw new Error("Authentication required");
+        throw new Error('Not authenticated');
       }
       
-      try {
-        // Get subscriber count
-        const { count: subscriberCount, error: subscriberError } = await supabase
-          .from('business_subscribers')
-          .select('*', { count: 'exact', head: true })
-          .eq('business_id', session.user.id);
-          
-        if (subscriberError) throw subscriberError;
-        
-        // Get staff count
-        const { count: staffCount, error: staffError } = await supabase
-          .from('business_staff')
-          .select('*', { count: 'exact', head: true })
-          .eq('business_id', session.user.id);
-          
-        if (staffError) throw staffError;
-        
-        // Get task completion stats
-        const { data: taskStats, error: taskError } = await supabase
-          .from('tasks')
-          .select('status')
-          .eq('user_id', session.user.id);
-          
-        if (taskError) throw taskError;
-        
-        const completedTasks = taskStats?.filter(task => task.status === 'completed')?.length || 0;
-        const totalTasks = taskStats?.length || 0;
-        const taskCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-        
-        // Get service distribution
-        const { data: services, error: servicesError } = await supabase
-          .from('business_services')
-          .select('name, id')
-          .eq('business_id', session.user.id);
-          
-        if (servicesError) throw servicesError;
-        
-        // For each service, count bookings
-        const serviceDistribution = await Promise.all(
-          (services || []).map(async (service) => {
-            const { count, error: bookingError } = await supabase
-              .from('bookings')
-              .select('*', { count: 'exact', head: true })
-              .eq('service_id', service.id);
-              
-            if (bookingError) throw bookingError;
-            
-            return {
-              name: service.name,
-              value: count || 0
-            };
-          })
-        );
-        
-        // Generate sample growth data (in a real app, this would be actual data)
-        const today = new Date();
-        const growth = [];
-        
-        // Generate sample data for the past 6 months
-        for (let i = 5; i >= 0; i--) {
-          const date = new Date(today);
-          date.setMonth(today.getMonth() - i);
-          
-          growth.push({
-            date: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-            subscribers: Math.floor(Math.random() * 50) + (50 - i * 8), // Sample data with growth trend
-            bookings: Math.floor(Math.random() * 30) + (30 - i * 5)     // Sample data with growth trend
-          });
-        }
-        
-        return {
-          subscriberCount: subscriberCount || 0,
-          staffCount: staffCount || 0,
-          taskCompletionRate,
-          timeRange,
-          growth,
-          serviceDistribution
-        };
-      } catch (error) {
-        console.error("Error fetching business analytics:", error);
-        throw error;
-      }
-    },
-    refetchOnWindowFocus: false
+      // In a real application, this would fetch data from the backend
+      // based on the selected time range
+      const growthData = getGrowthTrendsData();
+      const serviceData = getServiceDistributionData();
+      
+      return {
+        subscriberCount: 157,
+        staffCount: 5,
+        taskCompletionRate: 87,
+        timeRange,
+        growth: growthData.datasets[0].data,
+        serviceDistribution: serviceData.datasets[0].data
+      } as BusinessAnalyticsData;
+    }
   });
-
-  return {
-    data,
-    isLoading,
-    error
-  };
 };

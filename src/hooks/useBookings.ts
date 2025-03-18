@@ -1,99 +1,128 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { fetchBookings, createBooking, BookingTab, BookingStatus, BookingFormData } from "@/services/booking";
+import { 
+  fetchBookings, 
+  createBooking as createBookingService,
+  Booking,
+  BookingTab,
+  BookingFormData
+} from "@/services/booking";
 
-// Hook for handling booking operations
-export const useBookings = (activeTab: BookingTab = "all-bookings") => {
+export const useBookings = (tab: BookingTab = "all-bookings") => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<BookingStatus | "all">("all");
-  const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterDate, setFilterDate] = useState<Date | null>(null);
+  const [localUserRole, setLocalUserRole] = useState<"business">("business");
 
-  // Fetch bookings based on the selected tab
-  const {
-    data,
-    isLoading,
-    error,
-    refetch
+  // Fetch bookings with React Query
+  const { 
+    data, 
+    isLoading, 
+    error, 
+    refetch,
+    isError
   } = useQuery({
-    queryKey: ["bookings", activeTab],
-    queryFn: async () => {
-      console.log("Fetching bookings for tab:", activeTab);
-      
-      // Check user session first
-      const { data: sessionData } = await supabase.auth.getSession();
-      console.log("Auth session exists:", !!sessionData.session, "User ID:", sessionData.session?.user?.id);
-      
-      if (!sessionData?.session?.user) {
-        console.error("Not authenticated when fetching bookings");
-        return { bookings: [], userRole: "individual" as const };
+    queryKey: ['bookings', tab],
+    queryFn: () => fetchBookings(tab),
+    refetchOnWindowFocus: true,
+    retry: 2,
+    retryDelay: attemptIndex => Math.min(1000 * Math.pow(2, attemptIndex), 30000),
+    staleTime: 30 * 1000,
+    meta: {
+      onError: (err: any) => {
+        console.error("Booking fetch error:", err);
+        toast({
+          title: "Failed to load bookings",
+          description: err.message || "An unexpected error occurred",
+          variant: "destructive",
+        });
       }
-      
-      return fetchBookings(activeTab);
     }
   });
 
-  const bookings = data?.bookings || [];
-  console.log("Fetched bookings count:", bookings.length);
+  // Auto-retry in case of an error - but only once
+  useEffect(() => {
+    if (isError) {
+      const timer = setTimeout(() => {
+        console.log("Auto-retrying booking fetch after error");
+        refetch();
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isError, refetch]);
 
   // Create a new booking
-  const handleCreateBooking = async (formData: BookingFormData) => {
+  const createBooking = async (bookingData: Partial<BookingFormData>) => {
     try {
-      console.log("Creating booking with data:", formData);
-      const booking = await createBooking(formData);
+      if (!bookingData.title) {
+        throw new Error("Booking title is required");
+      }
+      
+      if (!bookingData.start_time || !bookingData.end_time) {
+        throw new Error("Booking must have start and end times");
+      }
+      
+      const result = await createBookingService(bookingData as BookingFormData);
+      
       toast({
         title: "Booking Created",
-        description: "The booking has been created successfully.",
+        description: "Your booking has been created successfully",
       });
-      refetch();
-      return booking;
+
+      // Refetch with a delay to ensure the database has time to update
+      setTimeout(() => {
+        refetch();
+      }, 500);
+      
+      return result;
     } catch (error: any) {
       console.error("Error creating booking:", error);
+      
       toast({
-        title: "Failed to Create Booking",
-        description: error.message || "An unknown error occurred.",
+        title: "Failed to create booking",
+        description: error?.message || "An unexpected error occurred",
         variant: "destructive",
       });
+      
       throw error;
     }
   };
 
-  // Filter bookings based on search query, status and date
-  const filteredBookings = bookings.filter(booking => {
-    // Filter by search query (title, description, customer name/email)
-    const matchesSearch = !searchQuery || 
-      booking.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (booking.description && booking.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (booking.customer_name && booking.customer_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (booking.customer_email && booking.customer_email.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    // Filter by status
-    const matchesStatus = filterStatus === "all" || booking.status === filterStatus;
-    
-    // Filter by date
-    const matchesDate = !filterDate || 
-      (new Date(booking.start_time).toDateString() === filterDate.toDateString());
-    
-    return matchesSearch && matchesStatus && matchesDate;
-  });
-
-  console.log("Filtered bookings count:", filteredBookings.length);
+  // Filter bookings based on search and filters
+  const getFilteredBookings = () => {
+    const bookingsList = data?.bookings || [];
+    return bookingsList.filter((booking) => {
+      // Search filter
+      const matchesSearch = searchQuery 
+        ? booking.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (booking.description && booking.description.toLowerCase().includes(searchQuery.toLowerCase()))
+        : true;
+      
+      // Status filter
+      const matchesStatus = filterStatus === "all" ? true : booking.status === filterStatus;
+      
+      // Date filter
+      const matchesDate = !filterDate ? true : new Date(booking.start_time).toDateString() === filterDate.toDateString();
+      
+      return matchesSearch && matchesStatus && matchesDate;
+    });
+  };
 
   return {
-    bookings,
-    filteredBookings,
-    userRole: data?.userRole || "individual",
+    bookings: data?.bookings || [],
+    filteredBookings: getFilteredBookings(),
     isLoading,
     error,
-    refetch,
     searchQuery,
     setSearchQuery,
     filterStatus,
     setFilterStatus,
     filterDate,
     setFilterDate,
-    createBooking: handleCreateBooking
+    createBooking,
+    refetch
   };
 };

@@ -2,99 +2,65 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export interface StaffSession {
+export interface StaffWorkLog {
   id: string;
+  staff_relation_id: string;
   start_time: string;
   end_time: string | null;
-  status: string;
+  earnings: number | null;
   notes: string | null;
-  earnings: number;
+  status: 'active' | 'completed' | 'cancelled';
+  created_at: string;
+  updated_at: string;
 }
 
 export interface StaffWithSessions {
   id: string;
   name: string;
   role: string;
-  position: string;
-  created_at: string;
-  sessions: StaffSession[];
+  sessions: StaffWorkLog[];
 }
 
 export const useStaffWorkLogs = () => {
-  const { data, isLoading, error } = useQuery({
+  return useQuery({
     queryKey: ['staffWorkLogs'],
     queryFn: async () => {
-      console.log("Fetching staff work logs...");
-      const { data: sessionData } = await supabase.auth.getSession();
-      
-      console.log("Auth session exists:", !!sessionData.session, "User ID:", sessionData.session?.user?.id);
-      
-      if (!sessionData?.session?.user) {
-        console.error("Not authenticated when fetching staff work logs");
-        throw new Error('Not authenticated');
-      }
-      
-      // Check user role
-      const { data: userRoleData, error: roleError } = await supabase.rpc(
-        "get_auth_user_account_type"
-      );
-  
-      console.log("User role data:", userRoleData, "Error:", roleError);
-      
-      if (roleError) {
-        console.error("Error checking user role:", roleError);
-        throw new Error(`Failed to check user role: ${roleError.message}`);
-      }
-  
-      if (userRoleData !== "business") {
-        console.log("User is not a business account, role:", userRoleData);
-        return [];
-      }
-
-      // Fetch staff members
-      const { data: staffData, error: staffError } = await supabase
-        .from('business_staff')
-        .select('*')
-        .eq('business_id', sessionData.session.user.id);
-
-      if (staffError) {
-        console.error("Error fetching staff members:", staffError);
-        throw staffError;
-      }
-
-      console.log("Staff members fetched:", staffData?.length || 0);
-
-      if (!staffData || staffData.length === 0) {
-        return [];
-      }
-
-      // Fetch work logs for each staff member
-      const staffWithSessions: StaffWithSessions[] = await Promise.all(
-        staffData.map(async (staff) => {
-          const { data: sessions, error: sessionsError } = await supabase
-            .from('staff_work_logs')
-            .select('*')
-            .eq('staff_relation_id', staff.id)
-            .order('start_time', { ascending: false });
-
-          if (sessionsError) {
-            console.error(`Error fetching sessions for staff ${staff.id}:`, sessionsError);
-            return {
-              ...staff,
-              sessions: []
-            };
-          }
-
+      try {
+        // Fetch all staff members
+        const { data: staffData, error: staffError } = await supabase
+          .from('business_staff')
+          .select('*');
+          
+        if (staffError) throw staffError;
+        
+        // Fetch all work logs
+        const { data: logsData, error: logsError } = await supabase
+          .from('staff_work_logs')
+          .select('*')
+          .order('start_time', { ascending: false });
+          
+        if (logsError) throw logsError;
+        
+        // Map staff with their sessions
+        const staffWithSessions: StaffWithSessions[] = staffData.map(staff => {
+          const staffLogs = logsData.filter(log => log.staff_relation_id === staff.id);
+          
           return {
-            ...staff,
-            sessions: sessions || []
+            id: staff.id,
+            name: staff.name || 'Unnamed Staff',
+            role: staff.role || 'staff',
+            sessions: staffLogs.map(log => ({
+              ...log,
+              status: (log.status as 'active' | 'completed' | 'cancelled') || 'active'
+            }))
           };
-        })
-      );
-
-      return staffWithSessions;
+        });
+        
+        return staffWithSessions;
+      } catch (error) {
+        console.error("Error fetching staff work logs:", error);
+        return [];
+      }
     }
   });
-
-  return { data, isLoading, error };
 };
