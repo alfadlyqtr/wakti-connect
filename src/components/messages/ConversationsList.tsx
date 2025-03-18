@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -9,9 +9,11 @@ import { useMessaging } from "@/hooks/useMessaging";
 
 const ConversationsList = () => {
   const navigate = useNavigate();
+  const { userId: currentChatUserId } = useParams<{ userId: string }>();
   const { conversations, isLoadingConversations } = useMessaging();
 
   const handleSelectConversation = (userId: string) => {
+    // Use a full path to ensure proper navigation
     navigate(`/dashboard/messages/${userId}`);
   };
 
@@ -51,7 +53,9 @@ const ConversationsList = () => {
       {conversations.map((conversation: Conversation) => (
         <div
           key={conversation.userId}
-          className="p-4 hover:bg-muted/50 cursor-pointer flex items-center gap-3"
+          className={`p-4 hover:bg-muted/50 cursor-pointer flex items-center gap-3 ${
+            conversation.userId === currentChatUserId ? 'bg-muted' : ''
+          }`}
           onClick={() => handleSelectConversation(conversation.userId)}
         >
           <Avatar className="h-12 w-12">

@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, useNavigate, useParams } from "react-router-dom";
+import { Routes, Route, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -88,6 +88,11 @@ const DashboardMessagesHome = () => {
 };
 
 const DashboardMessageChat = () => {
+  const { userId } = useParams<{ userId: string }>();
+  const { conversations } = useMessaging();
+  
+  const navigate = useNavigate();
+  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -97,6 +102,13 @@ const DashboardMessageChat = () => {
             Messages expire after 24 hours and are limited to 20 characters.
           </p>
         </div>
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/dashboard/messages')}
+          className="md:hidden"
+        >
+          Back to Conversations
+        </Button>
       </div>
       
       <div className="grid h-[calc(100vh-220px)] grid-cols-1 md:grid-cols-3 gap-4 rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
@@ -109,7 +121,7 @@ const DashboardMessageChat = () => {
           </div>
         </div>
         
-        <div className="md:col-span-2 overflow-hidden flex flex-col">
+        <div className="col-span-1 md:col-span-2 overflow-hidden flex flex-col">
           <ChatInterface />
         </div>
       </div>
@@ -118,18 +130,16 @@ const DashboardMessageChat = () => {
 };
 
 const DashboardMessages = () => {
-  const { userId } = useParams();
+  const { userId } = useParams<{ userId: string }>();
+  const location = useLocation();
   
-  if (userId) {
+  const isAtChatRoute = location.pathname.match(/\/dashboard\/messages\/[^\/]+$/);
+  
+  if (isAtChatRoute && userId) {
     return <DashboardMessageChat />;
   }
   
-  return (
-    <Routes>
-      <Route path="/" element={<DashboardMessagesHome />} />
-      <Route path="/:userId" element={<DashboardMessageChat />} />
-    </Routes>
-  );
+  return <DashboardMessagesHome />;
 };
 
 export default DashboardMessages;
