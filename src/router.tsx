@@ -8,7 +8,7 @@ import BusinessShell from "@/components/business/BusinessShell";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { publicRoutes } from "@/routes/publicRoutes";
 import { authRoutes } from "@/routes/authRoutes";
-import dashboardRoutes from "@/routes/dashboardRoutes";
+import { dashboardRoutes } from "@/routes/dashboardRoutes";
 import { businessRoutes } from "@/routes/businessRoutes";
 
 export const router = createBrowserRouter([
@@ -56,4 +56,3 @@ export const router = createBrowserRouter([
     element: <NotFound />,
   },
 ]);
-

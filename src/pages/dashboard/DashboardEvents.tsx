@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import DashboardShell from "@/components/dashboard/DashboardShell";
 import { Plus, Send, Edit, Clock } from "lucide-react";
 import { EventTab } from "@/types/event.types";
 import { useEvents } from "@/hooks/useEvents";
@@ -102,7 +102,6 @@ const DashboardEvents: React.FC = () => {
                   <DatePicker
                     date={filterDate}
                     setDate={setFilterDate}
-                    placeholder="Filter by date"
                   />
                 </div>
               </div>

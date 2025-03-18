@@ -17,13 +17,13 @@ export const sendInvitation = async (
       throw new Error("Authentication required");
     }
     
-    // Prepare invitation requests
+    // Prepare invitation requests with correct status type
     const invitationData = invitations.map(invitation => ({
       event_id: eventId,
       invited_user_id: invitation.target.type === 'user' ? invitation.target.id : null,
       email: invitation.target.type === 'email' ? invitation.target.id : null,
       shared_as_link: invitation.shared_as_link,
-      status: 'pending',
+      status: 'pending' as 'pending' | 'accepted' | 'declined',
       created_at: new Date().toISOString()
     }));
     
