@@ -1,10 +1,12 @@
-
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import NotFound from "@/pages/NotFound";
 
 // Import real components
 import DashboardBookings from "@/pages/dashboard/DashboardBookings";
+import DashboardTasks from "@/pages/dashboard/DashboardTasks";
+import DashboardTeamManagement from "@/pages/dashboard/DashboardTeamManagement";
+import DashboardWorkManagement from "@/pages/dashboard/DashboardWorkManagement";
 
 // For now, let's create a simple placeholder component for any missing components
 const PlaceholderComponent = ({ name }: { name: string }) => (
@@ -219,19 +221,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "team-management",
-        element: (
-          <BusinessRoute>
-            <DashboardTeamManagement />
-          </BusinessRoute>
-        ),
+        element: <DashboardTeamManagement />,
       },
       {
         path: "work-management",
-        element: (
-          <BusinessRoute>
-            <DashboardWorkManagement />
-          </BusinessRoute>
-        ),
+        element: <DashboardWorkManagement />,
       },
       {
         path: "analytics-hub",
