@@ -1,11 +1,14 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import PricingCardsGrid from "@/components/pricing/PricingCardsGrid";
+import { usePricingPlans } from "@/components/pricing/usePricingPlans";
 
 const PlanSelectionPage = () => {
   const navigate = useNavigate();
+  const { pricingPlans } = usePricingPlans();
 
   return (
     <div className="min-h-screen w-full p-4 space-y-8">
@@ -17,7 +20,7 @@ const PlanSelectionPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
-          <PricingCardsGrid />
+          <PricingCardsGrid pricingPlans={pricingPlans} />
           <div className="mt-8 text-center">
             <Button variant="outline" onClick={() => navigate("/dashboard")}>
               Skip for now

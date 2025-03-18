@@ -3,14 +3,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/use-theme";
-import PublicRoutes from "./routes/publicRoutes";
-import AuthRoutes from "./routes/authRoutes";
+import { publicRoutes } from "./routes/publicRoutes";
+import { authRoutes } from "./routes/authRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
-import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
-import VerificationPage from "./pages/auth/VerificationPage";
 import Header from "./components/landing/Header";
 import ScrollToTop from "./components/ui/scroll-to-top";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -20,7 +17,6 @@ import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "@/components/notifications/NotificationListener";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
-// Import i18n
 import "./i18n/i18n";
 
 const queryClient = new QueryClient();
@@ -40,38 +36,47 @@ function App() {
                   <Sonner />
                   <Routes>
                     {/* Public routes with Header */}
-                    <Route path="/" element={<Header />}>
-                      {PublicRoutes}
+                    <Route element={<Header />}>
+                      {publicRoutes.map((route) => (
+                        <Route
+                          key={route.path}
+                          path={route.path}
+                          element={route.element}
+                        />
+                      ))}
                     </Route>
                     
                     {/* Auth routes */}
-                    <Route path="/auth/*" element={<AuthRoutes />} />
+                    {authRoutes.map((route) => (
+                      <Route
+                        key={route.path}
+                        path={`/auth/${route.path}`}
+                        element={route.element}
+                      />
+                    ))}
                     
-                    {/* Direct auth-related pages for deep linking */}
-                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                    <Route path="/reset-password" element={<ResetPasswordPage />} />
-                    <Route path="/verify-email" element={<VerificationPage />} />
-                    
-                    {/* Dashboard routes - wrapped in ProtectedRoute */}
-                    <Route 
-                      path="/dashboard/*" 
+                    {/* Dashboard routes */}
+                    <Route
+                      path="/dashboard/*"
                       element={
                         <ProtectedRoute>
                           <DashboardLayout>
                             <Routes>
-                              {dashboardRoutes.map((route, index) => (
-                                <Route 
-                                  key={index}
+                              {dashboardRoutes.map((route) => (
+                                <Route
+                                  key={route.path}
                                   path={route.path}
                                   element={route.element}
-                                  index={route.index}
                                 />
                               ))}
                             </Routes>
                           </DashboardLayout>
                         </ProtectedRoute>
-                      } 
+                      }
                     />
+                    
+                    {/* Catch-all redirect */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </BrowserRouter>
               </TooltipProvider>
