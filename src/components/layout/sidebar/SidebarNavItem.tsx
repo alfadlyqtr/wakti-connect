@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -34,19 +35,28 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
       size={isMobile || isCollapsed ? "icon" : "sm"}
       asChild
       className={cn(
-        "justify-start w-full",
-        (isMobile || isCollapsed) && "h-8 w-8",
+        "w-full",
+        (isMobile || isCollapsed) ? "h-9 w-9 p-0" : "h-9 justify-start px-3",
         isActive && "bg-wakti-blue text-white hover:bg-wakti-blue/90"
       )}
       onClick={() => onClick(item.path)}
     >
-      <Link to={`/dashboard/${item.path}`} className="flex items-center gap-2">
-        <Icon className={cn("h-4 w-4", !isCollapsed && !isMobile && "shrink-0")} />
+      <Link 
+        to={`/dashboard/${item.path}`} 
+        className={cn(
+          "flex items-center gap-2.5",
+          !isCollapsed && !isMobile && "w-full"
+        )}
+      >
+        <Icon className="h-4 w-4 shrink-0" />
         {!isMobile && !isCollapsed && (
           <span className="text-xs truncate">{item.label}</span>
         )}
         {item.badge && !isMobile && !isCollapsed && (
-          <Badge variant="secondary" className="ml-auto text-[10px] h-4 min-w-4 flex items-center justify-center">
+          <Badge 
+            variant="secondary" 
+            className="ml-auto text-[10px] h-4 min-w-4 flex items-center justify-center"
+          >
             {item.badge}
           </Badge>
         )}
@@ -65,7 +75,10 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
             <div className="flex items-center gap-2">
               <p>{item.label}</p>
               {item.badge && (
-                <Badge variant="secondary" className="text-xs h-5 min-w-5 flex items-center justify-center">
+                <Badge 
+                  variant="secondary" 
+                  className="text-xs h-5 min-w-5 flex items-center justify-center"
+                >
                   {item.badge}
                 </Badge>
               )}

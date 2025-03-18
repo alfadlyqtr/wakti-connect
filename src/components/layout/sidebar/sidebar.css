@@ -1,6 +1,6 @@
 
 .sidebar-item {
-  @apply flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium transition-all duration-300;
+  @apply flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium transition-all duration-300;
   @apply text-muted-foreground hover:bg-accent/50 hover:text-foreground hover:shadow-sm;
   @apply relative after:absolute after:inset-0 after:rounded-md after:shadow-inner after:opacity-0 
          after:transition-opacity hover:after:opacity-100;
@@ -15,7 +15,7 @@
 }
 
 .sidebar-item svg {
-  @apply h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition-colors duration-300;
+  @apply h-4 w-4 text-muted-foreground shrink-0;
 }
 
 .sidebar-item.active svg {
