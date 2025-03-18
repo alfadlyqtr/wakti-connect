@@ -1,232 +1,105 @@
 
-import { useState, useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useCallback } from "react";
 import { useEvents } from "@/hooks/useEvents";
-import { EventFormData, EventCustomization, EventTab } from "@/types/event.types";
-import { InvitationRecipient } from "@/types/invitation.types";
-import { toast } from "@/components/ui/use-toast";
+import { EventFormData } from "@/types/event.types";
+import { 
+  useEventBasics, 
+  useEventLocation, 
+  useEventRecipients, 
+  useEventSubmission,
+  useFormReset
+} from "./events";
 
 export const useEventForm = () => {
-  const { createEvent, canCreateEvents, userRole } = useEvents();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState("details");
-  const [isAllDay, setIsAllDay] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("10:00");
-  const [recipients, setRecipients] = useState<InvitationRecipient[]>([]);
-  const [shareTab, setShareTab] = useState<'recipients' | 'links'>('recipients');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const { canCreateEvents, userRole } = useEvents();
   
-  // Location state
-  const [locationType, setLocationType] = useState<'manual' | 'google_maps'>('manual');
-  const [location, setLocation] = useState('');
-  const [mapsUrl, setMapsUrl] = useState('');
+  // Use our smaller, focused hooks
+  const {
+    title,
+    setTitle,
+    description,
+    setDescription,
+    isAllDay,
+    setIsAllDay,
+    selectedDate,
+    setSelectedDate,
+    startTime,
+    setStartTime,
+    endTime,
+    setEndTime,
+    activeTab,
+    setActiveTab,
+    customization,
+    setCustomization,
+    handleNextTab,
+    handlePrevTab
+  } = useEventBasics();
   
-  // Customization state
-  const [customization, setCustomization] = useState<EventCustomization>({
-    background: {
-      type: 'color',
-      value: '#ffffff',
-    },
-    font: {
-      family: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      size: 'medium',
-      color: '#333333',
-    },
-    buttons: {
-      accept: {
-        background: '#4CAF50',
-        color: '#ffffff',
-        shape: 'rounded',
-      },
-      decline: {
-        background: '#f44336',
-        color: '#ffffff',
-        shape: 'rounded',
-      }
-    },
-    headerStyle: 'simple',
-    animation: 'fade',
-  });
+  const {
+    location,
+    locationType,
+    mapsUrl,
+    handleLocationChange
+  } = useEventLocation();
+  
+  const {
+    recipients,
+    shareTab,
+    setShareTab,
+    addRecipient,
+    removeRecipient,
+    handleSendEmail
+  } = useEventRecipients();
 
+  // The resetForm hook needs access to all the setter functions
+  const { resetForm } = useFormReset({
+    setTitle,
+    setDescription,
+    setSelectedDate,
+    setStartTime,
+    setEndTime,
+    setIsAllDay,
+    setActiveTab,
+    setRecipients: useCallback((newRecipients) => {
+      // We need to wrap this in useCallback since useFormReset expects a function
+      // but we don't expose setRecipients directly from useEventRecipients
+      if (newRecipients.length === 0) {
+        recipients.forEach((_, index) => removeRecipient(index));
+      }
+    }, [recipients, removeRecipient]),
+    setLocation: useCallback((loc) => handleLocationChange(loc, 'manual'), [handleLocationChange]),
+    setLocationType: useCallback((type) => {
+      handleLocationChange(location, type);
+    }, [handleLocationChange, location]),
+    setMapsUrl: useCallback(() => {
+      // This is just a placeholder as we don't set mapsUrl directly
+      // It's handled by handleLocationChange
+    }, []),
+    setCustomization
+  });
+  
+  // The submission hook needs values from all other hooks
   const {
     register,
     handleSubmit,
-    formState: { errors },
-    reset,
-    setValue
-  } = useForm<EventFormData>();
-
-  const addRecipient = useCallback((recipient: InvitationRecipient) => {
-    setRecipients(prev => [...prev, recipient]);
-  }, []);
-
-  const removeRecipient = useCallback((index: number) => {
-    setRecipients(prev => prev.filter((_, i) => i !== index));
-  }, []);
-  
-  const handleLocationChange = useCallback((value: string, type: 'manual' | 'google_maps', url?: string) => {
-    setLocation(value);
-    setLocationType(type);
-    if (type === 'google_maps' && url) {
-      setMapsUrl(url);
-    } else {
-      setMapsUrl('');
-    }
-  }, []);
-
-  const processDateAndTime = (formData: EventFormData) => {
-    // Create ISO string for start and end times
-    const startDateTime = new Date(selectedDate);
-    const endDateTime = new Date(selectedDate);
-    
-    if (!isAllDay) {
-      const [startHours, startMinutes] = startTime.split(':').map(Number);
-      const [endHours, endMinutes] = endTime.split(':').map(Number);
-      
-      startDateTime.setHours(startHours, startMinutes, 0);
-      endDateTime.setHours(endHours, endMinutes, 0);
-    } else {
-      // For all-day events
-      startDateTime.setHours(0, 0, 0, 0);
-      endDateTime.setHours(23, 59, 59, 999);
-    }
-    
-    return {
-      ...formData,
-      title: title,
-      description: description,
-      start_time: startDateTime.toISOString(),
-      end_time: endDateTime.toISOString(),
-      is_all_day: isAllDay,
-      location: location,
-      location_type: locationType,
-      maps_url: locationType === 'google_maps' ? mapsUrl : undefined,
-      customization: customization
-    };
-  };
-
-  const onSubmit = async (formData: EventFormData) => {
-    try {
-      setIsSubmitting(true);
-      
-      if (!canCreateEvents) {
-        toast({
-          title: "Subscription Required",
-          description: "Creating events requires an Individual or Business subscription",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      if (!title) {
-        toast({
-          title: "Title Required",
-          description: "Please enter a title for your event",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const completeFormData = processDateAndTime(formData);
-      
-      // Determine status based on recipients
-      const status = recipients.length > 0 ? 'sent' : 'draft';
-      completeFormData.status = status;
-      
-      const result = await createEvent(completeFormData);
-      
-      if (result?.id) {
-        // This would actually send invitations to recipients in a real implementation
-        if (recipients.length > 0) {
-          toast({
-            title: "Event Created and Invitations Sent",
-            description: `Your event "${title}" has been created and invitations have been sent.`,
-          });
-        } else {
-          toast({
-            title: "Event Created",
-            description: `Your event "${title}" has been created as a draft.`,
-          });
-        }
-        
-        // Reset form
-        reset();
-        setTitle('');
-        setDescription('');
-        setSelectedDate(new Date());
-        setStartTime("09:00");
-        setEndTime("10:00");
-        setIsAllDay(false);
-        setActiveTab("details");
-        setRecipients([]);
-        setLocation('');
-        setLocationType('manual');
-        setMapsUrl('');
-        setCustomization({
-          background: {
-            type: 'color',
-            value: '#ffffff',
-          },
-          font: {
-            family: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-            size: 'medium',
-            color: '#333333',
-          },
-          buttons: {
-            accept: {
-              background: '#4CAF50',
-              color: '#ffffff',
-              shape: 'rounded',
-            },
-            decline: {
-              background: '#f44336',
-              color: '#ffffff',
-              shape: 'rounded',
-            }
-          },
-          headerStyle: 'simple',
-          animation: 'fade',
-        });
-      }
-    } catch (error: any) {
-      console.error("Error creating event:", error);
-      toast({
-        title: "Failed to create event",
-        description: error?.message || "An unexpected error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleNextTab = () => {
-    if (activeTab === "details") setActiveTab("customize");
-    else if (activeTab === "customize") setActiveTab("share");
-  };
-
-  const handlePrevTab = () => {
-    if (activeTab === "share") setActiveTab("customize");
-    else if (activeTab === "customize") setActiveTab("details");
-  };
-  
-  // Handle email sharing from the ShareLinksTab
-  const handleSendEmail = (email: string) => {
-    const newRecipient: InvitationRecipient = {
-      id: Date.now().toString(), // temporary ID
-      name: email,
-      email: email,
-      type: 'email'
-    };
-    
-    addRecipient(newRecipient);
-    
-    // Switch to the recipients tab to show the new recipient
-    setShareTab('recipients');
-  };
+    errors,
+    isSubmitting,
+    setValue,
+    onSubmit
+  } = useEventSubmission({
+    title,
+    description,
+    isAllDay,
+    selectedDate,
+    startTime,
+    endTime,
+    location,
+    locationType,
+    mapsUrl,
+    customization,
+    recipients,
+    resetForm
+  });
 
   return {
     register,

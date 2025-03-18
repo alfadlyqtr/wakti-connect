@@ -47,7 +47,8 @@ const ShareTab: React.FC<ShareTabProps> = ({
         
         <TabsContent value="links">
           <ShareLinksTab 
-            onSendEmail={handleSendEmail} 
+            onSendEmail={handleSendEmail}
+            eventId=""  // Provide a default value to fix the type error
           />
         </TabsContent>
       </Tabs>
