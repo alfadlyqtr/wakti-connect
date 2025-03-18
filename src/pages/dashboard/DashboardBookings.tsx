@@ -8,6 +8,7 @@ import { useBookings } from "@/hooks/useBookings";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Calendar, List } from "lucide-react";
 import CreateBookingDialog from "@/components/bookings/CreateBookingDialog";
+import { BookingStatus } from "@/types/booking.types";
 
 const DashboardBookings = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -27,6 +28,11 @@ const DashboardBookings = () => {
     isLoading,
     error
   } = useBookings(activeTab);
+
+  // Helper function to handle filter status changes with string conversion
+  const handleFilterStatusChange = (status: string) => {
+    setFilterStatus(status as BookingStatus | "all");
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -77,7 +83,7 @@ const DashboardBookings = () => {
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             filterStatus={filterStatus}
-            setFilterStatus={setFilterStatus}
+            setFilterStatus={handleFilterStatusChange}
             filterDate={filterDate}
             setFilterDate={setFilterDate}
           />

@@ -1,6 +1,13 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { BookingTab, Booking, BookingsResult } from "@/types/booking.types";
+import { Booking, BookingStatus } from "@/types/booking.types";
+
+interface BookingsResult {
+  bookings: Booking[];
+  userRole: "business" | "individual";
+}
+
+type BookingTab = "all-bookings" | "pending-bookings" | "staff-bookings";
 
 /**
  * Fetches bookings based on the selected tab (business accounts only)

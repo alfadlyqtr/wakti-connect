@@ -1,13 +1,15 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Booking, BookingStatus } from "@/types/booking.types";
+import { Booking, BookingStatus, BookingFormData } from "@/types/booking.types";
+import { toast } from "@/components/ui/use-toast";
 
 export const useBookings = (tabFilter: string = "all-bookings") => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<BookingStatus | "all">("all");
   const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
+  const queryClient = useQueryClient();
 
   const {
     data: bookings,
@@ -45,7 +47,7 @@ export const useBookings = (tabFilter: string = "all-bookings") => {
         if (error) throw error;
 
         console.log("Bookings fetched:", data);
-        return data || [];
+        return data as Booking[];
       } catch (err) {
         console.error("Error fetching bookings:", err);
         throw err;
@@ -53,8 +55,8 @@ export const useBookings = (tabFilter: string = "all-bookings") => {
     }
   });
 
-  // Client-side filtering
-  const filteredBookings = bookings?.filter((booking: Booking) => {
+  // Client-side filtering with proper type casting
+  const filteredBookings = bookings?.filter((booking) => {
     // Filter by search query
     const matchesSearch = searchQuery
       ? booking.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -73,6 +75,56 @@ export const useBookings = (tabFilter: string = "all-bookings") => {
     return matchesSearch && matchesStatus && matchesDate;
   });
 
+  // Add createBooking function
+  const createBookingMutation = useMutation({
+    mutationFn: async (bookingData: BookingFormData) => {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        throw new Error("Authentication required");
+      }
+      
+      // Add the business_id to the booking data
+      const completeBookingData = {
+        business_id: session.session.user.id,
+        ...bookingData
+      };
+
+      const { data, error } = await supabase
+        .from("bookings")
+        .insert(completeBookingData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error creating booking:", error);
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      // Invalidate and refetch bookings after mutation
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      
+      toast({
+        title: "Booking created",
+        description: "The booking has been successfully created",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to create booking: ${error instanceof Error ? error.message : "Unknown error"}`,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const createBooking = (bookingData: BookingFormData) => {
+    return createBookingMutation.mutateAsync(bookingData);
+  };
+
   return {
     bookings,
     filteredBookings: filteredBookings || [],
@@ -84,6 +136,7 @@ export const useBookings = (tabFilter: string = "all-bookings") => {
     setFilterDate,
     refetch,
     isLoading,
-    error
+    error,
+    createBooking
   };
 };

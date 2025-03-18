@@ -25,3 +25,23 @@ export interface Booking {
     name: string;
   };
 }
+
+export type BookingTab = "all-bookings" | "pending-bookings" | "staff-bookings";
+
+export interface BookingFormData {
+  title: string;
+  description?: string;
+  customer_name?: string;
+  customer_email?: string;
+  customer_id?: string;
+  service_id?: string;
+  start_time: string;
+  end_time: string;
+  status?: BookingStatus;
+  staff_assigned_id?: string;
+}
+
+export interface BookingsResult {
+  bookings: Booking[];
+  userRole: "business" | "individual";
+}

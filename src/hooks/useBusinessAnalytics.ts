@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-interface AnalyticsData {
+export interface BusinessAnalyticsData {
   subscriberCount: number;
   staffCount: number;
   taskCompletionRate: number;
@@ -21,7 +21,7 @@ interface AnalyticsData {
 export const useBusinessAnalytics = (timeRange: "day" | "week" | "month" | "year") => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['businessAnalytics', timeRange],
-    queryFn: async (): Promise<AnalyticsData> => {
+    queryFn: async (): Promise<BusinessAnalyticsData> => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session?.user) {
@@ -53,8 +53,8 @@ export const useBusinessAnalytics = (timeRange: "day" | "week" | "month" | "year
           
         if (taskError) throw taskError;
         
-        const completedTasks = taskStats.filter(task => task.status === 'completed').length;
-        const totalTasks = taskStats.length;
+        const completedTasks = taskStats?.filter(task => task.status === 'completed')?.length || 0;
+        const totalTasks = taskStats?.length || 0;
         const taskCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
         
         // Get service distribution
@@ -67,7 +67,7 @@ export const useBusinessAnalytics = (timeRange: "day" | "week" | "month" | "year
         
         // For each service, count bookings
         const serviceDistribution = await Promise.all(
-          services.map(async (service) => {
+          (services || []).map(async (service) => {
             const { count, error: bookingError } = await supabase
               .from('bookings')
               .select('*', { count: 'exact', head: true })

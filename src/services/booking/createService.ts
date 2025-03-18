@@ -1,7 +1,20 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { BookingFormData, Booking } from "@/types/booking.types";
+import { Booking, BookingStatus } from "@/types/booking.types";
+
+interface BookingFormData {
+  title: string;
+  description?: string;
+  customer_name?: string;
+  customer_email?: string;
+  customer_id?: string;
+  service_id?: string;
+  start_time: string;
+  end_time: string;
+  status?: BookingStatus;
+  staff_assigned_id?: string;
+}
 
 /**
  * Creates a new booking (business accounts only)
