@@ -9,6 +9,7 @@ import {
   Building2,
   Scissors,
   UserPlus,
+  PartyPopper,
 } from "lucide-react";
 
 export type NavItem = {
@@ -30,6 +31,12 @@ export const navItems: NavItem[] = [
     label: "Tasks",
     path: "tasks",
     icon: ListChecks,
+    showFor: ['free', 'individual', 'business'],
+  },
+  {
+    label: "Events",
+    path: "events",
+    icon: PartyPopper,
     showFor: ['free', 'individual', 'business'],
   },
   {
