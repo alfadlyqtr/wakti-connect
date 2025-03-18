@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { useNotificationSettings } from "@/components/settings/notifications/useNotificationSettings";
-import { AIAssistantSettings } from "@/components/settings/AIAssistantSettings";
+import { AIAssistantSettings } from "@/components/settings/ai";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const NotificationsTab = () => {
