@@ -37,7 +37,7 @@ export async function checkUserAccess(user, supabaseClient) {
       .from("profiles")
       .select("account_type")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
       
     if (profileError) {
       console.error("Error checking profile access:", profileError.message);
@@ -55,7 +55,7 @@ export async function checkUserAccess(user, supabaseClient) {
               updated_at: new Date().toISOString()
             })
             .select()
-            .single();
+            .maybeSingle();
             
           if (createError) {
             console.error("Error creating default profile:", createError.message);

@@ -11,6 +11,7 @@ import { AIKnowledgeTab } from "./AIKnowledgeTab";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 export const AIAssistantSettings = () => {
   const { 
@@ -39,9 +40,18 @@ export const AIAssistantSettings = () => {
     if (!newSettings) return;
     try {
       await updateSettings.mutateAsync(newSettings);
+      toast({
+        title: "Settings saved",
+        description: "Your AI assistant settings have been updated",
+      });
     } catch (err) {
       console.error("Error saving settings:", err);
       setError("Unable to save settings. Please try again.");
+      toast({
+        title: "Error saving settings",
+        description: "There was a problem saving your AI assistant settings",
+        variant: "destructive",
+      });
     }
   };
   
@@ -51,18 +61,36 @@ export const AIAssistantSettings = () => {
         title,
         content
       });
+      toast({
+        title: "Knowledge added",
+        description: "Your knowledge has been added to the AI assistant",
+      });
     } catch (err) {
       console.error("Error adding knowledge:", err);
       setError("Unable to add knowledge. Please try again.");
+      toast({
+        title: "Error adding knowledge",
+        description: "There was a problem adding your knowledge to the AI assistant",
+        variant: "destructive",
+      });
     }
   };
   
   const handleDeleteKnowledge = async (id: string) => {
     try {
       await deleteKnowledge.mutateAsync(id);
+      toast({
+        title: "Knowledge deleted",
+        description: "Your knowledge has been removed from the AI assistant",
+      });
     } catch (err) {
       console.error("Error deleting knowledge:", err);
       setError("Unable to delete knowledge. Please try again.");
+      toast({
+        title: "Error deleting knowledge", 
+        description: "There was a problem removing your knowledge from the AI assistant",
+        variant: "destructive",
+      });
     }
   };
   
@@ -76,13 +104,18 @@ export const AIAssistantSettings = () => {
       if (!session) {
         setError("No active session. Please log in again.");
         setIsCreatingSettings(false);
+        toast({
+          title: "Authentication error",
+          description: "No active session. Please log in again.",
+          variant: "destructive",
+        });
         return;
       }
       
       // Create default settings for the user
       const defaultSettings: Omit<AISettings, "id"> = {
         assistant_name: "WAKTI",
-        tone: "formal",
+        tone: "balanced",
         response_length: "balanced",
         proactiveness: true,
         suggestion_frequency: "medium",
@@ -102,14 +135,24 @@ export const AIAssistantSettings = () => {
           ...defaultSettings
         })
         .select()
-        .single();
+        .maybeSingle();
         
       if (error) {
         console.error("Error creating default settings:", error);
         setError(`Unable to create settings: ${error.message}`);
+        toast({
+          title: "Error creating settings",
+          description: `Unable to create settings: ${error.message}`,
+          variant: "destructive",
+        });
         setIsCreatingSettings(false);
         return;
       }
+      
+      toast({
+        title: "Default settings created",
+        description: "Your AI assistant settings have been created with default values",
+      });
       
       // Refresh the page to load the new settings
       window.location.reload();
@@ -117,6 +160,11 @@ export const AIAssistantSettings = () => {
     } catch (err) {
       console.error("Error in createDefaultSettings:", err);
       setError("An unexpected error occurred. Please try again.");
+      toast({
+        title: "Error creating settings",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsCreatingSettings(false);
     }

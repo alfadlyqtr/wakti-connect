@@ -55,7 +55,7 @@ const DashboardAIAssistant = () => {
           .from("profiles")
           .select("account_type")
           .eq("id", user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) {
           console.error("Error checking access:", profileError);

@@ -27,7 +27,7 @@ export async function saveConversation(userId, message, response, supabaseClient
         response: response
       })
       .select()
-      .single();
+      .maybeSingle();
       
     if (error) {
       console.error("Error saving conversation:", error.message);
