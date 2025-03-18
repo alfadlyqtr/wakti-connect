@@ -43,21 +43,39 @@ serve(async (req) => {
       );
     }
     
-    // Check if user is on a paid plan
-    const { data: profile, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("account_type")
-      .eq("id", user.id)
-      .single();
-      
-    if (profileError) {
-      return new Response(
-        JSON.stringify({ error: "Error fetching user profile" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    // Check if user is on a paid plan using RPC function
+    const { data: canUseAI, error: canUseAIError } = await supabaseClient.rpc(
+      "can_use_ai_assistant"
+    );
+
+    // Log for troubleshooting
+    console.log("Can use AI check:", { canUseAI, error: canUseAIError });
     
-    if (profile.account_type !== "business" && profile.account_type !== "individual") {
+    if (canUseAIError) {
+      // Fallback to direct profile check if RPC fails
+      const { data: profile, error: profileError } = await supabaseClient
+        .from("profiles")
+        .select("account_type")
+        .eq("id", user.id)
+        .single();
+        
+      if (profileError) {
+        return new Response(
+          JSON.stringify({ error: "Error fetching user profile" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Log profile data for troubleshooting
+      console.log("User profile:", profile);
+      
+      if (profile.account_type !== "business" && profile.account_type !== "individual") {
+        return new Response(
+          JSON.stringify({ error: "Feature only available for Business and Individual plans" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else if (!canUseAI) {
       return new Response(
         JSON.stringify({ error: "Feature only available for Business and Individual plans" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -72,10 +90,8 @@ serve(async (req) => {
       .single();
       
     if (settingsError && settingsError.code !== "PGRST116") { // Not found error is ok
-      return new Response(
-        JSON.stringify({ error: "Error fetching AI settings" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      console.log("Error fetching AI settings:", settingsError);
+      // Continue without settings, we'll use defaults
     }
 
     // Get request data
@@ -156,7 +172,7 @@ serve(async (req) => {
     // Add the user message
     conversation.push({ role: "user", content: message });
     
-    console.log("Sending request to DeepSeep API with conversation:", conversation);
+    console.log("Sending request to DeepSeep API");
     
     // Call DeepSeep API
     const response = await fetch("https://api.deepseek.com/v1/chat/completions", {

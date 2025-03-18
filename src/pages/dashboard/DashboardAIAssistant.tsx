@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AIAssistantUpgradeCard } from "@/components/ai/AIAssistantUpgradeCard";
 import { AIAssistantMessage } from "@/components/ai/message";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { supabase } from "@/integrations/supabase/client";
 
 const DashboardAIAssistant = () => {
   const { user } = useAuth();
@@ -21,7 +22,56 @@ const DashboardAIAssistant = () => {
     clearMessages 
   } = useAIAssistant();
   const [inputMessage, setInputMessage] = useState("");
+  const [isChecking, setIsChecking] = useState(true);
+  const [canAccess, setCanAccess] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Check if user has access to AI
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (!user) {
+        setCanAccess(false);
+        setIsChecking(false);
+        return;
+      }
+
+      try {
+        // Try RPC function first
+        const { data: canUse, error: rpcError } = await supabase.rpc("can_use_ai_assistant");
+        
+        if (!rpcError && canUse !== null) {
+          setCanAccess(canUse);
+          setIsChecking(false);
+          return;
+        }
+        
+        // Fallback to direct profile check
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("account_type")
+          .eq("id", user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Error checking access:", profileError);
+          setCanAccess(false);
+        } else {
+          // Check the account type
+          setCanAccess(profile?.account_type === "business" || profile?.account_type === "individual");
+          
+          // Log the account type for debugging
+          console.log("Account type:", profile?.account_type);
+        }
+      } catch (error) {
+        console.error("Error checking AI access:", error);
+        setCanAccess(false);
+      }
+      
+      setIsChecking(false);
+    };
+
+    checkAccess();
+  }, [user]);
 
   // Scroll to bottom of messages
   useEffect(() => {
@@ -30,7 +80,7 @@ const DashboardAIAssistant = () => {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMessage.trim() || isLoading || !canUseAI) return;
+    if (!inputMessage.trim() || isLoading || !canAccess) return;
     
     await sendMessage.mutateAsync(inputMessage);
     setInputMessage("");
@@ -43,6 +93,15 @@ const DashboardAIAssistant = () => {
     "Optimize my work schedule",
     "Suggest ways to improve task completion rate"
   ];
+
+  // If still checking access, show loading
+  if (isChecking) {
+    return (
+      <div className="flex items-center justify-center h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-wakti-blue" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -63,7 +122,7 @@ const DashboardAIAssistant = () => {
         </TabsList>
 
         <TabsContent value="chat" className="mt-6 space-y-4">
-          {!canUseAI ? (
+          {!canAccess ? (
             <AIAssistantUpgradeCard />
           ) : (
             <Card className="border shadow-sm">
@@ -93,10 +152,10 @@ const DashboardAIAssistant = () => {
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
                       placeholder="Type your message..."
-                      disabled={isLoading || !canUseAI}
+                      disabled={isLoading || !canAccess}
                       className="flex-1"
                     />
-                    <Button type="submit" disabled={isLoading || !canUseAI || !inputMessage.trim()}>
+                    <Button type="submit" disabled={isLoading || !canAccess || !inputMessage.trim()}>
                       {isLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
@@ -164,7 +223,7 @@ const DashboardAIAssistant = () => {
               <CardDescription>View your previous conversations with the AI assistant</CardDescription>
             </CardHeader>
             <CardContent>
-              {canUseAI ? (
+              {canAccess ? (
                 <p className="text-center text-muted-foreground py-8">
                   Chat history feature coming soon
                 </p>
