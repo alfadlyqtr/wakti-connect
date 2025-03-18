@@ -2,7 +2,7 @@
 import React from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Toast as ToastType, dismiss, useToast } from "@/hooks/use-toast";
+import { dismiss, Toast as ToastType } from "@/hooks/use-toast";
 
 interface ToastProps {
   toast: ToastType;
@@ -39,18 +39,6 @@ export function Toast({ toast }: ToastProps) {
           <X className="h-4 w-4" />
         </button>
       </div>
-    </div>
-  );
-}
-
-export function Toaster() {
-  const { toasts } = useToast();
-
-  return (
-    <div className="fixed top-0 z-[100] flex flex-col items-end gap-2 p-4 max-w-md w-full right-0">
-      {toasts.map((toast) => (
-        <Toast key={toast.id} toast={toast} />
-      ))}
     </div>
   );
 }

@@ -37,13 +37,13 @@ const TextTab: React.FC<TextTabProps> = ({
   const [activeTab, setActiveTab] = useState("main");
 
   // Helper function to handle property mapping
-  const handleFontChange = (handler: ((property: string, value: string) => void) | undefined, property: string, value: string) => {
+  const handleFontChange = (handler: ((property: any, value: string) => void) | undefined, property: string, value: string) => {
     if (handler) {
       // Filter out 'alignment' for tab-specific handlers
       if (property === 'alignment' && handler !== onFontChange) {
         return; // Skip alignment for header, description, and dateTime fonts
       }
-      handler(property, value);
+      handler(property as any, value);
     }
   };
 
