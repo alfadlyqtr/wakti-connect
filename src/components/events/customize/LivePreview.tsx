@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { EventCustomization } from "@/types/event.types";
 import { Button } from "@/components/ui/button";
-import { Check, X, MapPin, QrCode } from "lucide-react";
+import { Check, X, MapPin, QrCode, Calendar } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
@@ -26,6 +26,8 @@ const LivePreview: React.FC<LivePreviewProps> = ({
   onViewModeChange
 }) => {
   const [showMap, setShowMap] = useState(false);
+  const [showQrCode, setShowQrCode] = useState(false);
+  const [cardEffect, setCardEffect] = useState<'shadow' | 'matte' | 'gloss'>('shadow');
   
   // Compute background style based on customization
   const getBackgroundStyle = () => {
@@ -75,11 +77,25 @@ const LivePreview: React.FC<LivePreviewProps> = ({
       case 'fade':
         return 'animate-fade-in';
       case 'slide':
-        return 'animate-slide-in-right';
+        return 'animate-slide-in';
       case 'pop':
         return 'animate-scale-in';
       default:
         return '';
+    }
+  };
+
+  // Card effect class
+  const getCardEffectClass = () => {
+    switch (cardEffect) {
+      case 'shadow':
+        return 'shadow-lg';
+      case 'matte':
+        return 'shadow-sm bg-opacity-90';
+      case 'gloss':
+        return 'shadow-lg bg-opacity-95 backdrop-blur-sm';
+      default:
+        return 'shadow-md';
     }
   };
   
@@ -140,6 +156,39 @@ const LivePreview: React.FC<LivePreviewProps> = ({
       </div>
     );
   };
+
+  // QR Code Flip Card
+  const renderQrCodeFlip = () => {
+    if (!showQrCode) return null;
+
+    return (
+      <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
+        <div 
+          className={`relative w-[320px] h-[320px] bg-white rounded-lg ${
+            showQrCode ? 'animate-flip' : 'animate-flip-back'
+          }`}
+          style={{ transformStyle: 'preserve-3d' }}
+        >
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+            <div className="w-full h-full flex flex-col items-center justify-center">
+              <div className="w-48 h-48 bg-gray-200 flex items-center justify-center mb-4">
+                <QrCode size={140} />
+              </div>
+              <p className="text-center text-sm">Scan to view event</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-4"
+                onClick={() => setShowQrCode(false)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
   
   return (
     <div className="space-y-4">
@@ -156,8 +205,36 @@ const LivePreview: React.FC<LivePreviewProps> = ({
           />
         </div>
       </div>
+
+      <div className="flex justify-between items-center mb-4">
+        <Label htmlFor="card-effect" className="text-sm">Card Effect:</Label>
+        <div className="flex space-x-2">
+          <Button 
+            variant={cardEffect === 'shadow' ? "default" : "outline"} 
+            size="sm"
+            onClick={() => setCardEffect('shadow')}
+          >
+            Shadow
+          </Button>
+          <Button 
+            variant={cardEffect === 'matte' ? "default" : "outline"} 
+            size="sm"
+            onClick={() => setCardEffect('matte')}
+          >
+            Matte
+          </Button>
+          <Button 
+            variant={cardEffect === 'gloss' ? "default" : "outline"} 
+            size="sm"
+            onClick={() => setCardEffect('gloss')}
+          >
+            Gloss
+          </Button>
+        </div>
+      </div>
       
-      <div className={`border rounded-lg overflow-hidden ${getAnimationClass()} mx-auto transition-all`}
+      <div 
+        className={`border rounded-lg overflow-hidden ${getAnimationClass()} ${getCardEffectClass()} mx-auto transition-all`}
         style={{
           width: viewMode === 'mobile' ? '320px' : '500px',
           maxWidth: '100%',
@@ -208,18 +285,23 @@ const LivePreview: React.FC<LivePreviewProps> = ({
           )}
           
           {location && (
-            <div className="flex justify-center gap-2 mt-3">
+            <div className="grid grid-cols-3 gap-2 mt-4">
               {customization.enableAddToCalendar && (
-                <Button variant="outline" size="sm" className="text-xs">
-                  Add to Calendar
+                <Button variant="outline" size="sm" className="text-xs flex items-center justify-center gap-1">
+                  <Calendar className="h-3 w-3" /> Calendar
                 </Button>
               )}
               
-              <Button variant="outline" size="sm" className="text-xs flex items-center gap-1">
-                <MapPin className="h-3 w-3" /> View Map
+              <Button variant="outline" size="sm" className="text-xs flex items-center justify-center gap-1">
+                <MapPin className="h-3 w-3" /> Map
               </Button>
               
-              <Button variant="outline" size="sm" className="text-xs flex items-center gap-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs flex items-center justify-center gap-1"
+                onClick={() => setShowQrCode(true)}
+              >
                 <QrCode className="h-3 w-3" /> QR Code
               </Button>
             </div>
@@ -232,6 +314,8 @@ const LivePreview: React.FC<LivePreviewProps> = ({
           </div>
         </div>
       </div>
+
+      {renderQrCodeFlip()}
     </div>
   );
 };

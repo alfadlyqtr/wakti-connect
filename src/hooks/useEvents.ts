@@ -6,6 +6,7 @@ import {
   fetchEvents, 
   createEvent as createEventService,
   respondToInvitation as respondToInvitationService,
+  deleteEvent as deleteEventService,
   Event,
   EventTab,
   EventFormData
@@ -120,6 +121,23 @@ export const useEvents = (tab: EventTab = "my-events") => {
     }
   };
 
+  // Delete an event
+  const deleteEvent = async (eventId: string) => {
+    try {
+      await deleteEventService(eventId);
+      refetch();
+      return true;
+    } catch (error: any) {
+      console.error("Error deleting event:", error);
+      toast({
+        title: "Failed to delete event",
+        description: error?.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   // Filter events based on search and filters
   const getFilteredEvents = () => {
     const eventsList = data?.events || [];
@@ -161,6 +179,7 @@ export const useEvents = (tab: EventTab = "my-events") => {
     setFilterDate,
     createEvent,
     respondToInvitation,
+    deleteEvent,
     refetch
   };
 };

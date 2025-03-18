@@ -1,6 +1,6 @@
 
-// Re-export all event service functions
-export { fetchEvents } from "./fetchService";
-export { createEvent } from "./createService";
-export { respondToInvitation } from "./invitationService";
-export type { Event, EventTab, EventFormData, EventsResult, EventStatus } from "@/types/event.types";
+export * from './fetchService';
+export * from './createService';
+export * from './invitationService';
+export * from './deleteService';
+export * from '@/types/event.types';
