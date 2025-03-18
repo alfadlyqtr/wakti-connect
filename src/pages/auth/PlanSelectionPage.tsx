@@ -1,9 +1,8 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PricingCardsGrid } from "@/components/pricing/PricingCardsGrid";
+import PricingCardsGrid from "@/components/pricing/PricingCardsGrid";
 
 const PlanSelectionPage = () => {
   const navigate = useNavigate();

@@ -49,3 +49,4 @@ export const publicRoutes: RouteObject[] = [
   },
 ];
 
+export default publicRoutes;

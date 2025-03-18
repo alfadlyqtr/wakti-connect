@@ -53,3 +53,5 @@ export const authRoutes: RouteObject[] = [
     element: <PaymentSuccess />
   }
 ];
+
+export default authRoutes;

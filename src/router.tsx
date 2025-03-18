@@ -5,6 +5,7 @@ import NotFound from "@/pages/NotFound";
 import AuthShell from "@/components/auth/AuthShell";
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import BusinessShell from "@/components/business/BusinessShell";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { publicRoutes } from "@/routes/publicRoutes";
 import { authRoutes } from "@/routes/authRoutes";
 import dashboardRoutes from "@/routes/dashboardRoutes";
