@@ -24,6 +24,8 @@ import DashboardBilling from '@/pages/dashboard/DashboardBilling';
 import DashboardBusinessAnalytics from '@/pages/dashboard/DashboardBusinessAnalytics';
 import DashboardBusinessReports from '@/pages/dashboard/DashboardBusinessReports';
 import DashboardPaymentConfirmation from '@/pages/dashboard/DashboardPaymentConfirmation';
+// Import the verification page
+import AccountVerification from '@/pages/dashboard/AccountVerification';
 
 export const dashboardRoutes: RouteObject[] = [
   { path: "", element: <DashboardHome /> },
@@ -46,5 +48,7 @@ export const dashboardRoutes: RouteObject[] = [
   { path: "billing", element: <DashboardBilling /> },
   { path: "analytics", element: <DashboardBusinessAnalytics /> },
   { path: "reports", element: <DashboardBusinessReports /> },
-  { path: "payment/success", element: <DashboardPaymentConfirmation /> }
+  { path: "payment/success", element: <DashboardPaymentConfirmation /> },
+  // Add the verification route
+  { path: "verify", element: <AccountVerification /> }
 ];
