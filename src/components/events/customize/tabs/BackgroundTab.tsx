@@ -4,8 +4,10 @@ import BackgroundSelector from "../BackgroundSelector";
 import AnimationSelector from "../AnimationSelector";
 import { EventCustomization } from "@/types/event.types";
 import { Label } from "@/components/ui/label";
-import { ImagePlus } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { ImagePlus, X } from "lucide-react";
+import { toast } from "@/components/ui/toast";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 
 interface BackgroundTabProps {
   customization: EventCustomization;
@@ -54,8 +56,18 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
       if (event.target?.result) {
         if (isHeaderImage && onHeaderImageChange) {
           onHeaderImageChange(event.target.result as string);
+          toast({
+            title: "Header image uploaded",
+            description: "The image has been set as your event header",
+            variant: "success"
+          });
         } else {
           onBackgroundChange('image', event.target.result as string);
+          toast({
+            title: "Background image uploaded",
+            description: "The image has been set as your event background",
+            variant: "success"
+          });
         }
       }
     };
@@ -74,8 +86,10 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
         onBackgroundDirectionChange={onBackgroundDirectionChange}
       />
 
-      <div className="space-y-2">
-        <Label className="block">Header/Event Image</Label>
+      <Separator className="my-6" />
+
+      <div className="space-y-3">
+        <Label className="block text-base">Header/Event Image</Label>
         <div className="border-2 border-dashed rounded-md p-4 text-center bg-muted/50">
           <input
             type="file"
@@ -90,16 +104,26 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
             <span className="text-xs text-muted-foreground">JPG, PNG or WebP</span>
           </Label>
           {customization.headerImage && (
-            <div className="mt-4">
+            <div className="mt-4 relative">
               <img 
                 src={customization.headerImage} 
                 alt="Event image preview" 
                 className="mx-auto max-h-32 rounded-md object-cover"
               />
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                className="absolute top-2 right-2 w-8 h-8 p-0 rounded-full"
+                onClick={() => onHeaderImageChange && onHeaderImageChange('')}
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
           )}
         </div>
       </div>
+
+      <Separator className="my-6" />
 
       <AnimationSelector
         value={customization.animation}

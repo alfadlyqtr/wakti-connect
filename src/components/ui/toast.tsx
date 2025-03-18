@@ -2,7 +2,7 @@
 import React from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Toast as ToastType, dismiss } from "./use-toast";
+import { Toast as ToastType, dismiss, useToast } from "./use-toast";
 
 interface ToastProps {
   toast: ToastType;
@@ -55,6 +55,4 @@ export function Toaster() {
   );
 }
 
-// For importing in other files
-import { useToast } from "./use-toast";
-export { useToast };
+export { useToast, Toast as toast } from "./use-toast";

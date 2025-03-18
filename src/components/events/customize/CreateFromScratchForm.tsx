@@ -181,14 +181,15 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
   return (
     <div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-7 mb-4">
+        <TabsList className="grid grid-cols-3 mb-4 sm:grid-cols-4 md:grid-cols-7">
           <TabsTrigger value="background">Background</TabsTrigger>
           <TabsTrigger value="text">Text</TabsTrigger>
           <TabsTrigger value="buttons">Buttons</TabsTrigger>
           <TabsTrigger value="header">Header</TabsTrigger>
-          <TabsTrigger value="features">Features</TabsTrigger>
-          <TabsTrigger value="effects">Card Effect</TabsTrigger>
-          <TabsTrigger value="animations">Animations</TabsTrigger>
+          <TabsTrigger value="features" className="hidden sm:block">Features</TabsTrigger>
+          <TabsTrigger value="effects" className="hidden md:block">Card Effect</TabsTrigger>
+          <TabsTrigger value="animations" className="hidden md:block">Animations</TabsTrigger>
+          <TabsTrigger value="more" className="sm:hidden">More</TabsTrigger>
         </TabsList>
         
         <TabsContent value="background" className="space-y-4">
@@ -217,6 +218,7 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
             customization={customization}
             onButtonStyleChange={handleButtonStyleChange}
             onToggleButtons={handleToggleButtons}
+            onToggleCalendarButton={handleToggleCalendar}
           />
         </TabsContent>
         
@@ -260,6 +262,51 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
             }}
             onChange={handleElementAnimationsChange}
           />
+        </TabsContent>
+
+        {/* Mobile-only tab for additional options */}
+        <TabsContent value="more" className="space-y-6 sm:hidden">
+          <Tabs defaultValue="features">
+            <TabsList className="grid grid-cols-3 mb-4 w-full">
+              <TabsTrigger value="features">Features</TabsTrigger>
+              <TabsTrigger value="effects">Card Effect</TabsTrigger>
+              <TabsTrigger value="animations">Animations</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="features" className="space-y-6">
+              <FeaturesTab 
+                customization={customization}
+                onToggleChatbot={handleToggleChatbot}
+                onToggleCalendar={handleToggleCalendar}
+                onToggleButtons={handleToggleButtons}
+                onBrandingChange={handleBrandingChange}
+                onMapDisplayChange={handleMapDisplayChange}
+              />
+            </TabsContent>
+            
+            <TabsContent value="effects" className="space-y-6">
+              <CardEffectSelector 
+                value={customization.cardEffect || {
+                  type: 'shadow',
+                  borderRadius: 'medium',
+                  border: false
+                }}
+                onChange={handleCardEffectChange}
+              />
+            </TabsContent>
+            
+            <TabsContent value="animations" className="space-y-6">
+              <ElementAnimationsSelector 
+                value={customization.elementAnimations || {
+                  text: 'none',
+                  buttons: 'none',
+                  icons: 'none',
+                  delay: 'none'
+                }}
+                onChange={handleElementAnimationsChange}
+              />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
       </Tabs>
     </div>

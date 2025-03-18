@@ -4,39 +4,47 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { AlignLeft, AlignCenter, AlignRight } from "lucide-react";
+
+interface FontProps {
+  family: string;
+  size: string;
+  color: string;
+  weight?: string;
+  alignment?: string;
+}
 
 interface FontSelectorProps {
-  font: {
-    family: string;
-    size: 'small' | 'medium' | 'large';
-    color: string;
-    weight?: 'normal' | 'medium' | 'bold';
-    alignment?: 'left' | 'center' | 'right';
-  };
+  font: FontProps;
   onFontChange: (property: 'family' | 'size' | 'color' | 'weight' | 'alignment', value: string) => void;
   showAlignment?: boolean;
   showWeight?: boolean;
+  previewText?: string;
 }
 
 const FontSelector: React.FC<FontSelectorProps> = ({
   font,
   onFontChange,
   showAlignment = false,
-  showWeight = false
+  showWeight = false,
+  previewText = "The quick brown fox jumps over the lazy dog"
 }) => {
   const fontFamilies = [
-    { name: "System UI", value: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" },
-    { name: "Arial", value: "Arial, sans-serif" },
-    { name: "Times New Roman", value: "Times New Roman, serif" },
-    { name: "Courier New", value: "Courier New, monospace" },
-    { name: "Georgia", value: "Georgia, serif" },
-    { name: "Verdana", value: "Verdana, sans-serif" },
-    { name: "Roboto", value: "Roboto, sans-serif" },
-    { name: "Open Sans", value: "Open Sans, sans-serif" },
-    { name: "Playfair Display", value: "Playfair Display, serif" },
-    { name: "Montserrat", value: "Montserrat, sans-serif" },
-    { name: "Red Rose", value: "Red Rose, sans-serif" },
-    { name: "Cairo", value: "Cairo, sans-serif" }
+    { value: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', label: 'System Default' },
+    { value: 'Arial, sans-serif', label: 'Arial' },
+    { value: 'Verdana, sans-serif', label: 'Verdana' },
+    { value: 'Helvetica, sans-serif', label: 'Helvetica' },
+    { value: 'Times New Roman, serif', label: 'Times New Roman' },
+    { value: 'Georgia, serif', label: 'Georgia' },
+    { value: 'Courier New, monospace', label: 'Courier New' },
+    { value: 'Trebuchet MS, sans-serif', label: 'Trebuchet MS' },
+    { value: 'Impact, sans-serif', label: 'Impact' },
+    { value: 'Comic Sans MS, cursive', label: 'Comic Sans MS' },
+    { value: 'Palatino Linotype, serif', label: 'Palatino Linotype' },
+    { value: 'Tahoma, sans-serif', label: 'Tahoma' },
+    { value: 'Lucida Sans Unicode, sans-serif', label: 'Lucida Sans' },
+    { value: 'Garamond, serif', label: 'Garamond' }
   ];
 
   return (
@@ -48,16 +56,16 @@ const FontSelector: React.FC<FontSelectorProps> = ({
           onValueChange={(value) => onFontChange('family', value)}
         >
           <SelectTrigger id="font-family">
-            <SelectValue placeholder="Select font" />
+            <SelectValue placeholder="Select a font" />
           </SelectTrigger>
           <SelectContent>
             {fontFamilies.map((fontFamily) => (
               <SelectItem 
-                key={fontFamily.name} 
+                key={fontFamily.label} 
                 value={fontFamily.value}
                 style={{ fontFamily: fontFamily.value }}
               >
-                {fontFamily.name}
+                {fontFamily.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -66,61 +74,32 @@ const FontSelector: React.FC<FontSelectorProps> = ({
       
       <div>
         <Label htmlFor="font-size" className="block mb-2">Font Size</Label>
-        <RadioGroup 
+        <Select 
           value={font.size} 
           onValueChange={(value) => onFontChange('size', value)}
-          className="flex space-x-4"
         >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="small" id="font-small" />
-            <Label htmlFor="font-small">Small</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="medium" id="font-medium" />
-            <Label htmlFor="font-medium">Medium</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="large" id="font-large" />
-            <Label htmlFor="font-large">Large</Label>
-          </div>
-        </RadioGroup>
+          <SelectTrigger id="font-size">
+            <SelectValue placeholder="Select a size" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="small">Small</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="large">Large</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-      
-      {showWeight && (
-        <div>
-          <Label htmlFor="font-weight" className="block mb-2">Font Weight</Label>
-          <RadioGroup 
-            value={font.weight || 'normal'} 
-            onValueChange={(value) => onFontChange('weight', value)}
-            className="flex space-x-4"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="normal" id="weight-normal" />
-              <Label htmlFor="weight-normal">Normal</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="medium" id="weight-medium" />
-              <Label htmlFor="weight-medium">Medium</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="bold" id="weight-bold" />
-              <Label htmlFor="weight-bold">Bold</Label>
-            </div>
-          </RadioGroup>
-        </div>
-      )}
       
       <div>
         <Label htmlFor="font-color" className="block mb-2">Font Color</Label>
         <div className="flex gap-2">
-          <Input 
+          <Input
             type="color"
             id="font-color"
             value={font.color}
             onChange={(e) => onFontChange('color', e.target.value)}
             className="w-12 h-10 p-1 cursor-pointer"
           />
-          <Input 
+          <Input
             type="text"
             value={font.color}
             onChange={(e) => onFontChange('color', e.target.value)}
@@ -128,40 +107,68 @@ const FontSelector: React.FC<FontSelectorProps> = ({
           />
         </div>
       </div>
-      
-      {showAlignment && (
+
+      {showWeight && (
         <div>
-          <Label htmlFor="font-alignment" className="block mb-2">Text Alignment</Label>
+          <Label className="block mb-2">Font Weight</Label>
           <RadioGroup 
-            value={font.alignment || 'left'} 
-            onValueChange={(value) => onFontChange('alignment', value)}
-            className="flex space-x-4"
+            value={font.weight || 'normal'} 
+            onValueChange={(value) => onFontChange('weight', value)}
+            className="flex flex-wrap gap-x-4 gap-y-2"
           >
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="left" id="align-left" />
-              <Label htmlFor="align-left">Left</Label>
+              <RadioGroupItem value="normal" id="weight-normal" />
+              <Label htmlFor="weight-normal" className="font-normal">Normal</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="center" id="align-center" />
-              <Label htmlFor="align-center">Center</Label>
+              <RadioGroupItem value="medium" id="weight-medium" />
+              <Label htmlFor="weight-medium" className="font-medium">Medium</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="right" id="align-right" />
-              <Label htmlFor="align-right">Right</Label>
+              <RadioGroupItem value="bold" id="weight-bold" />
+              <Label htmlFor="weight-bold" className="font-bold">Bold</Label>
             </div>
           </RadioGroup>
         </div>
       )}
       
-      <div className="p-3 border rounded-md mt-4">
-        <p style={{ 
-          fontFamily: font.family,
-          fontSize: font.size === 'small' ? '0.875rem' : font.size === 'medium' ? '1rem' : '1.25rem',
-          fontWeight: font.weight === 'bold' ? 'bold' : font.weight === 'medium' ? '500' : 'normal',
-          color: font.color,
-          textAlign: (font.alignment || 'left') as 'left' | 'center' | 'right'
-        }}>
-          Sample Text
+      {showAlignment && (
+        <div>
+          <Label className="block mb-2">Text Alignment</Label>
+          <ToggleGroup 
+            type="single" 
+            value={font.alignment || 'left'} 
+            onValueChange={(value) => {
+              if (value) onFontChange('alignment', value);
+            }}
+            className="flex justify-start"
+          >
+            <ToggleGroupItem value="left" aria-label="Align left">
+              <AlignLeft className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="center" aria-label="Align center">
+              <AlignCenter className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="right" aria-label="Align right">
+              <AlignRight className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+      )}
+      
+      <div className="mt-4 p-4 border rounded-md">
+        <Label className="block mb-2 text-sm text-muted-foreground">Preview</Label>
+        <p 
+          className="break-words"
+          style={{ 
+            fontFamily: font.family,
+            fontSize: font.size === 'small' ? '0.875rem' : font.size === 'medium' ? '1rem' : '1.25rem',
+            color: font.color,
+            fontWeight: font.weight === 'bold' ? 'bold' : font.weight === 'medium' ? '500' : 'normal',
+            textAlign: font.alignment as any
+          }}
+        >
+          {previewText}
         </p>
       </div>
     </div>

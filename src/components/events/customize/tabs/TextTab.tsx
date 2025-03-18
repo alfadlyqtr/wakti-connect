@@ -31,7 +31,10 @@ const TextTab: React.FC<TextTabProps> = ({
           <TabsTrigger value="datetime">Date & Time</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="main">
+        <TabsContent value="main" className="pt-4">
+          <div className="mb-4 p-3 bg-muted/30 rounded-md text-sm">
+            These settings apply to all text by default, but can be overridden in the specific tabs.
+          </div>
           <FontSelector 
             font={customization.font}
             onFontChange={onFontChange}
@@ -40,7 +43,10 @@ const TextTab: React.FC<TextTabProps> = ({
           />
         </TabsContent>
         
-        <TabsContent value="header">
+        <TabsContent value="header" className="pt-4">
+          <div className="mb-4 p-3 bg-muted/30 rounded-md text-sm">
+            Customize the title font separately from the main text.
+          </div>
           <FontSelector 
             font={{
               family: customization.headerFont?.family || customization.font.family,
@@ -51,10 +57,14 @@ const TextTab: React.FC<TextTabProps> = ({
             onFontChange={(property, value) => onHeaderFontChange && onHeaderFontChange(property, value)}
             showAlignment={false}
             showWeight={true}
+            previewText={customization.headerFont?.family ? "Custom Header Font" : "Using Default Font"}
           />
         </TabsContent>
         
-        <TabsContent value="description">
+        <TabsContent value="description" className="pt-4">
+          <div className="mb-4 p-3 bg-muted/30 rounded-md text-sm">
+            Customize the description text separately.
+          </div>
           <FontSelector 
             font={{
               family: customization.descriptionFont?.family || customization.font.family,
@@ -65,10 +75,14 @@ const TextTab: React.FC<TextTabProps> = ({
             onFontChange={(property, value) => onDescriptionFontChange && onDescriptionFontChange(property, value)}
             showAlignment={false}
             showWeight={true}
+            previewText={customization.descriptionFont?.family ? "Custom Description Font" : "Using Default Font"}
           />
         </TabsContent>
         
-        <TabsContent value="datetime">
+        <TabsContent value="datetime" className="pt-4">
+          <div className="mb-4 p-3 bg-muted/30 rounded-md text-sm">
+            Customize the date and time text separately.
+          </div>
           <FontSelector 
             font={{
               family: customization.dateTimeFont?.family || customization.font.family,
@@ -79,6 +93,7 @@ const TextTab: React.FC<TextTabProps> = ({
             onFontChange={(property, value) => onDateTimeFontChange && onDateTimeFontChange(property, value)}
             showAlignment={false}
             showWeight={true}
+            previewText={customization.dateTimeFont?.family ? "Custom Date/Time Font" : "Using Default Font"}
           />
         </TabsContent>
       </Tabs>

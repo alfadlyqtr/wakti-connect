@@ -11,16 +11,38 @@ const ColorTab: React.FC<ColorTabProps> = ({
   value,
   onChange
 }) => {
-  // Default colors palette
+  // Expanded color palette with more options
   const colorPalette = [
+    // Whites and Light Grays
     "#ffffff", "#f8f9fa", "#e9ecef", "#dee2e6", "#ced4da", 
+    // Gray and Dark tones
     "#6c757d", "#495057", "#343a40", "#212529", "#000000",
+    // Reds
     "#f8d7da", "#f1aeb5", "#f44336", "#b71c1c", "#7f0000",
+    // Greens
     "#d1e7dd", "#a3cfbb", "#4caf50", "#2e7d32", "#1b5e20",
+    // Blues
     "#cff4fc", "#9eeaf9", "#03a9f4", "#0277bd", "#01579b",
+    // Yellows
     "#fff3cd", "#ffe69c", "#ffc107", "#f57f17", "#ff6f00",
+    // Purples
     "#d0d0f0", "#b0b0e0", "#3f51b5", "#283593", "#1a237e",
+    // Pinks
     "#e2d3f4", "#c5a3e0", "#9c27b0", "#6a1b9a", "#4a148c"
+  ];
+
+  // Trendy colors for 2024
+  const trendyColors = [
+    "#9b87f5", // Primary Purple
+    "#7E69AB", // Secondary Purple
+    "#D6BCFA", // Light Purple
+    "#8B5CF6", // Vivid Purple
+    "#D946EF", // Magenta Pink
+    "#F97316", // Bright Orange
+    "#0EA5E9", // Ocean Blue
+    "#1EAEDB", // Bright Blue
+    "#33C3F0", // Sky Blue
+    "#0FA0CE"  // Bright Blue
   ];
 
   return (
@@ -46,8 +68,26 @@ const ColorTab: React.FC<ColorTabProps> = ({
       </div>
       
       <div>
+        <Label className="block mb-2">Trendy Colors</Label>
+        <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
+          {trendyColors.map((color) => (
+            <button
+              key={color}
+              type="button"
+              className={`w-full aspect-square rounded-md border ${
+                value === color ? 'ring-2 ring-primary' : ''
+              }`}
+              style={{ backgroundColor: color }}
+              onClick={() => onChange(color)}
+              aria-label={`Select color ${color}`}
+            />
+          ))}
+        </div>
+      </div>
+      
+      <div>
         <Label className="block mb-2">Color Palette</Label>
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
           {colorPalette.map((color) => (
             <button
               key={color}

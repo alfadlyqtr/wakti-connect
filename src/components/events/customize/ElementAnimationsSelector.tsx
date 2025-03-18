@@ -3,6 +3,7 @@ import React from "react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 interface ElementAnimationsSelectorProps {
   value: {
@@ -53,7 +54,7 @@ const ElementAnimationsSelector: React.FC<ElementAnimationsSelectorProps> = ({
         <RadioGroup 
           value={value.text || 'none'} 
           onValueChange={handleTextAnimationChange}
-          className="flex flex-wrap gap-4"
+          className="grid grid-cols-2 sm:grid-cols-4 gap-2"
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="none" id="text-none" />
@@ -74,12 +75,14 @@ const ElementAnimationsSelector: React.FC<ElementAnimationsSelectorProps> = ({
         </RadioGroup>
       </div>
 
+      <Separator />
+
       <div>
         <Label className="block mb-2">Button Animation</Label>
         <RadioGroup 
           value={value.buttons || 'none'} 
           onValueChange={handleButtonsAnimationChange}
-          className="flex flex-wrap gap-4"
+          className="grid grid-cols-2 sm:grid-cols-4 gap-2"
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="none" id="buttons-none" />
@@ -100,12 +103,14 @@ const ElementAnimationsSelector: React.FC<ElementAnimationsSelectorProps> = ({
         </RadioGroup>
       </div>
 
+      <Separator />
+
       <div>
         <Label className="block mb-2">Icon Animation</Label>
         <RadioGroup 
           value={value.icons || 'none'} 
           onValueChange={handleIconsAnimationChange}
-          className="flex flex-wrap gap-4"
+          className="grid grid-cols-2 sm:grid-cols-4 gap-2"
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="none" id="icons-none" />
@@ -126,38 +131,52 @@ const ElementAnimationsSelector: React.FC<ElementAnimationsSelectorProps> = ({
         </RadioGroup>
       </div>
 
+      <Separator />
+
       <div>
-        <Label htmlFor="delay-type" className="block mb-2">Animation Timing</Label>
+        <Label htmlFor="animation-delay" className="block mb-2">Animation Timing</Label>
         <Select
           value={value.delay || 'none'}
           onValueChange={handleDelayTypeChange}
         >
-          <SelectTrigger id="delay-type">
+          <SelectTrigger id="animation-delay">
             <SelectValue placeholder="Select timing" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">All at once</SelectItem>
             <SelectItem value="staggered">Staggered</SelectItem>
-            <SelectItem value="sequence">In sequence</SelectItem>
+            <SelectItem value="sequence">Sequential</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      <div className="mt-4 p-4 border rounded-md">
-        <h3 className="text-lg mb-2 font-semibold">Animation Preview:</h3>
-        <div className="space-y-4">
-          <div className={`p-2 ${value.text === 'fade' ? 'animate-fade-in' : value.text === 'slide' ? 'animate-slide-in' : value.text === 'pop' ? 'animate-scale-in' : ''}`}>
-            <p className="text-sm">This is how text will animate.</p>
-          </div>
-          
-          <div className={`flex justify-center ${value.buttons === 'fade' ? 'animate-fade-in' : value.buttons === 'slide' ? 'animate-slide-in' : value.buttons === 'pop' ? 'animate-scale-in' : ''}`}>
-            <button className="bg-primary text-white px-3 py-1 rounded-md text-sm">Button Example</button>
-          </div>
-          
-          <div className="flex justify-center">
-            <span className={`inline-block p-2 ${value.icons === 'fade' ? 'animate-fade-in' : value.icons === 'slide' ? 'animate-slide-in' : value.icons === 'pop' ? 'animate-scale-in' : ''}`}>
-              🔔
+      <div className="p-4 bg-muted/20 rounded-md mt-4">
+        <h3 className="font-medium mb-2">Animation Preview</h3>
+        <div className="flex flex-col gap-2">
+          <div className="p-2 text-center">
+            <span className={value.text === 'fade' ? 'animate-fade-in' : 
+                             value.text === 'slide' ? 'animate-slide-in' : 
+                             value.text === 'pop' ? 'animate-scale-in' : ''}>
+              Text Animation
             </span>
+          </div>
+          <div className="p-2 text-center">
+            <span className={value.icons === 'fade' ? 'animate-fade-in' : 
+                             value.icons === 'slide' ? 'animate-slide-in' : 
+                             value.icons === 'pop' ? 'animate-scale-in' : ''}>
+              🔔 Icon Animation
+            </span>
+          </div>
+          <div className="p-2 text-center">
+            <button 
+              className={`px-3 py-1 bg-primary text-white rounded-md ${
+                value.buttons === 'fade' ? 'animate-fade-in' : 
+                value.buttons === 'slide' ? 'animate-slide-in' : 
+                value.buttons === 'pop' ? 'animate-scale-in' : ''
+              }`}
+            >
+              Button Animation
+            </button>
           </div>
         </div>
       </div>

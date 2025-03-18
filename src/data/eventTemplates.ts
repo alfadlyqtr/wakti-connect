@@ -4,316 +4,249 @@ import { EventCustomization } from "@/types/event.types";
 export interface EventTemplate {
   id: string;
   name: string;
-  type: 'wedding' | 'birthday' | 'graduation' | 'meeting' | 'party' | 'other';
   description: string;
-  previewImage?: string;
+  preview: string; // URL to preview image
   customization: EventCustomization;
 }
 
-export const eventTemplates: EventTemplate[] = [
+const eventTemplates: EventTemplate[] = [
   {
-    id: 'wedding-classic',
-    name: 'Classic Wedding',
-    type: 'wedding',
-    description: 'A classic, elegant wedding invitation',
+    id: "minimal",
+    name: "Minimal",
+    description: "Clean and simple design with minimal styling",
+    preview: "/templates/minimal.jpg",
     customization: {
       background: {
-        type: 'color',
-        value: '#f8f9fa'
+        type: "color",
+        value: "#ffffff"
       },
       font: {
-        family: 'Playfair Display, serif',
-        size: 'medium',
-        color: '#333333'
+        family: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        size: "medium",
+        color: "#333333",
+        alignment: "left"
       },
       buttons: {
         accept: {
-          background: '#4CAF50',
-          color: '#ffffff',
-          shape: 'rounded'
+          background: "#4CAF50",
+          color: "#ffffff",
+          shape: "rounded"
         },
         decline: {
-          background: '#f44336',
-          color: '#ffffff',
-          shape: 'rounded'
+          background: "#f44336",
+          color: "#ffffff",
+          shape: "rounded"
         }
       },
-      headerStyle: 'banner',
-      animation: 'fade',
-      headerImage: 'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-      branding: {
-        slogan: 'Join us on our special day'
-      },
-      enableAddToCalendar: true
+      headerStyle: "simple",
+      animation: "fade"
     }
   },
   {
-    id: 'birthday-fun',
-    name: 'Fun Birthday Party',
-    type: 'birthday',
-    description: 'A vibrant birthday party invitation',
+    id: "modern",
+    name: "Modern",
+    description: "Contemporary design with gradient background",
+    preview: "/templates/modern.jpg",
     customization: {
       background: {
-        type: 'gradient',
-        value: 'linear-gradient(90deg, hsla(39, 100%, 77%, 1) 0%, hsla(22, 90%, 57%, 1) 100%)'
+        type: "gradient",
+        value: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
       },
       font: {
-        family: 'Montserrat, sans-serif',
-        size: 'large',
-        color: '#ffffff'
+        family: "Helvetica, sans-serif",
+        size: "medium",
+        color: "#333333",
+        alignment: "center"
       },
       buttons: {
         accept: {
-          background: '#4CAF50',
-          color: '#ffffff',
-          shape: 'pill'
+          background: "#3498db",
+          color: "#ffffff",
+          shape: "pill"
         },
         decline: {
-          background: '#f44336',
-          color: '#ffffff',
-          shape: 'pill'
+          background: "#e74c3c",
+          color: "#ffffff",
+          shape: "pill"
         }
       },
-      headerStyle: 'simple',
-      animation: 'pop',
-      enableChatbot: true,
-      enableAddToCalendar: true
+      headerStyle: "simple",
+      animation: "fade"
     }
   },
   {
-    id: 'graduation-proud',
-    name: 'Graduation Celebration',
-    type: 'graduation',
-    description: 'A proud graduation announcement',
+    id: "bold",
+    name: "Bold",
+    description: "Strong colors with impactful design",
+    preview: "/templates/bold.jpg",
     customization: {
       background: {
-        type: 'color',
-        value: '#0d47a1'
+        type: "color",
+        value: "#2c3e50"
       },
       font: {
-        family: 'Georgia, serif',
-        size: 'medium',
-        color: '#ffffff'
+        family: "Impact, sans-serif",
+        size: "large",
+        color: "#ffffff",
+        alignment: "center"
       },
       buttons: {
         accept: {
-          background: '#ffeb3b',
-          color: '#212121',
-          shape: 'rounded'
+          background: "#2ecc71",
+          color: "#ffffff",
+          shape: "square"
         },
         decline: {
-          background: '#e0e0e0',
-          color: '#212121',
-          shape: 'rounded'
+          background: "#e74c3c",
+          color: "#ffffff",
+          shape: "square"
         }
       },
-      headerStyle: 'banner',
-      animation: 'fade',
-      enableAddToCalendar: true
+      headerStyle: "banner",
+      animation: "slide"
     }
   },
   {
-    id: 'family-gathering',
-    name: 'Family Gathering',
-    type: 'party',
-    description: 'A warm family reunion invitation',
+    id: "playful",
+    name: "Playful",
+    description: "Fun, colorful design for casual events",
+    preview: "/templates/playful.jpg",
     customization: {
       background: {
-        type: 'color',
-        value: '#f5f5dc'
+        type: "gradient",
+        value: "linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%)"
       },
       font: {
-        family: 'Verdana, sans-serif',
-        size: 'medium',
-        color: '#5d4037'
+        family: "Comic Sans MS, cursive",
+        size: "medium",
+        color: "#333333",
+        alignment: "center"
       },
       buttons: {
         accept: {
-          background: '#8d6e63',
-          color: '#ffffff',
-          shape: 'rounded'
+          background: "#00b894",
+          color: "#ffffff",
+          shape: "rounded"
         },
         decline: {
-          background: '#bdbdbd',
-          color: '#ffffff',
-          shape: 'rounded'
+          background: "#d63031",
+          color: "#ffffff",
+          shape: "rounded"
         }
       },
-      headerStyle: 'minimal',
-      animation: 'slide',
-      enableAddToCalendar: true
+      headerStyle: "minimal",
+      animation: "pop"
     }
   },
   {
-    id: 'business-meeting',
-    name: 'Business Meeting',
-    type: 'meeting',
-    description: 'A professional business meeting invitation',
+    id: "formal",
+    name: "Formal",
+    description: "Elegant design for professional events",
+    preview: "/templates/formal.jpg",
     customization: {
       background: {
-        type: 'color',
-        value: '#ffffff'
+        type: "color",
+        value: "#f8f9fa"
       },
       font: {
-        family: 'Arial, sans-serif',
-        size: 'medium',
-        color: '#212121'
+        family: "Georgia, serif",
+        size: "medium",
+        color: "#212529",
+        alignment: "left"
       },
       buttons: {
         accept: {
-          background: '#1976d2',
-          color: '#ffffff',
-          shape: 'square'
+          background: "#343a40",
+          color: "#ffffff",
+          shape: "rounded"
         },
         decline: {
-          background: '#e0e0e0',
-          color: '#212121',
-          shape: 'square'
+          background: "#6c757d",
+          color: "#ffffff",
+          shape: "rounded"
         }
       },
-      headerStyle: 'simple',
-      animation: 'fade',
-      branding: {
-        slogan: 'Let\'s discuss business opportunities'
-      },
-      enableChatbot: true,
-      enableAddToCalendar: true
+      headerStyle: "simple",
+      animation: "fade"
     }
   },
   {
-    id: 'modern-conference',
-    name: 'Modern Conference',
-    type: 'meeting',
-    description: 'A sleek and modern conference/event template',
+    id: "luxury",
+    name: "Luxury Gala",
+    description: "Elegant design for upscale events and galas",
+    preview: "/templates/luxury.jpg",
     customization: {
       background: {
-        type: 'gradient',
-        value: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        direction: 'to-bottom-right'
+        type: "gradient",
+        value: "linear-gradient(135deg, #2c3e50 0%, #4a5568 50%, #2c3e50 100%)",
+        angle: 135,
+        direction: "to-bottom-right"
       },
       font: {
-        family: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        size: 'medium',
-        color: '#2d3748',
-        weight: 'medium',
-        alignment: 'center'
+        family: "Georgia, serif",
+        size: "medium",
+        color: "#e2e8f0",
+        alignment: "center",
+        weight: "normal"
       },
       headerFont: {
-        family: 'Montserrat, sans-serif',
-        size: 'large',
-        color: '#2c5282',
-        weight: 'bold'
-      },
-      buttons: {
-        accept: {
-          background: '#3182ce',
-          color: '#ffffff',
-          shape: 'pill'
-        },
-        decline: {
-          background: '#e53e3e',
-          color: '#ffffff',
-          shape: 'pill'
-        }
-      },
-      headerStyle: 'banner',
-      animation: 'slide',
-      elementAnimations: {
-        text: 'fade',
-        buttons: 'pop',
-        icons: 'slide',
-        delay: 'staggered'
-      },
-      cardEffect: {
-        type: 'gloss',
-        borderRadius: 'large',
-        border: true,
-        borderColor: '#e2e8f0'
-      },
-      enableChatbot: true,
-      enableAddToCalendar: true,
-      showAcceptDeclineButtons: true,
-      mapDisplay: 'both'
-    }
-  },
-  {
-    id: 'luxury-gala',
-    name: 'Luxury Gala',
-    type: 'party',
-    description: 'An elegant gala or formal event invitation',
-    customization: {
-      background: {
-        type: 'gradient',
-        value: 'linear-gradient(to right, #141e30, #243b55)',
-        angle: 120,
-        direction: 'to-bottom-right'
-      },
-      font: {
-        family: 'Playfair Display, serif',
-        size: 'medium',
-        color: '#ffffff',
-        weight: 'normal',
-        alignment: 'center'
-      },
-      headerFont: {
-        family: 'Playfair Display, serif',
-        size: 'large',
-        color: '#ffd700',
-        weight: 'bold'
+        family: "Times New Roman, serif",
+        size: "large",
+        color: "#efd79f", // Gold color
+        weight: "bold"
       },
       descriptionFont: {
-        family: 'Georgia, serif',
-        size: 'medium',
-        color: '#e0e0e0',
-        weight: 'normal'
+        family: "Georgia, serif",
+        size: "medium",
+        color: "#e2e8f0",
+        weight: "normal"
       },
       dateTimeFont: {
-        family: 'Georgia, serif',
-        size: 'medium',
-        color: '#ffd700',
-        weight: 'medium'
+        family: "Georgia, serif",
+        size: "medium",
+        color: "#efd79f", // Gold color
+        weight: "medium"
       },
       buttons: {
         accept: {
-          background: '#ffd700',
-          color: '#000000',
-          shape: 'pill'
+          background: "#efd79f", // Gold
+          color: "#2c3e50",
+          shape: "pill"
         },
         decline: {
-          background: 'rgba(255,255,255,0.2)',
-          color: '#ffffff',
-          shape: 'pill'
+          background: "#2c3e50",
+          color: "#e2e8f0",
+          shape: "pill"
         }
       },
-      headerStyle: 'banner',
-      animation: 'fade',
-      elementAnimations: {
-        text: 'fade',
-        buttons: 'slide',
-        icons: 'pop',
-        delay: 'staggered'
+      headerStyle: "banner",
+      animation: "fade",
+      branding: {
+        slogan: "Luxury Event Experience"
       },
       cardEffect: {
-        type: 'gloss',
-        borderRadius: 'medium',
+        type: "gloss",
+        borderRadius: "medium",
         border: true,
-        borderColor: '#ffd700'
+        borderColor: "#efd79f"
       },
+      elementAnimations: {
+        text: "fade",
+        buttons: "scale",
+        icons: "fade",
+        delay: "staggered"
+      },
+      mapDisplay: "both",
       showAcceptDeclineButtons: true,
-      showAddToCalendarButton: true,
-      branding: {
-        slogan: 'An evening of elegance awaits'
-      },
-      mapDisplay: 'both'
+      showAddToCalendarButton: true
     }
   }
 ];
 
-export const getTemplatesByType = (type: string): EventTemplate[] => {
-  if (type === 'all') return eventTemplates;
-  return eventTemplates.filter(template => template.type === type);
-};
+export function getTemplates(): EventTemplate[] {
+  return eventTemplates;
+}
 
-export const getTemplateById = (id: string): EventTemplate | undefined => {
+export function getTemplateById(id: string): EventTemplate | undefined {
   return eventTemplates.find(template => template.id === id);
-};
+}

@@ -2,9 +2,10 @@
 import React, { useState } from "react";
 import { EventCustomization } from "@/types/event.types";
 import { Button } from "@/components/ui/button";
-import { Check, X, MapPin, QrCode, Calendar } from "lucide-react";
+import { Check, X, MapPin, QrCode, Calendar, Smartphone, Monitor } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 interface LivePreviewProps {
   customization: EventCustomization;
@@ -25,11 +26,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
   viewMode,
   onViewModeChange
 }) => {
-  const [showMap, setShowMap] = useState(false);
   const [showQrCode, setShowQrCode] = useState(false);
-  const [cardEffect, setCardEffect] = useState<'shadow' | 'matte' | 'gloss'>(
-    customization.cardEffect?.type || 'shadow'
-  );
   
   // Compute background style based on customization
   const getBackgroundStyle = () => {
@@ -38,16 +35,17 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     if (background.type === 'color') {
       return { backgroundColor: background.value };
     } else if (background.type === 'gradient') {
-      const direction = background.direction || 'to-right';
-      const directionValue = direction.replace('to-', 'to ');
-      const angle = background.angle !== undefined ? `${background.angle}deg` : '90deg';
-      
-      // Use either the predefined value or construct a new one from angle and direction
       if (background.value.includes('linear-gradient')) {
         return { backgroundImage: background.value };
-      } else {
+      } else if (background.angle !== undefined) {
         return { 
-          backgroundImage: `linear-gradient(${angle}, ${background.value})` 
+          backgroundImage: `linear-gradient(${background.angle}deg, ${background.value})` 
+        };
+      } else {
+        const direction = background.direction || 'to-right';
+        const directionValue = direction.replace('to-', 'to ');
+        return { 
+          backgroundImage: `linear-gradient(${directionValue}, ${background.value})` 
         };
       }
     } else if (background.type === 'image') {
@@ -125,28 +123,42 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     }
   };
 
-  // Element animation classes
-  const getElementAnimationClass = (type: 'text' | 'buttons' | 'icons') => {
+  // Element animation classes with delay support
+  const getElementAnimationClass = (type: 'text' | 'buttons' | 'icons', index: number = 0) => {
     if (!customization.elementAnimations) return '';
     
     const animation = customization.elementAnimations[type];
     if (!animation || animation === 'none') return '';
     
+    // Basic animation class
+    let animClass = '';
     switch (animation) {
       case 'fade':
-        return 'animate-fade-in';
+        animClass = 'animate-fade-in';
+        break;
       case 'slide':
-        return 'animate-slide-in';
+        animClass = 'animate-slide-in';
+        break;
       case 'pop':
-        return 'animate-scale-in';
+        animClass = 'animate-scale-in';
+        break;
       default:
         return '';
     }
+    
+    // Apply delay based on settings
+    if (customization.elementAnimations.delay === 'staggered') {
+      return `${animClass} [animation-delay:${index * 0.1}s]`;
+    } else if (customization.elementAnimations.delay === 'sequence') {
+      return `${animClass} [animation-delay:${index * 0.3}s]`;
+    }
+    
+    return animClass;
   };
 
   // Card effect class
   const getCardEffectClass = () => {
-    const effectType = customization.cardEffect?.type || cardEffect;
+    const effectType = customization.cardEffect?.type || 'shadow';
     
     switch (effectType) {
       case 'shadow':
@@ -271,19 +283,17 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     if (!showQrCode) return null;
 
     return (
-      <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50">
+      <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50" onClick={() => setShowQrCode(false)}>
         <div 
-          className={`relative w-[320px] h-[320px] bg-white rounded-lg ${
-            showQrCode ? 'animate-flip' : 'animate-flip-back'
-          }`}
-          style={{ transformStyle: 'preserve-3d' }}
+          className="relative w-[280px] h-[280px] bg-white rounded-lg shadow-2xl animate-flip"
+          onClick={(e) => e.stopPropagation()}
         >
           <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
             <div className="w-full h-full flex flex-col items-center justify-center">
               <div className="w-48 h-48 bg-gray-200 flex items-center justify-center mb-4">
-                <QrCode size={140} />
+                <QrCode size={140} className="text-gray-800" />
               </div>
-              <p className="text-center text-sm">Scan to view event</p>
+              <p className="text-center text-sm font-medium">Scan to view event</p>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -304,48 +314,36 @@ const LivePreview: React.FC<LivePreviewProps> = ({
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-base font-medium">Live Preview</h3>
         <div className="flex items-center space-x-2">
-          <Label htmlFor="view-mode" className="text-sm">
-            {viewMode === 'mobile' ? 'Mobile View' : 'Desktop View'}
-          </Label>
-          <Switch
-            id="view-mode"
-            checked={viewMode === 'desktop'}
-            onCheckedChange={(checked) => onViewModeChange(checked ? 'desktop' : 'mobile')}
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-between items-center mb-4">
-        <Label htmlFor="card-effect" className="text-sm">Card Effect:</Label>
-        <div className="flex space-x-2">
-          <Button 
-            variant={cardEffect === 'shadow' ? "default" : "outline"} 
-            size="sm"
-            onClick={() => setCardEffect('shadow')}
+          <Button
+            variant={viewMode === 'mobile' ? "default" : "outline"}
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onViewModeChange('mobile')}
+            title="Mobile View"
           >
-            Shadow
+            <Smartphone className="h-4 w-4" />
           </Button>
-          <Button 
-            variant={cardEffect === 'matte' ? "default" : "outline"} 
-            size="sm"
-            onClick={() => setCardEffect('matte')}
+          <Button
+            variant={viewMode === 'desktop' ? "default" : "outline"}
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onViewModeChange('desktop')}
+            title="Desktop View"
           >
-            Matte
-          </Button>
-          <Button 
-            variant={cardEffect === 'gloss' ? "default" : "outline"} 
-            size="sm"
-            onClick={() => setCardEffect('gloss')}
-          >
-            Gloss
+            <Monitor className="h-4 w-4" />
           </Button>
         </div>
       </div>
       
       <div 
-        className={`border overflow-hidden ${getAnimationClass()} ${getCardEffectClass()} ${getBorderRadiusClass()} mx-auto transition-all`}
+        className={cn(
+          "border overflow-hidden mx-auto transition-all",
+          getAnimationClass(),
+          getCardEffectClass(),
+          getBorderRadiusClass(),
+          viewMode === 'mobile' ? 'w-[320px] sm:w-[320px]' : 'w-full sm:w-[500px]'
+        )}
         style={{
-          width: viewMode === 'mobile' ? '320px' : '500px',
           maxWidth: '100%',
           ...getBackgroundStyle(),
           ...getBorderStyle()
@@ -356,7 +354,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
         <div className="p-4" style={getTextStyle()}>
           {description && (
             <p 
-              className={`mb-4 ${getElementAnimationClass('text')}`}
+              className={`mb-4 ${getElementAnimationClass('text', 1)}`}
               style={getTextStyle('description')}
             >
               {description}
@@ -365,29 +363,29 @@ const LivePreview: React.FC<LivePreviewProps> = ({
           
           {dateTime && (
             <p 
-              className={`mb-2 flex items-center ${getElementAnimationClass('text')}`}
+              className={`mb-2 flex items-center ${getElementAnimationClass('text', 2)}`}
               style={getTextStyle('datetime')}
             >
-              <span className={`mr-2 ${getElementAnimationClass('icons')}`}>📅</span> {dateTime}
+              <span className={`mr-2 ${getElementAnimationClass('icons', 0)}`}>📅</span> {dateTime}
             </p>
           )}
           
           {location && (
             <p 
-              className={`mb-4 flex items-center ${getElementAnimationClass('text')}`}
+              className={`mb-4 flex items-center ${getElementAnimationClass('text', 3)}`}
             >
-              <span className={`mr-2 ${getElementAnimationClass('icons')}`}>📍</span> {location}
+              <span className={`mr-2 ${getElementAnimationClass('icons', 1)}`}>📍</span> {location}
             </p>
           )}
           
           {customization.enableChatbot && (
-            <div className={`mb-4 p-2 border rounded-md bg-background/50 ${getElementAnimationClass('text')}`}>
+            <div className={`mb-4 p-2 border rounded-md bg-background/50 ${getElementAnimationClass('text', 4)}`}>
               <p className="text-sm">Ask me about this event! (Chatbot enabled)</p>
             </div>
           )}
           
-          {(location && customization.buttons.accept.background !== '#ffffff' && customization.showAcceptDeclineButtons !== false) && (
-            <div className={`flex justify-center gap-3 mt-6 mb-3 ${getElementAnimationClass('buttons')}`}>
+          {(location && customization.showAcceptDeclineButtons !== false) && (
+            <div className={`flex justify-center gap-3 mt-6 mb-3 ${getElementAnimationClass('buttons', 0)}`}>
               <button 
                 className="py-2 px-4 flex items-center gap-1"
                 style={getButtonStyle('accept')}
@@ -405,15 +403,15 @@ const LivePreview: React.FC<LivePreviewProps> = ({
           )}
           
           {location && (
-            <div className={`grid grid-cols-3 gap-2 mt-4 ${getElementAnimationClass('buttons')}`}>
+            <div className={`grid grid-cols-3 gap-2 mt-4 ${getElementAnimationClass('buttons', 1)}`}>
               {customization.showAddToCalendarButton !== false && (
                 <Button variant="outline" size="sm" className="text-xs flex items-center justify-center gap-1">
-                  <Calendar className={`h-3 w-3 ${getElementAnimationClass('icons')}`} /> Calendar
+                  <Calendar className={`h-3 w-3 ${getElementAnimationClass('icons', 2)}`} /> Calendar
                 </Button>
               )}
               
               <Button variant="outline" size="sm" className="text-xs flex items-center justify-center gap-1">
-                <MapPin className={`h-3 w-3 ${getElementAnimationClass('icons')}`} /> Map
+                <MapPin className={`h-3 w-3 ${getElementAnimationClass('icons', 3)}`} /> Map
               </Button>
               
               <Button 
@@ -422,7 +420,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
                 className="text-xs flex items-center justify-center gap-1"
                 onClick={() => setShowQrCode(true)}
               >
-                <QrCode className={`h-3 w-3 ${getElementAnimationClass('icons')}`} /> QR Code
+                <QrCode className={`h-3 w-3 ${getElementAnimationClass('icons', 4)}`} /> QR Code
               </Button>
             </div>
           )}

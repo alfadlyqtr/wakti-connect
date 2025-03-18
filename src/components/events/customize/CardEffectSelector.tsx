@@ -5,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 interface CardEffectSelectorProps {
   value: {
@@ -55,7 +56,7 @@ const CardEffectSelector: React.FC<CardEffectSelectorProps> = ({
         <RadioGroup 
           value={value.type} 
           onValueChange={handleTypeChange}
-          className="flex space-x-4"
+          className="flex flex-wrap gap-4"
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="shadow" id="card-shadow" />
@@ -71,6 +72,8 @@ const CardEffectSelector: React.FC<CardEffectSelectorProps> = ({
           </div>
         </RadioGroup>
       </div>
+
+      <Separator />
 
       <div>
         <Label htmlFor="card-radius" className="block mb-2">Corner Roundness</Label>
@@ -89,6 +92,8 @@ const CardEffectSelector: React.FC<CardEffectSelectorProps> = ({
           </SelectContent>
         </Select>
       </div>
+
+      <Separator />
 
       <div className="flex items-center justify-between">
         <Label htmlFor="card-border" className="block">Card Border</Label>
@@ -120,14 +125,14 @@ const CardEffectSelector: React.FC<CardEffectSelectorProps> = ({
         </div>
       )}
 
-      <div className="mt-6 grid grid-cols-3 gap-4">
-        <div className="shadow-lg bg-white rounded-lg h-20 flex items-center justify-center">
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="shadow-lg bg-white rounded-lg h-20 flex items-center justify-center text-center">
           Shadow
         </div>
-        <div className="shadow-sm bg-white bg-opacity-90 rounded-lg h-20 flex items-center justify-center">
+        <div className="shadow-sm bg-white bg-opacity-90 rounded-lg h-20 flex items-center justify-center text-center">
           Matte
         </div>
-        <div className="shadow-lg bg-white bg-opacity-95 backdrop-blur-sm border-opacity-30 rounded-lg h-20 flex items-center justify-center">
+        <div className="shadow-lg bg-white bg-opacity-95 backdrop-blur-sm border-opacity-30 rounded-lg h-20 flex items-center justify-center text-center">
           Gloss
         </div>
       </div>
