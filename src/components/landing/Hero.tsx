@@ -4,11 +4,9 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
-import { useDirection } from "@/contexts/DirectionContext";
 
 const Hero = () => {
   const { t } = useTranslation();
-  const { isRtl } = useDirection();
   
   return (
     <section className="py-16 md:py-24 px-4">
@@ -33,7 +31,7 @@ const Hero = () => {
             <Button asChild size="lg" className="w-full sm:w-auto">
               <Link to="/auth?tab=register">
                 {t('hero.startForFree')}
-                <ArrowRight className="ml-2 rtl:mr-2 rtl:ml-0 h-4 w-4 icon-flip-rtl" />
+                <ArrowRight className="ml-2 h-4 w-4 icon-flip-rtl" />
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
