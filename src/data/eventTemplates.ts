@@ -7,6 +7,7 @@ export interface EventTemplate {
   description: string;
   preview: string; // URL to preview image
   customization: EventCustomization;
+  type?: string; // Adding type property for filtering
 }
 
 const eventTemplates: EventTemplate[] = [
@@ -40,7 +41,8 @@ const eventTemplates: EventTemplate[] = [
       },
       headerStyle: "simple",
       animation: "fade"
-    }
+    },
+    type: "other"
   },
   {
     id: "modern",
@@ -72,7 +74,8 @@ const eventTemplates: EventTemplate[] = [
       },
       headerStyle: "simple",
       animation: "fade"
-    }
+    },
+    type: "meeting"
   },
   {
     id: "bold",
@@ -104,7 +107,8 @@ const eventTemplates: EventTemplate[] = [
       },
       headerStyle: "banner",
       animation: "slide"
-    }
+    },
+    type: "party"
   },
   {
     id: "playful",
@@ -136,7 +140,8 @@ const eventTemplates: EventTemplate[] = [
       },
       headerStyle: "minimal",
       animation: "pop"
-    }
+    },
+    type: "birthday"
   },
   {
     id: "formal",
@@ -168,7 +173,8 @@ const eventTemplates: EventTemplate[] = [
       },
       headerStyle: "simple",
       animation: "fade"
-    }
+    },
+    type: "graduation"
   },
   {
     id: "luxury",
@@ -220,7 +226,7 @@ const eventTemplates: EventTemplate[] = [
         }
       },
       headerStyle: "banner",
-      animation: "fade",
+      animation: "fade", // Changed from "scale" to "fade" to match allowed types
       branding: {
         slogan: "Luxury Event Experience"
       },
@@ -232,14 +238,15 @@ const eventTemplates: EventTemplate[] = [
       },
       elementAnimations: {
         text: "fade",
-        buttons: "scale",
+        buttons: "fade", // Changed from "scale" to "fade" to match allowed types
         icons: "fade",
         delay: "staggered"
       },
       mapDisplay: "both",
       showAcceptDeclineButtons: true,
       showAddToCalendarButton: true
-    }
+    },
+    type: "wedding"
   }
 ];
 

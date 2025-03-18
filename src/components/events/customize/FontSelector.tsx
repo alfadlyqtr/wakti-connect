@@ -17,7 +17,7 @@ interface FontProps {
 
 interface FontSelectorProps {
   font: FontProps;
-  onFontChange: (property: 'family' | 'size' | 'color' | 'weight' | 'alignment', value: string) => void;
+  onFontChange: (property: string, value: string) => void;
   showAlignment?: boolean;
   showWeight?: boolean;
   previewText?: string;

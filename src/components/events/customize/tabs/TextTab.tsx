@@ -12,6 +12,21 @@ interface TextTabProps {
   onDateTimeFontChange?: (property: 'family' | 'size' | 'color' | 'weight', value: string) => void;
 }
 
+// Update this interface to include alignment
+interface FontSelectorProps {
+  font: {
+    family: string;
+    size: string;
+    color: string;
+    weight?: string;
+    alignment?: string;
+  };
+  onFontChange: (property: string, value: string) => void;
+  showAlignment?: boolean;
+  showWeight?: boolean;
+  previewText?: string;
+}
+
 const TextTab: React.FC<TextTabProps> = ({
   customization,
   onFontChange,
@@ -20,6 +35,17 @@ const TextTab: React.FC<TextTabProps> = ({
   onDateTimeFontChange
 }) => {
   const [activeTab, setActiveTab] = useState("main");
+
+  // Helper function to handle property mapping
+  const handleFontChange = (handler: ((property: string, value: string) => void) | undefined, property: string, value: string) => {
+    if (handler) {
+      // Filter out 'alignment' for tab-specific handlers
+      if (property === 'alignment' && handler !== onFontChange) {
+        return; // Skip alignment for header, description, and dateTime fonts
+      }
+      handler(property, value);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -37,7 +63,7 @@ const TextTab: React.FC<TextTabProps> = ({
           </div>
           <FontSelector 
             font={customization.font}
-            onFontChange={onFontChange}
+            onFontChange={(property, value) => handleFontChange(onFontChange, property, value)}
             showAlignment={true}
             showWeight={true}
           />
@@ -54,7 +80,7 @@ const TextTab: React.FC<TextTabProps> = ({
               color: customization.headerFont?.color || customization.font.color,
               weight: customization.headerFont?.weight || customization.font.weight || 'normal'
             }}
-            onFontChange={(property, value) => onHeaderFontChange && onHeaderFontChange(property, value)}
+            onFontChange={(property, value) => handleFontChange(onHeaderFontChange, property, value)}
             showAlignment={false}
             showWeight={true}
             previewText={customization.headerFont?.family ? "Custom Header Font" : "Using Default Font"}
@@ -72,7 +98,7 @@ const TextTab: React.FC<TextTabProps> = ({
               color: customization.descriptionFont?.color || customization.font.color,
               weight: customization.descriptionFont?.weight || customization.font.weight || 'normal'
             }}
-            onFontChange={(property, value) => onDescriptionFontChange && onDescriptionFontChange(property, value)}
+            onFontChange={(property, value) => handleFontChange(onDescriptionFontChange, property, value)}
             showAlignment={false}
             showWeight={true}
             previewText={customization.descriptionFont?.family ? "Custom Description Font" : "Using Default Font"}
@@ -90,7 +116,7 @@ const TextTab: React.FC<TextTabProps> = ({
               color: customization.dateTimeFont?.color || customization.font.color,
               weight: customization.dateTimeFont?.weight || customization.font.weight || 'normal'
             }}
-            onFontChange={(property, value) => onDateTimeFontChange && onDateTimeFontChange(property, value)}
+            onFontChange={(property, value) => handleFontChange(onDateTimeFontChange, property, value)}
             showAlignment={false}
             showWeight={true}
             previewText={customization.dateTimeFont?.family ? "Custom Date/Time Font" : "Using Default Font"}

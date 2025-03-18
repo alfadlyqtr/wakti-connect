@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { eventTemplates, EventTemplate } from "@/data/eventTemplates";
+import { getTemplates, EventTemplate } from "@/data/eventTemplates";
 
 interface TemplateSelectorProps {
   selectedTemplateId: string | null;
@@ -19,6 +19,9 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   isLoading = false
 }) => {
   const [activeTab, setActiveTab] = useState<string>("all");
+  
+  // Get templates from the utility function
+  const eventTemplates = getTemplates();
   
   // Filter templates based on the active tab
   const filteredTemplates = activeTab === "all" 
