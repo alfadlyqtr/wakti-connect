@@ -1,15 +1,13 @@
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2, Send, Bot, Clock, RefreshCcw } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { useAuth } from "@/hooks/useAuth";
+import { Bot } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/hooks/useAuth";
 import { AIAssistantUpgradeCard } from "@/components/ai/AIAssistantUpgradeCard";
-import { AIAssistantMessage } from "@/components/ai/message";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AIAssistantChatCard } from "@/components/ai/assistant";
+import { AIAssistantLoader } from "@/components/ai/assistant";
+import { AIAssistantHistoryCard } from "@/components/ai/AIAssistantHistoryCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
@@ -25,7 +23,6 @@ const DashboardAIAssistant = () => {
   const [inputMessage, setInputMessage] = useState("");
   const [isChecking, setIsChecking] = useState(true);
   const [canAccess, setCanAccess] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Check if user has access to AI
   useEffect(() => {
@@ -92,11 +89,6 @@ const DashboardAIAssistant = () => {
     }
   }, [hookCanUseAI, isChecking, canAccess]);
 
-  // Scroll to bottom of messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim() || isLoading || !canAccess) return;
@@ -105,21 +97,9 @@ const DashboardAIAssistant = () => {
     setInputMessage("");
   };
 
-  const suggestionQuestions = [
-    "What tasks should I prioritize today?",
-    "Help me plan an event for next week",
-    "Analyze my team's performance",
-    "Optimize my work schedule",
-    "Suggest ways to improve task completion rate"
-  ];
-
   // If still checking access, show loading
   if (isChecking) {
-    return (
-      <div className="flex items-center justify-center h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-wakti-blue" />
-      </div>
-    );
+    return <AIAssistantLoader />;
   }
 
   return (
@@ -144,113 +124,20 @@ const DashboardAIAssistant = () => {
           {!canAccess ? (
             <AIAssistantUpgradeCard />
           ) : (
-            <Card className="border shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2">
-                  <Bot className="h-5 w-5 text-wakti-blue" />
-                  Chat with WAKTI AI
-                </CardTitle>
-                <CardDescription>
-                  Ask about tasks, events, staff management, analytics, and more
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="border-t border-b h-[400px] flex flex-col">
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {messages.map((message) => (
-                      <AIAssistantMessage
-                        key={message.id}
-                        message={message}
-                      />
-                    ))}
-                    <div ref={messagesEndRef} />
-                  </div>
-
-                  <form onSubmit={handleSendMessage} className="p-4 border-t flex gap-2">
-                    <Input
-                      value={inputMessage}
-                      onChange={(e) => setInputMessage(e.target.value)}
-                      placeholder="Type your message..."
-                      disabled={isLoading || !canAccess}
-                      className="flex-1"
-                    />
-                    <Button type="submit" disabled={isLoading || !canAccess || !inputMessage.trim()}>
-                      {isLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                      <span className="sr-only">Send</span>
-                    </Button>
-                  </form>
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col pt-6">
-                <div className="flex justify-between w-full mb-4">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={clearMessages}
-                    className="text-xs"
-                  >
-                    <RefreshCcw className="h-3 w-3 mr-1" />
-                    New conversation
-                  </Button>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3 mr-1" />
-                    Powered by <a 
-                      href="https://tmw.qa/ai-chat-bot/" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-wakti-blue hover:underline ml-1"
-                    >
-                      TMW AI
-                    </a>
-                  </div>
-                </div>
-                
-                <Alert className="bg-muted/50">
-                  <AlertTitle className="text-sm font-medium">Try asking:</AlertTitle>
-                  <AlertDescription className="mt-2">
-                    <div className="flex flex-wrap gap-2">
-                      {suggestionQuestions.map((question, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          className="text-xs"
-                          onClick={() => {
-                            setInputMessage(question);
-                          }}
-                          disabled={isLoading}
-                        >
-                          {question}
-                        </Button>
-                      ))}
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              </CardFooter>
-            </Card>
+            <AIAssistantChatCard
+              messages={messages}
+              inputMessage={inputMessage}
+              setInputMessage={setInputMessage}
+              handleSendMessage={handleSendMessage}
+              isLoading={isLoading}
+              canAccess={canAccess}
+              clearMessages={clearMessages}
+            />
           )}
         </TabsContent>
 
         <TabsContent value="history" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Chat History</CardTitle>
-              <CardDescription>View your previous conversations with the AI assistant</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {canAccess ? (
-                <p className="text-center text-muted-foreground py-8">
-                  Chat history feature coming soon
-                </p>
-              ) : (
-                <AIAssistantUpgradeCard />
-              )}
-            </CardContent>
-          </Card>
+          <AIAssistantHistoryCard canAccess={canAccess} />
         </TabsContent>
       </Tabs>
     </div>
