@@ -1,4 +1,3 @@
-
 import React from "react";
 import { RouteObject } from "react-router-dom";
 import DashboardHome from "@/pages/dashboard/DashboardHome";
@@ -15,6 +14,7 @@ import DashboardTeamManagement from "@/pages/dashboard/DashboardTeamManagement";
 import DashboardWorkManagement from "@/pages/dashboard/DashboardWorkManagement";
 import DashboardServiceManagement from "@/pages/dashboard/DashboardServiceManagement";
 import TaskDetails from "@/components/tasks/TaskDetails";
+import DashboardJobs from "@/pages/dashboard/DashboardJobs";
 
 const dashboardRoutes: RouteObject[] = [
   {
@@ -81,6 +81,10 @@ const dashboardRoutes: RouteObject[] = [
   {
     path: "services",
     element: <DashboardServiceManagement />,
+  },
+  {
+    path: "jobs",
+    element: <DashboardJobs />,
   },
 ];
 
