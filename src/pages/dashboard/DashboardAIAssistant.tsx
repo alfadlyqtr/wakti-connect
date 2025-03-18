@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AIAssistantUpgradeCard } from "@/components/ai/AIAssistantUpgradeCard";
-import { AIAssistantMessage } from "@/components/ai/AIAssistantMessage";
+import { AIAssistantMessage } from "@/components/ai/message";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const DashboardAIAssistant = () => {

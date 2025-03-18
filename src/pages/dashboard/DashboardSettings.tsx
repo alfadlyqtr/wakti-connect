@@ -1,10 +1,9 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProfileTab } from "@/components/settings/ProfileTab";
-import { AccountTab } from "@/components/settings/AccountTab";
-import { BillingTab } from "@/components/settings/BillingTab";
-import { NotificationsTab } from "@/components/settings/NotificationsTab";
+import ProfileTab from "@/components/settings/ProfileTab";
+import AccountTab from "@/components/settings/AccountTab";
+import BillingTab from "@/components/settings/BillingTab";
+import NotificationsTab from "@/components/settings/NotificationsTab";
 import { AIAssistantSettings } from "@/components/settings/ai";
 
 const DashboardSettings = () => {
