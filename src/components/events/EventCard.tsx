@@ -2,18 +2,27 @@
 import React from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Event } from "@/types/event.types";
-import { Calendar, Clock, MapPin } from "lucide-react";
+import { Calendar, Clock, MapPin, Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/utils/dateUtils";
+import { Button } from "@/components/ui/button";
 
 interface EventCardProps {
   event: Event;
   onCardClick?: () => void;
-  viewType?: string; // Adding viewType prop to fix build errors
+  viewType?: 'sent' | 'received' | 'draft';
+  onAccept?: (eventId: string) => void;
+  onDecline?: (eventId: string) => void;
 }
 
-const EventCard: React.FC<EventCardProps> = ({ event, onCardClick, viewType }) => {
-  const { title, description, location, start_time, end_time, status, customization } = event;
+const EventCard: React.FC<EventCardProps> = ({ 
+  event, 
+  onCardClick, 
+  viewType = 'sent',
+  onAccept,
+  onDecline
+}) => {
+  const { id, title, description, location, start_time, end_time, status, customization } = event;
   
   // Ensure customization has default values
   const safeCustomization = customization || {
@@ -28,8 +37,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, onCardClick, viewType }) =
   
   // Format date and time
   const formattedStartDate = formatDate(new Date(start_time));
-  const formattedStartTime = formatDate(new Date(start_time));
-  const formattedEndTime = formatDate(new Date(end_time));
+  const formattedStartTime = formatDate(new Date(start_time), { includeTime: true });
+  const formattedEndTime = formatDate(new Date(end_time), { includeTime: true });
   
   // Style based on customization
   const getCardStyle = () => {
@@ -91,31 +100,104 @@ const EventCard: React.FC<EventCardProps> = ({ event, onCardClick, viewType }) =
     }
   };
   
-  // Apply different layout based on viewType if needed
+  // Apply different layout based on viewType
   const getCardClassName = () => {
-    let baseClass = `h-full cursor-pointer transition-all hover:shadow-md ${getAnimationClass()}`;
-    if (viewType === 'grid') {
-      baseClass += ' max-w-sm';
-    } else if (viewType === 'list') {
-      baseClass += ' w-full';
-    }
+    let baseClass = `h-full transition-all hover:shadow-md ${getAnimationClass()}`;
     return baseClass;
+  };
+  
+  const handleAccept = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onAccept) onAccept(id);
+  };
+  
+  const handleDecline = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDecline) onDecline(id);
+  };
+  
+  // Get button style
+  const getButtonStyle = (type: 'accept' | 'decline') => {
+    const button = safeCustomization.buttons[type];
+    return {
+      backgroundColor: button.background,
+      color: button.color,
+      borderRadius: 
+        button.shape === 'rounded' ? '0.375rem' : 
+        button.shape === 'pill' ? '9999px' : '0'
+    };
+  };
+  
+  const handleClick = () => {
+    if (onCardClick) onCardClick();
+  };
+  
+  // Header based on headerStyle
+  const renderHeader = () => {
+    const { headerStyle, headerImage } = safeCustomization;
+    
+    switch (headerStyle) {
+      case 'banner':
+        return (
+          <div className="w-full h-24 relative overflow-hidden rounded-t-lg">
+            {headerImage ? (
+              <img src={headerImage} alt="Header" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-r from-purple-400 to-pink-500"></div>
+            )}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+              <h3 className="text-xl font-bold text-white">{title}</h3>
+            </div>
+          </div>
+        );
+      case 'simple':
+        return (
+          <CardHeader>
+            <div className="flex justify-between items-start">
+              <h3 className="font-medium text-lg line-clamp-2">{title}</h3>
+              <Badge variant={getBadgeVariant()} className="capitalize">
+                {status}
+              </Badge>
+            </div>
+          </CardHeader>
+        );
+      case 'minimal':
+        return (
+          <CardHeader>
+            <div className="flex flex-col items-center">
+              {headerImage ? (
+                <img src={headerImage} alt="Header" className="w-16 h-16 rounded-full object-cover mb-2" />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-primary mb-2"></div>
+              )}
+              <h3 className="text-lg font-medium text-center">{title}</h3>
+              <Badge variant={getBadgeVariant()} className="capitalize mt-2">
+                {status}
+              </Badge>
+            </div>
+          </CardHeader>
+        );
+      default:
+        return (
+          <CardHeader>
+            <div className="flex justify-between items-start">
+              <h3 className="font-medium text-lg line-clamp-2">{title}</h3>
+              <Badge variant={getBadgeVariant()} className="capitalize">
+                {status}
+              </Badge>
+            </div>
+          </CardHeader>
+        );
+    }
   };
   
   return (
     <Card 
       className={getCardClassName()}
       style={getCardStyle()}
-      onClick={onCardClick}
+      onClick={handleClick}
     >
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <h3 className="font-medium text-lg line-clamp-2">{title}</h3>
-          <Badge variant={getBadgeVariant()} className="capitalize">
-            {status}
-          </Badge>
-        </div>
-      </CardHeader>
+      {renderHeader()}
       
       <CardContent className="space-y-4">
         {description && (
@@ -142,7 +224,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onCardClick, viewType }) =
         </div>
       </CardContent>
       
-      <CardFooter className="border-t pt-4">
+      <CardFooter className="border-t pt-4 flex-col gap-3">
         <div className="w-full flex justify-between items-center">
           <div className="text-xs text-muted-foreground">
             Created {formatDate(new Date(event.created_at))}
@@ -154,6 +236,34 @@ const EventCard: React.FC<EventCardProps> = ({ event, onCardClick, viewType }) =
             </div>
           )}
         </div>
+        
+        {/* Show accept/decline buttons for invitations that aren't accepted/declined yet */}
+        {viewType === 'received' && status !== 'accepted' && status !== 'declined' && (
+          <div className="flex justify-center gap-2 w-full mt-2">
+            <button 
+              className="py-1.5 px-3 flex items-center gap-1 text-sm rounded-md"
+              style={getButtonStyle('accept')}
+              onClick={handleAccept}
+            >
+              <Check className="w-3 h-3" /> Accept
+            </button>
+            
+            <button 
+              className="py-1.5 px-3 flex items-center gap-1 text-sm rounded-md"
+              style={getButtonStyle('decline')}
+              onClick={handleDecline}
+            >
+              <X className="w-3 h-3" /> Decline
+            </button>
+          </div>
+        )}
+        
+        {/* Show edit button for drafts */}
+        {viewType === 'draft' && status === 'draft' && (
+          <Button variant="outline" size="sm" className="w-full">
+            Edit Draft
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

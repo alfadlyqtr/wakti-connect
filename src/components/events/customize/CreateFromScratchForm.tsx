@@ -96,6 +96,13 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
       animation: value
     });
   };
+  
+  const handleMapDisplayChange = (value: 'button' | 'qrcode' | 'both') => {
+    onCustomizationChange({
+      ...customization,
+      mapDisplay: value
+    });
+  };
 
   return (
     <div>
@@ -144,6 +151,7 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
             onToggleChatbot={handleToggleChatbot}
             onToggleCalendar={handleToggleCalendar}
             onBrandingChange={handleBrandingChange}
+            onMapDisplayChange={handleMapDisplayChange}
           />
         </TabsContent>
       </Tabs>

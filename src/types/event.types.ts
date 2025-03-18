@@ -114,6 +114,9 @@ export interface EventCustomization {
   
   // Photo/image
   headerImage?: string;
+  
+  // Map display preferences
+  mapDisplay?: 'button' | 'qrcode' | 'both';
 }
 
 export interface ShareOptions {

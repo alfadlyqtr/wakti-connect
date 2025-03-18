@@ -1,24 +1,30 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { InvitationTemplate } from "@/types/invitation.types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { eventTemplates, EventTemplate } from "@/data/eventTemplates";
 
 interface TemplateSelectorProps {
-  templates: InvitationTemplate[] | undefined;
   selectedTemplateId: string | null;
   onSelectTemplate: (templateId: string) => void;
-  isLoading: boolean;
+  isLoading?: boolean;
 }
 
 const TemplateSelector: React.FC<TemplateSelectorProps> = ({
-  templates,
   selectedTemplateId,
   onSelectTemplate,
-  isLoading
+  isLoading = false
 }) => {
+  const [activeTab, setActiveTab] = useState<string>("all");
+  
+  // Filter templates based on the active tab
+  const filteredTemplates = activeTab === "all" 
+    ? eventTemplates 
+    : eventTemplates.filter(template => template.type === activeTab);
+  
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -34,59 +40,111 @@ const TemplateSelector: React.FC<TemplateSelectorProps> = ({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Choose a Template</h3>
+      <h3 className="text-lg font-medium">Choose an Event Template</h3>
       
-      <RadioGroup
-        value={selectedTemplateId || undefined}
-        onValueChange={onSelectTemplate}
-        className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="w-full overflow-x-auto flex whitespace-nowrap">
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="wedding">Wedding</TabsTrigger>
+          <TabsTrigger value="birthday">Birthday</TabsTrigger>
+          <TabsTrigger value="graduation">Graduation</TabsTrigger>
+          <TabsTrigger value="party">Party</TabsTrigger>
+          <TabsTrigger value="meeting">Meeting</TabsTrigger>
+          <TabsTrigger value="other">Other</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value={activeTab} className="pt-4">
+          <RadioGroup
+            value={selectedTemplateId || undefined}
+            onValueChange={onSelectTemplate}
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
+          >
+            {filteredTemplates.map((template) => (
+              <TemplateCard
+                key={template.id}
+                template={template}
+                isSelected={selectedTemplateId === template.id}
+              />
+            ))}
+          </RadioGroup>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+interface TemplateCardProps {
+  template: EventTemplate;
+  isSelected: boolean;
+}
+
+const TemplateCard: React.FC<TemplateCardProps> = ({ template, isSelected }) => {
+  const { id, name, description, customization } = template;
+  
+  // Preview background style
+  const getBackgroundStyle = () => {
+    const { background } = customization;
+    
+    if (background.type === 'color') {
+      return { backgroundColor: background.value };
+    } else if (background.type === 'gradient') {
+      return { backgroundImage: background.value };
+    } else if (background.type === 'image' && background.value) {
+      return { 
+        backgroundImage: `url(${background.value})`,
+        backgroundSize: 'cover', 
+        backgroundPosition: 'center' 
+      };
+    }
+    
+    return {};
+  };
+  
+  return (
+    <div className="relative">
+      <RadioGroupItem
+        value={id}
+        id={`template-${id}`}
+        className="sr-only"
+      />
+      <Label
+        htmlFor={`template-${id}`}
+        className="cursor-pointer"
       >
-        {templates?.map((template) => (
-          <div key={template.id} className="relative">
-            <RadioGroupItem
-              value={template.id}
-              id={`template-${template.id}`}
-              className="sr-only"
-            />
-            <Label
-              htmlFor={`template-${template.id}`}
-              className="cursor-pointer"
-            >
-              <Card 
-                className={`overflow-hidden transition-all hover:shadow-md ${
-                  selectedTemplateId === template.id 
-                    ? 'ring-2 ring-primary' 
-                    : 'ring-1 ring-border'
-                }`}
+        <Card 
+          className={`overflow-hidden transition-all hover:shadow-md ${
+            isSelected 
+              ? 'ring-2 ring-primary' 
+              : 'ring-1 ring-border'
+          }`}
+        >
+          <div 
+            className="h-36 bg-cover bg-center flex items-center justify-center"
+            style={getBackgroundStyle()}
+          >
+            {template.customization.headerImage ? (
+              <img 
+                src={template.customization.headerImage} 
+                alt={name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div 
+                className="text-lg font-bold p-2 text-center"
+                style={{ color: customization.font.color }}
               >
-                <div 
-                  className="h-28 bg-cover bg-center"
-                  style={{ 
-                    backgroundColor: 
-                      template.defaultStyles.background.type === 'solid' 
-                        ? template.defaultStyles.background.value 
-                        : undefined,
-                    background: 
-                      template.defaultStyles.background.type === 'gradient' 
-                        ? template.defaultStyles.background.value 
-                        : undefined,
-                    backgroundImage: 
-                      template.previewImage 
-                        ? `url(${template.previewImage})` 
-                        : undefined
-                  }}
-                />
-                <CardContent className="p-3">
-                  <div className="font-medium text-sm">{template.name}</div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {template.defaultStyles.fontFamily}, {template.defaultStyles.fontSize}
-                  </div>
-                </CardContent>
-              </Card>
-            </Label>
+                {name}
+              </div>
+            )}
           </div>
-        ))}
-      </RadioGroup>
+          <CardContent className="p-3">
+            <div className="font-medium">{name}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {description}
+            </div>
+          </CardContent>
+        </Card>
+      </Label>
     </div>
   );
 };

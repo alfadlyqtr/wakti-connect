@@ -4,19 +4,22 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { EventCustomization } from "@/types/event.types";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface FeaturesTabProps {
   customization: EventCustomization;
   onToggleChatbot: (checked: boolean) => void;
   onToggleCalendar: (checked: boolean) => void;
   onBrandingChange: (property: 'logo' | 'slogan', value: string) => void;
+  onMapDisplayChange?: (value: 'button' | 'qrcode' | 'both') => void;
 }
 
 const FeaturesTab: React.FC<FeaturesTabProps> = ({
   customization,
   onToggleChatbot,
   onToggleCalendar,
-  onBrandingChange
+  onBrandingChange,
+  onMapDisplayChange
 }) => {
   return (
     <div className="space-y-6">
@@ -42,6 +45,28 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({
           checked={customization.enableAddToCalendar || false}
           onCheckedChange={onToggleCalendar}
         />
+      </div>
+      
+      <div className="space-y-3">
+        <Label className="font-medium">Google Maps Display</Label>
+        <RadioGroup 
+          defaultValue="button"
+          onValueChange={(value) => onMapDisplayChange && onMapDisplayChange(value as 'button' | 'qrcode' | 'both')}
+          className="space-y-2"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="button" id="map-button" />
+            <Label htmlFor="map-button">Show as Button</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="qrcode" id="map-qrcode" />
+            <Label htmlFor="map-qrcode">Show as QR Code</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="both" id="map-both" />
+            <Label htmlFor="map-both">Show Both</Label>
+          </div>
+        </RadioGroup>
       </div>
       
       <div className="p-3 bg-muted/30 rounded-md text-sm text-muted-foreground">
