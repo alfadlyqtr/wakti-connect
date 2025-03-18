@@ -12,20 +12,46 @@ export const useServiceQueries = () => {
   } = useQuery({
     queryKey: ['businessServices'],
     queryFn: async () => {
-      const { data: session } = await supabase.auth.getSession();
+      console.log("Fetching business services...");
+      const { data: sessionData } = await supabase.auth.getSession();
       
-      if (!session?.session?.user) {
+      console.log("Auth session exists:", !!sessionData.session, "User ID:", sessionData.session?.user?.id);
+      
+      if (!sessionData?.session?.user) {
+        console.error("Not authenticated when fetching services");
         throw new Error('Not authenticated');
+      }
+      
+      // Check user role
+      const { data: userRoleData, error: roleError } = await supabase.rpc(
+        "get_auth_user_account_type"
+      );
+  
+      console.log("User role data:", userRoleData, "Error:", roleError);
+      
+      if (roleError) {
+        console.error("Error checking user role:", roleError);
+        throw new Error(`Failed to check user role: ${roleError.message}`);
+      }
+  
+      if (userRoleData !== "business") {
+        console.log("User is not a business account, role:", userRoleData);
+        return [];
       }
       
       // Fetch services - using the correct table name business_services
       const { data: servicesData, error: servicesError } = await supabase
         .from('business_services')
         .select('*')
-        .eq('business_id', session.session.user.id)
+        .eq('business_id', sessionData.session.user.id)
         .order('name');
         
-      if (servicesError) throw servicesError;
+      if (servicesError) {
+        console.error("Error fetching services:", servicesError);
+        throw servicesError;
+      }
+
+      console.log("Services fetched:", servicesData?.length || 0);
 
       // Fetch service staff assignments
       const { data: assignmentsData, error: assignmentsError } = await supabase
@@ -40,7 +66,12 @@ export const useServiceQueries = () => {
           )
         `);
 
-      if (assignmentsError) throw assignmentsError;
+      if (assignmentsError) {
+        console.error("Error fetching staff assignments:", assignmentsError);
+        throw assignmentsError;
+      }
+
+      console.log("Staff assignments fetched:", assignmentsData?.length || 0);
 
       // Map staff assignments to services
       const servicesWithStaff = servicesData.map((service: Service) => {

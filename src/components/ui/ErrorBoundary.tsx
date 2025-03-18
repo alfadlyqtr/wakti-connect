@@ -9,6 +9,7 @@ interface Props {
 interface State {
   hasError: boolean;
   error?: Error;
+  errorInfo?: ErrorInfo;
 }
 
 class ErrorBoundary extends Component<Props, State> {
@@ -23,6 +24,9 @@ class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     console.error("Uncaught error:", error, errorInfo);
+    this.setState({
+      errorInfo
+    });
   }
 
   public render(): ReactNode {
@@ -34,9 +38,17 @@ class ErrorBoundary extends Component<Props, State> {
           <p className="text-muted-foreground mb-4">
             The application encountered an error. Please try refreshing the page.
           </p>
-          <pre className="bg-muted p-4 rounded-md overflow-auto max-w-full">
-            {this.state.error?.toString()}
-          </pre>
+          <details className="mb-4 w-full max-w-3xl">
+            <summary className="cursor-pointer font-medium">View Error Details</summary>
+            <pre className="mt-2 bg-muted p-4 rounded-md overflow-auto max-w-full text-sm">
+              {this.state.error?.toString()}
+            </pre>
+            {this.state.errorInfo && (
+              <pre className="mt-2 bg-muted p-4 rounded-md overflow-auto max-w-full text-sm">
+                {this.state.errorInfo.componentStack}
+              </pre>
+            )}
+          </details>
           <button
             className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md"
             onClick={() => window.location.reload()}

@@ -1,142 +1,99 @@
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Booking, BookingStatus, BookingFormData } from "@/types/booking.types";
 import { toast } from "@/components/ui/use-toast";
+import { fetchBookings, createBooking, BookingTab, BookingStatus, BookingFormData } from "@/services/booking";
 
-export const useBookings = (tabFilter: string = "all-bookings") => {
+// Hook for handling booking operations
+export const useBookings = (activeTab: BookingTab = "all-bookings") => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<BookingStatus | "all">("all");
   const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
-  const queryClient = useQueryClient();
 
+  // Fetch bookings based on the selected tab
   const {
-    data: bookings,
+    data,
     isLoading,
     error,
     refetch
   } = useQuery({
-    queryKey: ['bookings', tabFilter],
+    queryKey: ["bookings", activeTab],
     queryFn: async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session?.user) {
-          throw new Error("Authentication required");
-        }
-
-        let query = supabase
-          .from('bookings')
-          .select(`
-            *,
-            business_services:service_id (name, price, duration),
-            business_staff:staff_assigned_id (name)
-          `)
-          .eq('business_id', session.user.id);
-
-        // Apply tab filtering
-        if (tabFilter === "pending-bookings") {
-          query = query.eq('status', 'pending');
-        } else if (tabFilter === "staff-bookings") {
-          query = query.not('staff_assigned_id', 'is', null);
-        }
-
-        const { data, error } = await query;
-
-        if (error) throw error;
-        
-        // Type cast the response to Booking[] 
-        return (data || []) as unknown as Booking[];
-      } catch (err) {
-        console.error("Error fetching bookings:", err);
-        throw err;
+      console.log("Fetching bookings for tab:", activeTab);
+      
+      // Check user session first
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.log("Auth session exists:", !!sessionData.session, "User ID:", sessionData.session?.user?.id);
+      
+      if (!sessionData?.session?.user) {
+        console.error("Not authenticated when fetching bookings");
+        return { bookings: [], userRole: "individual" as const };
       }
+      
+      return fetchBookings(activeTab);
     }
   });
 
-  // Client-side filtering with proper type casting
-  const filteredBookings = bookings?.filter((booking) => {
-    // Filter by search query
-    const matchesSearch = searchQuery
-      ? booking.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booking.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        booking.customer_email?.toLowerCase().includes(searchQuery.toLowerCase())
-      : true;
+  const bookings = data?.bookings || [];
+  console.log("Fetched bookings count:", bookings.length);
 
-    // Filter by status
-    const matchesStatus = filterStatus === "all" ? true : booking.status === filterStatus;
-
-    // Filter by date
-    const matchesDate = filterDate
-      ? new Date(booking.start_time).toDateString() === filterDate.toDateString()
-      : true;
-
-    return matchesSearch && matchesStatus && matchesDate;
-  }) || [];
-
-  // Add createBooking function
-  const createBookingMutation = useMutation({
-    mutationFn: async (bookingData: BookingFormData) => {
-      const { data: session } = await supabase.auth.getSession();
-      
-      if (!session?.session?.user) {
-        throw new Error("Authentication required");
-      }
-      
-      // Add the business_id to the booking data
-      const completeBookingData = {
-        business_id: session.session.user.id,
-        ...bookingData
-      };
-
-      const { data, error } = await supabase
-        .from("bookings")
-        .insert(completeBookingData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Error creating booking:", error);
-        throw error;
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      // Invalidate and refetch bookings after mutation
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
-      
+  // Create a new booking
+  const handleCreateBooking = async (formData: BookingFormData) => {
+    try {
+      console.log("Creating booking with data:", formData);
+      const booking = await createBooking(formData);
       toast({
-        title: "Booking created",
-        description: "The booking has been successfully created",
+        title: "Booking Created",
+        description: "The booking has been created successfully.",
       });
-    },
-    onError: (error) => {
+      refetch();
+      return booking;
+    } catch (error: any) {
+      console.error("Error creating booking:", error);
       toast({
-        title: "Error",
-        description: `Failed to create booking: ${error instanceof Error ? error.message : "Unknown error"}`,
+        title: "Failed to Create Booking",
+        description: error.message || "An unknown error occurred.",
         variant: "destructive",
       });
+      throw error;
     }
-  });
-
-  const createBooking = (bookingData: BookingFormData) => {
-    return createBookingMutation.mutateAsync(bookingData);
   };
 
+  // Filter bookings based on search query, status and date
+  const filteredBookings = bookings.filter(booking => {
+    // Filter by search query (title, description, customer name/email)
+    const matchesSearch = !searchQuery || 
+      booking.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (booking.description && booking.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (booking.customer_name && booking.customer_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (booking.customer_email && booking.customer_email.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    // Filter by status
+    const matchesStatus = filterStatus === "all" || booking.status === filterStatus;
+    
+    // Filter by date
+    const matchesDate = !filterDate || 
+      (new Date(booking.start_time).toDateString() === filterDate.toDateString());
+    
+    return matchesSearch && matchesStatus && matchesDate;
+  });
+
+  console.log("Filtered bookings count:", filteredBookings.length);
+
   return {
-    bookings: bookings || [],
+    bookings,
     filteredBookings,
+    userRole: data?.userRole || "individual",
+    isLoading,
+    error,
+    refetch,
     searchQuery,
     setSearchQuery,
     filterStatus,
     setFilterStatus,
     filterDate,
     setFilterDate,
-    refetch,
-    isLoading,
-    error,
-    createBooking
+    createBooking: handleCreateBooking
   };
 };
