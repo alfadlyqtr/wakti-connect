@@ -12,8 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/components/ui/toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const DashboardEvents: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -22,6 +23,7 @@ const DashboardEvents: React.FC = () => {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [showResponsesDialog, setShowResponsesDialog] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const isMobile = useIsMobile();
   
   const {
     events,
@@ -134,10 +136,10 @@ const DashboardEvents: React.FC = () => {
     <DashboardShell>
       <div className="flex flex-col space-y-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Events</h1>
+          <h1 className="text-xl sm:text-2xl font-bold">Events</h1>
           {!showCreateForm && (
-            <Button onClick={handleCreateOrEditEvent}>
-              <Plus className="h-4 w-4 mr-2" /> Create Event
+            <Button onClick={handleCreateOrEditEvent} size={isMobile ? "sm" : "default"}>
+              <Plus className="h-4 w-4 mr-1 sm:mr-2" /> {isMobile ? "Create" : "Create Event"}
             </Button>
           )}
         </div>
@@ -152,20 +154,34 @@ const DashboardEvents: React.FC = () => {
         ) : (
           <>
             <Tabs value={activeTab} onValueChange={(value) => handleTabChange(value as EventTab)}>
-              <div className="flex justify-between items-center">
-                <TabsList className="grid grid-cols-3 w-[400px]">
-                  <TabsTrigger value="my-events" className="flex items-center">
-                    <Send className="h-4 w-4 mr-2" /> My Events
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                {/* Responsive TabsList */}
+                <TabsList className="flex w-full sm:w-auto">
+                  <TabsTrigger 
+                    value="my-events" 
+                    className="flex-1 sm:flex-initial px-2 sm:px-3 py-1.5 text-xs sm:text-sm flex items-center"
+                  >
+                    <Send className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" /> 
+                    <span className="truncate">My Events</span>
                   </TabsTrigger>
-                  <TabsTrigger value="invited-events" className="flex items-center">
-                    <Clock className="h-4 w-4 mr-2" /> Invitations
+                  <TabsTrigger 
+                    value="invited-events" 
+                    className="flex-1 sm:flex-initial px-2 sm:px-3 py-1.5 text-xs sm:text-sm flex items-center"
+                  >
+                    <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" /> 
+                    <span className="truncate">Invitations</span>
                   </TabsTrigger>
-                  <TabsTrigger value="draft-events" className="flex items-center">
-                    <Edit className="h-4 w-4 mr-2" /> Drafts
+                  <TabsTrigger 
+                    value="draft-events" 
+                    className="flex-1 sm:flex-initial px-2 sm:px-3 py-1.5 text-xs sm:text-sm flex items-center"
+                  >
+                    <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" /> 
+                    <span className="truncate">Drafts</span>
                   </TabsTrigger>
                 </TabsList>
                 
-                <div className="flex gap-2">
+                {/* View type toggle buttons - moved to filter section on mobile */}
+                <div className={`${isMobile ? "hidden" : "flex"} gap-2`}>
                   <Button 
                     variant={viewType === 'grid' ? "default" : "outline"} 
                     size="icon"
@@ -183,7 +199,8 @@ const DashboardEvents: React.FC = () => {
                 </div>
               </div>
 
-              <div className="my-4 flex flex-col sm:flex-row gap-3">
+              {/* Responsive Filter Section */}
+              <div className="my-3 sm:my-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <div className="flex-1">
                   <Label htmlFor="search" className="sr-only">Search</Label>
                   <Input
@@ -191,40 +208,67 @@ const DashboardEvents: React.FC = () => {
                     placeholder="Search events..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full"
                   />
                 </div>
-                <div className="w-[150px]">
-                  <Label htmlFor="status" className="sr-only">Status</Label>
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger id="status">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="sent">Sent</SelectItem>
-                      <SelectItem value="accepted">Accepted</SelectItem>
-                      <SelectItem value="declined">Declined</SelectItem>
-                      <SelectItem value="recalled">Recalled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="w-[150px]">
-                  <DatePicker
-                    date={filterDate}
-                    setDate={setFilterDate}
-                  />
+                
+                <div className="flex gap-2 mt-2 sm:mt-0">
+                  {/* View type toggle on mobile only */}
+                  {isMobile && (
+                    <div className="flex gap-1 mr-1">
+                      <Button 
+                        variant={viewType === 'grid' ? "default" : "outline"} 
+                        size="icon"
+                        className="h-9 w-9"
+                        onClick={() => setViewType('grid')}
+                      >
+                        <Grid3X3 className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        variant={viewType === 'list' ? "default" : "outline"} 
+                        size="icon"
+                        className="h-9 w-9"
+                        onClick={() => setViewType('list')}
+                      >
+                        <List className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <div className={isMobile ? "flex-1 min-w-[100px]" : "w-[150px]"}>
+                    <Label htmlFor="status" className="sr-only">Status</Label>
+                    <Select value={filterStatus} onValueChange={setFilterStatus}>
+                      <SelectTrigger id="status" className="h-9">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="sent">Sent</SelectItem>
+                        <SelectItem value="accepted">Accepted</SelectItem>
+                        <SelectItem value="declined">Declined</SelectItem>
+                        <SelectItem value="recalled">Recalled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className={isMobile ? "flex-1 min-w-[100px]" : "w-[150px]"}>
+                    <DatePicker
+                      date={filterDate}
+                      setDate={setFilterDate}
+                    />
+                  </div>
                 </div>
               </div>
 
               <TabsContent value="my-events" className="mt-2">
                 {isLoading ? (
-                  <div className="text-center py-10">Loading events...</div>
+                  <div className="text-center py-6 sm:py-10">Loading events...</div>
                 ) : getFilteredTabEvents().length > 0 ? (
                   <div className={
                     viewType === 'grid' 
-                      ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" 
-                      : "space-y-4"
+                      ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4" 
+                      : "space-y-3 sm:space-y-4"
                   }>
                     {getFilteredTabEvents().map((event) => (
                       <EventCard 
@@ -239,8 +283,8 @@ const DashboardEvents: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-10">
-                    <p className="text-muted-foreground">No events found</p>
+                  <div className="text-center py-6 sm:py-10">
+                    <p className="text-muted-foreground text-sm sm:text-base">No events found</p>
                     <Button 
                       variant="link" 
                       className="mt-2"
@@ -254,12 +298,12 @@ const DashboardEvents: React.FC = () => {
 
               <TabsContent value="invited-events" className="mt-2">
                 {isLoading ? (
-                  <div className="text-center py-10">Loading invitations...</div>
+                  <div className="text-center py-6 sm:py-10">Loading invitations...</div>
                 ) : filteredEvents.length > 0 ? (
                   <div className={
                     viewType === 'grid' 
-                      ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" 
-                      : "space-y-4"
+                      ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4" 
+                      : "space-y-3 sm:space-y-4"
                   }>
                     {filteredEvents.map((event) => (
                       <EventCard 
@@ -272,20 +316,20 @@ const DashboardEvents: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-10">
-                    <p className="text-muted-foreground">No invitations found</p>
+                  <div className="text-center py-6 sm:py-10">
+                    <p className="text-muted-foreground text-sm sm:text-base">No invitations found</p>
                   </div>
                 )}
               </TabsContent>
 
               <TabsContent value="draft-events" className="mt-2">
                 {isLoading ? (
-                  <div className="text-center py-10">Loading drafts...</div>
+                  <div className="text-center py-6 sm:py-10">Loading drafts...</div>
                 ) : filteredEvents.length > 0 ? (
                   <div className={
                     viewType === 'grid' 
-                      ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" 
-                      : "space-y-4"
+                      ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4" 
+                      : "space-y-3 sm:space-y-4"
                   }>
                     {filteredEvents.map((event) => (
                       <EventCard 
@@ -299,8 +343,8 @@ const DashboardEvents: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-10">
-                    <p className="text-muted-foreground">No draft events found</p>
+                  <div className="text-center py-6 sm:py-10">
+                    <p className="text-muted-foreground text-sm sm:text-base">No draft events found</p>
                   </div>
                 )}
               </TabsContent>
