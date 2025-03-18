@@ -1,64 +1,49 @@
 
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CreditCard, UserCircle, Bell, Palette } from "lucide-react";
-import { useProfileSettings } from "@/hooks/useProfileSettings";
-import AccountTab from "@/components/settings/AccountTab";
-import ProfileTab from "@/components/settings/ProfileTab";
-import BillingTab from "@/components/settings/BillingTab";
-import NotificationsTab from "@/components/settings/NotificationsTab";
-import useIsMobile from "@/hooks/use-mobile";
+import { ProfileTab } from "@/components/settings/ProfileTab";
+import { AccountTab } from "@/components/settings/AccountTab";
+import { BillingTab } from "@/components/settings/BillingTab";
+import { NotificationsTab } from "@/components/settings/NotificationsTab";
+import { AIAssistantSettings } from "@/components/settings/ai";
 
 const DashboardSettings = () => {
-  const { data: profile } = useProfileSettings();
-  const isMobile = useIsMobile();
-  const isBusinessAccount = profile?.account_type === 'business';
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+    <div className="mx-auto max-w-7xl py-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Settings</h1>
         <p className="text-muted-foreground">
-          Manage your account settings and preferences.
+          Manage your account settings and preferences
         </p>
       </div>
       
-      <Tabs defaultValue="account" className="w-full">
-        <TabsList className={`grid w-full ${isMobile ? 'grid-cols-4' : 'grid-cols-4 lg:w-[600px]'}`}>
-          <TabsTrigger value="account" className="flex items-center gap-2">
-            <UserCircle className="h-4 w-4" />
-            <span className={isMobile ? "hidden" : "hidden sm:inline"}>Account</span>
-          </TabsTrigger>
-          <TabsTrigger value="profile" className="flex items-center gap-2">
-            <UserCircle className="h-4 w-4" />
-            <span className={isMobile ? "hidden" : "hidden sm:inline"}>
-              {isBusinessAccount ? "Business" : "Profile"}
-            </span>
-          </TabsTrigger>
-          <TabsTrigger value="billing" className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            <span className={isMobile ? "hidden" : "hidden sm:inline"}>Billing</span>
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            <span className={isMobile ? "hidden" : "hidden sm:inline"}>Notifications</span>
-          </TabsTrigger>
+      <Tabs defaultValue="profile" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5 gap-4 h-auto">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="billing">Billing</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="ai-assistant">AI Assistant</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="account" className="space-y-4 mt-4">
-          <AccountTab profile={profile} />
+        <TabsContent value="profile" className="space-y-4">
+          <ProfileTab />
         </TabsContent>
         
-        <TabsContent value="profile" className="space-y-4 mt-4">
-          <ProfileTab profile={profile} />
+        <TabsContent value="account" className="space-y-4">
+          <AccountTab />
         </TabsContent>
         
-        <TabsContent value="billing" className="space-y-4 mt-4">
-          <BillingTab profile={profile} />
+        <TabsContent value="billing" className="space-y-4">
+          <BillingTab />
         </TabsContent>
         
-        <TabsContent value="notifications" className="space-y-4 mt-4">
+        <TabsContent value="notifications" className="space-y-4">
           <NotificationsTab />
+        </TabsContent>
+        
+        <TabsContent value="ai-assistant" className="space-y-4">
+          <AIAssistantSettings />
         </TabsContent>
       </Tabs>
     </div>
