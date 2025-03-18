@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
-import { useAIAssistant, AISettings } from "@/hooks/useAIAssistant";
+import { useAIAssistant } from "@/hooks/useAIAssistant";
+import type { AISettings } from "@/types/ai-assistant.types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
