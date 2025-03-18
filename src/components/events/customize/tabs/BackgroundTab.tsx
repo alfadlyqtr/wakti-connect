@@ -5,6 +5,7 @@ import AnimationSelector from "../AnimationSelector";
 import { EventCustomization } from "@/types/event.types";
 import { Label } from "@/components/ui/label";
 import { ImagePlus } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 interface BackgroundTabProps {
   customization: EventCustomization;
@@ -12,6 +13,7 @@ interface BackgroundTabProps {
   onBackgroundChange: (type: 'color' | 'gradient' | 'image', value: string) => void;
   onBackgroundAngleChange?: (angle: number) => void;
   onBackgroundDirectionChange?: (direction: string) => void;
+  onHeaderImageChange?: (imageUrl: string) => void;
 }
 
 const BackgroundTab: React.FC<BackgroundTabProps> = ({
@@ -19,19 +21,30 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
   onAnimationChange,
   onBackgroundChange,
   onBackgroundAngleChange,
-  onBackgroundDirectionChange
+  onBackgroundDirectionChange,
+  onHeaderImageChange
 }) => {
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isHeaderImage: boolean = false) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
     // Check file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Image too large",
+        description: "Please select an image under 2MB",
+        variant: "destructive"
+      });
       return;
     }
 
     // Check file type
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a JPG, PNG or WebP image",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -39,7 +52,11 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
-        onBackgroundChange('image', event.target.result as string);
+        if (isHeaderImage && onHeaderImageChange) {
+          onHeaderImageChange(event.target.result as string);
+        } else {
+          onBackgroundChange('image', event.target.result as string);
+        }
       }
     };
     reader.readAsDataURL(file);
@@ -64,7 +81,7 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
             type="file"
             id="eventImage"
             accept="image/jpeg,image/png,image/webp"
-            onChange={handleImageUpload}
+            onChange={(e) => handleImageUpload(e, true)}
             className="hidden"
           />
           <Label htmlFor="eventImage" className="cursor-pointer flex flex-col items-center justify-center gap-2">

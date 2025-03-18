@@ -42,10 +42,13 @@ const FontSelector: React.FC<FontSelectorProps> = ({
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="fontFamily" className="block mb-2">Font Family</Label>
-        <Select value={font.family} onValueChange={(value) => onFontChange('family', value)}>
-          <SelectTrigger id="fontFamily">
-            <SelectValue placeholder="Choose a font" />
+        <Label htmlFor="font-family" className="block mb-2">Font Family</Label>
+        <Select 
+          value={font.family} 
+          onValueChange={(value) => onFontChange('family', value)}
+        >
+          <SelectTrigger id="font-family">
+            <SelectValue placeholder="Select font" />
           </SelectTrigger>
           <SelectContent>
             {fontFamilies.map((fontFamily) => (
@@ -62,108 +65,104 @@ const FontSelector: React.FC<FontSelectorProps> = ({
       </div>
       
       <div>
-        <Label htmlFor="fontSize" className="block mb-2">Font Size</Label>
+        <Label htmlFor="font-size" className="block mb-2">Font Size</Label>
         <RadioGroup 
           value={font.size} 
           onValueChange={(value) => onFontChange('size', value)}
-          className="flex gap-6"
+          className="flex space-x-4"
         >
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="small" id="fontSizeSmall" />
-            <Label htmlFor="fontSizeSmall" className="text-sm">Small</Label>
+            <RadioGroupItem value="small" id="font-small" />
+            <Label htmlFor="font-small">Small</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="medium" id="fontSizeMedium" />
-            <Label htmlFor="fontSizeMedium" className="text-base">Medium</Label>
+            <RadioGroupItem value="medium" id="font-medium" />
+            <Label htmlFor="font-medium">Medium</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="large" id="fontSizeLarge" />
-            <Label htmlFor="fontSizeLarge" className="text-lg">Large</Label>
+            <RadioGroupItem value="large" id="font-large" />
+            <Label htmlFor="font-large">Large</Label>
           </div>
         </RadioGroup>
       </div>
       
       {showWeight && (
         <div>
-          <Label htmlFor="fontWeight" className="block mb-2">Font Weight</Label>
+          <Label htmlFor="font-weight" className="block mb-2">Font Weight</Label>
           <RadioGroup 
             value={font.weight || 'normal'} 
             onValueChange={(value) => onFontChange('weight', value)}
-            className="flex gap-6"
+            className="flex space-x-4"
           >
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="normal" id="fontWeightNormal" />
-              <Label htmlFor="fontWeightNormal" className="font-normal">Normal</Label>
+              <RadioGroupItem value="normal" id="weight-normal" />
+              <Label htmlFor="weight-normal">Normal</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="medium" id="fontWeightMedium" />
-              <Label htmlFor="fontWeightMedium" className="font-medium">Medium</Label>
+              <RadioGroupItem value="medium" id="weight-medium" />
+              <Label htmlFor="weight-medium">Medium</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="bold" id="fontWeightBold" />
-              <Label htmlFor="fontWeightBold" className="font-bold">Bold</Label>
-            </div>
-          </RadioGroup>
-        </div>
-      )}
-
-      {showAlignment && (
-        <div>
-          <Label htmlFor="fontAlignment" className="block mb-2">Text Alignment</Label>
-          <RadioGroup 
-            value={font.alignment || 'left'} 
-            onValueChange={(value) => onFontChange('alignment', value)}
-            className="flex gap-6"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="left" id="fontAlignLeft" />
-              <Label htmlFor="fontAlignLeft">Left</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="center" id="fontAlignCenter" />
-              <Label htmlFor="fontAlignCenter">Center</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="right" id="fontAlignRight" />
-              <Label htmlFor="fontAlignRight">Right</Label>
+              <RadioGroupItem value="bold" id="weight-bold" />
+              <Label htmlFor="weight-bold">Bold</Label>
             </div>
           </RadioGroup>
         </div>
       )}
       
       <div>
-        <Label htmlFor="fontColor" className="block mb-2">Font Color</Label>
-        <div className="flex gap-2 items-center">
+        <Label htmlFor="font-color" className="block mb-2">Font Color</Label>
+        <div className="flex gap-2">
           <Input 
-            type="color" 
-            value={font.color} 
-            onChange={(e) => onFontChange('color', e.target.value)} 
+            type="color"
+            id="font-color"
+            value={font.color}
+            onChange={(e) => onFontChange('color', e.target.value)}
             className="w-12 h-10 p-1 cursor-pointer"
           />
           <Input 
-            type="text" 
-            value={font.color} 
-            onChange={(e) => onFontChange('color', e.target.value)} 
+            type="text"
+            value={font.color}
+            onChange={(e) => onFontChange('color', e.target.value)}
             className="flex-1"
-            placeholder="#000000"
           />
         </div>
       </div>
       
-      <div className="mt-4 p-4 border rounded-md">
-        <h3 className="text-lg mb-2 font-semibold">Preview:</h3>
-        <div 
-          style={{ 
-            fontFamily: font.family,
-            fontSize: font.size === 'small' ? '0.875rem' : font.size === 'medium' ? '1rem' : '1.25rem',
-            color: font.color,
-            fontWeight: font.weight === 'bold' ? 'bold' : font.weight === 'medium' ? '500' : 'normal',
-            textAlign: font.alignment as any
-          }}
-        >
-          <p className="mb-1">This is how your event text will appear to attendees.</p>
-          <p>Customize it to match your brand or event style.</p>
+      {showAlignment && (
+        <div>
+          <Label htmlFor="font-alignment" className="block mb-2">Text Alignment</Label>
+          <RadioGroup 
+            value={font.alignment || 'left'} 
+            onValueChange={(value) => onFontChange('alignment', value)}
+            className="flex space-x-4"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="left" id="align-left" />
+              <Label htmlFor="align-left">Left</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="center" id="align-center" />
+              <Label htmlFor="align-center">Center</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="right" id="align-right" />
+              <Label htmlFor="align-right">Right</Label>
+            </div>
+          </RadioGroup>
         </div>
+      )}
+      
+      <div className="p-3 border rounded-md mt-4">
+        <p style={{ 
+          fontFamily: font.family,
+          fontSize: font.size === 'small' ? '0.875rem' : font.size === 'medium' ? '1rem' : '1.25rem',
+          fontWeight: font.weight === 'bold' ? 'bold' : font.weight === 'medium' ? '500' : 'normal',
+          color: font.color,
+          textAlign: (font.alignment || 'left') as 'left' | 'center' | 'right'
+        }}>
+          Sample Text
+        </p>
       </div>
     </div>
   );

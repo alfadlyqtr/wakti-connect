@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Event } from "@/types/event.types";
 import { format, isToday, isTomorrow, isYesterday } from "date-fns";
-import { CalendarClock, MapPin, MoreVertical, Trash, Edit, Users } from "lucide-react";
+import { CalendarClock, MapPin, MoreVertical, Trash, Edit, Users, QrCode, Calendar } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 
@@ -215,6 +215,28 @@ const EventCard: React.FC<EventCardProps> = ({
     );
   };
 
+  // Render business branding if available
+  const renderBranding = () => {
+    const { branding } = event.customization || {};
+    
+    if (!branding?.logo && !branding?.slogan) return null;
+    
+    return (
+      <div className={`flex flex-col items-center mt-4 mb-2 ${
+        event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
+        event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
+        event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''
+      }`}>
+        {branding.logo && (
+          <img src={branding.logo} alt="Business logo" className="h-8 mb-1 object-contain" />
+        )}
+        {branding.slogan && (
+          <p className="text-xs text-muted-foreground">{branding.slogan}</p>
+        )}
+      </div>
+    );
+  };
+
   // Get animation class
   const getAnimationClass = () => {
     if (!event.customization?.animation) return '';
@@ -388,6 +410,54 @@ const EventCard: React.FC<EventCardProps> = ({
               </span>
             </div>
           )}
+        </div>
+
+        {event.customization?.enableChatbot && (
+          <div className={`mt-3 p-2 border rounded-md bg-background/50 text-xs ${
+            event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
+            event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
+            event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''
+          }`}>
+            <p>Ask me about this event! (Chatbot enabled)</p>
+          </div>
+        )}
+
+        {renderBranding()}
+
+        {/* Quick action buttons for events with locations */}
+        {event.location && event.customization?.showAddToCalendarButton !== false && (
+          <div className={`grid grid-cols-3 gap-2 mt-3 ${
+            event.customization?.elementAnimations?.buttons === 'fade' ? 'animate-fade-in' : 
+            event.customization?.elementAnimations?.buttons === 'slide' ? 'animate-slide-in' : 
+            event.customization?.elementAnimations?.buttons === 'pop' ? 'animate-scale-in' : ''
+          }`}>
+            <Button variant="outline" size="sm" className="text-xs flex items-center justify-center gap-1">
+              <Calendar className={`h-3 w-3 ${event.customization?.elementAnimations?.icons || ''}`} /> 
+              Calendar
+            </Button>
+            
+            <Button variant="outline" size="sm" className="text-xs flex items-center justify-center gap-1">
+              <MapPin className={`h-3 w-3 ${event.customization?.elementAnimations?.icons || ''}`} /> 
+              Map
+            </Button>
+            
+            <Button variant="outline" size="sm" className="text-xs flex items-center justify-center gap-1">
+              <QrCode className={`h-3 w-3 ${event.customization?.elementAnimations?.icons || ''}`} /> 
+              QR Code
+            </Button>
+          </div>
+        )}
+
+        <div className="text-center text-xs text-muted-foreground mt-3">
+          <a 
+            href="https://wakti.qa" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Powered by WAKTI
+          </a>
         </div>
       </CardContent>
       

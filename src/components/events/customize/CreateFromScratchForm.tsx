@@ -198,6 +198,7 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
             onAnimationChange={handleAnimationChange}
             onBackgroundAngleChange={handleBackgroundAngleChange}
             onBackgroundDirectionChange={handleBackgroundDirectionChange}
+            onHeaderImageChange={handleHeaderImageChange}
           />
         </TabsContent>
         
@@ -215,6 +216,7 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
           <ButtonsTab 
             customization={customization}
             onButtonStyleChange={handleButtonStyleChange}
+            onToggleButtons={handleToggleButtons}
           />
         </TabsContent>
         

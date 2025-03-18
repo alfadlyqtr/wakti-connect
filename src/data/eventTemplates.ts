@@ -1,3 +1,4 @@
+
 import { EventCustomization } from "@/types/event.types";
 
 export interface EventTemplate {
@@ -232,6 +233,77 @@ export const eventTemplates: EventTemplate[] = [
       enableChatbot: true,
       enableAddToCalendar: true,
       showAcceptDeclineButtons: true,
+      mapDisplay: 'both'
+    }
+  },
+  {
+    id: 'luxury-gala',
+    name: 'Luxury Gala',
+    type: 'party',
+    description: 'An elegant gala or formal event invitation',
+    customization: {
+      background: {
+        type: 'gradient',
+        value: 'linear-gradient(to right, #141e30, #243b55)',
+        angle: 120,
+        direction: 'to-bottom-right'
+      },
+      font: {
+        family: 'Playfair Display, serif',
+        size: 'medium',
+        color: '#ffffff',
+        weight: 'normal',
+        alignment: 'center'
+      },
+      headerFont: {
+        family: 'Playfair Display, serif',
+        size: 'large',
+        color: '#ffd700',
+        weight: 'bold'
+      },
+      descriptionFont: {
+        family: 'Georgia, serif',
+        size: 'medium',
+        color: '#e0e0e0',
+        weight: 'normal'
+      },
+      dateTimeFont: {
+        family: 'Georgia, serif',
+        size: 'medium',
+        color: '#ffd700',
+        weight: 'medium'
+      },
+      buttons: {
+        accept: {
+          background: '#ffd700',
+          color: '#000000',
+          shape: 'pill'
+        },
+        decline: {
+          background: 'rgba(255,255,255,0.2)',
+          color: '#ffffff',
+          shape: 'pill'
+        }
+      },
+      headerStyle: 'banner',
+      animation: 'fade',
+      elementAnimations: {
+        text: 'fade',
+        buttons: 'slide',
+        icons: 'pop',
+        delay: 'staggered'
+      },
+      cardEffect: {
+        type: 'gloss',
+        borderRadius: 'medium',
+        border: true,
+        borderColor: '#ffd700'
+      },
+      showAcceptDeclineButtons: true,
+      showAddToCalendarButton: true,
+      branding: {
+        slogan: 'An evening of elegance awaits'
+      },
       mapDisplay: 'both'
     }
   }

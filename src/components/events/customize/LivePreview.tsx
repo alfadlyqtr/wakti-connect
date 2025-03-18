@@ -257,7 +257,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     return (
       <div className={`flex flex-col items-center mt-4 mb-2 ${getElementAnimationClass('text')}`}>
         {branding.logo && (
-          <img src={branding.logo} alt="Business logo" className="h-8 mb-1" />
+          <img src={branding.logo} alt="Business logo" className="h-8 mb-1 object-contain" />
         )}
         {branding.slogan && (
           <p className="text-xs text-muted-foreground">{branding.slogan}</p>
