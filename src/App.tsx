@@ -16,6 +16,7 @@ import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "@/components/notifications/NotificationListener";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import PublicLayout from "./components/layout/PublicLayout";
+import { DirectionProvider } from "@/contexts/DirectionContext";
 
 import "./i18n/i18n";
 
@@ -26,62 +27,64 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="system">
-          <AuthProvider>
-            <TaskProvider>
-              <TooltipProvider>
-                <BrowserRouter>
-                  <ScrollToTop />
-                  <NotificationListener />
-                  <Toaster />
-                  <Sonner />
-                  <Routes>
-                    {/* Public routes with PublicLayout */}
-                    <Route element={<PublicLayout />}>
-                      {publicRoutes.map((route) => (
+          <DirectionProvider>
+            <AuthProvider>
+              <TaskProvider>
+                <TooltipProvider>
+                  <BrowserRouter>
+                    <ScrollToTop />
+                    <NotificationListener />
+                    <Toaster />
+                    <Sonner />
+                    <Routes>
+                      {/* Public routes with PublicLayout */}
+                      <Route element={<PublicLayout />}>
+                        {publicRoutes.map((route) => (
+                          <Route
+                            key={route.path}
+                            path={route.path}
+                            element={route.element}
+                          />
+                        ))}
+                      </Route>
+                      
+                      {/* Auth routes */}
+                      {authRoutes.map((route) => (
                         <Route
                           key={route.path}
-                          path={route.path}
+                          path={`/auth/${route.path}`}
                           element={route.element}
                         />
                       ))}
-                    </Route>
-                    
-                    {/* Auth routes */}
-                    {authRoutes.map((route) => (
+                      
+                      {/* Dashboard routes */}
                       <Route
-                        key={route.path}
-                        path={`/auth/${route.path}`}
-                        element={route.element}
+                        path="/dashboard/*"
+                        element={
+                          <ProtectedRoute>
+                            <DashboardLayout>
+                              <Routes>
+                                {dashboardRoutes.map((route) => (
+                                  <Route
+                                    key={route.path}
+                                    path={route.path}
+                                    element={route.element}
+                                  />
+                                ))}
+                              </Routes>
+                            </DashboardLayout>
+                          </ProtectedRoute>
+                        }
                       />
-                    ))}
-                    
-                    {/* Dashboard routes */}
-                    <Route
-                      path="/dashboard/*"
-                      element={
-                        <ProtectedRoute>
-                          <DashboardLayout>
-                            <Routes>
-                              {dashboardRoutes.map((route) => (
-                                <Route
-                                  key={route.path}
-                                  path={route.path}
-                                  element={route.element}
-                                />
-                              ))}
-                            </Routes>
-                          </DashboardLayout>
-                        </ProtectedRoute>
-                      }
-                    />
-                    
-                    {/* Catch-all redirect */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </BrowserRouter>
-              </TooltipProvider>
-            </TaskProvider>
-          </AuthProvider>
+                      
+                      {/* Catch-all redirect */}
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </BrowserRouter>
+                </TooltipProvider>
+              </TaskProvider>
+            </AuthProvider>
+          </DirectionProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>
