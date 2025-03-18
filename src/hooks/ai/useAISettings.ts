@@ -10,12 +10,12 @@ export const useAISettings = () => {
   const queryClient = useQueryClient();
 
   // Fetch user's AI settings
-  const { data: aiSettings, isLoading: isLoadingSettings } = useQuery({
+  const { data: aiSettings, isLoading: isLoadingSettings, error: settingsError } = useQuery({
     queryKey: ["aiSettings", user?.id],
     queryFn: async () => {
       if (!user) {
         console.log("No user, can't fetch AI settings");
-        throw new Error("User not authenticated");
+        return null;
       }
 
       console.log("Fetching AI settings for user:", user.id);
@@ -37,7 +37,7 @@ export const useAISettings = () => {
 
           if (profileError) {
             console.error("Error checking profile:", profileError);
-            return null;
+            throw new Error(`Error checking profile: ${profileError.message}`);
           }
 
           console.log("Profile check for AI access, account type:", profile.account_type);
@@ -53,57 +53,35 @@ export const useAISettings = () => {
         
         console.log("User can use AI, fetching settings");
 
+        // Try to fetch user's settings
+        console.log("Attempting to fetch AI settings for user:", user.id);
         const { data, error } = await supabase
           .from("ai_assistant_settings")
           .select("*")
           .eq("user_id", user.id)
           .single();
 
-        if (error && error.code !== "PGRST116") {
-          // PGRST116 is "No rows returned" which is fine for first-time users
-          console.error("Error fetching AI settings:", error);
+        if (error) {
+          // Only log error if it's not "no rows returned" which is expected for first-time users
+          if (error.code !== "PGRST116") {
+            console.error("Error fetching AI settings:", error);
+            throw new Error(`Error fetching AI settings: ${error.message}`);
+          }
+          
+          console.log("No settings found for user:", user.id);
           return null;
         }
 
         if (!data) {
-          console.log("No settings found, creating defaults");
-          // Create default settings if none exist
-          const defaultSettings = {
-            user_id: user.id,
-            assistant_name: "WAKTI",
-            tone: "balanced",
-            response_length: "balanced",
-            proactiveness: true,
-            suggestion_frequency: "medium",
-            enabled_features: {
-              tasks: true,
-              events: true,
-              staff: true,
-              analytics: true,
-              messaging: true,
-            },
-          };
-
-          const { data: newSettings, error: insertError } = await supabase
-            .from("ai_assistant_settings")
-            .insert(defaultSettings)
-            .select()
-            .single();
-
-          if (insertError) {
-            console.error("Error creating AI settings:", insertError);
-            return null;
-          }
-          
-          console.log("Default settings created successfully");
-          return newSettings as unknown as AISettings;
+          console.log("No settings found, returning null");
+          return null;
         }
 
-        console.log("Settings fetched successfully");
+        console.log("Settings fetched successfully:", data);
         return data as unknown as AISettings;
       } catch (error) {
         console.error("Error in AI settings fetch:", error);
-        return null;
+        throw error;
       }
     },
     enabled: !!user,
@@ -112,7 +90,7 @@ export const useAISettings = () => {
   });
 
   // Check if user can use AI assistant directly from the profile data
-  const { data: canUseAI } = useQuery({
+  const { data: canUseAI, isLoading: isLoadingAccess } = useQuery({
     queryKey: ["canUseAI", user?.id],
     queryFn: async () => {
       if (!user) return false;
@@ -137,7 +115,7 @@ export const useAISettings = () => {
 
         if (profileError) {
           console.error("Error checking access:", profileError);
-          return false;
+          throw new Error(`Error checking access: ${profileError.message}`);
         }
 
         // Log the account type for debugging
@@ -146,7 +124,7 @@ export const useAISettings = () => {
         return profile?.account_type === "business" || profile?.account_type === "individual";
       } catch (error) {
         console.error("Error checking AI access:", error);
-        return false;
+        throw error;
       }
     },
     enabled: !!user,
@@ -192,8 +170,9 @@ export const useAISettings = () => {
 
   return {
     aiSettings,
-    isLoadingSettings,
+    isLoadingSettings: isLoadingSettings || isLoadingAccess,
+    settingsError,
     updateSettings,
-    canUseAI,
+    canUseAI: canUseAI === true,
   };
 };

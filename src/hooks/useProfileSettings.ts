@@ -11,77 +11,124 @@ export type ProfileWithEmail = Tables<"profiles"> & {
 export const useProfileSettings = () => {
   const queryClient = useQueryClient();
   
-  const fetchProfile = async (): Promise<ProfileWithEmail | null> => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return null;
-    
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
-      
-    // Create a proper profile object with all required fields even if data is null
-    const profileWithEmail: ProfileWithEmail = data || {
-      id: session.user.id,
-      account_type: 'free',
-      is_searchable: true,
-      auto_approve_contacts: false,
-      avatar_url: '',
-      business_name: '',
-      created_at: new Date().toISOString(),
-      display_name: '',
-      full_name: '',
-      occupation: '',
-      theme_preference: 'light',
-      updated_at: new Date().toISOString()
-    };
-    
-    if (session.user) {
-      profileWithEmail.email = session.user.email;
-    }
-      
-    return profileWithEmail;
-  };
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['settingsProfile'],
+    queryFn: async (): Promise<ProfileWithEmail | null> => {
+      try {
+        console.log("Fetching profile data in useProfileSettings...");
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          console.log("No active session found");
+          return null;
+        }
+        
+        console.log("Session found, fetching profile for user:", session.user.id);
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (error) {
+          console.error("Error fetching profile:", error);
+          // If profile not found, create a skeleton profile object
+          if (error.code === 'PGRST116') {
+            console.log("Profile not found, returning default profile");
+            const defaultProfile: ProfileWithEmail = {
+              id: session.user.id,
+              account_type: 'free',
+              is_searchable: true,
+              auto_approve_contacts: false,
+              avatar_url: '',
+              business_name: '',
+              created_at: new Date().toISOString(),
+              display_name: '',
+              full_name: '',
+              occupation: '',
+              theme_preference: 'light',
+              updated_at: new Date().toISOString(),
+              email: session.user.email
+            };
+            return defaultProfile;
+          }
+          
+          throw error;
+        }
+        
+        console.log("Profile fetched successfully:", data);
+        
+        // Create a proper profile object
+        const profileWithEmail: ProfileWithEmail = {
+          ...data,
+          email: session.user.email
+        };
+        
+        return profileWithEmail;
+      } catch (error) {
+        console.error("Error in profile settings fetch:", error);
+        throw error;
+      }
+    },
+    retry: 2,
+    staleTime: 60000, // 1 minute
+  });
 
-  const updateProfile = async (updatedData: Partial<ProfileWithEmail>): Promise<ProfileWithEmail> => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error("No active session");
-    
-    // Remove email property as it's not in the profiles table
-    const { email, ...profileData } = updatedData;
-    
-    // Update the profile
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({
-        ...profileData,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', session.user.id)
-      .select()
-      .single();
-      
-    if (error) throw error;
-    
-    // Update email if provided
-    if (email && email !== session.user.email) {
-      const { error: emailError } = await supabase.auth.updateUser({
-        email
-      });
-      
-      if (emailError) throw emailError;
-    }
-    
-    // Combine the updated profile with the email
-    const updatedProfile: ProfileWithEmail = data;
-    updatedProfile.email = email || session.user.email;
-    
-    return updatedProfile;
-  };
-  
-  const mutation = useMutation({
-    mutationFn: updateProfile,
+  const updateProfile = useMutation({
+    mutationFn: async (updatedData: Partial<ProfileWithEmail>): Promise<ProfileWithEmail> => {
+      try {
+        console.log("Updating profile with data:", updatedData);
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error("No active session");
+        
+        // Remove email property as it's not in the profiles table
+        const { email, ...profileData } = updatedData;
+        
+        // Update the profile
+        const { data, error } = await supabase
+          .from('profiles')
+          .update({
+            ...profileData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', session.user.id)
+          .select()
+          .single();
+          
+        if (error) {
+          console.error("Error updating profile in Supabase:", error);
+          throw error;
+        }
+        
+        console.log("Profile updated successfully:", data);
+        
+        // Update email if provided
+        if (email && email !== session.user.email) {
+          console.log("Updating user email to:", email);
+          const { error: emailError } = await supabase.auth.updateUser({
+            email
+          });
+          
+          if (emailError) {
+            console.error("Error updating email:", emailError);
+            throw emailError;
+          }
+        }
+        
+        // Combine the updated profile with the email
+        const updatedProfile: ProfileWithEmail = {
+          ...data,
+          email: email || session.user.email
+        };
+        
+        return updatedProfile;
+      } catch (error) {
+        console.error("Error in updateProfile mutation:", error);
+        throw error;
+      }
+    },
     onSuccess: (data) => {
       // Invalidate the profile query to refetch with updated data
       queryClient.invalidateQueries({ queryKey: ['settingsProfile'] });
@@ -95,18 +142,17 @@ export const useProfileSettings = () => {
       console.error("Error updating profile:", error);
       toast({
         title: "Update failed",
-        description: "There was a problem updating your profile.",
+        description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive"
       });
     }
   });
 
   return {
-    data: useQuery<ProfileWithEmail>({
-      queryKey: ['settingsProfile'],
-      queryFn: fetchProfile
-    }).data,
-    updateProfile: mutation.mutate,
-    isUpdating: mutation.isPending
+    data,
+    isLoading,
+    error,
+    updateProfile: updateProfile.mutate,
+    isUpdating: updateProfile.isPending
   };
 };
