@@ -39,6 +39,10 @@ const dashboardRoutes: RouteObject[] = [
     element: <DashboardTeamManagement />,
   },
   {
+    path: "staff",
+    element: <DashboardTeamManagement />,
+  },
+  {
     path: "work-management",
     element: <DashboardWorkManagement />,
   },
