@@ -61,6 +61,12 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
   // Add functionality information
   systemMessage += "You can help with task management, event planning, staff management, and business analytics. ";
   
+  // Add topic control instructions
+  systemMessage += "Always stay focused on productivity and business management topics. If users ask about unrelated topics, politely redirect them back to how you can help with the WAKTI platform. After 2-3 off-topic questions, inform them that for general chat they should visit TMW AI (https://tmw.qa/ai-chat-bot/). ";
+  
+  // Add personalization instructions
+  systemMessage += "Always address the user by name when greeting them. ";
+  
   // Add knowledge context if available
   if (knowledgeContext) {
     systemMessage += `Use this additional information when responding: ${knowledgeContext}`;
@@ -69,7 +75,7 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
   // Define the conversation history to send to the API
   const conversation = [
     { role: "system", content: systemMessage },
-    { role: "assistant", content: `Welcome back, ${userName}! How can I assist you today?` }
+    { role: "assistant", content: `Hello ${userName}! Welcome back. How can I assist you with your tasks, appointments, or business management today?` }
   ];
   
   // Add context if provided

@@ -12,7 +12,7 @@ export const useAIChat = () => {
     {
       id: "welcome-message",
       role: "assistant",
-      content: `Welcome! How can I assist you today?`,
+      content: `Hello there! I'm your WAKTI AI assistant. How can I help you with your tasks, events, or business needs today?`,
       timestamp: new Date(),
     },
   ]);
@@ -90,7 +90,7 @@ export const useAIChat = () => {
     {
       id: "welcome-message",
       role: "assistant",
-      content: `Welcome! How can I assist you today?`,
+      content: `Hello there! I'm your WAKTI AI assistant. How can I help you with your tasks, events, or business needs today?`,
       timestamp: new Date(),
     },
   ]);

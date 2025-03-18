@@ -14,7 +14,7 @@ export async function callDeepSeepAPI(conversation) {
     };
   }
   
-  console.log("Sending request to DeepSeep API");
+  console.log("Sending request to DeepSeep API with conversation:", JSON.stringify(conversation));
   
   try {
     // Call DeepSeep API
@@ -44,6 +44,18 @@ export async function callDeepSeepAPI(conversation) {
     }
     
     const data = await response.json();
+    console.log("Response from DeepSeep API:", JSON.stringify(data));
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error("Invalid response format from DeepSeep API:", JSON.stringify(data));
+      return {
+        error: new Response(
+          JSON.stringify({ error: "Invalid response format from AI service" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        )
+      };
+    }
+    
     const aiResponse = data.choices[0].message.content;
     
     return { aiResponse };

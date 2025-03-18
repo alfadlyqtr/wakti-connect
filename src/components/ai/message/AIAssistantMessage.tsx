@@ -15,8 +15,8 @@ export function AIAssistantMessage({ message }: AIAssistantMessageProps) {
   return (
     <div
       className={cn(
-        "flex gap-3 max-w-[80%]",
-        isUser ? "ml-auto" : "mr-auto"
+        "flex gap-3",
+        isUser ? "ml-auto justify-end" : "mr-auto justify-start"
       )}
     >
       {!isUser && <MessageAvatar isUser={isUser} />}

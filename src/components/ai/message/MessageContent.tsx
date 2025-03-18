@@ -13,7 +13,7 @@ export function MessageContent({ content, timestamp, isUser }: MessageContentPro
   return (
     <div
       className={cn(
-        "rounded-lg p-3 text-sm",
+        "rounded-lg p-3 text-sm max-w-[75%]",
         isUser ? "bg-wakti-blue text-white" : "bg-muted"
       )}
     >
@@ -21,7 +21,7 @@ export function MessageContent({ content, timestamp, isUser }: MessageContentPro
         <Markdown>{content}</Markdown>
       </div>
       <div className={cn(
-        "text-[10px] mt-1",
+        "text-[10px] mt-1 text-right",
         isUser ? "text-blue-100" : "text-muted-foreground"
       )}>
         {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
