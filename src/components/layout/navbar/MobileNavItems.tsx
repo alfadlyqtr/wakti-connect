@@ -1,12 +1,6 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { 
-  MessageSquare, 
-  Users, 
-  HeartHandshake,
-  Bell,
-} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
@@ -16,6 +10,7 @@ interface MobileNavItemsProps {
     label: string;
     path: string;
     badge: number | null;
+    showForBusiness?: boolean;
   }>;
 }
 

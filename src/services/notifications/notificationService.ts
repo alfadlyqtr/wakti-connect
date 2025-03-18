@@ -87,11 +87,14 @@ export const markAllNotificationsAsRead = async () => {
     return { success: false, error: new Error("No authenticated user") };
   }
 
-  // Using the database function we created
-  const { data: result, error } = await supabase
-    .rpc('mark_all_notifications_as_read', { p_user_id: userId });
+  // Instead of using RPC, use direct SQL update via helper
+  const { error } = await supabase
+    .from('notifications')
+    .update({ is_read: true })
+    .eq('user_id', userId)
+    .eq('is_read', false);
 
-  return { success: !error && !!result, error };
+  return { success: !error, error };
 };
 
 /**
@@ -117,16 +120,20 @@ export const createNotification = async (
   relatedEntityId?: string,
   relatedEntityType?: string
 ) => {
-  // Using the database function we created
+  // Instead of using RPC, insert directly
   const { data, error } = await supabase
-    .rpc('create_notification', {
-      p_user_id: userId,
-      p_title: title,
-      p_content: content,
-      p_type: type,
-      p_related_entity_id: relatedEntityId,
-      p_related_entity_type: relatedEntityType
-    });
+    .from('notifications')
+    .insert({
+      user_id: userId,
+      title: title,
+      content: content,
+      type: type,
+      related_entity_id: relatedEntityId,
+      related_entity_type: relatedEntityType,
+      is_read: false
+    })
+    .select('id')
+    .single();
 
   return { data, error };
 };

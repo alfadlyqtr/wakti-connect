@@ -14,6 +14,7 @@ import MobileNavItems from "./MobileNavItems";
 import AccountMenuItems from "./AccountMenuItems";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchUnreadNotificationsCount } from "@/services/notifications/notificationService";
 
 interface UserMenuProps {
   isAuthenticated: boolean;
@@ -64,7 +65,16 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
     }
   };
   
-  const navItems = [
+  // Define nav items with proper typing
+  type NavItem = {
+    icon: React.ElementType;
+    label: string;
+    path: string;
+    badge: number | null;
+    showForBusiness?: boolean;
+  };
+  
+  const navItems: NavItem[] = [
     { 
       icon: MessageSquare, 
       label: 'Messages', 
