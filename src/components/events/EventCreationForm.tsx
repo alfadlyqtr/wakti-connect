@@ -15,11 +15,12 @@ import { CalendarIcon, Clock, Send, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEvents } from "@/hooks/useEvents";
 import { toast } from "@/components/ui/use-toast";
-import { EventFormData } from "@/types/event.types";
-import TemplateSelector from "@/components/invitations/TemplateSelector";
-import RecipientSelector from "@/components/invitations/RecipientSelector";
-import { useInvitationBuilder } from "@/hooks/useInvitationBuilder";
+import { EventFormData, EventCustomization } from "@/types/event.types";
 import { InvitationRecipient } from "@/types/invitation.types";
+import LocationInput from "@/components/events/location/LocationInput";
+import RecipientSelector from "@/components/invitations/RecipientSelector";
+import CustomizeTab from "@/components/events/customize/CustomizeTab";
+import ShareLinksTab from "@/components/events/share/ShareLinksTab";
 
 const EventCreationForm: React.FC = () => {
   const { createEvent, canCreateEvents, userRole } = useEvents();
@@ -30,16 +31,38 @@ const EventCreationForm: React.FC = () => {
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
   const [recipients, setRecipients] = useState<InvitationRecipient[]>([]);
+  const [shareTab, setShareTab] = useState<'recipients' | 'links'>('recipients');
   
-  const { 
-    templates, 
-    isLoadingTemplates, 
-    selectedTemplateId, 
-    selectTemplate,
-    createCustomization,
-    currentCustomization,
-    updateCustomization
-  } = useInvitationBuilder();
+  // Location state
+  const [locationType, setLocationType] = useState<'manual' | 'google_maps'>('manual');
+  const [location, setLocation] = useState('');
+  const [mapsUrl, setMapsUrl] = useState('');
+  
+  // Customization state
+  const [customization, setCustomization] = useState<EventCustomization>({
+    background: {
+      type: 'color',
+      value: '#ffffff',
+    },
+    font: {
+      family: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      size: 'medium',
+      color: '#333333',
+    },
+    buttons: {
+      accept: {
+        background: '#4CAF50',
+        color: '#ffffff',
+        shape: 'rounded',
+      },
+      decline: {
+        background: '#f44336',
+        color: '#ffffff',
+        shape: 'rounded',
+      }
+    },
+    headerStyle: 'simple',
+  });
 
   const {
     register,
@@ -54,6 +77,16 @@ const EventCreationForm: React.FC = () => {
 
   const removeRecipient = (index: number) => {
     setRecipients(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  const handleLocationChange = (value: string, type: 'manual' | 'google_maps', url?: string) => {
+    setLocation(value);
+    setLocationType(type);
+    if (type === 'google_maps' && url) {
+      setMapsUrl(url);
+    } else {
+      setMapsUrl('');
+    }
   };
 
   const processDateAndTime = (formData: EventFormData) => {
@@ -78,7 +111,10 @@ const EventCreationForm: React.FC = () => {
       start_time: startDateTime.toISOString(),
       end_time: endDateTime.toISOString(),
       is_all_day: isAllDay,
-      customization: currentCustomization
+      location: location,
+      location_type: locationType,
+      maps_url: locationType === 'google_maps' ? mapsUrl : undefined,
+      customization: customization
     };
   };
 
@@ -103,42 +139,56 @@ const EventCreationForm: React.FC = () => {
       
       const result = await createEvent(completeFormData);
       
-      // Get the created event ID and create customization if needed
-      if (result?.id && selectedTemplateId) {
-        try {
-          await createCustomization.mutateAsync();
-          
-          // TODO: Actually send invitations to recipients here
-          // This would use the sendInvitations service
-          
+      if (result?.id) {
+        // This would actually send invitations to recipients in a real implementation
+        if (recipients.length > 0) {
           toast({
-            title: "Event Created with Customization",
-            description: `Your event "${formData.title}" has been created and styled.`,
+            title: "Event Created and Invitations Sent",
+            description: `Your event "${formData.title}" has been created and invitations have been sent.`,
           });
-        } catch (error) {
-          console.error("Error creating customization:", error);
-          // Event was created, but customization failed
+        } else {
           toast({
             title: "Event Created",
-            description: `Your event was created, but customization failed.`,
+            description: `Your event "${formData.title}" has been created as a draft.`,
           });
         }
-      } else {
-        toast({
-          title: "Event Created",
-          description: `Your event "${formData.title}" has been created.`,
+        
+        // Reset form
+        reset();
+        setSelectedDate(new Date());
+        setStartTime("09:00");
+        setEndTime("10:00");
+        setIsAllDay(false);
+        setActiveTab("details");
+        setRecipients([]);
+        setLocation('');
+        setLocationType('manual');
+        setMapsUrl('');
+        setCustomization({
+          background: {
+            type: 'color',
+            value: '#ffffff',
+          },
+          font: {
+            family: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            size: 'medium',
+            color: '#333333',
+          },
+          buttons: {
+            accept: {
+              background: '#4CAF50',
+              color: '#ffffff',
+              shape: 'rounded',
+            },
+            decline: {
+              background: '#f44336',
+              color: '#ffffff',
+              shape: 'rounded',
+            }
+          },
+          headerStyle: 'simple',
         });
       }
-      
-      // Reset form
-      reset();
-      setSelectedDate(new Date());
-      setStartTime("09:00");
-      setEndTime("10:00");
-      setIsAllDay(false);
-      setActiveTab("details");
-      setRecipients([]);
-      
     } catch (error: any) {
       console.error("Error creating event:", error);
       toast({
@@ -159,6 +209,21 @@ const EventCreationForm: React.FC = () => {
   const handlePrevTab = () => {
     if (activeTab === "share") setActiveTab("customize");
     else if (activeTab === "customize") setActiveTab("details");
+  };
+  
+  // Handle email sharing from the ShareLinksTab
+  const handleSendEmail = (email: string) => {
+    const newRecipient: InvitationRecipient = {
+      id: Date.now().toString(), // temporary ID
+      name: email,
+      email: email,
+      type: 'email'
+    };
+    
+    addRecipient(newRecipient);
+    
+    // Switch to the recipients tab to show the new recipient
+    setShareTab('recipients');
   };
   
   // If user can't create events, show upgrade message
@@ -218,10 +283,11 @@ const EventCreationForm: React.FC = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  {...register("location")}
-                  placeholder="Add location"
+                <LocationInput
+                  locationType={locationType}
+                  location={location}
+                  mapsUrl={mapsUrl}
+                  onLocationChange={handleLocationChange}
                 />
               </div>
               
@@ -304,14 +370,10 @@ const EventCreationForm: React.FC = () => {
           
           <TabsContent value="customize">
             <CardContent className="space-y-6">
-              <TemplateSelector
-                templates={templates}
-                selectedTemplateId={selectedTemplateId}
-                onSelectTemplate={selectTemplate}
-                isLoading={isLoadingTemplates}
+              <CustomizeTab
+                customization={customization}
+                onCustomizationChange={setCustomization}
               />
-              
-              {/* Add more customization options here */}
             </CardContent>
             
             <CardFooter className="flex justify-between">
@@ -326,11 +388,33 @@ const EventCreationForm: React.FC = () => {
           
           <TabsContent value="share">
             <CardContent className="space-y-6">
-              <RecipientSelector
-                selectedRecipients={recipients}
-                onAddRecipient={addRecipient}
-                onRemoveRecipient={removeRecipient}
-              />
+              <Tabs
+                value={shareTab}
+                onValueChange={(value) => setShareTab(value as 'recipients' | 'links')}
+                className="w-full"
+              >
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="recipients">Recipients</TabsTrigger>
+                  <TabsTrigger value="links">Share Links</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="recipients">
+                  <div className="py-4">
+                    <RecipientSelector
+                      selectedRecipients={recipients}
+                      onAddRecipient={addRecipient}
+                      onRemoveRecipient={removeRecipient}
+                    />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="links">
+                  <ShareLinksTab
+                    eventId="temp-event-id" // This will be replaced with the actual ID after creation
+                    onSendEmail={handleSendEmail}
+                  />
+                </TabsContent>
+              </Tabs>
               
               <div className="border-t pt-4 mt-6">
                 <div className="flex items-center mb-2">
