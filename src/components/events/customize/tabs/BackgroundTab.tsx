@@ -5,7 +5,7 @@ import AnimationSelector from "../AnimationSelector";
 import { EventCustomization } from "@/types/event.types";
 import { Label } from "@/components/ui/label";
 import { ImagePlus, X } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/toast";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 
