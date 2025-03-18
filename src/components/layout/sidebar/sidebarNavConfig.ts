@@ -1,18 +1,13 @@
 import {
   LayoutDashboard,
-  Users,
   Settings,
-  UserPlus,
   Calendar,
-  Mail,
   ListChecks,
   KanbanSquare,
   HelpCircle,
-  Contact2,
   Building2,
-  Heart,
-  BookOpen,
   Scissors,
+  UserPlus,
 } from "lucide-react";
 
 export type NavItem = {
@@ -86,40 +81,6 @@ export const navItems: SidebarNavItem[] = [
     path: "tasks",
     icon: ListChecks,
     showFor: ['free', 'individual', 'business'],
-  },
-  
-  {
-    section: "Communication",
-    showFor: ['free', 'individual', 'business'],
-  },
-  {
-    label: "Messages",
-    path: "messages",
-    icon: Mail,
-    showFor: ['free', 'individual', 'business'],
-  },
-  
-  {
-    section: "Contacts & Community",
-    showFor: ['free', 'individual', 'business'],
-  },
-  {
-    label: "Contacts",
-    path: "contacts",
-    icon: Contact2,
-    showFor: ['free', 'individual', 'business'],
-  },
-  {
-    label: "My Subscribers",
-    path: "subscribers",
-    icon: Users,
-    showFor: ['business'],
-  },
-  {
-    label: "My Subscriptions",
-    path: "subscriptions",
-    icon: Heart,
-    showFor: ['free', 'individual'],
   },
   
   {
