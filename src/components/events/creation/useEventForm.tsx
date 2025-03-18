@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useEvents } from "@/hooks/useEvents";
@@ -46,6 +45,7 @@ export const useEventForm = () => {
       }
     },
     headerStyle: 'simple',
+    animation: 'fade',
   });
 
   const {
@@ -171,6 +171,7 @@ export const useEventForm = () => {
             }
           },
           headerStyle: 'simple',
+          animation: 'fade',
         });
       }
     } catch (error: any) {

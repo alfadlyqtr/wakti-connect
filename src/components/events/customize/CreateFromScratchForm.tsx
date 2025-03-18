@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
@@ -122,6 +123,29 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
             backgroundValue={customization.background.value}
             onBackgroundChange={handleBackgroundChange}
           />
+
+          <div className="mt-6">
+            <Label className="block mb-2">Animation</Label>
+            <div className="grid grid-cols-3 gap-3">
+              {['fade', 'slide', 'pop'].map((animation) => (
+                <div 
+                  key={animation}
+                  className={`border p-2 rounded-md cursor-pointer transition-all ${
+                    customization.animation === animation ? 'border-primary shadow-sm' : 'border-border'
+                  }`}
+                  onClick={() => handleAnimationChange(animation as 'fade' | 'slide' | 'pop')}
+                >
+                  <div className={`aspect-video bg-muted/50 flex items-center justify-center text-sm font-medium capitalize ${
+                    animation === 'fade' ? 'animate-fade-in' :
+                    animation === 'slide' ? 'animate-slide-in-right' :
+                    animation === 'pop' ? 'animate-scale-in' : ''
+                  }`}>
+                    {animation}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </TabsContent>
         
         <TabsContent value="text" className="space-y-4">
@@ -169,25 +193,6 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
                   />
                 </div>
               )}
-            </div>
-          </div>
-          
-          <div className="mt-6">
-            <Label className="block mb-2">Animation</Label>
-            <div className="grid grid-cols-3 gap-3">
-              {['fade', 'slide', 'pop'].map((animation) => (
-                <div 
-                  key={animation}
-                  className={`border p-2 rounded-md cursor-pointer transition-all ${
-                    customization.animation === animation ? 'border-primary shadow-sm' : 'border-border'
-                  }`}
-                  onClick={() => handleAnimationChange(animation as 'fade' | 'slide' | 'pop')}
-                >
-                  <div className="aspect-video bg-muted/50 flex items-center justify-center text-sm font-medium capitalize">
-                    {animation}
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </TabsContent>

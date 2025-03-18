@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EventCustomization } from "@/types/event.types";
@@ -6,6 +5,7 @@ import CreateFromScratchForm from "./CreateFromScratchForm";
 import TemplateSelector from "@/components/invitations/TemplateSelector";
 import { Button } from "@/components/ui/button";
 import { useInvitationBuilder } from "@/hooks/useInvitationBuilder";
+import AnimationSelector from "./AnimationSelector";
 
 interface CustomizeTabProps {
   customization: EventCustomization;
@@ -49,6 +49,7 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
       }
     },
     headerStyle: 'simple',
+    animation: 'fade',
   };
 
   const handleTemplateSelected = (templateId: string) => {

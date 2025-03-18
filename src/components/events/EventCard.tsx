@@ -26,9 +26,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, onCardClick }) => {
   };
   
   // Format date and time
-  const formattedStartDate = formatDate(new Date(start_time), "PPP");
-  const formattedStartTime = formatDate(new Date(start_time), "p");
-  const formattedEndTime = formatDate(new Date(end_time), "p");
+  const formattedStartDate = formatDate(new Date(start_time));
+  const formattedStartTime = formatDate(new Date(start_time));
+  const formattedEndTime = formatDate(new Date(end_time));
   
   // Style based on customization
   const getCardStyle = () => {
@@ -56,6 +56,22 @@ const EventCard: React.FC<EventCardProps> = ({ event, onCardClick }) => {
     return style;
   };
   
+  // Animation class based on customization
+  const getAnimationClass = () => {
+    if (!safeCustomization.animation) return '';
+    
+    switch (safeCustomization.animation) {
+      case 'fade':
+        return 'animate-fade-in';
+      case 'slide':
+        return 'animate-slide-in-right';
+      case 'pop':
+        return 'animate-scale-in';
+      default:
+        return '';
+    }
+  };
+  
   // Status badge color
   const getBadgeVariant = () => {
     switch (status) {
@@ -76,7 +92,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onCardClick }) => {
   
   return (
     <Card 
-      className="h-full cursor-pointer transition-all hover:shadow-md"
+      className={`h-full cursor-pointer transition-all hover:shadow-md ${getAnimationClass()}`}
       style={getCardStyle()}
       onClick={onCardClick}
     >
@@ -117,7 +133,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onCardClick }) => {
       <CardFooter className="border-t pt-4">
         <div className="w-full flex justify-between items-center">
           <div className="text-xs text-muted-foreground">
-            Created {formatDate(new Date(event.created_at), "PP")}
+            Created {formatDate(new Date(event.created_at))}
           </div>
           
           {event.invitations && (
