@@ -1,184 +1,131 @@
 
 import React from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Event } from "@/types/event.types";
+import { Calendar, Clock, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "@/components/ui/use-toast";
-import { 
-  Check, 
-  X, 
-  Calendar, 
-  MapPin, 
-  Clock, 
-  AlertCircle,
-  Share2
-} from "lucide-react";
-import { Event, EventStatus } from "@/services/event";
-import { cn } from "@/lib/utils";
-import { formatDate, formatTime } from "@/utils/dateUtils";
-import { useEvents } from "@/hooks/useEvents";
+import { formatDate } from "@/utils/dateUtils";
 
 interface EventCardProps {
   event: Event;
-  viewType?: "sent" | "received";
-  onRespond?: (response: "accepted" | "declined") => void;
-  className?: string;
+  onCardClick?: () => void;
 }
 
-const EventCard: React.FC<EventCardProps> = ({
-  event,
-  viewType = "sent",
-  onRespond,
-  className
-}) => {
-  const { respondToInvitation } = useEvents();
+const EventCard: React.FC<EventCardProps> = ({ event, onCardClick }) => {
+  const { title, description, location, start_time, end_time, status, customization } = event;
   
-  const handleRespond = async (response: "accepted" | "declined") => {
-    if (onRespond) {
-      onRespond(response);
-    } else {
-      try {
-        const success = await respondToInvitation(event.id, response);
-        if (success) {
-          toast({
-            title: `Event ${response}`,
-            description: `You have ${response} the event invitation.`,
-          });
-        }
-      } catch (error) {
-        console.error(`Error ${response} event:`, error);
+  // Ensure customization has default values
+  const safeCustomization = customization || {
+    background: { type: 'color', value: '#ffffff' },
+    font: { family: 'system-ui', size: 'medium', color: '#333333' },
+    buttons: {
+      accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
+      decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' }
+    },
+    headerStyle: 'simple'
+  };
+  
+  // Format date and time
+  const formattedStartDate = formatDate(new Date(start_time), "PPP");
+  const formattedStartTime = formatDate(new Date(start_time), "p");
+  const formattedEndTime = formatDate(new Date(end_time), "p");
+  
+  // Style based on customization
+  const getCardStyle = () => {
+    const style: React.CSSProperties = {};
+    
+    // Background
+    if (safeCustomization.background) {
+      if (safeCustomization.background.type === 'color') {
+        style.backgroundColor = safeCustomization.background.value;
+      } else if (safeCustomization.background.type === 'gradient') {
+        style.backgroundImage = safeCustomization.background.value;
+      } else if (safeCustomization.background.type === 'image') {
+        style.backgroundImage = `url(${safeCustomization.background.value})`;
+        style.backgroundSize = 'cover';
+        style.backgroundPosition = 'center';
       }
     }
+    
+    // Font
+    if (safeCustomization.font) {
+      style.fontFamily = safeCustomization.font.family;
+      style.color = safeCustomization.font.color;
+    }
+    
+    return style;
   };
   
-  const getStatusBadge = (status: EventStatus) => {
+  // Status badge color
+  const getBadgeVariant = () => {
     switch (status) {
-      case "draft":
-        return <Badge variant="outline">Draft</Badge>;
-      case "sent":
-        return <Badge variant="secondary">Sent</Badge>;
-      case "accepted":
-        return <Badge variant="success">Accepted</Badge>;
-      case "declined":
-        return <Badge variant="destructive">Declined</Badge>;
-      case "recalled":
-        return <Badge variant="outline" className="bg-gray-200">Recalled</Badge>;
+      case 'draft':
+        return 'secondary';
+      case 'sent':
+        return 'default';
+      case 'accepted':
+        return 'success';
+      case 'declined':
+        return 'destructive';
+      case 'recalled':
+        return 'outline';
       default:
-        return null;
+        return 'default';
     }
   };
-  
-  // Apply customization styles if available
-  const customStyles = event.customization || {};
-  const cardStyle = {
-    backgroundColor: customStyles.backgroundColor,
-    backgroundImage: customStyles.backgroundImage,
-    fontFamily: customStyles.fontFamily,
-  };
-  
-  const isRecalled = event.is_recalled;
   
   return (
     <Card 
-      className={cn("overflow-hidden", className)} 
-      style={cardStyle}
+      className="h-full cursor-pointer transition-all hover:shadow-md"
+      style={getCardStyle()}
+      onClick={onCardClick}
     >
-      {isRecalled && (
-        <div className="bg-destructive/10 p-2 text-center">
-          <p className="text-xs flex items-center justify-center gap-1">
-            <AlertCircle className="h-3.5 w-3.5" />
-            This invitation has been recalled by the sender
-          </p>
-        </div>
-      )}
-      
-      <CardHeader className="p-4">
+      <CardHeader>
         <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-semibold text-lg">{event.title}</h3>
-            {getStatusBadge(event.status)}
-          </div>
-          <div className="text-right text-sm text-muted-foreground">
-            {formatDate(event.created_at)}
-          </div>
+          <h3 className="font-medium text-lg line-clamp-2">{title}</h3>
+          <Badge variant={getBadgeVariant()} className="capitalize">
+            {status}
+          </Badge>
         </div>
       </CardHeader>
       
-      <CardContent className="p-4 pt-0 space-y-4">
-        {event.description && (
-          <p className="text-sm">{event.description}</p>
+      <CardContent className="space-y-4">
+        {description && (
+          <p className="text-sm text-muted-foreground line-clamp-3">{description}</p>
         )}
         
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span>{formatDate(event.start_time)}</span>
+            <Calendar className="h-4 w-4" />
+            <span>{formattedStartDate}</span>
           </div>
           
-          {!event.is_all_day && (
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span>
-                {formatTime(event.start_time)} - {formatTime(event.end_time)}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2 text-sm">
+            <Clock className="h-4 w-4" />
+            <span>{formattedStartTime} - {formattedEndTime}</span>
+          </div>
           
-          {event.location && (
+          {location && (
             <div className="flex items-center gap-2 text-sm">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span>{event.location}</span>
+              <MapPin className="h-4 w-4" />
+              <span className="line-clamp-1">{location}</span>
             </div>
           )}
         </div>
       </CardContent>
       
-      <Separator />
-      
-      <CardFooter className="p-4 flex justify-between">
-        {viewType === "received" && !isRecalled && (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-destructive text-destructive hover:bg-destructive/10"
-              onClick={() => handleRespond("declined")}
-              disabled={event.status === "declined" || event.status === "accepted"}
-            >
-              <X className="h-4 w-4 mr-1" /> Decline
-            </Button>
-            
-            <Button
-              size="sm"
-              className="bg-green-600 hover:bg-green-700"
-              onClick={() => handleRespond("accepted")}
-              disabled={event.status === "declined" || event.status === "accepted"}
-            >
-              <Check className="h-4 w-4 mr-1" /> Accept
-            </Button>
-          </>
-        )}
-        
-        {viewType === "sent" && (
-          <Button variant="outline" size="sm" className="ml-auto">
-            <Share2 className="h-4 w-4 mr-1" /> Share
-          </Button>
-        )}
-        
-        {(event.status === "accepted" || event.status === "declined") && (
-          <Badge 
-            variant={event.status === "accepted" ? "success" : "destructive"}
-            className="ml-auto"
-          >
-            {event.status === "accepted" ? (
-              <Check className="h-3.5 w-3.5 mr-1" />
-            ) : (
-              <X className="h-3.5 w-3.5 mr-1" />
-            )}
-            {event.status === "accepted" ? "Accepted" : "Declined"}
-          </Badge>
-        )}
+      <CardFooter className="border-t pt-4">
+        <div className="w-full flex justify-between items-center">
+          <div className="text-xs text-muted-foreground">
+            Created {formatDate(new Date(event.created_at), "PP")}
+          </div>
+          
+          {event.invitations && (
+            <div className="text-xs">
+              {event.invitations.length} {event.invitations.length === 1 ? 'invitee' : 'invitees'}
+            </div>
+          )}
+        </div>
       </CardFooter>
     </Card>
   );

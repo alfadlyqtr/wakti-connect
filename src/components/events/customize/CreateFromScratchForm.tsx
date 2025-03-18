@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
@@ -9,6 +8,7 @@ import { EventCustomization } from "@/types/event.types";
 import BackgroundSelector from "./BackgroundSelector";
 import ButtonStyleSelector from "./ButtonStyleSelector";
 import FontSelector from "./FontSelector";
+import HeaderStyleSelector from "./HeaderStyleSelector";
 
 interface CreateFromScratchFormProps {
   customization: EventCustomization;
@@ -55,16 +55,21 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
     });
   };
   
+  const handleHeaderStyleChange = (style: 'banner' | 'simple' | 'minimal') => {
+    onCustomizationChange({
+      ...customization,
+      headerStyle: style
+    });
+  };
+  
   const handleHeaderImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Check file size and type
     if (file.size > 2 * 1024 * 1024 || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
       return;
     }
     
-    // In a real implementation, this would upload to storage
     const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
@@ -134,28 +139,11 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
           />
         </TabsContent>
         
-        <TabsContent value="header" className="space-y-4">
-          <div>
-            <Label className="block mb-2">Header Style</Label>
-            <div className="grid grid-cols-3 gap-3">
-              {['banner', 'simple', 'minimal'].map((style) => (
-                <div 
-                  key={style}
-                  className={`border p-2 rounded-md cursor-pointer transition-all ${
-                    customization.headerStyle === style ? 'border-primary shadow-sm' : 'border-border'
-                  }`}
-                  onClick={() => onCustomizationChange({
-                    ...customization,
-                    headerStyle: style as 'banner' | 'simple' | 'minimal'
-                  })}
-                >
-                  <div className="aspect-video bg-muted/50 flex items-center justify-center text-sm font-medium capitalize">
-                    {style}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        <TabsContent value="header" className="space-y-6">
+          <HeaderStyleSelector
+            value={customization.headerStyle}
+            onChange={handleHeaderStyleChange}
+          />
           
           <div className="mt-6">
             <Label className="block mb-2">Header Image</Label>
