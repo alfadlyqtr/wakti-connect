@@ -28,6 +28,15 @@ export interface AISettings {
   };
 }
 
+export interface AIKnowledgeUpload {
+  id: string;
+  user_id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at?: string;
+}
+
 export const useAIAssistant = () => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<AIMessage[]>([
@@ -45,7 +54,9 @@ export const useAIAssistant = () => {
     queryFn: async () => {
       if (!user) throw new Error("User not authenticated");
 
-      const { data, error } = await fromTable<AISettings>("ai_assistant_settings")
+      // Using regular supabase client instead of helper for known tables
+      const { data, error } = await supabase
+        .from("ai_assistant_settings")
         .select("*")
         .eq("user_id", user.id)
         .single();
@@ -73,16 +84,17 @@ export const useAIAssistant = () => {
           },
         };
 
-        const { data: newSettings, error: insertError } = await fromTable("ai_assistant_settings")
+        const { data: newSettings, error: insertError } = await supabase
+          .from("ai_assistant_settings")
           .insert(defaultSettings)
           .select()
           .single();
 
         if (insertError) throw insertError;
-        return newSettings as AISettings;
+        return newSettings as unknown as AISettings;
       }
 
-      return data;
+      return data as unknown as AISettings;
     },
     enabled: !!user,
   });
@@ -109,14 +121,15 @@ export const useAIAssistant = () => {
     mutationFn: async (newSettings: Partial<AISettings>) => {
       if (!user) throw new Error("User not authenticated");
 
-      const { data, error } = await fromTable<AISettings>("ai_assistant_settings")
+      const { data, error } = await supabase
+        .from("ai_assistant_settings")
         .update(newSettings)
         .eq("user_id", user.id)
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      return data as unknown as AISettings;
     },
     onSuccess: () => {
       toast({
@@ -207,7 +220,8 @@ export const useAIAssistant = () => {
     mutationFn: async ({ title, content }: { title: string; content: string }) => {
       if (!user) throw new Error("User not authenticated");
 
-      const { data, error } = await fromTable("ai_knowledge_uploads")
+      const { data, error } = await supabase
+        .from("ai_knowledge_uploads")
         .insert({
           user_id: user.id,
           title,
@@ -217,7 +231,7 @@ export const useAIAssistant = () => {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as unknown as AIKnowledgeUpload;
     },
     onSuccess: () => {
       toast({
@@ -240,12 +254,13 @@ export const useAIAssistant = () => {
     queryFn: async () => {
       if (!user) throw new Error("User not authenticated");
 
-      const { data, error } = await fromTable("ai_knowledge_uploads")
+      const { data, error } = await supabase
+        .from("ai_knowledge_uploads")
         .select("*")
         .eq("user_id", user.id);
 
       if (error) throw error;
-      return data;
+      return data as unknown as AIKnowledgeUpload[];
     },
     enabled: !!user,
   });
@@ -255,7 +270,8 @@ export const useAIAssistant = () => {
     mutationFn: async (id: string) => {
       if (!user) throw new Error("User not authenticated");
 
-      const { error } = await fromTable("ai_knowledge_uploads")
+      const { error } = await supabase
+        .from("ai_knowledge_uploads")
         .delete()
         .eq("id", id)
         .eq("user_id", user.id);

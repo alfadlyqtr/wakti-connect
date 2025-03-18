@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useAIAssistant } from "@/hooks/useAIAssistant";
+import { useAIAssistant, AISettings } from "@/hooks/useAIAssistant";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ export const AIAssistantSettings = () => {
     deleteKnowledge
   } = useAIAssistant();
   
-  const [newSettings, setNewSettings] = useState(aiSettings);
+  const [newSettings, setNewSettings] = useState<AISettings | null>(null);
   const [knowledgeTitle, setKnowledgeTitle] = useState("");
   const [knowledgeContent, setKnowledgeContent] = useState("");
   const [isKnowledgeDialogOpen, setIsKnowledgeDialogOpen] = useState(false);
