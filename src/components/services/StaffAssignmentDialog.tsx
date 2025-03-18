@@ -15,12 +15,16 @@ const StaffAssignmentDialog: React.FC<StaffAssignmentDialogProps> = ({
   serviceName 
 }) => {
   const { data: staffData, isLoading: isStaffLoading } = useStaffData();
-  const { staffAssignments, assignStaffToService } = useServiceStaffAssignments(serviceId);
+  const { 
+    staffAssignments, 
+    assignStaffToService,
+    isPending 
+  } = useServiceStaffAssignments(serviceId);
 
   const selectedStaff = staffAssignments?.map(assignment => assignment.id) || [];
 
   const handleStaffChange = async (staffIds: string[]) => {
-    await assignStaffToService(serviceId, staffIds);
+    await assignStaffToService(staffIds);
   };
 
   return (
