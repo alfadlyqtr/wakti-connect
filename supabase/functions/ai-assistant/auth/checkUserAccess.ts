@@ -20,6 +20,7 @@ export async function checkUserAccess(user, supabaseClient) {
         .single();
         
       if (profileError) {
+        console.error("Error checking profile access:", profileError);
         return {
           error: new Response(
             JSON.stringify({ error: "Error fetching user profile" }),

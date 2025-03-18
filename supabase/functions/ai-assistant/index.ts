@@ -30,7 +30,12 @@ serve(async (req) => {
     }
     
     // Get request data
-    const { message, context } = await req.json();
+    const requestData = await req.json().catch(error => {
+      console.error("Error parsing request JSON:", error);
+      return {};
+    });
+    
+    const { message, context } = requestData;
     
     if (!message) {
       return new Response(
@@ -57,7 +62,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error in AI assistant function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || "An unexpected error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

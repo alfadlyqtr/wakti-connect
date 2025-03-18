@@ -37,6 +37,7 @@ export async function authenticateUser(req) {
   const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
   
   if (userError || !user) {
+    console.error("Authentication error:", userError);
     return {
       error: new Response(
         JSON.stringify({ error: "Unauthorized" }),
@@ -45,5 +46,6 @@ export async function authenticateUser(req) {
     };
   }
 
+  console.log("Authenticated user:", user.id);
   return { user, supabaseClient };
 }

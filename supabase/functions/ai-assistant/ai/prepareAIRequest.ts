@@ -37,6 +37,9 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
     
   const userName = userProfile?.display_name || userProfile?.full_name || userProfile?.business_name || "there";
   
+  // Log user profile for debugging
+  console.log("User profile for greeting:", JSON.stringify(userProfile));
+  
   // Build system message based on settings
   let systemMessage = `You are ${aiName}, a helpful AI assistant for the WAKTI productivity platform. `;
   
