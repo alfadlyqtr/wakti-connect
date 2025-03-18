@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +18,7 @@ import DashboardLayout from "./components/dashboard/DashboardLayout";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "@/components/notifications/NotificationListener";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
 // Import i18n
 import "./i18n/i18n";
@@ -32,51 +34,47 @@ const DashboardRoutes = () => {
 function App() {
   return (
     <div className="app">
-      <NotificationListener />
-      
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider defaultTheme="system">
-          <AuthProvider>
-            <TaskProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <ScrollToTop />
-                  <Routes>
-                    {/* Public routes */}
-                    <Route path="/*" element={
-                      <>
-                        <Header />
-                        <Routes>
-                          {PublicRoutes}
-                        </Routes>
-                      </>
-                    } />
-                    
-                    {/* Auth routes */}
-                    <Route path="/auth/*" element={<AuthRoutes />} />
-                    
-                    {/* Direct auth-related pages for deep linking */}
-                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                    <Route path="/reset-password" element={<ResetPasswordPage />} />
-                    <Route path="/verify-email" element={<VerificationPage />} />
-                    
-                    {/* Dashboard routes - wrapped in ProtectedRoute */}
-                    <Route path="/dashboard/*" element={
-                      <ProtectedRoute>
-                        <DashboardLayout>
-                          <DashboardRoutes />
-                        </DashboardLayout>
-                      </ProtectedRoute>
-                    } />
-                  </Routes>
-                </BrowserRouter>
-              </TooltipProvider>
-            </TaskProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider defaultTheme="system">
+            <AuthProvider>
+              <TaskProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter>
+                    <ScrollToTop />
+                    <NotificationListener />
+                    <Routes>
+                      {/* Public routes */}
+                      <Route path="/" element={<Header />}>
+                        {PublicRoutes}
+                      </Route>
+                      
+                      {/* Auth routes */}
+                      <Route path="/auth/*" element={<AuthRoutes />} />
+                      
+                      {/* Direct auth-related pages for deep linking */}
+                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                      <Route path="/reset-password" element={<ResetPasswordPage />} />
+                      <Route path="/verify-email" element={<VerificationPage />} />
+                      
+                      {/* Dashboard routes - wrapped in ProtectedRoute */}
+                      <Route path="/dashboard/*" element={
+                        <ProtectedRoute>
+                          <DashboardLayout>
+                            <DashboardRoutes />
+                          </DashboardLayout>
+                        </ProtectedRoute>
+                      } />
+                    </Routes>
+                  </BrowserRouter>
+                </TooltipProvider>
+              </TaskProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </ErrorBoundary>
     </div>
   );
 }
