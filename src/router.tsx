@@ -1,5 +1,6 @@
+
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useState } from "react";
 import NotFound from "@/pages/NotFound";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -168,7 +169,7 @@ export const router = createBrowserRouter([
         path: "login",
         element: (
           <Suspense fallback={<div className="flex items-center justify-center h-20">Loading...</div>}>
-            <Login />
+            <Login setError={(error: string) => {}} />
           </Suspense>
         ),
       },
@@ -176,7 +177,7 @@ export const router = createBrowserRouter([
         path: "register",
         element: (
           <Suspense fallback={<div className="flex items-center justify-center h-20">Loading...</div>}>
-            <Register />
+            <Register setError={(error: string) => {}} />
           </Suspense>
         ),
       },
@@ -208,7 +209,7 @@ export const router = createBrowserRouter([
         path: "verify-success",
         element: (
           <Suspense fallback={<div className="flex items-center justify-center h-20">Loading...</div>}>
-            <VerifySuccess />
+            <VerifySuccess setError={(error: string) => {}} />
           </Suspense>
         ),
       },
@@ -227,7 +228,7 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Suspense fallback={<div className="flex items-center justify-center h-20">Loading...</div>}>
-              <WelcomeSetup />
+              <WelcomeSetup setError={(error: string) => {}} />
             </Suspense>
           </ProtectedRoute>
         ),
