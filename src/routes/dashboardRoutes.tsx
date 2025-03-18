@@ -9,12 +9,17 @@ import DashboardUserSubscriptions from "@/pages/dashboard/DashboardUserSubscript
 import DashboardBusinessPage from "@/pages/dashboard/DashboardBusinessPage";
 import DashboardMessages from "@/pages/dashboard/DashboardMessages";
 import DashboardNotifications from "@/pages/dashboard/DashboardNotifications";
+import DashboardBookings from "@/pages/dashboard/DashboardBookings";
 
 const dashboardRoutes: RouteObject[] = [
   {
     path: "/",
     element: <DashboardHome />,
     index: true,
+  },
+  {
+    path: "bookings",
+    element: <DashboardBookings />,
   },
   {
     path: "business-page",

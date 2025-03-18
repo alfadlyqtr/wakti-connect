@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 import { 
@@ -14,15 +14,13 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterDate, setFilterDate] = useState<Date | null>(null);
-  const [localUserRole, setLocalUserRole] = useState<"business">("business");
 
   // Fetch bookings with React Query
   const { 
     data, 
     isLoading, 
     error, 
-    refetch,
-    isError
+    refetch 
   } = useQuery({
     queryKey: ['bookings', tab],
     queryFn: () => fetchBookings(tab),
@@ -42,18 +40,6 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
     }
   });
 
-  // Auto-retry in case of an error - but only once
-  useEffect(() => {
-    if (isError) {
-      const timer = setTimeout(() => {
-        console.log("Auto-retrying booking fetch after error");
-        refetch();
-      }, 3000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isError, refetch]);
-
   // Create a new booking
   const createBooking = async (bookingData: Partial<BookingFormData>) => {
     try {
@@ -72,10 +58,8 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
         description: "Your booking has been created successfully",
       });
 
-      // Refetch with a delay to ensure the database has time to update
-      setTimeout(() => {
-        refetch();
-      }, 500);
+      // Refetch bookings
+      refetch();
       
       return result;
     } catch (error: any) {
@@ -94,6 +78,7 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
   // Filter bookings based on search and filters
   const getFilteredBookings = () => {
     const bookingsList = data?.bookings || [];
+    
     return bookingsList.filter((booking) => {
       // Search filter
       const matchesSearch = searchQuery 

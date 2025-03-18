@@ -3,6 +3,9 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import NotFound from "@/pages/NotFound";
 
+// Import real components
+import DashboardBookings from "@/pages/dashboard/DashboardBookings";
+
 // For now, let's create a simple placeholder component for any missing components
 const PlaceholderComponent = ({ name }: { name: string }) => (
   <div className="flex flex-col items-center justify-center min-h-screen p-4">
@@ -197,6 +200,10 @@ export const router = createBrowserRouter([
       {
         path: "tasks/:taskId",
         element: <TaskDetails />,
+      },
+      {
+        path: "bookings",
+        element: <DashboardBookings />,
       },
       {
         path: "upgrade",
