@@ -15,12 +15,21 @@ interface LocationInputProps {
 }
 
 function isValidGoogleMapsUrl(url: string): boolean {
-  // This is a simple check - in production, use a more robust validation
-  return (
-    url.startsWith('https://maps.google.com') ||
-    url.startsWith('https://www.google.com/maps') ||
-    url.startsWith('https://goo.gl/maps')
-  );
+  // Check for various valid Google Maps URL formats
+  const googleMapsPatterns = [
+    // Standard maps.google.com format
+    /^https?:\/\/(www\.)?maps\.google\.com/,
+    // Standard google.com/maps format
+    /^https?:\/\/(www\.)?google\.com\/maps/,
+    // Short URL format (goo.gl)
+    /^https?:\/\/goo\.gl\/maps/,
+    // Mobile app URL format
+    /^https?:\/\/maps\.app\.goo\.gl\//,
+    // Coordinate-based format
+    /^https?:\/\/(www\.)?google\.com\/maps\/place\/[^\/]+\/@[-\d.]+,[-\d.]+/
+  ];
+
+  return googleMapsPatterns.some(pattern => pattern.test(url));
 }
 
 const LocationInput: React.FC<LocationInputProps> = ({
@@ -92,6 +101,9 @@ const LocationInput: React.FC<LocationInputProps> = ({
                 placeholder="https://maps.google.com/..."
                 className="w-full"
               />
+              <p className="text-xs text-muted-foreground">
+                Supported formats: maps.google.com, google.com/maps, goo.gl/maps, maps.app.goo.gl
+              </p>
               {urlError && (
                 <Alert variant="destructive" className="py-2">
                   <AlertDescription>{urlError}</AlertDescription>
