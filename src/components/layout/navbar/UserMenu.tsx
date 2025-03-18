@@ -42,6 +42,13 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
     enabled: isAuthenticated,
   });
   
+  // Use notification service to get unread count
+  const { data: notificationCount = 0 } = useQuery({
+    queryKey: ['unreadNotificationsCount'],
+    queryFn: fetchUnreadNotificationsCount,
+    enabled: isAuthenticated,
+  });
+  
   // Determine the display name based on account type
   const getDisplayName = () => {
     if (!profileData) return t('common.account');
@@ -81,7 +88,7 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
       icon: Bell, 
       label: 'Notifications', 
       path: '/dashboard/notifications', 
-      badge: unreadNotifications.length > 0 ? unreadNotifications.length : null
+      badge: notificationCount > 0 ? notificationCount : null
     },
   ];
   

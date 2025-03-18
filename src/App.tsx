@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +16,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TaskProvider } from "@/contexts/TaskContext";
+import NotificationListener from "@/components/notifications/NotificationListener";
 
 // Import i18n
 import "./i18n/i18n";
@@ -29,50 +29,56 @@ const DashboardRoutes = () => {
   return routes;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="system">
-      <AuthProvider>
-        <TaskProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <ScrollToTop />
-              <Routes>
-                {/* Public routes */}
-                <Route path="/*" element={
-                  <>
-                    <Header />
-                    <Routes>
-                      {PublicRoutes}
-                    </Routes>
-                  </>
-                } />
-                
-                {/* Auth routes */}
-                <Route path="/auth/*" element={<AuthRoutes />} />
-                
-                {/* Direct auth-related pages for deep linking */}
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/verify-email" element={<VerificationPage />} />
-                
-                {/* Dashboard routes - wrapped in ProtectedRoute */}
-                <Route path="/dashboard/*" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <DashboardRoutes />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </TaskProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <div className="app">
+      <NotificationListener />
+      
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="system">
+          <AuthProvider>
+            <TaskProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <ScrollToTop />
+                  <Routes>
+                    {/* Public routes */}
+                    <Route path="/*" element={
+                      <>
+                        <Header />
+                        <Routes>
+                          {PublicRoutes}
+                        </Routes>
+                      </>
+                    } />
+                    
+                    {/* Auth routes */}
+                    <Route path="/auth/*" element={<AuthRoutes />} />
+                    
+                    {/* Direct auth-related pages for deep linking */}
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route path="/verify-email" element={<VerificationPage />} />
+                    
+                    {/* Dashboard routes - wrapped in ProtectedRoute */}
+                    <Route path="/dashboard/*" element={
+                      <ProtectedRoute>
+                        <DashboardLayout>
+                          <DashboardRoutes />
+                        </DashboardLayout>
+                      </ProtectedRoute>
+                    } />
+                  </Routes>
+                </BrowserRouter>
+              </TooltipProvider>
+            </TaskProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </div>
+  );
+}
 
 export default App;

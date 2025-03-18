@@ -8,6 +8,7 @@ import DashboardSubscribers from "@/pages/dashboard/DashboardSubscribers";
 import DashboardUserSubscriptions from "@/pages/dashboard/DashboardUserSubscriptions";
 import DashboardBusinessPage from "@/pages/dashboard/DashboardBusinessPage";
 import DashboardMessages from "@/pages/dashboard/DashboardMessages";
+import DashboardNotifications from "@/pages/dashboard/DashboardNotifications";
 
 const dashboardRoutes: RouteObject[] = [
   {
@@ -42,6 +43,10 @@ const dashboardRoutes: RouteObject[] = [
   {
     path: "messages/:userId",
     element: <DashboardMessages />,
+  },
+  {
+    path: "notifications",
+    element: <DashboardNotifications />,
   },
 ];
 

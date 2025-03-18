@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, Users, HeartHandshake, Bell } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchUnreadNotificationsCount } from "@/services/notifications/notificationService";
 
 interface NavItem {
   icon: React.ElementType;
@@ -21,6 +23,12 @@ interface NavItemsProps {
 
 const NavItems = ({ unreadMessages, unreadNotifications, isMobile = false }: NavItemsProps) => {
   const navigate = useNavigate();
+  
+  // Use our notification service to get unread count
+  const { data: notificationCount = 0 } = useQuery({
+    queryKey: ['unreadNotificationsCount'],
+    queryFn: fetchUnreadNotificationsCount,
+  });
   
   const navItems: NavItem[] = [
     { 
@@ -46,7 +54,7 @@ const NavItems = ({ unreadMessages, unreadNotifications, isMobile = false }: Nav
       icon: Bell, 
       label: 'Notifications', 
       path: '/dashboard/notifications', 
-      badge: unreadNotifications.length > 0 ? unreadNotifications.length : null
+      badge: notificationCount > 0 ? notificationCount : null
     },
   ];
 
