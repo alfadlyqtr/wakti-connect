@@ -9,6 +9,96 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_assistant_settings: {
+        Row: {
+          assistant_name: string | null
+          created_at: string
+          enabled_features: Json | null
+          id: string
+          proactiveness: boolean | null
+          response_length: string | null
+          suggestion_frequency: string | null
+          tone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assistant_name?: string | null
+          created_at?: string
+          enabled_features?: Json | null
+          id?: string
+          proactiveness?: boolean | null
+          response_length?: string | null
+          suggestion_frequency?: string | null
+          tone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assistant_name?: string | null
+          created_at?: string
+          enabled_features?: Json | null
+          id?: string
+          proactiveness?: boolean | null
+          response_length?: string | null
+          suggestion_frequency?: string | null
+          tone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          response: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          response: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          response?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_knowledge_uploads: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           business_id: string
@@ -977,6 +1067,10 @@ export type Database = {
     }
     Functions: {
       can_create_event: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      can_use_ai_assistant: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }

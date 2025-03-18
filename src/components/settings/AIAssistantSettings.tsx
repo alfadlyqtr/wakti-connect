@@ -8,7 +8,6 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Bot, Save, Loader2, Plus, Upload, Trash } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Slider } from "@/components/ui/slider";
 import { AIAssistantUpgradeCard } from "@/components/ai/AIAssistantUpgradeCard";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
