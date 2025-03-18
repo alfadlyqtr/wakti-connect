@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   Settings,
@@ -18,28 +19,18 @@ export type NavItem = {
   showFor: Array<'free' | 'individual' | 'business'>;
 };
 
-export type NavSection = {
-  section: string;
-  showFor: Array<'free' | 'individual' | 'business'>;
-};
-
-export type SidebarNavItem = NavItem | NavSection;
-
-export const navItems: SidebarNavItem[] = [
-  {
-    section: "Main",
-    showFor: ['free', 'individual', 'business'],
-  },
+export const navItems: NavItem[] = [
   {
     label: "Dashboard",
     path: "",
     icon: LayoutDashboard,
     showFor: ['free', 'individual', 'business'],
   },
-  
   {
-    section: "Business Tools",
-    showFor: ['business'],
+    label: "Tasks",
+    path: "tasks",
+    icon: ListChecks,
+    showFor: ['free', 'individual', 'business'],
   },
   {
     label: "Business Page",
@@ -70,22 +61,6 @@ export const navItems: SidebarNavItem[] = [
     path: "jobs",
     icon: KanbanSquare,
     showFor: ['business'],
-  },
-  
-  {
-    section: "Tasks & Projects",
-    showFor: ['free', 'individual', 'business'],
-  },
-  {
-    label: "Tasks",
-    path: "tasks",
-    icon: ListChecks,
-    showFor: ['free', 'individual', 'business'],
-  },
-  
-  {
-    section: "Settings",
-    showFor: ['free', 'individual', 'business'],
   },
   {
     label: "Settings",

@@ -3,10 +3,9 @@ import React from "react";
 import { useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { navItems, NavItem, NavSection, SidebarNavItem as SidebarNavItemType } from "./sidebarNavConfig";
+import { NavItem, navItems } from "./sidebarNavConfig";
 import { useSidebarData } from "./useSidebarData";
 import SidebarNavItem from "./SidebarNavItem";
-import SidebarSectionHeader from "./SidebarSectionHeader";
 
 interface SidebarNavItemsProps {
   onNavClick?: () => void;
@@ -20,7 +19,6 @@ const SidebarNavItems = ({ onNavClick, isCollapsed = false }: SidebarNavItemsPro
   const queryClient = useQueryClient();
 
   const isActive = (path: string) => {
-    // Handle root dashboard path
     if (path === '' && location.pathname === '/dashboard') {
       return true;
     }
@@ -28,7 +26,6 @@ const SidebarNavItems = ({ onNavClick, isCollapsed = false }: SidebarNavItemsPro
   };
 
   const handleNavClick = (path: string) => {
-    // Invalidate specific queries based on the route
     if (path === 'messages') {
       queryClient.invalidateQueries({ queryKey: ['unreadMessages'] });
     }
@@ -38,52 +35,30 @@ const SidebarNavItems = ({ onNavClick, isCollapsed = false }: SidebarNavItemsPro
     }
   };
 
-  const isItemVisible = (item: SidebarNavItemType) => {
+  const isItemVisible = (item: NavItem) => {
     if (!userData) return false;
-    
-    if ('section' in item) {
-      return item.showFor.includes(userData.accountType as 'free' | 'individual' | 'business');
-    } else {
-      return item.showFor.includes(userData.accountType as 'free' | 'individual' | 'business');
-    }
+    return item.showFor.includes(userData.accountType as 'free' | 'individual' | 'business');
   };
 
+  const filteredItems = navItems.filter((item): item is NavItem => 
+    !('section' in item) && isItemVisible(item)
+  );
+
   return (
-    <div className="flex flex-col gap-1 px-2">
-      {navItems.map((item, index) => {
-        // Skip if item should not be shown for current user type
-        if (!isItemVisible(item)) {
-          return null;
-        }
-
-        // Section header (only show when not collapsed)
-        if ('section' in item) {
-          return !isCollapsed ? (
-            <SidebarSectionHeader 
-              key={`section-${index}`} 
-              title={item.section} 
-            />
-          ) : null;
-        }
-
-        // Navigation item with badge for messages
-        const navItem: NavItem = {
-          ...item as NavItem,
-          badge: item.path === 'messages' ? unreadMessagesCount > 0 ? unreadMessagesCount : null : null
-        };
-
-        // Navigation item
-        return (
-          <SidebarNavItem
-            key={item.path}
-            item={navItem}
-            isActive={isActive(item.path)}
-            isMobile={isMobile}
-            isCollapsed={isCollapsed}
-            onClick={handleNavClick}
-          />
-        );
-      })}
+    <div className="flex flex-col gap-1.5 px-2 py-1">
+      {filteredItems.map((item) => (
+        <SidebarNavItem
+          key={item.path}
+          item={{
+            ...item,
+            badge: item.path === 'messages' ? unreadMessagesCount > 0 ? unreadMessagesCount : null : null
+          }}
+          isActive={isActive(item.path)}
+          isMobile={isMobile}
+          isCollapsed={isCollapsed}
+          onClick={handleNavClick}
+        />
+      ))}
     </div>
   );
 };
