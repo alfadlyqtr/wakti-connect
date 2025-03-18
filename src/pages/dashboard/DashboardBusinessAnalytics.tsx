@@ -13,12 +13,14 @@ import { GrowthChart } from "@/components/business/analytics/GrowthChart";
 import { accountTypeVerification } from "@/utils/accountTypeVerification";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const DashboardBusinessAnalytics = () => {
   const { t } = useTranslation();
   const [tab, setTab] = useState<string>("overview");
   const { isLoading, error, data } = useBusinessAnalytics("month");
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // Verify that the user has a business account when accessing this page
   useEffect(() => {
@@ -55,7 +57,7 @@ const DashboardBusinessAnalytics = () => {
       )}
 
       <Tabs defaultValue="overview" value={tab} onValueChange={setTab}>
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className={`grid w-full ${isMobile ? "grid-cols-1 gap-2" : "max-w-md grid-cols-2"}`}>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="services">Services</TabsTrigger>
         </TabsList>
@@ -74,7 +76,7 @@ const DashboardBusinessAnalytics = () => {
           />
 
           <div className="grid gap-6 md:grid-cols-2">
-            <Card>
+            <Card className="w-full">
               <CardContent className="pt-6">
                 <h3 className="text-lg font-medium mb-4">Growth Trends</h3>
                 <GrowthChart 
@@ -89,7 +91,7 @@ const DashboardBusinessAnalytics = () => {
         <TabsContent value="services" className="space-y-6 mt-6">
           <SectionContainer>
             <div className="grid gap-6 md:grid-cols-2">
-              <Card>
+              <Card className="w-full">
                 <CardContent className="pt-6">
                   <h3 className="text-lg font-medium mb-4">Service Distribution</h3>
                   <ServiceDistributionChart 

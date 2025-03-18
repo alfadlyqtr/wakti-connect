@@ -12,6 +12,7 @@ import { useBusinessReports } from "@/hooks/useBusinessReports";
 import { accountTypeVerification } from "@/utils/accountTypeVerification";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const DashboardBusinessReports = () => {
   const {
@@ -24,6 +25,7 @@ const DashboardBusinessReports = () => {
   } = useBusinessReports();
   
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // Verify that the user has a business account when accessing this page
   useEffect(() => {
@@ -93,7 +95,7 @@ const DashboardBusinessReports = () => {
       </div>
 
       <Tabs defaultValue="growth">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className={`grid w-full ${isMobile ? "grid-cols-1 gap-2" : "grid-cols-3"}`}>
           <TabsTrigger value="growth">Growth</TabsTrigger>
           <TabsTrigger value="engagement">Engagement</TabsTrigger>
           <TabsTrigger value="services">Services</TabsTrigger>

@@ -4,8 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarDays, FileText, Download, Printer, Users } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const ReportsTab = () => {
+  const isMobile = useIsMobile();
+  
   const handleGenerateReport = (reportType: string) => {
     console.log(`Generating ${reportType} report...`);
     // In a real app, this would generate and download the report
@@ -14,7 +17,7 @@ const ReportsTab = () => {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="financial">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className={`grid w-full ${isMobile ? "grid-cols-1 gap-2" : "grid-cols-3"}`}>
           <TabsTrigger value="financial">Financial</TabsTrigger>
           <TabsTrigger value="appointments">Appointments</TabsTrigger>
           <TabsTrigger value="staff">Staff</TabsTrigger>
@@ -37,12 +40,12 @@ const ReportsTab = () => {
                   This report includes total revenue, service-wise breakdown, payment methods, and trends compared to previous periods.
                 </p>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => handleGenerateReport('monthly-revenue')}>
+              <CardFooter className={`${isMobile ? 'flex-col gap-2' : 'flex justify-between'}`}>
+                <Button variant="outline" className={isMobile ? 'w-full' : ''} onClick={() => handleGenerateReport('monthly-revenue')}>
                   <Download className="mr-2 h-4 w-4" />
                   Download
                 </Button>
-                <Button variant="outline" onClick={() => handleGenerateReport('monthly-revenue-print')}>
+                <Button variant="outline" className={isMobile ? 'w-full' : ''} onClick={() => handleGenerateReport('monthly-revenue-print')}>
                   <Printer className="mr-2 h-4 w-4" />
                   Print
                 </Button>
@@ -64,12 +67,12 @@ const ReportsTab = () => {
                   This report provides a comprehensive overview of your annual revenue, expenses, and profit margins with quarter-by-quarter comparison.
                 </p>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => handleGenerateReport('annual-summary')}>
+              <CardFooter className={`${isMobile ? 'flex-col gap-2' : 'flex justify-between'}`}>
+                <Button variant="outline" className={isMobile ? 'w-full' : ''} onClick={() => handleGenerateReport('annual-summary')}>
                   <Download className="mr-2 h-4 w-4" />
                   Download
                 </Button>
-                <Button variant="outline" onClick={() => handleGenerateReport('annual-summary-print')}>
+                <Button variant="outline" className={isMobile ? 'w-full' : ''} onClick={() => handleGenerateReport('annual-summary-print')}>
                   <Printer className="mr-2 h-4 w-4" />
                   Print
                 </Button>
@@ -95,12 +98,12 @@ const ReportsTab = () => {
                   This report shows appointment trends, popular time slots, most booked services, and customer retention metrics.
                 </p>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => handleGenerateReport('appointment-analysis')}>
+              <CardFooter className={`${isMobile ? 'flex-col gap-2' : 'flex justify-between'}`}>
+                <Button variant="outline" className={isMobile ? 'w-full' : ''} onClick={() => handleGenerateReport('appointment-analysis')}>
                   <Download className="mr-2 h-4 w-4" />
                   Download
                 </Button>
-                <Button variant="outline" onClick={() => handleGenerateReport('appointment-analysis-print')}>
+                <Button variant="outline" className={isMobile ? 'w-full' : ''} onClick={() => handleGenerateReport('appointment-analysis-print')}>
                   <Printer className="mr-2 h-4 w-4" />
                   Print
                 </Button>
@@ -122,12 +125,12 @@ const ReportsTab = () => {
                   This report identifies patterns in cancellations and no-shows, helping you optimize your scheduling and reminder systems.
                 </p>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => handleGenerateReport('no-show-report')}>
+              <CardFooter className={`${isMobile ? 'flex-col gap-2' : 'flex justify-between'}`}>
+                <Button variant="outline" className={isMobile ? 'w-full' : ''} onClick={() => handleGenerateReport('no-show-report')}>
                   <Download className="mr-2 h-4 w-4" />
                   Download
                 </Button>
-                <Button variant="outline" onClick={() => handleGenerateReport('no-show-report-print')}>
+                <Button variant="outline" className={isMobile ? 'w-full' : ''} onClick={() => handleGenerateReport('no-show-report-print')}>
                   <Printer className="mr-2 h-4 w-4" />
                   Print
                 </Button>

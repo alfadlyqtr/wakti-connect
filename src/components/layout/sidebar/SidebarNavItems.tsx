@@ -1,62 +1,51 @@
 
 import React from "react";
 import { useLocation } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { NavItem, navItems } from "./sidebarNavConfig";
-import { useSidebarData } from "./useSidebarData";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { navItems, NavItem } from "./sidebarNavConfig";
 import SidebarNavItem from "./SidebarNavItem";
 
 interface SidebarNavItemsProps {
-  onNavClick?: () => void;
+  onNavClick: (path: string) => void;
   isCollapsed?: boolean;
 }
 
-const SidebarNavItems = ({ onNavClick, isCollapsed = false }: SidebarNavItemsProps) => {
+const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({ 
+  onNavClick,
+  isCollapsed = false
+}) => {
   const location = useLocation();
-  const isMobile = useIsMobile();
-  const { userData, unreadMessagesCount } = useSidebarData();
-  const queryClient = useQueryClient();
-
-  const isActive = (path: string) => {
-    if (path === '' && location.pathname === '/dashboard') {
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  
+  // Get user role from localStorage
+  const userRole = localStorage.getItem('userRole') as 'free' | 'individual' | 'business' || 'free';
+  
+  // Filter navigation items based on user role
+  const filteredNavItems = navItems.filter(item => 
+    item.showFor.includes(userRole)
+  );
+  
+  // Helper to check if a nav item is active
+  const isActive = (item: NavItem) => {
+    const path = `/dashboard/${item.path}`;
+    // For dashboard home
+    if (item.path === "" && location.pathname === "/dashboard") {
       return true;
     }
-    return path ? location.pathname.startsWith('/dashboard/' + path) : false;
+    // For regular routes
+    return location.pathname.startsWith(path);
   };
-
-  const handleNavClick = (path: string) => {
-    if (path === 'messages') {
-      queryClient.invalidateQueries({ queryKey: ['unreadMessages'] });
-    }
-    
-    if (onNavClick) {
-      onNavClick();
-    }
-  };
-
-  const isItemVisible = (item: NavItem) => {
-    if (!userData) return false;
-    return item.showFor.includes(userData.accountType as 'free' | 'individual' | 'business');
-  };
-
-  const filteredItems = navItems.filter((item): item is NavItem => 
-    !('section' in item) && isItemVisible(item)
-  );
 
   return (
-    <div className="flex flex-col gap-1.5 px-2 py-1">
-      {filteredItems.map((item) => (
+    <div className="flex flex-col gap-1.5 px-2.5">
+      {filteredNavItems.map((item) => (
         <SidebarNavItem
           key={item.path}
-          item={{
-            ...item,
-            badge: item.path === 'messages' ? unreadMessagesCount > 0 ? unreadMessagesCount : null : null
-          }}
-          isActive={isActive(item.path)}
+          item={item}
+          isActive={isActive(item)}
           isMobile={isMobile}
           isCollapsed={isCollapsed}
-          onClick={handleNavClick}
+          onClick={onNavClick}
         />
       ))}
     </div>
