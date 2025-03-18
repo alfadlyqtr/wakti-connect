@@ -1,12 +1,12 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { EventFormData } from "@/types/event.types";
+import { EventFormData, EventCustomization } from "@/types/event.types";
 import { InvitationRecipient } from "@/types/invitation.types";
-import { toast } from "@/components/ui/use-toast";
 import { useEvents } from "@/hooks/useEvents";
+import { toast } from "@/components/ui/use-toast";
 
-interface EventSubmissionProps {
+interface UseEventSubmissionProps {
   title: string;
   description: string;
   isAllDay: boolean;
@@ -16,7 +16,7 @@ interface EventSubmissionProps {
   location: string;
   locationType: 'manual' | 'google_maps';
   mapsUrl: string;
-  customization: any;
+  customization: EventCustomization;
   recipients: InvitationRecipient[];
   resetForm: () => void;
 }
@@ -34,8 +34,8 @@ export const useEventSubmission = ({
   customization,
   recipients,
   resetForm
-}: EventSubmissionProps) => {
-  const { createEvent, canCreateEvents } = useEvents();
+}: UseEventSubmissionProps) => {
+  const { createEvent, updateEvent, canCreateEvents } = useEvents();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const {
@@ -44,8 +44,13 @@ export const useEventSubmission = ({
     formState: { errors },
     setValue,
     reset
-  } = useForm<EventFormData>();
-
+  } = useForm<EventFormData>({
+    defaultValues: {
+      title: title,
+      description: description
+    }
+  });
+  
   const processDateAndTime = (formData: EventFormData) => {
     // Create ISO string for start and end times
     const startDateTime = new Date(selectedDate);
@@ -65,8 +70,6 @@ export const useEventSubmission = ({
     
     return {
       ...formData,
-      title: title,
-      description: description,
       start_time: startDateTime.toISOString(),
       end_time: endDateTime.toISOString(),
       is_all_day: isAllDay,
@@ -77,7 +80,7 @@ export const useEventSubmission = ({
     };
   };
 
-  const onSubmit = async (formData: EventFormData) => {
+  const onSubmit = useCallback(async (formData: EventFormData) => {
     try {
       setIsSubmitting(true);
       
@@ -85,15 +88,6 @@ export const useEventSubmission = ({
         toast({
           title: "Subscription Required",
           description: "Creating events requires an Individual or Business subscription",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      if (!title) {
-        toast({
-          title: "Title Required",
-          description: "Please enter a title for your event",
           variant: "destructive",
         });
         return;
@@ -112,18 +106,18 @@ export const useEventSubmission = ({
         if (recipients.length > 0) {
           toast({
             title: "Event Created and Invitations Sent",
-            description: `Your event "${title}" has been created and invitations have been sent.`,
+            description: `Your event "${formData.title}" has been created and invitations have been sent.`,
           });
         } else {
           toast({
             title: "Event Created",
-            description: `Your event "${title}" has been created as a draft.`,
+            description: `Your event "${formData.title}" has been created as a draft.`,
           });
         }
         
         // Reset form
-        reset();
         resetForm();
+        reset();
       }
     } catch (error: any) {
       console.error("Error creating event:", error);
@@ -135,7 +129,7 @@ export const useEventSubmission = ({
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [canCreateEvents, createEvent, isAllDay, location, locationType, mapsUrl, customization, recipients, resetForm, reset, selectedDate, startTime, endTime]);
 
   return {
     register,
