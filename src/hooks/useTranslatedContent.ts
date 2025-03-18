@@ -2,6 +2,7 @@
 import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { fromTable } from '@/integrations/supabase/helper';
 
 /**
  * Hook to fetch translated content from Supabase based on current language
@@ -32,32 +33,32 @@ export function useTranslatedContent<T = any>(
         
         // First try to get content in current language
         const currentLang = i18n.language;
-        let { data, error: langError } = await supabase
-          .from(`${tableName}_translations`)
-          .select('*')
+        const translationsTable = `${tableName}_translations`;
+        
+        // Use the fromTable helper for dynamic table access
+        const { data, error: langError } = await fromTable(translationsTable)
+          .select()
           .eq('content_id', contentId)
           .eq('language', currentLang)
-          .single();
+          .maybeSingle();
         
         // If no translation in current language, fall back to English
         if (langError || !data) {
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from(`${tableName}_translations`)
-            .select('*')
+          const { data: fallbackData, error: fallbackError } = await fromTable(translationsTable)
+            .select()
             .eq('content_id', contentId)
             .eq('language', 'en')
-            .single();
+            .maybeSingle();
             
-          if (fallbackError) {
+          if (fallbackError || !fallbackData) {
             // If no English translation, get the base content
-            const { data: baseData, error: baseError } = await supabase
-              .from(tableName)
-              .select('*')
+            const { data: baseData, error: baseError } = await fromTable(tableName)
+              .select()
               .eq('id', contentId)
-              .single();
+              .maybeSingle();
               
-            if (baseError) {
-              throw new Error(`Content not found in any language: ${baseError.message}`);
+            if (baseError || !baseData) {
+              throw new Error(`Content not found in any language: ${baseError?.message || 'Unknown error'}`);
             }
             
             setContent(baseData as T);
