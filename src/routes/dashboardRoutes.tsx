@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Route } from 'react-router-dom';
+import { RouteObject } from 'react-router-dom';
 
 // Dashboard Pages
 import DashboardHome from '@/pages/dashboard/DashboardHome';
@@ -25,28 +25,26 @@ import DashboardBusinessAnalytics from '@/pages/dashboard/DashboardBusinessAnaly
 import DashboardBusinessReports from '@/pages/dashboard/DashboardBusinessReports';
 import DashboardPaymentConfirmation from '@/pages/dashboard/DashboardPaymentConfirmation';
 
-export const dashboardRoutes = (
-  <>
-    <Route index element={<DashboardHome />} />
-    <Route path="tasks" element={<DashboardTasks />} />
-    <Route path="events" element={<DashboardEvents />} />
-    <Route path="settings" element={<DashboardSettings />} />
-    <Route path="upgrade" element={<DashboardUpgrade />} />
-    <Route path="messages" element={<DashboardMessages />} />
-    <Route path="contacts" element={<DashboardContacts />} />
-    <Route path="profile" element={<DashboardProfile />} />
-    <Route path="notifications" element={<DashboardNotifications />} />
-    <Route path="business-page" element={<DashboardBusinessPage />} />
-    <Route path="services" element={<DashboardServiceManagement />} />
-    <Route path="bookings" element={<DashboardBookings />} />
-    <Route path="staff" element={<DashboardStaffManagement />} />
-    <Route path="work-logs" element={<DashboardWorkLogs />} />
-    <Route path="subscribers" element={<DashboardSubscribers />} />
-    <Route path="jobs" element={<DashboardJobs />} />
-    <Route path="jobs/cards" element={<DashboardJobCards />} />
-    <Route path="billing" element={<DashboardBilling />} />
-    <Route path="analytics" element={<DashboardBusinessAnalytics />} />
-    <Route path="reports" element={<DashboardBusinessReports />} />
-    <Route path="payment/success" element={<DashboardPaymentConfirmation />} />
-  </>
-);
+export const dashboardRoutes: RouteObject[] = [
+  { path: "", element: <DashboardHome /> },
+  { path: "tasks", element: <DashboardTasks /> },
+  { path: "events", element: <DashboardEvents /> },
+  { path: "settings", element: <DashboardSettings /> },
+  { path: "upgrade", element: <DashboardUpgrade /> },
+  { path: "messages", element: <DashboardMessages /> },
+  { path: "contacts", element: <DashboardContacts /> },
+  { path: "profile", element: <DashboardProfile /> },
+  { path: "notifications", element: <DashboardNotifications /> },
+  { path: "business-page", element: <DashboardBusinessPage /> },
+  { path: "services", element: <DashboardServiceManagement /> },
+  { path: "bookings", element: <DashboardBookings /> },
+  { path: "staff", element: <DashboardStaffManagement /> },
+  { path: "work-logs", element: <DashboardWorkLogs /> },
+  { path: "subscribers", element: <DashboardSubscribers /> },
+  { path: "jobs", element: <DashboardJobs /> },
+  { path: "jobs/cards", element: <DashboardJobCards /> },
+  { path: "billing", element: <DashboardBilling /> },
+  { path: "analytics", element: <DashboardBusinessAnalytics /> },
+  { path: "reports", element: <DashboardBusinessReports /> },
+  { path: "payment/success", element: <DashboardPaymentConfirmation /> }
+];
