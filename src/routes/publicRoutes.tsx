@@ -10,10 +10,12 @@ import FaqPage from '@/pages/public/FaqPage';
 import PrivacyPage from '@/pages/public/PrivacyPage';
 import TermsPage from '@/pages/public/TermsPage';
 import BusinessLandingPage from '@/pages/business/BusinessLandingPage';
+import Index from '@/pages/Index';
 
 const publicRoutes = (
   <>
-    <Route index element={<LandingPage />} />
+    <Route index element={<Index />} />
+    <Route path="landing" element={<LandingPage />} />
     <Route path="about" element={<AboutPage />} />
     <Route path="features" element={<FeaturesPage />} />
     <Route path="pricing" element={<PricingPage />} />

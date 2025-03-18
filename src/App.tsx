@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useRoutes } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/use-theme";
 import PublicRoutes from "./routes/publicRoutes";
 import AuthRoutes from "./routes/authRoutes";
@@ -25,57 +25,61 @@ import "./i18n/i18n";
 
 const queryClient = new QueryClient();
 
-// Dashboard Routes Component
-const DashboardRoutes = () => {
-  const routes = useRoutes(dashboardRoutes);
-  return routes;
-};
-
 function App() {
   return (
-    <div className="app">
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="system">
-            <AuthProvider>
-              <TaskProvider>
-                <TooltipProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="system">
+          <AuthProvider>
+            <TaskProvider>
+              <TooltipProvider>
+                <BrowserRouter>
+                  <ScrollToTop />
+                  <NotificationListener />
                   <Toaster />
                   <Sonner />
-                  <BrowserRouter>
-                    <ScrollToTop />
-                    <NotificationListener />
-                    <Routes>
-                      {/* Public routes */}
-                      <Route path="/" element={<Header />}>
-                        {PublicRoutes}
-                      </Route>
-                      
-                      {/* Auth routes */}
-                      <Route path="/auth/*" element={<AuthRoutes />} />
-                      
-                      {/* Direct auth-related pages for deep linking */}
-                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                      <Route path="/reset-password" element={<ResetPasswordPage />} />
-                      <Route path="/verify-email" element={<VerificationPage />} />
-                      
-                      {/* Dashboard routes - wrapped in ProtectedRoute */}
-                      <Route path="/dashboard/*" element={
+                  <Routes>
+                    {/* Public routes with Header */}
+                    <Route path="/" element={<Header />}>
+                      {PublicRoutes}
+                    </Route>
+                    
+                    {/* Auth routes */}
+                    <Route path="/auth/*" element={<AuthRoutes />} />
+                    
+                    {/* Direct auth-related pages for deep linking */}
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route path="/verify-email" element={<VerificationPage />} />
+                    
+                    {/* Dashboard routes - wrapped in ProtectedRoute */}
+                    <Route 
+                      path="/dashboard/*" 
+                      element={
                         <ProtectedRoute>
                           <DashboardLayout>
-                            <DashboardRoutes />
+                            <Routes>
+                              {dashboardRoutes.map((route, index) => (
+                                <Route 
+                                  key={index}
+                                  path={route.path}
+                                  element={route.element}
+                                  index={route.index}
+                                />
+                              ))}
+                            </Routes>
                           </DashboardLayout>
                         </ProtectedRoute>
-                      } />
-                    </Routes>
-                  </BrowserRouter>
-                </TooltipProvider>
-              </TaskProvider>
-            </AuthProvider>
-          </ThemeProvider>
-        </QueryClientProvider>
-      </ErrorBoundary>
-    </div>
+                      } 
+                    />
+                  </Routes>
+                </BrowserRouter>
+              </TooltipProvider>
+            </TaskProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

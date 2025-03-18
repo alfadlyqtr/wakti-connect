@@ -8,6 +8,8 @@ const NotificationListener = () => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    let unsubscribe: (() => void) | null = null;
+    
     try {
       const handleNewNotification = (notification: Notification) => {
         // Invalidate queries to refresh notification data
@@ -16,20 +18,22 @@ const NotificationListener = () => {
       };
 
       // Subscribe to notifications
-      const unsubscribe = subscribeToNotifications(handleNewNotification);
-      
-      // Cleanup subscription when component unmounts
-      return () => {
-        unsubscribe();
-      };
+      unsubscribe = subscribeToNotifications(handleNewNotification);
     } catch (error) {
       console.error("Error in notification listener:", error);
       toast({
         title: "Notification System Error",
-        description: "Could not connect to notification service",
+        description: "Could not connect to notification service. Notifications may not be real-time.",
         variant: "destructive",
       });
     }
+    
+    // Cleanup subscription when component unmounts
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [queryClient]);
 
   // This component doesn't render anything
