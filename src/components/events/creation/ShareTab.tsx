@@ -3,7 +3,7 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import RecipientSelector from "@/components/invitations/RecipientSelector";
-import ShareLinksTab from "@/components/events/creation/ShareLinksTab";
+import ShareLinksTab from "@/components/events/share/ShareLinksTab";
 import { InvitationRecipient } from "@/types/invitation.types";
 
 interface ShareTabProps {
