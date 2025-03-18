@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { subscribeToNotifications, Notification } from "@/services/notifications/notificationService";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
-import { toast as sonnerToast } from "@/components/ui/sonner";
+import { toast as sonnerToast } from "sonner"; // Fixed import directly from sonner package
 
 const NotificationListener = () => {
   const queryClient = useQueryClient();
