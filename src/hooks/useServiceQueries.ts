@@ -18,10 +18,11 @@ export const useServiceQueries = () => {
         throw new Error('Not authenticated');
       }
       
-      // Fetch services
+      // Fetch services - using the correct table name business_services
       const { data: servicesData, error: servicesError } = await supabase
         .from('business_services')
         .select('*')
+        .eq('business_id', session.session.user.id)
         .order('name');
         
       if (servicesError) throw servicesError;

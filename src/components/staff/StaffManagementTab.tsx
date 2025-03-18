@@ -21,15 +21,24 @@ interface StaffMember {
 const StaffManagementTab = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  // Fetch staff members
+  // Fetch staff members using the correct table name and filter by current user's business ID
   const { data: staffMembers, isLoading: staffLoading, error: staffError } = useQuery({
     queryKey: ['businessStaff'],
     queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        throw new Error("No active session found");
+      }
+      
       const { data: staffData, error: staffError } = await supabase
         .from('business_staff')
-        .select('*');
+        .select('*')
+        .eq('business_id', session.user.id);
         
       if (staffError) throw staffError;
+      
+      console.log("Staff data fetched:", staffData); // Debug log
       return staffData as StaffMember[];
     }
   });
