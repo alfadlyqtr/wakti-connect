@@ -11,7 +11,8 @@ import {
   UserPlus,
   PartyPopper,
   BarChart2,
-  FileText
+  FileText,
+  Bot
 } from "lucide-react";
 
 export type NavItem = {
@@ -39,6 +40,12 @@ export const navItems: NavItem[] = [
     label: "Events",
     path: "events",
     icon: PartyPopper,
+    showFor: ['free', 'individual', 'business'],
+  },
+  {
+    label: "WAKTI AI",
+    path: "ai-assistant",
+    icon: Bot,
     showFor: ['free', 'individual', 'business'],
   },
   {
