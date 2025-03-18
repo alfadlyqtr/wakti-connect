@@ -3,22 +3,25 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useServiceStaffQueries = (serviceId?: string) => {
-  // Query to fetch all staff assignments for a specific service
+  // Query to fetch staff members assigned to a specific service
   const { 
     data: staffAssignments, 
     isLoading, 
     error 
   } = useQuery({
-    queryKey: ['serviceStaffAssignments', serviceId],
+    queryKey: ['staffServiceAssignments', serviceId],
     queryFn: async () => {
       if (!serviceId) return [];
       
-      // Fetch staff assignments for the service
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        throw new Error('Not authenticated');
+      }
+      
       const { data, error } = await supabase
         .from('staff_service_assignments')
         .select(`
-          id,
-          service_id,
           staff_id,
           business_staff:staff_id(
             id,
@@ -30,20 +33,13 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         
       if (error) throw error;
       
-      // Map the data to a more usable format
-      const enhancedData = data.map(assignment => {
-        return {
-          id: assignment.id,
-          serviceId: assignment.service_id,
-          staffId: assignment.staff_id,
-          staffName: assignment.business_staff?.name || 'Unknown',
-          staffRole: assignment.business_staff?.role || 'staff'
-        };
-      });
-      
-      return enhancedData;
+      return data.map(item => ({
+        id: item.staff_id,
+        name: item.business_staff?.name || 'Unknown',
+        role: item.business_staff?.role || 'staff'
+      }));
     },
-    enabled: !!serviceId // Only run the query if serviceId is provided
+    enabled: !!serviceId
   });
 
   return {

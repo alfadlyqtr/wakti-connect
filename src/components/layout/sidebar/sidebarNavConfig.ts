@@ -13,6 +13,8 @@ import {
   Contact2,
   Building2,
   Heart,
+  BookOpen,
+  Scissors,
 } from "lucide-react";
 
 export type NavItem = {
@@ -65,7 +67,7 @@ export const navItems: SidebarNavItem[] = [
   {
     label: "Services",
     path: "services",
-    icon: ListChecks,
+    icon: Scissors,
     showFor: ['business'],
   },
   {

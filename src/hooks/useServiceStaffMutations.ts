@@ -1,50 +1,56 @@
 
+import { useState } from 'react';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
 export const useServiceStaffMutations = () => {
   const queryClient = useQueryClient();
-
-  // Mutation to assign staff to a service
-  const assignStaffToService = async (serviceId: string, staffIds: string[]) => {
-    // Delete existing assignments
-    const { error: deleteError } = await supabase
-      .from('staff_service_assignments')
-      .delete()
-      .eq('service_id', serviceId);
+  const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
+  
+  // Mutation to assign staff members to a service
+  const staffAssignmentMutation = useMutation({
+    mutationFn: async ({ 
+      serviceId, 
+      staffIds 
+    }: { 
+      serviceId: string, 
+      staffIds: string[] 
+    }) => {
+      // First, remove existing assignments for this service
+      const { error: deleteError } = await supabase
+        .from('staff_service_assignments')
+        .delete()
+        .eq('service_id', serviceId);
+        
+      if (deleteError) throw deleteError;
       
-    if (deleteError) throw deleteError;
-
-    // Create new assignments if there are any
-    if (staffIds.length > 0) {
+      if (staffIds.length === 0) return { message: "Staff assignments cleared" };
+      
+      // Create new assignments
       const assignments = staffIds.map(staffId => ({
         service_id: serviceId,
         staff_id: staffId
       }));
-
-      if (assignments.length > 0) {
-        const { error: assignError } = await supabase
-          .from('staff_service_assignments')
-          .insert(assignments);
-
-        if (assignError) throw assignError;
-      }
-    }
-  };
-
-  // Mutation to manage staff assignments
-  const staffAssignmentMutation = useMutation({
-    mutationFn: async ({ serviceId, staffIds }: { serviceId: string, staffIds: string[] }) => {
-      await assignStaffToService(serviceId, staffIds);
-      return serviceId;
+      
+      const { data, error } = await supabase
+        .from('staff_service_assignments')
+        .insert(assignments)
+        .select();
+        
+      if (error) throw error;
+      return data;
     },
-    onSuccess: (serviceId) => {
-      queryClient.invalidateQueries({ queryKey: ['businessServices'] });
-      queryClient.invalidateQueries({ queryKey: ['serviceStaffAssignments', serviceId] });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ 
+        queryKey: ['staffServiceAssignments', variables.serviceId] 
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ['businessServices'] 
+      });
       toast({
         title: "Staff assignments updated",
-        description: "Staff assignments have been updated successfully.",
+        description: "The staff assignments for this service have been updated."
       });
     },
     onError: (error) => {
@@ -56,7 +62,13 @@ export const useServiceStaffMutations = () => {
     }
   });
 
+  const assignStaffToService = (serviceId: string, staffIds: string[]) => {
+    staffAssignmentMutation.mutate({ serviceId, staffIds });
+  };
+
   return {
+    selectedStaff,
+    setSelectedStaff,
     assignStaffToService,
     staffAssignmentMutation
   };
