@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
@@ -19,24 +18,25 @@ import SocialAuth from "./SocialAuth";
 import LanguageSwitcher from "@/components/ui/language-switcher";
 import { useTranslation } from "react-i18next";
 
-const AuthForm = () => {
+interface AuthFormProps {
+  defaultTab?: 'login' | 'register';
+}
+
+const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const { t } = useTranslation();
 
-  // Check if the user is already authenticated
   useEffect(() => {
     const checkSession = async () => {
       const { data, error } = await supabase.auth.getSession();
       if (data?.session) {
-        // User is already logged in, redirect to dashboard
         navigate("/dashboard");
       }
     };
 
     checkSession();
 
-    // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === "SIGNED_IN" && session) {
@@ -45,7 +45,6 @@ const AuthForm = () => {
       }
     );
 
-    // Cleanup
     return () => {
       authListener?.subscription.unsubscribe();
     };
@@ -53,7 +52,7 @@ const AuthForm = () => {
 
   return (
     <Card className="w-full max-w-md mx-auto border-border/50 shadow-xl animate-in">
-      <Tabs defaultValue="login" className="w-full">
+      <Tabs defaultValue={defaultTab} className="w-full">
         <CardHeader>
           <div className="flex items-center justify-between mb-2">
             <Button

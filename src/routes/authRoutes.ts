@@ -1,10 +1,10 @@
 
 import { RouteObject } from "react-router-dom";
 import { Navigate } from "react-router-dom";
-import Login from "@/pages/auth/LoginPage";
-import Register from "@/pages/auth/RegisterPage";
-import ForgotPassword from "@/pages/auth/ForgotPasswordPage";
-import ResetPassword from "@/pages/auth/ResetPasswordPage";
+import LoginPage from "@/pages/auth/LoginPage";
+import RegisterPage from "@/pages/auth/RegisterPage";
+import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 import EmailVerification from "@/pages/auth/VerificationPage";
 import VerifySuccess from "@/pages/auth/VerifySuccessPage";
 import PlanSelection from "@/pages/auth/PlanSelectionPage";
@@ -14,43 +14,42 @@ import PaymentSuccess from "@/pages/auth/PaymentSuccessPage";
 export const authRoutes: RouteObject[] = [
   {
     path: "",
-    element: <Navigate to="/auth/login" replace />,
+    element: <Navigate to="/auth/login" replace />
   },
   {
     path: "login",
-    element: <Login />,
+    element: <LoginPage />
   },
   {
     path: "register",
-    element: <Register />,
+    element: <RegisterPage />
   },
   {
     path: "forgot-password",
-    element: <ForgotPassword />,
+    element: <ForgotPasswordPage />
   },
   {
     path: "reset-password",
-    element: <ResetPassword />,
+    element: <ResetPasswordPage />
   },
   {
     path: "verify-email",
-    element: <EmailVerification />,
+    element: <EmailVerification />
   },
   {
     path: "verify-success",
-    element: <VerifySuccess />,
+    element: <VerifySuccess />
   },
   {
     path: "plans",
-    element: <PlanSelection />,
+    element: <PlanSelection />
   },
   {
     path: "welcome-setup",
-    element: <WelcomeSetup />,
+    element: <WelcomeSetup />
   },
   {
     path: "payment-success",
-    element: <PaymentSuccess />,
-  },
+    element: <PaymentSuccess />
+  }
 ];
-
