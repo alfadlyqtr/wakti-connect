@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Download, Users, Calendar, Clock } from "lucide-react";
@@ -9,6 +9,9 @@ import { BookingActivityChart } from "@/components/business/charts/BookingActivi
 import { ServicePopularityChart } from "@/components/business/charts/ServicePopularityChart";
 import { RevenueOverview } from "@/components/business/RevenueOverview";
 import { useBusinessReports } from "@/hooks/useBusinessReports";
+import { accountTypeVerification } from "@/utils/accountTypeVerification";
+import { useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/use-toast";
 
 const DashboardBusinessReports = () => {
   const {
@@ -19,6 +22,26 @@ const DashboardBusinessReports = () => {
     serviceCount,
     servicesLoading
   } = useBusinessReports();
+  
+  const navigate = useNavigate();
+
+  // Verify that the user has a business account when accessing this page
+  useEffect(() => {
+    const verifyBusinessAccount = async () => {
+      const isBusinessAccount = await accountTypeVerification.verifyAccountType('business');
+      
+      if (!isBusinessAccount) {
+        toast({
+          title: "Access Denied",
+          description: "You need a business account to access reports.",
+          variant: "destructive"
+        });
+        navigate("/dashboard");
+      }
+    };
+    
+    verifyBusinessAccount();
+  }, [navigate]);
 
   const handleDownloadReport = () => {
     // This would generate a report file in a real application
@@ -26,7 +49,7 @@ const DashboardBusinessReports = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="container py-6 space-y-6">
       <div className="flex flex-col md:flex-row justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold mb-2">Business Reports</h1>

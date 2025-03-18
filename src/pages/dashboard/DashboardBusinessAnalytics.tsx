@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { SectionContainer } from "@/components/ui/section-container";
@@ -10,11 +10,33 @@ import { useBusinessAnalytics } from "@/hooks/useBusinessAnalytics";
 import { AnalyticsSummaryCards } from "@/components/business/analytics/AnalyticsSummaryCards";
 import { ServiceDistributionChart } from "@/components/business/analytics/ServiceDistributionChart";
 import { GrowthChart } from "@/components/business/analytics/GrowthChart";
+import { accountTypeVerification } from "@/utils/accountTypeVerification";
+import { useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/use-toast";
 
 const DashboardBusinessAnalytics = () => {
   const { t } = useTranslation();
   const [tab, setTab] = useState<string>("overview");
   const { isLoading, error, data } = useBusinessAnalytics("month");
+  const navigate = useNavigate();
+
+  // Verify that the user has a business account when accessing this page
+  useEffect(() => {
+    const verifyBusinessAccount = async () => {
+      const isBusinessAccount = await accountTypeVerification.verifyAccountType('business');
+      
+      if (!isBusinessAccount) {
+        toast({
+          title: "Access Denied",
+          description: "You need a business account to access analytics.",
+          variant: "destructive"
+        });
+        navigate("/dashboard");
+      }
+    };
+    
+    verifyBusinessAccount();
+  }, [navigate]);
 
   return (
     <div className="container py-6 space-y-8">

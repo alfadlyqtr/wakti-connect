@@ -10,6 +10,8 @@ import {
   Scissors,
   UserPlus,
   PartyPopper,
+  BarChart2,
+  FileText
 } from "lucide-react";
 
 export type NavItem = {
@@ -67,6 +69,18 @@ export const navItems: NavItem[] = [
     label: "Jobs",
     path: "jobs",
     icon: KanbanSquare,
+    showFor: ['business'],
+  },
+  {
+    label: "Analytics",
+    path: "analytics",
+    icon: BarChart2,
+    showFor: ['business'],
+  },
+  {
+    label: "Reports",
+    path: "reports",
+    icon: FileText,
     showFor: ['business'],
   },
   {
