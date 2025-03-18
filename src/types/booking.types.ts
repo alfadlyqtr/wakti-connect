@@ -20,10 +20,10 @@ export interface Booking {
     name: string;
     price: number;
     duration: number;
-  };
+  } | null;
   business_staff?: {
     name: string;
-  };
+  } | null;
 }
 
 export type BookingTab = "all-bookings" | "pending-bookings" | "staff-bookings";

@@ -49,12 +49,27 @@ const TaskDetails = lazy(() => import("@/components/tasks/TaskDetails"));
 // Business pages
 const BusinessLandingPage = lazy(() => import("@/components/business/landing/BusinessLandingPage"));
 
-// Auth shell wrapper
-const AuthShell = ({ children }: { children: React.ReactNode }) => (
-  <div className="min-h-screen flex items-center justify-center bg-muted/20">
-    <div className="w-full max-w-md p-6 bg-card shadow-lg rounded-lg">{children}</div>
-  </div>
-);
+// Auth shell wrapper with error state
+const AuthShell = ({ children }: { children: React.ReactNode }) => {
+  const [error, setError] = useState("");
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-muted/20">
+      {error && (
+        <div className="absolute top-4 w-full max-w-md mx-auto">
+          <div className="bg-destructive/15 text-destructive px-4 py-2 rounded-md">
+            {error}
+          </div>
+        </div>
+      )}
+      <div className="w-full max-w-md p-6 bg-card shadow-lg rounded-lg">
+        {React.isValidElement(children) 
+          ? React.cloneElement(children, { setError } as any) 
+          : children}
+      </div>
+    </div>
+  );
+};
 
 // Business shell wrapper
 const BusinessShell = ({ children }: { children: React.ReactNode }) => (

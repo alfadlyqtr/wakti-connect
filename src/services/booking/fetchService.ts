@@ -1,13 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Booking, BookingStatus } from "@/types/booking.types";
-
-interface BookingsResult {
-  bookings: Booking[];
-  userRole: "business" | "individual";
-}
-
-type BookingTab = "all-bookings" | "pending-bookings" | "staff-bookings";
+import { Booking, BookingStatus, BookingTab, BookingsResult } from "@/types/booking.types";
 
 /**
  * Fetches bookings based on the selected tab (business accounts only)
@@ -49,7 +42,7 @@ export const fetchBookings = async (
             .order('created_at', { ascending: false });
             
           if (allBookingsError) throw allBookingsError;
-          bookings = allBookings || [];
+          bookings = allBookings as unknown as Booking[] || [];
           break;
           
         case "pending-bookings":
@@ -62,7 +55,7 @@ export const fetchBookings = async (
             .order('created_at', { ascending: false });
             
           if (pendingBookingsError) throw pendingBookingsError;
-          bookings = pendingBookings || [];
+          bookings = pendingBookings as unknown as Booking[] || [];
           break;
           
         case "staff-bookings":
@@ -75,7 +68,7 @@ export const fetchBookings = async (
             .order('created_at', { ascending: false });
             
           if (staffBookingsError) throw staffBookingsError;
-          bookings = staffBookings || [];
+          bookings = staffBookings as unknown as Booking[] || [];
           break;
             
         default:
@@ -86,7 +79,7 @@ export const fetchBookings = async (
             .order('created_at', { ascending: false });
             
           if (defaultBookingsError) throw defaultBookingsError;
-          bookings = defaultBookings || [];
+          bookings = defaultBookings as unknown as Booking[] || [];
       }
     } catch (fetchError: any) {
       console.error(`Error fetching bookings for tab "${tab}":`, fetchError);

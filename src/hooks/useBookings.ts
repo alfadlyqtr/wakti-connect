@@ -45,9 +45,9 @@ export const useBookings = (tabFilter: string = "all-bookings") => {
         const { data, error } = await query;
 
         if (error) throw error;
-
-        console.log("Bookings fetched:", data);
-        return data as Booking[];
+        
+        // Type cast the response to Booking[] 
+        return (data || []) as unknown as Booking[];
       } catch (err) {
         console.error("Error fetching bookings:", err);
         throw err;
@@ -73,7 +73,7 @@ export const useBookings = (tabFilter: string = "all-bookings") => {
       : true;
 
     return matchesSearch && matchesStatus && matchesDate;
-  });
+  }) || [];
 
   // Add createBooking function
   const createBookingMutation = useMutation({
@@ -126,8 +126,8 @@ export const useBookings = (tabFilter: string = "all-bookings") => {
   };
 
   return {
-    bookings,
-    filteredBookings: filteredBookings || [],
+    bookings: bookings || [],
+    filteredBookings,
     searchQuery,
     setSearchQuery,
     filterStatus,

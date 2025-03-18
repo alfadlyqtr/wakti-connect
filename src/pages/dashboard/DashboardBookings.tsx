@@ -26,7 +26,8 @@ const DashboardBookings = () => {
     setFilterDate,
     refetch,
     isLoading,
-    error
+    error,
+    createBooking
   } = useBookings(activeTab);
 
   // Helper function to handle filter status changes with string conversion

@@ -1,20 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { Booking, BookingStatus } from "@/types/booking.types";
-
-interface BookingFormData {
-  title: string;
-  description?: string;
-  customer_name?: string;
-  customer_email?: string;
-  customer_id?: string;
-  service_id?: string;
-  start_time: string;
-  end_time: string;
-  status?: BookingStatus;
-  staff_assigned_id?: string;
-}
+import { Booking, BookingStatus, BookingFormData } from "@/types/booking.types";
 
 /**
  * Creates a new booking (business accounts only)
@@ -85,7 +72,7 @@ export const createBooking = async (
       throw new Error("Failed to create booking: No data returned");
     }
 
-    return booking;
+    return booking as unknown as Booking;
   } catch (error: any) {
     console.error("Error in createBooking:", error);
     throw error;
