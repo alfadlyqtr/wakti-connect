@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Event } from "@/types/event.types";
@@ -99,7 +98,7 @@ const EventCard: React.FC<EventCardProps> = ({
         return 'default';
     }
   };
-  
+
   // Apply different layout based on viewType
   const getCardClassName = () => {
     let baseClass = `h-full transition-all hover:shadow-md ${getAnimationClass()}`;

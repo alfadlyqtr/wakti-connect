@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useEventForm } from "./creation/useEventForm";
+import { useEventForm } from "@/hooks/useEventForm";
 import DetailsTab from "./creation/DetailsTab";
 import ShareTab from "./creation/ShareTab";
 import CustomizeTab from "./customize/CustomizeTab";
@@ -118,7 +118,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
         });
       }
     }
-  }, [editEvent]);
+  }, [editEvent, setTitle, setDescription, setValue, setSelectedDate, setIsAllDay, setStartTime, setEndTime, handleLocationChange, setCustomization, addRecipient]);
 
   // If user can't create events, show upgrade message
   if (!canCreateEvents) {
