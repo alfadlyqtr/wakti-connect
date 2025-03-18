@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Lightbulb } from "lucide-react";
 
 interface HelpPlatformInfoProps {
-  accountType: string;
+  accountType: "free" | "individual" | "business";
 }
 
 export const HelpPlatformInfo = ({ accountType }: HelpPlatformInfoProps) => {

@@ -32,7 +32,7 @@ const DashboardHelp = () => {
     },
   });
 
-  const accountType = profile?.account_type || 'free';
+  const accountType = (profile?.account_type || 'free') as "free" | "individual" | "business";
 
   return (
     <div className="container py-6 space-y-6">

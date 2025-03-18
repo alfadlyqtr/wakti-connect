@@ -8,7 +8,7 @@ import { helpGuidesData } from "./helpData";
 
 interface HelpGuidesProps {
   searchQuery: string;
-  accountType: string;
+  accountType: "free" | "individual" | "business";
 }
 
 export const HelpGuides = ({ searchQuery, accountType }: HelpGuidesProps) => {
@@ -24,7 +24,7 @@ export const HelpGuides = ({ searchQuery, accountType }: HelpGuidesProps) => {
       }
       
       // Filter by account type
-      return guide.forAccountTypes.includes('all') || guide.forAccountTypes.includes(accountType);
+      return guide.forAccountTypes.includes('all') || guide.forAccountTypes.includes(accountType as "free" | "individual" | "business");
     });
   }, [searchQuery, accountType]);
 

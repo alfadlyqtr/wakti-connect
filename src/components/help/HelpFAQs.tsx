@@ -11,7 +11,7 @@ import { helpFaqsData } from "./helpData";
 
 interface HelpFAQsProps {
   searchQuery: string;
-  accountType: string;
+  accountType: "free" | "individual" | "business";
 }
 
 export const HelpFAQs = ({ searchQuery, accountType }: HelpFAQsProps) => {
@@ -27,7 +27,7 @@ export const HelpFAQs = ({ searchQuery, accountType }: HelpFAQsProps) => {
       }
       
       // Filter by account type (show all general questions plus account-specific ones)
-      return faq.forAccountTypes.includes('all') || faq.forAccountTypes.includes(accountType);
+      return faq.forAccountTypes.includes('all') || faq.forAccountTypes.includes(accountType as "free" | "individual" | "business");
     });
   }, [searchQuery, accountType]);
 
@@ -49,7 +49,7 @@ export const HelpFAQs = ({ searchQuery, accountType }: HelpFAQsProps) => {
             <AccordionTrigger className="text-left">
               <div className="flex flex-wrap items-center gap-2">
                 <span>{faq.question}</span>
-                {faq.forAccountTypes.includes(accountType) && faq.forAccountTypes[0] !== 'all' && (
+                {faq.forAccountTypes.includes(accountType as "free" | "individual" | "business") && faq.forAccountTypes[0] !== 'all' && (
                   <Badge variant="outline" className="capitalize">{accountType}</Badge>
                 )}
               </div>
