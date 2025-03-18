@@ -28,12 +28,15 @@ const DashboardAIAssistant = () => {
   useEffect(() => {
     const checkAccess = async () => {
       if (!user) {
+        console.log("No authenticated user, no AI access");
         setCanAccess(false);
         setIsChecking(false);
         return;
       }
 
       try {
+        console.log("Checking AI access for user:", user.id);
+        
         // Try RPC function first
         const { data: canUse, error: rpcError } = await supabase.rpc("can_use_ai_assistant");
         
@@ -43,6 +46,9 @@ const DashboardAIAssistant = () => {
           setIsChecking(false);
           return;
         }
+        
+        console.log("RPC check failed with error:", rpcError?.message);
+        console.log("Falling back to direct profile check");
         
         // Fallback to direct profile check
         const { data: profile, error: profileError } = await supabase
@@ -84,6 +90,7 @@ const DashboardAIAssistant = () => {
       console.log("Hook canUseAI value:", hookCanUseAI);
       // Only update if our direct check said false but hook says true
       if (!canAccess && hookCanUseAI) {
+        console.log("Using hook's canUseAI value as backup");
         setCanAccess(hookCanUseAI);
       }
     }
@@ -91,14 +98,23 @@ const DashboardAIAssistant = () => {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMessage.trim() || isLoading || !canAccess) return;
+    if (!inputMessage.trim() || isLoading || !canAccess) {
+      console.log("Cannot send message:", {
+        emptyMessage: !inputMessage.trim(), 
+        isLoading, 
+        noAccess: !canAccess
+      });
+      return;
+    }
     
+    console.log("Sending message:", inputMessage);
     await sendMessage.mutateAsync(inputMessage);
     setInputMessage("");
   };
 
   // If still checking access, show loading
   if (isChecking) {
+    console.log("Still checking access, showing loader");
     return <AIAssistantLoader />;
   }
 

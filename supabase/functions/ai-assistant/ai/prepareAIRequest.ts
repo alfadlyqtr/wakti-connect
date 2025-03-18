@@ -1,22 +1,47 @@
 
 export async function prepareAIRequest(user, message, context, supabaseClient) {
+  console.log("Preparing AI request for user:", user.id);
+  
   // Get user's AI assistant settings
-  const { data: settings, error: settingsError } = await supabaseClient
-    .from("ai_assistant_settings")
-    .select("*")
-    .eq("user_id", user.id)
-    .single();
-    
-  if (settingsError && settingsError.code !== "PGRST116") { // Not found error is ok
-    console.log("Error fetching AI settings:", settingsError);
+  console.log("Fetching AI assistant settings...");
+  let settings;
+  try {
+    const { data: settingsData, error: settingsError } = await supabaseClient
+      .from("ai_assistant_settings")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+      
+    if (settingsError && settingsError.code !== "PGRST116") { // Not found error is ok
+      console.log("Error fetching AI settings:", settingsError.message);
+      // Continue without settings, we'll use defaults
+    } else {
+      settings = settingsData;
+      console.log("AI settings fetched successfully:", settings?.assistant_name || "default settings");
+    }
+  } catch (error) {
+    console.error("Failed to fetch AI settings:", error);
     // Continue without settings, we'll use defaults
   }
 
   // Get user knowledge uploads if available
-  const { data: knowledgeUploads } = await supabaseClient
-    .from("ai_knowledge_uploads")
-    .select("title, content")
-    .eq("user_id", user.id);
+  let knowledgeUploads;
+  try {
+    console.log("Fetching knowledge uploads...");
+    const { data: knowledgeData, error: knowledgeError } = await supabaseClient
+      .from("ai_knowledge_uploads")
+      .select("title, content")
+      .eq("user_id", user.id);
+      
+    if (!knowledgeError) {
+      knowledgeUploads = knowledgeData;
+      console.log("Knowledge uploads fetched successfully:", knowledgeUploads?.length || 0, "items");
+    } else {
+      console.error("Error fetching knowledge uploads:", knowledgeError);
+    }
+  } catch (error) {
+    console.error("Failed to fetch knowledge uploads:", error);
+  }
   
   // Format knowledge uploads for the AI context
   const knowledgeContext = knowledgeUploads?.length > 0 
@@ -29,16 +54,35 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
   const responseLength = settings?.response_length || "balanced";
   
   // Get user's full name for personalized greeting
-  const { data: userProfile } = await supabaseClient
-    .from("profiles")
-    .select("full_name, display_name, business_name")
-    .eq("id", user.id)
-    .single();
-    
-  const userName = userProfile?.display_name || userProfile?.full_name || userProfile?.business_name || "there";
-  
-  // Log user profile for debugging
-  console.log("User profile for greeting:", JSON.stringify(userProfile));
+  let userName = "there";
+  try {
+    console.log("Fetching user profile for greeting...");
+    const { data: userProfile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("full_name, display_name, business_name")
+      .eq("id", user.id)
+      .single();
+      
+    if (profileError) {
+      console.error("Error fetching user profile:", profileError.message);
+    } else if (userProfile) {
+      // Log user profile for debugging
+      console.log("User profile for greeting:", JSON.stringify(userProfile));
+      
+      // Try different name fields in order of preference
+      if (userProfile.display_name && userProfile.display_name.trim()) {
+        userName = userProfile.display_name.trim();
+      } else if (userProfile.full_name && userProfile.full_name.trim()) {
+        userName = userProfile.full_name.trim();
+      } else if (userProfile.business_name && userProfile.business_name.trim()) {
+        userName = userProfile.business_name.trim();
+      }
+      
+      console.log("Selected user name for greeting:", userName);
+    }
+  } catch (error) {
+    console.error("Failed to fetch user profile:", error);
+  }
   
   // Build system message based on settings
   let systemMessage = `You are ${aiName}, a helpful AI assistant for the WAKTI productivity platform. `;
@@ -89,5 +133,6 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
   // Add the user message
   conversation.push({ role: "user", content: message });
   
+  console.log("AI request prepared with system message length:", systemMessage.length);
   return conversation;
 }

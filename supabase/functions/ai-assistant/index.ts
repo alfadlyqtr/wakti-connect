@@ -8,6 +8,9 @@ import { callDeepSeepAPI } from "./ai/callDeepSeepAPI.ts";
 import { saveConversation } from "./db/saveConversation.ts";
 
 serve(async (req) => {
+  console.log("AI assistant function called with URL:", req.url);
+  console.log("Request method:", req.method);
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -15,29 +18,50 @@ serve(async (req) => {
 
   try {
     // Authenticate the user
+    console.log("Authenticating user...");
     const { user, supabaseClient, error: authError } = await authenticateUser(req);
-    if (authError) return authError;
+    if (authError) {
+      console.error("Authentication error:", authError.status);
+      return authError;
+    }
+    
+    console.log("User authenticated:", user.id);
     
     // Check if user can use AI assistant
+    console.log("Checking user access...");
     const { canUseAI, error: accessError } = await checkUserAccess(user, supabaseClient);
-    if (accessError) return accessError;
+    if (accessError) {
+      console.error("Access check error:", accessError.status);
+      return accessError;
+    }
     
     if (!canUseAI) {
+      console.log("User does not have access to AI assistant:", user.id);
       return new Response(
         JSON.stringify({ error: "Feature only available for Business and Individual plans" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
+    console.log("User has access to AI assistant");
+    
     // Get request data
-    const requestData = await req.json().catch(error => {
+    let requestData;
+    try {
+      requestData = await req.json();
+      console.log("Request data received:", JSON.stringify(requestData));
+    } catch (error) {
       console.error("Error parsing request JSON:", error);
-      return {};
-    });
+      return new Response(
+        JSON.stringify({ error: "Invalid request format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     
     const { message, context } = requestData;
     
     if (!message) {
+      console.error("Missing message in request");
       return new Response(
         JSON.stringify({ error: "Message is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -45,22 +69,48 @@ serve(async (req) => {
     }
 
     // Prepare the AI request
-    const conversation = await prepareAIRequest(user, message, context, supabaseClient);
+    console.log("Preparing AI request...");
+    let conversation;
+    try {
+      conversation = await prepareAIRequest(user, message, context, supabaseClient);
+      console.log("AI conversation prepared with", conversation.length, "messages");
+    } catch (error) {
+      console.error("Error preparing AI request:", error);
+      return new Response(
+        JSON.stringify({ error: "Error preparing AI request" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     
-    // Call DeepSeep API
+    // Call DeepSeek API
+    console.log("Calling DeepSeek API...");
     const { aiResponse, error: apiError } = await callDeepSeepAPI(conversation);
-    if (apiError) return apiError;
+    if (apiError) {
+      console.error("DeepSeek API error:", apiError.status);
+      return apiError;
+    }
+    
+    console.log("DeepSeek API response received, length:", aiResponse?.length || 0);
     
     // Save the conversation
-    await saveConversation(user.id, message, aiResponse, supabaseClient);
+    console.log("Saving conversation...");
+    try {
+      await saveConversation(user.id, message, aiResponse, supabaseClient);
+      console.log("Conversation saved successfully");
+    } catch (error) {
+      // Don't fail if saving fails, just log it
+      console.error("Error saving conversation:", error);
+    }
     
+    console.log("Sending successful response");
     return new Response(
       JSON.stringify({ response: aiResponse }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
     
   } catch (error) {
-    console.error("Error in AI assistant function:", error);
+    console.error("Unexpected error in AI assistant function:", error.message);
+    console.error(error.stack);
     return new Response(
       JSON.stringify({ error: error.message || "An unexpected error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

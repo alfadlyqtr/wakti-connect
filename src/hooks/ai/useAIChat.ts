@@ -38,8 +38,10 @@ export const useAIChat = () => {
       
       if (!token) throw new Error("Authentication token not found");
       
-      // Call the edge function
-      const response = await fetch("/functions/v1/ai-assistant", {
+      console.log("Sending message to AI assistant", { message, token: token.substring(0, 10) + "..." });
+      
+      // Call the edge function with the correct URL format
+      const response = await fetch("https://sqdjqehcxpzsudhzjwbu.supabase.co/functions/v1/ai-assistant", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -48,12 +50,34 @@ export const useAIChat = () => {
         body: JSON.stringify({ message }),
       });
       
+      // Log response status for debugging
+      console.log("AI assistant response status:", response.status);
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Error communicating with AI assistant");
+        let errorMessage = "Error communicating with AI assistant";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+          console.error("AI assistant error:", errorData);
+        } catch (e) {
+          console.error("Failed to parse error response:", e);
+        }
+        throw new Error(errorMessage);
       }
       
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+        console.log("AI assistant response data:", data);
+      } catch (e) {
+        console.error("Failed to parse response JSON:", e);
+        throw new Error("Invalid response from AI assistant");
+      }
+      
+      if (!data || !data.response) {
+        console.error("Unexpected response format:", data);
+        throw new Error("Unexpected response format from AI assistant");
+      }
       
       // Add AI response to the list
       const aiMessage: AIMessage = {
@@ -68,6 +92,8 @@ export const useAIChat = () => {
       return data;
     },
     onError: (error) => {
+      console.error("AI assistant error:", error);
+      
       // Add error message to the list
       const errorMessage: AIMessage = {
         id: `error-${Date.now()}`,
