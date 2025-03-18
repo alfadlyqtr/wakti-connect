@@ -10,10 +10,15 @@ import { publicRoutes } from "@/routes/publicRoutes";
 import { authRoutes } from "@/routes/authRoutes";
 import { dashboardRoutes } from "@/routes/dashboardRoutes";
 import { businessRoutes } from "@/routes/businessRoutes";
+import PublicLayout from "@/components/layout/PublicLayout";
 
 export const router = createBrowserRouter([
-  // Public routes
-  ...publicRoutes,
+  // Public routes with layout
+  {
+    path: "/",
+    element: <PublicLayout />,
+    children: publicRoutes,
+  },
   
   // Auth routes
   {

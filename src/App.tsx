@@ -8,7 +8,6 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { publicRoutes } from "./routes/publicRoutes";
 import { authRoutes } from "./routes/authRoutes";
 import { dashboardRoutes } from "./routes/dashboardRoutes";
-import Header from "./components/landing/Header";
 import ScrollToTop from "./components/ui/scroll-to-top";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
@@ -16,6 +15,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "@/components/notifications/NotificationListener";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
+import PublicLayout from "./components/layout/PublicLayout";
 
 import "./i18n/i18n";
 
@@ -35,8 +35,8 @@ function App() {
                   <Toaster />
                   <Sonner />
                   <Routes>
-                    {/* Public routes with Header */}
-                    <Route element={<Header />}>
+                    {/* Public routes with PublicLayout */}
+                    <Route element={<PublicLayout />}>
                       {publicRoutes.map((route) => (
                         <Route
                           key={route.path}
