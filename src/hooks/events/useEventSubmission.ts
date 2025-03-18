@@ -35,7 +35,7 @@ export const useEventSubmission = ({
   recipients,
   resetForm
 }: UseEventSubmissionProps) => {
-  const { createEvent, updateEvent, canCreateEvents } = useEvents();
+  const { createEvent, canCreateEvents } = useEvents();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const {
