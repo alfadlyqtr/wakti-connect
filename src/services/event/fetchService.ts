@@ -46,7 +46,14 @@ export const fetchEvents = async (
             .order('created_at', { ascending: false });
             
           if (myEventsError) throw myEventsError;
-          events = myEvents || [];
+          
+          // Parse the JSON customization field for each event
+          events = (myEvents || []).map(event => ({
+            ...event,
+            customization: typeof event.customization === 'string' 
+              ? JSON.parse(event.customization) 
+              : event.customization
+          }));
           break;
           
         case "invited-events":
@@ -61,9 +68,19 @@ export const fetchEvents = async (
             .order('created_at', { ascending: false });
             
           if (invitationsError) throw invitationsError;
+          
+          // Parse the JSON customization field for each event
           events = invitations
             .filter(inv => inv.event)
-            .map(inv => inv.event) as Event[];
+            .map(inv => {
+              const event = inv.event as any;
+              return {
+                ...event,
+                customization: typeof event.customization === 'string' 
+                  ? JSON.parse(event.customization) 
+                  : event.customization
+              };
+            }) as Event[];
           break;
           
         case "draft-events":
@@ -76,7 +93,14 @@ export const fetchEvents = async (
             .order('created_at', { ascending: false });
             
           if (draftEventsError) throw draftEventsError;
-          events = draftEvents || [];
+          
+          // Parse the JSON customization field for each event
+          events = (draftEvents || []).map(event => ({
+            ...event,
+            customization: typeof event.customization === 'string' 
+              ? JSON.parse(event.customization) 
+              : event.customization
+          }));
           break;
             
         default:
@@ -87,7 +111,14 @@ export const fetchEvents = async (
             .order('created_at', { ascending: false });
             
           if (defaultEventsError) throw defaultEventsError;
-          events = defaultEvents || [];
+          
+          // Parse the JSON customization field for each event
+          events = (defaultEvents || []).map(event => ({
+            ...event,
+            customization: typeof event.customization === 'string' 
+              ? JSON.parse(event.customization) 
+              : event.customization
+          }));
       }
     } catch (fetchError: any) {
       console.error(`Error fetching events for tab "${tab}":`, fetchError);

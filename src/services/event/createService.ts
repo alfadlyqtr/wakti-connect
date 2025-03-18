@@ -46,13 +46,13 @@ export const createEvent = async (
     const completeEventData = {
       user_id: session.user.id,
       title: eventData.title,
-      description: eventData.description,
-      location: eventData.location,
+      description: eventData.description || '',
+      location: eventData.location || '',
       start_time: eventData.start_time,
       end_time: eventData.end_time,
       is_all_day: eventData.is_all_day || false,
       status: eventData.status || 'draft',
-      customization: eventData.customization
+      customization: JSON.stringify(eventData.customization || {})
     };
 
     const { data: event, error } = await supabase
@@ -70,7 +70,15 @@ export const createEvent = async (
       throw new Error("Failed to create event: No data returned");
     }
 
-    return event;
+    // Parse the stored JSON customization back into an object
+    const parsedEvent: Event = {
+      ...event,
+      customization: typeof event.customization === 'string' 
+        ? JSON.parse(event.customization) 
+        : event.customization
+    };
+
+    return parsedEvent;
   } catch (error: any) {
     console.error("Error in createEvent:", error);
     throw error;
