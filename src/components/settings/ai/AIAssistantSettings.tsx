@@ -4,14 +4,17 @@ import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { AISettings } from "@/types/ai-assistant.types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AIAssistantUpgradeCard } from "@/components/ai/AIAssistantUpgradeCard";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Loader2, Bot, AlertTriangle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
+
+// Import our refactored components
 import { AIPersonalityTab } from "./AIPersonalityTab";
 import { AIFeaturesTab } from "./AIFeaturesTab";
 import { AIKnowledgeTab } from "./AIKnowledgeTab";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { useCreateDefaultSettings } from "./hooks/useCreateDefaultSettings";
 
 export const AIAssistantSettings = () => {
   const { 
@@ -26,8 +29,25 @@ export const AIAssistantSettings = () => {
   } = useAIAssistant();
   
   const [newSettings, setNewSettings] = useState<AISettings | null>(null);
-  const [isCreatingSettings, setIsCreatingSettings] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  const { createDefaultSettings, isCreatingSettings } = useCreateDefaultSettings({
+    onSuccess: () => {
+      toast({
+        title: "Default settings created",
+        description: "Your AI assistant settings have been created with default values",
+      });
+      window.location.reload();
+    },
+    onError: (errorMsg) => {
+      setError(errorMsg);
+      toast({
+        title: "Error creating settings",
+        description: errorMsg,
+        variant: "destructive",
+      });
+    }
+  });
   
   useEffect(() => {
     if (aiSettings) {
@@ -91,82 +111,6 @@ export const AIAssistantSettings = () => {
         description: "There was a problem removing your knowledge from the AI assistant",
         variant: "destructive",
       });
-    }
-  };
-  
-  const createDefaultSettings = async () => {
-    setIsCreatingSettings(true);
-    setError(null);
-    
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        setError("No active session. Please log in again.");
-        setIsCreatingSettings(false);
-        toast({
-          title: "Authentication error",
-          description: "No active session. Please log in again.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Create default settings for the user
-      const defaultSettings: Omit<AISettings, "id"> = {
-        assistant_name: "WAKTI",
-        tone: "balanced",
-        response_length: "balanced",
-        proactiveness: true,
-        suggestion_frequency: "medium",
-        enabled_features: {
-          tasks: true,
-          events: true,
-          staff: true,
-          analytics: true,
-          messaging: true,
-        }
-      };
-      
-      const { data, error } = await supabase
-        .from("ai_assistant_settings")
-        .insert({
-          user_id: session.user.id,
-          ...defaultSettings
-        })
-        .select()
-        .maybeSingle();
-        
-      if (error) {
-        console.error("Error creating default settings:", error);
-        setError(`Unable to create settings: ${error.message}`);
-        toast({
-          title: "Error creating settings",
-          description: `Unable to create settings: ${error.message}`,
-          variant: "destructive",
-        });
-        setIsCreatingSettings(false);
-        return;
-      }
-      
-      toast({
-        title: "Default settings created",
-        description: "Your AI assistant settings have been created with default values",
-      });
-      
-      // Refresh the page to load the new settings
-      window.location.reload();
-      
-    } catch (err) {
-      console.error("Error in createDefaultSettings:", err);
-      setError("An unexpected error occurred. Please try again.");
-      toast({
-        title: "Error creating settings",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCreatingSettings(false);
     }
   };
   
