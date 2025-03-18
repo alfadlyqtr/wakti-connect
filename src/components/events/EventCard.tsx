@@ -9,9 +9,10 @@ import { formatDate } from "@/utils/dateUtils";
 interface EventCardProps {
   event: Event;
   onCardClick?: () => void;
+  viewType?: string; // Adding viewType prop to fix build errors
 }
 
-const EventCard: React.FC<EventCardProps> = ({ event, onCardClick }) => {
+const EventCard: React.FC<EventCardProps> = ({ event, onCardClick, viewType }) => {
   const { title, description, location, start_time, end_time, status, customization } = event;
   
   // Ensure customization has default values
@@ -90,9 +91,20 @@ const EventCard: React.FC<EventCardProps> = ({ event, onCardClick }) => {
     }
   };
   
+  // Apply different layout based on viewType if needed
+  const getCardClassName = () => {
+    let baseClass = `h-full cursor-pointer transition-all hover:shadow-md ${getAnimationClass()}`;
+    if (viewType === 'grid') {
+      baseClass += ' max-w-sm';
+    } else if (viewType === 'list') {
+      baseClass += ' w-full';
+    }
+    return baseClass;
+  };
+  
   return (
     <Card 
-      className={`h-full cursor-pointer transition-all hover:shadow-md ${getAnimationClass()}`}
+      className={getCardClassName()}
       style={getCardStyle()}
       onClick={onCardClick}
     >
