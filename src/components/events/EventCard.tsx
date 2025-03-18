@@ -66,11 +66,29 @@ const EventCard: React.FC<EventCardProps> = ({
   };
 
   // Get text color based on customization
-  const getTextStyle = () => {
-    if (!event.customization?.font?.color) return {};
+  const getTextStyle = (type?: 'header' | 'description' | 'datetime') => {
+    const { font, headerFont, descriptionFont, dateTimeFont } = event.customization || {};
+    
+    if (!font?.color) return {};
+
+    let specificFont;
+    if (type === 'header' && headerFont) {
+      specificFont = headerFont;
+    } else if (type === 'description' && descriptionFont) {
+      specificFont = descriptionFont;
+    } else if (type === 'datetime' && dateTimeFont) {
+      specificFont = dateTimeFont;
+    }
+    
+    if (!specificFont) {
+      return { color: font.color };
+    }
     
     return {
-      color: event.customization.font.color
+      color: specificFont.color || font.color,
+      fontFamily: specificFont.family || font.family,
+      fontWeight: specificFont.weight === 'bold' ? 'bold' : 
+                 specificFont.weight === 'medium' ? '500' : 'normal',
     };
   };
 
@@ -98,7 +116,14 @@ const EventCard: React.FC<EventCardProps> = ({
     if (!event.customization?.headerStyle || event.customization.headerStyle === 'simple') {
       return (
         <div className="flex justify-between items-start">
-          <h3 className="text-lg font-medium line-clamp-1" style={getTextStyle()}>{event.title}</h3>
+          <h3 
+            className={`text-lg font-medium line-clamp-1 ${event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
+              event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
+              event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''}`}
+            style={getTextStyle('header')}
+          >
+            {event.title}
+          </h3>
           <Badge variant={event.status === 'accepted' ? 'success' : event.status === 'declined' ? 'destructive' : 'outline'}>
             {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
           </Badge>
@@ -124,7 +149,15 @@ const EventCard: React.FC<EventCardProps> = ({
                 {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
               </Badge>
             </div>
-            <h3 className="text-lg font-medium text-white">{event.title}</h3>
+            <h3 
+              className={`text-lg font-medium text-white ${
+                event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
+                event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
+                event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''
+              }`}
+            >
+              {event.title}
+            </h3>
           </div>
         </div>
       );
@@ -144,7 +177,16 @@ const EventCard: React.FC<EventCardProps> = ({
                 />
               </div>
             )}
-            <h3 className="text-lg font-medium line-clamp-1" style={getTextStyle()}>{event.title}</h3>
+            <h3 
+              className={`text-lg font-medium line-clamp-1 ${
+                event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
+                event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
+                event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''
+              }`}
+              style={getTextStyle('header')}
+            >
+              {event.title}
+            </h3>
           </div>
           <Badge variant={event.status === 'accepted' ? 'success' : event.status === 'declined' ? 'destructive' : 'outline'}>
             {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
@@ -156,7 +198,16 @@ const EventCard: React.FC<EventCardProps> = ({
     // Default header
     return (
       <div className="flex justify-between items-start">
-        <h3 className="text-lg font-medium line-clamp-1" style={getTextStyle()}>{event.title}</h3>
+        <h3 
+          className={`text-lg font-medium line-clamp-1 ${
+            event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
+            event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
+            event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''
+          }`}
+          style={getTextStyle('header')}
+        >
+          {event.title}
+        </h3>
         <Badge variant={event.status === 'accepted' ? 'success' : event.status === 'declined' ? 'destructive' : 'outline'}>
           {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
         </Badge>
@@ -180,11 +231,61 @@ const EventCard: React.FC<EventCardProps> = ({
     }
   };
 
+  // Get card effect class
+  const getCardEffectClass = () => {
+    if (!event.customization?.cardEffect?.type) return 'shadow-md';
+    
+    switch (event.customization.cardEffect.type) {
+      case 'shadow':
+        return 'shadow-lg';
+      case 'matte':
+        return 'shadow-sm bg-opacity-90';
+      case 'gloss':
+        return 'shadow-lg bg-opacity-95 backdrop-blur-sm';
+      default:
+        return 'shadow-md';
+    }
+  };
+  
+  // Border radius based on card effect settings
+  const getBorderRadiusClass = () => {
+    if (!event.customization?.cardEffect?.borderRadius) return 'rounded-lg';
+    
+    switch (event.customization.cardEffect.borderRadius) {
+      case 'none':
+        return 'rounded-none';
+      case 'small':
+        return 'rounded-sm';
+      case 'medium':
+        return 'rounded-md';
+      case 'large':
+        return 'rounded-lg';
+      default:
+        return 'rounded-lg';
+    }
+  };
+  
+  // Border style if enabled
+  const getBorderStyle = () => {
+    if (event.customization?.cardEffect?.border) {
+      return {
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderColor: event.customization.cardEffect.borderColor || '#e2e8f0'
+      };
+    }
+    return {};
+  };
+
   return (
     <Card 
-      className={`${onCardClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''} overflow-hidden ${getAnimationClass()}`}
+      className={`${onCardClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''} 
+        overflow-hidden ${getAnimationClass()} ${getCardEffectClass()} ${getBorderRadiusClass()}`}
       onClick={onCardClick ? () => onCardClick() : undefined}
-      style={getCustomCardStyle()}
+      style={{
+        ...getCustomCardStyle(),
+        ...getBorderStyle()
+      }}
     >
       <CardHeader className="p-4 pb-2 relative">
         {renderCustomHeader()}
@@ -231,24 +332,54 @@ const EventCard: React.FC<EventCardProps> = ({
       <CardContent className="p-4 pt-0 pb-2">
         {event.description && (
           <p 
-            className="text-muted-foreground text-sm line-clamp-2 mb-2"
-            style={isDarkBackground() ? { color: 'rgba(255,255,255,0.8)' } : getTextStyle()}
+            className={`text-muted-foreground text-sm line-clamp-2 mb-2 ${
+              event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
+              event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
+              event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''
+            }`}
+            style={isDarkBackground() ? { color: 'rgba(255,255,255,0.8)' } : getTextStyle('description')}
           >
             {event.description}
           </p>
         )}
         
         <div className="space-y-1 text-sm">
-          <div className="flex items-center gap-1">
-            <CalendarClock className="h-4 w-4 text-muted-foreground" />
-            <span style={isDarkBackground() ? { color: 'rgba(255,255,255,0.8)' } : getTextStyle()}>
+          <div 
+            className={`flex items-center gap-1 ${
+              event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
+              event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
+              event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''
+            }`}
+          >
+            <CalendarClock 
+              className={`h-4 w-4 text-muted-foreground ${
+                event.customization?.elementAnimations?.icons === 'fade' ? 'animate-fade-in' : 
+                event.customization?.elementAnimations?.icons === 'slide' ? 'animate-slide-in' : 
+                event.customization?.elementAnimations?.icons === 'pop' ? 'animate-scale-in' : ''
+              }`} 
+            />
+            <span 
+              style={isDarkBackground() ? { color: 'rgba(255,255,255,0.8)' } : getTextStyle('datetime')}
+            >
               {formatDate(event.start_time)}
             </span>
           </div>
           
           {event.location && (
-            <div className="flex items-center gap-1">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
+            <div 
+              className={`flex items-center gap-1 ${
+                event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
+                event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
+                event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''
+              }`}
+            >
+              <MapPin 
+                className={`h-4 w-4 text-muted-foreground ${
+                  event.customization?.elementAnimations?.icons === 'fade' ? 'animate-fade-in' : 
+                  event.customization?.elementAnimations?.icons === 'slide' ? 'animate-slide-in' : 
+                  event.customization?.elementAnimations?.icons === 'pop' ? 'animate-scale-in' : ''
+                }`} 
+              />
               <span 
                 className="line-clamp-1"
                 style={isDarkBackground() ? { color: 'rgba(255,255,255,0.8)' } : getTextStyle()}
@@ -260,22 +391,47 @@ const EventCard: React.FC<EventCardProps> = ({
         </div>
       </CardContent>
       
-      {(onAccept || onDecline) && (
-        <CardFooter className="p-4 pt-2 flex space-x-2">
+      {(onAccept || onDecline) && (event.customization?.showAcceptDeclineButtons !== false) && (
+        <CardFooter 
+          className={`p-4 pt-2 flex space-x-2 ${
+            event.customization?.elementAnimations?.buttons === 'fade' ? 'animate-fade-in' : 
+            event.customization?.elementAnimations?.buttons === 'slide' ? 'animate-slide-in' : 
+            event.customization?.elementAnimations?.buttons === 'pop' ? 'animate-scale-in' : ''
+          }`}
+        >
           {onDecline && (
-            <Button variant="outline" className="flex-1" onClick={(e) => {
-              e.stopPropagation();
-              onDecline(event.id);
-            }}>
+            <Button 
+              variant="outline" 
+              className="flex-1" 
+              onClick={(e) => {
+                e.stopPropagation();
+                onDecline(event.id);
+              }}
+              style={event.customization?.buttons?.decline ? {
+                backgroundColor: event.customization.buttons.decline.background,
+                color: event.customization.buttons.decline.color,
+                borderRadius: event.customization.buttons.decline.shape === 'pill' ? '9999px' : 
+                             event.customization.buttons.decline.shape === 'rounded' ? '0.375rem' : '0px'
+              } : {}}
+            >
               Decline
             </Button>
           )}
           
           {onAccept && (
-            <Button className="flex-1" onClick={(e) => {
-              e.stopPropagation();
-              onAccept(event.id);
-            }}>
+            <Button 
+              className="flex-1" 
+              onClick={(e) => {
+                e.stopPropagation();
+                onAccept(event.id);
+              }}
+              style={event.customization?.buttons?.accept ? {
+                backgroundColor: event.customization.buttons.accept.background,
+                color: event.customization.buttons.accept.color,
+                borderRadius: event.customization.buttons.accept.shape === 'pill' ? '9999px' : 
+                             event.customization.buttons.accept.shape === 'rounded' ? '0.375rem' : '0px'
+              } : {}}
+            >
               Accept
             </Button>
           )}

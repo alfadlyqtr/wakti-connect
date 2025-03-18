@@ -27,7 +27,9 @@ const LivePreview: React.FC<LivePreviewProps> = ({
 }) => {
   const [showMap, setShowMap] = useState(false);
   const [showQrCode, setShowQrCode] = useState(false);
-  const [cardEffect, setCardEffect] = useState<'shadow' | 'matte' | 'gloss'>('shadow');
+  const [cardEffect, setCardEffect] = useState<'shadow' | 'matte' | 'gloss'>(
+    customization.cardEffect?.type || 'shadow'
+  );
   
   // Compute background style based on customization
   const getBackgroundStyle = () => {
@@ -36,7 +38,18 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     if (background.type === 'color') {
       return { backgroundColor: background.value };
     } else if (background.type === 'gradient') {
-      return { backgroundImage: background.value };
+      const direction = background.direction || 'to-right';
+      const directionValue = direction.replace('to-', 'to ');
+      const angle = background.angle !== undefined ? `${background.angle}deg` : '90deg';
+      
+      // Use either the predefined value or construct a new one from angle and direction
+      if (background.value.includes('linear-gradient')) {
+        return { backgroundImage: background.value };
+      } else {
+        return { 
+          backgroundImage: `linear-gradient(${angle}, ${background.value})` 
+        };
+      }
     } else if (background.type === 'image') {
       return { 
         backgroundImage: `url(${background.value})`,
@@ -47,14 +60,41 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     return {};
   };
   
-  // Compute text style based on customization
-  const getTextStyle = () => {
-    const { font } = customization;
-    return {
+  // Compute text style based on customization for general text
+  const getTextStyle = (type?: 'header' | 'description' | 'datetime') => {
+    const { font, headerFont, descriptionFont, dateTimeFont } = customization;
+    
+    let specificFont;
+    if (type === 'header' && headerFont) {
+      specificFont = headerFont;
+    } else if (type === 'description' && descriptionFont) {
+      specificFont = descriptionFont;
+    } else if (type === 'datetime' && dateTimeFont) {
+      specificFont = dateTimeFont;
+    }
+    
+    const baseFont = {
       fontFamily: font.family,
       color: font.color,
       fontSize: font.size === 'small' ? '0.875rem' : 
-               font.size === 'medium' ? '1rem' : '1.25rem'
+               font.size === 'medium' ? '1rem' : '1.25rem',
+      fontWeight: font.weight === 'bold' ? 'bold' : 
+                 font.weight === 'medium' ? '500' : 'normal',
+      textAlign: font.alignment as any
+    };
+    
+    if (!specificFont) return baseFont;
+    
+    return {
+      ...baseFont,
+      fontFamily: specificFont.family || baseFont.fontFamily,
+      color: specificFont.color || baseFont.color,
+      fontSize: specificFont.size === 'small' ? '0.875rem' : 
+                specificFont.size === 'medium' ? '1rem' : 
+                specificFont.size === 'large' ? '1.25rem' : baseFont.fontSize,
+      fontWeight: specificFont.weight === 'bold' ? 'bold' : 
+                 specificFont.weight === 'medium' ? '500' : 
+                 specificFont.weight === 'normal' ? 'normal' : baseFont.fontWeight
     };
   };
   
@@ -85,9 +125,30 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     }
   };
 
+  // Element animation classes
+  const getElementAnimationClass = (type: 'text' | 'buttons' | 'icons') => {
+    if (!customization.elementAnimations) return '';
+    
+    const animation = customization.elementAnimations[type];
+    if (!animation || animation === 'none') return '';
+    
+    switch (animation) {
+      case 'fade':
+        return 'animate-fade-in';
+      case 'slide':
+        return 'animate-slide-in';
+      case 'pop':
+        return 'animate-scale-in';
+      default:
+        return '';
+    }
+  };
+
   // Card effect class
   const getCardEffectClass = () => {
-    switch (cardEffect) {
+    const effectType = customization.cardEffect?.type || cardEffect;
+    
+    switch (effectType) {
       case 'shadow':
         return 'shadow-lg';
       case 'matte':
@@ -99,9 +160,40 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     }
   };
   
+  // Border radius based on card effect settings
+  const getBorderRadiusClass = () => {
+    const radius = customization.cardEffect?.borderRadius || 'medium';
+    
+    switch (radius) {
+      case 'none':
+        return 'rounded-none';
+      case 'small':
+        return 'rounded-sm';
+      case 'medium':
+        return 'rounded-md';
+      case 'large':
+        return 'rounded-lg';
+      default:
+        return 'rounded-lg';
+    }
+  };
+  
+  // Border style if enabled
+  const getBorderStyle = () => {
+    if (customization.cardEffect?.border) {
+      return {
+        borderWidth: '1px',
+        borderStyle: 'solid',
+        borderColor: customization.cardEffect.borderColor || '#e2e8f0'
+      };
+    }
+    return {};
+  };
+  
   // Header based on headerStyle
   const renderHeader = () => {
     const { headerStyle, headerImage } = customization;
+    const headerTextStyle = getTextStyle('header');
     
     switch (headerStyle) {
       case 'banner':
@@ -113,14 +205,19 @@ const LivePreview: React.FC<LivePreviewProps> = ({
               <div className="w-full h-full bg-gradient-to-r from-purple-400 to-pink-500"></div>
             )}
             <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-              <h2 className="text-xl font-bold text-white">{title}</h2>
+              <h2 className={`text-xl font-bold text-white ${getElementAnimationClass('text')}`}>{title}</h2>
             </div>
           </div>
         );
       case 'simple':
         return (
           <div className="p-4 border-b">
-            <h2 className="text-xl font-bold text-center">{title}</h2>
+            <h2 
+              className={`text-xl font-bold text-center ${getElementAnimationClass('text')}`}
+              style={headerTextStyle}
+            >
+              {title}
+            </h2>
           </div>
         );
       case 'minimal':
@@ -131,11 +228,23 @@ const LivePreview: React.FC<LivePreviewProps> = ({
             ) : (
               <div className="w-16 h-16 rounded-full bg-primary mb-2"></div>
             )}
-            <h2 className="text-lg font-medium">{title}</h2>
+            <h2 
+              className={`text-lg font-medium ${getElementAnimationClass('text')}`}
+              style={headerTextStyle}
+            >
+              {title}
+            </h2>
           </div>
         );
       default:
-        return <h2 className="text-xl font-bold p-4">{title}</h2>;
+        return (
+          <h2 
+            className={`text-xl font-bold p-4 ${getElementAnimationClass('text')}`}
+            style={headerTextStyle}
+          >
+            {title}
+          </h2>
+        );
     }
   };
   
@@ -146,7 +255,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     if (!branding?.logo && !branding?.slogan) return null;
     
     return (
-      <div className="flex flex-col items-center mt-4 mb-2">
+      <div className={`flex flex-col items-center mt-4 mb-2 ${getElementAnimationClass('text')}`}>
         {branding.logo && (
           <img src={branding.logo} alt="Business logo" className="h-8 mb-1" />
         )}
@@ -234,40 +343,51 @@ const LivePreview: React.FC<LivePreviewProps> = ({
       </div>
       
       <div 
-        className={`border rounded-lg overflow-hidden ${getAnimationClass()} ${getCardEffectClass()} mx-auto transition-all`}
+        className={`border overflow-hidden ${getAnimationClass()} ${getCardEffectClass()} ${getBorderRadiusClass()} mx-auto transition-all`}
         style={{
           width: viewMode === 'mobile' ? '320px' : '500px',
           maxWidth: '100%',
-          ...getBackgroundStyle()
+          ...getBackgroundStyle(),
+          ...getBorderStyle()
         }}
       >
         {renderHeader()}
         
         <div className="p-4" style={getTextStyle()}>
           {description && (
-            <p className="mb-4">{description}</p>
+            <p 
+              className={`mb-4 ${getElementAnimationClass('text')}`}
+              style={getTextStyle('description')}
+            >
+              {description}
+            </p>
           )}
           
           {dateTime && (
-            <p className="mb-2 flex items-center">
-              <span className="mr-2">📅</span> {dateTime}
+            <p 
+              className={`mb-2 flex items-center ${getElementAnimationClass('text')}`}
+              style={getTextStyle('datetime')}
+            >
+              <span className={`mr-2 ${getElementAnimationClass('icons')}`}>📅</span> {dateTime}
             </p>
           )}
           
           {location && (
-            <p className="mb-4 flex items-center">
-              <span className="mr-2">📍</span> {location}
+            <p 
+              className={`mb-4 flex items-center ${getElementAnimationClass('text')}`}
+            >
+              <span className={`mr-2 ${getElementAnimationClass('icons')}`}>📍</span> {location}
             </p>
           )}
           
           {customization.enableChatbot && (
-            <div className="mb-4 p-2 border rounded-md bg-background/50">
+            <div className={`mb-4 p-2 border rounded-md bg-background/50 ${getElementAnimationClass('text')}`}>
               <p className="text-sm">Ask me about this event! (Chatbot enabled)</p>
             </div>
           )}
           
-          {(location && customization.buttons.accept.background !== '#ffffff') && (
-            <div className="flex justify-center gap-3 mt-6 mb-3">
+          {(location && customization.buttons.accept.background !== '#ffffff' && customization.showAcceptDeclineButtons !== false) && (
+            <div className={`flex justify-center gap-3 mt-6 mb-3 ${getElementAnimationClass('buttons')}`}>
               <button 
                 className="py-2 px-4 flex items-center gap-1"
                 style={getButtonStyle('accept')}
@@ -285,15 +405,15 @@ const LivePreview: React.FC<LivePreviewProps> = ({
           )}
           
           {location && (
-            <div className="grid grid-cols-3 gap-2 mt-4">
-              {customization.enableAddToCalendar && (
+            <div className={`grid grid-cols-3 gap-2 mt-4 ${getElementAnimationClass('buttons')}`}>
+              {customization.showAddToCalendarButton !== false && (
                 <Button variant="outline" size="sm" className="text-xs flex items-center justify-center gap-1">
-                  <Calendar className="h-3 w-3" /> Calendar
+                  <Calendar className={`h-3 w-3 ${getElementAnimationClass('icons')}`} /> Calendar
                 </Button>
               )}
               
               <Button variant="outline" size="sm" className="text-xs flex items-center justify-center gap-1">
-                <MapPin className="h-3 w-3" /> Map
+                <MapPin className={`h-3 w-3 ${getElementAnimationClass('icons')}`} /> Map
               </Button>
               
               <Button 
@@ -302,7 +422,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
                 className="text-xs flex items-center justify-center gap-1"
                 onClick={() => setShowQrCode(true)}
               >
-                <QrCode className="h-3 w-3" /> QR Code
+                <QrCode className={`h-3 w-3 ${getElementAnimationClass('icons')}`} /> QR Code
               </Button>
             </div>
           )}
@@ -310,7 +430,14 @@ const LivePreview: React.FC<LivePreviewProps> = ({
           {renderBranding()}
           
           <div className="text-center text-xs text-muted-foreground mt-4">
-            Powered by WAKTI
+            <a 
+              href="https://wakti.qa" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:underline"
+            >
+              Powered by WAKTI
+            </a>
           </div>
         </div>
       </div>

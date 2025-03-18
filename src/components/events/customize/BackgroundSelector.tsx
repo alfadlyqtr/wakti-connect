@@ -9,13 +9,21 @@ import ImageTab from "./background-tabs/ImageTab";
 interface BackgroundSelectorProps {
   backgroundType: string;
   backgroundValue: string;
+  backgroundAngle?: number;
+  backgroundDirection?: string;
   onBackgroundChange: (type: 'color' | 'gradient' | 'image', value: string) => void;
+  onBackgroundAngleChange?: (angle: number) => void;
+  onBackgroundDirectionChange?: (direction: string) => void;
 }
 
 const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
   backgroundType,
   backgroundValue,
-  onBackgroundChange
+  backgroundAngle = 90,
+  backgroundDirection = 'to-right',
+  onBackgroundChange,
+  onBackgroundAngleChange,
+  onBackgroundDirectionChange
 }) => {
   const [activeTab, setActiveTab] = useState<string>(backgroundType || 'color');
 
@@ -37,6 +45,20 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
   // Handler for gradient tab changes
   const handleGradientChange = (value: string) => {
     onBackgroundChange('gradient', value);
+  };
+
+  // Handler for gradient angle changes
+  const handleGradientAngleChange = (angle: number) => {
+    if (onBackgroundAngleChange) {
+      onBackgroundAngleChange(angle);
+    }
+  };
+
+  // Handler for gradient direction changes
+  const handleGradientDirectionChange = (direction: string) => {
+    if (onBackgroundDirectionChange) {
+      onBackgroundDirectionChange(direction);
+    }
   };
 
   // Handler for image tab changes
@@ -66,6 +88,10 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
           <GradientTab 
             value={backgroundType === 'gradient' ? backgroundValue : 'linear-gradient(90deg, #f6d365 0%, #fda085 100%)'} 
             onChange={handleGradientChange} 
+            onDirectionChange={handleGradientDirectionChange}
+            onAngleChange={handleGradientAngleChange}
+            direction={backgroundDirection}
+            angle={backgroundAngle}
           />
         </TabsContent>
         

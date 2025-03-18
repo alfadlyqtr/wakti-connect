@@ -108,6 +108,18 @@ const config = {
         flipBack: {
           "0%": { transform: "rotateY(180deg)" },
           "100%": { transform: "rotateY(0deg)" },
+        },
+        buttonPulse: {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.05)" },
+        },
+        iconSpin: {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-1000px 0" },
+          "100%": { backgroundPosition: "1000px 0" },
         }
       },
       animation: {
@@ -118,7 +130,10 @@ const config = {
         "slide-in-right": "slideInRight 0.5s ease-in-out forwards",
         "scale-in": "scaleIn 0.5s ease-in-out forwards",
         "flip": "flip 0.6s ease-in-out forwards",
-        "flip-back": "flipBack 0.6s ease-in-out forwards"
+        "flip-back": "flipBack 0.6s ease-in-out forwards",
+        "button-pulse": "buttonPulse 2s infinite",
+        "icon-spin": "iconSpin 2s linear infinite",
+        "shimmer": "shimmer 2s infinite linear"
       },
     },
   },

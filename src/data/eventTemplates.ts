@@ -1,4 +1,3 @@
-
 import { EventCustomization } from "@/types/event.types";
 
 export interface EventTemplate {
@@ -178,6 +177,62 @@ export const eventTemplates: EventTemplate[] = [
       },
       enableChatbot: true,
       enableAddToCalendar: true
+    }
+  },
+  {
+    id: 'modern-conference',
+    name: 'Modern Conference',
+    type: 'meeting',
+    description: 'A sleek and modern conference/event template',
+    customization: {
+      background: {
+        type: 'gradient',
+        value: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        direction: 'to-bottom-right'
+      },
+      font: {
+        family: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        size: 'medium',
+        color: '#2d3748',
+        weight: 'medium',
+        alignment: 'center'
+      },
+      headerFont: {
+        family: 'Montserrat, sans-serif',
+        size: 'large',
+        color: '#2c5282',
+        weight: 'bold'
+      },
+      buttons: {
+        accept: {
+          background: '#3182ce',
+          color: '#ffffff',
+          shape: 'pill'
+        },
+        decline: {
+          background: '#e53e3e',
+          color: '#ffffff',
+          shape: 'pill'
+        }
+      },
+      headerStyle: 'banner',
+      animation: 'slide',
+      elementAnimations: {
+        text: 'fade',
+        buttons: 'pop',
+        icons: 'slide',
+        delay: 'staggered'
+      },
+      cardEffect: {
+        type: 'gloss',
+        borderRadius: 'large',
+        border: true,
+        borderColor: '#e2e8f0'
+      },
+      enableChatbot: true,
+      enableAddToCalendar: true,
+      showAcceptDeclineButtons: true,
+      mapDisplay: 'both'
     }
   }
 ];

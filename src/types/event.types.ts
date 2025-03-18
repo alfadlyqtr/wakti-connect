@@ -63,13 +63,39 @@ export interface EventCustomization {
   background: {
     type: 'color' | 'gradient' | 'image';
     value: string; // hex color, gradient string, or image URL
+    angle?: number; // For gradients: angle in degrees
+    direction?: 'to-right' | 'to-left' | 'to-bottom' | 'to-top' | 'to-bottom-right' | 'to-bottom-left' | 'to-top-right' | 'to-top-left';
   };
   
-  // Text styling
+  // Text styling with separate controls for different elements
   font: {
     family: string;
     size: 'small' | 'medium' | 'large';
     color: string;
+    weight?: 'normal' | 'medium' | 'bold';
+    alignment?: 'left' | 'center' | 'right';
+  };
+  
+  // Separate styling for header, description, and datetime
+  headerFont?: {
+    family?: string;
+    size?: 'small' | 'medium' | 'large';
+    color?: string;
+    weight?: 'normal' | 'medium' | 'bold';
+  };
+  
+  descriptionFont?: {
+    family?: string;
+    size?: 'small' | 'medium' | 'large';
+    color?: string;
+    weight?: 'normal' | 'medium' | 'bold';
+  };
+  
+  dateTimeFont?: {
+    family?: string;
+    size?: 'small' | 'medium' | 'large';
+    color?: string;
+    weight?: 'normal' | 'medium' | 'bold';
   };
   
   // Button styling
@@ -86,6 +112,10 @@ export interface EventCustomization {
     };
   };
   
+  // Show/hide buttons
+  showAcceptDeclineButtons?: boolean;
+  showAddToCalendarButton?: boolean;
+  
   // Business branding
   branding?: {
     logo?: string;
@@ -94,6 +124,22 @@ export interface EventCustomization {
       primary: string;
       secondary: string;
     };
+  };
+  
+  // Card effects
+  cardEffect?: {
+    type: 'shadow' | 'matte' | 'gloss';
+    borderRadius?: 'none' | 'small' | 'medium' | 'large';
+    border?: boolean;
+    borderColor?: string;
+  };
+  
+  // Element animations
+  elementAnimations?: {
+    text?: 'fade' | 'slide' | 'pop' | 'none';
+    buttons?: 'fade' | 'slide' | 'pop' | 'none';
+    icons?: 'fade' | 'slide' | 'pop' | 'none';
+    delay?: 'none' | 'staggered' | 'sequence';
   };
   
   // Animation

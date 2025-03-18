@@ -7,6 +7,8 @@ import TextTab from "./tabs/TextTab";
 import ButtonsTab from "./tabs/ButtonsTab";
 import HeaderTab from "./tabs/HeaderTab";
 import FeaturesTab from "./tabs/FeaturesTab";
+import CardEffectSelector from "./CardEffectSelector";
+import ElementAnimationsSelector from "./ElementAnimationsSelector";
 
 interface CreateFromScratchFormProps {
   customization: EventCustomization;
@@ -23,8 +25,29 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
     onCustomizationChange({
       ...customization,
       background: {
+        ...customization.background,
         type,
         value
+      }
+    });
+  };
+  
+  const handleBackgroundAngleChange = (angle: number) => {
+    onCustomizationChange({
+      ...customization,
+      background: {
+        ...customization.background,
+        angle
+      }
+    });
+  };
+  
+  const handleBackgroundDirectionChange = (direction: string) => {
+    onCustomizationChange({
+      ...customization,
+      background: {
+        ...customization.background,
+        direction: direction as 'to-right' | 'to-left' | 'to-bottom' | 'to-top' | 'to-bottom-right' | 'to-bottom-left' | 'to-top-right' | 'to-top-left'
       }
     });
   };
@@ -42,11 +65,41 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
     });
   };
   
-  const handleFontChange = (property: 'family' | 'size' | 'color', value: string) => {
+  const handleFontChange = (property: 'family' | 'size' | 'color' | 'weight' | 'alignment', value: string) => {
     onCustomizationChange({
       ...customization,
       font: {
         ...customization.font,
+        [property]: value
+      }
+    });
+  };
+  
+  const handleHeaderFontChange = (property: 'family' | 'size' | 'color' | 'weight', value: string) => {
+    onCustomizationChange({
+      ...customization,
+      headerFont: {
+        ...customization.headerFont || {},
+        [property]: value
+      }
+    });
+  };
+  
+  const handleDescriptionFontChange = (property: 'family' | 'size' | 'color' | 'weight', value: string) => {
+    onCustomizationChange({
+      ...customization,
+      descriptionFont: {
+        ...customization.descriptionFont || {},
+        [property]: value
+      }
+    });
+  };
+  
+  const handleDateTimeFontChange = (property: 'family' | 'size' | 'color' | 'weight', value: string) => {
+    onCustomizationChange({
+      ...customization,
+      dateTimeFont: {
+        ...customization.dateTimeFont || {},
         [property]: value
       }
     });
@@ -76,7 +129,14 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
   const handleToggleCalendar = (checked: boolean) => {
     onCustomizationChange({
       ...customization,
-      enableAddToCalendar: checked
+      showAddToCalendarButton: checked
+    });
+  };
+  
+  const handleToggleButtons = (checked: boolean) => {
+    onCustomizationChange({
+      ...customization,
+      showAcceptDeclineButtons: checked
     });
   };
   
@@ -104,15 +164,31 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
     });
   };
 
+  const handleCardEffectChange = (cardEffect: any) => {
+    onCustomizationChange({
+      ...customization,
+      cardEffect
+    });
+  };
+
+  const handleElementAnimationsChange = (elementAnimations: any) => {
+    onCustomizationChange({
+      ...customization,
+      elementAnimations
+    });
+  };
+
   return (
     <div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-5 mb-4">
+        <TabsList className="grid grid-cols-7 mb-4">
           <TabsTrigger value="background">Background</TabsTrigger>
           <TabsTrigger value="text">Text</TabsTrigger>
           <TabsTrigger value="buttons">Buttons</TabsTrigger>
           <TabsTrigger value="header">Header</TabsTrigger>
           <TabsTrigger value="features">Features</TabsTrigger>
+          <TabsTrigger value="effects">Card Effect</TabsTrigger>
+          <TabsTrigger value="animations">Animations</TabsTrigger>
         </TabsList>
         
         <TabsContent value="background" className="space-y-4">
@@ -120,6 +196,8 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
             customization={customization}
             onBackgroundChange={handleBackgroundChange}
             onAnimationChange={handleAnimationChange}
+            onBackgroundAngleChange={handleBackgroundAngleChange}
+            onBackgroundDirectionChange={handleBackgroundDirectionChange}
           />
         </TabsContent>
         
@@ -127,6 +205,9 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
           <TextTab 
             customization={customization}
             onFontChange={handleFontChange}
+            onHeaderFontChange={handleHeaderFontChange}
+            onDescriptionFontChange={handleDescriptionFontChange}
+            onDateTimeFontChange={handleDateTimeFontChange}
           />
         </TabsContent>
         
@@ -150,8 +231,32 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
             customization={customization}
             onToggleChatbot={handleToggleChatbot}
             onToggleCalendar={handleToggleCalendar}
+            onToggleButtons={handleToggleButtons}
             onBrandingChange={handleBrandingChange}
             onMapDisplayChange={handleMapDisplayChange}
+          />
+        </TabsContent>
+        
+        <TabsContent value="effects" className="space-y-6">
+          <CardEffectSelector 
+            value={customization.cardEffect || {
+              type: 'shadow',
+              borderRadius: 'medium',
+              border: false
+            }}
+            onChange={handleCardEffectChange}
+          />
+        </TabsContent>
+        
+        <TabsContent value="animations" className="space-y-6">
+          <ElementAnimationsSelector 
+            value={customization.elementAnimations || {
+              text: 'none',
+              buttons: 'none',
+              icons: 'none',
+              delay: 'none'
+            }}
+            onChange={handleElementAnimationsChange}
           />
         </TabsContent>
       </Tabs>

@@ -10,12 +10,16 @@ interface BackgroundTabProps {
   customization: EventCustomization;
   onAnimationChange: (value: 'fade' | 'slide' | 'pop') => void;
   onBackgroundChange: (type: 'color' | 'gradient' | 'image', value: string) => void;
+  onBackgroundAngleChange?: (angle: number) => void;
+  onBackgroundDirectionChange?: (direction: string) => void;
 }
 
 const BackgroundTab: React.FC<BackgroundTabProps> = ({
   customization,
   onAnimationChange,
-  onBackgroundChange
+  onBackgroundChange,
+  onBackgroundAngleChange,
+  onBackgroundDirectionChange
 }) => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -46,7 +50,11 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
       <BackgroundSelector 
         backgroundType={customization.background.type}
         backgroundValue={customization.background.value}
+        backgroundAngle={customization.background.angle}
+        backgroundDirection={customization.background.direction}
         onBackgroundChange={onBackgroundChange}
+        onBackgroundAngleChange={onBackgroundAngleChange}
+        onBackgroundDirectionChange={onBackgroundDirectionChange}
       />
 
       <div className="space-y-2">
