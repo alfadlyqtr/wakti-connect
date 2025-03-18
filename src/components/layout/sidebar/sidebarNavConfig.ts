@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   Users,
@@ -8,7 +7,6 @@ import {
   Mail,
   ListChecks,
   KanbanSquare,
-  FileText,
   HelpCircle,
   Contact2,
   Building2,
@@ -30,12 +28,9 @@ export type NavSection = {
   showFor: Array<'free' | 'individual' | 'business'>;
 };
 
-// Combined type for sidebar items
 export type SidebarNavItem = NavItem | NavSection;
 
-// Main navigation items
 export const navItems: SidebarNavItem[] = [
-  // Main section
   {
     section: "Main",
     showFor: ['free', 'individual', 'business'],
@@ -47,7 +42,6 @@ export const navItems: SidebarNavItem[] = [
     showFor: ['free', 'individual', 'business'],
   },
   
-  // Business Tools section
   {
     section: "Business Tools",
     showFor: ['business'],
@@ -83,7 +77,6 @@ export const navItems: SidebarNavItem[] = [
     showFor: ['business'],
   },
   
-  // Tasks & Projects section
   {
     section: "Tasks & Projects",
     showFor: ['free', 'individual', 'business'],
@@ -94,14 +87,7 @@ export const navItems: SidebarNavItem[] = [
     icon: ListChecks,
     showFor: ['free', 'individual', 'business'],
   },
-  {
-    label: "Documents",
-    path: "documents",
-    icon: FileText,
-    showFor: ['free', 'individual', 'business'],
-  },
   
-  // Communication section
   {
     section: "Communication",
     showFor: ['free', 'individual', 'business'],
@@ -113,7 +99,6 @@ export const navItems: SidebarNavItem[] = [
     showFor: ['free', 'individual', 'business'],
   },
   
-  // Contacts & Community section
   {
     section: "Contacts & Community",
     showFor: ['free', 'individual', 'business'],
@@ -137,7 +122,6 @@ export const navItems: SidebarNavItem[] = [
     showFor: ['free', 'individual'],
   },
   
-  // Settings section
   {
     section: "Settings",
     showFor: ['free', 'individual', 'business'],
