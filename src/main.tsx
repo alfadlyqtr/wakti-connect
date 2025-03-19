@@ -2,7 +2,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from './hooks/useAuth';
+import { AuthProvider } from './hooks/auth/useAuth';
 import App from './App.tsx';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import './index.css';

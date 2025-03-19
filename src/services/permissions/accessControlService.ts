@@ -1,59 +1,150 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export interface UserRoleInfo {
-  role: 'free' | 'individual' | 'business' | 'staff' | 'admin' | 'co-admin';
-  businessId?: string;
-  permissions?: string[];
+export type UserRole = "free" | "individual" | "business" | "staff" | "admin" | "co-admin";
+
+export enum PermissionLevel {
+  NONE = 0,
+  VIEW = 1,
+  EDIT = 2,
+  MANAGE = 3,
+  ADMIN = 4
 }
 
-/**
- * Fetches the current user's role and related permissions
- * from the access control manager function
- */
-export const getUserRoleInfo = async (): Promise<UserRoleInfo | null> => {
+export interface StaffPermissions {
+  canManageStaff: boolean;
+  canManageServices: boolean;
+  canViewAnalytics: boolean;
+  canManageBookings: boolean;
+}
+
+export interface UserRoleInfo {
+  role: UserRole;
+  businessId?: string;
+  permissions?: StaffPermissions;
+}
+
+export async function getUserRoleInfo(): Promise<UserRoleInfo | null> {
   try {
-    // First try to get the role from the RPC function
-    const { data: roleData, error: roleError } = await supabase.rpc('get_user_role');
+    // Check if there's a valid session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.log("No active session - can't get user role");
+      return null;
+    }
+    
+    // First try the RPC function to get the user role
+    const { data: userRole, error: roleError } = await supabase.rpc('get_user_role');
     
     if (roleError) {
       console.error("Error getting user role:", roleError);
       return null;
     }
-
-    // Get the user session to retrieve the ID
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return null;
     
-    const userId = session.user.id;
+    // Type assertion to make TypeScript happy
+    const role = userRole as UserRole;
+    console.log("User role from RPC:", role);
     
-    // Default role info
-    const roleInfo: UserRoleInfo = {
-      role: roleData || 'free',
-    };
+    let businessId: string | undefined;
+    let permissions: StaffPermissions | undefined;
     
-    // For business roles, get the business ID
-    if (roleInfo.role === 'business') {
-      roleInfo.businessId = userId; // For business owners, their user ID is the business ID
-    } 
-    // For staff roles, get the business ID they work for
-    else if (['staff', 'admin', 'co-admin'].includes(roleInfo.role)) {
+    // Get business ID for staff/admin roles
+    if (role === 'staff' || role === 'admin' || role === 'co-admin') {
       const { data: staffData } = await supabase
-        .from('business_staff')
-        .select('business_id, permissions')
-        .eq('staff_id', userId)
-        .eq('status', 'active')
+        .from("business_staff")
+        .select("business_id, permissions")
+        .eq("staff_id", session.user.id)
+        .eq("status", "active")
         .single();
-      
+        
       if (staffData) {
-        roleInfo.businessId = staffData.business_id;
-        roleInfo.permissions = staffData.permissions;
+        businessId = staffData.business_id;
+        
+        // Parse permissions if they exist
+        if (staffData.permissions) {
+          const permissionsObject = staffData.permissions as Record<string, boolean>;
+          permissions = {
+            canManageStaff: permissionsObject.canManageStaff || false,
+            canManageServices: permissionsObject.canManageServices || false,
+            canViewAnalytics: permissionsObject.canViewAnalytics || false,
+            canManageBookings: permissionsObject.canManageBookings || false
+          };
+        }
       }
+    } else if (role === 'business') {
+      // Business owners use their own ID as the business ID
+      businessId = session.user.id;
+      
+      // Business owners have all permissions
+      permissions = {
+        canManageStaff: true,
+        canManageServices: true,
+        canViewAnalytics: true,
+        canManageBookings: true
+      };
     }
     
-    return roleInfo;
+    return {
+      role,
+      businessId,
+      permissions
+    };
   } catch (error) {
-    console.error("Error in access control service:", error);
+    console.error("Error getting user role info:", error);
     return null;
   }
-};
+}
+
+export function getBusinessPermissions(roleInfo: UserRoleInfo | null): StaffPermissions {
+  // Default permissions (none)
+  const defaultPermissions: StaffPermissions = {
+    canManageStaff: false,
+    canManageServices: false,
+    canViewAnalytics: false,
+    canManageBookings: false
+  };
+  
+  if (!roleInfo) return defaultPermissions;
+  
+  // Business owners have all permissions
+  if (roleInfo.role === 'business') {
+    return {
+      canManageStaff: true,
+      canManageServices: true,
+      canViewAnalytics: true,
+      canManageBookings: true
+    };
+  }
+  
+  // Co-admins can do everything except manage staff
+  if (roleInfo.role === 'co-admin') {
+    return {
+      canManageStaff: false,
+      canManageServices: true,
+      canViewAnalytics: true,
+      canManageBookings: true
+    };
+  }
+  
+  // Return specific permissions for staff members if available
+  return roleInfo.permissions || defaultPermissions;
+}
+
+export function meetsPermissionLevel(
+  requiredLevel: PermissionLevel, 
+  userRole: UserRole | undefined
+): boolean {
+  if (!userRole) return false;
+  
+  const roleLevels: Record<UserRole, PermissionLevel> = {
+    'business': PermissionLevel.ADMIN,
+    'co-admin': PermissionLevel.ADMIN - 1,
+    'admin': PermissionLevel.MANAGE,
+    'staff': PermissionLevel.EDIT,
+    'individual': PermissionLevel.EDIT,
+    'free': PermissionLevel.VIEW
+  };
+  
+  const userLevel = roleLevels[userRole];
+  return userLevel >= requiredLevel;
+}

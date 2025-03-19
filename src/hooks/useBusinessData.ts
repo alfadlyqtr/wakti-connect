@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "./useAuth";
+import { useAuth } from "./auth/useAuth";
 
 export const useBusinessData = () => {
   const [business, setBusiness] = useState<any | null>(null);
@@ -30,8 +30,9 @@ export const useBusinessData = () => {
 
         const businessId = user.businessId || user.id;
 
+        // Fix: Use a table that exists in Supabase schema
         const { data, error: fetchError } = await supabase
-          .from("businesses")
+          .from("profiles")
           .select("*")
           .eq("id", businessId)
           .single();
