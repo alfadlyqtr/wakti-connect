@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Task } from "./types";
+import { Task, SubTask } from "./types";
 
 // Fetch tasks owned by the current user
 export async function fetchMyTasks(userId: string): Promise<Task[]> {
@@ -19,7 +19,11 @@ export async function fetchMyTasks(userId: string): Promise<Task[]> {
     throw error;
   }
   
-  return data as Task[] || [];
+  // Ensure subtasks is always an array
+  return (data || []).map(task => ({
+    ...task,
+    subtasks: Array.isArray(task.subtasks) ? task.subtasks : []
+  })) as Task[];
 }
 
 // Fetch tasks shared with the current user
@@ -39,8 +43,14 @@ export async function fetchSharedTasks(userId: string): Promise<Task[]> {
     throw error;
   }
   
-  // Extract tasks from the nested structure
-  return data.map(item => item.task) as Task[] || [];
+  // Extract tasks from the nested structure and ensure subtasks is always an array
+  return (data || []).map(item => {
+    if (!item.task) return null;
+    return {
+      ...item.task,
+      subtasks: Array.isArray(item.task.subtasks) ? item.task.subtasks : []
+    };
+  }).filter(Boolean) as Task[];
 }
 
 // Fetch tasks assigned to the current user (for staff) or by the current user (for business owners)
@@ -112,5 +122,6 @@ export async function fetchAssignedTasks(userId: string): Promise<Task[]> {
 
 // Default fallback - just get all tasks (used if tab is invalid)
 export async function fetchDefaultTasks(userId: string): Promise<Task[]> {
-  return fetchMyTasks(userId);
+  const tasks = await fetchMyTasks(userId);
+  return tasks;
 }

@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskStatus, TaskPriority } from "../types";
+import { Task, TaskStatus, TaskPriority, SubTask } from "../types";
 
 /**
  * Fetches tasks shared with the current user
@@ -8,7 +8,13 @@ import { Task, TaskStatus, TaskPriority } from "../types";
 export async function fetchSharedTasks(userId: string): Promise<Task[]> {
   const { data, error } = await supabase
     .from('shared_tasks')
-    .select('task_id, tasks(*)')
+    .select(`
+      task_id, 
+      tasks(
+        *,
+        subtasks:todo_items(*)
+      )
+    `)
     .eq('shared_with', userId)
     .order('created_at', { ascending: false });
     
@@ -30,7 +36,8 @@ export async function fetchSharedTasks(userId: string): Promise<Task[]> {
           user_id: task.user_id,
           assignee_id: task.assignee_id || null,
           created_at: task.created_at,
-          updated_at: task.updated_at
+          updated_at: task.updated_at,
+          subtasks: Array.isArray(task.subtasks) ? task.subtasks : []
         });
       }
     }
