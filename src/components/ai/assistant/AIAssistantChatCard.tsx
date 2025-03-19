@@ -7,6 +7,7 @@ import { AIAssistantChat } from "./AIAssistantChat";
 import { SuggestionPrompts } from "./SuggestionPrompts";
 import { AIMessage } from "@/types/ai-assistant.types";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAISettings } from "@/components/settings/ai";
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -28,6 +29,7 @@ export const AIAssistantChatCard = ({
   clearMessages,
 }: AIAssistantChatCardProps) => {
   const isMobile = useIsMobile();
+  const { settings } = useAISettings();
   
   const suggestionQuestions = [
     "What tasks should I prioritize today?",
@@ -37,12 +39,15 @@ export const AIAssistantChatCard = ({
     "Improve task completion"
   ];
 
+  // Use AI assistant name from settings if available
+  const assistantName = settings?.assistant_name || "WAKTI AI";
+
   return (
     <Card className="border shadow-sm">
       <CardHeader className="pb-2 md:pb-4">
         <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
           <Bot className="h-4 w-4 md:h-5 md:w-5 text-wakti-blue" />
-          Chat with WAKTI AI
+          Chat with {assistantName}
         </CardTitle>
         <CardDescription className="text-xs md:text-sm">
           Ask about tasks, events, staff management, analytics, and more
