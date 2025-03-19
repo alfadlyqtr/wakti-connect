@@ -1,43 +1,30 @@
 
 import React from "react";
-import TaskCard from "@/components/ui/TaskCard";
-import { Task, TaskTab } from "@/types/task.types";
+import { Task } from "@/types/task.types";
+import TaskCard from "./TaskCard";
 
 interface TaskGridProps {
   tasks: Task[];
-  userRole: "free" | "individual" | "business" | null;
-  tab: TaskTab;
-  onTaskAction?: (action: string, taskId: string) => void;
+  userRole: string | null;
+  tab: "my-tasks" | "shared-tasks" | "assigned-tasks";
+  onTaskAction: (action: string, taskId: string) => void;
 }
 
-const TaskGrid = ({ tasks, userRole, tab, onTaskAction }: TaskGridProps) => {
-  if (tasks.length === 0) return null;
-  
+const TaskGrid: React.FC<TaskGridProps> = ({ 
+  tasks, 
+  userRole,
+  tab,
+  onTaskAction
+}) => {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {tasks.map((task) => (
-        <TaskCard
-          key={task.id}
-          id={task.id}
-          title={task.title}
-          description={task.description || ""}
-          dueDate={task.due_date ? new Date(task.due_date) : new Date()}
-          status={task.status}
-          priority={task.priority}
-          category={tab === "assigned-tasks" ? "Assigned" : tab === "shared-tasks" ? "Shared" : "Personal"}
-          userRole={userRole || "free"}
-          isAssigned={tab === "assigned-tasks"}
-          isShared={tab === "shared-tasks"}
-          isRecurring={Boolean(task.parent_recurring_id)}
-          isRecurringInstance={Boolean(task.is_recurring_instance)}
-          subtasks={task.subtasks}
-          onShare={() => onTaskAction && onTaskAction("share", task.id)}
-          onAssign={() => onTaskAction && onTaskAction("assign", task.id)}
-          onEdit={() => onTaskAction && onTaskAction("edit", task.id)}
-          onDelete={() => onTaskAction && onTaskAction("delete", task.id)}
-          onMarkComplete={() => onTaskAction && onTaskAction("complete", task.id)}
-          onMarkPending={() => onTaskAction && onTaskAction("pending", task.id)}
-          onAddSubtask={() => onTaskAction && onTaskAction("addSubtask", task.id)}
+        <TaskCard 
+          key={task.id} 
+          task={task} 
+          userRole={userRole as "free" | "individual" | "business"} 
+          tab={tab}
+          onAction={onTaskAction}
         />
       ))}
     </div>

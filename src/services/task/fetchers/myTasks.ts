@@ -29,6 +29,8 @@ export async function fetchMyTasks(userId: string): Promise<Task[]> {
     assignee_id: item.assignee_id || null,
     created_at: item.created_at,
     updated_at: item.updated_at,
+    is_recurring_instance: item.is_recurring_instance,
+    parent_recurring_id: item.parent_recurring_id,
     subtasks: Array.isArray(item.subtasks) ? item.subtasks : []
   }));
 }

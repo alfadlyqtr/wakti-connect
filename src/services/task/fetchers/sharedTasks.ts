@@ -37,6 +37,8 @@ export async function fetchSharedTasks(userId: string): Promise<Task[]> {
           assignee_id: task.assignee_id || null,
           created_at: task.created_at,
           updated_at: task.updated_at,
+          is_recurring_instance: task.is_recurring_instance || false,
+          parent_recurring_id: task.parent_recurring_id || null,
           subtasks: Array.isArray(task.subtasks) ? task.subtasks : []
         });
       }

@@ -1,6 +1,25 @@
 
-// Re-export all task service functions
-export { fetchTasks } from "./fetchService";
-export { createTask } from "./createService";
-export { shareTask, assignTask } from "./sharingService";
-export type { Task, TaskTab, TaskFormData, TasksResult, TaskStatus, TaskPriority } from "./types";
+import { fetchTasks } from "./fetchService";
+import { createTask } from "./createService";
+import { shareTask, assignTask } from "./sharingService";
+import { 
+  markTaskComplete, 
+  markTaskPending, 
+  deleteTask, 
+  addSubtask,
+  getTaskById
+} from "./taskService";
+
+export { 
+  fetchTasks,
+  createTask,
+  shareTask, 
+  assignTask,
+  markTaskComplete,
+  markTaskPending,
+  deleteTask,
+  addSubtask,
+  getTaskById
+};
+
+export type { Task, TaskTab, TaskFormData, TasksResult, TaskStatus, TaskPriority, SubTask } from "./types";

@@ -31,7 +31,8 @@ export async function fetchSharedTasks(userId: string): Promise<Task[]> {
   const { data, error } = await supabase
     .from('shared_tasks')
     .select(`
-      task:task_id(
+      task_id, 
+      tasks(
         *,
         subtasks:todo_items(*)
       )
@@ -44,13 +45,31 @@ export async function fetchSharedTasks(userId: string): Promise<Task[]> {
   }
   
   // Extract tasks from the nested structure and ensure subtasks is always an array
-  return (data || []).map(item => {
-    if (!item.task) return null;
-    return {
-      ...item.task,
-      subtasks: Array.isArray(item.task.subtasks) ? item.task.subtasks : []
-    };
-  }).filter(Boolean) as Task[];
+  const tasksData: Task[] = [];
+  if (data && data.length > 0) {
+    for (const item of data) {
+      if (item.tasks) {
+        const task = item.tasks;
+        tasksData.push({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          priority: task.priority,
+          due_date: task.due_date,
+          user_id: task.user_id,
+          assignee_id: task.assignee_id || null,
+          created_at: task.created_at,
+          updated_at: task.updated_at,
+          is_recurring_instance: task.is_recurring_instance,
+          parent_recurring_id: task.parent_recurring_id,
+          subtasks: Array.isArray(task.subtasks) ? task.subtasks : []
+        });
+      }
+    }
+  }
+  
+  return tasksData;
 }
 
 // Fetch tasks assigned to the current user (for staff) or by the current user (for business owners)
@@ -122,6 +141,11 @@ export async function fetchAssignedTasks(userId: string): Promise<Task[]> {
 
 // Default fallback - just get all tasks (used if tab is invalid)
 export async function fetchDefaultTasks(userId: string): Promise<Task[]> {
-  const tasks = await fetchMyTasks(userId);
-  return tasks;
+  try {
+    const tasks = await fetchMyTasks(userId);
+    return tasks;
+  } catch (error) {
+    console.error("Error in default tasks fallback:", error);
+    return [];
+  }
 }

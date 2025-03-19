@@ -29,6 +29,8 @@ export async function fetchDefaultTasks(userId: string): Promise<Task[]> {
     assignee_id: item.assignee_id || null,
     created_at: item.created_at,
     updated_at: item.updated_at,
+    is_recurring_instance: item.is_recurring_instance || false,
+    parent_recurring_id: item.parent_recurring_id || null,
     subtasks: Array.isArray(item.subtasks) ? item.subtasks : []
   }));
 }

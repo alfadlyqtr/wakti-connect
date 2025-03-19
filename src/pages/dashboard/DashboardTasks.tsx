@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
@@ -9,7 +10,23 @@ import TaskGrid from "@/components/tasks/TaskGrid";
 import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog";
 import { ShareTaskDialog } from "@/components/tasks/ShareTaskDialog";
 import { AssignTaskDialog } from "@/components/tasks/AssignTaskDialog";
+import { AddSubtaskDialog } from "@/components/tasks/AddSubtaskDialog";
 import { useTranslation } from "react-i18next";
+import { 
+  markTaskComplete, 
+  markTaskPending, 
+  deleteTask 
+} from "@/services/task/taskService";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const DashboardTasks = () => {
   const { t } = useTranslation();
@@ -18,7 +35,10 @@ const DashboardTasks = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [addSubtaskDialogOpen, setAddSubtaskDialogOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const { 
     filteredTasks, 
@@ -98,7 +118,7 @@ const DashboardTasks = () => {
     return await assignTask(selectedTaskId || "", staffId);
   };
 
-  const handleTaskAction = (action: string, taskId: string) => {
+  const handleTaskAction = async (action: string, taskId: string) => {
     setSelectedTaskId(taskId);
     
     switch(action) {
@@ -108,11 +128,70 @@ const DashboardTasks = () => {
       case "assign":
         setAssignDialogOpen(true);
         break;
+      case "mark-complete":
+        setIsProcessing(true);
+        try {
+          const success = await markTaskComplete(taskId);
+          if (success) {
+            toast({
+              title: t('task.taskCompleted'),
+              description: t('task.taskCompletedSuccess'),
+            });
+            refetch();
+          }
+        } finally {
+          setIsProcessing(false);
+        }
+        break;
+      case "mark-pending":
+        setIsProcessing(true);
+        try {
+          const success = await markTaskPending(taskId);
+          if (success) {
+            toast({
+              title: t('task.taskPending'),
+              description: t('task.taskMarkedPending'),
+            });
+            refetch();
+          }
+        } finally {
+          setIsProcessing(false);
+        }
+        break;
+      case "delete":
+        setDeleteConfirmOpen(true);
+        break;
+      case "add-subtask":
+        setAddSubtaskDialogOpen(true);
+        break;
+      case "edit":
+        toast({
+          title: t('common.comingSoon'),
+          description: t('task.editTaskComingSoon'),
+        });
+        break;
       default:
         toast({
           title: t('common.comingSoon'),
           description: t('task.actionComingSoon'),
         });
+    }
+  };
+
+  const handleDeleteConfirmed = async () => {
+    setIsProcessing(true);
+    try {
+      const success = await deleteTask(selectedTaskId);
+      if (success) {
+        toast({
+          title: t('task.taskDeleted'),
+          description: t('task.taskDeletedSuccess'),
+        });
+        refetch();
+      }
+    } finally {
+      setIsProcessing(false);
+      setDeleteConfirmOpen(false);
     }
   };
 
@@ -196,6 +275,43 @@ const DashboardTasks = () => {
         taskId={selectedTaskId}
         onAssign={handleAssignTask}
       />
+      
+      <AddSubtaskDialog
+        open={addSubtaskDialogOpen}
+        onOpenChange={setAddSubtaskDialogOpen}
+        taskId={selectedTaskId}
+        onSuccess={refetch}
+      />
+      
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('task.confirmDelete')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('task.deleteWarning')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isProcessing}>
+              {t('common.cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirmed}
+              disabled={isProcessing}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t('common.deleting')}
+                </>
+              ) : (
+                t('common.delete')
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
