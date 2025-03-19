@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import "@/components/layout/sidebar/sidebar.css";
 import { useQuery } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -28,7 +29,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const navigate = useNavigate();
 
   // Fetch user profile data for the dashboard
-  const { data: profileData, isLoading: profileLoading } = useQuery({
+  const { data: profileData, isLoading: profileLoading, error: profileError } = useQuery({
     queryKey: ['dashboardUserProfile'],
     queryFn: async () => {
       try {
@@ -36,7 +37,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         
         if (!session?.user) {
           console.log("No active session found, redirecting to auth page");
-          navigate("/auth");
+          navigate("/auth/login");
           return null;
         }
         
@@ -50,9 +51,9 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           console.error("Error fetching user profile:", error);
           if (error.code === 'PGRST116') {
             console.log("Profile not found, user may need to sign up");
-            navigate("/auth");
+            navigate("/auth/login");
           }
-          return null;
+          throw error;
         }
         
         // Store user role in localStorage for use in other components
@@ -77,7 +78,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         return data as ProfileData;
       } catch (error) {
         console.error("Error fetching user profile:", error);
-        return null;
+        throw error;
       }
     },
     retry: 1,
@@ -99,7 +100,10 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       if (event === 'SIGNED_OUT') {
         // Clear stored user role on sign out
         localStorage.removeItem('userRole');
-        navigate("/auth");
+        navigate("/auth/login");
+      } else if (event === 'SIGNED_IN' && session) {
+        // Refresh the profile data query when user signs in
+        window.location.reload();
       }
     });
 
@@ -135,29 +139,51 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   };
 
   // Get the correct user role
-  const userRoleValue = profileData?.account_type || propUserRole || "free";
+  const userRoleValue = profileData?.account_type || propUserRole || localStorage.getItem('userRole') as "free" | "individual" | "business" || "free";
 
   // Calculate main content padding based on sidebar state
   const mainContentClass = isMobile 
     ? "transition-all duration-300" 
     : "lg:pl-[70px] transition-all duration-300";
 
+  // Handle loading state
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <LoadingSpinner />
+        <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
+      </div>
+    );
+  }
+  
+  // Handle error state
+  if (profileError && !profileData) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <h2 className="text-2xl font-bold text-destructive mb-4">Error loading dashboard</h2>
+        <p className="text-muted-foreground mb-4">
+          There was a problem loading your profile. Please try signing in again.
+        </p>
+        <button
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
+          onClick={() => navigate("/auth/login")}
+        >
+          Return to Login
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
       
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar isOpen={isSidebarOpen} userRole={userRoleValue as "free" | "individual" | "business"} />
+        <Sidebar isOpen={isSidebarOpen} userRole={userRoleValue} />
         
         <main className={`flex-1 overflow-y-auto pt-4 px-4 pb-12 ${mainContentClass}`}>
           <div className="container mx-auto animate-in">
-            {profileLoading ? (
-              <div className="flex items-center justify-center h-[calc(100vh-100px)]">
-                <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
-              </div>
-            ) : (
-              children
-            )}
+            {children}
           </div>
         </main>
       </div>
