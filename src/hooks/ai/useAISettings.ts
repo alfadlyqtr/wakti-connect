@@ -78,6 +78,11 @@ export const useAISettings = () => {
         }
 
         console.log("Settings fetched successfully:", data);
+        // Convert id to number if it's a string to match our AISettings type
+        if (data.id && typeof data.id === 'string') {
+          data.id = Number(data.id);
+        }
+        
         return data as unknown as AISettings;
       } catch (error) {
         console.error("Error in AI settings fetch:", error);
@@ -134,14 +139,20 @@ export const useAISettings = () => {
 
   // Update AI settings
   const updateSettings = useMutation({
-    mutationFn: async (newSettings: Partial<AISettings>) => {
+    mutationFn: async (newSettings: AISettings) => {
       if (!user) throw new Error("User not authenticated");
 
       console.log("Updating AI settings:", newSettings);
+      
+      // Convert settings for Supabase (ensuring id is removed if it's a number)
+      const settingsForUpdate = { ...newSettings };
+      if (typeof settingsForUpdate.id === 'number') {
+        delete settingsForUpdate.id;
+      }
 
       const { data, error } = await supabase
         .from("ai_assistant_settings")
-        .update(newSettings)
+        .update(settingsForUpdate)
         .eq("user_id", user.id)
         .select()
         .single();
@@ -149,6 +160,12 @@ export const useAISettings = () => {
       if (error) throw error;
       
       console.log("Settings updated successfully");
+      
+      // Convert id to number for consistency in our app
+      if (data && data.id && typeof data.id === 'string') {
+        data.id = Number(data.id);
+      }
+      
       return data as unknown as AISettings;
     },
     onSuccess: () => {

@@ -1,98 +1,143 @@
 
-import React from "react";
-import { Bot, RefreshCcw, Clock } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { AIAssistantChat } from "./AIAssistantChat";
-import { SuggestionPrompts } from "./SuggestionPrompts";
-import { AIMessage } from "@/types/ai-assistant.types";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useAISettings } from "@/components/settings/ai";
+import React, { useState, useEffect, useRef } from 'react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { AlertCircle, Bot, SendHorizontal, Trash2 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { AIMessage } from '@/types/ai-assistant.types';
+import { AIAssistantChat } from './AIAssistantChat';
+import { SuggestionPrompts } from './SuggestionPrompts';
+import { useAISettings } from '@/components/settings/ai/context/AISettingsContext';
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
   inputMessage: string;
-  setInputMessage: (message: string) => void;
+  setInputMessage: (value: string) => void;
   handleSendMessage: (e: React.FormEvent) => Promise<void>;
   isLoading: boolean;
   canAccess: boolean;
   clearMessages: () => void;
 }
 
-export const AIAssistantChatCard = ({
+export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   messages,
   inputMessage,
   setInputMessage,
   handleSendMessage,
   isLoading,
   canAccess,
-  clearMessages,
-}: AIAssistantChatCardProps) => {
+  clearMessages
+}) => {
   const isMobile = useIsMobile();
-  const { settings } = useAISettings();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   
-  const suggestionQuestions = [
-    "What tasks should I prioritize today?",
-    "Help me plan an event",
-    "Analyze my team's performance",
-    "Optimize my schedule",
-    "Improve task completion"
-  ];
-
-  // Use AI assistant name from settings if available
+  const { settings } = useAISettings();
   const assistantName = settings?.assistant_name || "WAKTI AI";
 
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    // Focus input when the component mounts
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  const handlePromptClick = (prompt: string) => {
+    setInputMessage(prompt);
+    setShowSuggestions(false);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
   return (
-    <Card className="border shadow-sm">
-      <CardHeader className="pb-2 md:pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-          <Bot className="h-4 w-4 md:h-5 md:w-5 text-wakti-blue" />
-          Chat with {assistantName}
-        </CardTitle>
-        <CardDescription className="text-xs md:text-sm">
-          Ask about tasks, events, staff management, analytics, and more
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-0">
-        <AIAssistantChat
-          messages={messages}
-          inputMessage={inputMessage}
-          setInputMessage={setInputMessage}
-          handleSendMessage={handleSendMessage}
-          isLoading={isLoading}
-          canAccess={canAccess}
-        />
-      </CardContent>
-      <CardFooter className="flex flex-col pt-3 md:pt-6">
-        <div className="flex justify-between w-full mb-2 md:mb-4">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={clearMessages}
-            className="text-xs py-1 px-2 h-auto md:py-1.5 md:px-3"
-          >
-            <RefreshCcw className="h-3 w-3 mr-1" />
-            {isMobile ? "New chat" : "New conversation"}
-          </Button>
-          <div className="flex items-center text-xs text-muted-foreground">
-            <Clock className="h-3 w-3 mr-1" />
-            <span className="hidden xs:inline">Powered by</span> <a 
-              href="https://tmw.qa/ai-chat-bot/" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-wakti-blue hover:underline ml-1"
-            >
-              TMW AI
-            </a>
-          </div>
+    <Card className="w-full h-[calc(80vh)] flex flex-col">
+      <CardHeader className="py-3 px-4 border-b flex-row justify-between items-center">
+        <div className="flex items-center">
+          <Bot className="w-5 h-5 mr-2 text-wakti-blue" />
+          <h3 className="font-medium text-sm md:text-base">Chat with {assistantName}</h3>
         </div>
+        {messages.length > 0 && (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={clearMessages}
+            className="h-8 w-8"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="sr-only">Clear chat</span>
+          </Button>
+        )}
+      </CardHeader>
+      <CardContent className="p-0 flex-1 flex flex-col">
+        <ScrollArea className="flex-1 p-4 pb-0">
+          {messages.length === 0 && showSuggestions ? (
+            <div className="h-full flex flex-col">
+              <div className="text-center my-8">
+                <Bot className="w-12 h-12 mx-auto text-wakti-blue opacity-80" />
+                <h3 className="mt-4 text-lg font-medium">
+                  How can I help you today?
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
+                  Ask me anything about tasks, scheduling, or your business. I'm here to make your workflow easier.
+                </p>
+              </div>
+              
+              <SuggestionPrompts onPromptClick={handlePromptClick} />
+            </div>
+          ) : (
+            <AIAssistantChat 
+              messages={messages} 
+              isLoading={isLoading}
+            />
+          )}
+          
+          {!canAccess && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 my-4 flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-medium text-amber-800">Upgrade Your Plan</h4>
+                <p className="text-sm text-amber-700 mt-1">
+                  You've reached the limit for the free plan. Upgrade to continue using the AI assistant.
+                </p>
+              </div>
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
+        </ScrollArea>
         
-        <SuggestionPrompts
-          suggestions={isMobile ? suggestionQuestions.slice(0, 3) : suggestionQuestions}
-          onSelectSuggestion={setInputMessage}
-          isLoading={isLoading}
-        />
-      </CardFooter>
+        <form onSubmit={handleSendMessage} className="p-4 pt-2 mt-auto">
+          <div className="relative">
+            <Input 
+              placeholder={isLoading ? "Thinking..." : "Type your message..."}
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              disabled={isLoading || !canAccess}
+              className="pr-10"
+              ref={inputRef}
+            />
+            <Button 
+              size="icon" 
+              type="submit" 
+              disabled={isLoading || !inputMessage.trim() || !canAccess}
+              className="absolute right-0 top-0 bottom-0 rounded-l-none"
+            >
+              <SendHorizontal className="h-4 w-4" />
+              <span className="sr-only">Send message</span>
+            </Button>
+          </div>
+        </form>
+      </CardContent>
     </Card>
   );
 };

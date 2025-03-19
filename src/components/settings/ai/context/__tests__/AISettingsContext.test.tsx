@@ -9,41 +9,47 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import '@testing-library/jest-dom'; // Add this import for the matchers
 
 // Mock the useAIAssistant hook
-vi.mock('@/hooks/useAIAssistant', () => ({
-  useAIAssistant: vi.fn(),
-}));
+vi.mock('@/hooks/useAIAssistant', () => {
+  return {
+    useAIAssistant: vi.fn(),
+  };
+});
 
 // Mock the supabase client
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    auth: {
-      getSession: vi.fn().mockResolvedValue({
-        data: {
-          session: {
-            user: {
-              id: 'test-user-id',
+vi.mock('@/integrations/supabase/client', () => {
+  return {
+    supabase: {
+      auth: {
+        getSession: vi.fn().mockResolvedValue({
+          data: {
+            session: {
+              user: {
+                id: 'test-user-id',
+              },
             },
           },
-        },
-      }),
-    },
-    from: vi.fn().mockReturnValue({
-      insert: vi.fn().mockReturnValue({
-        select: vi.fn().mockReturnValue({
-          maybeSingle: vi.fn().mockResolvedValue({
-            data: { id: 1 },
-            error: null,
+        }),
+      },
+      from: vi.fn().mockReturnValue({
+        insert: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: { id: 1 },
+              error: null,
+            }),
           }),
         }),
       }),
-    }),
-  },
-}));
+    },
+  };
+});
 
 // Mock toast
-vi.mock('@/components/ui/use-toast', () => ({
-  toast: vi.fn(),
-}));
+vi.mock('@/components/ui/use-toast', () => {
+  return {
+    toast: vi.fn(),
+  };
+});
 
 // Sample AI settings for testing
 const sampleSettings: AISettings = {
@@ -102,7 +108,7 @@ describe('AISettingsContext', () => {
 
   it('provides loading state correctly', () => {
     // Setup mock
-    const mockUseAIAssistant = useAIAssistant as unknown as vi.Mock;
+    const mockUseAIAssistant = vi.mocked(useAIAssistant);
     mockUseAIAssistant.mockReturnValue({
       aiSettings: null,
       isLoadingSettings: true,
@@ -127,7 +133,7 @@ describe('AISettingsContext', () => {
 
   it('provides settings data correctly', async () => {
     // Setup mock
-    const mockUseAIAssistant = useAIAssistant as unknown as vi.Mock;
+    const mockUseAIAssistant = vi.mocked(useAIAssistant);
     mockUseAIAssistant.mockReturnValue({
       aiSettings: sampleSettings,
       isLoadingSettings: false,
@@ -158,7 +164,7 @@ describe('AISettingsContext', () => {
     const mockUpdateAsync = vi.fn().mockResolvedValue({ ...sampleSettings, assistant_name: 'Updated Name' });
     
     // Setup mock
-    const mockUseAIAssistant = useAIAssistant as unknown as vi.Mock;
+    const mockUseAIAssistant = vi.mocked(useAIAssistant);
     mockUseAIAssistant.mockReturnValue({
       aiSettings: sampleSettings,
       isLoadingSettings: false,
@@ -195,7 +201,7 @@ describe('AISettingsContext', () => {
     window.location = { ...originalLocation, reload: vi.fn() };
     
     // Setup mock
-    const mockUseAIAssistant = useAIAssistant as unknown as vi.Mock;
+    const mockUseAIAssistant = vi.mocked(useAIAssistant);
     mockUseAIAssistant.mockReturnValue({
       aiSettings: null,
       isLoadingSettings: false,
@@ -230,7 +236,7 @@ describe('AISettingsContext', () => {
 
   it('handles errors correctly', async () => {
     // Setup mock
-    const mockUseAIAssistant = useAIAssistant as unknown as vi.Mock;
+    const mockUseAIAssistant = vi.mocked(useAIAssistant);
     mockUseAIAssistant.mockReturnValue({
       aiSettings: null,
       isLoadingSettings: false,
