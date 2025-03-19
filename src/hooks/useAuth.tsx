@@ -38,12 +38,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (error) {
           console.error("Error getting session:", error);
+          setUser(null);
           setIsLoading(false);
           return;
         }
         
         if (!session?.user) {
           console.log("AuthProvider: No active session found");
+          setUser(null);
           setIsLoading(false);
           return;
         }
@@ -56,9 +58,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .from("profiles")
             .select("*")
             .eq("id", session.user.id)
-            .single();
+            .maybeSingle();
             
-          if (profileError) {
+          if (profileError && profileError.code !== "PGRST116") {
             console.error("Error fetching profile:", profileError);
             // Don't return here, we can still set basic user info
           }
@@ -84,6 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (error) {
         console.error("Error loading user:", error);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -106,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .from("profiles")
               .select("*")
               .eq("id", session.user.id)
-              .single();
+              .maybeSingle();
               
             if (profileError && profileError.code !== "PGRST116") {
               console.error("Error fetching profile:", profileError);
@@ -164,6 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // User is set by the auth listener
     } catch (error: any) {
       console.error("Login error:", error);
+      setUser(null);
       toast({
         title: "Login failed",
         description: error.message || "An error occurred during login",
@@ -184,7 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       
       console.log("AuthProvider: Logout successful");
-      // User is set to null by the auth listener
+      setUser(null);
     } catch (error: any) {
       console.error("Logout error:", error);
       toast({

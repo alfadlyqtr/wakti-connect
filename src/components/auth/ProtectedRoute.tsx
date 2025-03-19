@@ -22,6 +22,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     });
   }, [isAuthenticated, isLoading, user]);
 
+  // If auth is still loading, show spinner
   if (isLoading) {
     return (
       <div className="h-screen flex flex-col items-center justify-center">
@@ -31,6 +32,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
+  // If not authenticated after loading completed, redirect to login
   if (!isAuthenticated) {
     console.log("ProtectedRoute: Not authenticated, redirecting to login");
     

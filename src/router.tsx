@@ -11,6 +11,7 @@ import { authRoutes } from "@/routes/authRoutes";
 import { dashboardRoutes } from "@/routes/dashboardRoutes";
 import { businessRoutes } from "@/routes/businessRoutes";
 import PublicLayout from "@/components/layout/PublicLayout";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export const router = createBrowserRouter([
   // Public routes with layout
@@ -25,7 +26,11 @@ export const router = createBrowserRouter([
     path: "/auth",
     element: (
       <AuthShell>
-        <Suspense fallback={<div>Loading...</div>} />
+        <Suspense fallback={
+          <div className="min-h-screen flex items-center justify-center">
+            <LoadingSpinner />
+          </div>
+        } />
       </AuthShell>
     ),
     children: authRoutes,
@@ -37,7 +42,12 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <DashboardShell>
-          <Suspense fallback={<div>Loading dashboard...</div>} />
+          <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+              <LoadingSpinner />
+              <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
+            </div>
+          } />
         </DashboardShell>
       </ProtectedRoute>
     ),
@@ -49,10 +59,21 @@ export const router = createBrowserRouter([
     path: "/business/:businessId",
     element: (
       <BusinessShell>
-        <Suspense fallback={<div>Loading business...</div>} />
+        <Suspense fallback={
+          <div className="min-h-screen flex items-center justify-center">
+            <LoadingSpinner />
+            <p className="mt-4 text-muted-foreground">Loading business...</p>
+          </div>
+        } />
       </BusinessShell>
     ),
     children: businessRoutes,
+  },
+
+  // Redirect /auth/login to /login
+  {
+    path: "/login",
+    element: <Navigate to="/auth/login" replace />
   },
 
   // 404 route

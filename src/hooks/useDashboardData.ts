@@ -20,7 +20,7 @@ export const useDashboardData = () => {
   
   // Only fetch profile data if authenticated
   const { data: profileData, isLoading: profileLoading, error: profileError } = useQuery({
-    queryKey: ['userProfile'],
+    queryKey: ['userProfile', user?.id],
     queryFn: async () => {
       try {
         console.log("useDashboardData: Fetching user profile data for user:", user?.id);
@@ -34,7 +34,7 @@ export const useDashboardData = () => {
           .from('profiles')
           .select('full_name, account_type, display_name, business_name, occupation, avatar_url, theme_preference')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
         
         if (error) {
           console.error("useDashboardData: Error fetching profile data:", error);
@@ -53,9 +53,9 @@ export const useDashboardData = () => {
     enabled: isAuthenticated && !authLoading && !!user?.id, // Only run query if authenticated and user exists
   });
 
-  // Fetch today's tasks only if we have a profile
+  // Fetch today's tasks only if we have authentication
   const { data: todayTasks, isLoading: tasksLoading, error: tasksError } = useQuery({
-    queryKey: ['todayTasks'],
+    queryKey: ['todayTasks', user?.id],
     queryFn: async () => {
       try {
         console.log("useDashboardData: Fetching today's tasks for user:", user?.id);
@@ -86,6 +86,10 @@ export const useDashboardData = () => {
           .lte('due_date', endOfDay.toISOString());
         
         if (error) {
+          if (error.code === 'PGRST116') {
+            console.log("useDashboardData: Tasks table might not exist yet");
+            return [];
+          }
           console.error("useDashboardData: Error fetching today's tasks:", error);
           // Return empty array instead of throwing for non-critical data
           return [];
@@ -98,13 +102,13 @@ export const useDashboardData = () => {
         return [];
       }
     },
-    enabled: !!profileData && !!user?.id, // Only run if we have the profile and user
+    enabled: isAuthenticated && !!user?.id, // Only run if authenticated and user exists
     staleTime: 60000, // 1 minute
   });
 
-  // Fetch unread notifications count only if we have a profile
+  // Fetch unread notifications only if we have authentication
   const { data: unreadNotifications, isLoading: notificationsLoading, error: notificationsError } = useQuery({
-    queryKey: ['unreadNotifications'],
+    queryKey: ['unreadNotifications', user?.id],
     queryFn: async () => {
       try {
         console.log("useDashboardData: Fetching unread notifications for user:", user?.id);
@@ -137,7 +141,7 @@ export const useDashboardData = () => {
         return [];
       }
     },
-    enabled: !!profileData && !!user?.id, // Only run if we have the profile and user
+    enabled: isAuthenticated && !!user?.id, // Only run if authenticated and user exists
     staleTime: 60000, // 1 minute
   });
 

@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { Task } from "../types";
+import { Task, TaskStatus, TaskPriority } from "../types";
 
 /**
  * Get task by ID for viewing details
@@ -38,6 +38,8 @@ export async function getTaskById(taskId: string): Promise<Task | null> {
     console.log("getTaskById: Task data retrieved:", data);
     return {
       ...data,
+      status: data.status as TaskStatus,
+      priority: data.priority as TaskPriority,
       subtasks: Array.isArray(data.subtasks) ? data.subtasks : []
     } as Task;
   } catch (error: any) {
@@ -99,13 +101,13 @@ export async function getUpcomingTasks(): Promise<Task[]> {
     
     console.log(`getUpcomingTasks: Retrieved ${data?.length || 0} upcoming tasks`);
     
-    // Transform data with proper typing and ensure subtasks is always an array
+    // Transform data with proper typing
     return (data || []).map(task => ({
       id: task.id,
       title: task.title,
       description: task.description,
-      status: task.status,
-      priority: task.priority,
+      status: task.status as TaskStatus,
+      priority: task.priority as TaskPriority,
       due_date: task.due_date,
       user_id: task.user_id,
       assignee_id: task.assignee_id || null,

@@ -32,14 +32,14 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
 
   // Fetch user profile data for the dashboard
   const { data: profileData, isLoading: profileLoading, error: profileError } = useQuery({
-    queryKey: ['dashboardUserProfile'],
+    queryKey: ['dashboardUserProfile', user?.id],
     queryFn: async () => {
       try {
         console.log("DashboardLayout: Fetching user profile data");
         
         if (!user?.id) {
           console.log("DashboardLayout: No active user found, redirecting to auth page");
-          navigate("/auth/login");
+          // Don't navigate here - let the ProtectedRoute component handle redirection
           return null;
         }
         
@@ -102,7 +102,8 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       }
     },
     retry: 1,
-    enabled: isAuthenticated && !authLoading && !!user?.id
+    enabled: isAuthenticated && !authLoading && !!user?.id, // Only run query if authenticated and user exists
+    staleTime: 300000, // 5 minutes cache
   });
 
   // Set theme based on user preference
@@ -159,11 +160,16 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     );
   }
   
-  // Handle not authenticated state
+  // Handle not authenticated state - though ProtectedRoute should handle this
   if (!isAuthenticated && !authLoading) {
     console.log("DashboardLayout: User not authenticated, redirecting");
-    navigate("/auth/login");
-    return null;
+    // Let ProtectedRoute handle the redirect
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <LoadingSpinner />
+        <p className="mt-4 text-muted-foreground">Verifying authentication...</p>
+      </div>
+    );
   }
   
   // Handle error state
