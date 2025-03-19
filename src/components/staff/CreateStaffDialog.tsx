@@ -101,6 +101,9 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
         };
       }
       
+      // Generate a staff ID - in a real system this would be more sophisticated
+      const staffId = crypto.randomUUID();
+      
       const { data: staff, error } = await supabase
         .from('business_staff')
         .insert({
@@ -111,7 +114,7 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
           role,
           is_service_provider: isServiceProvider,
           permissions: staffPermissions,
-          staff_id: user.id, // Temporary - in a real system would be the staff user's ID
+          staff_id: staffId, // Use generated ID instead of business owner's ID
           status: 'active'
         })
         .select()
@@ -186,7 +189,7 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add Staff Member</DialogTitle>
+          <DialogTitle>Create Staff Member</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
@@ -348,10 +351,10 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
               {isLoading ? (
                 <span className="flex items-center">
                   <span className="h-4 w-4 mr-2 border-2 border-t-transparent border-white rounded-full animate-spin"></span>
-                  Adding...
+                  Creating...
                 </span>
               ) : (
-                'Add Staff Member'
+                'Create Staff Member'
               )}
             </Button>
           </DialogFooter>

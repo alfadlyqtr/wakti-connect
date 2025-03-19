@@ -51,7 +51,7 @@ const StaffList: React.FC<StaffListProps> = ({
           <p className="text-muted-foreground mb-4">Add staff members to your business.</p>
           <Button onClick={onCreateStaff}>
             <UserPlus className="mr-2 h-4 w-4" />
-            Add Staff Member
+            Create Staff Member
           </Button>
         </div>
       </Card>
