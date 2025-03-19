@@ -758,7 +758,7 @@ export type Database = {
       profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
-          auto_approve_contacts: boolean
+          auto_approve_contacts: boolean | null
           avatar_url: string | null
           business_name: string | null
           created_at: string
@@ -772,7 +772,7 @@ export type Database = {
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["account_type"]
-          auto_approve_contacts?: boolean
+          auto_approve_contacts?: boolean | null
           avatar_url?: string | null
           business_name?: string | null
           created_at?: string
@@ -786,7 +786,7 @@ export type Database = {
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"]
-          auto_approve_contacts?: boolean
+          auto_approve_contacts?: boolean | null
           avatar_url?: string | null
           business_name?: string | null
           created_at?: string

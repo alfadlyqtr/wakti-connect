@@ -19,7 +19,7 @@ export const getUserRoleInfo = async (): Promise<{
       .from('profiles')
       .select('account_type')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
       
     if (profileError) {
       console.error("Error fetching user profile:", profileError);
@@ -37,11 +37,15 @@ export const getUserRoleInfo = async (): Promise<{
           
         if (createError) {
           console.error("Error creating default profile:", createError);
+          return { role: 'free' }; // Still return free even if creation fails
         } else {
           console.log("Created default profile:", newProfile);
           return { role: 'free' };
         }
       }
+      
+      // For other errors, still return a default role
+      return { role: 'free' };
     } else if (profile?.account_type === 'business') {
       return {
         role: 'business',
@@ -71,7 +75,7 @@ export const getUserRoleInfo = async (): Promise<{
     };
   } catch (error) {
     console.error("Error in getUserRoleInfo:", error);
-    return null;
+    return { role: 'free' }; // Return a default role on error
   }
 };
 

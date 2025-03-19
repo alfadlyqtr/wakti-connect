@@ -65,7 +65,13 @@ const LoginForm = ({ setError }: LoginFormProps) => {
       
       if (data?.user) {
         // Ensure profile exists after successful login
-        await ensureProfileExists(data.user.id);
+        const profileCreated = await ensureProfileExists(data.user.id);
+        
+        if (!profileCreated) {
+          console.warn("Could not ensure profile exists, but continuing login flow");
+        } else {
+          console.log("Profile exists or was created successfully");
+        }
         
         console.log("Login successful, session established:", !!data.session);
         

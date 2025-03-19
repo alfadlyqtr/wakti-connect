@@ -35,7 +35,7 @@ export const ensureProfileExists = async (userId: string, defaultName?: string):
         full_name: defaultName || email?.split('@')[0] || "User",
         account_type: "free"
       }])
-      .select("*")
+      .select()
       .single();
     
     if (createError) {
