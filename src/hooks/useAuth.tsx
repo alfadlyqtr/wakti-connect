@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -27,7 +26,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize auth state from Supabase with timeout protection
   useEffect(() => {
     let isMounted = true;
     const timeoutId = setTimeout(() => {
@@ -41,7 +39,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         setIsLoading(true);
         
-        // Get session with timeout protection
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -52,12 +49,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           console.log("Found active session for user:", session.user.id);
           
-          // Use the security definer function to get user role
           const { data: userRoleData } = await supabase.rpc('get_user_role');
           const userRole = userRoleData || 'free';
           console.log("User role from get_user_role RPC:", userRole);
           
-          // Check if user is staff and get associated business ID
           let businessId: string | undefined = undefined;
           
           if (userRole === 'staff' || userRole === 'admin' || userRole === 'co-admin') {
@@ -73,12 +68,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               console.log("Staff member of business:", businessId);
             }
           } else if (userRole === 'business') {
-            // Business owner's business ID is their own user ID
             businessId = session.user.id;
             console.log("Business owner, businessId =", businessId);
           }
           
-          // Get profile data with minimal fields
           const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("full_name, display_name")
@@ -86,7 +79,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .single();
             
           if (profileError) {
-            // If profile not found and error is "not found", attempt to create one
             if (profileError.code === "PGRST116") {
               console.log("Profile not found for user, attempting to create default profile");
               try {
@@ -146,20 +138,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     loadUser();
     
-    // Set up auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state changed:", event, session?.user?.id);
         
         if (event === 'SIGNED_IN' && session) {
-          // Simplify profile fetch to avoid recursive queries
           try {
-            // Use security definer function to get user role
             const { data: userRoleData } = await supabase.rpc('get_user_role');
             const userRole = userRoleData || 'free';
             console.log("User role after sign in:", userRole);
             
-            // Check if user is staff and get associated business ID
             let businessId: string | undefined = undefined;
             
             if (userRole === 'staff' || userRole === 'admin' || userRole === 'co-admin') {
@@ -175,12 +163,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.log("Staff member of business:", businessId);
               }
             } else if (userRole === 'business') {
-              // Business owner's business ID is their own user ID
               businessId = session.user.id;
               console.log("Business owner, businessId =", businessId);
             }
           
-            // Get profile data
             const { data: profile } = await supabase
               .from("profiles")
               .select("full_name, display_name")
@@ -197,7 +183,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
           } catch (error) {
             console.error("Error updating user after sign in:", error);
-            // Fallback with minimal data to prevent blocking
             setUser({
               id: session.user.id,
               email: session.user.email,
@@ -237,7 +222,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "Welcome back!",
       });
       
-      // User is set by the auth listener
     } catch (error: any) {
       console.error("Login error:", error);
       toast({
@@ -261,7 +245,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log("Logout successful");
       
-      // User is set to null by the auth listener
     } catch (error: any) {
       console.error("Logout error:", error);
       toast({
@@ -298,7 +281,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "Please check your email for verification",
       });
       
-      // User is set by the auth listener if email verification is disabled
     } catch (error: any) {
       console.error("Registration error:", error);
       toast({

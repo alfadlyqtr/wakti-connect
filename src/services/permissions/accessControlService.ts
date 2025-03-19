@@ -87,7 +87,6 @@ export const getBusinessPermissions = async (businessId: string): Promise<StaffP
       return null;
     }
     
-    // Extract typed permissions from the jsonb data
     // Convert the permissions object to a safer type for access
     const permissionsObj = data.permissions as Record<string, unknown>;
     
