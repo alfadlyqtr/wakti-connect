@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { getStaffPermissions } from "@/services/staff/staffPermissionService";
+import { getStaffPermissions, StaffPermissions } from "@/services/staff/staffPermissionService";
 
 import CreateJobCardDialog from "@/components/jobs/CreateJobCardDialog";
 import JobCardsList from "@/components/jobs/JobCardsList";
@@ -52,18 +52,27 @@ const JobCardsTab = () => {
         
         setStaffRelationId(data.id);
         
-        // Set permissions from data
-        if (data.permissions) {
-          setCanCreateJobCards(!!data.permissions.can_create_job_cards);
-          setCanTrackHours(!!data.permissions.can_track_hours);
+        // Parse permissions safely
+        let permissionsObj: StaffPermissions;
+        if (data.permissions && typeof data.permissions === 'object') {
+          permissionsObj = {
+            can_create_job_cards: true,  // defaults
+            can_track_hours: true,
+            can_message_staff: true,
+            can_view_own_analytics: true,
+            ...(data.permissions as object) as StaffPermissions
+          };
+          
+          setCanCreateJobCards(!!permissionsObj.can_create_job_cards);
+          setCanTrackHours(!!permissionsObj.can_track_hours);
         } else {
           // Default permissions if not set
           setCanCreateJobCards(true);
           setCanTrackHours(true);
         }
         
-        // Also check for active work session
-        if (data.permissions?.can_track_hours !== false) {
+        // Check for active work session if allowed to track hours
+        if (canTrackHours) {
           const { data: activeSessions, error: sessionsError } = await supabase
             .from('staff_work_logs')
             .select('*')
@@ -92,7 +101,7 @@ const JobCardsTab = () => {
     };
     
     getStaffRelation();
-  }, [toast]);
+  }, [toast, canTrackHours]);
   
   // Start work session
   const startWorkDay = async () => {

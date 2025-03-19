@@ -42,6 +42,7 @@ import { toast } from "@/components/ui/use-toast";
 import CreateStaffDialog from "./CreateStaffDialog";
 import EditStaffDialog from "./EditStaffDialog";
 import StaffPermissionsDisplay from "./StaffPermissionsDisplay";
+import { StaffPermissions, getDefaultPermissions } from "@/services/staff/staffPermissionService";
 
 interface StaffMember {
   id: string;
@@ -54,12 +55,7 @@ interface StaffMember {
   is_service_provider: boolean;
   status: 'active' | 'suspended' | 'deleted';
   profile_image_url: string | null;
-  permissions: {
-    can_track_hours: boolean;
-    can_message_staff: boolean;
-    can_create_job_cards: boolean;
-    can_view_own_analytics: boolean;
-  };
+  permissions: StaffPermissions;
 }
 
 const StaffManagementTab = () => {
@@ -81,19 +77,25 @@ const StaffManagementTab = () => {
       if (staffError) throw staffError;
       
       // Cast to StaffMember[] type with default values for new fields
-      return (staffData || []).map(staff => ({
-        ...staff,
-        staff_number: staff.staff_number || `TEMP_${staff.id.substring(0, 5)}`,
-        is_service_provider: staff.is_service_provider || false,
-        status: (staff.status as 'active' | 'suspended' | 'deleted') || 'active',
-        profile_image_url: staff.profile_image_url || null,
-        permissions: staff.permissions || {
-          can_track_hours: true,
-          can_message_staff: true,
-          can_create_job_cards: true,
-          can_view_own_analytics: true
+      return (staffData || []).map(staff => {
+        // Handle permissions safely
+        let permissions = getDefaultPermissions();
+        if (staff.permissions && typeof staff.permissions === 'object') {
+          permissions = {
+            ...permissions,
+            ...(staff.permissions as object) as StaffPermissions
+          };
         }
-      })) as StaffMember[];
+        
+        return {
+          ...staff,
+          staff_number: staff.staff_number || `TEMP_${staff.id.substring(0, 5)}`,
+          is_service_provider: staff.is_service_provider || false,
+          status: (staff.status as 'active' | 'suspended' | 'deleted') || 'active',
+          profile_image_url: staff.profile_image_url || null,
+          permissions: permissions
+        };
+      }) as StaffMember[];
     }
   });
 

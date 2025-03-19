@@ -34,7 +34,15 @@ export const getStaffPermissions = async (staffId: string): Promise<StaffPermiss
     // If permissions is null, return default permissions
     if (!data || !data.permissions) return getDefaultPermissions();
     
-    return data.permissions as StaffPermissions;
+    // Handle the data.permissions properly, ensure it's the correct type
+    if (typeof data.permissions === 'object' && data.permissions !== null) {
+      return {
+        ...getDefaultPermissions(),
+        ...data.permissions as StaffPermissions
+      };
+    }
+    
+    return getDefaultPermissions();
   } catch (error) {
     console.error("Error fetching staff permissions:", error);
     return getDefaultPermissions();
@@ -60,7 +68,15 @@ export const getStaffRelationPermissions = async (relationId: string): Promise<S
     // If permissions is null, return default permissions
     if (!data || !data.permissions) return getDefaultPermissions();
     
-    return data.permissions as StaffPermissions;
+    // Handle the data.permissions properly, ensure it's the correct type
+    if (typeof data.permissions === 'object' && data.permissions !== null) {
+      return {
+        ...getDefaultPermissions(),
+        ...data.permissions as StaffPermissions
+      };
+    }
+    
+    return getDefaultPermissions();
   } catch (error) {
     console.error("Error fetching staff relation permissions:", error);
     return getDefaultPermissions();
@@ -87,7 +103,20 @@ export const updateStaffPermissions = async (
       return false;
     }
     
-    const currentPermissions = currentData?.permissions || getDefaultPermissions();
+    // Handle different types of currentData.permissions
+    let currentPermissions: StaffPermissions;
+    
+    if (!currentData?.permissions) {
+      currentPermissions = getDefaultPermissions();
+    } else if (typeof currentData.permissions === 'object' && currentData.permissions !== null) {
+      currentPermissions = {
+        ...getDefaultPermissions(),
+        ...(currentData.permissions as object) as StaffPermissions
+      };
+    } else {
+      currentPermissions = getDefaultPermissions();
+    }
+    
     const updatedPermissions = { ...currentPermissions, ...permissions };
     
     // Update with merged permissions
