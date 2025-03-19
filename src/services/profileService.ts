@@ -8,7 +8,7 @@ export const ensureProfileExists = async (userId: string, defaultName?: string):
     // First, check if profile exists
     const { data: existingProfile, error: checkError } = await supabase
       .from("profiles")
-      .select("id")
+      .select("id, full_name")
       .eq("id", userId)
       .maybeSingle();
     
@@ -19,7 +19,7 @@ export const ensureProfileExists = async (userId: string, defaultName?: string):
     
     // If profile exists, we're done
     if (existingProfile) {
-      console.log("Profile already exists for user");
+      console.log("Profile already exists for user:", existingProfile.full_name || userId);
       return true;
     }
     
@@ -39,6 +39,12 @@ export const ensureProfileExists = async (userId: string, defaultName?: string):
       .single();
     
     if (createError) {
+      // Check specifically for duplicate key violations
+      if (createError.code === '23505') {
+        console.log("Profile already exists (race condition). Continuing...");
+        return true;
+      }
+      
       console.error("Error creating profile:", createError);
       return false;
     }

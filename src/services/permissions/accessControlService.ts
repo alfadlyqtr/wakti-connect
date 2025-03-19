@@ -36,6 +36,23 @@ export const getUserRoleInfo = async (): Promise<{
           .single();
           
         if (createError) {
+          // Check for unique constraint violations (profile was created in a race condition)
+          if (createError.code === '23505') {
+            console.log("Profile already exists (race condition), fetching it");
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('account_type')
+              .eq('id', user.id)
+              .maybeSingle();
+              
+            if (existingProfile) {
+              return { 
+                role: existingProfile.account_type,
+                businessId: existingProfile.account_type === 'business' ? user.id : undefined
+              };
+            }
+          }
+          
           console.error("Error creating default profile:", createError);
           return { role: 'free' }; // Still return free even if creation fails
         } else {
