@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -7,7 +8,8 @@ interface User {
   name?: string;
   email?: string;
   displayName?: string;
-  plan?: "free" | "individual" | "business";
+  plan?: "free" | "individual" | "business" | "staff" | "admin" | "co-admin";
+  businessId?: string;
 }
 
 interface AuthContextType {
@@ -50,11 +52,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           console.log("Found active session for user:", session.user.id);
           
-          // Use the new security definer function to get user role
+          // Use the security definer function to get user role
           const { data: userRoleData } = await supabase.rpc('get_user_role');
           const userRole = userRoleData || 'free';
+          console.log("User role from get_user_role RPC:", userRole);
           
-          // Get minimal profile data without recursive queries
+          // Check if user is staff and get associated business ID
+          let businessId: string | undefined = undefined;
+          
+          if (userRole === 'staff' || userRole === 'admin' || userRole === 'co-admin') {
+            const { data: staffData } = await supabase
+              .from("business_staff")
+              .select("business_id")
+              .eq("staff_id", session.user.id)
+              .eq("status", "active")
+              .single();
+              
+            if (staffData) {
+              businessId = staffData.business_id;
+              console.log("Staff member of business:", businessId);
+            }
+          } else if (userRole === 'business') {
+            // Business owner's business ID is their own user ID
+            businessId = session.user.id;
+            console.log("Business owner, businessId =", businessId);
+          }
+          
+          // Get profile data with minimal fields
           const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("full_name, display_name")
@@ -71,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   .insert([{ 
                     id: session.user.id,
                     full_name: session.user.email?.split('@')[0],
-                    account_type: "free"
+                    account_type: userRole === 'business' ? 'business' : 'free'
                   }])
                   .select('full_name, display_name')
                   .single();
@@ -86,7 +110,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     email: session.user.email,
                     name: newProfile?.full_name || session.user.email?.split('@')[0],
                     displayName: newProfile?.display_name || newProfile?.full_name,
-                    plan: userRole as "free" | "individual" | "business"
+                    plan: userRole as any,
+                    businessId
                   });
                   return;
                 }
@@ -103,7 +128,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email: session.user.email,
             name: profile?.full_name || session.user.email?.split('@')[0],
             displayName: profile?.display_name || profile?.full_name,
-            plan: userRole as "free" | "individual" | "business"
+            plan: userRole as any,
+            businessId
           });
         } else {
           console.log("No active session found");
@@ -126,13 +152,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log("Auth state changed:", event, session?.user?.id);
         
         if (event === 'SIGNED_IN' && session) {
-          // Use simplified profile fetch to avoid recursive queries
+          // Simplify profile fetch to avoid recursive queries
           try {
-            // Use the new security definer function to get user role
+            // Use security definer function to get user role
             const { data: userRoleData } = await supabase.rpc('get_user_role');
             const userRole = userRoleData || 'free';
+            console.log("User role after sign in:", userRole);
+            
+            // Check if user is staff and get associated business ID
+            let businessId: string | undefined = undefined;
+            
+            if (userRole === 'staff' || userRole === 'admin' || userRole === 'co-admin') {
+              const { data: staffData } = await supabase
+                .from("business_staff")
+                .select("business_id")
+                .eq("staff_id", session.user.id)
+                .eq("status", "active")
+                .single();
+                
+              if (staffData) {
+                businessId = staffData.business_id;
+                console.log("Staff member of business:", businessId);
+              }
+            } else if (userRole === 'business') {
+              // Business owner's business ID is their own user ID
+              businessId = session.user.id;
+              console.log("Business owner, businessId =", businessId);
+            }
           
-            // Get minimal profile data
+            // Get profile data
             const { data: profile } = await supabase
               .from("profiles")
               .select("full_name, display_name")
@@ -144,7 +192,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: session.user.email,
               name: profile?.full_name || session.user.email?.split('@')[0],
               displayName: profile?.display_name || profile?.full_name,
-              plan: userRole as "free" | "individual" | "business"
+              plan: userRole as any,
+              businessId
             });
           } catch (error) {
             console.error("Error updating user after sign in:", error);
@@ -181,7 +230,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) throw error;
       
-      console.log("Login successful");
+      console.log("Login successful for", email);
       
       toast({
         title: "Login successful",

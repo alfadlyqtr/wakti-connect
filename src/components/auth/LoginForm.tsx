@@ -43,8 +43,8 @@ const LoginForm = ({ setError }: LoginFormProps) => {
     setIsLoading(true);
 
     try {
-      console.log("Logging in with email:", email);
-      const result = await login(email, password);
+      console.log("Attempting login with email:", email);
+      await login(email, password);
       
       // Store login time in localStorage to help debug session issues
       localStorage.setItem('lastLoginAttempt', new Date().toISOString());

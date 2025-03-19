@@ -47,11 +47,25 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       return;
     }
 
-    // Check if user has the required role
+    // Get current user role
     const userRole = user.plan;
-    const hasRole = userRole === requiredRole || 
-                   (requiredRole === 'individual' && userRole === 'business') || 
-                   (requiredRole === 'free' && (userRole === 'individual' || userRole === 'business'));
+    console.log("Protected route - User role:", userRole, "Required role:", requiredRole);
+    
+    // Check if user meets the role requirement
+    // business > co-admin > admin > staff > individual > free
+    const hasRole = 
+      // Business owners can access everything
+      userRole === 'business' ||
+      // Co-admins can access everything except business owner pages
+      (userRole === 'co-admin' && requiredRole !== 'business') ||
+      // Admins can access staff, individual and free pages
+      (userRole === 'admin' && ['staff', 'individual', 'free'].includes(requiredRole)) ||
+      // Staff can access staff level and below
+      (userRole === 'staff' && ['staff', 'individual', 'free'].includes(requiredRole)) ||
+      // Individual users can access individual and free
+      (userRole === 'individual' && ['individual', 'free'].includes(requiredRole)) ||
+      // Free users can only access free content
+      (userRole === 'free' && requiredRole === 'free');
     
     // If no specific permission is required, just check the role
     if (!requiredPermission) {
@@ -59,8 +73,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       return;
     }
     
-    // For future: implement permission check with access_control_manager
-    // This should be expanded as we implement permission-based features
+    // For future: implement specific permission checks
     setHasPermission(hasRole);
   }, [isAuthenticated, user, requiredRole, requiredPermission]);
 
@@ -70,7 +83,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     isLocalLoading,
     hasTimeout: hasLoadingTimeout,
     userId: user?.id,
-    userRole: user?.plan,
+    userPlan: user?.plan,
     requiredRole,
     hasPermission,
     path: location.pathname 
