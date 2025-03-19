@@ -120,11 +120,11 @@ export const hasBusinessPermission = async (
     // Admin has all permissions
     if (userLevel === 'admin') return true;
     
-    // Specific level checks
+    // Specific level checks with proper type handling
     if (requiredLevel === 'read') {
-      return userLevel === 'read' || userLevel === 'write' || userLevel === 'admin';
+      return ['read', 'write', 'admin'].includes(userLevel as string);
     } else if (requiredLevel === 'write') {
-      return userLevel === 'write' || userLevel === 'admin';
+      return ['write', 'admin'].includes(userLevel as string);
     } else if (requiredLevel === 'admin') {
       return userLevel === 'admin';
     }

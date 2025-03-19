@@ -65,14 +65,14 @@ export function useBusinessPermissions(businessId?: string) {
     
     const userLevel = permissions[type];
     
-    // Check permission levels
+    // Check permission levels based on hierarchy
     if (userLevel === 'admin') return true;
     
-    // Specific level checks
+    // Specific level checks with proper type handling
     if (requiredLevel === 'read') {
-      return userLevel === 'read' || userLevel === 'write' || userLevel === 'admin';
+      return ['read', 'write', 'admin'].includes(userLevel as string);
     } else if (requiredLevel === 'write') {
-      return userLevel === 'write' || userLevel === 'admin';
+      return ['write', 'admin'].includes(userLevel as string);
     } else if (requiredLevel === 'admin') {
       return userLevel === 'admin';
     }
