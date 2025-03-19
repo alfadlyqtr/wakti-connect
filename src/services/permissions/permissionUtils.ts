@@ -2,7 +2,7 @@
 import { PermissionLevel } from "./types";
 
 // Helper function to ensure we have a valid permission level
-export function extractPermissionLevel(value: any): PermissionLevel {
+export function extractPermissionLevel(value: unknown): PermissionLevel {
   if (value === 'admin' || value === 'write' || value === 'read') {
     return value;
   }

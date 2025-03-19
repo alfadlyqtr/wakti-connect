@@ -88,14 +88,14 @@ export const getBusinessPermissions = async (businessId: string): Promise<StaffP
     }
     
     // Extract typed permissions from the jsonb data
-    // Fix: properly type and handle JSONB data
-    const permissions = data.permissions as Record<string, string> | null;
+    // Convert the permissions object to a safer type for access
+    const permissionsObj = data.permissions as Record<string, unknown>;
     
     const staffPermissions: StaffPermissions = {
-      service_permission: extractPermissionLevel(permissions?.service_permission),
-      booking_permission: extractPermissionLevel(permissions?.booking_permission),
-      staff_permission: extractPermissionLevel(permissions?.staff_permission),
-      analytics_permission: extractPermissionLevel(permissions?.analytics_permission)
+      service_permission: extractPermissionLevel(permissionsObj?.service_permission),
+      booking_permission: extractPermissionLevel(permissionsObj?.booking_permission),
+      staff_permission: extractPermissionLevel(permissionsObj?.staff_permission),
+      analytics_permission: extractPermissionLevel(permissionsObj?.analytics_permission)
     };
     
     return staffPermissions;
