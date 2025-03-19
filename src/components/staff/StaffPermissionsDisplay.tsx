@@ -1,55 +1,68 @@
 
 import React from "react";
-import { Check, X } from "lucide-react";
+import { Shield, ShieldCheck, ShieldX, ShieldAlert } from "lucide-react";
+import { PermissionLevel } from "@/services/permissions/accessControlService";
 
 interface StaffPermissionsProps {
   permissions: {
-    can_track_hours: boolean;
-    can_message_staff: boolean;
-    can_create_job_cards: boolean;
-    can_view_own_analytics: boolean;
+    service_permission: PermissionLevel;
+    booking_permission: PermissionLevel;
+    staff_permission: PermissionLevel;
+    analytics_permission: PermissionLevel;
   };
 }
 
 const StaffPermissionsDisplay: React.FC<StaffPermissionsProps> = ({ permissions }) => {
+  const getPermissionIcon = (level: PermissionLevel) => {
+    switch (level) {
+      case 'admin':
+        return <ShieldCheck className="h-3.5 w-3.5 text-green-500" />;
+      case 'write':
+        return <Shield className="h-3.5 w-3.5 text-blue-500" />;
+      case 'read':
+        return <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />;
+      case 'none':
+      default:
+        return <ShieldX className="h-3.5 w-3.5 text-muted-foreground" />;
+    }
+  };
+
+  const getPermissionLabel = (level: PermissionLevel) => {
+    switch (level) {
+      case 'admin':
+        return "Full Access";
+      case 'write':
+        return "Can Edit";
+      case 'read':
+        return "View Only";
+      case 'none':
+      default:
+        return "No Access";
+    }
+  };
+
   return (
     <div className="space-y-2 text-sm">
       <h4 className="text-xs font-medium uppercase text-muted-foreground mb-1">Permissions</h4>
       <div className="grid grid-cols-2 gap-2">
         <div className="flex items-center gap-1">
-          {permissions.can_track_hours ? (
-            <Check className="h-3 w-3 text-green-500" />
-          ) : (
-            <X className="h-3 w-3 text-destructive" />
-          )}
-          <span>Work Hours Tracking</span>
+          {getPermissionIcon(permissions.service_permission)}
+          <span>Services: {getPermissionLabel(permissions.service_permission)}</span>
         </div>
         
         <div className="flex items-center gap-1">
-          {permissions.can_message_staff ? (
-            <Check className="h-3 w-3 text-green-500" />
-          ) : (
-            <X className="h-3 w-3 text-destructive" />
-          )}
-          <span>Staff Messaging</span>
+          {getPermissionIcon(permissions.booking_permission)}
+          <span>Bookings: {getPermissionLabel(permissions.booking_permission)}</span>
         </div>
         
         <div className="flex items-center gap-1">
-          {permissions.can_create_job_cards ? (
-            <Check className="h-3 w-3 text-green-500" />
-          ) : (
-            <X className="h-3 w-3 text-destructive" />
-          )}
-          <span>Job Cards</span>
+          {getPermissionIcon(permissions.staff_permission)}
+          <span>Staff: {getPermissionLabel(permissions.staff_permission)}</span>
         </div>
         
         <div className="flex items-center gap-1">
-          {permissions.can_view_own_analytics ? (
-            <Check className="h-3 w-3 text-green-500" />
-          ) : (
-            <X className="h-3 w-3 text-destructive" />
-          )}
-          <span>View Analytics</span>
+          {getPermissionIcon(permissions.analytics_permission)}
+          <span>Analytics: {getPermissionLabel(permissions.analytics_permission)}</span>
         </div>
       </div>
     </div>
