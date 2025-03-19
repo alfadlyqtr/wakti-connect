@@ -76,7 +76,7 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
       if (!user) throw new Error("Unable to get current user");
       
       // Set default permissions based on role
-      let staffPermissions = { ...permissions };
+      let staffPermissions: Record<string, any> = {};
       if (role === 'co-admin') {
         staffPermissions = {
           service_permission: 'admin',
@@ -90,6 +90,14 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
           booking_permission: 'admin',
           staff_permission: 'write',
           analytics_permission: 'admin'
+        };
+      } else {
+        // Regular staff gets custom permissions
+        staffPermissions = {
+          service_permission: permissions.service_permission,
+          booking_permission: permissions.booking_permission,
+          staff_permission: permissions.staff_permission,
+          analytics_permission: permissions.analytics_permission
         };
       }
       

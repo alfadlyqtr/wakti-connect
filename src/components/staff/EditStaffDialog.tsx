@@ -20,11 +20,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  PermissionLevel, 
-  StaffPermissions, 
-  updateStaffPermissions 
-} from "@/services/permissions/accessControlService";
+import { PermissionLevel, StaffPermissions } from "@/services/permissions/accessControlService";
 
 interface StaffMember {
   id: string;
@@ -33,10 +29,7 @@ interface StaffMember {
   role: string;
   position: string;
   is_service_provider: boolean;
-  service_permission: PermissionLevel;
-  booking_permission: PermissionLevel;
-  staff_permission: PermissionLevel;
-  analytics_permission: PermissionLevel;
+  permissions: StaffPermissions;
 }
 
 interface EditStaffDialogProps {
@@ -59,10 +52,10 @@ const EditStaffDialog: React.FC<EditStaffDialogProps> = ({
   const [isServiceProvider, setIsServiceProvider] = useState(staff.is_service_provider);
   const [isLoading, setIsLoading] = useState(false);
   const [permissions, setPermissions] = useState<StaffPermissions>({
-    service_permission: staff.service_permission || 'none',
-    booking_permission: staff.booking_permission || 'none',
-    staff_permission: staff.staff_permission || 'none',
-    analytics_permission: staff.analytics_permission || 'none'
+    service_permission: staff.permissions.service_permission || 'none',
+    booking_permission: staff.permissions.booking_permission || 'none',
+    staff_permission: staff.permissions.staff_permission || 'none',
+    analytics_permission: staff.permissions.analytics_permission || 'none'
   });
 
   // Reset form when staff changes
@@ -73,10 +66,10 @@ const EditStaffDialog: React.FC<EditStaffDialogProps> = ({
     setRole(staff.role);
     setIsServiceProvider(staff.is_service_provider);
     setPermissions({
-      service_permission: staff.service_permission || 'none',
-      booking_permission: staff.booking_permission || 'none',
-      staff_permission: staff.staff_permission || 'none',
-      analytics_permission: staff.analytics_permission || 'none'
+      service_permission: staff.permissions.service_permission || 'none',
+      booking_permission: staff.permissions.booking_permission || 'none',
+      staff_permission: staff.permissions.staff_permission || 'none',
+      analytics_permission: staff.permissions.analytics_permission || 'none'
     });
   }, [staff]);
 
@@ -85,6 +78,14 @@ const EditStaffDialog: React.FC<EditStaffDialogProps> = ({
     setIsLoading(true);
 
     try {
+      // Convert permissions to a plain object for JSON storage
+      const permissionsJson = {
+        service_permission: permissions.service_permission,
+        booking_permission: permissions.booking_permission,
+        staff_permission: permissions.staff_permission,
+        analytics_permission: permissions.analytics_permission
+      };
+
       // Update the staff member
       const { error } = await supabase
         .from('business_staff')
@@ -94,10 +95,7 @@ const EditStaffDialog: React.FC<EditStaffDialogProps> = ({
           position,
           role,
           is_service_provider: isServiceProvider,
-          service_permission: permissions.service_permission,
-          booking_permission: permissions.booking_permission,
-          staff_permission: permissions.staff_permission,
-          analytics_permission: permissions.analytics_permission
+          permissions: permissionsJson
         })
         .eq('id', staff.id);
 

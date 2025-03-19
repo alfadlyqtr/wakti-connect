@@ -49,12 +49,7 @@ interface StaffMember {
   is_service_provider: boolean;
   status: 'active' | 'suspended' | 'deleted';
   profile_image_url: string | null;
-  permissions: {
-    service_permission: PermissionLevel;
-    booking_permission: PermissionLevel;
-    staff_permission: PermissionLevel;
-    analytics_permission: PermissionLevel;
-  };
+  permissions: StaffPermissions;
 }
 
 const StaffManagementTab = () => {
@@ -104,9 +99,13 @@ const StaffManagementTab = () => {
             analytics_permission: 'admin'
           };
         } else if (staff.permissions && typeof staff.permissions === 'object') {
+          const perms = staff.permissions as Record<string, any>;
+          
           permissions = {
-            ...defaultPermissions,
-            ...staff.permissions
+            service_permission: getPermissionLevel(perms.service_permission),
+            booking_permission: getPermissionLevel(perms.booking_permission),
+            staff_permission: getPermissionLevel(perms.staff_permission),
+            analytics_permission: getPermissionLevel(perms.analytics_permission)
           };
         }
         
@@ -121,6 +120,14 @@ const StaffManagementTab = () => {
       }) as StaffMember[];
     }
   });
+
+  // Helper function to ensure we have a valid permission level
+  function getPermissionLevel(value: any): PermissionLevel {
+    if (value === 'admin' || value === 'write' || value === 'read') {
+      return value;
+    }
+    return 'none';
+  }
 
   const handleStatusChange = async (staff: StaffMember, newStatus: 'active' | 'suspended' | 'deleted') => {
     try {
@@ -308,6 +315,7 @@ const StaffManagementTab = () => {
       <CreateStaffDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+        onCreated={refetch}
       />
       
       {editingStaff && (

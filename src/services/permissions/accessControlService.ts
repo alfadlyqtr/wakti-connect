@@ -70,11 +70,15 @@ export const getBusinessPermissions = async (businessId: string): Promise<StaffP
       };
     }
     
-    // If permissions exist in the database, merge them with defaults
-    if (data.permissions) {
+    // If permissions exist in the database as a JSON object, extract them
+    if (data.permissions && typeof data.permissions === 'object') {
+      const perms = data.permissions as Record<string, any>;
+      
       return {
-        ...defaultPermissions,
-        ...data.permissions
+        service_permission: extractPermissionLevel(perms.service_permission),
+        booking_permission: extractPermissionLevel(perms.booking_permission),
+        staff_permission: extractPermissionLevel(perms.staff_permission),
+        analytics_permission: extractPermissionLevel(perms.analytics_permission)
       };
     }
     
@@ -84,6 +88,14 @@ export const getBusinessPermissions = async (businessId: string): Promise<StaffP
     return null;
   }
 };
+
+// Helper function to ensure we have a valid permission level
+function extractPermissionLevel(value: any): PermissionLevel {
+  if (value === 'admin' || value === 'write' || value === 'read') {
+    return value;
+  }
+  return 'none';
+}
 
 // Check if user has a specific permission level for a business
 export const hasBusinessPermission = async (
@@ -162,9 +174,17 @@ export const updateStaffPermissions = async (
   permissions: StaffPermissions
 ): Promise<boolean> => {
   try {
+    // Convert StaffPermissions to a plain object that Supabase can handle as JSON
+    const permissionsJson = {
+      service_permission: permissions.service_permission,
+      booking_permission: permissions.booking_permission,
+      staff_permission: permissions.staff_permission,
+      analytics_permission: permissions.analytics_permission
+    };
+    
     const { error } = await supabase
       .from('business_staff')
-      .update({ permissions })
+      .update({ permissions: permissionsJson })
       .eq('id', staffId);
     
     if (error) {

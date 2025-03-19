@@ -6,7 +6,6 @@ import { getUserRoleInfo } from "@/services/permissions/accessControlService";
 
 export interface SidebarUserData {
   accountType: string;
-  roleLevel?: number;
   businessId?: string;
 }
 
@@ -26,10 +25,9 @@ export const useSidebarData = () => {
           if (roleInfo) {
             console.log("Sidebar - fetched role info from access_control_manager:", roleInfo);
             
-            // Store the role level and business id for permission checks
+            // Store the role and business id for permission checks
             setUserData({ 
               accountType: roleInfo.role,
-              roleLevel: roleInfo.roleLevel,
               businessId: roleInfo.businessId
             });
             localStorage.setItem('userRole', roleInfo.role);
