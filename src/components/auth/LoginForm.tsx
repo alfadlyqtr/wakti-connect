@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
@@ -9,6 +10,7 @@ import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
+import { ensureProfileExists } from "@/services/profileService";
 
 interface LoginFormProps {
   setError: (error: string) => void;
@@ -43,18 +45,39 @@ const LoginForm = ({ setError }: LoginFormProps) => {
 
     try {
       console.log("Attempting login with email:", email);
-      await login(email, password);
       
-      // Store login time in localStorage to help debug session issues
-      localStorage.setItem('lastLoginAttempt', new Date().toISOString());
+      // First, let's directly use the supabase client to login
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
-      if (rememberMe) {
-        localStorage.setItem('rememberedEmail', email);
-      } else {
-        localStorage.removeItem('rememberedEmail');
+      if (error) throw error;
+      
+      if (data?.user) {
+        // Ensure profile exists after successful login
+        await ensureProfileExists(data.user.id);
+        
+        console.log("Login successful, session established:", !!data.session);
+        
+        // Store login time in localStorage to help debug session issues
+        localStorage.setItem('lastLoginAttempt', new Date().toISOString());
+        
+        if (rememberMe) {
+          localStorage.setItem('rememberedEmail', email);
+        } else {
+          localStorage.removeItem('rememberedEmail');
+        }
+        
+        // Show toast for successful login
+        toast({
+          title: "Login successful",
+          description: "Welcome back!",
+        });
+        
+        // Navigate to the destination
+        navigate(from, { replace: true });
       }
-      
-      // Navigate is handled by the useEffect when isAuthenticated changes
     } catch (error: any) {
       console.error("Login form error:", error);
       setError(error.message || "Failed to log in. Please try again.");
@@ -65,7 +88,7 @@ const LoginForm = ({ setError }: LoginFormProps) => {
         title: "Login failed",
         description: error.message || "Check your email and password and try again."
       });
-      
+    } finally {
       setIsLoading(false);
     }
   };

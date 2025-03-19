@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import DashboardSpinner from '@/components/dashboard/ui/DashboardSpinner';
+import { getUserRoleInfo } from '@/services/permissions/accessControlService';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -42,39 +43,48 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Check if user has the required role and permissions
   useEffect(() => {
-    if (!isAuthenticated || !requiredRole || !user) {
-      setHasPermission(null);
-      return;
-    }
-
-    // Get current user role
-    const userRole = user.plan;
-    console.log("Protected route - User role:", userRole, "Required role:", requiredRole);
+    const checkPermissions = async () => {
+      if (!isAuthenticated || !requiredRole || !user) {
+        setHasPermission(null);
+        return;
+      }
+  
+      try {
+        // Get user role info from the access control service
+        const roleInfo = await getUserRoleInfo();
+        if (!roleInfo) {
+          setHasPermission(false);
+          return;
+        }
+        
+        // Get current user role
+        const userRole = roleInfo.role;
+        console.log("Protected route - User role:", userRole, "Required role:", requiredRole);
+        
+        // Check if user meets the role requirement
+        // business > co-admin > admin > staff > individual > free
+        const hasRole = 
+          // Business owners can access everything
+          userRole === 'business' ||
+          // Co-admins can access everything except business owner pages
+          (userRole === 'co-admin' && requiredRole !== 'business') ||
+          // Admins can access staff, individual and free pages
+          (userRole === 'admin' && ['staff', 'individual', 'free'].includes(requiredRole)) ||
+          // Staff can access staff level and below
+          (userRole === 'staff' && ['staff', 'individual', 'free'].includes(requiredRole)) ||
+          // Individual users can access individual and free
+          (userRole === 'individual' && ['individual', 'free'].includes(requiredRole)) ||
+          // Free users can only access free content
+          (userRole === 'free' && requiredRole === 'free');
+        
+        setHasPermission(hasRole);
+      } catch (error) {
+        console.error("Error checking permissions:", error);
+        setHasPermission(false);
+      }
+    };
     
-    // Check if user meets the role requirement
-    // business > co-admin > admin > staff > individual > free
-    const hasRole = 
-      // Business owners can access everything
-      userRole === 'business' ||
-      // Co-admins can access everything except business owner pages
-      (userRole === 'co-admin' && requiredRole !== 'business') ||
-      // Admins can access staff, individual and free pages
-      (userRole === 'admin' && ['staff', 'individual', 'free'].includes(requiredRole)) ||
-      // Staff can access staff level and below
-      (userRole === 'staff' && ['staff', 'individual', 'free'].includes(requiredRole)) ||
-      // Individual users can access individual and free
-      (userRole === 'individual' && ['individual', 'free'].includes(requiredRole)) ||
-      // Free users can only access free content
-      (userRole === 'free' && requiredRole === 'free');
-    
-    // If no specific permission is required, just check the role
-    if (!requiredPermission) {
-      setHasPermission(hasRole);
-      return;
-    }
-    
-    // For future: implement specific permission checks
-    setHasPermission(hasRole);
+    checkPermissions();
   }, [isAuthenticated, user, requiredRole, requiredPermission]);
 
   console.log("ProtectedRoute - Auth state:", { 

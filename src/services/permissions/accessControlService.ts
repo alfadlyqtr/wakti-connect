@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PermissionLevel, StaffPermissions } from "./types";
 import { extractPermissionLevel, meetsPermissionLevel } from "./permissionUtils";
 
-// Get current user role information
+// Get current user role information with better error handling
 export const getUserRoleInfo = async (): Promise<{ 
   role: string; 
   businessId?: string;
@@ -12,7 +12,9 @@ export const getUserRoleInfo = async (): Promise<{
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
     
-    // First, check if user is a business owner
+    console.log("Getting role info for user:", user.id);
+    
+    // First check if user is a business owner
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('account_type')
@@ -21,6 +23,25 @@ export const getUserRoleInfo = async (): Promise<{
       
     if (profileError) {
       console.error("Error fetching user profile:", profileError);
+      
+      // If the profile doesn't exist, attempt to create one with free account type
+      if (profileError.code === 'PGRST116') {
+        console.log("Profile not found, creating default profile");
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert([
+            { id: user.id, account_type: 'free' }
+          ])
+          .select()
+          .single();
+          
+        if (createError) {
+          console.error("Error creating default profile:", createError);
+        } else {
+          console.log("Created default profile:", newProfile);
+          return { role: 'free' };
+        }
+      }
     } else if (profile?.account_type === 'business') {
       return {
         role: 'business',
