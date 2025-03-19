@@ -33,7 +33,7 @@ const StaffManagementTab = () => {
         <h2 className="text-xl font-semibold">Staff Members</h2>
         <Button onClick={() => setCreateDialogOpen(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
-          Add Staff Member
+          Create Staff Member
         </Button>
       </div>
       
