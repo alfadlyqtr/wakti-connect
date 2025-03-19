@@ -7,29 +7,37 @@ import { Switch } from "@/components/ui/switch";
 import { Save, Loader2 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { useAISettings } from "./context/AISettingsContext";
+import { AISettings } from "@/types/ai-assistant.types";
 
-export const AIFeaturesTab: React.FC = () => {
-  const { settings, updateSettings, isUpdatingSettings } = useAISettings();
-  
-  if (!settings) return null;
+interface AIFeaturesTabProps {
+  settings: AISettings;
+  onSettingsChange: (settings: AISettings) => void;
+  onSave: () => void;
+  isSaving: boolean;
+}
 
+export const AIFeaturesTab: React.FC<AIFeaturesTabProps> = ({
+  settings,
+  onSettingsChange,
+  onSave,
+  isSaving,
+}) => {
   const handleProactivenessChange = (checked: boolean) => {
-    updateSettings({
+    onSettingsChange({
       ...settings,
       proactiveness: checked,
     });
   };
 
   const handleSuggestionFrequencyChange = (value: "low" | "medium" | "high") => {
-    updateSettings({
+    onSettingsChange({
       ...settings,
       suggestion_frequency: value,
     });
   };
 
   const handleFeatureToggle = (feature: keyof typeof settings.enabled_features, checked: boolean) => {
-    updateSettings({
+    onSettingsChange({
       ...settings,
       enabled_features: {
         ...settings.enabled_features,
@@ -145,11 +153,11 @@ export const AIFeaturesTab: React.FC = () => {
       </CardContent>
       <CardFooter>
         <Button 
-          onClick={() => updateSettings(settings)}
-          disabled={isUpdatingSettings}
+          onClick={onSave}
+          disabled={isSaving}
           className="w-full"
         >
-          {isUpdatingSettings ? (
+          {isSaving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Saving...

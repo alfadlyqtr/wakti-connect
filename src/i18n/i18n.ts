@@ -7,7 +7,6 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import enTranslation from './locales/en/translation.json';
 import arTranslation from './locales/ar/translation.json';
 
-// Initialize i18next
 i18n
   // detect user language
   .use(LanguageDetector)
@@ -29,27 +28,9 @@ i18n
       escapeValue: false, // not needed for react as it escapes by default
     },
     detection: {
-      order: ['localStorage', 'navigator', 'htmlTag'],
+      order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
     }
   });
-
-// Set the HTML dir attribute based on the current language
-const setDocumentDirection = (language: string) => {
-  document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-  if (language === 'ar') {
-    document.body.classList.add('rtl');
-  } else {
-    document.body.classList.remove('rtl');
-  }
-};
-
-// Set the initial direction based on the detected language
-setDocumentDirection(i18n.language);
-
-// Listen for language changes
-i18n.on('languageChanged', (lng) => {
-  setDocumentDirection(lng);
-});
 
 export default i18n;

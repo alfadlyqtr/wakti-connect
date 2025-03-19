@@ -13,15 +13,15 @@ export function MessageContent({ content, timestamp, isUser }: MessageContentPro
   return (
     <div
       className={cn(
-        "rounded-lg p-2 sm:p-3 text-xs sm:text-sm max-w-[75%] sm:max-w-md break-words",
+        "rounded-lg p-3 text-sm max-w-md",
         isUser ? "bg-wakti-blue text-white" : "bg-muted"
       )}
     >
-      <div className="prose prose-xs sm:prose-sm max-w-none dark:prose-invert overflow-auto">
+      <div className="prose prose-sm max-w-none dark:prose-invert">
         <Markdown>{content}</Markdown>
       </div>
       <div className={cn(
-        "text-[8px] sm:text-[10px] mt-1 text-right",
+        "text-[10px] mt-1 text-right",
         isUser ? "text-blue-100" : "text-muted-foreground"
       )}>
         {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

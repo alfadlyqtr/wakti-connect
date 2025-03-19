@@ -1,32 +1,118 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useAIAssistant } from "@/hooks/useAIAssistant";
+import { AISettings } from "@/types/ai-assistant.types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AIAssistantUpgradeCard } from "@/components/ai/AIAssistantUpgradeCard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Bot, AlertTriangle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 // Import our refactored components
 import { AIPersonalityTab } from "./AIPersonalityTab";
 import { AIFeaturesTab } from "./AIFeaturesTab";
 import { AIKnowledgeTab } from "./AIKnowledgeTab";
-import { AISettingsProvider, useAISettings } from "./context/AISettingsContext";
+import { useCreateDefaultSettings } from "./hooks/useCreateDefaultSettings";
 
-// Create a component that uses the context
-const AIAssistantSettingsContent = () => {
+export const AIAssistantSettings = () => {
   const { 
-    settings, 
+    aiSettings, 
     isLoadingSettings, 
-    error,
+    updateSettings, 
     canUseAI,
-    createDefaultSettings,
-    isCreatingSettings,
+    addKnowledge,
     knowledgeUploads,
     isLoadingKnowledge,
-    addKnowledge,
-    deleteKnowledge,
-    isAddingKnowledge
-  } = useAISettings();
+    deleteKnowledge
+  } = useAIAssistant();
+  
+  const [newSettings, setNewSettings] = useState<AISettings | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  
+  const { createDefaultSettings, isCreatingSettings } = useCreateDefaultSettings({
+    onSuccess: () => {
+      toast({
+        title: "Default settings created",
+        description: "Your AI assistant settings have been created with default values",
+      });
+      window.location.reload();
+    },
+    onError: (errorMsg) => {
+      setError(errorMsg);
+      toast({
+        title: "Error creating settings",
+        description: errorMsg,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  useEffect(() => {
+    if (aiSettings) {
+      setNewSettings(aiSettings);
+      setError(null);
+    }
+  }, [aiSettings]);
+  
+  const handleSaveSettings = async () => {
+    if (!newSettings) return;
+    try {
+      await updateSettings.mutateAsync(newSettings);
+      toast({
+        title: "Settings saved",
+        description: "Your AI assistant settings have been updated",
+      });
+    } catch (err) {
+      console.error("Error saving settings:", err);
+      setError("Unable to save settings. Please try again.");
+      toast({
+        title: "Error saving settings",
+        description: "There was a problem saving your AI assistant settings",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleAddKnowledge = async (title: string, content: string) => {
+    try {
+      await addKnowledge.mutateAsync({
+        title,
+        content
+      });
+      toast({
+        title: "Knowledge added",
+        description: "Your knowledge has been added to the AI assistant",
+      });
+    } catch (err) {
+      console.error("Error adding knowledge:", err);
+      setError("Unable to add knowledge. Please try again.");
+      toast({
+        title: "Error adding knowledge",
+        description: "There was a problem adding your knowledge to the AI assistant",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleDeleteKnowledge = async (id: string) => {
+    try {
+      await deleteKnowledge.mutateAsync(id);
+      toast({
+        title: "Knowledge deleted",
+        description: "Your knowledge has been removed from the AI assistant",
+      });
+    } catch (err) {
+      console.error("Error deleting knowledge:", err);
+      setError("Unable to delete knowledge. Please try again.");
+      toast({
+        title: "Error deleting knowledge", 
+        description: "There was a problem removing your knowledge from the AI assistant",
+        variant: "destructive",
+      });
+    }
+  };
   
   if (!canUseAI) {
     return <AIAssistantUpgradeCard />;
@@ -65,7 +151,7 @@ const AIAssistantSettingsContent = () => {
     );
   }
   
-  if (!settings) {
+  if (!newSettings) {
     return (
       <Card>
         <CardHeader>
@@ -105,25 +191,32 @@ const AIAssistantSettingsContent = () => {
       </TabsList>
       
       <TabsContent value="personality">
-        <AIPersonalityTab />
+        <AIPersonalityTab
+          settings={newSettings}
+          onSettingsChange={setNewSettings}
+          onSave={handleSaveSettings}
+          isSaving={updateSettings.isPending}
+        />
       </TabsContent>
       
       <TabsContent value="features">
-        <AIFeaturesTab />
+        <AIFeaturesTab
+          settings={newSettings}
+          onSettingsChange={setNewSettings}
+          onSave={handleSaveSettings}
+          isSaving={updateSettings.isPending}
+        />
       </TabsContent>
       
       <TabsContent value="knowledge">
-        <AIKnowledgeTab />
+        <AIKnowledgeTab
+          knowledgeUploads={knowledgeUploads}
+          isLoadingKnowledge={isLoadingKnowledge}
+          onAddKnowledge={handleAddKnowledge}
+          onDeleteKnowledge={handleDeleteKnowledge}
+          isAddingKnowledge={addKnowledge.isPending}
+        />
       </TabsContent>
     </Tabs>
-  );
-};
-
-// Export the wrapper component that provides the context
-export const AIAssistantSettings = () => {
-  return (
-    <AISettingsProvider>
-      <AIAssistantSettingsContent />
-    </AISettingsProvider>
   );
 };

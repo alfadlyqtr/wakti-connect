@@ -25,18 +25,6 @@ export function LanguageSwitcher() {
     }
   };
 
-  // Check current language on component mount and set direction
-  React.useEffect(() => {
-    const currentLang = i18n.language;
-    if (currentLang === 'ar' && document.documentElement.dir !== 'rtl') {
-      document.documentElement.dir = 'rtl';
-      document.body.classList.add('rtl');
-    } else if (currentLang !== 'ar' && document.documentElement.dir !== 'ltr') {
-      document.documentElement.dir = 'ltr';
-      document.body.classList.remove('rtl');
-    }
-  }, [i18n.language]);
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

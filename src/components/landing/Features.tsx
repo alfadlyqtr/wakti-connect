@@ -6,8 +6,7 @@ import FeaturesHeading from "./FeaturesHeading";
 import { useTranslation } from "react-i18next";
 
 const Features = () => {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n.language === 'ar';
+  const { t } = useTranslation();
   
   const features = [
     {

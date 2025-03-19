@@ -7,17 +7,23 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Plus, Upload, Trash } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { useAISettings } from "./context/AISettingsContext";
+import { AIKnowledgeUpload } from "@/types/ai-assistant.types";
 
-export const AIKnowledgeTab: React.FC = () => {
-  const { 
-    knowledgeUploads, 
-    isLoadingKnowledge, 
-    addKnowledge, 
-    deleteKnowledge,
-    isAddingKnowledge 
-  } = useAISettings();
-  
+interface AIKnowledgeTabProps {
+  knowledgeUploads?: AIKnowledgeUpload[];
+  isLoadingKnowledge: boolean;
+  onAddKnowledge: (title: string, content: string) => Promise<void>;
+  onDeleteKnowledge: (id: string) => Promise<void>;
+  isAddingKnowledge: boolean;
+}
+
+export const AIKnowledgeTab: React.FC<AIKnowledgeTabProps> = ({
+  knowledgeUploads,
+  isLoadingKnowledge,
+  onAddKnowledge,
+  onDeleteKnowledge,
+  isAddingKnowledge,
+}) => {
   const [knowledgeTitle, setKnowledgeTitle] = useState("");
   const [knowledgeContent, setKnowledgeContent] = useState("");
   const [isKnowledgeDialogOpen, setIsKnowledgeDialogOpen] = useState(false);
@@ -25,7 +31,7 @@ export const AIKnowledgeTab: React.FC = () => {
   const handleAddKnowledge = async () => {
     if (!knowledgeTitle.trim() || !knowledgeContent.trim()) return;
     
-    await addKnowledge(knowledgeTitle, knowledgeContent);
+    await onAddKnowledge(knowledgeTitle, knowledgeContent);
     
     setKnowledgeTitle("");
     setKnowledgeContent("");
@@ -118,7 +124,7 @@ export const AIKnowledgeTab: React.FC = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => deleteKnowledge(knowledge.id)}
+                    onClick={() => onDeleteKnowledge(knowledge.id)}
                     className="h-8 w-8"
                   >
                     <Trash className="h-4 w-4" />

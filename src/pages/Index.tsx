@@ -1,10 +1,11 @@
 
 import React from "react";
+import { Navigate } from "react-router-dom";
 import LandingPage from "@/pages/public/LandingPage";
 
 const Index = () => {
-  // Simply render the LandingPage component
-  // The header will be rendered by PublicLayout that wraps this component
+  // We'll directly render the landing page instead of redirecting,
+  // which could cause additional rendering cycles
   return <LandingPage />;
 };
 

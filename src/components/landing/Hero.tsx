@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 
 const Hero = () => {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n.language === 'ar';
+  const { t } = useTranslation();
   
   return (
     <section className="py-16 md:py-24 px-4">
@@ -20,7 +19,8 @@ const Hero = () => {
           </div>
           
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
-            {t('hero.title')}
+            {t('hero.title').split(' & ')[0]} <br className="hidden md:block" />
+            <span className="text-wakti-blue">& {t('hero.title').split(' & ')[1]}</span>
           </h1>
           
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -31,7 +31,7 @@ const Hero = () => {
             <Button asChild size="lg" className="w-full sm:w-auto">
               <Link to="/auth?tab=register">
                 {t('hero.startForFree')}
-                <ArrowRight className={`${isRtl ? 'mr-2 icon-flip-rtl' : 'ml-2'} h-4 w-4`} />
+                <ArrowRight className="ml-2 h-4 w-4 icon-flip-rtl" />
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
