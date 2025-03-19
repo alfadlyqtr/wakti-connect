@@ -1,150 +1,76 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { StaffPermissions, PermissionLevel, BusinessPermissionsState } from "./types";
+import { normalizeStaffPermissions, getDefaultStaffPermissions } from "./staffPermissions";
 
-export type UserRole = "free" | "individual" | "business" | "staff" | "admin" | "co-admin";
-
-export enum PermissionLevel {
-  NONE = 0,
-  VIEW = 1,
-  EDIT = 2,
-  MANAGE = 3,
-  ADMIN = 4
-}
-
-export interface StaffPermissions {
-  canManageStaff: boolean;
-  canManageServices: boolean;
-  canViewAnalytics: boolean;
-  canManageBookings: boolean;
-}
-
-export interface UserRoleInfo {
-  role: UserRole;
-  businessId?: string;
-  permissions?: StaffPermissions;
-}
-
-export async function getUserRoleInfo(): Promise<UserRoleInfo | null> {
-  try {
-    // Check if there's a valid session
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      console.log("No active session - can't get user role");
-      return null;
-    }
-    
-    // First try the RPC function to get the user role
-    const { data: userRole, error: roleError } = await supabase.rpc('get_user_role');
-    
-    if (roleError) {
-      console.error("Error getting user role:", roleError);
-      return null;
-    }
-    
-    // Type assertion to make TypeScript happy
-    const role = userRole as UserRole;
-    console.log("User role from RPC:", role);
-    
-    let businessId: string | undefined;
-    let permissions: StaffPermissions | undefined;
-    
-    // Get business ID for staff/admin roles
-    if (role === 'staff' || role === 'admin' || role === 'co-admin') {
-      const { data: staffData } = await supabase
-        .from("business_staff")
-        .select("business_id, permissions")
-        .eq("staff_id", session.user.id)
-        .eq("status", "active")
-        .single();
-        
-      if (staffData) {
-        businessId = staffData.business_id;
-        
-        // Parse permissions if they exist
-        if (staffData.permissions) {
-          const permissionsObject = staffData.permissions as Record<string, boolean>;
-          permissions = {
-            canManageStaff: permissionsObject.canManageStaff || false,
-            canManageServices: permissionsObject.canManageServices || false,
-            canViewAnalytics: permissionsObject.canViewAnalytics || false,
-            canManageBookings: permissionsObject.canManageBookings || false
-          };
-        }
-      }
-    } else if (role === 'business') {
-      // Business owners use their own ID as the business ID
-      businessId = session.user.id;
-      
-      // Business owners have all permissions
-      permissions = {
-        canManageStaff: true,
-        canManageServices: true,
-        canViewAnalytics: true,
-        canManageBookings: true
-      };
-    }
-    
-    return {
-      role,
-      businessId,
-      permissions
-    };
-  } catch (error) {
-    console.error("Error getting user role info:", error);
-    return null;
-  }
-}
-
-export function getBusinessPermissions(roleInfo: UserRoleInfo | null): StaffPermissions {
-  // Default permissions (none)
-  const defaultPermissions: StaffPermissions = {
-    canManageStaff: false,
-    canManageServices: false,
-    canViewAnalytics: false,
-    canManageBookings: false
+// Check if a user has the required permission level
+export function meetsPermissionLevel(required: PermissionLevel, actual: PermissionLevel): boolean {
+  const levels: Record<PermissionLevel, number> = {
+    "admin": 3,
+    "write": 2,
+    "read": 1,
+    "none": 0
   };
   
-  if (!roleInfo) return defaultPermissions;
-  
-  // Business owners have all permissions
-  if (roleInfo.role === 'business') {
+  return levels[actual] >= levels[required];
+}
+
+// Get business permissions based on role and permission levels
+export function getBusinessPermissions(roleInfo: any): BusinessPermissionsState {
+  if (!roleInfo) {
     return {
-      canManageStaff: true,
-      canManageServices: true,
-      canViewAnalytics: true,
-      canManageBookings: true
-    };
-  }
-  
-  // Co-admins can do everything except manage staff
-  if (roleInfo.role === 'co-admin') {
-    return {
+      canCreateServices: false,
+      canEditServices: false,
+      canDeleteServices: false,
+      canAssignStaff: false,
+      canCreateBookings: false,
+      canEditBookings: false,
+      canCancelBookings: false,
       canManageStaff: false,
-      canManageServices: true,
-      canViewAnalytics: true,
-      canManageBookings: true
+      canViewAnalytics: false
     };
   }
   
-  // Return specific permissions for staff members if available
-  return roleInfo.permissions || defaultPermissions;
+  const permissions = normalizeStaffPermissions(roleInfo.permissions || {});
+  const role = roleInfo.role || "staff";
+  
+  // Business owners and admins have full permissions
+  if (role === "business" || role === "admin" || role === "co-admin") {
+    return {
+      canCreateServices: true,
+      canEditServices: true,
+      canDeleteServices: true,
+      canAssignStaff: true,
+      canCreateBookings: true,
+      canEditBookings: true,
+      canCancelBookings: true,
+      canManageStaff: true,
+      canViewAnalytics: true
+    };
+  }
+  
+  // For staff members, check specific permissions
+  return {
+    canCreateServices: meetsPermissionLevel("write", permissions.services),
+    canEditServices: meetsPermissionLevel("write", permissions.services),
+    canDeleteServices: meetsPermissionLevel("admin", permissions.services),
+    canAssignStaff: meetsPermissionLevel("write", permissions.services),
+    canCreateBookings: meetsPermissionLevel("write", permissions.bookings),
+    canEditBookings: meetsPermissionLevel("write", permissions.bookings),
+    canCancelBookings: meetsPermissionLevel("write", permissions.bookings),
+    canManageStaff: meetsPermissionLevel("write", permissions.staff),
+    canViewAnalytics: meetsPermissionLevel("read", permissions.analytics)
+  };
 }
 
-export function meetsPermissionLevel(
-  requiredLevel: PermissionLevel, 
-  userRole: UserRole | undefined
-): boolean {
-  if (!userRole) return false;
-  
-  const roleLevels: Record<UserRole, PermissionLevel> = {
-    'business': PermissionLevel.ADMIN,
-    'co-admin': PermissionLevel.ADMIN - 1,
-    'admin': PermissionLevel.MANAGE,
-    'staff': PermissionLevel.EDIT,
-    'individual': PermissionLevel.EDIT,
-    'free': PermissionLevel.VIEW
+// Get user role info - simulate API call for now
+export async function getUserRoleInfo(): Promise<any> {
+  // This would typically be a call to your API or database
+  // For now, return a mock object
+  return {
+    role: "staff",
+    permissions: getDefaultStaffPermissions(),
+    businessId: "some-business-id"
   };
-  
-  const userLevel = roleLevels[userRole];
-  return userLevel >= requiredLevel;
 }
+
+export { type PermissionLevel, type StaffPermissions, type BusinessPermissionsState };
