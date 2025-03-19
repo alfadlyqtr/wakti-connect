@@ -38,6 +38,15 @@ const LoginForm = ({ setError }: LoginFormProps) => {
     }
   }, [isAuthenticated, authLoading, navigate, from]);
 
+  // Check if there's a remembered email
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem('rememberedEmail');
+    if (rememberedEmail) {
+      setEmail(rememberedEmail);
+      setRememberMe(true);
+    }
+  }, []);
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
@@ -92,15 +101,6 @@ const LoginForm = ({ setError }: LoginFormProps) => {
       setIsLoading(false);
     }
   };
-
-  // Load remembered email if available
-  useEffect(() => {
-    const rememberedEmail = localStorage.getItem('rememberedEmail');
-    if (rememberedEmail) {
-      setEmail(rememberedEmail);
-      setRememberMe(true);
-    }
-  }, []);
 
   return (
     <form onSubmit={handleLogin} className="space-y-4">
