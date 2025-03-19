@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/useAuth";
 
 interface LoginFormProps {
   setError: (error: string) => void;
@@ -15,12 +17,25 @@ interface LoginFormProps {
 
 const LoginForm = ({ setError }: LoginFormProps) => {
   const { t } = useTranslation();
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get the intended destination from location state, or default to dashboard
+  const from = location.state?.from?.pathname || "/dashboard";
+  
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      console.log("User is authenticated, redirecting to:", from);
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, authLoading, navigate, from]);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -28,36 +43,13 @@ const LoginForm = ({ setError }: LoginFormProps) => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (rememberMe) {
-        // Set session expiry to 30 days instead of the default
-        // This is handled by Supabase automatically based on the rememberMe option
-      }
-
-      toast({
-        title: "Success!",
-        description: "You have been logged in successfully.",
-      });
-
-      // Simply redirect to dashboard - we'll handle the routing there
-      navigate('/dashboard');
-
+      console.log("Logging in with email:", email);
+      await login(email, password);
+      
+      // Navigate is handled by the useEffect above when isAuthenticated changes
     } catch (error: any) {
+      console.error("Login form error:", error);
       setError(error.message || "Failed to log in. Please try again.");
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: error.message || "Failed to log in. Please try again.",
-      });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -134,8 +126,8 @@ const LoginForm = ({ setError }: LoginFormProps) => {
         </Label>
       </div>
       
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? (
+      <Button type="submit" className="w-full" disabled={isLoading || authLoading}>
+        {(isLoading || authLoading) ? (
           <div className="flex items-center gap-2">
             <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
             <span>{t('auth.loggingIn')}</span>

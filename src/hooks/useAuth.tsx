@@ -40,6 +40,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         if (session?.user) {
+          console.log("Found active session for user:", session.user.id);
+          
           // Get user profile data
           const { data: profile, error: profileError } = await supabase
             .from("profiles")
@@ -47,9 +49,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq("id", session.user.id)
             .single();
             
-          if (profileError && profileError.code !== "PGRST116") {
-            console.error("Error fetching profile:", profileError);
+          if (profileError) {
+            // If profile not found and error is "not found", attempt to create one
+            if (profileError.code === "PGRST116") {
+              console.log("Profile not found for user, attempting to create default profile");
+              try {
+                const { data: newProfile, error: createError } = await supabase
+                  .from("profiles")
+                  .insert([{ 
+                    id: session.user.id,
+                    full_name: session.user.email?.split('@')[0],
+                    account_type: "free"
+                  }])
+                  .select('*')
+                  .single();
+                
+                if (createError) {
+                  console.error("Error creating profile:", createError);
+                } else {
+                  console.log("Created new profile for user:", newProfile);
+                  
+                  setUser({
+                    id: session.user.id,
+                    email: session.user.email,
+                    name: newProfile?.full_name || session.user.email?.split('@')[0],
+                    displayName: newProfile?.display_name || newProfile?.full_name,
+                    plan: newProfile?.account_type || "free"
+                  });
+                  return;
+                }
+              } catch (e) {
+                console.error("Error in profile creation process:", e);
+              }
+            } else {
+              console.error("Error fetching profile:", profileError);
+            }
           }
+          
+          console.log("User profile data:", profile);
           
           setUser({
             id: session.user.id,
@@ -58,6 +95,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             displayName: profile?.display_name || profile?.full_name,
             plan: profile?.account_type || "free"
           });
+        } else {
+          console.log("No active session found");
+          setUser(null);
         }
       } catch (error) {
         console.error("Error loading user:", error);
@@ -71,6 +111,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.id);
+        
         if (event === 'SIGNED_IN' && session) {
           // Get user profile data
           const { data: profile, error: profileError } = await supabase
@@ -79,8 +121,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq("id", session.user.id)
             .single();
             
-          if (profileError && profileError.code !== "PGRST116") {
-            console.error("Error fetching profile:", profileError);
+          if (profileError && profileError.code === "PGRST116") {
+            console.log("Profile not found for new sign-in, creating default profile");
+            try {
+              const { data: newProfile, error: createError } = await supabase
+                .from("profiles")
+                .insert([{ 
+                  id: session.user.id,
+                  full_name: session.user.email?.split('@')[0],
+                  account_type: "free"
+                }])
+                .select('*')
+                .single();
+              
+              if (createError) {
+                console.error("Error creating profile after sign in:", createError);
+              } else {
+                console.log("Created new profile after sign in:", newProfile);
+                
+                setUser({
+                  id: session.user.id,
+                  email: session.user.email,
+                  name: newProfile?.full_name || session.user.email?.split('@')[0],
+                  displayName: newProfile?.display_name || newProfile?.full_name,
+                  plan: newProfile?.account_type || "free"
+                });
+                return;
+              }
+            } catch (e) {
+              console.error("Error in profile creation process:", e);
+            }
+          } else if (profileError) {
+            console.error("Error fetching profile after sign in:", profileError);
           }
           
           setUser({
@@ -91,6 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             plan: profile?.account_type || "free"
           });
         } else if (event === 'SIGNED_OUT') {
+          console.log("User signed out, clearing state");
           setUser(null);
         }
       }
@@ -103,12 +176,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("Attempting login for:", email);
+      setIsLoading(true);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) throw error;
+      
+      console.log("Login successful");
+      
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+      });
       
       // User is set by the auth listener
     } catch (error: any) {
@@ -119,13 +202,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         variant: "destructive",
       });
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const logout = async () => {
     try {
+      console.log("Attempting logout");
+      setIsLoading(true);
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
+      console.log("Logout successful");
       
       // User is set to null by the auth listener
     } catch (error: any) {
@@ -135,11 +225,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: error.message || "An error occurred during logout",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const register = async (email: string, password: string, name: string) => {
     try {
+      console.log("Attempting registration for:", email);
+      setIsLoading(true);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -151,6 +246,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       if (error) throw error;
+      
+      console.log("Registration successful");
       
       toast({
         title: "Registration successful",
@@ -166,6 +263,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         variant: "destructive",
       });
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
