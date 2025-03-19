@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import StaffPermissionsDisplay from "./StaffPermissionsDisplay";
 import { StaffPermissions } from "@/services/permissions/accessControlService";
+import { normalizePermissions } from "@/services/permissions/staffPermissions";
 
 export interface StaffMember {
   id: string;
@@ -42,6 +42,19 @@ interface StaffMemberCardProps {
   onDelete: (staff: StaffMember) => void;
   onReactivate: (staff: StaffMember) => void;
 }
+
+const getPermissionDisplay = (permissions: any) => {
+  // Normalize permissions to ensure all required fields exist
+  const normalizedPermissions = normalizePermissions(permissions);
+  
+  // Now we can safely return the permissions object
+  return {
+    service_permission: normalizedPermissions.service_permission || normalizedPermissions.services || "none",
+    booking_permission: normalizedPermissions.booking_permission || normalizedPermissions.bookings || "none",
+    staff_permission: normalizedPermissions.staff_permission || normalizedPermissions.staff || "none", 
+    analytics_permission: normalizedPermissions.analytics_permission || normalizedPermissions.analytics || "none"
+  };
+};
 
 const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
   member,
@@ -95,7 +108,7 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
         )}
       </CardHeader>
       <CardContent className="pb-2">
-        <StaffPermissionsDisplay permissions={member.permissions} />
+        <StaffPermissionsDisplay permissions={getPermissionDisplay(member.permissions)} />
       </CardContent>
       <CardFooter className="pt-2 flex gap-2">
         <Button 

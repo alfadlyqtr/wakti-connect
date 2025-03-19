@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +5,7 @@ import { toast } from "@/components/ui/use-toast";
 import { StaffMember } from "./StaffMemberCard";
 import { PermissionLevel, StaffPermissions } from "@/services/permissions/accessControlService";
 import { useAuth } from "@/hooks/useAuth";
+import { normalizePermissions, createDefaultPermissions, createAdminPermissions, createStaffPermissions } from "@/services/permissions/staffPermissions";
 
 export const useStaffManagement = () => {
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
@@ -44,31 +44,16 @@ export const useStaffManagement = () => {
       // Cast to StaffMember[] type with default values for new fields
       return (staffData || []).map(staff => {
         // Define default permissions
-        const defaultPermissions: StaffPermissions = {
-          service_permission: 'none',
-          booking_permission: 'none',
-          staff_permission: 'none',
-          analytics_permission: 'none'
-        };
+        const defaultPermissions = createDefaultPermissions("none");
         
         // Get permissions from staff.permissions or use defaults
         let permissions = defaultPermissions;
         
         // If staff has a role, set permissions accordingly
         if (staff.role === 'co-admin') {
-          permissions = {
-            service_permission: 'admin',
-            booking_permission: 'admin',
-            staff_permission: 'admin',
-            analytics_permission: 'admin'
-          };
+          permissions = createAdminPermissions();
         } else if (staff.role === 'admin') {
-          permissions = {
-            service_permission: 'admin',
-            booking_permission: 'admin',
-            staff_permission: 'write',
-            analytics_permission: 'admin'
-          };
+          permissions = createAdminPermissions();
         } else if (staff.permissions && typeof staff.permissions === 'object') {
           const perms = staff.permissions as Record<string, any>;
           

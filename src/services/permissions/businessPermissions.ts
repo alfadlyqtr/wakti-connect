@@ -1,7 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { StaffPermissions, PermissionLevel } from "./types";
 import { extractPermissionLevel } from "./permissionUtils";
+import { createDefaultPermissions, createAdminPermissions, createStaffPermissions } from "@/services/permissions/staffPermissions";
 
 // Get all permissions for the current user in a specific business
 export const getBusinessPermissions = async (businessId: string): Promise<StaffPermissions | null> => {
@@ -119,5 +119,17 @@ export const hasBusinessPermission = async (
   } catch (error) {
     console.error("Error checking business permission:", error);
     return false;
+  }
+};
+
+export const getDefaultPermissions = (role: string) => {
+  switch (role) {
+    case "admin":
+    case "co-admin":
+      return createAdminPermissions();
+    case "staff":
+      return createStaffPermissions();
+    default:
+      return createDefaultPermissions("none");
   }
 };

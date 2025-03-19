@@ -1,68 +1,72 @@
 import { PermissionLevel, StaffPermissions } from "./types";
 
-// This function migrates old permission property names to new ones
-export function normalizeStaffPermissions(permissions: any): StaffPermissions {
-  const normalized: StaffPermissions = {
-    tasks: permissions.tasks || "none",
-    events: permissions.events || "none",
-    messages: permissions.messages || "none",
-    services: permissions.services || permissions.service_permission || "none",
-    bookings: permissions.bookings || permissions.booking_permission || "none",
-    staff: permissions.staff || permissions.staff_permission || "none",
-    analytics: permissions.analytics || permissions.analytics_permission || "none"
+// Helper to convert legacy permission format to new format
+export function normalizePermissions(permissions: any): StaffPermissions {
+  // If it's already in the new format with all required fields, return it
+  if (
+    permissions.tasks !== undefined &&
+    permissions.events !== undefined &&
+    permissions.messages !== undefined &&
+    permissions.services !== undefined &&
+    permissions.bookings !== undefined &&
+    permissions.staff !== undefined &&
+    permissions.analytics !== undefined
+  ) {
+    return permissions as StaffPermissions;
+  }
+
+  // Otherwise convert from legacy format
+  const normalizedPermissions: StaffPermissions = {
+    // Map legacy fields to new fields
+    tasks: "none",
+    events: "none",
+    messages: "none",
+    services: permissions.service_permission || "none",
+    bookings: permissions.booking_permission || "none",
+    staff: permissions.staff_permission || "none",
+    analytics: permissions.analytics_permission || "none",
+    
+    // Keep the legacy fields for backwards compatibility
+    service_permission: permissions.service_permission,
+    booking_permission: permissions.booking_permission,
+    staff_permission: permissions.staff_permission,
+    analytics_permission: permissions.analytics_permission
   };
-  
-  // Preserve backward compatibility by keeping old property names
-  if (permissions.service_permission) {
-    normalized.service_permission = permissions.service_permission;
-  }
-  
-  if (permissions.booking_permission) {
-    normalized.booking_permission = permissions.booking_permission;
-  }
-  
-  if (permissions.staff_permission) {
-    normalized.staff_permission = permissions.staff_permission;
-  }
-  
-  if (permissions.analytics_permission) {
-    normalized.analytics_permission = permissions.analytics_permission;
-  }
-  
-  return normalized;
+
+  return normalizedPermissions;
 }
 
-// This function migrates new permission property names to old ones for API calls
-export function legacyStaffPermissions(permissions: StaffPermissions): any {
+// Create default permissions object with both new and legacy fields
+export function createDefaultPermissions(level: PermissionLevel = "none"): StaffPermissions {
   return {
-    tasks: permissions.tasks,
-    events: permissions.events,
-    messages: permissions.messages,
-    services: permissions.services,
-    bookings: permissions.bookings,
-    staff: permissions.staff,
-    analytics: permissions.analytics,
-    service_permission: permissions.services,
-    booking_permission: permissions.bookings,
-    staff_permission: permissions.staff,
-    analytics_permission: permissions.analytics
+    // New fields
+    tasks: level,
+    events: level,
+    messages: level,
+    services: level,
+    bookings: level,
+    staff: level,
+    analytics: level,
+    
+    // Legacy fields
+    service_permission: level,
+    booking_permission: level,
+    staff_permission: level,
+    analytics_permission: level
   };
 }
 
-export function getDefaultStaffPermissions(): StaffPermissions {
-  return {
-    tasks: "none" as PermissionLevel,
-    events: "none" as PermissionLevel,
-    messages: "none" as PermissionLevel,
-    services: "none" as PermissionLevel,
-    bookings: "none" as PermissionLevel,
-    staff: "none" as PermissionLevel,
-    analytics: "none" as PermissionLevel,
-    service_permission: "none" as PermissionLevel,
-    booking_permission: "none" as PermissionLevel,
-    staff_permission: "none" as PermissionLevel,
-    analytics_permission: "none" as PermissionLevel
-  };
+// Create admin permissions
+export function createAdminPermissions(): StaffPermissions {
+  return createDefaultPermissions("admin");
+}
+
+// Create standard staff permissions
+export function createStaffPermissions(): StaffPermissions {
+  const permissions = createDefaultPermissions("write");
+  permissions.staff = "none";
+  permissions.staff_permission = "none";
+  return permissions;
 }
 
 import { supabase } from "@/integrations/supabase/client";

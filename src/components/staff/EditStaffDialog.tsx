@@ -1,303 +1,289 @@
-
 import React, { useState, useEffect } from "react";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogFooter
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { PermissionLevel, StaffPermissions } from "@/services/permissions/accessControlService";
-
-interface StaffMember {
-  id: string;
-  name: string;
-  email: string | null;
-  role: string;
-  position: string;
-  is_service_provider: boolean;
-  permissions: StaffPermissions;
-}
+import { Button } from "@/components/ui/button";
+import { Staff } from "@/types/business.types";
+import { PermissionLevel, StaffPermissions } from "@/services/permissions/types";
+import { useToast } from "@/components/ui/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { normalizePermissions, createDefaultPermissions } from "@/services/permissions/staffPermissions";
 
 interface EditStaffDialogProps {
-  staff: StaffMember;
   open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: () => void;
+  setOpen: (open: boolean) => void;
+  selectedStaff: Staff | null;
+  onSave: (staff: Staff) => void;
+  onDelete: (staffId: string) => void;
 }
 
 const EditStaffDialog: React.FC<EditStaffDialogProps> = ({
-  staff,
   open,
-  onOpenChange,
-  onSave
+  setOpen,
+  selectedStaff,
+  onSave,
+  onDelete,
 }) => {
-  const [name, setName] = useState(staff.name);
-  const [email, setEmail] = useState(staff.email || "");
-  const [position, setPosition] = useState(staff.position);
-  const [role, setRole] = useState<string>(staff.role);
-  const [isServiceProvider, setIsServiceProvider] = useState(staff.is_service_provider);
-  const [isLoading, setIsLoading] = useState(false);
-  const [permissions, setPermissions] = useState<StaffPermissions>({
-    service_permission: staff.permissions.service_permission || 'none',
-    booking_permission: staff.permissions.booking_permission || 'none',
-    staff_permission: staff.permissions.staff_permission || 'none',
-    analytics_permission: staff.permissions.analytics_permission || 'none'
-  });
+  const { toast } = useToast();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<string>("staff");
+  const [permissions, setPermissions] = useState<StaffPermissions>(createDefaultPermissions());
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  // Reset form when staff changes
   useEffect(() => {
-    setName(staff.name);
-    setEmail(staff.email || "");
-    setPosition(staff.position);
-    setRole(staff.role);
-    setIsServiceProvider(staff.is_service_provider);
-    setPermissions({
-      service_permission: staff.permissions.service_permission || 'none',
-      booking_permission: staff.permissions.booking_permission || 'none',
-      staff_permission: staff.permissions.staff_permission || 'none',
-      analytics_permission: staff.permissions.analytics_permission || 'none'
-    });
-  }, [staff]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      // Convert permissions to a plain object for JSON storage
-      const permissionsJson = {
-        service_permission: permissions.service_permission,
-        booking_permission: permissions.booking_permission,
-        staff_permission: permissions.staff_permission,
-        analytics_permission: permissions.analytics_permission
-      };
-
-      // Update the staff member
-      const { error } = await supabase
-        .from('business_staff')
-        .update({
-          name,
-          email: email || null,
-          position,
-          role,
-          is_service_provider: isServiceProvider,
-          permissions: permissionsJson
-        })
-        .eq('id', staff.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Staff updated",
-        description: `${name} has been updated successfully.`,
-      });
-
-      onSave();
-      onOpenChange(false);
-    } catch (error: any) {
-      console.error("Error updating staff:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update staff member",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
+    if (selectedStaff) {
+      setName(selectedStaff.full_name || "");
+      setEmail(selectedStaff.email || "");
+      setRole(selectedStaff.role || "staff");
+    } else {
+      setName("");
+      setEmail("");
+      setRole("staff");
     }
+  }, [selectedStaff]);
+
+  // Fix this function that updates permissions
+  const updatePermissionState = (oldPermissions: any, field: string, value: PermissionLevel) => {
+  // Create a normalized version of the permissions to ensure it has all required fields
+  const normalizedPermissions = normalizePermissions(oldPermissions);
+  
+  // Update both the new and legacy field names
+  if (field === 'services') {
+    normalizedPermissions.services = value;
+    normalizedPermissions.service_permission = value;
+  } else if (field === 'bookings') {
+    normalizedPermissions.bookings = value;
+    normalizedPermissions.booking_permission = value;
+  } else if (field === 'staff') {
+    normalizedPermissions.staff = value;
+    normalizedPermissions.staff_permission = value;
+  } else if (field === 'analytics') {
+    normalizedPermissions.analytics = value;
+    normalizedPermissions.analytics_permission = value;
+  } else {
+    // For new fields that don't have legacy equivalents
+    normalizedPermissions[field as keyof StaffPermissions] = value;
+  }
+  
+  return normalizedPermissions;
+};
+
+  const handlePermissionChange = (field: string, value: PermissionLevel) => {
+    setPermissions((prevPermissions) => {
+      return updatePermissionState(prevPermissions, field, value);
+    });
   };
 
-  const handlePermissionChange = (type: keyof StaffPermissions, value: PermissionLevel) => {
-    setPermissions(prev => ({
-      ...prev,
-      [type]: value
-    }));
+  const handleSave = () => {
+    if (!selectedStaff) return;
+
+    const updatedStaff: Staff = {
+      ...selectedStaff,
+      full_name: name,
+      email: email,
+      role: role,
+      permissions: permissions,
+    };
+
+    onSave(updatedStaff);
+    toast({
+      title: "Staff member updated",
+      description: `${name} has been updated successfully.`,
+    });
+    setOpen(false);
   };
 
-  // Role options based on current staff role
-  const canAssignCoAdmin = role !== 'co-admin'; // Only one co-admin allowed
+  const handleDelete = () => {
+    if (!selectedStaff) return;
+
+    onDelete(selectedStaff.id);
+    toast({
+      title: "Staff member deleted",
+      description: `${name} has been deleted successfully.`,
+    });
+    setOpen(false);
+    setIsDeleteOpen(false);
+  };
+
+  // Fix this useEffect that initializes permissions
+useEffect(() => {
+  if (selectedStaff) {
+    const normalizedPermissions = normalizePermissions(selectedStaff.permissions || {});
+    setPermissions(normalizedPermissions);
+  } else {
+    setPermissions(createDefaultPermissions());
+  }
+}, [selectedStaff]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Edit Staff Member</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input 
-              id="name" 
-              value={name} 
-              onChange={(e) => setName(e.target.value)} 
-              required
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <Button variant="outline">Edit Staff</Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Edit Staff Member</AlertDialogTitle>
+          <AlertDialogDescription>
+            Make changes to the staff member's details here.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="name" className="text-right">
+              Name
+            </Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="col-span-3"
             />
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              value={email} 
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="email" className="text-right">
+              Email
+            </Label>
+            <Input
+              type="email"
+              id="email"
+              value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="col-span-3"
             />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="position">Position</Label>
-            <Input 
-              id="position" 
-              value={position} 
-              onChange={(e) => setPosition(e.target.value)}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <Select 
-              value={role}
-              onValueChange={setRole}
-            >
-              <SelectTrigger>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="role" className="text-right">
+              Role
+            </Label>
+            <Select value={role} onValueChange={setRole}>
+              <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="staff">Staff</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                {canAssignCoAdmin && (
-                  <SelectItem value="co-admin">Co-Admin</SelectItem>
-                )}
+                <SelectItem value="co-admin">Co-Admin</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="isServiceProvider" 
-              checked={isServiceProvider}
-              onCheckedChange={(checked) => setIsServiceProvider(!!checked)}
-            />
-            <Label 
-              htmlFor="isServiceProvider"
-              className="font-normal text-sm"
-            >
-              Is Service Provider
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="services" className="text-right">
+              Services
             </Label>
-          </div>
-          
-          <div className="space-y-4 border p-4 rounded-md">
-            <h3 className="font-medium">Permissions</h3>
-            
-            <div className="space-y-2">
-              <Label>Services Permission</Label>
-              <Select 
-                value={permissions.service_permission}
-                onValueChange={(value) => handlePermissionChange('service_permission', value as PermissionLevel)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="read">Read</SelectItem>
-                  <SelectItem value="write">Write</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Bookings Permission</Label>
-              <Select 
-                value={permissions.booking_permission}
-                onValueChange={(value) => handlePermissionChange('booking_permission', value as PermissionLevel)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="read">Read</SelectItem>
-                  <SelectItem value="write">Write</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Staff Management Permission</Label>
-              <Select 
-                value={permissions.staff_permission}
-                onValueChange={(value) => handlePermissionChange('staff_permission', value as PermissionLevel)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="read">Read</SelectItem>
-                  <SelectItem value="write">Write</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Analytics Permission</Label>
-              <Select 
-                value={permissions.analytics_permission}
-                onValueChange={(value) => handlePermissionChange('analytics_permission', value as PermissionLevel)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="read">Read</SelectItem>
-                  <SelectItem value="write">Write</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
+            <Select
+              value={permissions?.services || "none"}
+              onValueChange={(value) => handlePermissionChange("services", value as PermissionLevel)}
             >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
-                <span className="flex items-center">
-                  <span className="h-4 w-4 mr-2 border-2 border-t-transparent border-white rounded-full animate-spin"></span>
-                  Saving...
-                </span>
-              ) : (
-                'Save Changes'
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select a permission" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="write">Write</SelectItem>
+                <SelectItem value="read">Read</SelectItem>
+                <SelectItem value="none">None</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="bookings" className="text-right">
+              Bookings
+            </Label>
+            <Select
+              value={permissions?.bookings || "none"}
+              onValueChange={(value) => handlePermissionChange("bookings", value as PermissionLevel)}
+            >
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select a permission" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="write">Write</SelectItem>
+                <SelectItem value="read">Read</SelectItem>
+                <SelectItem value="none">None</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="staff" className="text-right">
+              Staff
+            </Label>
+            <Select
+              value={permissions?.staff || "none"}
+              onValueChange={(value) => handlePermissionChange("staff", value as PermissionLevel)}
+            >
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select a permission" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="write">Write</SelectItem>
+                <SelectItem value="read">Read</SelectItem>
+                <SelectItem value="none">None</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="analytics" className="text-right">
+              Analytics
+            </Label>
+            <Select
+              value={permissions?.analytics || "none"}
+              onValueChange={(value) => handlePermissionChange("analytics", value as PermissionLevel)}
+            >
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select a permission" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="write">Write</SelectItem>
+                <SelectItem value="read">Read</SelectItem>
+                <SelectItem value="none">None</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <Button type="submit" onClick={handleSave}>
+            Save changes
+          </Button>
+          <AlertDialog
+            open={isDeleteOpen}
+            onOpenChange={setIsDeleteOpen}
+          >
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">Delete</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete
+                  the staff member from our servers.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 
