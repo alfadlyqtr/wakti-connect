@@ -13,6 +13,7 @@ import {
   getUpcomingTasks 
 } from "./taskService";
 
+// Properly export all task-related types and functions
 export { 
   fetchTasks,
   createTask,

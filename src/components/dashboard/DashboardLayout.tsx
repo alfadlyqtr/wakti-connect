@@ -9,6 +9,7 @@ import "@/components/layout/sidebar/sidebar.css";
 import { useQuery } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -27,16 +28,17 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
   // Fetch user profile data for the dashboard
   const { data: profileData, isLoading: profileLoading, error: profileError } = useQuery({
     queryKey: ['dashboardUserProfile'],
     queryFn: async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log("DashboardLayout: Fetching user profile data");
         
-        if (!session?.user) {
-          console.log("No active session found, redirecting to auth page");
+        if (!user?.id) {
+          console.log("DashboardLayout: No active user found, redirecting to auth page");
           navigate("/auth/login");
           return null;
         }
@@ -44,16 +46,34 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         const { data, error } = await supabase
           .from('profiles')
           .select('account_type, display_name, business_name, full_name, theme_preference')
-          .eq('id', session.user.id)
-          .single();
+          .eq('id', user.id)
+          .maybeSingle();
         
         if (error) {
-          console.error("Error fetching user profile:", error);
+          console.error("DashboardLayout: Error fetching user profile:", error);
           if (error.code === 'PGRST116') {
-            console.log("Profile not found, user may need to sign up");
-            navigate("/auth/login");
+            console.log("DashboardLayout: Profile not found, user may need to complete signup");
+            // Return default profile to avoid errors
+            return {
+              account_type: "free" as const,
+              display_name: null,
+              business_name: null,
+              full_name: null,
+              theme_preference: "light"
+            };
           }
           throw error;
+        }
+        
+        if (!data) {
+          console.log("DashboardLayout: No profile data found, using defaults");
+          return {
+            account_type: "free" as const,
+            display_name: null,
+            business_name: null,
+            full_name: null,
+            theme_preference: "light"
+          };
         }
         
         // Store user role in localStorage for use in other components
@@ -77,11 +97,12 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         
         return data as ProfileData;
       } catch (error) {
-        console.error("Error fetching user profile:", error);
+        console.error("DashboardLayout: Error fetching user profile:", error);
         throw error;
       }
     },
     retry: 1,
+    enabled: isAuthenticated && !authLoading && !!user?.id
   });
 
   // Set theme based on user preference
@@ -91,26 +112,6 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       document.documentElement.classList.add(profileData.theme_preference);
     }
   }, [profileData?.theme_preference]);
-
-  // Setup auth listener
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed in dashboard layout:", event);
-      
-      if (event === 'SIGNED_OUT') {
-        // Clear stored user role on sign out
-        localStorage.removeItem('userRole');
-        navigate("/auth/login");
-      } else if (event === 'SIGNED_IN' && session) {
-        // Refresh the profile data query when user signs in
-        window.location.reload();
-      }
-    });
-
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
-  }, [navigate]);
 
   // Close sidebar when clicking outside on mobile
   useEffect(() => {
@@ -147,13 +148,22 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     : "lg:pl-[70px] transition-all duration-300";
 
   // Handle loading state
-  if (profileLoading) {
+  const isLoading = authLoading || (profileLoading && isAuthenticated);
+  
+  if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <LoadingSpinner />
         <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
       </div>
     );
+  }
+  
+  // Handle not authenticated state
+  if (!isAuthenticated && !authLoading) {
+    console.log("DashboardLayout: User not authenticated, redirecting");
+    navigate("/auth/login");
+    return null;
   }
   
   // Handle error state

@@ -8,7 +8,14 @@ import { Task } from "../types";
  */
 export async function getTaskById(taskId: string): Promise<Task | null> {
   try {
-    console.log("Fetching task by ID:", taskId);
+    console.log("getTaskById: Fetching task by ID:", taskId);
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      console.error("getTaskById: No active session found");
+      throw new Error("Authentication required");
+    }
+    
     const { data, error } = await supabase
       .from('tasks')
       .select(`
@@ -16,20 +23,25 @@ export async function getTaskById(taskId: string): Promise<Task | null> {
         subtasks:todo_items(*)
       `)
       .eq('id', taskId)
-      .single();
+      .maybeSingle(); // Use maybeSingle instead of single to avoid errors if no data
       
     if (error) {
-      console.error("Supabase error fetching task:", error);
+      console.error("getTaskById: Supabase error fetching task:", error);
       throw error;
     }
     
-    console.log("Task data retrieved:", data);
+    if (!data) {
+      console.log("getTaskById: No task found with ID:", taskId);
+      return null;
+    }
+    
+    console.log("getTaskById: Task data retrieved:", data);
     return {
       ...data,
       subtasks: Array.isArray(data.subtasks) ? data.subtasks : []
     } as Task;
   } catch (error: any) {
-    console.error("Error fetching task:", error);
+    console.error("getTaskById: Error fetching task:", error);
     toast({
       title: "Error",
       description: error.message || "Failed to fetch task details",
@@ -44,11 +56,11 @@ export async function getTaskById(taskId: string): Promise<Task | null> {
  */
 export async function getUpcomingTasks(): Promise<Task[]> {
   try {
-    console.log("Fetching upcoming tasks");
+    console.log("getUpcomingTasks: Fetching upcoming tasks");
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
-      console.warn("No active session found when fetching upcoming tasks");
+      console.warn("getUpcomingTasks: No active session found");
       return [];
     }
     
@@ -57,7 +69,7 @@ export async function getUpcomingTasks(): Promise<Task[]> {
     const nextWeek = new Date(today);
     nextWeek.setDate(today.getDate() + 7);
     
-    console.log("Date range for upcoming tasks:", {
+    console.log("getUpcomingTasks: Date range for upcoming tasks:", {
       today: today.toISOString(),
       nextWeek: nextWeek.toISOString()
     });
@@ -75,19 +87,25 @@ export async function getUpcomingTasks(): Promise<Task[]> {
       .order('due_date', { ascending: true });
       
     if (error) {
-      console.error("Supabase error fetching upcoming tasks:", error);
+      // Check if the error is because the table doesn't exist yet
+      if (error.code === 'PGRST116') {
+        console.log("getUpcomingTasks: Tasks table might not exist yet");
+        return [];
+      }
+      
+      console.error("getUpcomingTasks: Supabase error fetching upcoming tasks:", error);
       throw error;
     }
     
-    console.log(`Retrieved ${data?.length || 0} upcoming tasks`);
+    console.log(`getUpcomingTasks: Retrieved ${data?.length || 0} upcoming tasks`);
     
     // Transform data with proper typing and ensure subtasks is always an array
     return (data || []).map(task => ({
       id: task.id,
       title: task.title,
       description: task.description,
-      status: task.status as Task["status"],
-      priority: task.priority as Task["priority"],
+      status: task.status,
+      priority: task.priority,
       due_date: task.due_date,
       user_id: task.user_id,
       assignee_id: task.assignee_id || null,
@@ -99,8 +117,7 @@ export async function getUpcomingTasks(): Promise<Task[]> {
     }));
     
   } catch (error: any) {
-    console.error("Error fetching upcoming tasks:", error);
-    // Don't show toast for this one as it's used in the background
+    console.error("getUpcomingTasks: Error fetching upcoming tasks:", error);
     return [];
   }
 }
