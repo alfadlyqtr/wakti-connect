@@ -2,16 +2,16 @@
 // Define task types for consistent use
 export type TaskStatus = 'pending' | 'in-progress' | 'completed' | 'late';
 export type TaskPriority = 'urgent' | 'high' | 'medium' | 'normal';
-export type TaskTab = 'daily' | 'weekly' | 'monthly' | 'quarterly';
+export type TaskTab = 'my-tasks' | 'shared-tasks' | 'assigned-tasks';
 
 // Core task types
 export interface SubTask {
-  id: string;
-  task_id: string;
+  id?: string;
+  task_id?: string;
   content: string;
   is_completed: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Task {
@@ -34,10 +34,11 @@ export interface Task {
 export interface TaskFormData {
   title: string;
   description?: string;
-  status: TaskStatus;
-  priority: TaskPriority;
-  due_date?: Date | null;
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  due_date?: string | null;
   assignee_id?: string | null;
+  subtasks?: SubTask[];
   recurrence?: {
     frequency: string;
     interval: number;
@@ -48,7 +49,8 @@ export interface TaskFormData {
 
 // Result type for task queries
 export interface TasksResult {
-  data: Task[] | null;
-  error: Error | null;
-  isLoading: boolean;
+  tasks: Task[] | null;
+  userRole: "free" | "individual" | "business";
+  error?: Error | null;
+  isLoading?: boolean;
 }

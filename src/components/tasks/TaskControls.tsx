@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TaskTab } from "@/hooks/useTasks";
+import { TaskTab } from "@/types/task.types";
 import { useTranslation } from "react-i18next";
 
 interface TaskControlsProps {

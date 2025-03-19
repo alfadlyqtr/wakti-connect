@@ -8,17 +8,33 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export async function checkIfTableExists(tableName: string): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from(tableName)
-      .select('count(*)', { count: 'exact', head: true });
+    // Use RPC to check if table exists to avoid type issues with dynamic table names
+    const { data, error } = await supabase.rpc('check_table_exists', { table_name: tableName });
+    
+    if (error) {
+      console.error(`Error checking if table '${tableName}' exists:`, error);
       
-    // If the error code is PGRST116, the table doesn't exist
-    if (error && error.code === 'PGRST116') {
-      console.log(`Table '${tableName}' does not exist`);
-      return false;
+      // Try an alternative approach with a raw query if RPC fails
+      try {
+        const { data: tableData, error: countError } = await supabase
+          .from('_metadata')
+          .select('*')
+          .eq('table_name', tableName)
+          .maybeSingle();
+          
+        if (countError) {
+          console.error(`Fallback check for table '${tableName}' failed:`, countError);
+          return false;
+        }
+        
+        return tableData != null;
+      } catch (fallbackError) {
+        console.error(`Fallback for table check failed:`, fallbackError);
+        return false;
+      }
     }
     
-    return true;
+    return data === true;
   } catch (error) {
     console.error(`Error checking if table '${tableName}' exists:`, error);
     return false;
