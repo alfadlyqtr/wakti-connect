@@ -33,50 +33,37 @@ const JobCardsTab = () => {
           return;
         }
         
-        const { data, error } = await supabase
+        // First, get the staff relation ID
+        const { data: staffData, error: staffError } = await supabase
           .from('business_staff')
-          .select('id, permissions')
+          .select('id')
           .eq('staff_id', user.id)
-          .single();
+          .maybeSingle();
           
-        if (error) {
-          console.error("Error fetching staff relation:", error);
+        if (staffError) {
+          console.error("Error fetching staff relation:", staffError);
           setPermissionsLoading(false);
           return;
         }
         
-        if (!data) {
+        if (!staffData) {
           setPermissionsLoading(false);
           return;
         }
         
-        setStaffRelationId(data.id);
+        setStaffRelationId(staffData.id);
         
-        // Parse permissions safely
-        let permissionsObj: StaffPermissions;
-        if (data.permissions && typeof data.permissions === 'object') {
-          permissionsObj = {
-            can_create_job_cards: true,  // defaults
-            can_track_hours: true,
-            can_message_staff: true,
-            can_view_own_analytics: true,
-            ...(data.permissions as object) as StaffPermissions
-          };
-          
-          setCanCreateJobCards(!!permissionsObj.can_create_job_cards);
-          setCanTrackHours(!!permissionsObj.can_track_hours);
-        } else {
-          // Default permissions if not set
-          setCanCreateJobCards(true);
-          setCanTrackHours(true);
-        }
+        // Now fetch permissions separately to avoid potential circular references
+        const permissions = await getStaffRelationPermissions(staffData.id);
+        setCanCreateJobCards(permissions.can_create_job_cards);
+        setCanTrackHours(permissions.can_track_hours);
         
         // Check for active work session if allowed to track hours
-        if (canTrackHours) {
+        if (permissions.can_track_hours) {
           const { data: activeSessions, error: sessionsError } = await supabase
             .from('staff_work_logs')
             .select('*')
-            .eq('staff_relation_id', data.id)
+            .eq('staff_relation_id', staffData.id)
             .is('end_time', null)
             .eq('status', 'active')
             .maybeSingle();
@@ -90,7 +77,7 @@ const JobCardsTab = () => {
         
         setPermissionsLoading(false);
       } catch (error) {
-        console.error("Error fetching staff relation:", error);
+        console.error("Error in getStaffRelation:", error);
         setPermissionsLoading(false);
         toast({
           title: "Error",
@@ -101,7 +88,54 @@ const JobCardsTab = () => {
     };
     
     getStaffRelation();
-  }, [toast, canTrackHours]);
+  }, [toast]);
+  
+  // Helper function to get permissions from the staff relation ID
+  const getStaffRelationPermissions = async (relationId: string): Promise<StaffPermissions> => {
+    try {
+      const { data, error } = await supabase
+        .from('business_staff')
+        .select('permissions')
+        .eq('id', relationId)
+        .maybeSingle();
+        
+      if (error) {
+        console.error("Error fetching permissions:", error);
+        return {
+          can_create_job_cards: true,  // default values
+          can_track_hours: true,
+          can_message_staff: true,
+          can_view_own_analytics: true
+        };
+      }
+      
+      // Parse permissions with proper type handling
+      if (data && data.permissions) {
+        const perms = data.permissions;
+        return {
+          can_create_job_cards: typeof perms.can_create_job_cards === 'boolean' ? perms.can_create_job_cards : true,
+          can_track_hours: typeof perms.can_track_hours === 'boolean' ? perms.can_track_hours : true,
+          can_message_staff: typeof perms.can_message_staff === 'boolean' ? perms.can_message_staff : true,
+          can_view_own_analytics: typeof perms.can_view_own_analytics === 'boolean' ? perms.can_view_own_analytics : true
+        };
+      }
+      
+      return {
+        can_create_job_cards: true,
+        can_track_hours: true,
+        can_message_staff: true,
+        can_view_own_analytics: true
+      };
+    } catch (error) {
+      console.error("Error getting staff permissions:", error);
+      return {
+        can_create_job_cards: true,
+        can_track_hours: true,
+        can_message_staff: true,
+        can_view_own_analytics: true
+      };
+    }
+  };
   
   // Start work session
   const startWorkDay = async () => {
