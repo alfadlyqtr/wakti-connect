@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "./useAuth";
-import { fetchTasksByTab } from "@/services/task/fetchService";
+import { fetchTasks } from "@/services/task/fetchService";
 import { createTaskWithSubtasks } from "@/services/task/createService";
 import { Task, TaskFormData, TaskTab } from "@/types/task.types";
 import { deleteTask } from "@/services/task/operations/taskDeleteOperations";
 import { RecurringFormData } from "@/types/recurring.types";
-import { updateTaskStatus } from "@/services/task/operations/taskStatusOperations";
+import { markTaskComplete, markTaskPending, updateTaskStatus } from "@/services/task/operations/taskStatusOperations";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -23,7 +23,7 @@ export function useTasks() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const fetchTasks = async () => {
+  const fetchTasksData = async () => {
     if (!user) {
       setTasks(null);
       setIsLoading(false);
@@ -32,7 +32,7 @@ export function useTasks() {
     
     setIsLoading(true);
     try {
-      const result = await fetchTasksByTab(
+      const result = await fetchTasks(
         user.id,
         currentTab,
         filterStatus,
@@ -54,7 +54,7 @@ export function useTasks() {
   
   // Fetch tasks whenever dependencies change
   useEffect(() => {
-    fetchTasks();
+    fetchTasksData();
   }, [user, currentTab, filterStatus, filterPriority, searchQuery]);
   
   // Function to create a new task
@@ -67,7 +67,7 @@ export function useTasks() {
       const newTask = await createTaskWithSubtasks(taskData, user.id);
       
       // Refresh tasks after creating a new one
-      fetchTasks();
+      fetchTasksData();
       
       toast({
         title: "Task created",
@@ -124,16 +124,22 @@ export function useTasks() {
     try {
       await updateTaskStatus(taskId, status);
       
-      // Update local state
-      setTasks((prevTasks) => 
-        prevTasks
-          ? prevTasks.map((task) => 
-              task.id === taskId 
-                ? { ...task, status } 
-                : task
-            )
-          : null
-      );
+      // Update local state safely with proper casting
+      setTasks((prevTasks) => {
+        if (!prevTasks) return null;
+        
+        return prevTasks.map((task) => {
+          if (task.id === taskId) {
+            // Ensure we cast the status to a valid TaskStatus
+            const validStatus = ['pending', 'in-progress', 'completed', 'late'].includes(status)
+              ? status as Task['status']
+              : task.status;
+              
+            return { ...task, status: validStatus };
+          }
+          return task;
+        });
+      });
       
       toast({
         title: "Task updated",
@@ -165,7 +171,7 @@ export function useTasks() {
     createTask,
     removeTask,
     updateStatus,
-    fetchTasks,
+    fetchTasks: fetchTasksData,
     userRole,
   };
 }

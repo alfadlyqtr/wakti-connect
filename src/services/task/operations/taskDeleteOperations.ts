@@ -7,23 +7,15 @@ import { toast } from "@/components/ui/use-toast";
  */
 export async function deleteTask(taskId: string): Promise<boolean> {
   try {
-    // First delete all subtasks
-    const { error: subtasksError } = await supabase
+    // First, delete any subtasks associated with this task
+    const { error: subtaskError } = await supabase
       .from('todo_items')
       .delete()
       .eq('task_id', taskId);
-      
-    if (subtasksError) throw subtasksError;
     
-    // Delete any shared task entries
-    const { error: sharedError } = await supabase
-      .from('shared_tasks')
-      .delete()
-      .eq('task_id', taskId);
-      
-    if (sharedError) throw sharedError;
+    if (subtaskError) throw subtaskError;
     
-    // Finally delete the task itself
+    // Then delete the task itself
     const { error } = await supabase
       .from('tasks')
       .delete()
@@ -36,7 +28,7 @@ export async function deleteTask(taskId: string): Promise<boolean> {
     console.error("Error deleting task:", error);
     toast({
       title: "Error",
-      description: error.message || "Failed to delete task",
+      description: "Failed to delete task",
       variant: "destructive",
     });
     return false;

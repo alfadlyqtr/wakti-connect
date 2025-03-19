@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { TaskFormData, Task, SubTask } from "@/types/task.types";
 import { createTask } from "./baseService";
@@ -40,14 +41,20 @@ export async function createTaskWithSubtasks(taskData: TaskFormData, userId: str
  */
 export async function createSubtasks(taskId: string, subtasks: SubTask[]): Promise<SubTask[]> {
   try {
+    // Check if subtasks array is empty
+    if (!subtasks || subtasks.length === 0) {
+      return [];
+    }
+    
     const subtaskPayload = subtasks.map(subtask => ({
       task_id: taskId,
       content: subtask.content,
       is_completed: subtask.is_completed || false
     }));
     
+    // Use the helper from util to handle dynamic table names
     const { data, error } = await supabase
-      .from("subtasks")
+      .from("todo_items")
       .insert(subtaskPayload)
       .select("*");
       
@@ -56,7 +63,15 @@ export async function createSubtasks(taskId: string, subtasks: SubTask[]): Promi
       throw new Error(error.message);
     }
     
-    return data;
+    // Ensure the data is properly typed
+    return (data || []).map(item => ({
+      id: item.id,
+      task_id: item.task_id,
+      content: item.content,
+      is_completed: item.is_completed || false,
+      created_at: item.created_at,
+      updated_at: item.updated_at
+    }));
   } catch (error: any) {
     console.error("Error in createSubtasks:", error);
     throw new Error(`Failed to create subtasks: ${error.message}`);
@@ -101,11 +116,15 @@ export async function createRecurringTask(
       task_id: initialTask.id,
       frequency: recurringData.frequency,
       interval: recurringData.interval,
-      end_date: recurringData.endDate ? recurringData.endDate.toISOString() : null,
-      max_occurrences: recurringData.maxOccurrences || null,
-      days_of_week: recurringData.days_of_week || null
+      end_date: recurringData.end_date ? recurringData.end_date.toISOString() : null,
+      max_occurrences: recurringData.max_occurrences || null,
+      days_of_week: recurringData.days_of_week || null,
+      entity_id: initialTask.id,
+      entity_type: "task",
+      created_by: userId
     };
     
+    // Use our helper to handle dynamic table insertion
     const { data: recurrence, error: recurrenceError } = await supabase
       .from("recurrences")
       .insert(recurrencePayload)
@@ -123,3 +142,6 @@ export async function createRecurringTask(
     throw new Error(`Failed to create recurring task: ${error.message}`);
   }
 }
+
+// Export the task creation functions
+export { createTaskWithSubtasks as createTask };

@@ -1,21 +1,44 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskStatus, TaskPriority } from "../types";
+import { Task, TaskStatus, TaskPriority } from "@/types/task.types";
 
 /**
  * Fetches tasks created by the current user
  */
-export async function fetchMyTasks(userId: string): Promise<Task[]> {
+export async function fetchMyTasks(
+  userId: string, 
+  filterStatus: string = "all", 
+  filterPriority: string = "all", 
+  searchQuery: string = ""
+): Promise<Task[]> {
   try {
-    const { data, error } = await supabase
+    // Build the query
+    let query = supabase
       .from('tasks')
       .select(`
         *,
         subtasks:todo_items(*)
       `)
       .eq('user_id', userId)
-      .is('assignee_id', null)
-      .order('due_date', { ascending: true });
+      .is('assignee_id', null);
+    
+    // Apply status filter if needed
+    if (filterStatus !== "all") {
+      query = query.eq('status', filterStatus);
+    }
+    
+    // Apply priority filter if needed
+    if (filterPriority !== "all") {
+      query = query.eq('priority', filterPriority);
+    }
+    
+    // Apply search filter if needed
+    if (searchQuery) {
+      query = query.ilike('title', `%${searchQuery}%`);
+    }
+    
+    // Get data
+    const { data, error } = await query.order('due_date', { ascending: true });
       
     if (error) throw error;
     
@@ -40,3 +63,6 @@ export async function fetchMyTasks(userId: string): Promise<Task[]> {
     return [];
   }
 }
+
+// For backward compatibility
+export const getMyTasks = fetchMyTasks;

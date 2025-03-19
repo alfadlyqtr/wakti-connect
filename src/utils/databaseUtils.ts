@@ -2,6 +2,15 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
+ * Helper function to perform a more flexible select from a table
+ * @param tableName The name of the table to query
+ * @returns A database query builder
+ */
+export function fromTable(tableName: string) {
+  return supabase.from(tableName);
+}
+
+/**
  * Check if a table exists in the database
  * @param tableName The name of the table to check
  * @returns A boolean indicating if the table exists
@@ -16,9 +25,8 @@ export async function checkIfTableExists(tableName: string): Promise<boolean> {
       
       // Try an alternative approach with a raw query if RPC fails
       try {
-        // Use fromTable helper which avoids type issues with dynamic table names
-        const { data: tableData, error: countError } = await supabase
-          .from('_metadata')
+        // Use the helper function for dynamic table queries
+        const { data: tableData, error: countError } = await fromTable('_metadata')
           .select('*')
           .eq('table_name', tableName)
           .maybeSingle();

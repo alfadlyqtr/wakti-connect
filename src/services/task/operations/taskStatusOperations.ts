@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { TaskStatus } from "@/types/task.types";
 
 /**
  * Mark a task as complete
@@ -50,6 +51,37 @@ export async function markTaskPending(taskId: string): Promise<boolean> {
     toast({
       title: "Error",
       description: error.message || "Failed to mark task as pending",
+      variant: "destructive",
+    });
+    return false;
+  }
+}
+
+/**
+ * Update a task's status
+ */
+export async function updateTaskStatus(taskId: string, status: string): Promise<boolean> {
+  try {
+    const validStatus = ['pending', 'in-progress', 'completed', 'late'].includes(status)
+      ? status as TaskStatus
+      : 'pending';
+    
+    const { error } = await supabase
+      .from('tasks')
+      .update({ 
+        status: validStatus,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', taskId);
+      
+    if (error) throw error;
+    
+    return true;
+  } catch (error: any) {
+    console.error("Error updating task status:", error);
+    toast({
+      title: "Error",
+      description: error.message || "Failed to update task status",
       variant: "destructive",
     });
     return false;

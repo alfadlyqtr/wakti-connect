@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskFormData, TaskPriority, TaskStatus } from "@/types/task.types";
 
@@ -27,7 +28,22 @@ export async function createTask(taskData: {
       throw new Error(error.message);
     }
 
-    return data;
+    // Ensure the returned data conforms to Task type
+    return {
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      status: data.status as TaskStatus,
+      priority: data.priority as TaskPriority,
+      due_date: data.due_date,
+      user_id: data.user_id,
+      assignee_id: data.assignee_id,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      is_recurring_instance: data.is_recurring_instance || false,
+      parent_recurring_id: data.parent_recurring_id || null,
+      subtasks: []
+    };
   } catch (error: any) {
     console.error("Error in createTask:", error);
     throw new Error(`Failed to create task: ${error.message}`);
@@ -53,9 +69,20 @@ export async function getTaskWithSubtasks(taskId: string): Promise<Task> {
     
   if (subtasksError) throw subtasksError;
   
-  // Combine the data
+  // Combine the data and ensure the task conforms to Task type
   return {
-    ...taskData,
+    id: taskData.id,
+    title: taskData.title,
+    description: taskData.description,
+    status: taskData.status as TaskStatus,
+    priority: taskData.priority as TaskPriority,
+    due_date: taskData.due_date,
+    user_id: taskData.user_id,
+    assignee_id: taskData.assignee_id,
+    created_at: taskData.created_at,
+    updated_at: taskData.updated_at,
+    is_recurring_instance: taskData.is_recurring_instance || false,
+    parent_recurring_id: taskData.parent_recurring_id || null,
     subtasks: subtasksData || []
-  } as Task;
+  };
 }

@@ -1,8 +1,9 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { TasksResult, TaskTab } from "@/types/task.types";
-import { getAssignedTasks } from "./fetchers/assignedTasks";
-import { getSharedTasks } from "./fetchers/sharedTasks";
-import { getMyTasks } from "./fetchers/myTasks";
+import { fetchAssignedTasks } from "./fetchers/assignedTasks";
+import { fetchSharedTasks } from "./fetchers/sharedTasks";
+import { fetchMyTasks } from "./fetchers/myTasks";
 import { safeQueryExecution } from "@/utils/databaseUtils";
 
 /**
@@ -40,19 +41,19 @@ export async function fetchTasksByTab(
       "tasks",
       async () => {
         if (tab === "my-tasks") {
-          const myTasks = await getMyTasks(userId, filterStatus, filterPriority, searchQuery);
+          const myTasks = await fetchMyTasks(userId, filterStatus, filterPriority, searchQuery);
           return {
             tasks: myTasks,
             userRole
           };
         } else if (tab === "shared-tasks") {
-          const sharedTasks = await getSharedTasks(userId, filterStatus, filterPriority, searchQuery);
+          const sharedTasks = await fetchSharedTasks(userId, filterStatus, filterPriority, searchQuery);
           return {
             tasks: sharedTasks,
             userRole
           };
         } else if (tab === "assigned-tasks") {
-          const assignedTasks = await getAssignedTasks(userId, filterStatus, filterPriority, searchQuery);
+          const assignedTasks = await fetchAssignedTasks(userId, filterStatus, filterPriority, searchQuery);
           return {
             tasks: assignedTasks,
             userRole
@@ -60,7 +61,7 @@ export async function fetchTasksByTab(
         }
         
         // Fall back to my tasks
-        const defaultTasks = await getMyTasks(userId, filterStatus, filterPriority, searchQuery);
+        const defaultTasks = await fetchMyTasks(userId, filterStatus, filterPriority, searchQuery);
         return {
           tasks: defaultTasks,
           userRole
@@ -80,3 +81,6 @@ export async function fetchTasksByTab(
     };
   }
 }
+
+// Export this function for ease of use elsewhere
+export { fetchTasksByTab as fetchTasks };

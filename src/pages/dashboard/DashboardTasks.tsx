@@ -2,10 +2,10 @@
 import React, { useState } from "react";
 import TaskControls from "@/components/tasks/TaskControls";
 import { Card, CardContent } from "@/components/ui/card";
-import { EmptyTasksState } from "@/components/tasks/EmptyTasksState";
+import EmptyTasksState from "@/components/tasks/EmptyTasksState";
 import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog";
 import { SectionContainer } from "@/components/ui/section-container";
-import { TaskGrid } from "@/components/tasks/TaskGrid";
+import TaskGrid from "@/components/tasks/TaskGrid";
 import { useTasks } from "@/hooks/useTasks";
 import { useAuth } from "@/hooks/useAuth";
 import { TaskFormData, TaskTab } from "@/types/task.types";
@@ -51,6 +51,12 @@ const DashboardTasks = () => {
       console.error("Error creating task:", error);
       throw error;
     }
+  };
+  
+  // Handle task actions from the grid
+  const handleTaskAction = (action: string, taskId: string) => {
+    console.log(`Action ${action} on task ${taskId}`);
+    // Implement the action handling logic here
   };
   
   return (

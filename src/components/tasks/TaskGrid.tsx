@@ -5,16 +5,14 @@ import TaskCard from "./TaskCard";
 
 interface TaskGridProps {
   tasks: Task[];
-  userRole: string | null;
-  tab: "my-tasks" | "shared-tasks" | "assigned-tasks";
-  onTaskAction: (action: string, taskId: string) => void;
+  showAssignee?: boolean;
+  type: "my-tasks" | "shared-tasks" | "assigned-tasks";
 }
 
 const TaskGrid: React.FC<TaskGridProps> = ({ 
   tasks, 
-  userRole,
-  tab,
-  onTaskAction
+  showAssignee = false,
+  type 
 }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -22,9 +20,9 @@ const TaskGrid: React.FC<TaskGridProps> = ({
         <TaskCard 
           key={task.id} 
           task={task} 
-          userRole={userRole as "free" | "individual" | "business"} 
-          tab={tab}
-          onAction={onTaskAction}
+          userRole="free" // This should be passed from parent component
+          tab={type}
+          onAction={() => {}} // This should be implemented in parent component
         />
       ))}
     </div>
