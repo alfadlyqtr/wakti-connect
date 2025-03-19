@@ -44,16 +44,25 @@ const JobCardsTab = () => {
           throw error;
         }
         
+        if (!data) {
+          setPermissionsLoading(false);
+          return;
+        }
+        
         setStaffRelationId(data.id);
         
         // Set permissions from data
         if (data.permissions) {
           setCanCreateJobCards(!!data.permissions.can_create_job_cards);
           setCanTrackHours(!!data.permissions.can_track_hours);
+        } else {
+          // Default permissions if not set
+          setCanCreateJobCards(true);
+          setCanTrackHours(true);
         }
         
         // Also check for active work session
-        if (data.permissions?.can_track_hours) {
+        if ((data.permissions?.can_track_hours !== false)) {
           const { data: activeSessions, error: sessionsError } = await supabase
             .from('staff_work_logs')
             .select('*')

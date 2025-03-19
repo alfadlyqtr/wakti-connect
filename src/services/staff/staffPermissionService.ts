@@ -25,7 +25,10 @@ export const getStaffPermissions = async (staffId: string): Promise<StaffPermiss
       
     if (error) throw error;
     
-    return data?.permissions || getDefaultPermissions();
+    // If permissions is null, return default permissions
+    if (!data || !data.permissions) return getDefaultPermissions();
+    
+    return data.permissions as StaffPermissions;
   } catch (error) {
     console.error("Error fetching staff permissions:", error);
     return getDefaultPermissions();
@@ -42,7 +45,10 @@ export const getStaffRelationPermissions = async (relationId: string): Promise<S
       
     if (error) throw error;
     
-    return data?.permissions || getDefaultPermissions();
+    // If permissions is null, return default permissions
+    if (!data || !data.permissions) return getDefaultPermissions();
+    
+    return data.permissions as StaffPermissions;
   } catch (error) {
     console.error("Error fetching staff relation permissions:", error);
     return getDefaultPermissions();

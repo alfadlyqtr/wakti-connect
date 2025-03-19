@@ -359,30 +359,45 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          is_service_provider: boolean | null
           name: string | null
+          permissions: Json | null
           position: string | null
+          profile_image_url: string | null
           role: string
           staff_id: string
+          staff_number: string | null
+          status: string | null
         }
         Insert: {
           business_id: string
           created_at?: string
           email?: string | null
           id?: string
+          is_service_provider?: boolean | null
           name?: string | null
+          permissions?: Json | null
           position?: string | null
+          profile_image_url?: string | null
           role?: string
           staff_id: string
+          staff_number?: string | null
+          status?: string | null
         }
         Update: {
           business_id?: string
           created_at?: string
           email?: string | null
           id?: string
+          is_service_provider?: boolean | null
           name?: string | null
+          permissions?: Json | null
           position?: string | null
+          profile_image_url?: string | null
           role?: string
           staff_id?: string
+          staff_number?: string | null
+          status?: string | null
         }
         Relationships: []
       }
@@ -1030,6 +1045,7 @@ export type Database = {
           contact_id: string
           created_at: string | null
           id: string
+          staff_relation_id: string | null
           status: string
           updated_at: string | null
           user_id: string
@@ -1038,6 +1054,7 @@ export type Database = {
           contact_id: string
           created_at?: string | null
           id?: string
+          staff_relation_id?: string | null
           status?: string
           updated_at?: string | null
           user_id: string
@@ -1046,11 +1063,20 @@ export type Database = {
           contact_id?: string
           created_at?: string | null
           id?: string
+          staff_relation_id?: string | null
           status?: string
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_contacts_staff_relation_id_fkey"
+            columns: ["staff_relation_id"]
+            isOneToOne: false
+            referencedRelation: "business_staff"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_monthly_usage: {
         Row: {

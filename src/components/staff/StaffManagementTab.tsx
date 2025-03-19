@@ -79,7 +79,21 @@ const StaffManagementTab = () => {
         .order('created_at', { ascending: false });
         
       if (staffError) throw staffError;
-      return staffData as StaffMember[];
+      
+      // Cast to StaffMember[] type with default values for new fields
+      return (staffData || []).map(staff => ({
+        ...staff,
+        staff_number: staff.staff_number || `TEMP_${staff.id.substring(0, 5)}`,
+        is_service_provider: staff.is_service_provider || false,
+        status: (staff.status as 'active' | 'suspended' | 'deleted') || 'active',
+        profile_image_url: staff.profile_image_url || null,
+        permissions: staff.permissions || {
+          can_track_hours: true,
+          can_message_staff: true,
+          can_create_job_cards: true,
+          can_view_own_analytics: true
+        }
+      })) as StaffMember[];
     }
   });
 
