@@ -15,16 +15,16 @@ export const SuggestionPrompts = ({
   isLoading,
 }: SuggestionPromptsProps) => {
   return (
-    <Alert className="bg-muted/50">
-      <AlertTitle className="text-sm font-medium">Try asking:</AlertTitle>
-      <AlertDescription className="mt-2">
-        <div className="flex flex-wrap gap-2">
+    <Alert className="bg-muted/50 p-3 sm:p-4">
+      <AlertTitle className="text-xs sm:text-sm font-medium mb-2">Try asking:</AlertTitle>
+      <AlertDescription>
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
           {suggestions.map((suggestion, index) => (
             <Button
               key={index}
               variant="outline"
               size="sm"
-              className="text-xs"
+              className="text-xs h-auto py-1 px-2"
               onClick={() => onSelectSuggestion(suggestion)}
               disabled={isLoading}
             >

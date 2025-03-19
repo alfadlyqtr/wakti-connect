@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AIAssistantChat } from "./AIAssistantChat";
 import { SuggestionPrompts } from "./SuggestionPrompts";
 import { AIMessage } from "@/types/ai-assistant.types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -26,22 +27,24 @@ export const AIAssistantChatCard = ({
   canAccess,
   clearMessages,
 }: AIAssistantChatCardProps) => {
+  const isMobile = useIsMobile();
+  
   const suggestionQuestions = [
     "What tasks should I prioritize today?",
-    "Help me plan an event for next week",
+    "Help me plan an event",
     "Analyze my team's performance",
-    "Optimize my work schedule",
-    "Suggest ways to improve task completion rate"
+    "Optimize my schedule",
+    "Improve task completion"
   ];
 
   return (
     <Card className="border shadow-sm">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2">
-          <Bot className="h-5 w-5 text-wakti-blue" />
+      <CardHeader className="pb-2 md:pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+          <Bot className="h-4 w-4 md:h-5 md:w-5 text-wakti-blue" />
           Chat with WAKTI AI
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs md:text-sm">
           Ask about tasks, events, staff management, analytics, and more
         </CardDescription>
       </CardHeader>
@@ -55,20 +58,20 @@ export const AIAssistantChatCard = ({
           canAccess={canAccess}
         />
       </CardContent>
-      <CardFooter className="flex flex-col pt-6">
-        <div className="flex justify-between w-full mb-4">
+      <CardFooter className="flex flex-col pt-3 md:pt-6">
+        <div className="flex justify-between w-full mb-2 md:mb-4">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={clearMessages}
-            className="text-xs"
+            className="text-xs py-1 px-2 h-auto md:py-1.5 md:px-3"
           >
             <RefreshCcw className="h-3 w-3 mr-1" />
-            New conversation
+            {isMobile ? "New chat" : "New conversation"}
           </Button>
           <div className="flex items-center text-xs text-muted-foreground">
             <Clock className="h-3 w-3 mr-1" />
-            Powered by <a 
+            <span className="hidden xs:inline">Powered by</span> <a 
               href="https://tmw.qa/ai-chat-bot/" 
               target="_blank" 
               rel="noopener noreferrer" 
@@ -80,7 +83,7 @@ export const AIAssistantChatCard = ({
         </div>
         
         <SuggestionPrompts
-          suggestions={suggestionQuestions}
+          suggestions={isMobile ? suggestionQuestions.slice(0, 3) : suggestionQuestions}
           onSelectSuggestion={setInputMessage}
           isLoading={isLoading}
         />

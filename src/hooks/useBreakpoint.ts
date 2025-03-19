@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 
-export type Breakpoint = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+type Breakpoint = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 
 const breakpoints = {
   xs: 0,
@@ -13,31 +13,29 @@ const breakpoints = {
 };
 
 /**
- * Hook to determine current breakpoint based on window width
- * @returns Current breakpoint name
+ * Hook that returns an array of breakpoints that are currently active
+ * @returns Array of active breakpoints
  */
-export function useBreakpoint(): Breakpoint {
-  const [breakpoint, setBreakpoint] = useState<Breakpoint>('xs');
+export function useBreakpoint(): Breakpoint[] {
+  const [activeBreakpoints, setActiveBreakpoints] = useState<Breakpoint[]>(['xs']);
 
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
-      if (width >= breakpoints['2xl']) {
-        setBreakpoint('2xl');
-      } else if (width >= breakpoints.xl) {
-        setBreakpoint('xl');
-      } else if (width >= breakpoints.lg) {
-        setBreakpoint('lg');
-      } else if (width >= breakpoints.md) {
-        setBreakpoint('md');
-      } else if (width >= breakpoints.sm) {
-        setBreakpoint('sm');
-      } else {
-        setBreakpoint('xs');
-      }
+      const active: Breakpoint[] = [];
+      
+      // Add all breakpoints that are smaller than or equal to the current width
+      if (width >= 0) active.push('xs');
+      if (width >= breakpoints.sm) active.push('sm');
+      if (width >= breakpoints.md) active.push('md');
+      if (width >= breakpoints.lg) active.push('lg');
+      if (width >= breakpoints.xl) active.push('xl');
+      if (width >= breakpoints['2xl']) active.push('2xl');
+      
+      setActiveBreakpoints(active);
     };
 
-    // Set initial breakpoint
+    // Set initial breakpoints
     handleResize();
 
     // Add event listener
@@ -49,7 +47,7 @@ export function useBreakpoint(): Breakpoint {
     };
   }, []);
 
-  return breakpoint;
+  return activeBreakpoints;
 }
 
 /**
@@ -58,13 +56,8 @@ export function useBreakpoint(): Breakpoint {
  * @returns Boolean indicating if current width meets or exceeds the specified breakpoint
  */
 export function useBreakpointValue(minBreakpoint: Breakpoint): boolean {
-  const currentBreakpoint = useBreakpoint();
-  const breakpointOrder: Breakpoint[] = ['xs', 'sm', 'md', 'lg', 'xl', '2xl'];
-  
-  const currentIndex = breakpointOrder.indexOf(currentBreakpoint);
-  const minIndex = breakpointOrder.indexOf(minBreakpoint);
-  
-  return currentIndex >= minIndex;
+  const currentBreakpoints = useBreakpoint();
+  return currentBreakpoints.includes(minBreakpoint);
 }
 
 export default useBreakpoint;
