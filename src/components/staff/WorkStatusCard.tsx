@@ -4,6 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Clock } from "lucide-react";
 import WorkSessionStatus from "./WorkSessionStatus";
 import WorkStatusActions from "./WorkStatusActions";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
 interface WorkStatusCardProps {
   activeWorkSession: any | null;
@@ -27,15 +28,30 @@ const WorkStatusCard: React.FC<WorkStatusCardProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <WorkSessionStatus activeWorkSession={activeWorkSession} />
+        <ErrorBoundary fallback={
+          <div className="text-destructive text-sm">
+            Error displaying work status. Please refresh the page.
+          </div>
+        }>
+          <WorkSessionStatus activeWorkSession={activeWorkSession} />
+        </ErrorBoundary>
       </CardContent>
       <CardFooter className="flex gap-3 flex-wrap">
-        <WorkStatusActions 
-          activeWorkSession={activeWorkSession}
-          onStartWorkDay={onStartWorkDay}
-          onEndWorkDay={onEndWorkDay}
-          onCreateJobCard={onCreateJobCard}
-        />
+        <ErrorBoundary fallback={
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 rounded-md bg-primary text-primary-foreground w-full"
+          >
+            Refresh Page
+          </button>
+        }>
+          <WorkStatusActions 
+            activeWorkSession={activeWorkSession}
+            onStartWorkDay={onStartWorkDay}
+            onEndWorkDay={onEndWorkDay}
+            onCreateJobCard={onCreateJobCard}
+          />
+        </ErrorBoundary>
       </CardFooter>
     </Card>
   );

@@ -7,6 +7,7 @@ import ActiveWorkSession from "@/components/staff/ActiveWorkSession";
 import JobCardsNoAccess from "@/components/jobs/JobCardsNoAccess";
 import CreateJobCardDialog from "@/components/jobs/CreateJobCardDialog";
 import { useToast } from "@/hooks/use-toast";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
 interface JobCardsContentProps {
   staffRelationId: string;
@@ -52,17 +53,47 @@ const JobCardsContent: React.FC<JobCardsContentProps> = ({
 
   return (
     <>
-      <WorkStatusCard 
-        activeWorkSession={activeWorkSession}
-        onStartWorkDay={startWorkDay}
-        onEndWorkDay={endWorkDay}
-        onCreateJobCard={openCreateJobCard}
-      />
+      <ErrorBoundary fallback={
+        <div className="p-6 border rounded-lg border-destructive/50 bg-destructive/10">
+          <h3 className="text-lg font-semibold mb-2">Work Status Error</h3>
+          <p className="text-muted-foreground mb-4">
+            We encountered an error loading your work status information.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
+          >
+            Refresh Page
+          </button>
+        </div>
+      }>
+        <WorkStatusCard 
+          activeWorkSession={activeWorkSession}
+          onStartWorkDay={startWorkDay}
+          onEndWorkDay={endWorkDay}
+          onCreateJobCard={openCreateJobCard}
+        />
+      </ErrorBoundary>
       
       <div className="mt-6">
         <div className="space-y-6">
           {canCreateJobCards ? (
-            <JobCardsList staffRelationId={staffRelationId} />
+            <ErrorBoundary fallback={
+              <div className="p-6 border rounded-lg border-destructive/50 bg-destructive/10">
+                <h3 className="text-lg font-semibold mb-2">Job Cards Error</h3>
+                <p className="text-muted-foreground mb-4">
+                  We encountered an error loading your job cards.
+                </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 rounded-md bg-primary text-primary-foreground"
+                >
+                  Refresh Page
+                </button>
+              </div>
+            }>
+              <JobCardsList staffRelationId={staffRelationId} />
+            </ErrorBoundary>
           ) : (
             <JobCardsNoAccess />
           )}
@@ -70,9 +101,21 @@ const JobCardsContent: React.FC<JobCardsContentProps> = ({
           {canTrackHours && (
             <div className="pt-6 border-t">
               <h3 className="font-medium text-lg mb-4">Work Session History</h3>
-              <ActiveWorkSession session={activeWorkSession} />
+              <ErrorBoundary fallback={
+                <div className="p-4 border rounded-lg border-destructive/50 bg-destructive/10 text-center">
+                  <p>Error loading active work session. Please refresh the page.</p>
+                </div>
+              }>
+                <ActiveWorkSession session={activeWorkSession} />
+              </ErrorBoundary>
               <div className="mt-4">
-                <WorkHistory staffRelationId={staffRelationId} />
+                <ErrorBoundary fallback={
+                  <div className="p-4 border rounded-lg border-destructive/50 bg-destructive/10 text-center">
+                    <p>Error loading work history. Please refresh the page.</p>
+                  </div>
+                }>
+                  <WorkHistory staffRelationId={staffRelationId} />
+                </ErrorBoundary>
               </div>
             </div>
           )}
