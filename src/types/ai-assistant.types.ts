@@ -7,7 +7,7 @@ export interface AIMessage {
 }
 
 export interface AISettings {
-  id?: number | string; // Allow both number and string for flexibility
+  id?: string; // Changed from number | string to just string to match Supabase's UUID type
   assistant_name: string;
   tone: "formal" | "casual" | "concise" | "detailed" | "balanced";
   response_length: "short" | "balanced" | "detailed";

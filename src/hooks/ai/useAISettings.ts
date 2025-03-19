@@ -78,12 +78,25 @@ export const useAISettings = () => {
         }
 
         console.log("Settings fetched successfully:", data);
-        // Convert id to number if it's a string to match our AISettings type
-        if (data.id && typeof data.id === 'string') {
-          data.id = parseInt(data.id, 10);
-        }
         
-        return data as unknown as AISettings;
+        // Create a proper AISettings object from the database result
+        const settings: AISettings = {
+          id: data.id,
+          assistant_name: data.assistant_name || "WAKTI",
+          tone: (data.tone as AISettings["tone"]) || "balanced",
+          response_length: (data.response_length as AISettings["response_length"]) || "balanced",
+          proactiveness: data.proactiveness !== null ? data.proactiveness : true,
+          suggestion_frequency: (data.suggestion_frequency as AISettings["suggestion_frequency"]) || "medium",
+          enabled_features: data.enabled_features as AISettings["enabled_features"] || {
+            tasks: true,
+            events: true,
+            staff: true,
+            analytics: true,
+            messaging: true,
+          }
+        };
+        
+        return settings;
       } catch (error) {
         console.error("Error in AI settings fetch:", error);
         throw error;
@@ -144,30 +157,79 @@ export const useAISettings = () => {
 
       console.log("Updating AI settings:", newSettings);
       
-      // Convert settings for Supabase (ensuring id is correctly handled)
-      const settingsForUpdate = { ...newSettings };
-      // Remove id if it's a number as Supabase expects string ID or none
-      if (typeof settingsForUpdate.id === 'number') {
-        delete settingsForUpdate.id;
-      }
+      // Prepare settings for Supabase
+      const settingsForUpdate = {
+        user_id: user.id,
+        assistant_name: newSettings.assistant_name,
+        tone: newSettings.tone,
+        response_length: newSettings.response_length,
+        proactiveness: newSettings.proactiveness,
+        suggestion_frequency: newSettings.suggestion_frequency,
+        enabled_features: newSettings.enabled_features
+      };
 
-      const { data, error } = await supabase
-        .from("ai_assistant_settings")
-        .update(settingsForUpdate)
-        .eq("user_id", user.id)
-        .select()
-        .single();
+      // If we have an id, update the existing record
+      if (newSettings.id) {
+        const { data, error } = await supabase
+          .from("ai_assistant_settings")
+          .update(settingsForUpdate)
+          .eq("user_id", user.id)
+          .select()
+          .single();
 
-      if (error) throw error;
-      
-      console.log("Settings updated successfully");
-      
-      // Convert id to number for consistency in our app
-      if (data && data.id && typeof data.id === 'string') {
-        data.id = parseInt(data.id, 10);
+        if (error) throw error;
+        
+        console.log("Settings updated successfully");
+        
+        // Convert to AISettings type
+        const updatedSettings: AISettings = {
+          id: data.id,
+          assistant_name: data.assistant_name || "WAKTI",
+          tone: (data.tone as AISettings["tone"]) || "balanced",
+          response_length: (data.response_length as AISettings["response_length"]) || "balanced",
+          proactiveness: data.proactiveness !== null ? data.proactiveness : true,
+          suggestion_frequency: (data.suggestion_frequency as AISettings["suggestion_frequency"]) || "medium",
+          enabled_features: data.enabled_features as AISettings["enabled_features"] || {
+            tasks: true,
+            events: true,
+            staff: true,
+            analytics: true,
+            messaging: true,
+          }
+        };
+        
+        return updatedSettings;
+      } else {
+        // No id, so insert a new record
+        const { data, error } = await supabase
+          .from("ai_assistant_settings")
+          .insert(settingsForUpdate)
+          .select()
+          .single();
+
+        if (error) throw error;
+        
+        console.log("Settings created successfully");
+        
+        // Convert to AISettings type
+        const createdSettings: AISettings = {
+          id: data.id,
+          assistant_name: data.assistant_name || "WAKTI",
+          tone: (data.tone as AISettings["tone"]) || "balanced",
+          response_length: (data.response_length as AISettings["response_length"]) || "balanced",
+          proactiveness: data.proactiveness !== null ? data.proactiveness : true,
+          suggestion_frequency: (data.suggestion_frequency as AISettings["suggestion_frequency"]) || "medium",
+          enabled_features: data.enabled_features as AISettings["enabled_features"] || {
+            tasks: true,
+            events: true,
+            staff: true,
+            analytics: true,
+            messaging: true,
+          }
+        };
+        
+        return createdSettings;
       }
-      
-      return data as unknown as AISettings;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["aiSettings", user?.id] });
