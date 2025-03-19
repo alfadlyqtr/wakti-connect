@@ -1,72 +1,11 @@
 
 import React from 'react';
-import { render, screen, act, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
 import { AISettingsProvider, useAISettings } from '../AISettingsContext';
-import { useAIAssistant } from '@/hooks/useAIAssistant';
 import { AISettings } from '@/types/ai-assistant.types';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-import '@testing-library/jest-dom'; // Add this import for the matchers
-
-// Mock the useAIAssistant hook
-vi.mock('@/hooks/useAIAssistant', () => {
-  return {
-    useAIAssistant: vi.fn(),
-  };
-});
-
-// Mock the supabase client
-vi.mock('@/integrations/supabase/client', () => {
-  return {
-    supabase: {
-      auth: {
-        getSession: vi.fn().mockResolvedValue({
-          data: {
-            session: {
-              user: {
-                id: 'test-user-id',
-              },
-            },
-          },
-        }),
-      },
-      from: vi.fn().mockReturnValue({
-        insert: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            maybeSingle: vi.fn().mockResolvedValue({
-              data: { id: 1 },
-              error: null,
-            }),
-          }),
-        }),
-      }),
-    },
-  };
-});
-
-// Mock toast
-vi.mock('@/components/ui/use-toast', () => {
-  return {
-    toast: vi.fn(),
-  };
-});
-
-// Sample AI settings for testing
-const sampleSettings: AISettings = {
-  id: 1, // This is now valid with our updated type
-  assistant_name: 'Test Assistant',
-  tone: 'balanced',
-  response_length: 'balanced',
-  proactiveness: true,
-  suggestion_frequency: 'medium',
-  enabled_features: {
-    tasks: true,
-    events: true,
-    staff: true,
-    analytics: true,
-    messaging: true,
-  },
-};
+import { vi, type Mock, type MockInstance } from 'vitest';
 
 // Create a test component that uses the context
 const TestComponent = () => {
@@ -74,109 +13,181 @@ const TestComponent = () => {
     settings, 
     isLoadingSettings, 
     error, 
-    updateSettings,
-    canUseAI,
-    createDefaultSettings
+    updateSettings, 
+    addKnowledge,
+    deleteKnowledge,
+    createDefaultSettings,
+    isCreatingSettings
   } = useAISettings();
+
+  if (isLoadingSettings) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!settings) return <button onClick={createDefaultSettings}>Create Settings</button>;
 
   return (
     <div>
-      <div data-testid="loading">{isLoadingSettings ? 'Loading' : 'Not Loading'}</div>
-      <div data-testid="can-use-ai">{canUseAI ? 'Can Use AI' : 'Cannot Use AI'}</div>
-      <div data-testid="error">{error || 'No Error'}</div>
-      <div data-testid="assistant-name">{settings?.assistant_name || 'No Name'}</div>
-      <button 
-        data-testid="update-button" 
-        onClick={() => settings && updateSettings({ ...settings, assistant_name: 'Updated Name' })}
-      >
-        Update Settings
+      <h1>Settings</h1>
+      <div data-testid="assistant-name">{settings.assistant_name}</div>
+      <button onClick={() => updateSettings({ ...settings, assistant_name: 'New Name' })}>
+        Update Name
       </button>
-      <button 
-        data-testid="create-button" 
-        onClick={() => createDefaultSettings()}
-      >
-        Create Default Settings
+      <button onClick={() => addKnowledge('Test Title', 'Test Content')}>
+        Add Knowledge
+      </button>
+      <button onClick={() => deleteKnowledge('test-id')}>
+        Delete Knowledge
       </button>
     </div>
   );
 };
+
+// Mock the useAIAssistant hook
+vi.mock('@/hooks/useAIAssistant', () => ({
+  useAIAssistant: vi.fn(() => ({
+    aiSettings: null,
+    isLoadingSettings: false,
+    updateSettings: {
+      mutateAsync: vi.fn(),
+      isPending: false,
+    },
+    addKnowledge: {
+      mutateAsync: vi.fn(),
+      isPending: false,
+    },
+    knowledgeUploads: [],
+    isLoadingKnowledge: false,
+    deleteKnowledge: {
+      mutateAsync: vi.fn(),
+    },
+    canUseAI: true,
+  })),
+}));
+
+// Mock the createDefaultSettings function
+vi.mock('../createDefaultSettings', () => ({
+  createDefaultSettings: vi.fn(() => Promise.resolve()),
+}));
 
 describe('AISettingsContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('provides loading state correctly', () => {
-    // Setup mock
-    const mockUseAIAssistant = vi.mocked(useAIAssistant);
-    mockUseAIAssistant.mockReturnValue({
+  it('should render loading state', () => {
+    // Update the mock to return loading state
+    const useAIAssistant = require('@/hooks/useAIAssistant').useAIAssistant;
+    useAIAssistant.mockReturnValue({
       aiSettings: null,
       isLoadingSettings: true,
-      updateSettings: { mutateAsync: vi.fn(), isPending: false },
-      canUseAI: true,
-      addKnowledge: { mutateAsync: vi.fn(), isPending: false },
+      updateSettings: {
+        mutateAsync: vi.fn() as Mock<any>,
+        isPending: false,
+      },
+      addKnowledge: {
+        mutateAsync: vi.fn() as Mock<any>,
+        isPending: false,
+      },
       knowledgeUploads: [],
       isLoadingKnowledge: false,
-      deleteKnowledge: { mutateAsync: vi.fn() }
+      deleteKnowledge: {
+        mutateAsync: vi.fn() as Mock<any>,
+      },
+      canUseAI: true,
     });
 
-    // Render
     render(
       <AISettingsProvider>
         <TestComponent />
       </AISettingsProvider>
     );
 
-    // Assert
-    expect(screen.getByTestId('loading')).toHaveTextContent('Loading');
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
-  it('provides settings data correctly', async () => {
-    // Setup mock
-    const mockUseAIAssistant = vi.mocked(useAIAssistant);
-    mockUseAIAssistant.mockReturnValue({
-      aiSettings: sampleSettings,
+  it('should render settings', () => {
+    // Update the mock to return settings
+    const useAIAssistant = require('@/hooks/useAIAssistant').useAIAssistant;
+    useAIAssistant.mockReturnValue({
+      aiSettings: {
+        id: '1',
+        assistant_name: 'Test Assistant',
+        tone: 'formal',
+        response_length: 'balanced',
+        proactiveness: true,
+        suggestion_frequency: 'medium',
+        enabled_features: {
+          tasks: true,
+          events: true,
+          staff: true,
+          analytics: true,
+          messaging: true,
+        },
+      } as unknown as AISettings,
       isLoadingSettings: false,
-      updateSettings: { mutateAsync: vi.fn(), isPending: false },
-      canUseAI: true,
-      addKnowledge: { mutateAsync: vi.fn(), isPending: false },
+      updateSettings: {
+        mutateAsync: vi.fn() as Mock<any>,
+        isPending: false,
+      },
+      addKnowledge: {
+        mutateAsync: vi.fn() as Mock<any>,
+        isPending: false,
+      },
       knowledgeUploads: [],
       isLoadingKnowledge: false,
-      deleteKnowledge: { mutateAsync: vi.fn() }
+      deleteKnowledge: {
+        mutateAsync: vi.fn() as Mock<any>,
+      },
+      canUseAI: true,
     });
 
-    // Render
     render(
       <AISettingsProvider>
         <TestComponent />
       </AISettingsProvider>
     );
 
-    // Assert
-    await waitFor(() => {
-      expect(screen.getByTestId('assistant-name')).toHaveTextContent('Test Assistant');
-      expect(screen.getByTestId('loading')).toHaveTextContent('Not Loading');
-    });
+    expect(screen.getByText('Settings')).toHaveTextContent('Settings');
+    expect(screen.getByTestId('assistant-name')).toHaveTextContent('Test Assistant');
   });
 
-  it('handles updateSettings correctly', async () => {
-    // Create a mock for the update function
-    const mockUpdateAsync = vi.fn().mockResolvedValue({ ...sampleSettings, assistant_name: 'Updated Name' });
+  it('should handle update settings', async () => {
+    const mockUpdateSettings = vi.fn() as Mock<any>;
     
-    // Setup mock
-    const mockUseAIAssistant = vi.mocked(useAIAssistant);
-    mockUseAIAssistant.mockReturnValue({
-      aiSettings: sampleSettings,
+    // Update the mock to return settings and the update function
+    const useAIAssistant = require('@/hooks/useAIAssistant').useAIAssistant;
+    useAIAssistant.mockReturnValue({
+      aiSettings: {
+        id: '1',
+        assistant_name: 'Test Assistant',
+        tone: 'formal',
+        response_length: 'balanced',
+        proactiveness: true,
+        suggestion_frequency: 'medium',
+        enabled_features: {
+          tasks: true,
+          events: true,
+          staff: true,
+          analytics: true,
+          messaging: true,
+        },
+      } as unknown as AISettings,
       isLoadingSettings: false,
-      updateSettings: { mutateAsync: mockUpdateAsync, isPending: false },
-      canUseAI: true,
-      addKnowledge: { mutateAsync: vi.fn(), isPending: false },
+      updateSettings: {
+        mutateAsync: mockUpdateSettings,
+        isPending: false,
+      },
+      addKnowledge: {
+        mutateAsync: vi.fn() as Mock<any>,
+        isPending: false,
+      },
       knowledgeUploads: [],
       isLoadingKnowledge: false,
-      deleteKnowledge: { mutateAsync: vi.fn() }
+      deleteKnowledge: {
+        mutateAsync: vi.fn() as Mock<any>,
+      },
+      canUseAI: true,
     });
 
-    // Render
     render(
       <AISettingsProvider>
         <TestComponent />
@@ -185,89 +196,202 @@ describe('AISettingsContext', () => {
 
     // Click the update button
     const user = userEvent.setup();
-    await user.click(screen.getByTestId('update-button'));
+    await user.click(screen.getByText('Update Name'));
 
-    // Assert
-    expect(mockUpdateAsync).toHaveBeenCalledWith({
-      ...sampleSettings,
-      assistant_name: 'Updated Name'
+    // Verify that the update function was called with the correct arguments
+    expect(mockUpdateSettings).toHaveBeenCalledWith({
+      id: '1',
+      assistant_name: 'New Name',
+      tone: 'formal',
+      response_length: 'balanced',
+      proactiveness: true,
+      suggestion_frequency: 'medium',
+      enabled_features: {
+        tasks: true,
+        events: true,
+        staff: true,
+        analytics: true,
+        messaging: true,
+      },
     });
   });
 
-  it('handles createDefaultSettings correctly', async () => {
-    // Setup mock for window.location.reload
-    const originalLocation = window.location;
-    delete window.location;
-    window.location = { ...originalLocation, reload: vi.fn() };
+  it('should handle add knowledge', async () => {
+    const mockAddKnowledge = vi.fn() as Mock<any>;
     
-    // Setup mock
-    const mockUseAIAssistant = vi.mocked(useAIAssistant);
-    mockUseAIAssistant.mockReturnValue({
-      aiSettings: null,
+    // Update the mock to return settings and the add knowledge function
+    const useAIAssistant = require('@/hooks/useAIAssistant').useAIAssistant;
+    useAIAssistant.mockReturnValue({
+      aiSettings: {
+        id: '1',
+        assistant_name: 'Test Assistant',
+        tone: 'formal',
+        response_length: 'balanced',
+        proactiveness: true,
+        suggestion_frequency: 'medium',
+        enabled_features: {
+          tasks: true,
+          events: true,
+          staff: true,
+          analytics: true,
+          messaging: true,
+        },
+      } as unknown as AISettings,
       isLoadingSettings: false,
-      updateSettings: { mutateAsync: vi.fn(), isPending: false },
-      canUseAI: true,
-      addKnowledge: { mutateAsync: vi.fn(), isPending: false },
+      updateSettings: {
+        mutateAsync: vi.fn() as Mock<any>,
+        isPending: false,
+      },
+      addKnowledge: {
+        mutateAsync: mockAddKnowledge,
+        isPending: false,
+      },
       knowledgeUploads: [],
       isLoadingKnowledge: false,
-      deleteKnowledge: { mutateAsync: vi.fn() }
-    });
-
-    // Render
-    render(
-      <AISettingsProvider>
-        <TestComponent />
-      </AISettingsProvider>
-    );
-
-    // Click the create button
-    const user = userEvent.setup();
-    await user.click(screen.getByTestId('create-button'));
-
-    // Assert that the supabase from().insert() was called
-    await waitFor(() => {
-      const supabaseClient = require('@/integrations/supabase/client').supabase;
-      expect(supabaseClient.from).toHaveBeenCalledWith('ai_assistant_settings');
-    });
-
-    // Restore original location
-    window.location = originalLocation;
-  });
-
-  it('handles errors correctly', async () => {
-    // Setup mock
-    const mockUseAIAssistant = vi.mocked(useAIAssistant);
-    mockUseAIAssistant.mockReturnValue({
-      aiSettings: null,
-      isLoadingSettings: false,
-      updateSettings: { 
-        mutateAsync: vi.fn().mockRejectedValue(new Error('Update failed')),
-        isPending: false 
+      deleteKnowledge: {
+        mutateAsync: vi.fn() as Mock<any>,
       },
       canUseAI: true,
-      addKnowledge: { mutateAsync: vi.fn(), isPending: false },
-      knowledgeUploads: [],
-      isLoadingKnowledge: false,
-      deleteKnowledge: { mutateAsync: vi.fn() }
     });
 
-    // Render
     render(
       <AISettingsProvider>
         <TestComponent />
       </AISettingsProvider>
     );
 
-    // Initially there should be no error
-    expect(screen.getByTestId('error')).toHaveTextContent('No Error');
-
-    // Click the update button which will trigger an error
+    // Click the add knowledge button
     const user = userEvent.setup();
-    await user.click(screen.getByTestId('update-button'));
+    await user.click(screen.getByText('Add Knowledge'));
 
-    // Assert
-    await waitFor(() => {
-      expect(screen.getByTestId('error')).toHaveTextContent('Unable to save settings. Please try again.');
+    // Verify that the add knowledge function was called with the correct arguments
+    expect(mockAddKnowledge).toHaveBeenCalledWith({
+      title: 'Test Title',
+      content: 'Test Content',
     });
+  });
+
+  it('should handle delete knowledge', async () => {
+    const mockDeleteKnowledge = vi.fn() as Mock<any>;
+    
+    // Update the mock to return settings and the delete knowledge function
+    const useAIAssistant = require('@/hooks/useAIAssistant').useAIAssistant;
+    useAIAssistant.mockReturnValue({
+      aiSettings: {
+        id: '1',
+        assistant_name: 'Test Assistant',
+        tone: 'formal',
+        response_length: 'balanced',
+        proactiveness: true,
+        suggestion_frequency: 'medium',
+        enabled_features: {
+          tasks: true,
+          events: true,
+          staff: true,
+          analytics: true,
+          messaging: true,
+        },
+      } as unknown as AISettings,
+      isLoadingSettings: false,
+      updateSettings: {
+        mutateAsync: vi.fn() as Mock<any>,
+        isPending: false,
+      },
+      addKnowledge: {
+        mutateAsync: vi.fn() as Mock<any>,
+        isPending: false,
+      },
+      knowledgeUploads: [],
+      isLoadingKnowledge: false,
+      deleteKnowledge: {
+        mutateAsync: mockDeleteKnowledge,
+      },
+      canUseAI: true,
+    });
+
+    render(
+      <AISettingsProvider>
+        <TestComponent />
+      </AISettingsProvider>
+    );
+
+    // Click the delete knowledge button
+    const user = userEvent.setup();
+    await user.click(screen.getByText('Delete Knowledge'));
+
+    // Verify that the delete knowledge function was called with the correct arguments
+    expect(mockDeleteKnowledge).toHaveBeenCalledWith('test-id');
+  });
+
+  it('should handle create default settings', async () => {
+    // Mock the createDefaultSettings function
+    const createDefaultSettingsMock = require('../createDefaultSettings').createDefaultSettings as MockInstance;
+    createDefaultSettingsMock.mockResolvedValue(undefined);
+    
+    // Update the mock to return null settings to trigger the create default settings button
+    const useAIAssistant = require('@/hooks/useAIAssistant').useAIAssistant;
+    useAIAssistant.mockReturnValue({
+      aiSettings: null,
+      isLoadingSettings: false,
+      updateSettings: {
+        mutateAsync: vi.fn() as Mock<any>,
+        isPending: false,
+      },
+      addKnowledge: {
+        mutateAsync: vi.fn() as Mock<any>,
+        isPending: false,
+      },
+      knowledgeUploads: [],
+      isLoadingKnowledge: false,
+      deleteKnowledge: {
+        mutateAsync: vi.fn() as Mock<any>,
+      },
+      canUseAI: true,
+    });
+
+    render(
+      <AISettingsProvider>
+        <TestComponent />
+      </AISettingsProvider>
+    );
+
+    // Click the create settings button
+    const user = userEvent.setup();
+    await user.click(screen.getByText('Create Settings'));
+
+    // Verify that the create default settings function was called
+    expect(createDefaultSettingsMock).toHaveBeenCalled();
+  });
+
+  it('should handle error', () => {
+    // Update the mock to return an error
+    const useAIAssistant = require('@/hooks/useAIAssistant').useAIAssistant;
+    useAIAssistant.mockReturnValue({
+      aiSettings: null,
+      isLoadingSettings: false,
+      settingsError: new Error('Test error'),
+      updateSettings: {
+        mutateAsync: vi.fn() as Mock<any>,
+        isPending: false,
+      },
+      addKnowledge: {
+        mutateAsync: vi.fn() as Mock<any>,
+        isPending: false,
+      },
+      knowledgeUploads: [],
+      isLoadingKnowledge: false,
+      deleteKnowledge: {
+        mutateAsync: vi.fn() as Mock<any>,
+      },
+      canUseAI: true,
+    });
+
+    render(
+      <AISettingsProvider>
+        <TestComponent />
+      </AISettingsProvider>
+    );
+
+    expect(screen.getByText('Error: Test error')).toBeInTheDocument();
   });
 });

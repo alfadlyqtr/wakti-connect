@@ -21,6 +21,11 @@ interface AIAssistantChatCardProps {
   clearMessages: () => void;
 }
 
+// Interface for SuggestionPrompts
+interface SuggestionPromptsProps {
+  onPromptClick: (prompt: string) => void;
+}
+
 export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   messages,
   inputMessage,
@@ -98,6 +103,10 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
             <AIAssistantChat 
               messages={messages} 
               isLoading={isLoading}
+              inputMessage={inputMessage}
+              setInputMessage={setInputMessage}
+              handleSendMessage={handleSendMessage}
+              canAccess={canAccess}
             />
           )}
           

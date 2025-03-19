@@ -80,7 +80,7 @@ export const useAISettings = () => {
         console.log("Settings fetched successfully:", data);
         // Convert id to number if it's a string to match our AISettings type
         if (data.id && typeof data.id === 'string') {
-          data.id = Number(data.id);
+          data.id = parseInt(data.id, 10);
         }
         
         return data as unknown as AISettings;
@@ -144,8 +144,9 @@ export const useAISettings = () => {
 
       console.log("Updating AI settings:", newSettings);
       
-      // Convert settings for Supabase (ensuring id is removed if it's a number)
+      // Convert settings for Supabase (ensuring id is correctly handled)
       const settingsForUpdate = { ...newSettings };
+      // Remove id if it's a number as Supabase expects string ID or none
       if (typeof settingsForUpdate.id === 'number') {
         delete settingsForUpdate.id;
       }
@@ -163,7 +164,7 @@ export const useAISettings = () => {
       
       // Convert id to number for consistency in our app
       if (data && data.id && typeof data.id === 'string') {
-        data.id = Number(data.id);
+        data.id = parseInt(data.id, 10);
       }
       
       return data as unknown as AISettings;
