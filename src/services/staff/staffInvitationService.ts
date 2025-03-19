@@ -47,6 +47,7 @@ export const createStaffInvitation = async (params: CreateStaffInvitationParams)
         position: params.position,
         role: params.role,
         token: token,
+        status: 'pending' as const,
       })
       .select()
       .single();
@@ -84,7 +85,7 @@ export const createStaffInvitation = async (params: CreateStaffInvitationParams)
       // Continue even if email fails, we can resend it later
     }
     
-    return invitation;
+    return invitation as StaffInvitation;
   } catch (error) {
     console.error("Error creating staff invitation:", error);
     throw error;
@@ -106,7 +107,7 @@ export const getStaffInvitationByToken = async (token: string): Promise<StaffInv
       throw error;
     }
     
-    return data;
+    return data as StaffInvitation;
   } catch (error) {
     console.error("Error getting staff invitation:", error);
     return null;
@@ -136,7 +137,7 @@ export const getBusinessStaffInvitations = async (): Promise<StaffInvitation[]> 
       throw error;
     }
     
-    return data || [];
+    return (data || []) as StaffInvitation[];
   } catch (error) {
     console.error("Error getting business staff invitations:", error);
     return [];

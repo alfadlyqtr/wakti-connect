@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import { Check, AlertCircle, Loader2, Mail, Lock, Building } from "lucide-react"
 import { getStaffInvitationByToken, updateStaffInvitationStatus } from "@/services/staff/staffInvitationService";
 import { supabase } from "@/integrations/supabase/client";
 import { format, isAfter } from "date-fns";
-import { BrandLogo } from "@/components/layout/navbar/BrandLogo";
+import BrandLogo from "@/components/layout/navbar/BrandLogo";
 
 const StaffInvitationPage = () => {
   const [searchParams] = useSearchParams();
@@ -23,7 +22,6 @@ const StaffInvitationPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [invitation, setInvitation] = useState<any | null>(null);
   
-  // Form states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -45,14 +43,12 @@ const StaffInvitationPage = () => {
           return;
         }
         
-        // Check if invitation has expired
         if (!isAfter(new Date(invitationData.expires_at), new Date())) {
           setError("This invitation has expired.");
           setIsLoading(false);
           return;
         }
         
-        // Check if invitation already accepted
         if (invitationData.status === "accepted") {
           setError("This invitation has already been accepted.");
           setIsLoading(false);
@@ -82,19 +78,16 @@ const StaffInvitationPage = () => {
         throw new Error("Invitation data is missing");
       }
       
-      // Check if the email on the form matches the invitation email
       if (email.toLowerCase() !== invitation.email.toLowerCase()) {
         throw new Error("The email address doesn't match the invitation");
       }
       
-      // Check if user already exists
       const { data: existingUser, error: checkError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (existingUser?.user) {
-        // User exists, link staff role to existing user
         const { error: staffError } = await supabase
           .from('business_staff')
           .insert({
@@ -109,21 +102,17 @@ const StaffInvitationPage = () => {
           
         if (staffError) throw staffError;
         
-        // Update invitation status
         await updateStaffInvitationStatus(invitation.id, "accepted");
         
-        // Sign in and redirect
         await supabase.auth.signInWithPassword({ email, password });
         navigate("/dashboard");
         return;
       }
       
-      // If we get here, the user doesn't exist and we need to create a new account
       if (checkError?.message !== "Invalid login credentials") {
         throw checkError;
       }
       
-      // Create new user account
       const { data: newUser, error: signupError } = await supabase.auth.signUp({
         email,
         password,
@@ -141,7 +130,6 @@ const StaffInvitationPage = () => {
         throw new Error("Failed to create account");
       }
       
-      // Create staff record
       const { error: staffError } = await supabase
         .from('business_staff')
         .insert({
@@ -156,10 +144,8 @@ const StaffInvitationPage = () => {
         
       if (staffError) throw staffError;
       
-      // Update invitation status
       await updateStaffInvitationStatus(invitation.id, "accepted");
       
-      // Redirect to dashboard
       navigate("/dashboard");
     } catch (err: any) {
       console.error("Error accepting invitation:", err);
