@@ -122,9 +122,9 @@ export const hasBusinessPermission = async (
     
     // Specific level checks
     if (requiredLevel === 'read') {
-      return ['read', 'write', 'admin'].includes(userLevel);
+      return userLevel === 'read' || userLevel === 'write' || userLevel === 'admin';
     } else if (requiredLevel === 'write') {
-      return ['write', 'admin'].includes(userLevel);
+      return userLevel === 'write' || userLevel === 'admin';
     } else if (requiredLevel === 'admin') {
       return userLevel === 'admin';
     }
