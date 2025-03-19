@@ -199,4 +199,18 @@
   .mobile-menu-item:active {
     @apply bg-muted/80 scale-95;
   }
+  
+  /* Enhanced header mobile menu */
+  .mobile-nav-dropdown {
+    @apply w-full left-0 right-0 absolute top-full bg-popover border-t border-border shadow-md;
+    animation: slide-in-down 0.3s ease forwards;
+  }
+  
+  .mobile-nav-item {
+    @apply w-full p-3 flex items-center transition-colors;
+  }
+  
+  .mobile-nav-item:active {
+    @apply bg-muted/50;
+  }
 }
