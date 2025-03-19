@@ -21,9 +21,9 @@ export interface StaffWithSessions {
   sessions: StaffWorkLog[];
 }
 
-export const useStaffWorkLogs = () => {
+export const useStaffWorkLogs = (startDate?: Date, endDate?: Date) => {
   return useQuery({
-    queryKey: ['staffWorkLogs'],
+    queryKey: ['staffWorkLogs', startDate?.toISOString(), endDate?.toISOString()],
     queryFn: async () => {
       try {
         // Fetch all staff members
@@ -33,11 +33,25 @@ export const useStaffWorkLogs = () => {
           
         if (staffError) throw staffError;
         
-        // Fetch all work logs
-        const { data: logsData, error: logsError } = await supabase
+        // Build the query for work logs
+        let query = supabase
           .from('staff_work_logs')
-          .select('*')
-          .order('start_time', { ascending: false });
+          .select('*');
+        
+        // Add date filters if provided
+        if (startDate) {
+          query = query.gte('start_time', startDate.toISOString());
+        }
+        
+        if (endDate) {
+          // Set end date to end of day
+          const endOfDay = new Date(endDate);
+          endOfDay.setHours(23, 59, 59, 999);
+          query = query.lte('start_time', endOfDay.toISOString());
+        }
+        
+        // Execute the query with ordering
+        const { data: logsData, error: logsError } = await query.order('start_time', { ascending: false });
           
         if (logsError) throw logsError;
         
