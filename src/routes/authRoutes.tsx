@@ -1,57 +1,51 @@
 
-import { RouteObject } from "react-router-dom";
-import { Navigate } from "react-router-dom";
-import LoginPage from "@/pages/auth/LoginPage";
-import RegisterPage from "@/pages/auth/RegisterPage";
-import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
-import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
-import EmailVerification from "@/pages/auth/VerificationPage";
-import VerifySuccess from "@/pages/auth/VerifySuccessPage";
-import PlanSelection from "@/pages/auth/PlanSelectionPage";
-import WelcomeSetup from "@/pages/auth/WelcomeSetupPage";
-import PaymentSuccess from "@/pages/auth/PaymentSuccessPage";
+import { lazy } from "react";
+import { RouteObject, Navigate } from "react-router-dom";
+
+const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
+const RegisterPage = lazy(() => import("@/pages/auth/RegisterPage"));
+const ForgotPasswordPage = lazy(() => import("@/pages/auth/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("@/pages/auth/ResetPasswordPage"));
+const VerificationPage = lazy(() => import("@/pages/auth/VerificationPage"));
+const PlanSelectionPage = lazy(() => import("@/pages/auth/PlanSelectionPage"));
+const WelcomeSetupPage = lazy(() => import("@/pages/auth/WelcomeSetupPage"));
+const StaffInvitationPage = lazy(() => import("@/pages/auth/StaffInvitationPage"));
 
 export const authRoutes: RouteObject[] = [
   {
-    path: "",
-    element: <Navigate to="/auth/login" replace />
+    index: true,
+    element: <Navigate to="/auth/login" replace />,
   },
   {
     path: "login",
-    element: <LoginPage />
+    element: <LoginPage />,
   },
   {
-    path: "register",
-    element: <RegisterPage />
+    path: "signup",
+    element: <RegisterPage />,
   },
   {
     path: "forgot-password",
-    element: <ForgotPasswordPage />
+    element: <ForgotPasswordPage />,
   },
   {
     path: "reset-password",
-    element: <ResetPasswordPage />
+    element: <ResetPasswordPage />,
   },
   {
-    path: "verify-email",
-    element: <EmailVerification />
+    path: "verify",
+    element: <VerificationPage />,
   },
   {
-    path: "verify-success",
-    element: <VerifySuccess />
-  },
-  {
-    path: "plans",
-    element: <PlanSelection />
+    path: "plan-selection",
+    element: <PlanSelectionPage />,
   },
   {
     path: "welcome-setup",
-    element: <WelcomeSetup />
+    element: <WelcomeSetupPage />,
   },
   {
-    path: "payment-success",
-    element: <PaymentSuccess />
-  }
+    path: "staff-invitation",
+    element: <StaffInvitationPage />,
+  },
 ];
-
-export default authRoutes;

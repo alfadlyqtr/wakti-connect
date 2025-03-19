@@ -1,11 +1,12 @@
 
+import { lazy } from "react";
 import { RouteObject } from "react-router-dom";
-import BusinessPage from "@/pages/business/BusinessLandingPage";
+
+const BusinessLandingPage = lazy(() => import("@/pages/business/BusinessLandingPage"));
 
 export const businessRoutes: RouteObject[] = [
   {
-    path: "",
-    element: <BusinessPage />,
+    index: true,
+    element: <BusinessLandingPage />,
   },
 ];
-

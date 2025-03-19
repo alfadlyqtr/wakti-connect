@@ -1,50 +1,121 @@
 
-import React from "react";
-import DashboardHome from "@/pages/dashboard/DashboardHome";
-import DashboardTasks from "@/pages/dashboard/DashboardTasks";
-import DashboardEvents from "@/pages/dashboard/DashboardEvents";
-import DashboardSettings from "@/pages/dashboard/DashboardSettings";
-import DashboardBusinessAnalytics from "@/pages/dashboard/DashboardBusinessAnalytics";
-import DashboardStaffManagement from "@/pages/dashboard/DashboardStaffManagement";
-import DashboardWorkLogs from "@/pages/dashboard/DashboardWorkLogs";
-import DashboardTeamManagement from "@/pages/dashboard/DashboardTeamManagement";
-import DashboardAIAssistant from "@/pages/dashboard/DashboardAIAssistant";
+import { lazy } from "react";
+import { RouteObject, Navigate } from "react-router-dom";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
-export const dashboardRoutes = [
+const DashboardHome = lazy(() => import("@/pages/dashboard/DashboardHome"));
+const DashboardTasks = lazy(() => import("@/pages/dashboard/DashboardTasks"));
+const DashboardBookings = lazy(() => import("@/pages/dashboard/DashboardBookings"));
+const DashboardEvents = lazy(() => import("@/pages/dashboard/DashboardEvents"));
+const DashboardMessages = lazy(() => import("@/pages/dashboard/DashboardMessages"));
+const DashboardContacts = lazy(() => import("@/pages/dashboard/DashboardContacts"));
+const DashboardTeamManagement = lazy(() => import("@/pages/dashboard/DashboardTeamManagement"));
+const DashboardServiceManagement = lazy(() => import("@/pages/dashboard/DashboardServiceManagement"));
+const DashboardBusinessPage = lazy(() => import("@/pages/dashboard/DashboardBusinessPage"));
+const DashboardSettings = lazy(() => import("@/pages/dashboard/DashboardSettings"));
+const DashboardProfile = lazy(() => import("@/pages/dashboard/DashboardProfile"));
+const DashboardSubscribers = lazy(() => import("@/pages/dashboard/DashboardSubscribers"));
+const DashboardNotifications = lazy(() => import("@/pages/dashboard/DashboardNotifications"));
+
+export const dashboardRoutes: RouteObject[] = [
   {
-    path: "",
+    index: true,
     element: <DashboardHome />,
   },
   {
     path: "tasks",
-    element: <DashboardTasks />,
+    element: (
+      <ProtectedRoute requiredRole="free">
+        <DashboardTasks />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "bookings",
+    element: (
+      <ProtectedRoute requiredRole="free">
+        <DashboardBookings />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "events",
-    element: <DashboardEvents />,
+    element: (
+      <ProtectedRoute requiredRole="free">
+        <DashboardEvents />
+      </ProtectedRoute>
+    ),
   },
   {
-    path: "ai-assistant",
-    element: <DashboardAIAssistant />,
+    path: "messages",
+    element: (
+      <ProtectedRoute requiredRole="free">
+        <DashboardMessages />
+      </ProtectedRoute>
+    ),
   },
   {
-    path: "settings",
-    element: <DashboardSettings />,
-  },
-  {
-    path: "analytics",
-    element: <DashboardBusinessAnalytics />,
-  },
-  {
-    path: "staff",
-    element: <DashboardStaffManagement />,
-  },
-  {
-    path: "work-logs",
-    element: <DashboardWorkLogs />,
+    path: "contacts",
+    element: (
+      <ProtectedRoute requiredRole="free">
+        <DashboardContacts />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "team",
-    element: <DashboardTeamManagement />,
+    element: (
+      <ProtectedRoute requiredRole="business">
+        <DashboardTeamManagement />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "services",
+    element: (
+      <ProtectedRoute requiredRole="business">
+        <DashboardServiceManagement />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "business-page",
+    element: (
+      <ProtectedRoute requiredRole="business">
+        <DashboardBusinessPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "subscribers",
+    element: (
+      <ProtectedRoute requiredRole="business">
+        <DashboardSubscribers />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "settings",
+    element: (
+      <ProtectedRoute requiredRole="free">
+        <DashboardSettings />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "profile",
+    element: (
+      <ProtectedRoute requiredRole="free">
+        <DashboardProfile />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "notifications",
+    element: (
+      <ProtectedRoute requiredRole="free">
+        <DashboardNotifications />
+      </ProtectedRoute>
+    ),
   },
 ];

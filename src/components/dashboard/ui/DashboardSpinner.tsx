@@ -1,10 +1,12 @@
 
 import React from "react";
 
-const DashboardSpinner = () => (
-  <div className="flex items-center justify-center h-[calc(100vh-100px)]">
-    <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
-  </div>
-);
+const DashboardSpinner: React.FC = () => {
+  return (
+    <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-wakti-blue"></div>
+    </div>
+  );
+};
 
 export default DashboardSpinner;

@@ -1,26 +1,15 @@
 
 import React from "react";
 import { useParams } from "react-router-dom";
-import BusinessLandingPageComponent from "@/components/business/landing/BusinessLandingPage";
-import Header from "@/components/landing/Header";
 
 const BusinessPage: React.FC = () => {
   const { businessSlug } = useParams<{ businessSlug: string }>();
-  
-  if (!businessSlug) {
-    return (
-      <div className="text-center py-12">
-        <h1 className="text-2xl font-bold">Business Page Not Found</h1>
-        <p className="text-muted-foreground mt-2">Invalid URL.</p>
-      </div>
-    );
-  }
-  
+
   return (
-    <>
-      <Header />
-      <BusinessLandingPageComponent />
-    </>
+    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Business: {businessSlug}</h1>
+      <p>This is the public business page for {businessSlug}</p>
+    </div>
   );
 };
 

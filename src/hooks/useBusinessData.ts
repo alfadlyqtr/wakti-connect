@@ -1,36 +1,56 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
 
 export const useBusinessData = () => {
   const [business, setBusiness] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { user } = useAuth();
 
-  const fetchBusinessData = async () => {
-    try {
-      setIsLoading(true);
-      // This is a placeholder. In a real application, you would fetch business data
-      // from your database and store it in the business state
-      const { data } = await supabase.auth.getSession();
-      
-      if (data.session?.user) {
-        // Business data fetch would go here
-        setBusiness({
-          id: data.session.user.id,
-          // Add other business data fields here
-        });
-      } else {
+  useEffect(() => {
+    const fetchBusinessData = async () => {
+      if (!user) {
         setBusiness(null);
+        setIsLoading(false);
+        return;
       }
-      
-      setIsLoading(false);
-    } catch (err: any) {
-      console.error("Error fetching business data:", err);
-      setError(err);
-      setIsLoading(false);
-    }
-  };
 
-  return { business, isLoading, error, fetchBusinessData };
+      // Only try to fetch business data if the user is a business owner or staff
+      if (!user.businessId && (user.plan !== 'business' && user.plan !== 'staff' && user.plan !== 'admin' && user.plan !== 'co-admin')) {
+        setBusiness(null);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const businessId = user.businessId || user.id;
+
+        const { data, error: fetchError } = await supabase
+          .from("businesses")
+          .select("*")
+          .eq("id", businessId)
+          .single();
+
+        if (fetchError) {
+          throw fetchError;
+        }
+
+        setBusiness(data);
+      } catch (err: any) {
+        console.error("Error fetching business data:", err);
+        setError(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBusinessData();
+  }, [user]);
+
+  return { business, isLoading, error };
 };
