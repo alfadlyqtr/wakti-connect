@@ -1,177 +1,127 @@
 
-import { useState, useEffect } from "react";
-import { useAuth } from "./useAuth";
-import { fetchTasks } from "@/services/task/fetchService";
-import { createTaskWithSubtasks } from "@/services/task/createService";
-import { Task, TaskFormData, TaskTab } from "@/types/task.types";
-import { deleteTask } from "@/services/task/operations/taskDeleteOperations";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "@/components/ui/use-toast";
+import { 
+  fetchTasks, 
+  createTask as createTaskService, 
+  shareTask as shareTaskService, 
+  assignTask as assignTaskService 
+} from "@/services/task";
+import { filterTasks } from "@/utils/taskUtils";
+import { Task, TaskTab, TaskFormData } from "@/types/task.types";
 import { RecurringFormData } from "@/types/recurring.types";
-import { markTaskComplete, markTaskPending, updateTaskStatus } from "@/services/task/operations/taskStatusOperations";
-import { useToast } from "@/components/ui/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
 
-export function useTasks() {
-  const { user } = useAuth();
-  const [currentTab, setCurrentTab] = useState<TaskTab>("my-tasks");
-  const [tasks, setTasks] = useState<Task[] | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterPriority, setFilterPriority] = useState("all");
+export type { Task, TaskTab, TaskFormData } from "@/types/task.types";
+
+export const useTasks = (tab: TaskTab = "my-tasks") => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [userRole, setUserRole] = useState<"free" | "individual" | "business">("free");
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterPriority, setFilterPriority] = useState<string>("all");
 
-  const fetchTasksData = async () => {
-    if (!user) {
-      setTasks(null);
-      setIsLoading(false);
-      return;
-    }
-    
-    setIsLoading(true);
+  // Fetch tasks with React Query
+  const { 
+    data, 
+    isLoading, 
+    error, 
+    refetch 
+  } = useQuery({
+    queryKey: ['tasks', tab],
+    queryFn: () => fetchTasks(tab),
+    refetchOnWindowFocus: false,
+  });
+
+  // Create a new task
+  const createTask = async (taskData: Partial<TaskFormData>, recurringData?: RecurringFormData) => {
     try {
-      const result = await fetchTasks(
-        user.id,
-        currentTab,
-        filterStatus,
-        filterPriority,
-        searchQuery
-      );
-      
-      setTasks(result.tasks);
-      setUserRole(result.userRole);
-      setError(result.error || null);
-    } catch (err: any) {
-      console.error("Error fetching tasks:", err);
-      setError(err);
-      setTasks(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Fetch tasks whenever dependencies change
-  useEffect(() => {
-    fetchTasksData();
-  }, [user, currentTab, filterStatus, filterPriority, searchQuery]);
-  
-  // Function to create a new task
-  const createTask = async (taskData: TaskFormData, recurringData?: RecurringFormData) => {
-    if (!user) {
-      throw new Error("You must be logged in to create a task");
-    }
-    
-    try {
-      const newTask = await createTaskWithSubtasks(taskData, user.id);
-      
-      // Refresh tasks after creating a new one
-      fetchTasksData();
+      const result = await createTaskService(taskData as TaskFormData, recurringData);
       
       toast({
-        title: "Task created",
-        description: "Your task has been created successfully.",
+        title: recurringData ? "Recurring Task Created" : "Task Created",
+        description: recurringData 
+          ? "New recurring task has been created successfully" 
+          : "New task has been created successfully",
       });
+
+      // Refetch tasks to update the list
+      refetch();
       
-      return newTask;
-    } catch (err: any) {
-      console.error("Error creating task:", err);
-      toast({
-        title: "Error",
-        description: `Failed to create task: ${err.message}`,
-        variant: "destructive",
-      });
-      throw err;
-    }
-  };
-  
-  // Function to delete a task
-  const removeTask = async (taskId: string) => {
-    if (!user) {
-      throw new Error("You must be logged in to delete a task");
-    }
-    
-    try {
-      await deleteTask(taskId);
-      
-      // Update local state
-      setTasks((prevTasks) => 
-        prevTasks ? prevTasks.filter((task) => task.id !== taskId) : null
-      );
-      
-      toast({
-        title: "Task deleted",
-        description: "The task has been deleted successfully.",
-      });
-    } catch (err: any) {
-      console.error("Error deleting task:", err);
-      toast({
-        title: "Error",
-        description: `Failed to delete task: ${err.message}`,
-        variant: "destructive",
-      });
-      throw err;
-    }
-  };
-  
-  // Function to update a task's status
-  const updateStatus = async (taskId: string, status: string) => {
-    if (!user) {
-      throw new Error("You must be logged in to update a task");
-    }
-    
-    try {
-      await updateTaskStatus(taskId, status);
-      
-      // Update local state safely with proper casting
-      setTasks((prevTasks) => {
-        if (!prevTasks) return null;
-        
-        return prevTasks.map((task) => {
-          if (task.id === taskId) {
-            // Ensure we cast the status to a valid TaskStatus
-            const validStatus = ['pending', 'in-progress', 'completed', 'late'].includes(status)
-              ? status as Task['status']
-              : task.status;
-              
-            return { ...task, status: validStatus };
-          }
-          return task;
+      return result;
+    } catch (error: any) {
+      if (error.message !== "This feature is only available for paid accounts") {
+        toast({
+          title: "Failed to create task",
+          description: error.message || "An unexpected error occurred",
+          variant: "destructive",
         });
-      });
-      
-      toast({
-        title: "Task updated",
-        description: `Task status has been updated to ${status}.`,
-      });
-    } catch (err: any) {
-      console.error("Error updating task status:", err);
-      toast({
-        title: "Error",
-        description: `Failed to update task: ${err.message}`,
-        variant: "destructive",
-      });
-      throw err;
+      }
+      throw error;
     }
   };
-  
+
+  // Filter tasks based on search and filters
+  const getFilteredTasks = () => {
+    const taskList = data?.tasks || [];
+    return filterTasks(taskList, searchQuery, filterStatus, filterPriority);
+  };
+
+  // Share a task with another user
+  const shareTask = async (taskId: string, userId: string) => {
+    try {
+      await shareTaskService(taskId, userId);
+
+      toast({
+        title: "Task Shared",
+        description: "Task has been shared successfully",
+      });
+
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "Failed to share task",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  // Assign a task to a staff member (for business accounts)
+  const assignTask = async (taskId: string, staffId: string) => {
+    try {
+      await assignTaskService(taskId, staffId);
+
+      toast({
+        title: "Task Assigned",
+        description: "Task has been assigned successfully",
+      });
+
+      return true;
+    } catch (error: any) {
+      toast({
+        title: "Failed to assign task",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   return {
-    tasks,
+    tasks: data?.tasks || [],
+    userRole: data?.userRole || "free",
+    filteredTasks: getFilteredTasks(),
     isLoading,
     error,
-    currentTab,
-    setCurrentTab,
+    searchQuery,
+    setSearchQuery,
     filterStatus,
     setFilterStatus,
     filterPriority,
     setFilterPriority,
-    searchQuery,
-    setSearchQuery,
     createTask,
-    removeTask,
-    updateStatus,
-    fetchTasks: fetchTasksData,
-    userRole,
+    shareTask,
+    assignTask,
+    refetch
   };
-}
+};

@@ -1,86 +1,54 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { TasksResult, TaskTab } from "@/types/task.types";
-import { fetchAssignedTasks } from "./fetchers/assignedTasks";
-import { fetchSharedTasks } from "./fetchers/sharedTasks";
-import { fetchMyTasks } from "./fetchers/myTasks";
-import { safeQueryExecution } from "@/utils/databaseUtils";
+import { TaskTab, TasksResult } from "./types";
+import {
+  fetchMyTasks,
+  fetchSharedTasks,
+  fetchAssignedTasks,
+  fetchDefaultTasks
+} from "./fetchers";
 
-/**
- * Fetch tasks based on the selected tab
- */
-export async function fetchTasksByTab(
-  userId: string, 
-  tab: TaskTab, 
-  filterStatus: string = "all", 
-  filterPriority: string = "all", 
-  searchQuery: string = ""
-): Promise<TasksResult> {
-  try {
-    // First, verify the user's account type
-    const { data: userProfile, error: profileError } = await supabase
-      .from("profiles")
-      .select("account_type")
-      .eq("id", userId)
-      .single();
-
-    if (profileError) {
-      console.error("Error fetching user profile:", profileError);
-      return { 
-        tasks: null, 
-        userRole: "free", 
-        error: new Error(profileError.message),
-        isLoading: false
+// Fetch tasks based on the selected tab
+export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session?.user) {
+    throw new Error("No active session");
+  }
+  
+  // Get user profile to check account type
+  const { data: profileData } = await supabase
+    .from('profiles')
+    .select('account_type')
+    .eq('id', session.user.id)
+    .single();
+  
+  const userRole = profileData?.account_type || "free";
+  
+  // Fetch tasks based on the selected tab
+  switch (tab) {
+    case "my-tasks":
+      return {
+        tasks: await fetchMyTasks(session.user.id),
+        userRole: userRole as "free" | "individual" | "business"
       };
-    }
-
-    const userRole = userProfile?.account_type as "free" | "individual" | "business";
-
-    // Use a safe execution to handle cases where tables might not exist yet
-    const result = await safeQueryExecution<TasksResult>(
-      "tasks",
-      async () => {
-        if (tab === "my-tasks") {
-          const myTasks = await fetchMyTasks(userId, filterStatus, filterPriority, searchQuery);
-          return {
-            tasks: myTasks,
-            userRole
-          };
-        } else if (tab === "shared-tasks") {
-          const sharedTasks = await fetchSharedTasks(userId, filterStatus, filterPriority, searchQuery);
-          return {
-            tasks: sharedTasks,
-            userRole
-          };
-        } else if (tab === "assigned-tasks") {
-          const assignedTasks = await fetchAssignedTasks(userId, filterStatus, filterPriority, searchQuery);
-          return {
-            tasks: assignedTasks,
-            userRole
-          };
-        }
-        
-        // Fall back to my tasks
-        const defaultTasks = await fetchMyTasks(userId, filterStatus, filterPriority, searchQuery);
-        return {
-          tasks: defaultTasks,
-          userRole
-        };
-      },
-      { tasks: null, userRole, error: null, isLoading: false }
-    );
-
-    return result;
-  } catch (error: any) {
-    console.error("Error in fetchTasksByTab:", error);
-    return {
-      tasks: null,
-      userRole: "free",
-      error: new Error(`Failed to fetch tasks: ${error.message}`),
-      isLoading: false
-    };
+    
+    case "shared-tasks":
+      return {
+        tasks: await fetchSharedTasks(session.user.id),
+        userRole: userRole as "free" | "individual" | "business"
+      };
+    
+    case "assigned-tasks":
+      return {
+        tasks: await fetchAssignedTasks(session.user.id),
+        userRole: userRole as "free" | "individual" | "business"
+      };
+    
+    default:
+      return {
+        tasks: await fetchDefaultTasks(session.user.id),
+        userRole: userRole as "free" | "individual" | "business"
+      };
   }
 }
-
-// Export this function for ease of use elsewhere
-export { fetchTasksByTab as fetchTasks };

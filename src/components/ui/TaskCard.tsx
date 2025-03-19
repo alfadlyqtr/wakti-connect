@@ -26,13 +26,6 @@ interface TaskCardProps {
   recurringFrequency?: string;
   isRecurringInstance?: boolean;
   subtasks?: { content: string; is_completed: boolean }[];
-  onShare?: () => void;
-  onAssign?: () => void;
-  onEdit?: () => void;
-  onDelete?: () => void;
-  onMarkComplete?: () => void;
-  onMarkPending?: () => void;
-  onAddSubtask?: () => void;
 }
 
 const TaskCard = ({
@@ -49,20 +42,13 @@ const TaskCard = ({
   isRecurring = false,
   recurringFrequency,
   isRecurringInstance = false,
-  subtasks = [],
-  onShare,
-  onAssign,
-  onEdit,
-  onDelete,
-  onMarkComplete,
-  onMarkPending,
-  onAddSubtask
+  subtasks = []
 }: TaskCardProps) => {
   const completedSubtasks = subtasks.filter(task => task.is_completed).length;
   const totalSubtasks = subtasks.length;
   
   return (
-    <Card className="border-border/40 shadow-sm hover:shadow transition-shadow group">
+    <Card className="border-border/40 shadow-sm hover:shadow transition-shadow">
       <CardHeader className="pb-2 flex flex-row items-start justify-between gap-2">
         <div className="space-y-1 w-5/6">
           <div className="flex items-center gap-2 flex-wrap">
@@ -85,14 +71,7 @@ const TaskCard = ({
           status={status} 
           userRole={userRole || "free"} 
           isShared={isShared} 
-          isAssigned={isAssigned}
-          onShare={onShare}
-          onAssign={onAssign}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onMarkComplete={onMarkComplete}
-          onMarkPending={onMarkPending}
-          onAddSubtask={onAddSubtask}
+          isAssigned={isAssigned} 
         />
       </CardHeader>
       

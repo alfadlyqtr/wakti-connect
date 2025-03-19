@@ -9,24 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      _metadata: {
-        Row: {
-          created_at: string | null
-          id: number
-          table_name: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: number
-          table_name: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: number
-          table_name?: string
-        }
-        Relationships: []
-      }
       ai_assistant_settings: {
         Row: {
           assistant_name: string | null
@@ -1096,12 +1078,6 @@ export type Database = {
         Args: {
           task_id: string
           user_uuid: string
-        }
-        Returns: boolean
-      }
-      check_table_exists: {
-        Args: {
-          table_name: string
         }
         Returns: boolean
       }

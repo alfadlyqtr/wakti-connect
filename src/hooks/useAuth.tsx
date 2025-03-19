@@ -26,91 +26,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Function to create a profile if it doesn't exist
-  const ensureProfile = async (userId: string, userData: { email?: string; name?: string }) => {
-    try {
-      console.log(`Checking if profile exists for user ${userId}`);
-      
-      // Check if profile exists
-      const { data: existingProfile, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
-        
-      if (profileError && profileError.code !== "PGRST116") {
-        console.error("Error checking profile:", profileError);
-        return;
-      }
-      
-      // If profile doesn't exist, create it
-      if (!existingProfile) {
-        console.log(`No profile found for ${userId}, creating default profile`);
-        const { error: createError } = await supabase
-          .from("profiles")
-          .insert({
-            id: userId,
-            full_name: userData.name || userData.email?.split('@')[0],
-            account_type: "free",
-            is_searchable: true,
-            auto_approve_contacts: false,
-            theme_preference: "light"
-          });
-          
-        if (createError) {
-          console.error("Error creating profile:", createError);
-        }
-      } else {
-        console.log(`Profile found for ${userId}`);
-      }
-    } catch (error) {
-      console.error("Error in ensureProfile:", error);
-    }
-  };
-
   // Initialize auth state from Supabase
   useEffect(() => {
     const loadUser = async () => {
       try {
-        console.log("AuthProvider: Initializing auth state");
         setIsLoading(true);
         
-        // Get the current session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error("Error getting session:", error);
-          setUser(null);
-          setIsLoading(false);
           return;
         }
         
-        if (!session?.user) {
-          console.log("AuthProvider: No active session found");
-          setUser(null);
-          setIsLoading(false);
-          return;
-        }
-        
-        console.log("AuthProvider: Active session found for user:", session.user.id);
-        
-        // Ensure profile exists (create if it doesn't)
-        await ensureProfile(session.user.id, {
-          email: session.user.email,
-          name: session.user.user_metadata?.full_name
-        });
-        
-        // Get user profile data
-        try {
+        if (session?.user) {
+          // Get user profile data
           const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("*")
             .eq("id", session.user.id)
-            .maybeSingle();
+            .single();
             
           if (profileError && profileError.code !== "PGRST116") {
             console.error("Error fetching profile:", profileError);
-            // Don't return here, we can still set basic user info
           }
           
           setUser({
@@ -120,21 +58,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             displayName: profile?.display_name || profile?.full_name,
             plan: profile?.account_type || "free"
           });
-          
-          console.log("AuthProvider: User profile loaded successfully");
-        } catch (profileError) {
-          console.error("Error in profile fetch:", profileError);
-          // Set basic user info if profile fetch fails
-          setUser({
-            id: session.user.id,
-            email: session.user.email,
-            name: session.user.email?.split('@')[0],
-            plan: "free"
-          });
         }
       } catch (error) {
         console.error("Error loading user:", error);
-        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -145,71 +71,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("AuthProvider: Auth state changed:", event);
-        
         if (event === 'SIGNED_IN' && session) {
-          console.log("AuthProvider: User signed in:", session.user.id);
-          setIsLoading(true);
-          
-          try {
-            // Ensure profile exists
-            await ensureProfile(session.user.id, {
-              email: session.user.email,
-              name: session.user.user_metadata?.full_name
-            });
+          // Get user profile data
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", session.user.id)
+            .single();
             
-            // Get user profile data
-            const { data: profile, error: profileError } = await supabase
-              .from("profiles")
-              .select("*")
-              .eq("id", session.user.id)
-              .maybeSingle();
-              
-            if (profileError && profileError.code !== "PGRST116") {
-              console.error("Error fetching profile:", profileError);
-            }
-            
-            setUser({
-              id: session.user.id,
-              email: session.user.email,
-              name: profile?.full_name || session.user.email?.split('@')[0],
-              displayName: profile?.display_name || profile?.full_name,
-              plan: profile?.account_type || "free"
-            });
-          } catch (error) {
-            console.error("Error updating user after sign in:", error);
-            // Set basic user info if profile fetch fails
-            setUser({
-              id: session.user.id,
-              email: session.user.email,
-              name: session.user.email?.split('@')[0],
-              plan: "free"
-            });
-          } finally {
-            setIsLoading(false);
+          if (profileError && profileError.code !== "PGRST116") {
+            console.error("Error fetching profile:", profileError);
           }
+          
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            name: profile?.full_name || session.user.email?.split('@')[0],
+            displayName: profile?.display_name || profile?.full_name,
+            plan: profile?.account_type || "free"
+          });
         } else if (event === 'SIGNED_OUT') {
-          console.log("AuthProvider: User signed out");
           setUser(null);
-          setIsLoading(false);
-        } else if (event === 'TOKEN_REFRESHED') {
-          console.log("AuthProvider: Token refreshed");
-          // No need to update state, just log
         }
       }
     );
 
     return () => {
-      console.log("AuthProvider: Cleaning up auth listener");
       authListener?.subscription.unsubscribe();
     };
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      console.log("AuthProvider: Attempting login for email:", email);
-      setIsLoading(true);
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -217,32 +110,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) throw error;
       
-      console.log("AuthProvider: Login successful");
       // User is set by the auth listener
     } catch (error: any) {
       console.error("Login error:", error);
-      setUser(null);
       toast({
         title: "Login failed",
         description: error.message || "An error occurred during login",
         variant: "destructive",
       });
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const logout = async () => {
     try {
-      console.log("AuthProvider: Attempting logout");
-      setIsLoading(true);
-      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      console.log("AuthProvider: Logout successful");
-      setUser(null);
+      // User is set to null by the auth listener
     } catch (error: any) {
       console.error("Logout error:", error);
       toast({
@@ -250,16 +135,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: error.message || "An error occurred during logout",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const register = async (email: string, password: string, name: string) => {
     try {
-      console.log("AuthProvider: Attempting registration for email:", email);
-      setIsLoading(true);
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -277,7 +157,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "Please check your email for verification",
       });
       
-      console.log("AuthProvider: Registration successful");
       // User is set by the auth listener if email verification is disabled
     } catch (error: any) {
       console.error("Registration error:", error);
@@ -287,8 +166,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         variant: "destructive",
       });
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 

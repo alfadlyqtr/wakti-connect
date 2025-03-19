@@ -1,118 +1,142 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useTasks, TaskTab } from "@/hooks/useTasks";
 import TaskControls from "@/components/tasks/TaskControls";
-import { Card, CardContent } from "@/components/ui/card";
 import EmptyTasksState from "@/components/tasks/EmptyTasksState";
-import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog";
-import { SectionContainer } from "@/components/ui/section-container";
 import TaskGrid from "@/components/tasks/TaskGrid";
-import { useTasks } from "@/hooks/useTasks";
-import { useAuth } from "@/hooks/useAuth";
-import { TaskFormData, TaskTab } from "@/types/task.types";
-import { RecurringFormData } from "@/types/recurring.types";
+import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog";
 
 const DashboardTasks = () => {
-  const { user } = useAuth();
-  const {
-    tasks,
-    isLoading,
-    currentTab,
-    setCurrentTab,
+  const [userRole, setUserRole] = useState<"free" | "individual" | "business" | null>(null);
+  const [activeTab, setActiveTab] = useState<TaskTab>("my-tasks");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  
+  const { 
+    filteredTasks, 
+    isLoading, 
+    error, 
+    searchQuery, 
+    setSearchQuery,
     filterStatus,
     setFilterStatus,
     filterPriority,
     setFilterPriority,
-    searchQuery,
-    setSearchQuery,
     createTask,
-    userRole
-  } = useTasks();
-  
-  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+    userRole: fetchedUserRole
+  } = useTasks(activeTab);
 
-  // Calculate whether the user has a paid account
-  const isPaidAccount = userRole === "individual" || userRole === "business";
-  
-  // Handle creating a new task
-  const handleCreateTask = async (
-    taskData: TaskFormData, 
-    recurringData?: RecurringFormData
-  ) => {
-    if (!user) return;
-    
-    try {
-      // Check if this is a free account
-      if (userRole === "free") {
-        throw new Error("This feature is only available for paid accounts");
+  // Fetch user role
+  useEffect(() => {
+    const getUserRole = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session?.user) return;
+        
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('account_type')
+          .eq('id', session.user.id)
+          .single();
+        
+        setUserRole(profileData?.account_type || "free");
+      } catch (error) {
+        console.error("Error fetching user role:", error);
       }
-      
-      return await createTask(taskData, recurringData);
-    } catch (error) {
-      console.error("Error creating task:", error);
-      throw error;
+    };
+
+    getUserRole();
+  }, []);
+
+  // Show error toast if query fails
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Failed to load tasks",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
+      });
     }
+  }, [error]);
+
+  const isPaidAccount = userRole === "individual" || userRole === "business";
+
+  const handleCreateTask = async (taskData: any) => {
+    await createTask(taskData);
+    setCreateDialogOpen(false);
   };
-  
-  // Handle task actions from the grid
-  const handleTaskAction = (action: string, taskId: string) => {
-    console.log(`Action ${action} on task ${taskId}`);
-    // Implement the action handling logic here
+
+  const handleTabChange = (newTab: TaskTab) => {
+    setActiveTab(newTab);
   };
-  
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
+          <p className="text-muted-foreground">
+            Manage your tasks and track your progress.
+          </p>
+        </div>
+        
+        <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-wakti-blue" />
+            <span className="ml-2">Loading tasks...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full space-y-4">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight mb-1">Tasks</h1>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
         <p className="text-muted-foreground">
-          Manage your tasks and to-do lists
+          Manage your tasks and track your progress.
         </p>
       </div>
-
-      <SectionContainer>
-        <TaskControls
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          filterStatus={filterStatus}
-          onStatusChange={setFilterStatus}
-          filterPriority={filterPriority}
-          onPriorityChange={setFilterPriority}
-          onCreateTask={() => setIsCreateTaskOpen(true)}
-          currentTab={currentTab}
-          onTabChange={setCurrentTab}
-          isPaidAccount={isPaidAccount}
-          userRole={userRole}
-        />
-      </SectionContainer>
-
-      <SectionContainer>
-        <Card>
-          <CardContent className="p-4 md:p-6">
-            {isLoading ? (
-              <div className="flex justify-center items-center h-40">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : tasks && tasks.length > 0 ? (
-              <TaskGrid 
-                tasks={tasks} 
-                showAssignee={currentTab === "shared-tasks" || currentTab === "assigned-tasks"} 
-                type={currentTab}
-              />
-            ) : (
-              <EmptyTasksState 
-                onCreateTask={() => setIsCreateTaskOpen(true)} 
-                type={currentTab} 
-                isPaidAccount={isPaidAccount}
-              />
-            )}
-          </CardContent>
-        </Card>
-      </SectionContainer>
-
+      
+      <TaskControls
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        filterStatus={filterStatus}
+        onStatusChange={setFilterStatus}
+        filterPriority={filterPriority}
+        onPriorityChange={setFilterPriority}
+        onCreateTask={() => setCreateDialogOpen(true)}
+        currentTab={activeTab}
+        onTabChange={handleTabChange}
+        isPaidAccount={isPaidAccount}
+        userRole={userRole || "free"}
+      />
+      
+      <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
+        {filteredTasks.length > 0 ? (
+          <TaskGrid 
+            tasks={filteredTasks} 
+            userRole={userRole} 
+            tab={activeTab}
+          />
+        ) : (
+          <EmptyTasksState 
+            isPaidAccount={isPaidAccount} 
+            onCreateTask={() => setCreateDialogOpen(true)} 
+            tab={activeTab}
+          />
+        )}
+      </div>
+      
       <CreateTaskDialog
-        open={isCreateTaskOpen}
-        onOpenChange={setIsCreateTaskOpen}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
         onCreateTask={handleCreateTask}
-        userRole={userRole}
+        userRole={userRole || "free"}
       />
     </div>
   );

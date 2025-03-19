@@ -11,7 +11,6 @@ import { authRoutes } from "@/routes/authRoutes";
 import { dashboardRoutes } from "@/routes/dashboardRoutes";
 import { businessRoutes } from "@/routes/businessRoutes";
 import PublicLayout from "@/components/layout/PublicLayout";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export const router = createBrowserRouter([
   // Public routes with layout
@@ -26,62 +25,34 @@ export const router = createBrowserRouter([
     path: "/auth",
     element: (
       <AuthShell>
-        <Suspense fallback={
-          <div className="min-h-screen flex items-center justify-center">
-            <LoadingSpinner />
-          </div>
-        } />
+        <Suspense fallback={<div>Loading...</div>} />
       </AuthShell>
     ),
     children: authRoutes,
   },
 
-  // Dashboard routes - wrapped with ProtectedRoute for auth check
+  // Dashboard routes
   {
     path: "/dashboard",
     element: (
       <ProtectedRoute>
         <DashboardShell>
-          <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center">
-              <LoadingSpinner />
-              <p className="mt-4 text-muted-foreground">Loading dashboard...</p>
-            </div>
-          } />
+          <Suspense fallback={<div>Loading dashboard...</div>} />
         </DashboardShell>
       </ProtectedRoute>
     ),
     children: dashboardRoutes,
   },
 
-  // Business routes - also need auth protection
+  // Business routes
   {
     path: "/business/:businessId",
     element: (
-      <ProtectedRoute>
-        <BusinessShell>
-          <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center">
-              <LoadingSpinner />
-              <p className="mt-4 text-muted-foreground">Loading business...</p>
-            </div>
-          } />
-        </BusinessShell>
-      </ProtectedRoute>
+      <BusinessShell>
+        <Suspense fallback={<div>Loading business...</div>} />
+      </BusinessShell>
     ),
     children: businessRoutes,
-  },
-
-  // Redirect /login to /auth/login
-  {
-    path: "/login",
-    element: <Navigate to="/auth/login" replace />
-  },
-
-  // Redirect from / to /dashboard if authenticated
-  {
-    path: "/",
-    element: <Navigate to="/dashboard" replace />
   },
 
   // 404 route

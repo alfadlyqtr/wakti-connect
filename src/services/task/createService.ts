@@ -1,146 +1,120 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { TaskFormData, Task, SubTask } from "@/types/task.types";
-import { createTask } from "./baseService";
-import { RecurringFormData } from "@/types/recurring.types";
-import { fromTable } from "@/utils/databaseUtils";
+import { Task, TaskFormData, SubTask } from "./types";
+import { createNewTask } from "./baseService";
+import { RecurringFormData, EntityType } from "@/types/recurring.types";
+import { createRecurringSetting, generateRecurringDates } from "@/services/recurring/recurringService";
 
-/**
- * Create a task with subtasks (if any)
- */
-export async function createTaskWithSubtasks(taskData: TaskFormData, userId: string): Promise<Task> {
-  try {
-    const taskPayload = {
-      user_id: userId,
-      title: taskData.title,
-      description: taskData.description || "",
-      status: taskData.status || "pending",
-      priority: taskData.priority || "normal",
-      due_date: taskData.due_date || new Date().toISOString(),
-      assignee_id: taskData.assignee_id || userId,
-    };
-    
-    // Create the task first
-    const task = await createTask(taskPayload);
-    
-    // If there are subtasks, create them
-    if (taskData.subtasks && taskData.subtasks.length > 0) {
-      await createSubtasks(task.id, taskData.subtasks);
-    }
-    
-    return task;
-  } catch (error: any) {
-    console.error("Error in createTaskWithSubtasks:", error);
-    throw new Error(`Failed to create task: ${error.message}`);
+// Create a new task
+export async function createTask(taskData: TaskFormData, recurringData?: RecurringFormData): Promise<Task> {
+  // Get current user
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session) {
+    throw new Error("Authentication required to create tasks");
   }
-}
 
-/**
- * Create subtasks for a given task
- * @param taskId The ID of the task to create subtasks for
- * @param subtasks The subtasks to create
- */
-export async function createSubtasks(taskId: string, subtasks: SubTask[]): Promise<SubTask[]> {
-  try {
-    // Check if subtasks array is empty
-    if (!subtasks || subtasks.length === 0) {
-      return [];
-    }
-    
-    const subtaskPayload = subtasks.map(subtask => ({
-      task_id: taskId,
-      content: subtask.content,
-      is_completed: subtask.is_completed || false
-    }));
-    
-    // Use the helper from util to handle dynamic table names
-    const { data, error } = await fromTable("todo_items")
-      .insert(subtaskPayload)
-      .select();
+  // Create the new task using the base service
+  const task = await createNewTask(session.user.id, taskData);
+  
+  // If there are subtasks, create them
+  if (taskData.subtasks && taskData.subtasks.length > 0) {
+    await createSubtasks(task.id, taskData.subtasks);
+  }
+  
+  // If recurring data is provided, create recurring settings
+  if (recurringData && task) {
+    try {
+      await createRecurringSetting({
+        entity_id: task.id,
+        entity_type: 'task' as EntityType,
+        created_by: session.user.id,
+        frequency: recurringData.frequency!,
+        interval: recurringData.interval!,
+        days_of_week: recurringData.days_of_week,
+        day_of_month: recurringData.day_of_month,
+        end_date: recurringData.end_date,
+        max_occurrences: recurringData.max_occurrences
+      });
       
-    if (error) {
-      console.error("Error creating subtasks:", error);
-      throw new Error(error.message);
+      // If there's a due date and we need to generate recurring instances
+      if (taskData.due_date && recurringData.frequency) {
+        // We might want to create future recurring instances here
+        // This is a more complex feature that would involve creating multiple tasks
+        // and setting their is_recurring_instance flag to true
+      }
+    } catch (error: any) {
+      // Log the error but don't fail the task creation
+      console.error("Failed to create recurring settings:", error);
+      
+      if (error.message === "This feature is only available for paid accounts") {
+        throw error; // Re-throw this specific error to handle in the UI
+      }
     }
+  }
+  
+  return task;
+}
+
+// Create subtasks for a task
+async function createSubtasks(taskId: string, subtasks: SubTask[]): Promise<void> {
+  if (!subtasks.length) return;
+  
+  const subtasksToCreate = subtasks.map(subtask => ({
+    task_id: taskId,
+    content: subtask.content,
+    is_completed: subtask.is_completed || false,
+  }));
+  
+  const { error } = await supabase
+    .from('todo_items')
+    .insert(subtasksToCreate);
     
-    // Ensure the data is properly typed
-    return (data || []).map(item => ({
-      id: item.id,
-      task_id: item.task_id,
-      content: item.content,
-      is_completed: item.is_completed || false,
-      created_at: item.created_at,
-      updated_at: item.updated_at
-    }));
-  } catch (error: any) {
-    console.error("Error in createSubtasks:", error);
-    throw new Error(`Failed to create subtasks: ${error.message}`);
+  if (error) {
+    console.error("Failed to create subtasks:", error);
+    throw error;
   }
 }
 
-/**
- * Create a recurring task
- * @param taskData The data for the recurring task
- * @param userId The ID of the user creating the task
- * @param recurringData The data for the recurrence
- */
-export async function createRecurringTask(
-  taskData: TaskFormData, 
-  userId: string, 
-  recurringData: RecurringFormData
+// Create recurring task instances
+export async function createRecurringTaskInstances(
+  originalTaskId: string,
+  dates: Date[]
 ): Promise<Task[]> {
-  try {
-    // Check if the user has a paid account
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("account_type")
-      .eq("id", userId)
-      .single();
-      
-    if (profileError) {
-      console.error("Error fetching user profile:", profileError);
-      throw new Error(profileError.message);
-    }
+  const { data: originalTask, error: taskError } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('id', originalTaskId)
+    .single();
     
-    const isPaidAccount = profile?.account_type === "individual" || profile?.account_type === "business";
-    
-    if (!isPaidAccount) {
-      throw new Error("This feature is only available for paid accounts");
-    }
-    
-    // Create the initial task
-    const initialTask = await createTaskWithSubtasks(taskData, userId);
-    
-    // Create the recurrence
-    const recurrencePayload = {
-      task_id: initialTask.id,
-      frequency: recurringData.frequency,
-      interval: recurringData.interval,
-      end_date: recurringData.end_date ? recurringData.end_date.toISOString() : null,
-      max_occurrences: recurringData.max_occurrences || null,
-      days_of_week: recurringData.days_of_week || null,
-      entity_id: initialTask.id,
-      entity_type: "task",
-      created_by: userId
+  if (taskError) throw taskError;
+  
+  const createdTasks: Task[] = [];
+  
+  for (const date of dates) {
+    const newTaskData = {
+      title: originalTask.title,
+      description: originalTask.description,
+      priority: originalTask.priority,
+      status: 'pending',
+      due_date: date.toISOString(),
+      user_id: originalTask.user_id,
+      is_recurring_instance: true,
+      parent_recurring_id: originalTaskId
     };
     
-    // Use the helper function for dynamic table insertion
-    const { data: recurrence, error: recurrenceError } = await fromTable("recurring_settings")
-      .insert(recurrencePayload)
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert(newTaskData)
       .select()
       .single();
       
-    if (recurrenceError) {
-      console.error("Error creating recurrence:", recurrenceError);
-      throw new Error(recurrenceError.message);
+    if (error) {
+      console.error("Failed to create recurring task instance:", error);
+    } else if (data) {
+      createdTasks.push(data as Task);
     }
-    
-    return [initialTask];
-  } catch (error: any) {
-    console.error("Error in createRecurringTask:", error);
-    throw new Error(`Failed to create recurring task: ${error.message}`);
   }
+  
+  return createdTasks;
 }
-
-// Export the task creation functions
-export { createTaskWithSubtasks as createTask };

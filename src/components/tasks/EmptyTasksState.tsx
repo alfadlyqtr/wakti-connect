@@ -2,15 +2,15 @@
 import React from "react";
 import { ClipboardCheck, Plus, Share2, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { TaskTab } from "@/types/task.types";
+import { TaskTab } from "@/hooks/useTasks";
 
 interface EmptyTasksStateProps {
   isPaidAccount: boolean;
   onCreateTask: () => void;
-  type: TaskTab;
+  tab: TaskTab;
 }
 
-const EmptyTasksState = ({ isPaidAccount, onCreateTask, type }: EmptyTasksStateProps) => {
+const EmptyTasksState = ({ isPaidAccount, onCreateTask, tab }: EmptyTasksStateProps) => {
   // Different content based on the current tab
   const content = {
     "my-tasks": {
@@ -35,20 +35,20 @@ const EmptyTasksState = ({ isPaidAccount, onCreateTask, type }: EmptyTasksStateP
   
   return (
     <div className="py-12 flex flex-col items-center justify-center text-center">
-      {content[type].icon}
+      {content[tab].icon}
       
       <h3 className="mt-4 text-lg font-semibold">
-        {content[type].title}
+        {content[tab].title}
       </h3>
       
       <p className="mt-2 text-muted-foreground max-w-sm">
-        {content[type].description}
+        {content[tab].description}
       </p>
       
       {isPaidAccount && (
         <Button onClick={onCreateTask} className="mt-6">
           <Plus className="h-4 w-4 mr-2" />
-          {content[type].buttonText}
+          {content[tab].buttonText}
         </Button>
       )}
       
