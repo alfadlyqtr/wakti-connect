@@ -1,16 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
-
-// Define permission levels
-export type PermissionLevel = 'none' | 'read' | 'write' | 'admin';
-
-// Define staff permissions structure
-export interface StaffPermissions {
-  service_permission: PermissionLevel;
-  booking_permission: PermissionLevel;
-  staff_permission: PermissionLevel;
-  analytics_permission: PermissionLevel;
-}
+import { PermissionLevel, StaffPermissions } from "./types";
+import { extractPermissionLevel, meetsPermissionLevel } from "./permissionUtils";
 
 // Get current user role information
 export const getUserRoleInfo = async (): Promise<{ 
@@ -97,11 +88,14 @@ export const getBusinessPermissions = async (businessId: string): Promise<StaffP
     }
     
     // Extract typed permissions from the jsonb data
+    // Fix: properly type and handle JSONB data
+    const permissions = data.permissions as Record<string, string> | null;
+    
     const staffPermissions: StaffPermissions = {
-      service_permission: extractPermissionLevel(data.permissions?.service_permission),
-      booking_permission: extractPermissionLevel(data.permissions?.booking_permission),
-      staff_permission: extractPermissionLevel(data.permissions?.staff_permission),
-      analytics_permission: extractPermissionLevel(data.permissions?.analytics_permission)
+      service_permission: extractPermissionLevel(permissions?.service_permission),
+      booking_permission: extractPermissionLevel(permissions?.booking_permission),
+      staff_permission: extractPermissionLevel(permissions?.staff_permission),
+      analytics_permission: extractPermissionLevel(permissions?.analytics_permission)
     };
     
     return staffPermissions;
@@ -111,25 +105,6 @@ export const getBusinessPermissions = async (businessId: string): Promise<StaffP
   }
 };
 
-// Check if a permission level meets the required level
-export const meetsPermissionLevel = (
-  userLevel: PermissionLevel, 
-  requiredLevel: PermissionLevel
-): boolean => {
-  const levels: Record<PermissionLevel, number> = {
-    'none': 0,
-    'read': 1,
-    'write': 2,
-    'admin': 3
-  };
-  
-  return levels[userLevel] >= levels[requiredLevel];
-};
-
-// Extract permission level from unknown data
-export const extractPermissionLevel = (value: unknown): PermissionLevel => {
-  if (typeof value === 'string' && ['none', 'read', 'write', 'admin'].includes(value)) {
-    return value as PermissionLevel;
-  }
-  return 'none';
-};
+// Export the utility functions for use elsewhere
+export { extractPermissionLevel, meetsPermissionLevel };
+export type { PermissionLevel, StaffPermissions };
