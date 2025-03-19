@@ -4,7 +4,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Clock, Calendar, ClipboardList, CheckCircle2, XCircle } from "lucide-react";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
 
 interface WorkStatusCardProps {
   activeWorkSession: any | null;
@@ -35,35 +34,7 @@ const WorkStatusCard: React.FC<WorkStatusCardProps> = ({
   onEndWorkDay,
   onCreateJobCard
 }) => {
-  const [canCreateJobs, setCanCreateJobs] = useState(true);
-  const [canTrackHours, setCanTrackHours] = useState(true);
   const [secondsCounter, setSecondsCounter] = useState(0);
-  
-  // Effect to check current user permissions
-  useEffect(() => {
-    const checkPermissions = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      
-      const { data, error } = await supabase
-        .from('business_staff')
-        .select('permissions')
-        .eq('staff_id', user.id)
-        .maybeSingle();
-        
-      if (error || !data) {
-        console.error("Error checking permissions:", error);
-        return;
-      }
-      
-      if (data.permissions) {
-        setCanCreateJobs(!!data.permissions.can_create_job_cards);
-        setCanTrackHours(!!data.permissions.can_track_hours);
-      }
-    };
-    
-    checkPermissions();
-  }, []);
   
   // Timer effect to update working time counter
   useEffect(() => {
@@ -118,7 +89,6 @@ const WorkStatusCard: React.FC<WorkStatusCardProps> = ({
             onClick={onStartWorkDay}
             variant="default"
             className="flex-1"
-            disabled={!canTrackHours}
           >
             <Clock className="h-4 w-4 mr-2" />
             Start Work Day
@@ -135,7 +105,6 @@ const WorkStatusCard: React.FC<WorkStatusCardProps> = ({
             </Button>
             <Button 
               onClick={onCreateJobCard}
-              disabled={!canCreateJobs}
               className="flex-1"
             >
               <ClipboardList className="h-4 w-4 mr-2" />

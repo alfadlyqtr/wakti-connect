@@ -40,8 +40,9 @@ const JobCardsTab = () => {
           .single();
           
         if (error) {
+          console.error("Error fetching staff relation:", error);
           setPermissionsLoading(false);
-          throw error;
+          return;
         }
         
         if (!data) {
@@ -62,7 +63,7 @@ const JobCardsTab = () => {
         }
         
         // Also check for active work session
-        if ((data.permissions?.can_track_hours !== false)) {
+        if (data.permissions?.can_track_hours !== false) {
           const { data: activeSessions, error: sessionsError } = await supabase
             .from('staff_work_logs')
             .select('*')
@@ -71,9 +72,11 @@ const JobCardsTab = () => {
             .eq('status', 'active')
             .maybeSingle();
             
-          if (sessionsError) throw sessionsError;
-          
-          setActiveWorkSession(activeSessions);
+          if (sessionsError) {
+            console.error("Error fetching active work session:", sessionsError);
+          } else {
+            setActiveWorkSession(activeSessions);
+          }
         }
         
         setPermissionsLoading(false);
@@ -91,12 +94,21 @@ const JobCardsTab = () => {
     getStaffRelation();
   }, [toast]);
   
-  // Start/End work session
+  // Start work session
   const startWorkDay = async () => {
     if (!canTrackHours) {
       toast({
         title: "Permission Denied",
         description: "You don't have permission to track work hours",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!staffRelationId) {
+      toast({
+        title: "Error",
+        description: "Staff relation ID not found",
         variant: "destructive"
       });
       return;
@@ -113,7 +125,15 @@ const JobCardsTab = () => {
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error starting work day:", error);
+        toast({
+          title: "Error",
+          description: "Could not start your work day: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
       
       setActiveWorkSession(data);
       
@@ -131,6 +151,7 @@ const JobCardsTab = () => {
     }
   };
   
+  // End work session
   const endWorkDay = async () => {
     if (!activeWorkSession) return;
     
@@ -145,7 +166,15 @@ const JobCardsTab = () => {
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error ending work day:", error);
+        toast({
+          title: "Error",
+          description: "Could not end your work day: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
       
       setActiveWorkSession(null);
       
@@ -163,6 +192,7 @@ const JobCardsTab = () => {
     }
   };
   
+  // Open job card creation dialog
   const openCreateJobCard = () => {
     if (!canCreateJobCards) {
       toast({

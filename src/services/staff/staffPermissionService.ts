@@ -15,6 +15,9 @@ export const getDefaultPermissions = (): StaffPermissions => ({
   can_view_own_analytics: true
 });
 
+/**
+ * Gets permissions for a staff member by staff user ID
+ */
 export const getStaffPermissions = async (staffId: string): Promise<StaffPermissions> => {
   try {
     const { data, error } = await supabase
@@ -23,7 +26,10 @@ export const getStaffPermissions = async (staffId: string): Promise<StaffPermiss
       .eq('staff_id', staffId)
       .maybeSingle();
       
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching staff permissions:", error);
+      return getDefaultPermissions();
+    }
     
     // If permissions is null, return default permissions
     if (!data || !data.permissions) return getDefaultPermissions();
@@ -35,6 +41,9 @@ export const getStaffPermissions = async (staffId: string): Promise<StaffPermiss
   }
 };
 
+/**
+ * Gets permissions for a staff relation by relation ID
+ */
 export const getStaffRelationPermissions = async (relationId: string): Promise<StaffPermissions> => {
   try {
     const { data, error } = await supabase
@@ -43,7 +52,10 @@ export const getStaffRelationPermissions = async (relationId: string): Promise<S
       .eq('id', relationId)
       .maybeSingle();
       
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching staff relation permissions:", error);
+      return getDefaultPermissions();
+    }
     
     // If permissions is null, return default permissions
     if (!data || !data.permissions) return getDefaultPermissions();
@@ -55,28 +67,39 @@ export const getStaffRelationPermissions = async (relationId: string): Promise<S
   }
 };
 
+/**
+ * Updates permissions for a staff member by staff relation ID
+ */
 export const updateStaffPermissions = async (
   staffId: string, 
   permissions: Partial<StaffPermissions>
 ): Promise<boolean> => {
   try {
+    // First, get current permissions
     const { data: currentData, error: fetchError } = await supabase
       .from('business_staff')
       .select('permissions')
       .eq('id', staffId)
       .maybeSingle();
       
-    if (fetchError) throw fetchError;
+    if (fetchError) {
+      console.error("Error fetching current permissions:", fetchError);
+      return false;
+    }
     
     const currentPermissions = currentData?.permissions || getDefaultPermissions();
     const updatedPermissions = { ...currentPermissions, ...permissions };
     
+    // Update with merged permissions
     const { error: updateError } = await supabase
       .from('business_staff')
       .update({ permissions: updatedPermissions })
       .eq('id', staffId);
       
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error("Error updating staff permissions:", updateError);
+      return false;
+    }
     
     return true;
   } catch (error) {
@@ -85,6 +108,9 @@ export const updateStaffPermissions = async (
   }
 };
 
+/**
+ * Checks if a staff member has a specific permission
+ */
 export const checkStaffPermission = async (
   staffId: string, 
   permission: keyof StaffPermissions
@@ -98,6 +124,9 @@ export const checkStaffPermission = async (
   }
 };
 
+/**
+ * Checks if a staff member is a service provider
+ */
 export const isServiceProvider = async (staffId: string): Promise<boolean> => {
   try {
     const { data, error } = await supabase
@@ -106,7 +135,10 @@ export const isServiceProvider = async (staffId: string): Promise<boolean> => {
       .eq('staff_id', staffId)
       .maybeSingle();
       
-    if (error) throw error;
+    if (error) {
+      console.error("Error checking if staff is service provider:", error);
+      return false;
+    }
     
     return !!data?.is_service_provider;
   } catch (error) {

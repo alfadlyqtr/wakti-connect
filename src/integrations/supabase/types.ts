@@ -1145,6 +1145,24 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      is_business_owner: {
+        Args: {
+          business_id: string
+        }
+        Returns: boolean
+      }
+      is_own_staff_record: {
+        Args: {
+          record_id: string
+        }
+        Returns: boolean
+      }
+      is_staff_member: {
+        Args: {
+          business_id: string
+        }
+        Returns: boolean
+      }
       user_owns_service: {
         Args: {
           service_id: string
