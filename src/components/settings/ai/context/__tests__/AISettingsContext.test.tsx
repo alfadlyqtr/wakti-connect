@@ -6,6 +6,7 @@ import { AISettingsProvider, useAISettings } from '../AISettingsContext';
 import { useAIAssistant } from '@/hooks/useAIAssistant';
 import { AISettings } from '@/types/ai-assistant.types';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import '@testing-library/jest-dom'; // Add this import for the matchers
 
 // Mock the useAIAssistant hook
 vi.mock('@/hooks/useAIAssistant', () => ({
@@ -46,7 +47,7 @@ vi.mock('@/components/ui/use-toast', () => ({
 
 // Sample AI settings for testing
 const sampleSettings: AISettings = {
-  id: 1,
+  id: 1, // This is now valid with our updated type
   assistant_name: 'Test Assistant',
   tone: 'balanced',
   response_length: 'balanced',

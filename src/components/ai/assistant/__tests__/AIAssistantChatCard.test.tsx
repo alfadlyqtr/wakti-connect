@@ -2,6 +2,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
+import '@testing-library/jest-dom'; // Add this import for the matchers
 import { AIAssistantChatCard } from '../AIAssistantChatCard';
 import { AISettingsProvider } from '@/components/settings/ai';
 

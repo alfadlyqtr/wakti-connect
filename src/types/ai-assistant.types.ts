@@ -7,6 +7,7 @@ export interface AIMessage {
 }
 
 export interface AISettings {
+  id?: number; // Added optional id field
   assistant_name: string;
   tone: "formal" | "casual" | "concise" | "detailed" | "balanced";
   response_length: "short" | "balanced" | "detailed";
