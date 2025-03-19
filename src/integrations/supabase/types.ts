@@ -27,6 +27,36 @@ export type Database = {
         }
         Relationships: []
       }
+      access_control_manager: {
+        Row: {
+          business_id: string | null
+          created_at: string
+          id: string
+          permissions: Json | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          permissions?: Json | null
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          permissions?: Json | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_assistant_settings: {
         Row: {
           assistant_name: string | null
@@ -1145,9 +1175,19 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       is_business_owner: {
         Args: {
           business_id: string
+        }
+        Returns: boolean
+      }
+      is_business_owner_or_staff: {
+        Args: {
+          business_uuid: string
         }
         Returns: boolean
       }
@@ -1162,6 +1202,10 @@ export type Database = {
           business_id: string
         }
         Returns: boolean
+      }
+      populate_access_control: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       user_owns_service: {
         Args: {

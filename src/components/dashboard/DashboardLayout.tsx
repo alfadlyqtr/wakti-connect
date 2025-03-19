@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import "@/components/layout/sidebar/sidebar.css";
 import { useQuery } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ErrorBoundary } from "react-error-boundary";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -22,13 +23,38 @@ interface ProfileData {
   theme_preference: string | null;
 }
 
+const DashboardFallback = () => (
+  <div className="flex flex-col items-center justify-center h-[70vh] p-4">
+    <h2 className="text-2xl font-bold mb-4">Dashboard Error</h2>
+    <p className="text-muted-foreground mb-4 text-center">
+      We encountered an issue loading the dashboard. This has been reported.
+    </p>
+    <button
+      onClick={() => window.location.reload()}
+      className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
+    >
+      Refresh Page
+    </button>
+  </div>
+);
+
 const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const [hasLoadingTimeout, setHasLoadingTimeout] = useState(false);
 
-  // Fetch user profile data for the dashboard
-  const { data: profileData, isLoading: profileLoading } = useQuery({
+  // Set a timeout to prevent infinite loading state
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setHasLoadingTimeout(true);
+    }, 7000); // 7 seconds timeout
+    
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  // Fetch user profile data for the dashboard with minimal fields
+  const { data: profileData, isLoading: profileLoading, error: profileError } = useQuery({
     queryKey: ['dashboardUserProfile'],
     queryFn: async () => {
       try {
@@ -40,9 +66,13 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           return null;
         }
         
+        // Use the new security definer function to get user role first
+        const { data: userRoleData } = await supabase.rpc('get_user_role');
+        
+        // Then fetch only necessary profile data
         const { data, error } = await supabase
           .from('profiles')
-          .select('account_type, display_name, business_name, full_name, theme_preference')
+          .select('display_name, business_name, full_name, theme_preference')
           .eq('id', session.user.id)
           .single();
         
@@ -55,32 +85,19 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           return null;
         }
         
-        // Store user role in localStorage for use in other components
-        localStorage.setItem('userRole', data.account_type);
-        
-        if (data.account_type === 'business' && !data.business_name) {
-          // If business account but no business name is set, inform the user
-          toast({
-            title: "Complete your business profile",
-            description: "Please set your business name in your profile settings",
-            action: (
-              <button 
-                className="bg-primary text-white px-3 py-1 rounded-md text-xs"
-                onClick={() => navigate("/dashboard/settings")}
-              >
-                Update Profile
-              </button>
-            )
-          });
-        }
-        
-        return data as ProfileData;
+        // Combine the data
+        return {
+          ...data,
+          account_type: userRoleData || 'free'
+        } as ProfileData;
       } catch (error) {
         console.error("Error fetching user profile:", error);
         return null;
       }
     },
-    retry: 1,
+    retry: 2,
+    refetchOnWindowFocus: false,
+    staleTime: 300000, // 5 minutes
   });
 
   // Set theme based on user preference
@@ -134,13 +151,48 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // Get the correct user role
-  const userRoleValue = profileData?.account_type || propUserRole || "free";
+  // Get the correct user role with a fallback mechanism
+  const userRoleValue = profileData?.account_type || 
+                        propUserRole || 
+                        localStorage.getItem('userRole') as "free" | "individual" | "business" || 
+                        "free";
+
+  // Store role in localStorage as backup
+  useEffect(() => {
+    if (profileData?.account_type) {
+      localStorage.setItem('userRole', profileData.account_type);
+    }
+  }, [profileData?.account_type]);
 
   // Calculate main content padding based on sidebar state
   const mainContentClass = isMobile 
     ? "transition-all duration-300" 
     : "lg:pl-[70px] transition-all duration-300";
+
+  // Show error UI if profile loading error
+  if (profileError) {
+    console.error("Dashboard profile loading error:", profileError);
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <h2 className="text-2xl font-bold mb-4">Unable to load profile</h2>
+        <p className="text-muted-foreground mb-6">There was a problem loading your profile information.</p>
+        <div className="flex gap-4">
+          <button
+            onClick={() => navigate("/auth/login")}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
+          >
+            Go to Login
+          </button>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -151,12 +203,14 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         
         <main className={`flex-1 overflow-y-auto pt-4 px-4 pb-12 ${mainContentClass}`}>
           <div className="container mx-auto animate-in">
-            {profileLoading ? (
+            {profileLoading && !hasLoadingTimeout ? (
               <div className="flex items-center justify-center h-[calc(100vh-100px)]">
                 <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
               </div>
             ) : (
-              children
+              <ErrorBoundary FallbackComponent={DashboardFallback}>
+                {children}
+              </ErrorBoundary>
             )}
           </div>
         </main>

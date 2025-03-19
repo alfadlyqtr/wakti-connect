@@ -26,12 +26,19 @@ export const useStaffWorkLogs = (startDate?: Date, endDate?: Date) => {
     queryKey: ['staffWorkLogs', startDate?.toISOString(), endDate?.toISOString()],
     queryFn: async () => {
       try {
+        // Check if we have a user role from the access control manager
+        const { data: roleData } = await supabase.rpc('get_user_role');
+        console.log("User role from access control manager:", roleData);
+        
         // Fetch all staff members
         const { data: staffData, error: staffError } = await supabase
           .from('business_staff')
           .select('*');
           
-        if (staffError) throw staffError;
+        if (staffError) {
+          console.error("Error fetching staff data:", staffError);
+          throw staffError;
+        }
         
         // Build the query for work logs
         let query = supabase
@@ -53,7 +60,10 @@ export const useStaffWorkLogs = (startDate?: Date, endDate?: Date) => {
         // Execute the query with ordering
         const { data: logsData, error: logsError } = await query.order('start_time', { ascending: false });
           
-        if (logsError) throw logsError;
+        if (logsError) {
+          console.error("Error fetching staff work logs:", logsError);
+          throw logsError;
+        }
         
         // Map staff with their sessions
         const staffWithSessions: StaffWithSessions[] = staffData.map(staff => {
@@ -73,8 +83,10 @@ export const useStaffWorkLogs = (startDate?: Date, endDate?: Date) => {
         return staffWithSessions;
       } catch (error) {
         console.error("Error fetching staff work logs:", error);
+        // Return an empty array instead of throwing to prevent UI breakage
         return [];
       }
-    }
+    },
+    staleTime: 60000 // 1 minute
   });
 };

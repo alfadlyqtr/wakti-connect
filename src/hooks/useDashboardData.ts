@@ -36,9 +36,13 @@ export const useDashboardData = () => {
           throw new Error("Failed to ensure profile exists");
         }
         
+        // Use our security definer function to get user role
+        const { data: roleData } = await supabase.rpc('get_user_role');
+        
+        // Get profile fields except account_type (to avoid recursive RLS)
         const { data, error } = await supabase
           .from('profiles')
-          .select('full_name, account_type, display_name, business_name, occupation, avatar_url, theme_preference')
+          .select('full_name, display_name, business_name, occupation, avatar_url, theme_preference')
           .eq('id', session.user.id)
           .single();
         
@@ -48,13 +52,19 @@ export const useDashboardData = () => {
         }
         
         console.log("Successfully fetched profile data:", data);
-        return data as ProfileData;
+        
+        // Combine role data with profile data
+        return {
+          ...data,
+          account_type: roleData || 'free'
+        } as ProfileData;
       } catch (error) {
         console.error("Error in profile data fetch:", error);
         throw error;
       }
     },
-    retry: 2, // Retry a couple times in case of network issues
+    retry: 2,
+    staleTime: 180000, // 3 minutes
     refetchOnWindowFocus: false
   });
 

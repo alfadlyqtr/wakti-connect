@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -26,12 +25,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize auth state from Supabase
+  // Initialize auth state from Supabase with timeout protection
   useEffect(() => {
+    let isMounted = true;
+    const timeoutId = setTimeout(() => {
+      if (isMounted && isLoading) {
+        console.warn("Auth loading timeout - forcing completion to prevent blocking UI");
+        setIsLoading(false);
+      }
+    }, 5000); // 5 second safety timeout
+
     const loadUser = async () => {
       try {
         setIsLoading(true);
         
+        // Get session with timeout protection
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -42,10 +50,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           console.log("Found active session for user:", session.user.id);
           
-          // Get user profile data
+          // Use the new security definer function to get user role
+          const { data: userRoleData } = await supabase.rpc('get_user_role');
+          const userRole = userRoleData || 'free';
+          
+          // Get minimal profile data without recursive queries
           const { data: profile, error: profileError } = await supabase
             .from("profiles")
-            .select("*")
+            .select("full_name, display_name")
             .eq("id", session.user.id)
             .single();
             
@@ -61,7 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     full_name: session.user.email?.split('@')[0],
                     account_type: "free"
                   }])
-                  .select('*')
+                  .select('full_name, display_name')
                   .single();
                 
                 if (createError) {
@@ -74,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     email: session.user.email,
                     name: newProfile?.full_name || session.user.email?.split('@')[0],
                     displayName: newProfile?.display_name || newProfile?.full_name,
-                    plan: newProfile?.account_type || "free"
+                    plan: userRole as "free" | "individual" | "business"
                   });
                   return;
                 }
@@ -86,14 +98,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           }
           
-          console.log("User profile data:", profile);
-          
           setUser({
             id: session.user.id,
             email: session.user.email,
             name: profile?.full_name || session.user.email?.split('@')[0],
             displayName: profile?.display_name || profile?.full_name,
-            plan: profile?.account_type || "free"
+            plan: userRole as "free" | "individual" | "business"
           });
         } else {
           console.log("No active session found");
@@ -102,7 +112,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error("Error loading user:", error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -114,54 +126,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log("Auth state changed:", event, session?.user?.id);
         
         if (event === 'SIGNED_IN' && session) {
-          // Get user profile data
-          const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-            
-          if (profileError && profileError.code === "PGRST116") {
-            console.log("Profile not found for new sign-in, creating default profile");
-            try {
-              const { data: newProfile, error: createError } = await supabase
-                .from("profiles")
-                .insert([{ 
-                  id: session.user.id,
-                  full_name: session.user.email?.split('@')[0],
-                  account_type: "free"
-                }])
-                .select('*')
-                .single();
-              
-              if (createError) {
-                console.error("Error creating profile after sign in:", createError);
-              } else {
-                console.log("Created new profile after sign in:", newProfile);
-                
-                setUser({
-                  id: session.user.id,
-                  email: session.user.email,
-                  name: newProfile?.full_name || session.user.email?.split('@')[0],
-                  displayName: newProfile?.display_name || newProfile?.full_name,
-                  plan: newProfile?.account_type || "free"
-                });
-                return;
-              }
-            } catch (e) {
-              console.error("Error in profile creation process:", e);
-            }
-          } else if (profileError) {
-            console.error("Error fetching profile after sign in:", profileError);
-          }
+          // Use simplified profile fetch to avoid recursive queries
+          try {
+            // Use the new security definer function to get user role
+            const { data: userRoleData } = await supabase.rpc('get_user_role');
+            const userRole = userRoleData || 'free';
           
-          setUser({
-            id: session.user.id,
-            email: session.user.email,
-            name: profile?.full_name || session.user.email?.split('@')[0],
-            displayName: profile?.display_name || profile?.full_name,
-            plan: profile?.account_type || "free"
-          });
+            // Get minimal profile data
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("full_name, display_name")
+              .eq("id", session.user.id)
+              .single();
+              
+            setUser({
+              id: session.user.id,
+              email: session.user.email,
+              name: profile?.full_name || session.user.email?.split('@')[0],
+              displayName: profile?.display_name || profile?.full_name,
+              plan: userRole as "free" | "individual" | "business"
+            });
+          } catch (error) {
+            console.error("Error updating user after sign in:", error);
+            // Fallback with minimal data to prevent blocking
+            setUser({
+              id: session.user.id,
+              email: session.user.email,
+              plan: "free"
+            });
+          }
         } else if (event === 'SIGNED_OUT') {
           console.log("User signed out, clearing state");
           setUser(null);
@@ -170,6 +163,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
       authListener?.subscription.unsubscribe();
     };
   }, []);
