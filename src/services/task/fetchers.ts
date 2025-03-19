@@ -75,7 +75,11 @@ export async function fetchAssignedTasks(userId: string): Promise<Task[]> {
       throw error;
     }
     
-    return data as Task[] || [];
+    // Process the data to ensure subtasks is always an array
+    return (data || []).map(task => ({
+      ...task,
+      subtasks: Array.isArray(task.subtasks) ? task.subtasks : []
+    })) as Task[];
   } 
   // For individuals and staff, get tasks assigned to them
   else {
@@ -98,7 +102,11 @@ export async function fetchAssignedTasks(userId: string): Promise<Task[]> {
       throw error;
     }
     
-    return data as Task[] || [];
+    // Process the data to ensure subtasks is always an array
+    return (data || []).map(task => ({
+      ...task,
+      subtasks: Array.isArray(task.subtasks) ? task.subtasks : []
+    })) as Task[];
   }
 }
 
