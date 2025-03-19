@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { UserPlus } from "lucide-react";
+import { UserPlus, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StaffMemberCard, { StaffMember } from "./StaffMemberCard";
 
@@ -37,7 +37,11 @@ const StaffList: React.FC<StaffListProps> = ({
   if (hasError) {
     return (
       <Card className="col-span-full p-8">
-        <p className="text-center text-destructive">Error loading staff members</p>
+        <div className="text-center">
+          <AlertCircle className="h-10 w-10 mx-auto text-destructive mb-4" />
+          <p className="text-center text-destructive font-medium mb-2">Error loading staff members</p>
+          <p className="text-muted-foreground mb-4">There was a problem retrieving staff data. This may be due to permissions or network issues.</p>
+        </div>
       </Card>
     );
   }

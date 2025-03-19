@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { StaffMember } from "./StaffMemberCard";
 import { PermissionLevel, StaffPermissions } from "@/services/permissions/accessControlService";
+import { useAuth } from "@/hooks/useAuth";
 
 export const useStaffManagement = () => {
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
@@ -12,6 +13,7 @@ export const useStaffManagement = () => {
   const [deletingStaff, setDeletingStaff] = useState<StaffMember | null>(null);
   const [reactivatingStaff, setReactivatingStaff] = useState<StaffMember | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const { user } = useAuth();
 
   // Helper function to ensure we have a valid permission level
   const getPermissionLevel = (value: any): PermissionLevel => {
@@ -23,11 +25,18 @@ export const useStaffManagement = () => {
 
   // Fetch staff members
   const { data: staffMembers, isLoading, error, refetch } = useQuery({
-    queryKey: ['businessStaff'],
+    queryKey: ['businessStaff', user?.id],
     queryFn: async () => {
+      if (!user?.id) {
+        throw new Error("Not authenticated or not a business owner");
+      }
+
+      const businessId = user.businessId || user.id;
+      
       const { data: staffData, error: staffError } = await supabase
         .from('business_staff')
         .select('*')
+        .eq('business_id', businessId)
         .order('created_at', { ascending: false });
         
       if (staffError) throw staffError;
@@ -80,15 +89,21 @@ export const useStaffManagement = () => {
           permissions
         };
       }) as StaffMember[];
-    }
+    },
+    enabled: !!user?.id && (user?.plan === 'business' || !!user?.businessId)
   });
 
   const handleStatusChange = async (staff: StaffMember, newStatus: 'active' | 'suspended' | 'deleted') => {
     try {
+      if (!user?.id) {
+        throw new Error("Not authenticated");
+      }
+      
       const { error } = await supabase
         .from('business_staff')
         .update({ status: newStatus })
-        .eq('id', staff.id);
+        .eq('id', staff.id)
+        .eq('business_id', user.businessId || user.id);
         
       if (error) throw error;
       
@@ -140,6 +155,7 @@ export const useStaffManagement = () => {
     setReactivatingStaff,
     createDialogOpen,
     setCreateDialogOpen,
-    handleStatusChange
+    handleStatusChange,
+    isBusinessOwner: user?.plan === 'business'
   };
 };

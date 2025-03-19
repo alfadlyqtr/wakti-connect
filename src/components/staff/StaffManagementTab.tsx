@@ -1,14 +1,17 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { UserPlus } from "lucide-react";
+import { UserPlus, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import CreateStaffDialog from "./CreateStaffDialog";
 import EditStaffDialog from "./EditStaffDialog";
 import StaffDialogs from "./StaffDialogs";
 import StaffList from "./StaffList";
 import { useStaffManagement } from "./useStaffManagement";
+import { useAuth } from "@/hooks/useAuth";
 
 const StaffManagementTab = () => {
+  const { user } = useAuth();
   const {
     staffMembers,
     isLoading,
@@ -24,8 +27,25 @@ const StaffManagementTab = () => {
     setReactivatingStaff,
     createDialogOpen,
     setCreateDialogOpen,
-    handleStatusChange
+    handleStatusChange,
+    isBusinessOwner
   } = useStaffManagement();
+
+  // Check if user is a business owner or admin
+  const canManageStaff = isBusinessOwner || user?.plan === 'co-admin' || user?.plan === 'admin';
+
+  // If the user is not a business owner or admin, show an access denied message
+  if (!canManageStaff) {
+    return (
+      <Alert variant="destructive" className="mb-6">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Access Denied</AlertTitle>
+        <AlertDescription>
+          You do not have permission to manage staff. Only business owners and administrators can access this feature.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <>

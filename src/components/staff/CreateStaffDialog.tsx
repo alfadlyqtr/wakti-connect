@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   Dialog, 
@@ -25,6 +24,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CreateStaffDialogProps {
   open: boolean;
@@ -56,6 +56,7 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
   onCreated
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
 
   const form = useForm<StaffFormValues>({
     resolver: zodResolver(staffFormSchema),
@@ -100,15 +101,18 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
     setIsLoading(true);
 
     try {
+      if (!user?.id) {
+        throw new Error("Not authenticated");
+      }
+      
+      const businessId = user.businessId || user.id;
+    
       // Check if a co-admin already exists
       if (data.role === 'co-admin') {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error("No active session");
-        
         const { data: existingCoAdmin, error: coAdminError } = await supabase
           .from('business_staff')
           .select('id')
-          .eq('business_id', session.user.id)
+          .eq('business_id', businessId)
           .eq('role', 'co-admin')
           .eq('status', 'active')
           .maybeSingle();
@@ -119,10 +123,6 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
           throw new Error("You already have a Co-Admin. Only one Co-Admin is allowed per business.");
         }
       }
-
-      // Get the current business owner's ID
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Unable to get current user");
       
       // Set default permissions based on role
       let staffPermissions: Record<string, any> = {};
@@ -157,7 +157,7 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
       const { data: staff, error } = await supabase
         .from('business_staff')
         .insert({
-          business_id: user.id,
+          business_id: businessId,
           name: data.name,
           email: data.email,
           position: data.position,
