@@ -1,18 +1,9 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, Moon, Sun, User, ChevronDown, ChevronUp } from "lucide-react";
+import { Moon, Sun, User, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
-import { 
-  NavigationMenu, 
-  NavigationMenuContent, 
-  NavigationMenuItem, 
-  NavigationMenuLink, 
-  NavigationMenuList, 
-  NavigationMenuTrigger 
-} from "@/components/ui/navigation-menu";
-import LanguageSwitcher from "@/components/ui/language-switcher";
 import { useTranslation } from "react-i18next";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
@@ -49,7 +40,6 @@ const Header = () => {
           <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors">
             {t('header.contact')}
           </Link>
-          <LanguageSwitcher />
           <Button 
             variant="ghost" 
             size="icon" 
@@ -71,7 +61,6 @@ const Header = () => {
         
         {/* Mobile navigation button */}
         <div className="md:hidden flex items-center gap-2">
-          <LanguageSwitcher />
           <Button 
             variant="ghost" 
             size="icon" 

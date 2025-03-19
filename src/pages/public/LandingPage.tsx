@@ -12,7 +12,7 @@ import Footer from "@/components/landing/Footer";
 const LandingPage = () => {
   return (
     <div className="min-h-screen">
-      {/* Header */}
+      {/* Header is rendered here */}
       <Header />
       
       {/* Hero Section */}
