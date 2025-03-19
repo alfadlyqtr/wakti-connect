@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -8,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import "@/components/layout/sidebar/sidebar.css";
 import { useQuery } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ErrorBoundary } from "react-error-boundary";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -44,7 +43,6 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const navigate = useNavigate();
   const [hasLoadingTimeout, setHasLoadingTimeout] = useState(false);
 
-  // Set a timeout to prevent infinite loading state
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setHasLoadingTimeout(true);
@@ -53,7 +51,6 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     return () => clearTimeout(timeoutId);
   }, []);
 
-  // Fetch user profile data for the dashboard with minimal fields
   const { data: profileData, isLoading: profileLoading, error: profileError } = useQuery({
     queryKey: ['dashboardUserProfile'],
     queryFn: async () => {
@@ -66,10 +63,8 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           return null;
         }
         
-        // Use the new security definer function to get user role first
         const { data: userRoleData } = await supabase.rpc('get_user_role');
         
-        // Then fetch only necessary profile data
         const { data, error } = await supabase
           .from('profiles')
           .select('display_name, business_name, full_name, theme_preference')
@@ -85,7 +80,6 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           return null;
         }
         
-        // Combine the data
         return {
           ...data,
           account_type: userRoleData || 'free'
@@ -97,10 +91,9 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     },
     retry: 2,
     refetchOnWindowFocus: false,
-    staleTime: 300000, // 5 minutes
+    staleTime: 300000,
   });
 
-  // Set theme based on user preference
   useEffect(() => {
     if (profileData?.theme_preference) {
       document.documentElement.classList.remove('light', 'dark');
@@ -108,13 +101,11 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     }
   }, [profileData?.theme_preference]);
 
-  // Setup auth listener
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed in dashboard layout:", event);
       
       if (event === 'SIGNED_OUT') {
-        // Clear stored user role on sign out
         localStorage.removeItem('userRole');
         navigate("/auth");
       }
@@ -125,7 +116,6 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     };
   }, [navigate]);
 
-  // Close sidebar when clicking outside on mobile
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (isMobile && isSidebarOpen) {
@@ -151,25 +141,21 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // Get the correct user role with a fallback mechanism
   const userRoleValue = profileData?.account_type || 
                         propUserRole || 
                         localStorage.getItem('userRole') as "free" | "individual" | "business" || 
                         "free";
 
-  // Store role in localStorage as backup
   useEffect(() => {
     if (profileData?.account_type) {
       localStorage.setItem('userRole', profileData.account_type);
     }
   }, [profileData?.account_type]);
 
-  // Calculate main content padding based on sidebar state
   const mainContentClass = isMobile 
     ? "transition-all duration-300" 
     : "lg:pl-[70px] transition-all duration-300";
 
-  // Show error UI if profile loading error
   if (profileError) {
     console.error("Dashboard profile loading error:", profileError);
     return (
@@ -208,7 +194,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
                 <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
               </div>
             ) : (
-              <ErrorBoundary FallbackComponent={DashboardFallback}>
+              <ErrorBoundary fallback={<DashboardFallback />}>
                 {children}
               </ErrorBoundary>
             )}
