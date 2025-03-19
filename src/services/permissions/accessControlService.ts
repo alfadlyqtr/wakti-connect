@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export type PermissionLevel = 'none' | 'read' | 'write' | 'admin';
@@ -30,7 +31,7 @@ export const getBusinessPermissions = async (businessId: string): Promise<StaffP
     // Get staff permissions
     const { data, error } = await supabase
       .from('business_staff')
-      .select('service_permission, booking_permission, staff_permission, analytics_permission')
+      .select('role, permissions')
       .eq('business_id', businessId)
       .eq('staff_id', user.id)
       .eq('status', 'active')
@@ -41,7 +42,43 @@ export const getBusinessPermissions = async (businessId: string): Promise<StaffP
       return null;
     }
     
-    return data as StaffPermissions;
+    // Initialize with default permissions (none)
+    const defaultPermissions: StaffPermissions = {
+      service_permission: 'none',
+      booking_permission: 'none',
+      staff_permission: 'none',
+      analytics_permission: 'none'
+    };
+    
+    // If role is co-admin, set all permissions to admin
+    if (data.role === 'co-admin') {
+      return {
+        service_permission: 'admin',
+        booking_permission: 'admin',
+        staff_permission: 'admin',
+        analytics_permission: 'admin'
+      };
+    }
+    
+    // If role is admin, set some permissions to admin
+    if (data.role === 'admin') {
+      return {
+        service_permission: 'admin',
+        booking_permission: 'admin',
+        staff_permission: 'write',
+        analytics_permission: 'admin'
+      };
+    }
+    
+    // If permissions exist in the database, merge them with defaults
+    if (data.permissions) {
+      return {
+        ...defaultPermissions,
+        ...data.permissions
+      };
+    }
+    
+    return defaultPermissions;
   } catch (error) {
     console.error("Error in getBusinessPermissions:", error);
     return null;
@@ -62,31 +99,46 @@ export const hasBusinessPermission = async (
     // Business owner has all permissions
     if (user.id === businessId) return true;
     
-    // Otherwise check staff permissions
-    const { data } = await supabase.rpc('has_business_permission', {
-      business_uuid: businessId,
-      permission_type: permissionType.replace('_permission', ''),
-      required_level: requiredLevel
-    });
+    // Get permissions
+    const permissions = await getBusinessPermissions(businessId);
+    if (!permissions) return false;
     
-    return !!data;
+    const userLevel = permissions[permissionType];
+    
+    // Admin has all permissions
+    if (userLevel === 'admin') return true;
+    
+    // Specific level checks
+    if (requiredLevel === 'read') {
+      return ['read', 'write', 'admin'].includes(userLevel);
+    } else if (requiredLevel === 'write') {
+      return ['write', 'admin'].includes(userLevel);
+    } else if (requiredLevel === 'admin') {
+      return userLevel === 'admin';
+    }
+    
+    return userLevel !== 'none';
   } catch (error) {
     console.error("Error checking business permission:", error);
     return false;
   }
 };
 
-// Get role information from access_control_manager
+// Get role information from business_staff
 export const getUserRoleInfo = async (): Promise<{ 
   role: string; 
-  roleLevel: number;
   businessId?: string;
 } | null> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    
     const { data, error } = await supabase
-      .from('access_control_manager')
-      .select('role, role_level, business_id')
-      .order('role_level', { ascending: false })
+      .from('business_staff')
+      .select('role, business_id')
+      .eq('staff_id', user.id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
       .limit(1);
     
     if (error || !data || data.length === 0) {
@@ -96,7 +148,6 @@ export const getUserRoleInfo = async (): Promise<{
     
     return {
       role: data[0].role,
-      roleLevel: data[0].role_level,
       businessId: data[0].business_id
     };
   } catch (error) {
@@ -108,12 +159,12 @@ export const getUserRoleInfo = async (): Promise<{
 // Update staff permissions
 export const updateStaffPermissions = async (
   staffId: string,
-  permissions: Partial<StaffPermissions>
+  permissions: StaffPermissions
 ): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('business_staff')
-      .update(permissions)
+      .update({ permissions })
       .eq('id', staffId);
     
     if (error) {

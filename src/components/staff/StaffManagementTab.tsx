@@ -8,17 +8,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { 
   UserPlus, 
-  BriefcaseBusiness, 
-  Calendar, 
-  MessageSquare, 
-  FileCheck, 
-  ChartBar,
   UserCog,
   Ban,
   PowerOff,
   Check,
-  X,
-  AlertTriangle
+  X
 } from "lucide-react";
 import { 
   DropdownMenu,
@@ -42,7 +36,7 @@ import { toast } from "@/components/ui/use-toast";
 import CreateStaffDialog from "./CreateStaffDialog";
 import EditStaffDialog from "./EditStaffDialog";
 import StaffPermissionsDisplay from "./StaffPermissionsDisplay";
-import { StaffPermissions, getDefaultPermissions } from "@/services/staff/staffPermissionService";
+import { PermissionLevel, StaffPermissions } from "@/services/permissions/accessControlService";
 
 interface StaffMember {
   id: string;
@@ -55,7 +49,12 @@ interface StaffMember {
   is_service_provider: boolean;
   status: 'active' | 'suspended' | 'deleted';
   profile_image_url: string | null;
-  permissions: StaffPermissions;
+  permissions: {
+    service_permission: PermissionLevel;
+    booking_permission: PermissionLevel;
+    staff_permission: PermissionLevel;
+    analytics_permission: PermissionLevel;
+  };
 }
 
 const StaffManagementTab = () => {
@@ -78,12 +77,36 @@ const StaffManagementTab = () => {
       
       // Cast to StaffMember[] type with default values for new fields
       return (staffData || []).map(staff => {
-        // Handle permissions safely
-        let permissions = getDefaultPermissions();
-        if (staff.permissions && typeof staff.permissions === 'object') {
+        // Define default permissions
+        const defaultPermissions: StaffPermissions = {
+          service_permission: 'none',
+          booking_permission: 'none',
+          staff_permission: 'none',
+          analytics_permission: 'none'
+        };
+        
+        // Get permissions from staff.permissions or use defaults
+        let permissions = defaultPermissions;
+        
+        // If staff has a role, set permissions accordingly
+        if (staff.role === 'co-admin') {
           permissions = {
-            ...permissions,
-            ...(staff.permissions as object) as StaffPermissions
+            service_permission: 'admin',
+            booking_permission: 'admin',
+            staff_permission: 'admin',
+            analytics_permission: 'admin'
+          };
+        } else if (staff.role === 'admin') {
+          permissions = {
+            service_permission: 'admin',
+            booking_permission: 'admin',
+            staff_permission: 'write',
+            analytics_permission: 'admin'
+          };
+        } else if (staff.permissions && typeof staff.permissions === 'object') {
+          permissions = {
+            ...defaultPermissions,
+            ...staff.permissions
           };
         }
         
@@ -93,7 +116,7 @@ const StaffManagementTab = () => {
           is_service_provider: staff.is_service_provider || false,
           status: (staff.status as 'active' | 'suspended' | 'deleted') || 'active',
           profile_image_url: staff.profile_image_url || null,
-          permissions: permissions
+          permissions
         };
       }) as StaffMember[];
     }

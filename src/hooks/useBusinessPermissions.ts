@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { 
@@ -69,9 +70,9 @@ export function useBusinessPermissions(businessId?: string) {
     
     // Specific level checks
     if (requiredLevel === 'read') {
-      return userLevel === 'read' || userLevel === 'write' || userLevel === 'admin';
+      return ['read', 'write', 'admin'].includes(userLevel);
     } else if (requiredLevel === 'write') {
-      return userLevel === 'write' || userLevel === 'admin';
+      return ['write', 'admin'].includes(userLevel);
     } else if (requiredLevel === 'admin') {
       return userLevel === 'admin';
     }

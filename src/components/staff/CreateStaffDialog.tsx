@@ -20,7 +20,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { PermissionLevel } from "@/services/permissions/accessControlService";
+import { PermissionLevel, StaffPermissions } from "@/services/permissions/accessControlService";
 
 interface CreateStaffDialogProps {
   open: boolean;
@@ -39,7 +39,7 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
   const [role, setRole] = useState<string>("staff");
   const [isServiceProvider, setIsServiceProvider] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [permissions, setPermissions] = useState({
+  const [permissions, setPermissions] = useState<StaffPermissions>({
     service_permission: 'none' as PermissionLevel,
     booking_permission: 'none' as PermissionLevel,
     staff_permission: 'none' as PermissionLevel,
@@ -75,6 +75,24 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Unable to get current user");
       
+      // Set default permissions based on role
+      let staffPermissions = { ...permissions };
+      if (role === 'co-admin') {
+        staffPermissions = {
+          service_permission: 'admin',
+          booking_permission: 'admin',
+          staff_permission: 'admin',
+          analytics_permission: 'admin'
+        };
+      } else if (role === 'admin') {
+        staffPermissions = {
+          service_permission: 'admin',
+          booking_permission: 'admin',
+          staff_permission: 'write',
+          analytics_permission: 'admin'
+        };
+      }
+      
       const { data: staff, error } = await supabase
         .from('business_staff')
         .insert({
@@ -84,28 +102,14 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
           position,
           role,
           is_service_provider: isServiceProvider,
-          service_permission: permissions.service_permission,
-          booking_permission: permissions.booking_permission,
-          staff_permission: permissions.staff_permission,
-          analytics_permission: permissions.analytics_permission
+          permissions: staffPermissions,
+          staff_id: user.id, // Temporary - in a real system would be the staff user's ID
+          status: 'active'
         })
         .select()
         .single();
 
       if (error) throw error;
-
-      // Set default permissions based on role
-      if (role === 'co-admin' || role === 'admin') {
-        await supabase
-          .from('business_staff')
-          .update({
-            service_permission: 'admin',
-            booking_permission: 'admin',
-            staff_permission: role === 'co-admin' ? 'admin' : 'write',
-            analytics_permission: 'admin'
-          })
-          .eq('id', staff.id);
-      }
 
       // Run populate access control
       await supabase.rpc('populate_access_control');
@@ -142,7 +146,7 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
     }
   };
 
-  const handlePermissionChange = (type: string, value: PermissionLevel) => {
+  const handlePermissionChange = (type: keyof StaffPermissions, value: PermissionLevel) => {
     setPermissions(prev => ({
       ...prev,
       [type]: value
