@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TaskFormData, Task, SubTask } from "@/types/task.types";
 import { createTask } from "./baseService";
 import { RecurringFormData } from "@/types/recurring.types";
+import { fromTable } from "@/utils/databaseUtils";
 
 /**
  * Create a task with subtasks (if any)
@@ -53,10 +54,9 @@ export async function createSubtasks(taskId: string, subtasks: SubTask[]): Promi
     }));
     
     // Use the helper from util to handle dynamic table names
-    const { data, error } = await supabase
-      .from("todo_items")
+    const { data, error } = await fromTable("todo_items")
       .insert(subtaskPayload)
-      .select("*");
+      .select();
       
     if (error) {
       console.error("Error creating subtasks:", error);
@@ -124,11 +124,10 @@ export async function createRecurringTask(
       created_by: userId
     };
     
-    // Use our helper to handle dynamic table insertion
-    const { data: recurrence, error: recurrenceError } = await supabase
-      .from("recurrences")
+    // Use the helper function for dynamic table insertion
+    const { data: recurrence, error: recurrenceError } = await fromTable("recurring_settings")
       .insert(recurrencePayload)
-      .select("*")
+      .select()
       .single();
       
     if (recurrenceError) {

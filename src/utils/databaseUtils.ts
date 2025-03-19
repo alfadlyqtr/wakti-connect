@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { fromTable as dynamicFromTable } from "@/integrations/supabase/helper";
 
 /**
  * Helper function to perform a more flexible select from a table
@@ -7,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
  * @returns A database query builder
  */
 export function fromTable(tableName: string) {
-  return supabase.from(tableName);
+  return dynamicFromTable(tableName);
 }
 
 /**
@@ -17,30 +18,12 @@ export function fromTable(tableName: string) {
  */
 export async function checkIfTableExists(tableName: string): Promise<boolean> {
   try {
-    // Use RPC to check if table exists to avoid type issues with dynamic table names
+    // Use RPC to check if table exists
     const { data, error } = await supabase.rpc('check_table_exists', { table_name: tableName });
     
     if (error) {
       console.error(`Error checking if table '${tableName}' exists:`, error);
-      
-      // Try an alternative approach with a raw query if RPC fails
-      try {
-        // Use the helper function for dynamic table queries
-        const { data: tableData, error: countError } = await fromTable('_metadata')
-          .select('*')
-          .eq('table_name', tableName)
-          .maybeSingle();
-          
-        if (countError) {
-          console.error(`Fallback check for table '${tableName}' failed:`, countError);
-          return false;
-        }
-        
-        return tableData != null;
-      } catch (fallbackError) {
-        console.error(`Fallback for table check failed:`, fallbackError);
-        return false;
-      }
+      return false;
     }
     
     return data === true;
