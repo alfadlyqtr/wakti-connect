@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Task, SubTask } from "./types";
+import { Task, SubTask, TaskStatus, TaskPriority } from "./types";
 
 // Fetch tasks owned by the current user
 export async function fetchMyTasks(userId: string): Promise<Task[]> {
@@ -19,9 +19,11 @@ export async function fetchMyTasks(userId: string): Promise<Task[]> {
     throw error;
   }
   
-  // Ensure subtasks is always an array
+  // Ensure subtasks is always an array and properly type the task fields
   return (data || []).map(task => ({
     ...task,
+    status: task.status as TaskStatus,
+    priority: task.priority as TaskPriority,
     subtasks: Array.isArray(task.subtasks) ? task.subtasks : []
   })) as Task[];
 }
@@ -54,15 +56,15 @@ export async function fetchSharedTasks(userId: string): Promise<Task[]> {
           id: task.id,
           title: task.title,
           description: task.description,
-          status: task.status,
-          priority: task.priority,
+          status: task.status as TaskStatus,
+          priority: task.priority as TaskPriority,
           due_date: task.due_date,
           user_id: task.user_id,
           assignee_id: task.assignee_id || null,
           created_at: task.created_at,
           updated_at: task.updated_at,
-          is_recurring_instance: task.is_recurring_instance,
-          parent_recurring_id: task.parent_recurring_id,
+          is_recurring_instance: task.is_recurring_instance || false,
+          parent_recurring_id: task.parent_recurring_id || null,
           subtasks: Array.isArray(task.subtasks) ? task.subtasks : []
         });
       }
@@ -104,9 +106,11 @@ export async function fetchAssignedTasks(userId: string): Promise<Task[]> {
       throw error;
     }
     
-    // Process the data to ensure subtasks is always an array
+    // Process the data to ensure subtasks is always an array and properly type task fields
     return (data || []).map(task => ({
       ...task,
+      status: task.status as TaskStatus,
+      priority: task.priority as TaskPriority,
       subtasks: Array.isArray(task.subtasks) ? task.subtasks : []
     })) as Task[];
   } 
@@ -131,9 +135,11 @@ export async function fetchAssignedTasks(userId: string): Promise<Task[]> {
       throw error;
     }
     
-    // Process the data to ensure subtasks is always an array
+    // Process the data to ensure subtasks is always an array and properly type task fields
     return (data || []).map(task => ({
       ...task,
+      status: task.status as TaskStatus,
+      priority: task.priority as TaskPriority,
       subtasks: Array.isArray(task.subtasks) ? task.subtasks : []
     })) as Task[];
   }

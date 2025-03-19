@@ -7,7 +7,8 @@ import {
   markTaskPending, 
   deleteTask, 
   addSubtask,
-  getTaskById
+  getTaskById,
+  getUpcomingTasks 
 } from "./taskService";
 
 export { 
@@ -19,7 +20,8 @@ export {
   markTaskPending,
   deleteTask,
   addSubtask,
-  getTaskById
+  getTaskById,
+  getUpcomingTasks
 };
 
 export type { Task, TaskTab, TaskFormData, TasksResult, TaskStatus, TaskPriority, SubTask } from "./types";
