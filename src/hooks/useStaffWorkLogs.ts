@@ -1,92 +1,84 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
+import { Staff, WorkSession } from "@/hooks/useStaffData";
 
-export interface StaffWorkLog {
-  id: string;
-  staff_relation_id: string;
-  start_time: string;
-  end_time: string | null;
-  earnings: number | null;
-  notes: string | null;
-  status: 'active' | 'completed' | 'cancelled';
-  created_at: string;
-  updated_at: string;
+export interface StaffWithSessions extends Staff {
+  sessions: WorkSession[];
 }
 
-export interface StaffWithSessions {
-  id: string;
-  name: string;
-  role: string;
-  sessions: StaffWorkLog[];
-}
-
-export const useStaffWorkLogs = (startDate?: Date, endDate?: Date) => {
+export const useStaffWorkLogs = () => {
   return useQuery({
-    queryKey: ['staffWorkLogs', startDate?.toISOString(), endDate?.toISOString()],
+    queryKey: ['staffWorkLogs'],
     queryFn: async () => {
       try {
-        // Check if we have a user role from the access control manager
-        const { data: roleData } = await supabase.rpc('get_user_role');
-        console.log("User role from access control manager:", roleData);
-        
-        // Fetch all staff members
         const { data: staffData, error: staffError } = await supabase
           .from('business_staff')
           .select('*');
-          
+        
         if (staffError) {
-          console.error("Error fetching staff data:", staffError);
           throw staffError;
         }
-        
-        // Build the query for work logs
-        let query = supabase
-          .from('staff_work_logs')
-          .select('*');
-        
-        // Add date filters if provided
-        if (startDate) {
-          query = query.gte('start_time', startDate.toISOString());
-        }
-        
-        if (endDate) {
-          // Set end date to end of day
-          const endOfDay = new Date(endDate);
-          endOfDay.setHours(23, 59, 59, 999);
-          query = query.lte('start_time', endOfDay.toISOString());
-        }
-        
-        // Execute the query with ordering
-        const { data: logsData, error: logsError } = await query.order('start_time', { ascending: false });
-          
-        if (logsError) {
-          console.error("Error fetching staff work logs:", logsError);
-          throw logsError;
-        }
-        
-        // Map staff with their sessions
-        const staffWithSessions: StaffWithSessions[] = staffData.map(staff => {
-          const staffLogs = logsData.filter(log => log.staff_relation_id === staff.id);
-          
+
+        // Transform staff data into the format we need
+        const staffMembers: Staff[] = staffData.map(staff => {
           return {
             id: staff.id,
             name: staff.name || 'Unnamed Staff',
             role: staff.role || 'staff',
-            sessions: staffLogs.map(log => ({
-              ...log,
-              status: (log.status as 'active' | 'completed' | 'cancelled') || 'active'
-            }))
+            email: staff.email || ''
           };
         });
         
+        // For each staff member, get their work sessions
+        const staffWithSessions: StaffWithSessions[] = [];
+        
+        for (const staff of staffMembers) {
+          const { data: sessions, error: sessionsError } = await supabase
+            .from('staff_work_logs')
+            .select('*')
+            .eq('staff_relation_id', staff.id);
+              
+          if (sessionsError) {
+            console.error(`Error fetching sessions for staff ${staff.id}:`, sessionsError);
+            toast({
+              title: "Error fetching work logs",
+              description: sessionsError.message,
+              variant: "destructive"
+            });
+          }
+            
+          // Transform the sessions to include a date field and ensure correct status type
+          const formattedSessions = (sessions || []).map(session => {
+            // Ensure the status is one of the valid options
+            let typedStatus: 'active' | 'completed' | 'cancelled' = 'active';
+            if (session.status === 'completed') typedStatus = 'completed';
+            if (session.status === 'cancelled') typedStatus = 'cancelled';
+              
+            return {
+              ...session,
+              date: new Date(session.start_time).toISOString().split('T')[0],
+              status: typedStatus
+            } as WorkSession;
+          });
+            
+          staffWithSessions.push({
+            ...staff,
+            sessions: formattedSessions
+          });
+        }
+        
         return staffWithSessions;
       } catch (error) {
-        console.error("Error fetching staff work logs:", error);
-        // Return an empty array instead of throwing to prevent UI breakage
+        console.error("Error in staffWorkLogs query:", error);
+        toast({
+          title: "Error loading staff work logs",
+          description: error instanceof Error ? error.message : "Unknown error occurred",
+          variant: "destructive"
+        });
         return [];
       }
-    },
-    staleTime: 60000 // 1 minute
+    }
   });
 };
