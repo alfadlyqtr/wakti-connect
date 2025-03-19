@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,20 +19,18 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Upload, UserPlus, Camera, AlertCircle } from "lucide-react";
+import { Upload, Save, User, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
 import { uploadBusinessImage } from "@/services/profile/updateProfileService";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
-const staffFormSchema = z.object({
+const staffEditFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email").optional().or(z.literal('')),
-  role: z.string().min(1, "Please select a role"),
   position: z.string().optional(),
   is_service_provider: z.boolean().default(false),
   permissions: z.object({
@@ -48,30 +46,53 @@ const staffFormSchema = z.object({
   })
 });
 
-type StaffFormValues = z.infer<typeof staffFormSchema>;
+type StaffEditFormValues = z.infer<typeof staffEditFormSchema>;
 
-interface CreateStaffDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+interface StaffMember {
+  id: string;
+  name: string;
+  email: string | null;
+  role: string;
+  position: string;
+  created_at: string;
+  staff_number: string;
+  is_service_provider: boolean;
+  status: 'active' | 'suspended' | 'deleted';
+  profile_image_url: string | null;
+  permissions: {
+    can_track_hours: boolean;
+    can_message_staff: boolean;
+    can_create_job_cards: boolean;
+    can_view_own_analytics: boolean;
+  };
 }
 
-const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChange }) => {
-  const queryClient = useQueryClient();
+interface EditStaffDialogProps {
+  staff: StaffMember;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: () => void;
+}
+
+const EditStaffDialog: React.FC<EditStaffDialogProps> = ({ 
+  staff, 
+  open, 
+  onOpenChange,
+  onSave
+}) => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(staff.profile_image_url);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
-  const [formError, setFormError] = useState<string | null>(null);
   
-  const form = useForm<StaffFormValues>({
-    resolver: zodResolver(staffFormSchema),
+  const form = useForm<StaffEditFormValues>({
+    resolver: zodResolver(staffEditFormSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      role: "staff",
-      position: "",
-      is_service_provider: false,
-      permissions: {
+      name: staff.name,
+      email: staff.email || "",
+      position: staff.position || "",
+      is_service_provider: staff.is_service_provider,
+      permissions: staff.permissions || {
         can_track_hours: true,
         can_message_staff: true,
         can_create_job_cards: true,
@@ -80,7 +101,22 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
     }
   });
   
-  const watchRole = form.watch('role');
+  // Update form when staff changes
+  useEffect(() => {
+    form.reset({
+      name: staff.name,
+      email: staff.email || "",
+      position: staff.position || "",
+      is_service_provider: staff.is_service_provider,
+      permissions: staff.permissions || {
+        can_track_hours: true,
+        can_message_staff: true,
+        can_create_job_cards: true,
+        can_view_own_analytics: true
+      }
+    });
+    setImagePreview(staff.profile_image_url);
+  }, [staff, form]);
   
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -111,17 +147,9 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
     }
   };
   
-  const onSubmit = async (values: StaffFormValues) => {
+  const onSubmit = async (values: StaffEditFormValues) => {
     try {
       setIsSubmitting(true);
-      setFormError(null);
-      
-      // Check if profile image is selected
-      if (!selectedImage) {
-        setFormError("Please upload a profile picture for the staff member");
-        setIsSubmitting(false);
-        return;
-      }
       
       // Get the current user's ID (the business ID)
       const { data: session } = await supabase.auth.getSession();
@@ -130,54 +158,44 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
         throw new Error('Not authenticated');
       }
       
-      // Upload profile image
-      const businessId = session.session.user.id;
-      const profile_image_url = await uploadBusinessImage(
-        businessId,
-        selectedImage,
-        'staff-profiles'
-      );
+      let updateData: any = {
+        name: values.name,
+        email: values.email || null,
+        position: values.position || staff.position,
+        is_service_provider: values.is_service_provider,
+        permissions: values.permissions
+      };
       
-      // Create staff member
-      const { data, error } = await supabase
-        .from('business_staff')
-        .insert({
-          business_id: businessId,
-          name: values.name,
-          email: values.email || null,
-          role: values.role,
-          position: values.position || 'staff',
-          staff_id: businessId, // Using business owner's ID as staff_id for now
-          is_service_provider: values.is_service_provider,
-          profile_image_url: profile_image_url,
-          permissions: values.permissions
-        })
-        .select();
-        
-      if (error) {
-        if (error.code === '23505' && error.message.includes('co-admin')) {
-          throw new Error('Only one Co-Admin is allowed per business account');
-        }
-        throw error;
+      // Upload new profile image if changed
+      if (selectedImage) {
+        const businessId = session.session.user.id;
+        const profile_image_url = await uploadBusinessImage(
+          businessId,
+          selectedImage,
+          'staff-profiles'
+        );
+        updateData.profile_image_url = profile_image_url;
       }
       
+      // Update staff member
+      const { error } = await supabase
+        .from('business_staff')
+        .update(updateData)
+        .eq('id', staff.id);
+        
+      if (error) throw error;
+      
       toast({
-        title: "Staff member created",
-        description: `${values.name} has been added successfully with staff number: ${data[0].staff_number}`
+        title: "Staff member updated",
+        description: `${values.name}'s information has been updated successfully`
       });
       
-      queryClient.invalidateQueries({ queryKey: ['staffData'] });
-      queryClient.invalidateQueries({ queryKey: ['businessStaff'] });
-      
-      form.reset();
-      setSelectedImage(null);
-      setImagePreview(null);
-      onOpenChange(false);
+      onSave();
     } catch (error) {
-      console.error("Error creating staff:", error);
+      console.error("Error updating staff:", error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create staff member",
+        description: error instanceof Error ? error.message : "Failed to update staff member",
         variant: "destructive"
       });
     } finally {
@@ -188,18 +206,15 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
   return (
     <Dialog open={open} onOpenChange={(open) => {
       if (!open) {
-        form.reset();
         setSelectedImage(null);
-        setImagePreview(null);
-        setFormError(null);
       }
       onOpenChange(open);
     }}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Add Staff Member</DialogTitle>
+          <DialogTitle>Edit Staff Member</DialogTitle>
           <DialogDescription>
-            Create a new staff member for your business
+            Update information for {staff.name}
           </DialogDescription>
         </DialogHeader>
         
@@ -212,14 +227,14 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
               </TabsList>
               
               <TabsContent value="details" className="space-y-4 pt-4">
-                <div className="flex flex-col items-center mb-6">
-                  <div className="relative mb-4">
-                    <Avatar className="h-24 w-24 border-2 border-border">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="relative">
+                    <Avatar className="h-20 w-20 border-2 border-border">
                       {imagePreview ? (
                         <AvatarImage src={imagePreview} alt="Profile preview" />
                       ) : (
                         <AvatarFallback className="bg-muted">
-                          <Camera className="h-8 w-8 text-muted-foreground" />
+                          <User className="h-8 w-8 text-muted-foreground" />
                         </AvatarFallback>
                       )}
                     </Avatar>
@@ -228,25 +243,26 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
                       size="icon"
                       variant="outline"
                       className="absolute bottom-0 right-0 rounded-full h-8 w-8"
-                      onClick={() => document.getElementById('profile-upload')?.click()}
+                      onClick={() => document.getElementById('profile-upload-edit')?.click()}
                     >
-                      <Upload className="h-4 w-4" />
+                      <Camera className="h-4 w-4" />
                     </Button>
                     <input 
-                      id="profile-upload"
+                      id="profile-upload-edit"
                       type="file"
                       accept="image/png, image/jpeg, image/jpg, image/webp"
                       className="hidden"
                       onChange={handleImageChange}
                     />
                   </div>
-                  <p className="text-sm text-muted-foreground mb-2">Upload staff profile picture</p>
-                  {formError && (
-                    <div className="flex items-center gap-2 text-destructive text-sm mt-1">
-                      <AlertCircle className="h-4 w-4" />
-                      <span>{formError}</span>
-                    </div>
-                  )}
+                  
+                  <div>
+                    <h3 className="font-medium">{staff.staff_number}</h3>
+                    <p className="text-sm text-muted-foreground">Staff ID</p>
+                    <p className="text-sm mt-1">
+                      <span className="font-medium">Role:</span> {staff.role}
+                    </p>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -279,49 +295,19 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
                   />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="role"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Role <span className="text-destructive">*</span></FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a role" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="co-admin">Co-Admin</SelectItem>
-                            <SelectItem value="staff">Staff</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormDescription>
-                          {watchRole === 'co-admin' && "Only one Co-Admin is allowed per business"}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="position"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Position</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g. Manager, Receptionist" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="position"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Position</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Manager, Receptionist" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
                 <FormField
                   control={form.control}
@@ -356,7 +342,7 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
                     type="button" 
                     onClick={() => setActiveTab("permissions")}
                   >
-                    Next: Set Permissions
+                    Next: Update Permissions
                   </Button>
                 </div>
               </TabsContent>
@@ -470,12 +456,12 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
                     {isSubmitting ? (
                       <>
                         <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></span>
-                        Creating Staff...
+                        Saving Changes...
                       </>
                     ) : (
                       <>
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Create Staff Member
+                        <Save className="mr-2 h-4 w-4" />
+                        Save Changes
                       </>
                     )}
                   </Button>
@@ -489,4 +475,4 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
   );
 };
 
-export default CreateStaffDialog;
+export default EditStaffDialog;

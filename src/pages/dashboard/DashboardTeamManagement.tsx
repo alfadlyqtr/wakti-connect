@@ -3,9 +3,9 @@ import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserCog, Clock } from "lucide-react";
 
-// Import the components dynamically to avoid circular dependencies
-const StaffManagementTab = React.lazy(() => import("@/components/staff/StaffManagementTab"));
-const WorkLogsTab = React.lazy(() => import("@/components/staff/WorkLogsTab"));
+// Import the components
+import StaffManagementTab from "@/components/staff/StaffManagementTab";
+import WorkLogsTab from "@/components/staff/WorkLogsTab";
 
 const DashboardTeamManagement = () => {
   return (
@@ -28,15 +28,11 @@ const DashboardTeamManagement = () => {
         </TabsList>
         
         <TabsContent value="staff" className="mt-0">
-          <React.Suspense fallback={<div>Loading...</div>}>
-            <StaffManagementTab />
-          </React.Suspense>
+          <StaffManagementTab />
         </TabsContent>
         
         <TabsContent value="work-logs" className="mt-0">
-          <React.Suspense fallback={<div>Loading...</div>}>
-            <WorkLogsTab />
-          </React.Suspense>
+          <WorkLogsTab />
         </TabsContent>
       </Tabs>
     </div>
