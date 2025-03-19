@@ -20,9 +20,11 @@ export const useDashboardData = () => {
     queryKey: ['userProfile'],
     queryFn: async () => {
       try {
+        console.log("Fetching user profile data");
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) {
+          console.error("No active session found when fetching profile data");
           throw new Error("No active session");
         }
         
@@ -33,10 +35,11 @@ export const useDashboardData = () => {
           .single();
         
         if (error) {
-          console.error("Error fetching profile:", error);
+          console.error("Error fetching profile data:", error);
           throw error;
         }
         
+        console.log("Profile data successfully retrieved");
         return data as ProfileData;
       } catch (error: any) {
         console.error("Error in profile data fetching:", error);
@@ -44,16 +47,19 @@ export const useDashboardData = () => {
       }
     },
     retry: 2,
+    staleTime: 300000, // 5 minutes
   });
 
-  // Fetch today's tasks
+  // Fetch today's tasks only if we have a profile
   const { data: todayTasks, isLoading: tasksLoading, error: tasksError } = useQuery({
     queryKey: ['todayTasks'],
     queryFn: async () => {
       try {
+        console.log("Fetching today's tasks");
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) {
+          console.warn("No active session found when fetching today's tasks");
           return [];
         }
         
@@ -65,6 +71,11 @@ export const useDashboardData = () => {
         const endOfDay = new Date(today);
         endOfDay.setHours(23, 59, 59, 999);
         
+        console.log("Date range for today's tasks:", {
+          startOfDay: startOfDay.toISOString(),
+          endOfDay: endOfDay.toISOString()
+        });
+        
         const { data, error } = await supabase
           .from('tasks')
           .select('*')
@@ -74,26 +85,31 @@ export const useDashboardData = () => {
         
         if (error) {
           console.error("Error fetching today's tasks:", error);
+          // Return empty array instead of throwing for non-critical data
           return [];
         }
         
+        console.log(`Retrieved ${data?.length || 0} tasks for today`);
         return data || [];
       } catch (error) {
         console.error("Error in tasks fetching:", error);
         return [];
       }
     },
-    enabled: !!profileData,
+    enabled: !!profileData, // Only run if we have the profile
+    staleTime: 60000, // 1 minute
   });
 
-  // Fetch unread notifications count
+  // Fetch unread notifications count only if we have a profile
   const { data: unreadNotifications, isLoading: notificationsLoading, error: notificationsError } = useQuery({
     queryKey: ['unreadNotifications'],
     queryFn: async () => {
       try {
+        console.log("Fetching unread notifications");
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) {
+          console.warn("No active session found when fetching notifications");
           return [];
         }
         
@@ -106,26 +122,30 @@ export const useDashboardData = () => {
         if (error) {
           // If the error is because the table doesn't exist, just return empty array
           if (error.code === 'PGRST116') {
+            console.log("Notifications table might not exist yet");
             return [];
           }
           console.error("Error fetching unread notifications:", error);
           return [];
         }
         
+        console.log(`Retrieved ${data?.length || 0} unread notifications`);
         return data || [];
       } catch (error) {
         console.error("Error in notifications fetching:", error);
         return [];
       }
     },
-    enabled: !!profileData,
+    enabled: !!profileData, // Only run if we have the profile
+    staleTime: 60000, // 1 minute
   });
 
   // Check for errors and display toast notifications if needed
   if (profileError && !profileLoading) {
+    console.error("Profile data error:", profileError);
     toast({
       title: "Profile Error",
-      description: "Unable to load your profile data",
+      description: "Unable to load your profile data. Please refresh the page or try again later.",
       variant: "destructive",
     });
   }
@@ -134,7 +154,9 @@ export const useDashboardData = () => {
     profileData,
     todayTasks,
     unreadNotifications,
-    isLoading: profileLoading || tasksLoading || notificationsLoading,
+    isLoading: profileLoading, // Only depend on profile loading
+    tasksLoading,
+    notificationsLoading,
     hasError: !!profileError || !!tasksError || !!notificationsError,
   };
 };

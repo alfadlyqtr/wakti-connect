@@ -8,6 +8,7 @@ import { Task } from "../types";
  */
 export async function getTaskById(taskId: string): Promise<Task | null> {
   try {
+    console.log("Fetching task by ID:", taskId);
     const { data, error } = await supabase
       .from('tasks')
       .select(`
@@ -17,8 +18,12 @@ export async function getTaskById(taskId: string): Promise<Task | null> {
       .eq('id', taskId)
       .single();
       
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase error fetching task:", error);
+      throw error;
+    }
     
+    console.log("Task data retrieved:", data);
     return {
       ...data,
       subtasks: Array.isArray(data.subtasks) ? data.subtasks : []
@@ -39,9 +44,11 @@ export async function getTaskById(taskId: string): Promise<Task | null> {
  */
 export async function getUpcomingTasks(): Promise<Task[]> {
   try {
+    console.log("Fetching upcoming tasks");
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
+      console.warn("No active session found when fetching upcoming tasks");
       return [];
     }
     
@@ -49,6 +56,11 @@ export async function getUpcomingTasks(): Promise<Task[]> {
     const today = new Date();
     const nextWeek = new Date(today);
     nextWeek.setDate(today.getDate() + 7);
+    
+    console.log("Date range for upcoming tasks:", {
+      today: today.toISOString(),
+      nextWeek: nextWeek.toISOString()
+    });
     
     const { data, error } = await supabase
       .from('tasks')
@@ -62,7 +74,12 @@ export async function getUpcomingTasks(): Promise<Task[]> {
       .neq('status', 'completed')
       .order('due_date', { ascending: true });
       
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase error fetching upcoming tasks:", error);
+      throw error;
+    }
+    
+    console.log(`Retrieved ${data?.length || 0} upcoming tasks`);
     
     // Transform data with proper typing and ensure subtasks is always an array
     return (data || []).map(task => ({
@@ -83,6 +100,7 @@ export async function getUpcomingTasks(): Promise<Task[]> {
     
   } catch (error: any) {
     console.error("Error fetching upcoming tasks:", error);
+    // Don't show toast for this one as it's used in the background
     return [];
   }
 }

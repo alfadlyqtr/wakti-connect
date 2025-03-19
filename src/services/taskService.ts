@@ -5,6 +5,8 @@ export {
   markTaskPending, 
   deleteTask, 
   addSubtask,
+  updateSubtaskStatus,
+  deleteSubtask,
   getTaskById,
   getUpcomingTasks
 } from "./task/taskService";

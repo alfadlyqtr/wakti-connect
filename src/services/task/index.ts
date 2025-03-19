@@ -7,6 +7,8 @@ import {
   markTaskPending, 
   deleteTask, 
   addSubtask,
+  updateSubtaskStatus,
+  deleteSubtask,
   getTaskById,
   getUpcomingTasks 
 } from "./taskService";
@@ -20,6 +22,8 @@ export {
   markTaskPending,
   deleteTask,
   addSubtask,
+  updateSubtaskStatus,
+  deleteSubtask,
   getTaskById,
   getUpcomingTasks
 };

@@ -10,7 +10,9 @@ export {
 } from "./operations/taskDeleteOperations";
 
 export { 
-  addSubtask
+  addSubtask,
+  updateSubtaskStatus,
+  deleteSubtask
 } from "./operations/subtaskOperations";
 
 export {
