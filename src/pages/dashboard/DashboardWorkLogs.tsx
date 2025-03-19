@@ -6,6 +6,11 @@ import StaffList from "@/components/staff/StaffList";
 const DashboardWorkLogs = () => {
   const { data: staffData, isLoading } = useStaffWorkLogs();
 
+  // Create empty handler functions for required props
+  const handleCreateStaff = () => {
+    console.log("Create staff functionality not implemented in work logs view");
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -13,7 +18,16 @@ const DashboardWorkLogs = () => {
         <p className="text-muted-foreground">Track staff hours, sessions, and earnings</p>
       </div>
       
-      <StaffList staffData={staffData} isLoading={isLoading} />
+      <StaffList 
+        staffMembers={staffData} 
+        isLoading={isLoading} 
+        hasError={false}
+        onCreateStaff={handleCreateStaff}
+        onEditStaff={() => {}}
+        onSuspendStaff={() => {}}
+        onDeleteStaff={() => {}}
+        onReactivateStaff={() => {}}
+      />
     </div>
   );
 };
