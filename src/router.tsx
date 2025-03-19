@@ -36,7 +36,7 @@ export const router = createBrowserRouter([
     children: authRoutes,
   },
 
-  // Dashboard routes
+  // Dashboard routes - wrapped with ProtectedRoute for auth check
   {
     path: "/dashboard",
     element: (
@@ -54,26 +54,34 @@ export const router = createBrowserRouter([
     children: dashboardRoutes,
   },
 
-  // Business routes
+  // Business routes - also need auth protection
   {
     path: "/business/:businessId",
     element: (
-      <BusinessShell>
-        <Suspense fallback={
-          <div className="min-h-screen flex items-center justify-center">
-            <LoadingSpinner />
-            <p className="mt-4 text-muted-foreground">Loading business...</p>
-          </div>
-        } />
-      </BusinessShell>
+      <ProtectedRoute>
+        <BusinessShell>
+          <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+              <LoadingSpinner />
+              <p className="mt-4 text-muted-foreground">Loading business...</p>
+            </div>
+          } />
+        </BusinessShell>
+      </ProtectedRoute>
     ),
     children: businessRoutes,
   },
 
-  // Redirect /auth/login to /login
+  // Redirect /login to /auth/login
   {
     path: "/login",
     element: <Navigate to="/auth/login" replace />
+  },
+
+  // Redirect from / to /dashboard if authenticated
+  {
+    path: "/",
+    element: <Navigate to="/dashboard" replace />
   },
 
   // 404 route

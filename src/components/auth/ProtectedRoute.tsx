@@ -18,9 +18,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     console.log("ProtectedRoute - Auth state:", { 
       isAuthenticated, 
       isLoading, 
-      userId: user?.id 
+      userId: user?.id,
+      pathname: location.pathname
     });
-  }, [isAuthenticated, isLoading, user]);
+  }, [isAuthenticated, isLoading, user, location.pathname]);
 
   // If auth is still loading, show spinner
   if (isLoading) {
@@ -34,10 +35,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // If not authenticated after loading completed, redirect to login
   if (!isAuthenticated) {
-    console.log("ProtectedRoute: Not authenticated, redirecting to login");
+    console.log("ProtectedRoute: Not authenticated, redirecting to login from", location.pathname);
     
-    // Show toast only if we're not on the login page already
-    if (!location.pathname.includes('/auth/login')) {
+    // Only show toast if we're on a dashboard page, not during initial auth check
+    if (location.pathname.startsWith('/dashboard')) {
       toast({
         title: "Authentication Required",
         description: "Please log in to access this page",
@@ -49,6 +50,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   // Authenticated and not loading
+  console.log("ProtectedRoute: User authenticated, rendering protected content");
   return <>{children}</>;
 };
 

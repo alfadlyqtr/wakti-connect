@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -30,17 +29,42 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const navigate = useNavigate();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
-  // Fetch user profile data for the dashboard
+  useEffect(() => {
+    console.log("DashboardLayout: Initial render with auth state:", {
+      isAuthenticated,
+      authLoading,
+      userId: user?.id
+    });
+  }, []);
+
   const { data: profileData, isLoading: profileLoading, error: profileError } = useQuery({
     queryKey: ['dashboardUserProfile', user?.id],
     queryFn: async () => {
       try {
-        console.log("DashboardLayout: Fetching user profile data");
+        console.log("DashboardLayout: Fetching user profile data for user:", user?.id);
         
         if (!user?.id) {
-          console.log("DashboardLayout: No active user found, redirecting to auth page");
-          // Don't navigate here - let the ProtectedRoute component handle redirection
+          console.log("DashboardLayout: No active user found, cannot fetch profile");
           return null;
+        }
+        
+        try {
+          const { data: testData, error: testError } = await supabase
+            .from('profiles')
+            .select('count(*)', { count: 'exact', head: true });
+            
+          if (testError && testError.code === 'PGRST116') {
+            console.error("DashboardLayout: Profiles table not found");
+            return {
+              account_type: "free" as const,
+              display_name: user.displayName || null,
+              business_name: null,
+              full_name: user.name || null,
+              theme_preference: "light"
+            };
+          }
+        } catch (testError) {
+          console.error("DashboardLayout: Error testing profiles table:", testError);
         }
         
         const { data, error } = await supabase
@@ -53,12 +77,11 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           console.error("DashboardLayout: Error fetching user profile:", error);
           if (error.code === 'PGRST116') {
             console.log("DashboardLayout: Profile not found, user may need to complete signup");
-            // Return default profile to avoid errors
             return {
               account_type: "free" as const,
-              display_name: null,
+              display_name: user.displayName || null,
               business_name: null,
-              full_name: null,
+              full_name: user.name || null,
               theme_preference: "light"
             };
           }
@@ -69,18 +92,18 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           console.log("DashboardLayout: No profile data found, using defaults");
           return {
             account_type: "free" as const,
-            display_name: null,
+            display_name: user.displayName || null,
             business_name: null,
-            full_name: null,
+            full_name: user.name || null,
             theme_preference: "light"
           };
         }
         
-        // Store user role in localStorage for use in other components
+        console.log("DashboardLayout: Profile data loaded successfully:", data);
+        
         localStorage.setItem('userRole', data.account_type);
         
         if (data.account_type === 'business' && !data.business_name) {
-          // If business account but no business name is set, inform the user
           toast({
             title: "Complete your business profile",
             description: "Please set your business name in your profile settings",
@@ -98,15 +121,21 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         return data as ProfileData;
       } catch (error) {
         console.error("DashboardLayout: Error fetching user profile:", error);
-        throw error;
+        return {
+          account_type: "free" as const,
+          display_name: user?.displayName || null,
+          business_name: null,
+          full_name: user?.name || null,
+          theme_preference: "light"
+        };
       }
     },
-    retry: 1,
-    enabled: isAuthenticated && !authLoading && !!user?.id, // Only run query if authenticated and user exists
-    staleTime: 300000, // 5 minutes cache
+    retry: 3,
+    retryDelay: attempt => Math.min(attempt > 1 ? 2000 : 1000, 10000),
+    enabled: isAuthenticated && !authLoading && !!user?.id,
+    staleTime: 300000
   });
 
-  // Set theme based on user preference
   useEffect(() => {
     if (profileData?.theme_preference) {
       document.documentElement.classList.remove('light', 'dark');
@@ -114,7 +143,6 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     }
   }, [profileData?.theme_preference]);
 
-  // Close sidebar when clicking outside on mobile
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (isMobile && isSidebarOpen) {
@@ -140,15 +168,12 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // Get the correct user role
   const userRoleValue = profileData?.account_type || propUserRole || localStorage.getItem('userRole') as "free" | "individual" | "business" || "free";
 
-  // Calculate main content padding based on sidebar state
   const mainContentClass = isMobile 
     ? "transition-all duration-300" 
     : "lg:pl-[70px] transition-all duration-300";
 
-  // Handle loading state
   const isLoading = authLoading || (profileLoading && isAuthenticated);
   
   if (isLoading) {
@@ -160,20 +185,14 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     );
   }
   
-  // Handle not authenticated state - though ProtectedRoute should handle this
   if (!isAuthenticated && !authLoading) {
     console.log("DashboardLayout: User not authenticated, redirecting");
-    // Let ProtectedRoute handle the redirect
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <LoadingSpinner />
-        <p className="mt-4 text-muted-foreground">Verifying authentication...</p>
-      </div>
-    );
+    navigate("/auth/login");
+    return null;
   }
   
-  // Handle error state
   if (profileError && !profileData) {
+    console.error("DashboardLayout: Profile error", profileError);
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
         <h2 className="text-2xl font-bold text-destructive mb-4">Error loading dashboard</h2>

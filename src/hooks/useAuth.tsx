@@ -26,6 +26,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Function to create a profile if it doesn't exist
+  const ensureProfile = async (userId: string, userData: { email?: string; name?: string }) => {
+    try {
+      console.log(`Checking if profile exists for user ${userId}`);
+      
+      // Check if profile exists
+      const { data: existingProfile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .maybeSingle();
+        
+      if (profileError && profileError.code !== "PGRST116") {
+        console.error("Error checking profile:", profileError);
+        return;
+      }
+      
+      // If profile doesn't exist, create it
+      if (!existingProfile) {
+        console.log(`No profile found for ${userId}, creating default profile`);
+        const { error: createError } = await supabase
+          .from("profiles")
+          .insert({
+            id: userId,
+            full_name: userData.name || userData.email?.split('@')[0],
+            account_type: "free",
+            is_searchable: true,
+            auto_approve_contacts: false,
+            theme_preference: "light"
+          });
+          
+        if (createError) {
+          console.error("Error creating profile:", createError);
+        }
+      } else {
+        console.log(`Profile found for ${userId}`);
+      }
+    } catch (error) {
+      console.error("Error in ensureProfile:", error);
+    }
+  };
+
   // Initialize auth state from Supabase
   useEffect(() => {
     const loadUser = async () => {
@@ -51,6 +93,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         console.log("AuthProvider: Active session found for user:", session.user.id);
+        
+        // Ensure profile exists (create if it doesn't)
+        await ensureProfile(session.user.id, {
+          email: session.user.email,
+          name: session.user.user_metadata?.full_name
+        });
         
         // Get user profile data
         try {
@@ -104,6 +152,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsLoading(true);
           
           try {
+            // Ensure profile exists
+            await ensureProfile(session.user.id, {
+              email: session.user.email,
+              name: session.user.user_metadata?.full_name
+            });
+            
             // Get user profile data
             const { data: profile, error: profileError } = await supabase
               .from("profiles")

@@ -30,6 +30,28 @@ export const useDashboardData = () => {
           return null;
         }
         
+        // Check if profiles table exists first
+        try {
+          const { data: testData, error: testError } = await supabase
+            .from('profiles')
+            .select('count(*)', { count: 'exact', head: true });
+            
+          if (testError && testError.code === 'PGRST116') {
+            console.error("useDashboardData: Profiles table not found");
+            return {
+              full_name: user.name || null,
+              account_type: "free" as const,
+              display_name: user.displayName || null,
+              business_name: null,
+              occupation: null,
+              avatar_url: null,
+              theme_preference: "light"
+            };
+          }
+        } catch (testError) {
+          console.error("useDashboardData: Error testing profiles table:", testError);
+        }
+        
         const { data, error } = await supabase
           .from('profiles')
           .select('full_name, account_type, display_name, business_name, occupation, avatar_url, theme_preference')
@@ -38,17 +60,54 @@ export const useDashboardData = () => {
         
         if (error) {
           console.error("useDashboardData: Error fetching profile data:", error);
+          
+          // If profile not found, create a fallback profile object
+          if (error.code === 'PGRST116') {
+            return {
+              full_name: user.name || null,
+              account_type: "free" as const,
+              display_name: user.displayName || null,
+              business_name: null,
+              occupation: null,
+              avatar_url: null,
+              theme_preference: "light"
+            };
+          }
+          
           throw error;
+        }
+        
+        if (!data) {
+          console.warn("useDashboardData: No profile data found, using defaults");
+          return {
+            full_name: user.name || null,
+            account_type: "free" as const,
+            display_name: user.displayName || null,
+            business_name: null,
+            occupation: null,
+            avatar_url: null,
+            theme_preference: "light"
+          };
         }
         
         console.log("useDashboardData: Profile data successfully retrieved:", data);
         return data as ProfileData;
       } catch (error: any) {
         console.error("useDashboardData: Error in profile data fetching:", error);
-        return null;
+        // Return fallback data instead of null to avoid UI errors
+        return {
+          full_name: user?.name || null,
+          account_type: "free" as const,
+          display_name: user?.displayName || null,
+          business_name: null,
+          occupation: null,
+          avatar_url: null,
+          theme_preference: "light"
+        };
       }
     },
-    retry: 2,
+    retry: 3,
+    retryDelay: attempt => Math.min(attempt > 1 ? 2000 : 1000, 10000), // Exponential backoff
     staleTime: 300000, // 5 minutes
     enabled: isAuthenticated && !authLoading && !!user?.id, // Only run query if authenticated and user exists
   });
@@ -78,6 +137,21 @@ export const useDashboardData = () => {
           endOfDay: endOfDay.toISOString()
         });
         
+        // First, check if the tasks table exists
+        try {
+          const { data: testData, error: testError } = await supabase
+            .from('tasks')
+            .select('count(*)', { count: 'exact', head: true });
+            
+          if (testError && testError.code === 'PGRST116') {
+            console.log("useDashboardData: Tasks table doesn't exist yet");
+            return [];
+          }
+        } catch (testError) {
+          console.error("useDashboardData: Error testing tasks table:", testError);
+          return [];
+        }
+        
         const { data, error } = await supabase
           .from('tasks')
           .select('*')
@@ -104,6 +178,7 @@ export const useDashboardData = () => {
     },
     enabled: isAuthenticated && !!user?.id, // Only run if authenticated and user exists
     staleTime: 60000, // 1 minute
+    retry: 2,
   });
 
   // Fetch unread notifications only if we have authentication
@@ -115,6 +190,21 @@ export const useDashboardData = () => {
         
         if (!user?.id) {
           console.warn("useDashboardData: No active user found when fetching notifications");
+          return [];
+        }
+        
+        // Check if notifications table exists
+        try {
+          const { data: testData, error: testError } = await supabase
+            .from('notifications')
+            .select('count(*)', { count: 'exact', head: true });
+            
+          if (testError && testError.code === 'PGRST116') {
+            console.log("useDashboardData: Notifications table doesn't exist yet");
+            return [];
+          }
+        } catch (testError) {
+          console.error("useDashboardData: Error testing notifications table:", testError);
           return [];
         }
         
@@ -143,23 +233,14 @@ export const useDashboardData = () => {
     },
     enabled: isAuthenticated && !!user?.id, // Only run if authenticated and user exists
     staleTime: 60000, // 1 minute
+    retry: 2,
   });
-
-  // Check for errors and display toast notifications if needed
-  if (profileError && !profileLoading && !authLoading) {
-    console.error("useDashboardData: Profile data error:", profileError);
-    toast({
-      title: "Profile Error",
-      description: "Unable to load your profile data. Please refresh the page or try again later.",
-      variant: "destructive",
-    });
-  }
 
   return {
     profileData,
     todayTasks,
     unreadNotifications,
-    isLoading: authLoading || profileLoading, // Consider loading if auth or profile is loading
+    isLoading: authLoading || (profileLoading && isAuthenticated), // Consider loading if auth or profile is loading
     tasksLoading,
     notificationsLoading,
     hasError: !!profileError || !!tasksError || !!notificationsError,
