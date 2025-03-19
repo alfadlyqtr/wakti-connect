@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { 
   PermissionLevel, 
   StaffPermissions,
-  getBusinessPermissions
+  getBusinessPermissions,
+  meetsPermissionLevel
 } from "@/services/permissions/accessControlService";
 
 export function useBusinessPermissions(businessId?: string) {
@@ -65,21 +65,8 @@ export function useBusinessPermissions(businessId?: string) {
     
     const userLevel = permissions[type];
     
-    // Check permission levels based on hierarchy
-    if (userLevel === 'admin') return true;
-    
-    // Specific level checks with proper type handling
-    if (requiredLevel === 'read') {
-      return ['read', 'write', 'admin'].includes(userLevel as string);
-    } else if (requiredLevel === 'write') {
-      return ['write', 'admin'].includes(userLevel as string);
-    } else if (requiredLevel === 'admin') {
-      // For admin level, we need an exact match - userLevel must be 'admin'
-      // Using strict equality here, but with type assertion
-      return userLevel === ('admin' as PermissionLevel);
-    }
-    
-    return userLevel !== 'none';
+    // Use the meetsPermissionLevel utility function
+    return meetsPermissionLevel(userLevel, requiredLevel);
   };
 
   return {
