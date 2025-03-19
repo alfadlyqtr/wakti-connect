@@ -74,6 +74,55 @@ export function useUserData() {
     setIsLoading(false);
   };
 
+  useEffect(() => {
+    let isMounted = true;
+    const timeoutId = setTimeout(() => {
+      if (isMounted && isLoading) {
+        console.warn("Auth loading timeout - forcing completion to prevent blocking UI");
+        setIsLoading(false);
+      }
+    }, 5000); // 5 second safety timeout
+
+    const initAuth = async () => {
+      try {
+        setIsLoading(true);
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        await loadUserData(session);
+        
+      } catch (error) {
+        console.error("Error loading user:", error);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initAuth();
+    
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.id);
+        
+        if (event === 'SIGNED_IN' && session) {
+          setIsLoading(true);
+          await loadUserData(session);
+          setIsLoading(false);
+        } else if (event === 'SIGNED_OUT') {
+          console.log("User signed out, clearing state");
+          setUser(null);
+        }
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      authListener?.subscription.unsubscribe();
+    };
+  }, []);
+
   return {
     user,
     setUser,
