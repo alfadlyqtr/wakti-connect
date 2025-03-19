@@ -6,37 +6,29 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Save, Loader2, Bot } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { AISettings } from "@/types/ai-assistant.types";
+import { useAISettings } from "./context/AISettingsContext";
 
-interface AIPersonalityTabProps {
-  settings: AISettings;
-  onSettingsChange: (settings: AISettings) => void;
-  onSave: () => void;
-  isSaving: boolean;
-}
+export const AIPersonalityTab: React.FC = () => {
+  const { settings, updateSettings, isUpdatingSettings } = useAISettings();
+  
+  if (!settings) return null;
 
-export const AIPersonalityTab: React.FC<AIPersonalityTabProps> = ({
-  settings,
-  onSettingsChange,
-  onSave,
-  isSaving,
-}) => {
   const handleAssistantNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onSettingsChange({
+    updateSettings({
       ...settings,
       assistant_name: e.target.value,
     });
   };
 
   const handleToneChange = (value: "formal" | "casual" | "concise" | "detailed" | "balanced") => {
-    onSettingsChange({
+    updateSettings({
       ...settings,
       tone: value,
     });
   };
 
   const handleResponseLengthChange = (value: "short" | "balanced" | "detailed") => {
-    onSettingsChange({
+    updateSettings({
       ...settings,
       response_length: value,
     });
@@ -117,11 +109,11 @@ export const AIPersonalityTab: React.FC<AIPersonalityTabProps> = ({
       </CardContent>
       <CardFooter>
         <Button 
-          onClick={onSave}
-          disabled={isSaving}
+          onClick={() => updateSettings(settings)}
+          disabled={isUpdatingSettings}
           className="w-full"
         >
-          {isSaving ? (
+          {isUpdatingSettings ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Saving...

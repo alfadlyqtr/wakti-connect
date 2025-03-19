@@ -2,6 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface NoTasksProps {
   message: string;
@@ -9,6 +10,8 @@ interface NoTasksProps {
 }
 
 export const NoTasks: React.FC<NoTasksProps> = ({ message, onCreateTask }) => {
+  const { t } = useTranslation();
+  
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="mb-4 rounded-full bg-muted p-3">
@@ -16,10 +19,10 @@ export const NoTasks: React.FC<NoTasksProps> = ({ message, onCreateTask }) => {
       </div>
       <h3 className="mb-2 text-lg font-semibold">{message}</h3>
       <p className="mb-4 text-sm text-muted-foreground">
-        Start by creating your first task to keep track of your work.
+        {t('dashboard.noTasks')}
       </p>
       <Button onClick={onCreateTask}>
-        Create Task
+        {t('task.createTask')}
       </Button>
     </div>
   );

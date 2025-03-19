@@ -1,4 +1,3 @@
-
 {
   "common": {
     "wakti": "Wakti",
@@ -62,6 +61,10 @@
     "aiIntegration": {
       "title": "AI Integration",
       "description": "AI-powered chatbot to assist with task scheduling and management (Business plan)."
+    },
+    "appointmentBooking": {
+      "title": "Appointment Booking",
+      "description": "Create and manage appointments and events easily, and share them with others."
     }
   },
   "pricing": {
@@ -135,7 +138,33 @@
     "billing": "Billing & Subscription",
     "settings": "Settings",
     "home": "Home",
-    "viewOnly": "View Only"
+    "viewOnly": "View Only",
+    "welcome": {
+      "morning": "Good Morning",
+      "afternoon": "Good Afternoon",
+      "evening": "Good Evening",
+      "overview": "Here's an overview of your tasks and schedule."
+    },
+    "tasksOverview": "Tasks Overview",
+    "calendar": "Calendar",
+    "noTasks": "You don't have any tasks yet",
+    "createTask": "Create Task",
+    "noEvents": "No events scheduled for",
+    "businessDashboard": "Business Dashboard",
+    "professionalDashboard": "Professional Dashboard",
+    "personalDashboard": "Personal Dashboard",
+    "welcomeBack": "Welcome back",
+    "businessAdmin": "Business Administrator",
+    "professional": "Professional",
+    "personalUser": "Personal User",
+    "businessAccount": "Business Account",
+    "individualAccount": "Individual Account",
+    "freeAccount": "Free Account",
+    "completed": "completed",
+    "noTasksToday": "No tasks for today",
+    "unreadNotifications": "Unread notifications",
+    "noNewNotifications": "No new notifications",
+    "activity": "Activity"
   },
   "auth": {
     "welcomeToWakti": "Welcome to Wakti",
@@ -191,5 +220,91 @@
     "endAfter": "End after",
     "occurrences": "occurrences",
     "endBy": "End by"
+  },
+  "settings": {
+    "profile": "Profile",
+    "account": "Account",
+    "billing": "Billing",
+    "notifications": "Notifications",
+    "aiAssistant": "AI Assistant",
+    "manageSettings": "Manage your account settings and preferences",
+    "personalInfo": "Personal Information",
+    "updatePersonalInfo": "Update your personal information",
+    "name": "Name",
+    "emailAddress": "Email Address",
+    "phoneNumber": "Phone Number",
+    "profilePicture": "Profile Picture",
+    "uploadNewPicture": "Upload new picture",
+    "remove": "Remove",
+    "saveChanges": "Save Changes",
+    "updatingProfile": "Updating profile..."
+  },
+  "contact": {
+    "getInTouch": "Get In Touch",
+    "contactUs": "Contact Us",
+    "hereToHelp": "We're Here to Help",
+    "contactInfo": "Contact Information",
+    "emailUs": "Email Us",
+    "callUs": "Call Us",
+    "visitUs": "Visit Us",
+    "followUs": "Follow Us",
+    "sendMessage": "Send a Message",
+    "yourName": "Your Name",
+    "yourEmail": "Your Email",
+    "subject": "Subject",
+    "message": "Message",
+    "sending": "Sending...",
+    "send": "Send",
+    "messageSent": "Your message has been sent successfully!",
+    "messageFailed": "Failed to send message. Please try again."
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Find answers to common questions about Wakti and how it can help streamline your productivity.",
+    "general": "General",
+    "account": "Account",
+    "technical": "Technical",
+    "stillHaveQuestions": "Still have questions?",
+    "supportTeamHelp": "Our support team is here to help you with any other questions you might have.",
+    "contactUs": "Contact Us"
+  },
+  "calendar": {
+    "tasks": "Tasks",
+    "bookings": "Bookings",
+    "noEvents": "No events scheduled for"
+  },
+  "sidebar": {
+    "home": "Home",
+    "tasks": "Tasks",
+    "calendar": "Calendar",
+    "messages": "Messages",
+    "contacts": "Contacts",
+    "notifications": "Notifications",
+    "services": "Services",
+    "staff": "Staff",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "business": "Business",
+    "subscribers": "Subscribers",
+    "upgrade": "Upgrade to Pro",
+    "upgradeFree": "Upgrade your free plan to access more features",
+    "profile": "Profile"
+  },
+  "task": {
+    "status": {
+      "completed": "Completed",
+      "inProgress": "In Progress",
+      "pending": "Pending",
+      "late": "Late"
+    },
+    "priority": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low",
+      "normal": "Normal"
+    },
+    "today": "Tasks Today",
+    "createTask": "Create Task",
+    "startWork": "Start Working"
   }
 }

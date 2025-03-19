@@ -7,6 +7,7 @@ import CalendarDayCell from "./CalendarDayCell";
 import { format, isSameDay } from "date-fns";
 import CalendarLegend from "./CalendarLegend";
 import { TaskList } from "./TaskList";
+import { useTranslation } from "react-i18next";
 
 interface DashboardCalendarProps {
   events: CalendarEvent[];
@@ -18,6 +19,8 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
   isCompact = false,
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.language === 'ar';
   
   // Get all events for a specific date
   const getEventsForDate = (date: Date) => {
@@ -43,7 +46,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
         mode="single"
         selected={selectedDate}
         onSelect={(date) => date && setSelectedDate(date)}
-        className="rounded-md border"
+        className={`rounded-md border ${isRtl ? 'rtl-calendar' : ''}`}
         components={{
           Day: ({ date, ...props }) => (
             <CalendarDayCell
@@ -68,7 +71,7 @@ export const DashboardCalendar: React.FC<DashboardCalendarProps> = ({
         </div>
       ) : (
         <div className="text-center py-4 text-muted-foreground text-sm">
-          No events scheduled for {format(selectedDate, "MMMM d, yyyy")}
+          {t('calendar.noEvents')} {format(selectedDate, "MMMM d, yyyy")}
         </div>
       )}
     </div>

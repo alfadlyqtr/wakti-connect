@@ -2,6 +2,7 @@
 import React from "react";
 import { Building, UserCircle, Briefcase } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useTranslation } from "react-i18next";
 
 interface ProfileDataProps {
   profileData: {
@@ -15,6 +16,9 @@ interface ProfileDataProps {
 }
 
 export const ProfileData = ({ profileData }: ProfileDataProps) => {
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.language === 'ar';
+  
   // Get display name for welcome message
   const getDisplayName = () => {
     if (profileData?.display_name) return profileData.display_name;
@@ -26,11 +30,11 @@ export const ProfileData = ({ profileData }: ProfileDataProps) => {
   const getWelcomeTitle = () => {
     switch (profileData?.account_type) {
       case 'business':
-        return 'Business Dashboard';
+        return t('dashboard.businessDashboard');
       case 'individual':
-        return 'Professional Dashboard';
+        return t('dashboard.professionalDashboard');
       default:
-        return 'Personal Dashboard';
+        return t('dashboard.personalDashboard');
     }
   };
 
@@ -40,14 +44,14 @@ export const ProfileData = ({ profileData }: ProfileDataProps) => {
       if (profileData?.business_name) {
         return profileData.business_name;
       }
-      return 'Business Administrator';
+      return t('dashboard.businessAdmin');
     }
     
     if (profileData?.occupation) {
       return profileData.occupation;
     }
     
-    return profileData?.account_type === 'individual' ? 'Professional' : 'Personal User';
+    return profileData?.account_type === 'individual' ? t('dashboard.professional') : t('dashboard.personalUser');
   };
 
   const getAccountIcon = () => {
@@ -68,7 +72,7 @@ export const ProfileData = ({ profileData }: ProfileDataProps) => {
           {getWelcomeTitle()}
         </h1>
         <p className="text-muted-foreground">
-          Welcome back{getDisplayName() ? `, ${getDisplayName()}` : ''}!
+          {t('dashboard.welcomeBack')}{getDisplayName() ? `, ${getDisplayName()}` : ''}!
         </p>
       </div>
       
@@ -83,8 +87,8 @@ export const ProfileData = ({ profileData }: ProfileDataProps) => {
         <div>
           <div className="flex items-center">
             {getAccountIcon()}
-            <span className="ml-1 text-sm font-medium capitalize">
-              {profileData?.account_type || 'Free'} Account
+            <span className={`${isRtl ? 'mr-1' : 'ml-1'} text-sm font-medium capitalize`}>
+              {t(`dashboard.${profileData?.account_type || 'free'}Account`)}
             </span>
           </div>
           <p className="text-xs text-muted-foreground">

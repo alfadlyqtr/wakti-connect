@@ -1,38 +1,33 @@
 
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import React from 'react';
+import { Button } from '@/components/ui/button';
 
-interface SuggestionPromptsProps {
-  suggestions: string[];
-  onSelectSuggestion: (suggestion: string) => void;
-  isLoading: boolean;
+export interface SuggestionPromptsProps {
+  onPromptClick: (prompt: string) => void;
 }
 
-export const SuggestionPrompts = ({
-  suggestions,
-  onSelectSuggestion,
-  isLoading,
-}: SuggestionPromptsProps) => {
+export const SuggestionPrompts: React.FC<SuggestionPromptsProps> = ({ onPromptClick }) => {
+  const suggestedPrompts = [
+    "How can I make my tasks more organized?",
+    "Help me create a booking schedule for next week",
+    "Show me my upcoming deadlines",
+    "Tips for managing my team better",
+    "How do I use the calendar feature?",
+    "Create a task for website redesign"
+  ];
+
   return (
-    <Alert className="bg-muted/50">
-      <AlertTitle className="text-sm font-medium">Try asking:</AlertTitle>
-      <AlertDescription className="mt-2">
-        <div className="flex flex-wrap gap-2">
-          {suggestions.map((suggestion, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              size="sm"
-              className="text-xs"
-              onClick={() => onSelectSuggestion(suggestion)}
-              disabled={isLoading}
-            >
-              {suggestion}
-            </Button>
-          ))}
-        </div>
-      </AlertDescription>
-    </Alert>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-auto mb-4">
+      {suggestedPrompts.map((prompt, index) => (
+        <Button
+          key={index}
+          variant="outline"
+          className="justify-start text-left h-auto py-3 px-4 text-sm"
+          onClick={() => onPromptClick(prompt)}
+        >
+          {prompt}
+        </Button>
+      ))}
+    </div>
   );
 };
