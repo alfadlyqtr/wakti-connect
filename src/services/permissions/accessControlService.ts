@@ -126,7 +126,8 @@ export const hasBusinessPermission = async (
     } else if (requiredLevel === 'write') {
       return ['write', 'admin'].includes(userLevel as string);
     } else if (requiredLevel === 'admin') {
-      return userLevel === 'admin';
+      // For admin level, we need exact match with type assertion
+      return userLevel === ('admin' as PermissionLevel);
     }
     
     return userLevel !== 'none';

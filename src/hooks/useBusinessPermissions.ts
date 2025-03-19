@@ -74,7 +74,9 @@ export function useBusinessPermissions(businessId?: string) {
     } else if (requiredLevel === 'write') {
       return ['write', 'admin'].includes(userLevel as string);
     } else if (requiredLevel === 'admin') {
-      return userLevel === 'admin';
+      // For admin level, we need an exact match - userLevel must be 'admin'
+      // Using strict equality here, but with type assertion
+      return userLevel === ('admin' as PermissionLevel);
     }
     
     return userLevel !== 'none';
