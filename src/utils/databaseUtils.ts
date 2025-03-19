@@ -16,6 +16,7 @@ export async function checkIfTableExists(tableName: string): Promise<boolean> {
       
       // Try an alternative approach with a raw query if RPC fails
       try {
+        // Use fromTable helper which avoids type issues with dynamic table names
         const { data: tableData, error: countError } = await supabase
           .from('_metadata')
           .select('*')

@@ -1,31 +1,37 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskFormData } from "./types";
+import { Task, TaskFormData, TaskPriority, TaskStatus } from "@/types/task.types";
 
-// Create a new task base service function
-export async function createNewTask(userId: string, taskData: Partial<TaskFormData>): Promise<Task> {
-  // Prepare the new task object with basic properties
-  const newTask = {
-    user_id: userId,
-    title: taskData.title,
-    description: taskData.description || null,
-    status: taskData.status || "pending",
-    priority: taskData.priority || "normal",
-    due_date: taskData.due_date || null,
-    assignee_id: taskData.assignee_id || null
-  };
+/**
+ * Create a new task with the given data
+ * @param taskData The data for the new task
+ * @returns The newly created task
+ */
+export async function createTask(taskData: {
+  user_id: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  due_date: string;
+  assignee_id: string;
+}): Promise<Task> {
+  try {
+    const { data, error } = await supabase
+      .from("tasks")
+      .insert(taskData)
+      .select("*")
+      .single();
 
-  // Insert the task data
-  const { data, error } = await supabase
-    .from('tasks')
-    .insert(newTask)
-    .select();
+    if (error) {
+      console.error("Error creating task:", error);
+      throw new Error(error.message);
+    }
 
-  if (error) {
-    throw error;
+    return data;
+  } catch (error: any) {
+    console.error("Error in createTask:", error);
+    throw new Error(`Failed to create task: ${error.message}`);
   }
-  
-  return data[0] as Task;
 }
 
 // Get task with subtasks

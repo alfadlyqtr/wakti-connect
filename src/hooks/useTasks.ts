@@ -1,127 +1,171 @@
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "@/components/ui/use-toast";
-import { 
-  fetchTasks, 
-  createTask as createTaskService, 
-  shareTask as shareTaskService, 
-  assignTask as assignTaskService 
-} from "@/services/task";
-import { filterTasks } from "@/utils/taskUtils";
-import { Task, TaskTab, TaskFormData } from "@/types/task.types";
+import { useState, useEffect } from "react";
+import { useAuth } from "./useAuth";
+import { fetchTasksByTab } from "@/services/task/fetchService";
+import { createTaskWithSubtasks } from "@/services/task/createService";
+import { Task, TaskFormData, TaskTab } from "@/types/task.types";
+import { deleteTask } from "@/services/task/operations/taskDeleteOperations";
 import { RecurringFormData } from "@/types/recurring.types";
+import { updateTaskStatus } from "@/services/task/operations/taskStatusOperations";
+import { useToast } from "@/components/ui/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
-export type { Task, TaskTab, TaskFormData } from "@/types/task.types";
-
-export const useTasks = (tab: TaskTab = "my-tasks") => {
+export function useTasks() {
+  const { user } = useAuth();
+  const [currentTab, setCurrentTab] = useState<TaskTab>("my-tasks");
+  const [tasks, setTasks] = useState<Task[] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterPriority, setFilterPriority] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [filterPriority, setFilterPriority] = useState<string>("all");
+  const [userRole, setUserRole] = useState<"free" | "individual" | "business">("free");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Fetch tasks with React Query
-  const { 
-    data, 
-    isLoading, 
-    error, 
-    refetch 
-  } = useQuery({
-    queryKey: ['tasks', tab],
-    queryFn: () => fetchTasks(tab),
-    refetchOnWindowFocus: false,
-  });
-
-  // Create a new task
-  const createTask = async (taskData: Partial<TaskFormData>, recurringData?: RecurringFormData) => {
+  const fetchTasks = async () => {
+    if (!user) {
+      setTasks(null);
+      setIsLoading(false);
+      return;
+    }
+    
+    setIsLoading(true);
     try {
-      const result = await createTaskService(taskData as TaskFormData, recurringData);
+      const result = await fetchTasksByTab(
+        user.id,
+        currentTab,
+        filterStatus,
+        filterPriority,
+        searchQuery
+      );
+      
+      setTasks(result.tasks);
+      setUserRole(result.userRole);
+      setError(result.error || null);
+    } catch (err: any) {
+      console.error("Error fetching tasks:", err);
+      setError(err);
+      setTasks(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Fetch tasks whenever dependencies change
+  useEffect(() => {
+    fetchTasks();
+  }, [user, currentTab, filterStatus, filterPriority, searchQuery]);
+  
+  // Function to create a new task
+  const createTask = async (taskData: TaskFormData, recurringData?: RecurringFormData) => {
+    if (!user) {
+      throw new Error("You must be logged in to create a task");
+    }
+    
+    try {
+      const newTask = await createTaskWithSubtasks(taskData, user.id);
+      
+      // Refresh tasks after creating a new one
+      fetchTasks();
       
       toast({
-        title: recurringData ? "Recurring Task Created" : "Task Created",
-        description: recurringData 
-          ? "New recurring task has been created successfully" 
-          : "New task has been created successfully",
+        title: "Task created",
+        description: "Your task has been created successfully.",
       });
-
-      // Refetch tasks to update the list
-      refetch();
       
-      return result;
-    } catch (error: any) {
-      if (error.message !== "This feature is only available for paid accounts") {
-        toast({
-          title: "Failed to create task",
-          description: error.message || "An unexpected error occurred",
-          variant: "destructive",
-        });
-      }
-      throw error;
-    }
-  };
-
-  // Filter tasks based on search and filters
-  const getFilteredTasks = () => {
-    const taskList = data?.tasks || [];
-    return filterTasks(taskList, searchQuery, filterStatus, filterPriority);
-  };
-
-  // Share a task with another user
-  const shareTask = async (taskId: string, userId: string) => {
-    try {
-      await shareTaskService(taskId, userId);
-
+      return newTask;
+    } catch (err: any) {
+      console.error("Error creating task:", err);
       toast({
-        title: "Task Shared",
-        description: "Task has been shared successfully",
-      });
-
-      return true;
-    } catch (error: any) {
-      toast({
-        title: "Failed to share task",
-        description: error.message || "An unexpected error occurred",
+        title: "Error",
+        description: `Failed to create task: ${err.message}`,
         variant: "destructive",
       });
-      return false;
+      throw err;
     }
   };
-
-  // Assign a task to a staff member (for business accounts)
-  const assignTask = async (taskId: string, staffId: string) => {
+  
+  // Function to delete a task
+  const removeTask = async (taskId: string) => {
+    if (!user) {
+      throw new Error("You must be logged in to delete a task");
+    }
+    
     try {
-      await assignTaskService(taskId, staffId);
-
+      await deleteTask(taskId);
+      
+      // Update local state
+      setTasks((prevTasks) => 
+        prevTasks ? prevTasks.filter((task) => task.id !== taskId) : null
+      );
+      
       toast({
-        title: "Task Assigned",
-        description: "Task has been assigned successfully",
+        title: "Task deleted",
+        description: "The task has been deleted successfully.",
       });
-
-      return true;
-    } catch (error: any) {
+    } catch (err: any) {
+      console.error("Error deleting task:", err);
       toast({
-        title: "Failed to assign task",
-        description: error.message || "An unexpected error occurred",
+        title: "Error",
+        description: `Failed to delete task: ${err.message}`,
         variant: "destructive",
       });
-      return false;
+      throw err;
     }
   };
-
+  
+  // Function to update a task's status
+  const updateStatus = async (taskId: string, status: string) => {
+    if (!user) {
+      throw new Error("You must be logged in to update a task");
+    }
+    
+    try {
+      await updateTaskStatus(taskId, status);
+      
+      // Update local state
+      setTasks((prevTasks) => 
+        prevTasks
+          ? prevTasks.map((task) => 
+              task.id === taskId 
+                ? { ...task, status } 
+                : task
+            )
+          : null
+      );
+      
+      toast({
+        title: "Task updated",
+        description: `Task status has been updated to ${status}.`,
+      });
+    } catch (err: any) {
+      console.error("Error updating task status:", err);
+      toast({
+        title: "Error",
+        description: `Failed to update task: ${err.message}`,
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+  
   return {
-    tasks: data?.tasks || [],
-    userRole: data?.userRole || "free",
-    filteredTasks: getFilteredTasks(),
+    tasks,
     isLoading,
     error,
-    searchQuery,
-    setSearchQuery,
+    currentTab,
+    setCurrentTab,
     filterStatus,
     setFilterStatus,
     filterPriority,
     setFilterPriority,
+    searchQuery,
+    setSearchQuery,
     createTask,
-    shareTask,
-    assignTask,
-    refetch
+    removeTask,
+    updateStatus,
+    fetchTasks,
+    userRole,
   };
-};
+}
