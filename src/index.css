@@ -95,6 +95,36 @@
     margin-left: 0;
     margin-right: 1rem;
   }
+  
+  /* RTL calendar adjustments */
+  [dir="rtl"] .rdp-nav {
+    direction: ltr;
+  }
+  
+  [dir="rtl"] .rdp-caption_label {
+    direction: rtl;
+  }
+  
+  /* RTL sidebar adjustments */
+  [dir="rtl"] .sidebar-open {
+    right: 0;
+    left: auto;
+  }
+  
+  [dir="rtl"] .sidebar-closed {
+    right: -100%;
+    left: auto;
+  }
+  
+  [dir="rtl"] .lg\:pl-[70px] {
+    padding-left: 0;
+    padding-right: 70px;
+  }
+  
+  /* RTL dropdown adjustments */
+  [dir="rtl"] .dropdown-menu-content {
+    transform-origin: top right;
+  }
 }
 
 /* Animations */
@@ -255,4 +285,26 @@ html[dir="rtl"] {
 /* Fix dropdown alignments in RTL */
 html[dir="rtl"] .dropdown-menu-content {
   transform-origin: top right;
+}
+
+/* RTL avatar with text adjustments */
+[dir="rtl"] .avatar-with-text {
+  flex-direction: row-reverse;
+}
+
+/* RTL dashboard layout adjustments */
+@media (min-width: 1024px) {
+  [dir="rtl"] .sidebar-toggle-rtl {
+    right: 0;
+    left: auto;
+  }
+  
+  [dir="rtl"] #sidebar {
+    right: 0;
+    left: auto;
+  }
+  
+  [dir="rtl"] .lg\:translate-x-0 {
+    transform: translateX(0);
+  }
 }

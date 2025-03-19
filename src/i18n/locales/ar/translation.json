@@ -1,4 +1,3 @@
-
 {
   "common": {
     "wakti": "وقتي",
@@ -88,7 +87,7 @@
         "features": [
           "مهمة واحدة/شهريًا",
           "عرض المهام",
-          "مراسلة المستخدمين الأفراد (1 شهريًا)",
+          "مرا��لة المستخدمين الأفراد (1 شهريًا)",
           "قبول الدعوات",
           "عرض الإشعارات"
         ]
@@ -139,7 +138,33 @@
     "billing": "الفواتير والاشتراك",
     "settings": "الإعدادات",
     "home": "الرئيسية",
-    "viewOnly": "عرض فقط"
+    "viewOnly": "عرض فقط",
+    "welcome": {
+      "morning": "صباح الخير",
+      "afternoon": "مساء الخير",
+      "evening": "مساء الخير",
+      "overview": "فيما يلي نظرة عامة على مهامك وجدولك."
+    },
+    "tasksOverview": "نظرة عامة على المهام",
+    "calendar": "التقويم",
+    "noTasks": "ليس لديك أي مهام حتى الآن",
+    "createTask": "إنشاء مهمة",
+    "noEvents": "لا توجد أحداث مجدولة لـ",
+    "businessDashboard": "لوحة معلومات الأعمال",
+    "professionalDashboard": "لوحة المعلومات المهنية",
+    "personalDashboard": "لوحة المعلومات الشخصية",
+    "welcomeBack": "مرحبًا بعودتك",
+    "businessAdmin": "مسؤول الأعمال",
+    "professional": "مهني",
+    "personalUser": "مستخدم شخصي",
+    "businessAccount": "حساب الأعمال",
+    "individualAccount": "حساب فردي",
+    "freeAccount": "حساب مجاني",
+    "completed": "مكتمل",
+    "noTasksToday": "لا توجد مهام لليوم",
+    "unreadNotifications": "إشعارات غير مقروءة",
+    "noNewNotifications": "لا توجد إشعارات جديدة",
+    "activity": "النشاط"
   },
   "auth": {
     "welcomeToWakti": "مرحبًا بك في وقتي",
@@ -242,5 +267,44 @@
     "stillHaveQuestions": "هل لا تزال لديك أسئلة؟",
     "supportTeamHelp": "فريق الدعم لدينا هنا لمساعدتك في أي أسئلة أخرى قد تكون لديك.",
     "contactUs": "اتصل بنا"
+  },
+  "calendar": {
+    "tasks": "المهام",
+    "bookings": "الحجوزات",
+    "noEvents": "لا توجد أحداث مجدولة لـ"
+  },
+  "sidebar": {
+    "home": "الرئيسية",
+    "tasks": "المهام",
+    "calendar": "التقويم",
+    "messages": "الرسائل",
+    "contacts": "جهات الاتصال",
+    "notifications": "الإشعارات",
+    "services": "الخدمات",
+    "staff": "الموظفين",
+    "analytics": "التحليلات",
+    "settings": "الإعدادات",
+    "business": "الأعمال",
+    "subscribers": "المشتركين",
+    "upgrade": "الترقية إلى برو",
+    "upgradeFree": "قم بترقية خطتك المجانية للوصول إلى المزيد من الميزات",
+    "profile": "الملف الشخصي"
+  },
+  "task": {
+    "status": {
+      "completed": "مكتمل",
+      "inProgress": "قيد التنفيذ",
+      "pending": "معلق",
+      "late": "متأخر"
+    },
+    "priority": {
+      "high": "عالي",
+      "medium": "متوسط",
+      "low": "منخفض",
+      "normal": "عادي"
+    },
+    "today": "مهام اليوم",
+    "createTask": "إنشاء مهمة",
+    "startWork": "بدء العمل"
   }
 }

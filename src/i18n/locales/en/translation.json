@@ -1,4 +1,3 @@
-
 {
   "common": {
     "wakti": "Wakti",
@@ -139,7 +138,33 @@
     "billing": "Billing & Subscription",
     "settings": "Settings",
     "home": "Home",
-    "viewOnly": "View Only"
+    "viewOnly": "View Only",
+    "welcome": {
+      "morning": "Good Morning",
+      "afternoon": "Good Afternoon",
+      "evening": "Good Evening",
+      "overview": "Here's an overview of your tasks and schedule."
+    },
+    "tasksOverview": "Tasks Overview",
+    "calendar": "Calendar",
+    "noTasks": "You don't have any tasks yet",
+    "createTask": "Create Task",
+    "noEvents": "No events scheduled for",
+    "businessDashboard": "Business Dashboard",
+    "professionalDashboard": "Professional Dashboard",
+    "personalDashboard": "Personal Dashboard",
+    "welcomeBack": "Welcome back",
+    "businessAdmin": "Business Administrator",
+    "professional": "Professional",
+    "personalUser": "Personal User",
+    "businessAccount": "Business Account",
+    "individualAccount": "Individual Account",
+    "freeAccount": "Free Account",
+    "completed": "completed",
+    "noTasksToday": "No tasks for today",
+    "unreadNotifications": "Unread notifications",
+    "noNewNotifications": "No new notifications",
+    "activity": "Activity"
   },
   "auth": {
     "welcomeToWakti": "Welcome to Wakti",
@@ -242,5 +267,44 @@
     "stillHaveQuestions": "Still have questions?",
     "supportTeamHelp": "Our support team is here to help you with any other questions you might have.",
     "contactUs": "Contact Us"
+  },
+  "calendar": {
+    "tasks": "Tasks",
+    "bookings": "Bookings",
+    "noEvents": "No events scheduled for"
+  },
+  "sidebar": {
+    "home": "Home",
+    "tasks": "Tasks",
+    "calendar": "Calendar",
+    "messages": "Messages",
+    "contacts": "Contacts",
+    "notifications": "Notifications",
+    "services": "Services",
+    "staff": "Staff",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "business": "Business",
+    "subscribers": "Subscribers",
+    "upgrade": "Upgrade to Pro",
+    "upgradeFree": "Upgrade your free plan to access more features",
+    "profile": "Profile"
+  },
+  "task": {
+    "status": {
+      "completed": "Completed",
+      "inProgress": "In Progress",
+      "pending": "Pending",
+      "late": "Late"
+    },
+    "priority": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low",
+      "normal": "Normal"
+    },
+    "today": "Tasks Today",
+    "createTask": "Create Task",
+    "startWork": "Start Working"
   }
 }
