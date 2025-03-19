@@ -44,15 +44,41 @@ const LoginForm = ({ setError }: LoginFormProps) => {
 
     try {
       console.log("Logging in with email:", email);
-      await login(email, password);
+      const result = await login(email, password);
       
-      // Navigate is handled by the useEffect above when isAuthenticated changes
+      // Store login time in localStorage to help debug session issues
+      localStorage.setItem('lastLoginAttempt', new Date().toISOString());
+      
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email);
+      } else {
+        localStorage.removeItem('rememberedEmail');
+      }
+      
+      // Navigate is handled by the useEffect when isAuthenticated changes
     } catch (error: any) {
       console.error("Login form error:", error);
       setError(error.message || "Failed to log in. Please try again.");
+      
+      // Show toast for better visibility
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error.message || "Check your email and password and try again."
+      });
+      
       setIsLoading(false);
     }
   };
+
+  // Load remembered email if available
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem('rememberedEmail');
+    if (rememberedEmail) {
+      setEmail(rememberedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   return (
     <form onSubmit={handleLogin} className="space-y-4">

@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export interface SidebarUserData {
   accountType: string;
@@ -9,6 +10,7 @@ export interface SidebarUserData {
 export const useSidebarData = () => {
   const [userData, setUserData] = useState<SidebarUserData | null>(null);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -29,13 +31,16 @@ export const useSidebarData = () => {
 
             if (error) {
               console.error("Error fetching user data for sidebar:", error);
+              
+              // Last resort: try to get role from auth context
+              if (user?.plan) {
+                console.log("Using role from auth context:", user.plan);
+                setUserData({ accountType: user.plan });
+                localStorage.setItem('userRole', user.plan);
+              }
             } else if (data) {
-              // Log fetched account type for debugging
               console.log("Sidebar - fetched account type:", data.account_type);
-              
-              // Store in localStorage for backup access
               localStorage.setItem('userRole', data.account_type);
-              
               setUserData({ accountType: data.account_type });
             }
           } else {
@@ -47,10 +52,19 @@ export const useSidebarData = () => {
         }
       } catch (error) {
         console.error("Failed to fetch sidebar user data:", error);
+        
+        // Try to recover from localStorage as last resort
+        const storedRole = localStorage.getItem('userRole');
+        if (storedRole) {
+          console.log("Using stored role from localStorage:", storedRole);
+          setUserData({ accountType: storedRole });
+        }
       }
     };
 
-    fetchUserData();
+    if (user?.id) {
+      fetchUserData();
+    }
     
     // Set up auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -65,7 +79,7 @@ export const useSidebarData = () => {
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, []);
+  }, [user]);
 
   return {
     userData,
