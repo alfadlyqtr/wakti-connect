@@ -16,6 +16,26 @@ export const getDefaultPermissions = (): StaffPermissions => ({
 });
 
 /**
+ * Helper function to safely convert JSON permissions to StaffPermissions type
+ */
+const convertJsonToPermissions = (jsonData: any): StaffPermissions => {
+  const defaultPermissions = getDefaultPermissions();
+  
+  // If the data is not an object or is null, return defaults
+  if (!jsonData || typeof jsonData !== 'object' || Array.isArray(jsonData)) {
+    return defaultPermissions;
+  }
+  
+  // Create a new permissions object with defaults and override with values from jsonData
+  return {
+    can_track_hours: typeof jsonData.can_track_hours === 'boolean' ? jsonData.can_track_hours : defaultPermissions.can_track_hours,
+    can_message_staff: typeof jsonData.can_message_staff === 'boolean' ? jsonData.can_message_staff : defaultPermissions.can_message_staff,
+    can_create_job_cards: typeof jsonData.can_create_job_cards === 'boolean' ? jsonData.can_create_job_cards : defaultPermissions.can_create_job_cards,
+    can_view_own_analytics: typeof jsonData.can_view_own_analytics === 'boolean' ? jsonData.can_view_own_analytics : defaultPermissions.can_view_own_analytics
+  };
+};
+
+/**
  * Gets permissions for a staff member by staff user ID
  */
 export const getStaffPermissions = async (staffId: string): Promise<StaffPermissions> => {
@@ -31,18 +51,11 @@ export const getStaffPermissions = async (staffId: string): Promise<StaffPermiss
       return getDefaultPermissions();
     }
     
-    // If permissions is null, return default permissions
+    // If permissions is null or doesn't exist, return default permissions
     if (!data || !data.permissions) return getDefaultPermissions();
     
-    // Handle the data.permissions properly, ensure it's the correct type
-    if (typeof data.permissions === 'object' && data.permissions !== null) {
-      return {
-        ...getDefaultPermissions(),
-        ...data.permissions as StaffPermissions
-      };
-    }
-    
-    return getDefaultPermissions();
+    // Safely convert the permissions JSON to StaffPermissions type
+    return convertJsonToPermissions(data.permissions);
   } catch (error) {
     console.error("Error fetching staff permissions:", error);
     return getDefaultPermissions();
@@ -65,18 +78,11 @@ export const getStaffRelationPermissions = async (relationId: string): Promise<S
       return getDefaultPermissions();
     }
     
-    // If permissions is null, return default permissions
+    // If permissions is null or doesn't exist, return default permissions
     if (!data || !data.permissions) return getDefaultPermissions();
     
-    // Handle the data.permissions properly, ensure it's the correct type
-    if (typeof data.permissions === 'object' && data.permissions !== null) {
-      return {
-        ...getDefaultPermissions(),
-        ...data.permissions as StaffPermissions
-      };
-    }
-    
-    return getDefaultPermissions();
+    // Safely convert the permissions JSON to StaffPermissions type
+    return convertJsonToPermissions(data.permissions);
   } catch (error) {
     console.error("Error fetching staff relation permissions:", error);
     return getDefaultPermissions();
@@ -103,20 +109,12 @@ export const updateStaffPermissions = async (
       return false;
     }
     
-    // Handle different types of currentData.permissions
-    let currentPermissions: StaffPermissions;
+    // Get current permissions or use defaults
+    const currentPermissions = currentData?.permissions 
+      ? convertJsonToPermissions(currentData.permissions) 
+      : getDefaultPermissions();
     
-    if (!currentData?.permissions) {
-      currentPermissions = getDefaultPermissions();
-    } else if (typeof currentData.permissions === 'object' && currentData.permissions !== null) {
-      currentPermissions = {
-        ...getDefaultPermissions(),
-        ...(currentData.permissions as object) as StaffPermissions
-      };
-    } else {
-      currentPermissions = getDefaultPermissions();
-    }
-    
+    // Merge current and new permissions
     const updatedPermissions = { ...currentPermissions, ...permissions };
     
     // Update with merged permissions
