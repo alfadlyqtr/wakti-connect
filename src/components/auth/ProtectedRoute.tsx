@@ -24,7 +24,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   console.log("ProtectedRoute - Auth state:", { isAuthenticated, isLoading, path: location.pathname });
 
-  // If we're still loading but hit the timeout, we'll redirect to login as a fallback
+  // If we're still loading but haven't hit the timeout, show loading spinner
   if (isLoading && !hasLoadingTimeout) {
     return (
       <div className="h-screen flex items-center justify-center">
