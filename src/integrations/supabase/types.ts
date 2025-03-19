@@ -874,6 +874,48 @@ export type Database = {
           },
         ]
       }
+      staff_invitations: {
+        Row: {
+          business_id: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          name: string
+          position: string | null
+          role: string
+          status: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          name: string
+          position?: string | null
+          role?: string
+          status?: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          name?: string
+          position?: string | null
+          role?: string
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       staff_service_assignments: {
         Row: {
           created_at: string
