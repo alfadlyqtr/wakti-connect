@@ -7,9 +7,10 @@ interface TaskGridProps {
   tasks: Task[];
   userRole: "free" | "individual" | "business" | null;
   tab: TaskTab;
+  onTaskAction?: (action: string, taskId: string) => void;
 }
 
-const TaskGrid = ({ tasks, userRole, tab }: TaskGridProps) => {
+const TaskGrid = ({ tasks, userRole, tab, onTaskAction }: TaskGridProps) => {
   if (tasks.length === 0) return null;
   
   return (
@@ -27,6 +28,16 @@ const TaskGrid = ({ tasks, userRole, tab }: TaskGridProps) => {
           userRole={userRole || "free"}
           isAssigned={tab === "assigned-tasks"}
           isShared={tab === "shared-tasks"}
+          isRecurring={Boolean(task.parent_recurring_id)}
+          isRecurringInstance={Boolean(task.is_recurring_instance)}
+          subtasks={task.subtasks}
+          onShare={() => onTaskAction && onTaskAction("share", task.id)}
+          onAssign={() => onTaskAction && onTaskAction("assign", task.id)}
+          onEdit={() => onTaskAction && onTaskAction("edit", task.id)}
+          onDelete={() => onTaskAction && onTaskAction("delete", task.id)}
+          onMarkComplete={() => onTaskAction && onTaskAction("complete", task.id)}
+          onMarkPending={() => onTaskAction && onTaskAction("pending", task.id)}
+          onAddSubtask={() => onTaskAction && onTaskAction("addSubtask", task.id)}
         />
       ))}
     </div>
