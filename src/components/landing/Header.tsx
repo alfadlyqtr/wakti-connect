@@ -10,9 +10,10 @@ import LanguageSwitcher from "@/components/ui/language-switcher";
 
 const Header = () => {
   const { theme, setTheme } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const isRtl = i18n.language === 'ar';
   
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -46,7 +47,8 @@ const Header = () => {
             variant="ghost" 
             size="icon" 
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")} 
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} 
+            aria-label={theme === "dark" ? t('header.lightMode') : t('header.darkMode')} 
+            title={theme === "dark" ? t('header.lightMode') : t('header.darkMode')} 
             className="text-foreground hover:text-foreground"
           >
             {theme === "dark" ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
@@ -55,7 +57,7 @@ const Header = () => {
             <Link to="/auth">{t('common.getStarted')}</Link>
           </Button>
           <Button asChild variant="ghost" size="icon" className="rounded-full bg-muted text-foreground ml-2">
-            <Link to="/auth" aria-label="Sign in">
+            <Link to="/auth" aria-label={t('header.signIn')} title={t('header.signIn')}>
               <User className="h-[1.2rem] w-[1.2rem]" />
             </Link>
           </Button>
@@ -68,7 +70,8 @@ const Header = () => {
             variant="ghost" 
             size="icon" 
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")} 
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} 
+            aria-label={theme === "dark" ? t('header.lightMode') : t('header.darkMode')} 
+            title={theme === "dark" ? t('header.lightMode') : t('header.darkMode')} 
             className="text-foreground hover:text-foreground"
           >
             {theme === "dark" ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
@@ -117,7 +120,7 @@ const Header = () => {
               className="flex items-center px-4 py-3 hover:bg-muted rounded-md transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              <User className="h-4 w-4 mr-2" />
+              <User className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />
               <span className="font-medium">{t('header.signIn')}</span>
             </Link>
             <div className="pt-2 px-4">
