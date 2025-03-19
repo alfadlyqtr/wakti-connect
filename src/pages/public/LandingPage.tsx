@@ -6,10 +6,15 @@ import Pricing from "@/components/landing/Pricing";
 import CTA from "@/components/landing/CTA";
 import { SectionContainer } from "@/components/ui/section-container";
 import DashboardPreview from "@/components/landing/DashboardPreview";
+import Header from "@/components/landing/Header";
+import Footer from "@/components/landing/Footer";
 
 const LandingPage = () => {
   return (
     <div className="min-h-screen">
+      {/* Header */}
+      <Header />
+      
       {/* Hero Section */}
       <Hero />
 
@@ -26,6 +31,9 @@ const LandingPage = () => {
 
       {/* Call to Action */}
       <CTA />
+      
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };
