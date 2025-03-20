@@ -10,6 +10,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreateTab, InfoTab } from "./dialog";
 import { useCreateStaff } from "@/hooks/staff/useCreateStaff";
+import { InvitationInfoAlert } from "./invitation";
 
 interface CreateStaffDialogProps {
   open: boolean;
@@ -52,6 +53,11 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
           </TabsList>
           
           <TabsContent value="create">
+            {/* Use the InvitationInfoAlert component for consistent messaging */}
+            <div className="mb-4">
+              <InvitationInfoAlert />
+            </div>
+            
             <CreateTab 
               form={form} 
               onSubmit={handleSubmit} 
