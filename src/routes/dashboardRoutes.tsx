@@ -13,6 +13,8 @@ import DashboardMessages from "@/pages/dashboard/DashboardMessages";
 import DashboardContacts from "@/pages/dashboard/DashboardContacts";
 import DashboardSubscribers from "@/pages/dashboard/DashboardSubscribers";
 import DashboardNotifications from "@/pages/dashboard/DashboardNotifications";
+import DashboardWorkManagement from "@/pages/dashboard/DashboardWorkManagement";
+import DashboardJobCards from "@/pages/dashboard/DashboardJobCards";
 
 export const dashboardRoutes = [
   {
@@ -50,6 +52,14 @@ export const dashboardRoutes = [
   {
     path: "team",
     element: <DashboardTeamManagement />,
+  },
+  {
+    path: "work-management",
+    element: <DashboardWorkManagement />,
+  },
+  {
+    path: "job-cards",
+    element: <DashboardJobCards />,
   },
   {
     path: "messages/*",

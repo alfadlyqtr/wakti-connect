@@ -1,48 +1,32 @@
 
-/**
- * Format a number as currency
- */
-export const formatCurrency = (amount: number | null | undefined): string => {
-  if (amount === null || amount === undefined) return "—";
+export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    minimumFractionDigits: 2
   }).format(amount);
 };
 
-/**
- * Format a number as a percentage
- */
-export const formatPercentage = (value: number | null | undefined): string => {
-  if (value === null || value === undefined) return "—";
-  return `${(value * 100).toFixed(1)}%`;
-};
-
-/**
- * Format a number with commas
- */
-export const formatNumber = (value: number | null | undefined): string => {
-  if (value === null || value === undefined) return "—";
-  return new Intl.NumberFormat('en-US').format(value);
-};
-
-/**
- * Convert a date and time strings to ISO format
- */
-export const formatDateTimeToISO = (date: Date, startTime: string, endTime: string) => {
-  const startDateTime = new Date(date);
-  const endDateTime = new Date(date);
+export const formatDateTimeToISO = (
+  date: Date, 
+  startTime: string, 
+  endTime?: string
+): { start_time: string, end_time?: string } => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
   
-  const [startHours, startMinutes] = startTime.split(':').map(Number);
-  const [endHours, endMinutes] = endTime.split(':').map(Number);
+  const [startHour, startMinute] = startTime.split(':');
+  const startTimestamp = `${year}-${month}-${day}T${startHour}:${startMinute}:00`;
   
-  startDateTime.setHours(startHours, startMinutes);
-  endDateTime.setHours(endHours, endMinutes);
+  let endTimestamp;
+  if (endTime) {
+    const [endHour, endMinute] = endTime.split(':');
+    endTimestamp = `${year}-${month}-${day}T${endHour}:${endMinute}:00`;
+  }
   
   return {
-    start_time: startDateTime.toISOString(),
-    end_time: endDateTime.toISOString()
+    start_time: startTimestamp,
+    end_time: endTimestamp
   };
 };

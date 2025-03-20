@@ -1,34 +1,24 @@
 
-import { format } from "date-fns";
-
 /**
- * Format a date string to readable date format
+ * Format a date/time string to display time in a readable format
  */
-export const formatDate = (date: string | Date) => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return format(dateObj, 'MMM d, yyyy');
+export const formatTime = (isoString: string): string => {
+  const date = new Date(isoString);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
 /**
- * Format a time string to readable time format
+ * Format a date string to a readable format
  */
-export const formatTime = (dateTime: string | Date | null) => {
-  if (!dateTime) return "—";
-  const dateObj = typeof dateTime === 'string' ? new Date(dateTime) : dateTime;
-  return format(dateObj, 'h:mm a');
+export const formatDate = (isoString: string): string => {
+  const date = new Date(isoString);
+  return date.toLocaleDateString();
 };
 
 /**
- * Calculate hours between start and end times
+ * Format a date/time string to a readable format with both date and time
  */
-export const calculateHours = (startTime: string, endTime: string | null) => {
-  if (!endTime) return "—";
-  
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  
-  const diffMs = end.getTime() - start.getTime();
-  const diffHours = diffMs / (1000 * 60 * 60);
-  
-  return diffHours.toFixed(1);
+export const formatDateTime = (isoString: string): string => {
+  const date = new Date(isoString);
+  return `${formatDate(isoString)} ${formatTime(isoString)}`;
 };

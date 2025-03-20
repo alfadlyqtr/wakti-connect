@@ -1,47 +1,83 @@
 
 import React from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { User, ChevronDown } from "lucide-react";
-import { StaffWorkSessionTable } from "./StaffWorkSessionTable";
-import type { StaffWithSessions } from "@/hooks/useStaffWorkLogs";
+import { StaffWithSessions } from "@/hooks/useStaffData";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Clock, Calendar } from "lucide-react";
 
 interface StaffCardProps {
   staff: StaffWithSessions;
-  isExpanded: boolean;
-  onToggle: () => void;
+  isSelected: boolean;
+  onClick: () => void;
 }
 
-export const StaffCard = ({ staff, isExpanded, onToggle }: StaffCardProps) => {
+const StaffCard: React.FC<StaffCardProps> = ({ 
+  staff, 
+  isSelected,
+  onClick 
+}) => {
+  const activeSessions = staff.sessions.filter(s => s.status === 'active');
+  const hasActiveSessions = activeSessions.length > 0;
+  
+  // Group sessions by date
+  const sessionsByDate = staff.sessions.reduce((acc, session) => {
+    const date = new Date(session.start_time).toLocaleDateString();
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(session);
+    return acc;
+  }, {} as Record<string, any[]>);
+  
+  // Count of unique work days
+  const workDaysCount = Object.keys(sessionsByDate).length;
+  
   return (
-    <Card>
-      <CardHeader className="pb-2">
+    <Card 
+      className={`
+        cursor-pointer hover:border-primary transition-colors
+        ${isSelected ? 'border-primary ring-1 ring-primary' : ''}
+        ${hasActiveSessions ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900' : ''}
+      `}
+      onClick={onClick}
+    >
+      <CardHeader className="pb-2 pt-4">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-lg flex items-center">
-            <User className="mr-2 h-5 w-5" />
-            {staff.name}
-            <span className="ml-2 text-sm font-normal text-muted-foreground">
-              ({staff.role})
-            </span>
-          </CardTitle>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={onToggle}
-            aria-label={isExpanded ? "Collapse" : "Expand"}
-          >
-            <ChevronDown className={`h-5 w-5 transition-transform ${
-              isExpanded ? 'rotate-180' : ''
-            }`} />
-          </Button>
+          <Avatar className="h-10 w-10">
+            <AvatarFallback>
+              {staff.name.substring(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <Badge variant={staff.role === "admin" ? "secondary" : "outline"}>
+            {staff.role.charAt(0).toUpperCase() + staff.role.slice(1)}
+          </Badge>
         </div>
+        <h3 className="font-medium mt-2">{staff.name}</h3>
+        {staff.email && (
+          <p className="text-xs text-muted-foreground">{staff.email}</p>
+        )}
       </CardHeader>
-      
-      {isExpanded && (
-        <CardContent>
-          <StaffWorkSessionTable sessions={staff.sessions} />
-        </CardContent>
-      )}
+      <CardContent className="pb-4">
+        <div className="space-y-1 text-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
+              <span>Sessions: {staff.sessions.length}</span>
+            </div>
+            
+            {hasActiveSessions && (
+              <Badge variant="success" className="bg-green-500">Active</Badge>
+            )}
+          </div>
+          <div className="flex items-center">
+            <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
+            <span>Work days: {workDaysCount}</span>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
 };
+
+export default StaffCard;
