@@ -13,6 +13,12 @@ export interface StaffMember {
   created_at: string;
   display_name?: string;
   profile_image_url?: string;
+  
+  // Add these properties to match StaffMemberCard component's expected type
+  name?: string;
+  role?: string;
+  staff_number?: string;
+  is_service_provider?: boolean;
 }
 
 export interface StaffInvitation {
@@ -25,6 +31,7 @@ export interface StaffInvitation {
   position?: string;
   permissions?: StaffPermissions;
   business_name?: string;
+  name?: string;
 }
 
 export interface WorkSession {
@@ -55,8 +62,6 @@ export interface WorkLogSummary {
   total_earnings: number;
   total_sessions: number;
 }
-
-// Add missing types that were referenced in the errors
 
 export interface BusinessPage {
   id: string;
@@ -127,6 +132,9 @@ export interface BusinessProfile {
   address?: string;
   created_at: string;
   updated_at: string;
+  display_name?: string;
+  profile_image_url?: string;
+  account_type?: string;
 }
 
 export interface BusinessSubscription {
@@ -138,6 +146,10 @@ export interface BusinessSubscription {
   updated_at: string;
   business_name?: string;
   business_logo_url?: string;
+  business_profile?: {
+    business_name?: string;
+    avatar_url?: string;
+  };
 }
 
 export interface BusinessSubscriberWithProfile {
@@ -150,5 +162,7 @@ export interface BusinessSubscriberWithProfile {
     display_name?: string;
     email?: string;
     profile_image_url?: string;
+    full_name?: string;
+    avatar_url?: string;
   };
 }

@@ -3,11 +3,13 @@ import { useAuth } from "./auth/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { 
   PermissionLevel, 
-  StaffPermissions, 
+  StaffPermissions
+} from "@/services/permissions/types";
+import {
+  getUserRoleInfo,
   getBusinessPermissions, 
   meetsPermissionLevel,
-  getUserRoleInfo,
-  UserRoleInfo
+  type UserRoleInfo
 } from "@/services/permissions/accessControlService";
 
 export const useBusinessPermissions = () => {

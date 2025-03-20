@@ -40,13 +40,13 @@ const SubscribersList = ({ businessId }: SubscribersListProps) => {
               <CardContent className="p-4">
                 <div className="flex items-center space-x-4">
                   <Avatar>
-                    <AvatarImage src={subscriber.profile.avatar_url || ''} />
+                    <AvatarImage src={subscriber.profile.profile_image_url || ''} />
                     <AvatarFallback>
-                      {(subscriber.profile.display_name || subscriber.profile.full_name || "User").slice(0, 2).toUpperCase()}
+                      {(subscriber.profile.display_name || "User").slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium">{subscriber.profile.display_name || subscriber.profile.full_name || "User"}</p>
+                    <p className="font-medium">{subscriber.profile.display_name || "User"}</p>
                     <p className="text-sm text-muted-foreground">
                       Subscribed: {new Date(subscriber.created_at).toLocaleDateString()}
                     </p>

@@ -3,7 +3,7 @@ import { normalizePermissions, createDefaultPermissions } from "./staffPermissio
 import { supabase } from "@/integrations/supabase/client";
 
 // Export the types that are needed by other modules
-export { PermissionLevel, StaffPermissions } from "./types";
+export type { PermissionLevel, StaffPermissions } from "./types";
 
 // Define the UserRoleInfo interface for role information
 export interface UserRoleInfo {
@@ -20,9 +20,10 @@ export async function getUserRoleInfo(): Promise<UserRoleInfo | null> {
     
     // First try to get business owner status
     const { data: businessData, error: businessError } = await supabase
-      .from('businesses')
-      .select('id')
-      .eq('owner_id', session.user.id)
+      .from('profiles')
+      .select('id, account_type')
+      .eq('id', session.user.id)
+      .eq('account_type', 'business')
       .maybeSingle();
       
     if (businessData) {
@@ -60,7 +61,7 @@ export async function getUserRoleInfo(): Promise<UserRoleInfo | null> {
       
     if (profileData) {
       return {
-        role: profileData.account_type
+        role: profileData.account_type as string
       };
     }
     

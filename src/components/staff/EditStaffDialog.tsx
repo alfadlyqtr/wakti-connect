@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -87,6 +88,15 @@ const EditStaffDialog: React.FC<EditStaffDialogProps> = ({ staff, open, onOpenCh
     }
   };
   
+  // Helper function to safely handle value changes for permission selects
+  const handlePermissionChange = (setter: React.Dispatch<React.SetStateAction<PermissionLevel>>) => {
+    return (value: string) => {
+      if (value === 'none' || value === 'read' || value === 'write' || value === 'admin') {
+        setter(value as PermissionLevel);
+      }
+    };
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -110,7 +120,7 @@ const EditStaffDialog: React.FC<EditStaffDialogProps> = ({ staff, open, onOpenCh
             <Label htmlFor="servicePermission" className="text-right">
               Service Permission
             </Label>
-            <Select value={servicePermission} onValueChange={setServicePermission} >
+            <Select value={servicePermission} onValueChange={handlePermissionChange(setServicePermission)}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
@@ -126,7 +136,7 @@ const EditStaffDialog: React.FC<EditStaffDialogProps> = ({ staff, open, onOpenCh
             <Label htmlFor="bookingPermission" className="text-right">
               Booking Permission
             </Label>
-            <Select value={bookingPermission} onValueChange={setBookingPermission}>
+            <Select value={bookingPermission} onValueChange={handlePermissionChange(setBookingPermission)}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
@@ -142,7 +152,7 @@ const EditStaffDialog: React.FC<EditStaffDialogProps> = ({ staff, open, onOpenCh
             <Label htmlFor="staffPermission" className="text-right">
               Staff Permission
             </Label>
-            <Select value={staffPermission} onValueChange={setStaffPermission}>
+            <Select value={staffPermission} onValueChange={handlePermissionChange(setStaffPermission)}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
@@ -158,7 +168,7 @@ const EditStaffDialog: React.FC<EditStaffDialogProps> = ({ staff, open, onOpenCh
             <Label htmlFor="analyticsPermission" className="text-right">
               Analytics Permission
             </Label>
-            <Select value={analyticsPermission} onValueChange={setAnalyticsPermission}>
+            <Select value={analyticsPermission} onValueChange={handlePermissionChange(setAnalyticsPermission)}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>

@@ -121,7 +121,7 @@ export const useStaffManagement = () => {
       permissions.staff_permission = "none";
       
       // Convert to simple JSON object for Supabase
-      const permissionsJson = {
+      const permissionsJson = JSON.stringify({
         tasks: permissions.tasks,
         events: permissions.events,
         messages: permissions.messages,
@@ -133,16 +133,19 @@ export const useStaffManagement = () => {
         booking_permission: permissions.booking_permission,
         staff_permission: permissions.staff_permission,
         analytics_permission: permissions.analytics_permission
-      };
+      });
       
       const { data, error } = await supabase
         .from('staff_invitations')
-        .insert([{
+        .insert({
           business_id: user.businessId,
           email: email,
           position: position,
+          name: email.split('@')[0], // Set a default name based on email
+          role: 'staff',
+          token: Math.random().toString(36).substring(2, 12), // Simple token generation
           permissions: permissionsJson
-        }])
+        })
         .select('*')
         .single();
 
@@ -172,11 +175,11 @@ export const useStaffManagement = () => {
 
     try {
       // If permissions are part of the updates, convert them to JSON
-      let updateData = { ...updates };
+      let updateData: any = { ...updates };
       
       if (updates.permissions) {
-        // Convert to simple JSON object for Supabase
-        updateData.permissions = {
+        // Convert to JSON string for Supabase
+        updateData.permissions = JSON.stringify({
           tasks: updates.permissions.tasks,
           events: updates.permissions.events,
           messages: updates.permissions.messages,
@@ -188,7 +191,7 @@ export const useStaffManagement = () => {
           booking_permission: updates.permissions.booking_permission,
           staff_permission: updates.permissions.staff_permission,
           analytics_permission: updates.permissions.analytics_permission
-        };
+        });
       }
       
       const { error } = await supabase
@@ -311,25 +314,6 @@ export const useStaffManagement = () => {
     updateStaffMember,
     deleteStaffMember,
     resendInvitation,
-    revokeInvitation,
-    // Legacy properties for compatibility with StaffManagementTab
-    staffMembers: staffList,
-    isLoading: loading,
-    refetch: () => {
-      if (user?.businessId) {
-        fetchStaffMembers(user.businessId);
-        fetchInvitations(user.businessId);
-      }
-    },
-    editingStaff: null, 
-    setEditingStaff: () => {}, 
-    suspendingStaff: null,
-    setSuspendingStaff: () => {},
-    deletingStaff: null,
-    setDeletingStaff: () => {},
-    reactivatingStaff: null,
-    setReactivatingStaff: () => {},
-    handleStatusChange: () => Promise.resolve(),
-    isBusinessOwner: true
+    revokeInvitation
   };
 };

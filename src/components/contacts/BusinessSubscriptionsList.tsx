@@ -40,9 +40,9 @@ const BusinessSubscriptionsList = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <Avatar>
-                      <AvatarImage src={subscription.business_profile?.avatar_url || ''} />
+                      <AvatarImage src={subscription.business_logo_url || ''} />
                       <AvatarFallback>
-                        {(subscription.business_profile?.business_name || "").slice(0, 2).toUpperCase()}
+                        {(subscription.business_name || "").slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div>
@@ -50,7 +50,7 @@ const BusinessSubscriptionsList = () => {
                         to={`/business/${subscription.business_id}`} 
                         className="font-medium hover:underline text-primary"
                       >
-                        {subscription.business_profile?.business_name || "Business"}
+                        {subscription.business_name || "Business"}
                       </Link>
                       <p className="text-sm text-muted-foreground">
                         Subscribed: {new Date(subscription.created_at).toLocaleDateString()}
