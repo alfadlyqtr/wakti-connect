@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, DollarSign, Users, UserPlus, Briefcase } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import CreateStaffDialog from "@/components/staff/CreateStaffDialog";
+import InvitationsTab from "@/components/staff/InvitationsTab";
 
 interface Profile {
   full_name: string | null;
@@ -37,6 +38,7 @@ interface WorkLog {
 
 const DashboardStaffManagement = () => {
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   // Fetch staff members
   const { data: staffMembers, isLoading: staffLoading, error: staffError } = useQuery({
@@ -94,13 +96,6 @@ const DashboardStaffManagement = () => {
     enabled: !!selectedStaffId
   });
 
-  const handleInviteStaff = () => {
-    toast({
-      title: "Invite sent",
-      description: "Staff invitation has been sent successfully.",
-    });
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between gap-4">
@@ -108,7 +103,7 @@ const DashboardStaffManagement = () => {
           <h1 className="text-3xl font-bold mb-2">Staff Management</h1>
           <p className="text-muted-foreground">Manage your staff members, track work hours, and assign services.</p>
         </div>
-        <Button className="md:self-start" onClick={handleInviteStaff}>
+        <Button className="md:self-start" onClick={() => setCreateDialogOpen(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
           Invite Staff
         </Button>
@@ -117,7 +112,7 @@ const DashboardStaffManagement = () => {
       <Tabs defaultValue="staff">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="staff">Staff Members</TabsTrigger>
-          <TabsTrigger value="work-logs">Work Logs</TabsTrigger>
+          <TabsTrigger value="invitations">Invitations</TabsTrigger>
         </TabsList>
         
         <TabsContent value="staff" className="mt-6">
@@ -136,7 +131,7 @@ const DashboardStaffManagement = () => {
                   <Users className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No Staff Members Yet</h3>
                   <p className="text-muted-foreground mb-4">Invite new staff members to your business.</p>
-                  <Button onClick={handleInviteStaff}>
+                  <Button onClick={() => setCreateDialogOpen(true)}>
                     <UserPlus className="mr-2 h-4 w-4" />
                     Invite Staff
                   </Button>
@@ -187,76 +182,85 @@ const DashboardStaffManagement = () => {
           </div>
         </TabsContent>
         
-        <TabsContent value="work-logs" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Staff Work Logs</CardTitle>
-              <CardDescription>
-                Track staff working hours and earnings
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {!selectedStaffId ? (
-                <div className="text-center py-8">
-                  <Clock className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Select a Staff Member</h3>
-                  <p className="text-muted-foreground">Select a staff member to view their work logs</p>
-                </div>
-              ) : logsLoading ? (
-                <div className="flex justify-center p-8">
-                  <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
-                </div>
-              ) : workLogs?.length === 0 ? (
-                <div className="text-center py-8">
-                  <Clock className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Work Logs</h3>
-                  <p className="text-muted-foreground">This staff member has no work logs yet</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {workLogs?.map((log) => (
-                    <div key={log.id} className="border rounded-md p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="flex items-center">
-                          <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                          <span className="font-medium">
-                            {new Date(log.start_time).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <Badge variant={log.end_time ? "outline" : "secondary"}>
-                          {log.end_time ? "Completed" : "In Progress"}
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <p className="text-muted-foreground">Start Time</p>
-                          <p>{new Date(log.start_time).toLocaleTimeString()}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">End Time</p>
-                          <p>{log.end_time ? new Date(log.end_time).toLocaleTimeString() : "Not ended"}</p>
-                        </div>
-                        {log.earnings !== null && (
-                          <div className="col-span-2 flex items-center mt-2">
-                            <DollarSign className="h-4 w-4 mr-1 text-muted-foreground" />
-                            <span>Earnings: ${log.earnings.toFixed(2)}</span>
-                          </div>
-                        )}
-                        {log.notes && (
-                          <div className="col-span-2 mt-2">
-                            <p className="text-muted-foreground">Notes</p>
-                            <p>{log.notes}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <TabsContent value="invitations" className="mt-6">
+          <InvitationsTab />
         </TabsContent>
       </Tabs>
+      
+      <TabsContent value="work-logs" className="mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Staff Work Logs</CardTitle>
+            <CardDescription>
+              Track staff working hours and earnings
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!selectedStaffId ? (
+              <div className="text-center py-8">
+                <Clock className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Select a Staff Member</h3>
+                <p className="text-muted-foreground">Select a staff member to view their work logs</p>
+              </div>
+            ) : logsLoading ? (
+              <div className="flex justify-center p-8">
+                <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
+              </div>
+            ) : workLogs?.length === 0 ? (
+              <div className="text-center py-8">
+                <Clock className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Work Logs</h3>
+                <p className="text-muted-foreground">This staff member has no work logs yet</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {workLogs?.map((log) => (
+                  <div key={log.id} className="border rounded-md p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span className="font-medium">
+                          {new Date(log.start_time).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <Badge variant={log.end_time ? "outline" : "secondary"}>
+                        {log.end_time ? "Completed" : "In Progress"}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Start Time</p>
+                        <p>{new Date(log.start_time).toLocaleTimeString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">End Time</p>
+                        <p>{log.end_time ? new Date(log.end_time).toLocaleTimeString() : "Not ended"}</p>
+                      </div>
+                      {log.earnings !== null && (
+                        <div className="col-span-2 flex items-center mt-2">
+                          <DollarSign className="h-4 w-4 mr-1 text-muted-foreground" />
+                          <span>Earnings: ${log.earnings.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {log.notes && (
+                        <div className="col-span-2 mt-2">
+                          <p className="text-muted-foreground">Notes</p>
+                          <p>{log.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+      
+      <CreateStaffDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+      />
     </div>
   );
 };
