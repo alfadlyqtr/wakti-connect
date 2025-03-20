@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StaffMember, StaffInvitation } from "@/types/business.types";
@@ -119,13 +120,28 @@ export const useStaffManagement = () => {
       permissions.staff = "none";
       permissions.staff_permission = "none";
       
+      // Convert to simple JSON object for Supabase
+      const permissionsJson = {
+        tasks: permissions.tasks,
+        events: permissions.events,
+        messages: permissions.messages,
+        services: permissions.services,
+        bookings: permissions.bookings,
+        staff: permissions.staff,
+        analytics: permissions.analytics,
+        service_permission: permissions.service_permission,
+        booking_permission: permissions.booking_permission,
+        staff_permission: permissions.staff_permission,
+        analytics_permission: permissions.analytics_permission
+      };
+      
       const { data, error } = await supabase
         .from('staff_invitations')
         .insert([{
           business_id: user.businessId,
           email: email,
           position: position,
-          permissions: permissions
+          permissions: permissionsJson
         }])
         .select('*')
         .single();
@@ -155,9 +171,29 @@ export const useStaffManagement = () => {
     setError(null);
 
     try {
+      // If permissions are part of the updates, convert them to JSON
+      let updateData = { ...updates };
+      
+      if (updates.permissions) {
+        // Convert to simple JSON object for Supabase
+        updateData.permissions = {
+          tasks: updates.permissions.tasks,
+          events: updates.permissions.events,
+          messages: updates.permissions.messages,
+          services: updates.permissions.services,
+          bookings: updates.permissions.bookings,
+          staff: updates.permissions.staff,
+          analytics: updates.permissions.analytics,
+          service_permission: updates.permissions.service_permission,
+          booking_permission: updates.permissions.booking_permission,
+          staff_permission: updates.permissions.staff_permission,
+          analytics_permission: updates.permissions.analytics_permission
+        };
+      }
+      
       const { error } = await supabase
         .from('business_staff')
-        .update(updates)
+        .update(updateData)
         .eq('id', staffId);
 
       if (error) {
@@ -275,6 +311,25 @@ export const useStaffManagement = () => {
     updateStaffMember,
     deleteStaffMember,
     resendInvitation,
-    revokeInvitation
+    revokeInvitation,
+    // Legacy properties for compatibility with StaffManagementTab
+    staffMembers: staffList,
+    isLoading: loading,
+    refetch: () => {
+      if (user?.businessId) {
+        fetchStaffMembers(user.businessId);
+        fetchInvitations(user.businessId);
+      }
+    },
+    editingStaff: null, 
+    setEditingStaff: () => {}, 
+    suspendingStaff: null,
+    setSuspendingStaff: () => {},
+    deletingStaff: null,
+    setDeletingStaff: () => {},
+    reactivatingStaff: null,
+    setReactivatingStaff: () => {},
+    handleStatusChange: () => Promise.resolve(),
+    isBusinessOwner: true
   };
 };

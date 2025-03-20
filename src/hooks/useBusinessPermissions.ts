@@ -6,7 +6,8 @@ import {
   StaffPermissions, 
   getBusinessPermissions, 
   meetsPermissionLevel,
-  getUserRoleInfo
+  getUserRoleInfo,
+  UserRoleInfo
 } from "@/services/permissions/accessControlService";
 
 export const useBusinessPermissions = () => {
@@ -22,7 +23,7 @@ export const useBusinessPermissions = () => {
   
   const hasPermission = (level: PermissionLevel): boolean => {
     if (!user || !roleInfo) return false;
-    return meetsPermissionLevel(level, roleInfo.role);
+    return meetsPermissionLevel(level, (roleInfo as UserRoleInfo).role);
   };
   
   return {
