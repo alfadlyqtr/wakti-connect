@@ -9,6 +9,10 @@ import DashboardStaffManagement from "@/pages/dashboard/DashboardStaffManagement
 import DashboardWorkLogs from "@/pages/dashboard/DashboardWorkLogs";
 import DashboardTeamManagement from "@/pages/dashboard/DashboardTeamManagement";
 import DashboardAIAssistant from "@/pages/dashboard/DashboardAIAssistant";
+import DashboardMessages from "@/pages/dashboard/DashboardMessages";
+import DashboardContacts from "@/pages/dashboard/DashboardContacts";
+import DashboardSubscribers from "@/pages/dashboard/DashboardSubscribers";
+import DashboardNotifications from "@/pages/dashboard/DashboardNotifications";
 
 export const dashboardRoutes = [
   {
@@ -46,5 +50,21 @@ export const dashboardRoutes = [
   {
     path: "team",
     element: <DashboardTeamManagement />,
+  },
+  {
+    path: "messages/*",
+    element: <DashboardMessages />,
+  },
+  {
+    path: "contacts",
+    element: <DashboardContacts />,
+  },
+  {
+    path: "subscribers",
+    element: <DashboardSubscribers />,
+  },
+  {
+    path: "notifications",
+    element: <DashboardNotifications />,
   },
 ];
