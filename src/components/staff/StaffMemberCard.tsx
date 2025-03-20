@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,29 +19,17 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import StaffPermissionsDisplay from "./StaffPermissionsDisplay";
-import { StaffPermissions } from "@/services/permissions/accessControlService";
+import { StaffPermissions } from "@/services/permissions/types";
 import { normalizePermissions } from "@/services/permissions/staffPermissions";
+import { StaffMember as BusinessStaffMember } from "@/types/business.types";
 
-export interface StaffMember {
-  id: string;
-  name: string;
-  email: string | null;
-  role: string;
-  position: string;
-  created_at: string;
-  staff_number: string;
-  is_service_provider: boolean;
-  status: 'active' | 'suspended' | 'deleted';
-  profile_image_url: string | null;
-  permissions: StaffPermissions;
-}
-
-interface StaffMemberCardProps {
-  member: StaffMember;
-  onEdit: (staff: StaffMember) => void;
-  onSuspend: (staff: StaffMember) => void;
-  onDelete: (staff: StaffMember) => void;
-  onReactivate: (staff: StaffMember) => void;
+// Use a renamed import to avoid confusion with the existing StaffMember type
+export interface StaffMemberCardProps {
+  member: BusinessStaffMember;
+  onEdit: (staff: BusinessStaffMember) => void;
+  onSuspend: (staff: BusinessStaffMember) => void;
+  onDelete: (staff: BusinessStaffMember) => void;
+  onReactivate: (staff: BusinessStaffMember) => void;
 }
 
 const getPermissionDisplay = (permissions: any) => {
@@ -63,7 +52,7 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
   onDelete,
   onReactivate
 }) => {
-  const getStatusBadge = (status: 'active' | 'suspended' | 'deleted') => {
+  const getStatusBadge = (status: 'active' | 'suspended' | 'deleted' | 'pending' | 'inactive') => {
     switch (status) {
       case 'active':
         return <Badge variant="success" className="bg-green-500">Active</Badge>;
@@ -71,35 +60,48 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
         return <Badge variant="outline" className="bg-amber-500 text-white">Suspended</Badge>;
       case 'deleted':
         return <Badge variant="destructive">Deleted</Badge>;
+      case 'pending':
+        return <Badge variant="outline" className="bg-blue-500 text-white">Pending</Badge>;
+      case 'inactive':
+        return <Badge variant="outline" className="bg-gray-500 text-white">Inactive</Badge>;
+      default:
+        return <Badge variant="outline">Unknown</Badge>;
     }
   };
 
+  const displayName = member.full_name || member.display_name || "Unnamed Staff";
+  const role = member.role || "staff";
+  const position = member.position || "Staff Member";
+  const isServiceProvider = member.is_service_provider || false;
+  const staffNumber = member.staff_number || member.id.substring(0, 8);
+  const status = member.status || 'active';
+
   return (
-    <Card className={`overflow-hidden ${member.status !== 'active' ? 'opacity-75' : ''}`}>
+    <Card className={`overflow-hidden ${status !== 'active' ? 'opacity-75' : ''}`}>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <Avatar className="h-14 w-14">
-            <AvatarImage src={member.profile_image_url || ""} alt={member.name} />
+            <AvatarImage src={member.profile_image_url || ""} alt={displayName} />
             <AvatarFallback>
-              {member.name ? member.name.substring(0, 2).toUpperCase() : "ST"}
+              {displayName ? displayName.substring(0, 2).toUpperCase() : "ST"}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col items-end gap-1">
-            <Badge variant={member.role === "co-admin" ? "secondary" : "outline"}>
-              {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+            <Badge variant={role === "co-admin" ? "secondary" : "outline"}>
+              {role.charAt(0).toUpperCase() + role.slice(1)}
             </Badge>
-            {getStatusBadge(member.status)}
-            {member.is_service_provider && (
+            {getStatusBadge(status)}
+            {isServiceProvider && (
               <Badge variant="outline" className="border-wakti-blue text-wakti-blue">
                 Service Provider
               </Badge>
             )}
           </div>
         </div>
-        <CardTitle className="mt-2">{member.name || "Unnamed Staff"}</CardTitle>
-        <CardDescription>{member.position || "Staff Member"}</CardDescription>
+        <CardTitle className="mt-2">{displayName}</CardTitle>
+        <CardDescription>{position}</CardDescription>
         <CardDescription className="text-xs mb-1">
-          {member.staff_number}
+          {staffNumber}
         </CardDescription>
         {member.email && (
           <CardDescription className="text-xs break-all">
@@ -115,7 +117,7 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
           variant="outline" 
           className="flex-1"
           onClick={() => onEdit(member)}
-          disabled={member.status === 'deleted'}
+          disabled={status === 'deleted'}
         >
           <UserCog className="h-4 w-4 mr-2" />
           Edit
@@ -135,7 +137,7 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
             <DropdownMenuLabel>Manage Staff</DropdownMenuLabel>
             <DropdownMenuSeparator />
             
-            {member.status === 'active' && (
+            {status === 'active' && (
               <DropdownMenuItem 
                 className="text-amber-500 focus:text-amber-500"
                 onClick={() => onSuspend(member)}
@@ -145,7 +147,7 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
               </DropdownMenuItem>
             )}
             
-            {member.status === 'suspended' && (
+            {status === 'suspended' && (
               <DropdownMenuItem 
                 className="text-green-500 focus:text-green-500"
                 onClick={() => onReactivate(member)}
@@ -155,7 +157,7 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
               </DropdownMenuItem>
             )}
             
-            {member.status !== 'deleted' && (
+            {status !== 'deleted' && (
               <DropdownMenuItem 
                 className="text-destructive focus:text-destructive"
                 onClick={() => onDelete(member)}

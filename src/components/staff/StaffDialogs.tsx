@@ -11,7 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Ban, Check, X } from "lucide-react";
-import { StaffMember } from "./StaffMemberCard";
+import { StaffMember } from "@/types/business.types";
 
 interface StaffDialogsProps {
   suspendingStaff: StaffMember | null;
@@ -32,6 +32,11 @@ const StaffDialogs: React.FC<StaffDialogsProps> = ({
   onReactivatingStaffChange,
   onStatusChange
 }) => {
+  const getStaffName = (staff: StaffMember | null) => {
+    if (!staff) return '';
+    return staff.full_name || staff.display_name || 'Unnamed Staff';
+  };
+
   return (
     <>
       {/* Suspend Staff Dialog */}
@@ -43,7 +48,7 @@ const StaffDialogs: React.FC<StaffDialogsProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Suspend Staff Member</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to suspend {suspendingStaff?.name}? They won't be able to access your business account while suspended.
+              Are you sure you want to suspend {getStaffName(suspendingStaff)}? They won't be able to access your business account while suspended.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -68,7 +73,7 @@ const StaffDialogs: React.FC<StaffDialogsProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Staff Member</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {deletingStaff?.name}? This action marks the staff account as deleted but keeps the historical data.
+              Are you sure you want to delete {getStaffName(deletingStaff)}? This action marks the staff account as deleted but keeps the historical data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -93,7 +98,7 @@ const StaffDialogs: React.FC<StaffDialogsProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Reactivate Staff Member</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to reactivate {reactivatingStaff?.name}? They will regain access to your business account.
+              Are you sure you want to reactivate {getStaffName(reactivatingStaff)}? They will regain access to your business account.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

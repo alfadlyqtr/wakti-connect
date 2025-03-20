@@ -3,7 +3,8 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import { UserPlus, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import StaffMemberCard, { StaffMember } from "./StaffMemberCard";
+import StaffMemberCard from "./StaffMemberCard";
+import { StaffMember } from "@/types/business.types";
 
 interface StaffListProps {
   staffMembers: StaffMember[] | undefined;

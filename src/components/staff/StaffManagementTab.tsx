@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Mail, UserPlus, AlertCircle } from "lucide-react";
+import { Mail, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import InviteStaffDialog from "./InviteStaffDialog";
@@ -45,12 +45,32 @@ const StaffManagementTab = () => {
   };
 
   // Simple status change handler
-  const handleStatusChange = async () => {
+  const handleStatusChange = async (staff: StaffMember, status: 'active' | 'suspended' | 'deleted') => {
     // You'd implement this fully based on your business logic
     refetch();
     setSuspendingStaff(null);
     setDeletingStaff(null);
     setReactivatingStaff(null);
+  };
+
+  // Handle edit staff
+  const handleEditStaff = (staff: StaffMember) => {
+    setEditingStaff(staff);
+  };
+
+  // Handle suspend staff
+  const handleSuspendStaff = (staff: StaffMember) => {
+    setSuspendingStaff(staff);
+  };
+
+  // Handle delete staff
+  const handleDeleteStaff = (staff: StaffMember) => {
+    setDeletingStaff(staff);
+  };
+
+  // Handle reactivate staff
+  const handleReactivateStaff = (staff: StaffMember) => {
+    setReactivatingStaff(staff);
   };
 
   // Check if user is a business owner or admin
@@ -95,14 +115,14 @@ const StaffManagementTab = () => {
         
         <TabsContent value="staff">
           <StaffList
-            staffMembers={staffList as any[]}
+            staffMembers={staffList}
             isLoading={isLoading}
             hasError={!!error}
             onCreateStaff={() => setInviteDialogOpen(true)}
-            onEditStaff={setEditingStaff}
-            onSuspendStaff={setSuspendingStaff}
-            onDeleteStaff={setDeletingStaff}
-            onReactivateStaff={setReactivatingStaff}
+            onEditStaff={handleEditStaff}
+            onSuspendStaff={handleSuspendStaff}
+            onDeleteStaff={handleDeleteStaff}
+            onReactivateStaff={handleReactivateStaff}
           />
         </TabsContent>
         
