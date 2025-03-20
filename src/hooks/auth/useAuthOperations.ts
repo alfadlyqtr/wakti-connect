@@ -98,20 +98,26 @@ export function useAuthOperations(
     }
   };
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = async (email: string, password: string, name: string, accountType: string = 'free', businessName?: string) => {
     try {
       console.log("Attempting registration for:", email);
       setIsLoading(true);
       
-      // Prepare metadata with account type included
+      // Prepare metadata with all necessary fields
       const metadata: any = {
         full_name: name,
+        account_type: accountType
       };
+      
+      // Add business name if provided and account type is business
+      if (businessName && accountType === 'business') {
+        metadata.business_name = businessName;
+      }
       
       // Set display name to full name by default
       metadata.display_name = name;
       
-      // Sign up the user
+      // Sign up the user with complete metadata
       const { data, error } = await supabase.auth.signUp({
         email,
         password,

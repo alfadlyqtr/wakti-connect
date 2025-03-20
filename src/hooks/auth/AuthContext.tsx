@@ -48,14 +48,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (error.code === "PGRST116" || error.message.includes("does not exist")) {
               console.log("Profile not found or table doesn't exist, creating new profile");
               
+              // Get user metadata directly
+              const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
+              
+              if (userError) {
+                console.error("Error getting user data:", userError);
+                throw userError;
+              }
+              
+              const metadata = authUser?.user_metadata || {};
+              
               // Profile doesn't exist - create one with retries
               try {
                 const { data: newProfile, error: createError } = await supabase
                   .from("profiles")
                   .insert({ 
                     id: userId,
-                    full_name: userEmail?.split('@')[0] || "",
-                    account_type: "free",
+                    full_name: metadata?.full_name || userEmail?.split('@')[0] || "",
+                    account_type: metadata?.account_type || "free",
+                    business_name: metadata?.business_name || null,
+                    display_name: metadata?.display_name || metadata?.full_name || "",
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                   })

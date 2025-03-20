@@ -8,7 +8,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
-import { supabase } from "@/integrations/supabase/client";
 
 interface SignupFormProps {
   setError: (error: string) => void;
@@ -48,32 +47,8 @@ const SignupForm = ({ setError }: SignupFormProps) => {
     try {
       console.log("Registering with account type:", accountType);
       
-      // First update the register function to only use the required parameters
-      await register(email, password, fullName);
-      
-      // Then update the user metadata with account type and business name if needed
-      if (accountType !== "free" || businessName) {
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            const metadata: any = {
-              account_type: accountType
-            };
-            
-            if (businessName && accountType === "business") {
-              metadata.business_name = businessName;
-            }
-            
-            await supabase.auth.updateUser({
-              data: metadata
-            });
-            console.log("User metadata updated with account type and business info");
-          }
-        } catch (metadataError) {
-          console.error("Error updating user metadata:", metadataError);
-          // This is non-critical, so we don't throw the error
-        }
-      }
+      // Call the register function with all parameters
+      await register(email, password, fullName, accountType, businessName);
 
       toast({
         title: "Account created!",
