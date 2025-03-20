@@ -29,7 +29,8 @@ export function useAuthInitializer() {
             // Try to get or create profile with retries
             const profileResult = await handleProfileOperation(session.user.id, session.user.email || "");
             
-            if (profileResult) {
+            // Check if profileResult exists and is not null
+            if (profileResult !== null && profileResult !== undefined) {
               setUser(createUserFromProfile(session.user.id, session.user.email || "", profileResult));
             } else {
               // If we still don't have a profile, create a basic user object
@@ -82,7 +83,8 @@ export function useAuthInitializer() {
             // Try to get or create profile with retries
             const profileResult = await handleProfileOperation(session.user.id, session.user.email || "");
             
-            if (profileResult) {
+            // Check if profileResult exists and is not null
+            if (profileResult !== null && profileResult !== undefined) {
               setUser(createUserFromProfile(session.user.id, session.user.email || "", profileResult));
             } else {
               // If we still don't have a profile, create a basic user object
