@@ -11,6 +11,7 @@ import { authRoutes } from "@/routes/authRoutes";
 import { dashboardRoutes } from "@/routes/dashboardRoutes";
 import { businessRoutes } from "@/routes/businessRoutes";
 import PublicLayout from "@/components/layout/PublicLayout";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export const router = createBrowserRouter([
   // Public routes with layout
@@ -25,7 +26,7 @@ export const router = createBrowserRouter([
     path: "/auth",
     element: (
       <AuthShell>
-        <Suspense fallback={<div>Loading...</div>} />
+        <Suspense fallback={<LoadingSpinner />} />
       </AuthShell>
     ),
     children: authRoutes,
@@ -37,7 +38,7 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <DashboardShell>
-          <Suspense fallback={<div>Loading dashboard...</div>} />
+          <Suspense fallback={<LoadingSpinner />} />
         </DashboardShell>
       </ProtectedRoute>
     ),
@@ -49,7 +50,7 @@ export const router = createBrowserRouter([
     path: "/business/:businessId",
     element: (
       <BusinessShell>
-        <Suspense fallback={<div>Loading business...</div>} />
+        <Suspense fallback={<LoadingSpinner />} />
       </BusinessShell>
     ),
     children: businessRoutes,

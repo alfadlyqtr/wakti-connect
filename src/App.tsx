@@ -11,7 +11,6 @@ import { dashboardRoutes } from "./routes/dashboardRoutes";
 import ScrollToTop from "./components/ui/scroll-to-top";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
-import { AuthProvider } from "@/hooks/useAuth";
 import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "@/components/notifications/NotificationListener";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
@@ -26,62 +25,61 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="system">
-          <AuthProvider>
-            <TaskProvider>
-              <TooltipProvider>
-                <BrowserRouter>
-                  <ScrollToTop />
-                  <NotificationListener />
-                  <Toaster />
-                  <Sonner />
-                  <Routes>
-                    {/* Public routes with PublicLayout */}
-                    <Route element={<PublicLayout />}>
-                      {publicRoutes.map((route) => (
-                        <Route
-                          key={route.path}
-                          path={route.path}
-                          element={route.element}
-                        />
-                      ))}
-                    </Route>
-                    
-                    {/* Auth routes */}
-                    {authRoutes.map((route) => (
+          {/* Removed duplicate AuthProvider here, as it's already included in main.tsx */}
+          <TaskProvider>
+            <TooltipProvider>
+              <BrowserRouter>
+                <ScrollToTop />
+                <NotificationListener />
+                <Toaster />
+                <Sonner />
+                <Routes>
+                  {/* Public routes with PublicLayout */}
+                  <Route element={<PublicLayout />}>
+                    {publicRoutes.map((route) => (
                       <Route
                         key={route.path}
-                        path={`/auth/${route.path}`}
+                        path={route.path}
                         element={route.element}
                       />
                     ))}
-                    
-                    {/* Dashboard routes */}
+                  </Route>
+                  
+                  {/* Auth routes */}
+                  {authRoutes.map((route) => (
                     <Route
-                      path="/dashboard/*"
-                      element={
-                        <ProtectedRoute>
-                          <DashboardLayout>
-                            <Routes>
-                              {dashboardRoutes.map((route) => (
-                                <Route
-                                  key={route.path}
-                                  path={route.path}
-                                  element={route.element}
-                                />
-                              ))}
-                            </Routes>
-                          </DashboardLayout>
-                        </ProtectedRoute>
-                      }
+                      key={route.path}
+                      path={`/auth/${route.path}`}
+                      element={route.element}
                     />
-                    
-                    {/* Catch-all redirect */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </BrowserRouter>
-              </TooltipProvider>
-            </TaskProvider>
-          </AuthProvider>
+                  ))}
+                  
+                  {/* Dashboard routes */}
+                  <Route
+                    path="/dashboard/*"
+                    element={
+                      <ProtectedRoute>
+                        <DashboardLayout>
+                          <Routes>
+                            {dashboardRoutes.map((route) => (
+                              <Route
+                                key={route.path}
+                                path={route.path}
+                                element={route.element}
+                              />
+                            ))}
+                          </Routes>
+                        </DashboardLayout>
+                      </ProtectedRoute>
+                    }
+                  />
+                  
+                  {/* Catch-all redirect */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </TaskProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>
