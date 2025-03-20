@@ -6,7 +6,7 @@ import { z } from "zod";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useStaffInvitations } from "@/hooks/useStaffInvitations";
+import { useStaffInvitations } from "@/hooks/staff/useStaffInvitations";
 
 // Form validation schema
 const staffSignupSchema = z.object({
@@ -20,7 +20,7 @@ const staffSignupSchema = z.object({
   path: ["confirmPassword"],
 });
 
-type StaffSignupFormValues = z.infer<typeof staffSignupSchema>;
+export type StaffSignupFormValues = z.infer<typeof staffSignupSchema>;
 
 export const useStaffSignup = () => {
   const [searchParams] = useSearchParams();
