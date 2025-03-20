@@ -21,6 +21,7 @@ const LoginForm = ({ setError }: LoginFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loginAttempts, setLoginAttempts] = useState(0);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -43,11 +44,23 @@ const LoginForm = ({ setError }: LoginFormProps) => {
 
     } catch (error: any) {
       console.error("Login error in form handler:", error);
-      setError(error.message || "Failed to log in. Please try again.");
+      
+      // Track login attempts
+      setLoginAttempts(prev => prev + 1);
+      
+      // Provide more contextual error messages based on number of attempts
+      let errorMessage = error.message || "Failed to log in. Please try again.";
+      
+      if (loginAttempts >= 2 && (error.message?.includes("database") || error.message?.includes("profiles"))) {
+        errorMessage = "We're experiencing technical difficulties. Please try again later or contact support.";
+      }
+      
+      setError(errorMessage);
+      
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: error.message || "Failed to log in. Please try again.",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -139,6 +152,18 @@ const LoginForm = ({ setError }: LoginFormProps) => {
           </div>
         )}
       </Button>
+
+      {loginAttempts >= 3 && (
+        <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-sm">
+          <p>Having trouble logging in? Try these steps:</p>
+          <ul className="list-disc ml-5 mt-1">
+            <li>Make sure you've entered the correct email and password</li>
+            <li>Try clearing your browser cache and cookies</li>
+            <li>Try using a different browser</li>
+            <li>Contact support if the issue persists</li>
+          </ul>
+        </div>
+      )}
     </form>
   );
 };

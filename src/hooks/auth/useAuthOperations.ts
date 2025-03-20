@@ -19,6 +19,12 @@ export function useAuthOperations(
       
       if (error) {
         console.error("Login error:", error);
+        
+        // Provide more specific error messages for common issues
+        if (error.message.includes("database") || error.message.includes("profiles")) {
+          throw new Error("Server connection issue. Please try again in a few moments.");
+        }
+        
         throw error;
       }
       
@@ -26,9 +32,21 @@ export function useAuthOperations(
       // User is set by the auth listener
     } catch (error: any) {
       console.error("Login error:", error);
+      
+      // Improved error message handling
+      let errorMessage = "An error occurred during login";
+      
+      if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "Invalid email or password";
+      } else if (error.message.includes("database") || error.message.includes("profiles")) {
+        errorMessage = "Server connection issue. Please try again in a few moments.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Login failed",
-        description: error.message || "An error occurred during login",
+        description: errorMessage,
         variant: "destructive",
       });
       throw error;
@@ -67,19 +85,28 @@ export function useAuthOperations(
       console.log("Attempting registration for:", email);
       setIsLoading(true);
       
+      // Prepare metadata with account type included
+      const metadata = {
+        full_name: name,
+      };
+      
       // Sign up the user
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: {
-            full_name: name,
-          },
+          data: metadata,
         },
       });
       
       if (error) {
         console.error("Registration error:", error);
+        
+        // More specific error messages
+        if (error.message.includes("database") || error.message.includes("profiles")) {
+          throw new Error("Server connection issue. Please try again in a few moments.");
+        }
+        
         throw error;
       }
       
@@ -93,9 +120,21 @@ export function useAuthOperations(
       // User is set by the auth listener if email verification is disabled
     } catch (error: any) {
       console.error("Registration error:", error);
+      
+      // Improved error handling
+      let errorMessage = "An error occurred during registration";
+      
+      if (error.message.includes("already registered")) {
+        errorMessage = "This email is already registered. Please log in instead.";
+      } else if (error.message.includes("database") || error.message.includes("profiles")) {
+        errorMessage = "Server connection issue. Please try again in a few moments.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Registration failed",
-        description: error.message || "An error occurred during registration",
+        description: errorMessage,
         variant: "destructive",
       });
       throw error;

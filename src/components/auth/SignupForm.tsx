@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, User, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
   const [fullName, setFullName] = useState("");
   const [accountType, setAccountType] = useState("free");
   const [businessName, setBusinessName] = useState("");
+  const [registerAttempts, setRegisterAttempts] = useState(0);
   const { register } = useAuth();
   
   const needsBusinessName = accountType === "business";
@@ -44,6 +46,16 @@ const SignupForm = ({ setError }: SignupFormProps) => {
     }
 
     try {
+      // Create metadata object including all relevant user data
+      const userData = {
+        full_name: fullName,
+        account_type: accountType,
+        ...(businessName && { business_name: businessName }),
+        display_name: fullName, // Default display name to full name initially
+      };
+      
+      console.log("Registering with user data:", { email, userData });
+      
       await register(email, password, fullName);
 
       toast({
@@ -53,13 +65,25 @@ const SignupForm = ({ setError }: SignupFormProps) => {
 
       // Note: we don't redirect here as the user needs to verify their email first
     } catch (error: any) {
-      setError(error.message || "Failed to create account. Please try again.");
+      console.error("Signup error:", error);
+      
+      // Track registration attempts
+      setRegisterAttempts(prev => prev + 1);
+      
+      // Provide contextual error messages
+      let errorMessage = error.message || "Failed to create account. Please try again.";
+      
+      if (registerAttempts >= 2 && (error.message?.includes("database") || error.message?.includes("profiles"))) {
+        errorMessage = "We're experiencing technical difficulties. Please try again later.";
+      }
+      
+      setError(errorMessage);
+      
       toast({
         variant: "destructive",
         title: "Signup failed",
-        description: error.message || "Failed to create account. Please try again.",
+        description: errorMessage,
       });
-      console.error("Signup error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -111,6 +135,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            minLength={6}
           />
           <Button
             type="button"
@@ -127,6 +152,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
             )}
           </Button>
         </div>
+        <p className="text-xs text-muted-foreground">Password must be at least 6 characters</p>
       </div>
       
       <div className="space-y-2">
@@ -191,6 +217,18 @@ const SignupForm = ({ setError }: SignupFormProps) => {
           <span>{t('auth.createAccount')}</span>
         )}
       </Button>
+      
+      {registerAttempts >= 2 && (
+        <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-sm">
+          <p>Having trouble creating an account? Try these steps:</p>
+          <ul className="list-disc ml-5 mt-1">
+            <li>Make sure you've entered a valid email address</li>
+            <li>Use a strong password with at least 6 characters</li>
+            <li>Try again in a few minutes</li>
+            <li>Try using a different browser</li>
+          </ul>
+        </div>
+      )}
     </form>
   );
 };
