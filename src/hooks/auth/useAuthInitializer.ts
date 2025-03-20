@@ -27,10 +27,10 @@ export function useAuthInitializer() {
             console.log("User authenticated, fetching profile data");
             
             // Try to get or create profile with retries
-            const profile = await handleProfileOperation(session.user.id, session.user.email || "");
+            const profileResult = await handleProfileOperation(session.user.id, session.user.email || "");
             
-            if (profile) {
-              setUser(createUserFromProfile(session.user.id, session.user.email || "", profile));
+            if (profileResult) {
+              setUser(createUserFromProfile(session.user.id, session.user.email || "", profileResult));
             } else {
               // If we still don't have a profile, create a basic user object
               console.warn("Failed to get or create profile, using basic user data");
@@ -80,10 +80,10 @@ export function useAuthInitializer() {
           
           try {
             // Try to get or create profile with retries
-            const profile = await handleProfileOperation(session.user.id, session.user.email || "");
+            const profileResult = await handleProfileOperation(session.user.id, session.user.email || "");
             
-            if (profile) {
-              setUser(createUserFromProfile(session.user.id, session.user.email || "", profile));
+            if (profileResult) {
+              setUser(createUserFromProfile(session.user.id, session.user.email || "", profileResult));
             } else {
               // If we still don't have a profile, create a basic user object
               console.warn("Failed to get or create profile, using basic user data");

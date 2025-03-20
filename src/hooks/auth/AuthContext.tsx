@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { User, AuthContextType } from "./types";
 import { useAuthOperations } from "./useAuthOperations";
 import { useAuthInitializer } from "./useAuthInitializer";
@@ -24,15 +24,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     setUser,
     isLoading,
+    setIsLoading,
     authInitialized,
     authError,
   } = useAuthInitializer();
   
   // Use the auth operations hook for login, logout, register functions
-  const { login, logout, register } = useAuthOperations(setUser, (loading: boolean) => {
-    // Correctly handle the setIsLoading function
-    loading ? setIsLoading(true) : setIsLoading(false);
-  });
+  const { login, logout, register } = useAuthOperations(setUser, setIsLoading);
 
   // Provide the auth context value
   const contextValue: AuthContextType = {
