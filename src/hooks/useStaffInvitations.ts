@@ -26,6 +26,15 @@ interface CreateInvitationData {
   position?: string;
 }
 
+interface VerifyInvitationData {
+  token: string;
+}
+
+interface AcceptInvitationData {
+  token: string;
+  userId: string;
+}
+
 export const useStaffInvitations = () => {
   const queryClient = useQueryClient();
 
@@ -102,6 +111,84 @@ export const useStaffInvitations = () => {
     }
   });
 
+  // Verify an invitation token
+  const verifyInvitation = useMutation({
+    mutationFn: async ({ token }: VerifyInvitationData) => {
+      if (!token) {
+        throw new Error('Invalid token');
+      }
+      
+      const { data, error } = await supabase
+        .from('staff_invitations')
+        .select('*')
+        .eq('token', token)
+        .eq('status', 'pending')
+        .single();
+      
+      if (error) throw new Error('Invalid or expired invitation');
+      
+      // Check if the invitation has expired
+      if (new Date(data.expires_at) < new Date()) {
+        throw new Error('Invitation has expired');
+      }
+      
+      return data as StaffInvitation;
+    }
+  });
+
+  // Accept an invitation
+  const acceptInvitation = useMutation({
+    mutationFn: async ({ token, userId }: AcceptInvitationData) => {
+      if (!token || !userId) {
+        throw new Error('Invalid token or user ID');
+      }
+      
+      // Verify the invitation token first
+      const { data: invitation, error: verifyError } = await supabase
+        .from('staff_invitations')
+        .select('*')
+        .eq('token', token)
+        .eq('status', 'pending')
+        .single();
+      
+      if (verifyError) throw new Error('Invalid or expired invitation');
+      
+      // Check if the invitation has expired
+      if (new Date(invitation.expires_at) < new Date()) {
+        throw new Error('Invitation has expired');
+      }
+      
+      // Update the invitation status to accepted
+      const { error: updateError } = await supabase
+        .from('staff_invitations')
+        .update({ 
+          status: 'accepted',
+          updated_at: new Date().toISOString()
+        })
+        .eq('token', token);
+      
+      if (updateError) throw updateError;
+      
+      // Create the business_staff record
+      const { error: staffError } = await supabase
+        .from('business_staff')
+        .insert({
+          business_id: invitation.business_id,
+          staff_id: userId,
+          role: invitation.role,
+          position: invitation.position
+        });
+      
+      if (staffError) throw staffError;
+      
+      return invitation;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staffInvitations'] });
+      queryClient.invalidateQueries({ queryKey: ['businessStaff'] });
+    }
+  });
+
   // Resend an invitation
   const resendInvitation = useMutation({
     mutationFn: async (invitationId: string) => {
@@ -170,6 +257,8 @@ export const useStaffInvitations = () => {
     error,
     createInvitation,
     resendInvitation,
-    cancelInvitation
+    cancelInvitation,
+    verifyInvitation,
+    acceptInvitation
   };
 };
