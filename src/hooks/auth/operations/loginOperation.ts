@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { User } from "../types";
@@ -60,7 +61,7 @@ export async function loginOperation(
     console.log("Login successful:", data);
     // User is set by the auth listener
     
-    return data;
+    return data; // Properly return the data for components that need it
   } catch (error: any) {
     console.error("Login error:", error);
     

@@ -7,7 +7,13 @@ export function useAuthOperations(
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) {
   const login = async (email: string, password: string) => {
-    return loginOperation(email, password, setIsLoading, setUser);
+    try {
+      const result = await loginOperation(email, password, setIsLoading, setUser);
+      return result; // Return the result for components that need it
+    } catch (error) {
+      // Rethrow the error so it can be caught by callers
+      throw error;
+    }
   };
 
   const logout = async () => {
