@@ -77,14 +77,10 @@ export const useProfileData = () => {
           toast({
             title: "Complete your business profile",
             description: "Please set your business name in your profile settings",
-            action: (
-              <button 
-                className="bg-primary text-white px-3 py-1 rounded-md text-xs"
-                onClick={() => navigate("/dashboard/settings")}
-              >
-                Update Profile
-              </button>
-            )
+            action: {
+              label: "Update Profile",
+              onClick: () => navigate("/dashboard/settings")
+            }
           });
         }
         
