@@ -38,35 +38,13 @@ export const useResendInvitation = () => {
         
       if (updateError) throw updateError;
       
-      try {
-        // Use Supabase Auth's invite user functionality for resending
-        const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(invitation.email, {
-          data: {
-            invitation_id: invitation.id,
-            business_id: invitation.business_id,
-            role: invitation.role,
-            invitation_token: invitation.token
-          },
-          redirectTo: `${window.location.origin}/auth/staff-signup?token=${invitation.token}`
-        });
-        
-        if (inviteError) {
-          console.error("Error resending invitation email:", inviteError);
-          throw inviteError;
-        }
-        
-        toast({
-          title: "Invitation Resent",
-          description: `Invitation email resent to ${invitation.email}`
-        });
-      } catch (emailError) {
-        console.error("Error with invitation email:", emailError);
-        toast({
-          title: "Invitation Updated",
-          description: "Invitation updated, but there was an issue resending the email. The user can still register using the invitation link.",
-          variant: "destructive"
-        });
-      }
+      // Note: We're removing the admin invite functionality that was causing the error
+      // Instead, we'll update the invitation and show a message to the user
+      
+      toast({
+        title: "Invitation Updated",
+        description: `Invitation extended for ${invitation.email}. They can still register using the invitation link.`
+      });
       
       return updatedInvitation as StaffInvitation;
     },

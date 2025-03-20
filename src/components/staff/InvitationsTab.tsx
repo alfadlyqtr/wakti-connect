@@ -7,6 +7,7 @@ import { Copy, RefreshCw, Trash2, Loader2, Mail } from "lucide-react";
 import { useStaffInvitations } from "@/hooks/useStaffInvitations";
 import { formatInvitationDate, isInvitationExpired } from "@/utils/authUtils";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const InvitationsTab = () => {
   const { invitations, isLoading, resendInvitation, cancelInvitation } = useStaffInvitations();
@@ -31,6 +32,14 @@ const InvitationsTab = () => {
   
   return (
     <div className="space-y-6">
+      <Alert className="mb-4">
+        <AlertTitle>About Staff Invitations</AlertTitle>
+        <AlertDescription>
+          Invitations are valid for 48 hours. You can extend invitations by clicking "Resend". 
+          Share the invitation link with staff members to let them create an account.
+        </AlertDescription>
+      </Alert>
+
       {invitations && invitations.length > 0 ? (
         <div className="grid gap-4">
           {invitations.map(invitation => {
@@ -78,13 +87,14 @@ const InvitationsTab = () => {
                           variant="outline"
                           onClick={() => resendInvitation.mutate(invitation.id)}
                           disabled={resendInvitation.isPending}
+                          title="Extend invitation for another 48 hours"
                         >
                           {resendInvitation.isPending ? (
                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           ) : (
                             <RefreshCw className="h-4 w-4 mr-2" />
                           )}
-                          Resend
+                          Extend
                         </Button>
                         
                         <Button 
