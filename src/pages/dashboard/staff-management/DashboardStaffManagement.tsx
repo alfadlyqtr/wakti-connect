@@ -1,9 +1,8 @@
 
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import CreateStaffDialog from "@/components/staff/CreateStaffDialog";
 import InvitationsTab from "@/components/staff/InvitationsTab";
 import StaffMembersTab from "./StaffMembersTab";
@@ -45,17 +44,7 @@ const DashboardStaffManagement = () => {
         </TabsContent>
         
         <TabsContent value="work-logs" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Staff Work Logs</CardTitle>
-              <CardDescription>
-                Track staff working hours and earnings
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <WorkLogsTab selectedStaffId={selectedStaffId} />
-            </CardContent>
-          </Card>
+          <WorkLogsTab selectedStaffId={selectedStaffId} />
         </TabsContent>
       </Tabs>
       
