@@ -1,6 +1,5 @@
 
 import { createBrowserRouter } from "react-router-dom";
-import { Suspense } from "react";
 import NotFound from "@/pages/NotFound";
 import AuthShell from "@/components/auth/AuthShell";
 import DashboardShell from "@/components/dashboard/DashboardShell";
