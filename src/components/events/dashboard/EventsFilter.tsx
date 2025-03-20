@@ -1,153 +1,157 @@
 
 import React from "react";
-import { TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Send, Clock, Edit, Grid3X3, List } from "lucide-react";
-import { EventTab } from "@/types/event.types";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Filter, Search, Grid, List, CheckCircle, LayoutList } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { EventTab } from "@/types/event.types";
 
 interface EventsFilterProps {
   activeTab: EventTab;
   onTabChange: (tab: EventTab) => void;
   viewType: 'grid' | 'list';
-  setViewType: (type: 'grid' | 'list') => void;
+  onViewTypeChange: (type: 'grid' | 'list') => void;
   searchQuery: string;
-  setSearchQuery: (query: string) => void;
+  onSearchChange: (query: string) => void;
+  onSort: (value: string) => void;
+  activeSort: string;
   filterStatus: string;
-  setFilterStatus: (status: string) => void;
-  filterDate: Date | null;
-  setFilterDate: (date: Date | null) => void;
+  onFilterStatus: (status: string) => void;
 }
 
 const EventsFilter: React.FC<EventsFilterProps> = ({
   activeTab,
   onTabChange,
   viewType,
-  setViewType,
+  onViewTypeChange,
   searchQuery,
-  setSearchQuery,
+  onSearchChange,
+  onSort,
+  activeSort,
   filterStatus,
-  setFilterStatus,
-  filterDate,
-  setFilterDate
+  onFilterStatus
 }) => {
   const isMobile = useIsMobile();
-
+  
   return (
-    <>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        {/* Responsive TabsList */}
-        <TabsList className="flex w-full sm:w-auto">
-          <TabsTrigger 
-            value="my-events" 
-            className="flex-1 sm:flex-initial px-2 sm:px-3 py-1.5 text-xs sm:text-sm flex items-center"
-            onClick={() => onTabChange("my-events")}
-          >
-            <Send className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" /> 
-            <span className="truncate">My Events</span>
+    <div className="mb-4 space-y-4">
+      <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as EventTab)}>
+        <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:inline-flex h-auto sm:h-10">
+          <TabsTrigger value="my-events" className="py-2 sm:py-0 text-xs sm:text-sm">
+            My Events
           </TabsTrigger>
-          <TabsTrigger 
-            value="invited-events" 
-            className="flex-1 sm:flex-initial px-2 sm:px-3 py-1.5 text-xs sm:text-sm flex items-center"
-            onClick={() => onTabChange("invited-events")}
-          >
-            <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" /> 
-            <span className="truncate">Invitations</span>
+          <TabsTrigger value="invited-events" className="py-2 sm:py-0 text-xs sm:text-sm">
+            Invitations
           </TabsTrigger>
-          <TabsTrigger 
-            value="draft-events" 
-            className="flex-1 sm:flex-initial px-2 sm:px-3 py-1.5 text-xs sm:text-sm flex items-center"
-            onClick={() => onTabChange("draft-events")}
-          >
-            <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" /> 
-            <span className="truncate">Drafts</span>
+          <TabsTrigger value="drafts" className="py-2 sm:py-0 text-xs sm:text-sm">
+            Drafts
           </TabsTrigger>
         </TabsList>
-        
-        {/* View type toggle buttons - moved to filter section on mobile */}
-        <div className={`${isMobile ? "hidden" : "flex"} gap-2`}>
-          <Button 
-            variant={viewType === 'grid' ? "default" : "outline"} 
-            size="icon"
-            onClick={() => setViewType('grid')}
-          >
-            <Grid3X3 className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant={viewType === 'list' ? "default" : "outline"} 
-            size="icon"
-            onClick={() => setViewType('list')}
-          >
-            <List className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Responsive Filter Section */}
-      <div className="my-3 sm:my-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
-        <div className="flex-1">
-          <Label htmlFor="search" className="sr-only">Search</Label>
+      </Tabs>
+      
+      <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center justify-between">
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            id="search"
             placeholder="Search events..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-8 w-full h-9"
           />
         </div>
         
-        <div className="flex gap-2 mt-2 sm:mt-0">
-          {/* View type toggle on mobile only */}
-          {isMobile && (
-            <div className="flex gap-1 mr-1">
-              <Button 
-                variant={viewType === 'grid' ? "default" : "outline"} 
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => setViewType('grid')}
-              >
-                <Grid3X3 className="h-3 w-3" />
-              </Button>
-              <Button 
-                variant={viewType === 'list' ? "default" : "outline"} 
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => setViewType('list')}
-              >
-                <List className="h-3 w-3" />
-              </Button>
-            </div>
-          )}
+        <div className="flex items-center space-x-1.5 w-full sm:w-auto justify-between sm:justify-start">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onViewTypeChange('grid')}
+            className={viewType === 'grid' ? 'bg-secondary' : ''}
+          >
+            <Grid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onViewTypeChange('list')}
+            className={viewType === 'list' ? 'bg-secondary' : ''}
+          >
+            <LayoutList className="h-4 w-4" />
+          </Button>
           
-          <div className={isMobile ? "flex-1 min-w-[100px]" : "w-[150px]"}>
-            <Label htmlFor="status" className="sr-only">Status</Label>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger id="status" className="h-9">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="sent">Sent</SelectItem>
-                <SelectItem value="accepted">Accepted</SelectItem>
-                <SelectItem value="declined">Declined</SelectItem>
-                <SelectItem value="recalled">Recalled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={activeSort} onValueChange={onSort}>
+            <SelectTrigger className="w-[110px] h-9 text-xs">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="oldest">Oldest</SelectItem>
+              <SelectItem value="name">Name A-Z</SelectItem>
+              <SelectItem value="name-desc">Name Z-A</SelectItem>
+            </SelectContent>
+          </Select>
           
-          <div className={isMobile ? "flex-1 min-w-[100px]" : "w-[150px]"}>
-            <DatePicker
-              date={filterDate}
-              setDate={setFilterDate}
-            />
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9">
+                <Filter className="h-4 w-4 mr-1" />
+                <span className="text-xs">Filter</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[200px]">
+              <div className="p-2 flex flex-col gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`justify-start text-xs ${filterStatus === 'all' ? 'bg-secondary' : ''}`}
+                  onClick={() => onFilterStatus('all')}
+                >
+                  All
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`justify-start text-xs ${filterStatus === 'upcoming' ? 'bg-secondary' : ''}`}
+                  onClick={() => onFilterStatus('upcoming')}
+                >
+                  Upcoming
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`justify-start text-xs ${filterStatus === 'past' ? 'bg-secondary' : ''}`}
+                  onClick={() => onFilterStatus('past')}
+                >
+                  Past
+                </Button>
+                {activeTab === 'invited-events' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`justify-start text-xs ${filterStatus === 'accepted' ? 'bg-secondary' : ''}`}
+                    onClick={() => onFilterStatus('accepted')}
+                  >
+                    <CheckCircle className="h-3 w-3 mr-1" /> Accepted
+                  </Button>
+                )}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
