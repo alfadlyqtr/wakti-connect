@@ -34,7 +34,7 @@ const StaffDialogs: React.FC<StaffDialogsProps> = ({
 }) => {
   const getStaffName = (staff: StaffMember | null) => {
     if (!staff) return '';
-    return staff.full_name || staff.display_name || 'Unnamed Staff';
+    return staff.full_name || staff.display_name || staff.name || 'Unnamed Staff';
   };
 
   return (

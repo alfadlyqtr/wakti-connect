@@ -21,15 +21,14 @@ import {
 import StaffPermissionsDisplay from "./StaffPermissionsDisplay";
 import { StaffPermissions } from "@/services/permissions/types";
 import { normalizePermissions } from "@/services/permissions/staffPermissions";
-import { StaffMember as BusinessStaffMember } from "@/types/business.types";
+import { StaffMember } from "@/types/business.types";
 
-// Use a renamed import to avoid confusion with the existing StaffMember type
 export interface StaffMemberCardProps {
-  member: BusinessStaffMember;
-  onEdit: (staff: BusinessStaffMember) => void;
-  onSuspend: (staff: BusinessStaffMember) => void;
-  onDelete: (staff: BusinessStaffMember) => void;
-  onReactivate: (staff: BusinessStaffMember) => void;
+  member: StaffMember;
+  onEdit: (staff: StaffMember) => void;
+  onSuspend: (staff: StaffMember) => void;
+  onDelete: (staff: StaffMember) => void;
+  onReactivate: (staff: StaffMember) => void;
 }
 
 const getPermissionDisplay = (permissions: any) => {
@@ -69,7 +68,7 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
     }
   };
 
-  const displayName = member.full_name || member.display_name || "Unnamed Staff";
+  const displayName = member.full_name || member.display_name || member.name || "Unnamed Staff";
   const role = member.role || "staff";
   const position = member.position || "Staff Member";
   const isServiceProvider = member.is_service_provider || false;
@@ -90,7 +89,7 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
             <Badge variant={role === "co-admin" ? "secondary" : "outline"}>
               {role.charAt(0).toUpperCase() + role.slice(1)}
             </Badge>
-            {getStatusBadge(status)}
+            {getStatusBadge(status as any)}
             {isServiceProvider && (
               <Badge variant="outline" className="border-wakti-blue text-wakti-blue">
                 Service Provider

@@ -8,7 +8,7 @@ export interface StaffMember {
   full_name?: string;
   position?: string;
   email?: string;
-  status: "pending" | "active" | "inactive";
+  status: "pending" | "active" | "inactive" | "suspended" | "deleted";
   permissions: StaffPermissions;
   created_at: string;
   display_name?: string;
