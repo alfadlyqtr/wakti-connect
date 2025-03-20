@@ -1221,6 +1221,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_profiles_table: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       check_table_exists: {
         Args: {
           table_name: string
