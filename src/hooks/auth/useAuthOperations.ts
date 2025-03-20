@@ -10,14 +10,19 @@ export function useAuthOperations(
 ) {
   const login = async (email: string, password: string) => {
     try {
+      console.log("Attempting login for:", email);
       setIsLoading(true);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Login error:", error);
+        throw error;
+      }
       
+      console.log("Login successful:", data);
       // User is set by the auth listener
     } catch (error: any) {
       console.error("Login error:", error);
@@ -34,10 +39,16 @@ export function useAuthOperations(
 
   const logout = async () => {
     try {
+      console.log("Attempting logout");
       setIsLoading(true);
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        console.error("Logout error:", error);
+        throw error;
+      }
       
+      console.log("Logout successful");
+      setUser(null);
       // User is set to null by the auth listener
     } catch (error: any) {
       console.error("Logout error:", error);
@@ -53,7 +64,10 @@ export function useAuthOperations(
 
   const register = async (email: string, password: string, name: string) => {
     try {
+      console.log("Attempting registration for:", email);
       setIsLoading(true);
+      
+      // Sign up the user
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -64,7 +78,12 @@ export function useAuthOperations(
         },
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Registration error:", error);
+        throw error;
+      }
+      
+      console.log("Registration successful:", data);
       
       toast({
         title: "Registration successful",

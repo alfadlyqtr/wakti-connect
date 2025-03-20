@@ -42,7 +42,7 @@ const LoginForm = ({ setError }: LoginFormProps) => {
       navigate('/dashboard');
 
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("Login error in form handler:", error);
       setError(error.message || "Failed to log in. Please try again.");
       toast({
         variant: "destructive",
