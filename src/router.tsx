@@ -1,5 +1,5 @@
 
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import { Suspense } from "react";
 import NotFound from "@/pages/NotFound";
 import AuthShell from "@/components/auth/AuthShell";
@@ -24,11 +24,7 @@ export const router = createBrowserRouter([
   // Auth routes
   {
     path: "/auth",
-    element: (
-      <AuthShell>
-        <Suspense fallback={<LoadingSpinner />} />
-      </AuthShell>
-    ),
+    element: <AuthShell />,
     children: authRoutes,
   },
 
@@ -37,9 +33,7 @@ export const router = createBrowserRouter([
     path: "/dashboard",
     element: (
       <ProtectedRoute>
-        <DashboardShell>
-          <Suspense fallback={<LoadingSpinner />} />
-        </DashboardShell>
+        <DashboardShell />
       </ProtectedRoute>
     ),
     children: dashboardRoutes,
@@ -48,11 +42,7 @@ export const router = createBrowserRouter([
   // Business routes
   {
     path: "/business/:businessId",
-    element: (
-      <BusinessShell>
-        <Suspense fallback={<LoadingSpinner />} />
-      </BusinessShell>
-    ),
+    element: <BusinessShell />,
     children: businessRoutes,
   },
 

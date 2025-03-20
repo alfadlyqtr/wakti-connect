@@ -6,13 +6,10 @@ import Pricing from "@/components/landing/Pricing";
 import CTA from "@/components/landing/CTA";
 import { SectionContainer } from "@/components/ui/section-container";
 import DashboardPreview from "@/components/landing/DashboardPreview";
-import Footer from "@/components/landing/Footer";
 
 const LandingPage = () => {
   return (
     <div className="min-h-screen">
-      {/* Header is now rendered in PublicLayout.tsx */}
-      
       {/* Hero Section */}
       <Hero />
 
@@ -29,9 +26,6 @@ const LandingPage = () => {
 
       {/* Call to Action */}
       <CTA />
-      
-      {/* Footer is still needed here since PublicLayout only wraps Outlet content */}
-      <Footer />
     </div>
   );
 };
