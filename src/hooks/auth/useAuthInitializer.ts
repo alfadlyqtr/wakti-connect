@@ -44,7 +44,13 @@ export function useAuthInitializer() {
             console.log("User authenticated, fetching profile data");
             
             // Try to get or create profile with retries
-            const profileResult = await handleProfileOperation(session.user.id, session.user.email || "");
+            // Fix for TS1345: Store the result in a variable before checking it
+            let profileResult = null;
+            try {
+              profileResult = await handleProfileOperation(session.user.id, session.user.email || "");
+            } catch (error) {
+              console.error("Failed to handle profile operation:", error);
+            }
             
             // Always create a user object, even with minimal data if profile fetch fails
             if (profileResult) {
@@ -96,7 +102,13 @@ export function useAuthInitializer() {
           
           try {
             // Try to get or create profile with retries
-            const profileResult = await handleProfileOperation(session.user.id, session.user.email || "");
+            // Fix for TS1345: Store the result in a variable before checking it
+            let profileResult = null;
+            try {
+              profileResult = await handleProfileOperation(session.user.id, session.user.email || "");
+            } catch (error) {
+              console.error("Failed to handle profile operation:", error);
+            }
             
             // Always create a user object, even with minimal data if profile fetch fails
             if (profileResult) {
