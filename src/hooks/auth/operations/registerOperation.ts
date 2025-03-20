@@ -10,8 +10,8 @@ export async function registerOperation(
   email: string, 
   password: string, 
   name: string, 
-  accountType: string = 'free', 
-  businessName?: string,
+  accountType: string, 
+  businessName: string | undefined,
   setIsLoading: SetLoadingFunction,
   setUser: SetUserFunction
 ) {
