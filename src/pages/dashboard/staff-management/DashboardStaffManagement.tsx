@@ -27,9 +27,10 @@ const DashboardStaffManagement = () => {
       </div>
 
       <Tabs defaultValue="staff">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="staff">Staff Members</TabsTrigger>
           <TabsTrigger value="invitations">Invitations</TabsTrigger>
+          <TabsTrigger value="work-logs">Work Logs</TabsTrigger>
         </TabsList>
         
         <TabsContent value="staff" className="mt-6">
@@ -42,21 +43,21 @@ const DashboardStaffManagement = () => {
         <TabsContent value="invitations" className="mt-6">
           <InvitationsTab />
         </TabsContent>
+        
+        <TabsContent value="work-logs" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Staff Work Logs</CardTitle>
+              <CardDescription>
+                Track staff working hours and earnings
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <WorkLogsTab selectedStaffId={selectedStaffId} />
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
-      
-      <TabsContent value="work-logs" className="mt-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Staff Work Logs</CardTitle>
-            <CardDescription>
-              Track staff working hours and earnings
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <WorkLogsTab selectedStaffId={selectedStaffId} />
-          </CardContent>
-        </Card>
-      </TabsContent>
       
       <CreateStaffDialog
         open={createDialogOpen}
