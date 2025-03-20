@@ -12,23 +12,38 @@ export function useProfileOperations() {
     
     while (retries > 0) {
       try {
-        // First check if the profiles table exists
+        // First check if the profiles table exists using our custom function
         try {
-          // Simple test query to verify profiles table exists
-          const { error: tableCheckError } = await supabase
-            .from("profiles")
-            .select("count(*)", { count: "exact", head: true });
+          const { data: tableExists, error: checkError } = await supabase.rpc('check_profiles_table');
+          
+          if (checkError) {
+            console.warn("Could not verify profiles table via RPC:", checkError);
             
-          if (tableCheckError) {
-            if (tableCheckError.message.includes("does not exist")) {
-              console.error("Profiles table does not exist:", tableCheckError);
-              throw new Error("Database schema error: profiles table not found");
+            // Fallback to manual check
+            const { error: tableCheckError } = await supabase
+              .from("profiles")
+              .select("count(*)", { count: "exact", head: true });
+              
+            if (tableCheckError) {
+              if (tableCheckError.message.includes("does not exist")) {
+                console.error("Profiles table does not exist:", tableCheckError);
+                throw new Error("Database schema error: profiles table not found");
+              }
+              throw tableCheckError;
             }
-            throw tableCheckError;
+          } else if (!tableExists) {
+            console.error("RPC check confirms profiles table does not exist");
+            throw new Error("Database schema error: profiles table not found via RPC check");
           }
         } catch (tableError: any) {
-          console.error("Error checking profiles table:", tableError);
-          throw tableError;
+          // If the RPC function itself failed but didn't say the table doesn't exist,
+          // we can try to continue
+          if (!tableError.message?.includes("does not exist")) {
+            console.warn("Error checking profiles table, continuing anyway:", tableError);
+          } else {
+            console.error("Error checking profiles table:", tableError);
+            throw tableError;
+          }
         }
         
         // Try to get profile
@@ -40,7 +55,7 @@ export function useProfileOperations() {
           
         if (error) {
           if (error.code === "PGRST116" || error.message.includes("does not exist")) {
-            console.log("Profile not found or table doesn't exist, creating new profile");
+            console.log("Profile not found, creating new profile");
             
             // Get user metadata directly
             const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();

@@ -14,6 +14,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [checkTimeout, setCheckTimeout] = useState(false);
   const [longTimeout, setLongTimeout] = useState(false);
+  const [navigationAttempted, setNavigationAttempted] = useState(false);
 
   // Add a timeout to prevent infinite loading
   useEffect(() => {
@@ -54,6 +55,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     };
   }, [isLoading, isAuthenticated, user]);
 
+  // Prevent multiple redirects
+  useEffect(() => {
+    if (!isAuthenticated && !isLoading && !navigationAttempted) {
+      setNavigationAttempted(true);
+    }
+  }, [isAuthenticated, isLoading, navigationAttempted]);
+
   // If auth check is taking too long, show a better loading state
   if (isLoading && isCheckingAuth) {
     return (
@@ -90,7 +98,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   console.log("Auth check completed, authenticated:", isAuthenticated);
   
-  if (!isAuthenticated) {
+  if (!isAuthenticated && navigationAttempted) {
     console.log("Not authenticated, redirecting to login");
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }

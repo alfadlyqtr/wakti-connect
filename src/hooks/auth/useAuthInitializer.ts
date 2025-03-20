@@ -16,11 +16,12 @@ export function useAuthInitializer() {
   useEffect(() => {
     console.log("Setting up auth state listener...");
     let authCheckComplete = false;
+    let authTimeout: NodeJS.Timeout;
     
     // First check if we can connect to Supabase
     const checkSupabaseConnection = async () => {
       try {
-        const { data, error } = await supabase.from('_metadata').select('*').limit(1).maybeSingle();
+        const { error } = await supabase.from('_metadata').select('*').limit(1).maybeSingle();
         if (error && !error.message.includes("does not exist")) {
           console.error("Supabase connection test failed:", error);
           throw new Error("Failed to connect to database service. Please check application configuration.");
@@ -37,14 +38,19 @@ export function useAuthInitializer() {
     // Set up Supabase auth listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("Auth state changed:", event);
+        console.log("Auth state changed:", event, session?.user?.id);
+        
+        // Prevent multiple state updates for the same event
+        if (authCheckComplete && event === 'INITIAL_SESSION') {
+          console.log("Ignoring duplicate INITIAL_SESSION event");
+          return;
+        }
         
         if (session?.user) {
           try {
             console.log("User authenticated, fetching profile data");
             
             // Try to get or create profile with retries
-            // Fix for TS1345: Store the result in a variable before checking it
             let profileResult = null;
             try {
               profileResult = await handleProfileOperation(session.user.id, session.user.email || "");
@@ -80,6 +86,7 @@ export function useAuthInitializer() {
         }
         
         authCheckComplete = true;
+        clearTimeout(authTimeout);
         setIsLoading(false);
         setAuthInitialized(true);
       }
@@ -97,12 +104,17 @@ export function useAuthInitializer() {
           return;
         }
         
+        // If auth listener has already processed this session, don't duplicate the work
+        if (authCheckComplete) {
+          console.log("Auth check already completed by listener, skipping duplicate work");
+          return;
+        }
+        
         if (session?.user) {
           console.log("Existing session found for user:", session.user.id);
           
           try {
             // Try to get or create profile with retries
-            // Fix for TS1345: Store the result in a variable before checking it
             let profileResult = null;
             try {
               profileResult = await handleProfileOperation(session.user.id, session.user.email || "");
@@ -130,8 +142,9 @@ export function useAuthInitializer() {
         console.error("Error checking session:", error);
         setAuthError(error.message || "Error checking authentication");
       } finally {
-        // Ensure we always set loading to false even if errors occur
+        // Only finalize initialization if the auth listener hasn't already done so
         if (!authCheckComplete) {
+          authCheckComplete = true;
           setIsLoading(false);
           setAuthInitialized(true);
         }
@@ -139,7 +152,7 @@ export function useAuthInitializer() {
     };
     
     // Set a timeout to prevent hanging indefinitely
-    const authTimeout = setTimeout(() => {
+    authTimeout = setTimeout(() => {
       if (!authCheckComplete) {
         console.warn("Auth check timed out");
         setIsLoading(false);

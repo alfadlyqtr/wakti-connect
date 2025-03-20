@@ -26,6 +26,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const [errorLogged, setErrorLogged] = useState(false);
 
   // Fetch user profile data for the dashboard
   const { data: profileData, isLoading: profileLoading } = useQuery({
@@ -44,21 +45,46 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           .from('profiles')
           .select('account_type, display_name, business_name, full_name, theme_preference')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
         
         if (error) {
           console.error("Error fetching user profile:", error);
-          if (error.code === 'PGRST116') {
+          if (error.code === 'PGRST116' && !errorLogged) {
             console.log("Profile not found, user may need to sign up");
-            navigate("/auth");
+            setErrorLogged(true);
+            
+            // Try to create a profile for this user if it doesn't exist
+            try {
+              const { data: newProfileData, error: createError } = await supabase
+                .from('profiles')
+                .insert({
+                  id: session.user.id,
+                  full_name: session.user.email?.split('@')[0] || 'User',
+                  display_name: session.user.email?.split('@')[0] || 'User',
+                  account_type: 'free'
+                })
+                .select()
+                .single();
+                
+              if (createError) {
+                console.error("Error creating profile:", createError);
+              } else {
+                console.log("Created new profile:", newProfileData);
+                return newProfileData as ProfileData;
+              }
+            } catch (createError) {
+              console.error("Failed to create profile:", createError);
+            }
           }
           return null;
         }
         
         // Store user role in localStorage for use in other components
-        localStorage.setItem('userRole', data.account_type);
+        if (data?.account_type) {
+          localStorage.setItem('userRole', data.account_type);
+        }
         
-        if (data.account_type === 'business' && !data.business_name) {
+        if (data?.account_type === 'business' && !data.business_name) {
           // If business account but no business name is set, inform the user
           toast({
             title: "Complete your business profile",
@@ -80,7 +106,8 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         return null;
       }
     },
-    retry: 1,
+    retry: 2,
+    retryDelay: 1000,
   });
 
   // Set theme based on user preference

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { User } from "../types";
@@ -16,44 +15,28 @@ export async function loginOperation(
     console.log("Attempting login for:", email);
     setIsLoading(true);
     
-    // First verify Supabase connection and schema
+    // Check if profiles table exists before proceeding
     try {
-      // Try to access a simple public table first
-      const { data: metadataCheck, error: metadataError } = await supabase
-        .from('_metadata')
-        .select('*')
-        .limit(1);
-        
-      if (metadataError) {
-        console.warn("Metadata table check failed, might be first run:", metadataError);
-        // Continue as this table might not exist yet
-      }
+      const { data: tableExists, error: checkError } = await supabase.rpc('check_profiles_table');
       
-      // Now check if the profiles table exists
-      const { error: profilesError } = await supabase
-        .from('profiles')
-        .select('count(*)', { count: 'exact', head: true });
-        
-      if (profilesError) {
-        // Log the specific error
-        console.error("Profiles table check failed:", profilesError);
-        
-        if (profilesError.message && 
-            (profilesError.message.includes("does not exist") || 
-             profilesError.message.includes("relation") || 
-             profilesError.message.includes("undefined"))) {
-          // Critical database schema issue
-          throw new Error(
-            "Database schema not properly initialized. Please contact the administrator or ensure migrations have been run."
-          );
-        }
+      if (checkError) {
+        console.warn("Could not verify profiles table:", checkError);
+        // Continue anyway, as this might just be an RPC error
+      } else if (!tableExists) {
+        console.error("Profiles table does not exist");
+        throw new Error(
+          "Application database is not properly initialized. Please contact support."
+        );
       }
     } catch (schemaError: any) {
       console.error("Schema verification failed:", schemaError);
-      throw schemaError;
+      // If the RPC function itself failed, continue with login
+      if (!schemaError.message.includes("does not exist")) {
+        throw schemaError;
+      }
     }
     
-    // Proceed with authentication if schema checks passed
+    // Proceed with authentication
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -76,6 +59,8 @@ export async function loginOperation(
     
     console.log("Login successful:", data);
     // User is set by the auth listener
+    
+    return data;
   } catch (error: any) {
     console.error("Login error:", error);
     
@@ -101,6 +86,7 @@ export async function loginOperation(
     });
     throw error;
   } finally {
-    setIsLoading(false);
+    // We need to keep loading state active until the auth listener finishes processing
+    // So don't set isLoading false here, it will be handled by the auth listener
   }
 }
