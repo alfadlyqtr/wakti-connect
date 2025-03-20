@@ -51,7 +51,7 @@ export const useStaffWorkLogs = () => {
             email: staff.email || '', // Ensure email is included
             sessions: staffLogs.map(log => ({
               ...log,
-              job_cards_count: log.job_cards ? log.job_cards.count : 0, // Process the job_cards count correctly
+              job_cards_count: log.job_cards?.[0]?.count || 0, // Process the job_cards count correctly
               date: new Date(log.start_time).toISOString().split('T')[0], // Add date property to match WorkSession
               status: (log.status as 'active' | 'completed' | 'cancelled') || 'active'
             })) as WorkSession[]

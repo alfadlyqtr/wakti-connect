@@ -37,7 +37,7 @@ const WorkHistory: React.FC<WorkHistoryProps> = ({ staffRelationId }) => {
       // Correctly process the job_cards count from Supabase
       return data.map(session => ({
         ...session,
-        job_cards_count: session.job_cards ? session.job_cards.count : 0
+        job_cards_count: session.job_cards?.[0]?.count || 0
       })) as WorkSession[];
     }
   });
