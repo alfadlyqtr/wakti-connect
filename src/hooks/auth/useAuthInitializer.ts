@@ -144,6 +144,7 @@ export function useAuthInitializer() {
       }
     }, 10000); // 10 second timeout
     
+    // Call the checkSession function
     checkSession();
 
     // Clean up subscriptions and timers on unmount
