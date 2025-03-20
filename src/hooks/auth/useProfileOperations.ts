@@ -12,6 +12,25 @@ export function useProfileOperations() {
     
     while (retries > 0) {
       try {
+        // First check if the profiles table exists
+        try {
+          // Simple test query to verify profiles table exists
+          const { error: tableCheckError } = await supabase
+            .from("profiles")
+            .select("count(*)", { count: "exact", head: true });
+            
+          if (tableCheckError) {
+            if (tableCheckError.message.includes("does not exist")) {
+              console.error("Profiles table does not exist:", tableCheckError);
+              throw new Error("Database schema error: profiles table not found");
+            }
+            throw tableCheckError;
+          }
+        } catch (tableError: any) {
+          console.error("Error checking profiles table:", tableError);
+          throw tableError;
+        }
+        
         // Try to get profile
         const { data: profile, error } = await supabase
           .from("profiles")
@@ -89,8 +108,8 @@ export function useProfileOperations() {
         console.error(`Profile operation attempt ${6-retries} failed:`, error);
         
         // Handle specific database errors
-        if (error.message && error.message.includes("database") || 
-            error.message && error.message.includes("does not exist")) {
+        if (error.message && (error.message.includes("database") || 
+            error.message.includes("does not exist"))) {
           // Database connection error
           toast({
             title: "Database Connection Issue",
@@ -113,6 +132,17 @@ export function useProfileOperations() {
 
   // Function to map profile data to User object
   const createUserFromProfile = (userId: string, userEmail: string, profile: any): User => {
+    if (!profile) {
+      console.warn("Creating user from empty profile data");
+      return {
+        id: userId,
+        email: userEmail || "",
+        name: userEmail?.split('@')[0] || "",
+        displayName: "",
+        plan: "free"
+      };
+    }
+    
     return {
       id: userId,
       email: userEmail || "",
@@ -128,6 +158,7 @@ export function useProfileOperations() {
       id: userId,
       email: userEmail || "",
       name: userEmail?.split('@')[0] || "",
+      displayName: userEmail?.split('@')[0] || "",
       plan: "free"
     };
   };

@@ -17,6 +17,25 @@ export function useAuthInitializer() {
     console.log("Setting up auth state listener...");
     let authCheckComplete = false;
     
+    // First verify the profiles table exists
+    const verifyProfilesTable = async () => {
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .select('count(*)', { count: 'exact', head: true });
+          
+        if (error && error.message.includes('does not exist')) {
+          throw new Error('Profiles table does not exist. Database may not be properly initialized.');
+        }
+      } catch (error) {
+        console.error('Error verifying profiles table:', error);
+        // Don't throw - we'll continue and let normal error handling work
+      }
+    };
+    
+    // Try to verify the profiles table exists, but don't block the auth flow
+    verifyProfilesTable();
+    
     // Set up Supabase auth listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {

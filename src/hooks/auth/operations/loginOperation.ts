@@ -24,6 +24,18 @@ export async function loginOperation(
       throw new Error("Unable to connect to authentication service. Please check your internet connection and try again.");
     }
     
+    // Check if the profiles table exists to catch errors early
+    try {
+      // Simple test query to check if the profiles table exists
+      await supabase.from('profiles').select('id').limit(1);
+    } catch (profilesError: any) {
+      console.error("Profiles table check failed:", profilesError);
+      
+      if (profilesError.message && profilesError.message.includes("does not exist")) {
+        throw new Error("The application is not properly initialized. Please contact the administrator.");
+      }
+    }
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
