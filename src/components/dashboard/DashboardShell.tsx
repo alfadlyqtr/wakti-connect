@@ -22,7 +22,7 @@ const DashboardShell = () => {
   useThemeSetter(profileData);
 
   return (
-    <DashboardLayout>
+    <DashboardLayout userRole={profileData?.account_type}>
       {isLoading ? <ProfileLoader /> : <Outlet />}
     </DashboardLayout>
   );
