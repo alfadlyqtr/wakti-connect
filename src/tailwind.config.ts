@@ -24,7 +24,11 @@ const config = {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: {
+        DEFAULT: "1rem",
+        sm: "1.5rem",
+        lg: "2rem"
+      },
       screens: {
         "2xl": "1400px",
       },
@@ -137,7 +141,14 @@ const config = {
       },
     },
   },
-  plugins: [tailwindcssAnimate, headlessui],
+  plugins: [
+    tailwindcssAnimate, 
+    headlessui,
+    // Add a plugin for touch variant
+    function({ addVariant }) {
+      addVariant('touch', '@media (hover: none) { &:active }');
+    }
+  ],
 } satisfies Config;
 
 export default config;

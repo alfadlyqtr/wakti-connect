@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -11,7 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TaskTab } from "@/hooks/useTasks";
+import { TaskTab } from "@/types/task.types";
+import { useIsMobile } from "@/hooks/useResponsive";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 
 interface TaskControlsProps {
   searchQuery: string;
@@ -40,9 +42,41 @@ const TaskControls = ({
   isPaidAccount,
   userRole
 }: TaskControlsProps) => {
+  const isMobile = useIsMobile();
+  
   if (!isPaidAccount) return null;
 
   const showAssignedTab = userRole === "business" || userRole === "individual";
+  
+  const filterControls = (
+    <>
+      <Select value={filterStatus} onValueChange={onStatusChange}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Status</SelectItem>
+          <SelectItem value="pending">Pending</SelectItem>
+          <SelectItem value="in-progress">In Progress</SelectItem>
+          <SelectItem value="completed">Completed</SelectItem>
+          <SelectItem value="late">Late</SelectItem>
+        </SelectContent>
+      </Select>
+      
+      <Select value={filterPriority} onValueChange={onPriorityChange}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Priority" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Priority</SelectItem>
+          <SelectItem value="urgent">Urgent</SelectItem>
+          <SelectItem value="high">High</SelectItem>
+          <SelectItem value="medium">Medium</SelectItem>
+          <SelectItem value="normal">Normal</SelectItem>
+        </SelectContent>
+      </Select>
+    </>
+  );
   
   return (
     <div className="space-y-4">
@@ -72,40 +106,46 @@ const TaskControls = ({
         </div>
         
         <div className="flex gap-2 w-full sm:w-auto">
-          <Select value={filterStatus} onValueChange={onStatusChange}>
-            <SelectTrigger className="w-full sm:w-32">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="in-progress">In Progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="late">Late</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={filterPriority} onValueChange={onPriorityChange}>
-            <SelectTrigger className="w-full sm:w-32">
-              <SelectValue placeholder="Priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Priority</SelectItem>
-              <SelectItem value="urgent">Urgent</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="normal">Normal</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Button onClick={onCreateTask} className="flex items-center gap-2">
-            <Plus size={16} />
-            <span className="hidden sm:inline">
-              {currentTab === "assigned-tasks" && userRole === "business" 
-                ? "Assign Task" 
-                : "Create Task"}
-            </span>
-          </Button>
+          {isMobile ? (
+            <>
+              <Drawer>
+                <DrawerTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <Filter className="h-4 w-4" />
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <DrawerHeader>
+                    <DrawerTitle>Filter Tasks</DrawerTitle>
+                  </DrawerHeader>
+                  <div className="px-4 py-2 space-y-4">
+                    {filterControls}
+                  </div>
+                </DrawerContent>
+              </Drawer>
+              
+              <Button onClick={onCreateTask} className="flex-1 sm:flex-initial">
+                <Plus size={16} className="sm:mr-2" />
+                <span className="sr-only sm:not-sr-only sm:inline">
+                  {currentTab === "assigned-tasks" && userRole === "business" 
+                    ? "Assign Task" 
+                    : "Create Task"}
+                </span>
+              </Button>
+            </>
+          ) : (
+            <>
+              {filterControls}
+              <Button onClick={onCreateTask} className="flex items-center gap-2">
+                <Plus size={16} />
+                <span>
+                  {currentTab === "assigned-tasks" && userRole === "business" 
+                    ? "Assign Task" 
+                    : "Create Task"}
+                </span>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>

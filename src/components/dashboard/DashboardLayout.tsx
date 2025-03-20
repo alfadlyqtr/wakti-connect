@@ -7,7 +7,7 @@ import { toast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import "@/components/layout/sidebar/sidebar.css";
 import { useQuery } from "@tanstack/react-query";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/useResponsive";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -157,6 +157,13 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     };
   }, [isMobile, isSidebarOpen]);
 
+  // Close sidebar on navigation when on mobile
+  useEffect(() => {
+    if (isMobile && isSidebarOpen) {
+      setIsSidebarOpen(false);
+    }
+  }, [location.pathname, isMobile]);
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -176,7 +183,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       <div className="flex flex-1 overflow-hidden">
         <Sidebar isOpen={isSidebarOpen} userRole={userRoleValue as "free" | "individual" | "business"} />
         
-        <main className={`flex-1 overflow-y-auto pt-4 px-4 pb-12 ${mainContentClass}`}>
+        <main className={`flex-1 overflow-y-auto pt-4 px-4 pb-safe-area-inset-bottom ${mainContentClass}`}>
           <div className="container mx-auto animate-in">
             {profileLoading ? (
               <div className="flex items-center justify-center h-[calc(100vh-100px)]">
