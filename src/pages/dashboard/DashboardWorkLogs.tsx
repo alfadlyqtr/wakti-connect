@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useStaffWorkLogs } from "@/hooks/useStaffWorkLogs";
+import { useStaffWorkLogs, StaffWithSessions } from "@/hooks/useStaffWorkLogs";
 import { StaffList } from "@/components/staff/StaffList";
 
 const DashboardWorkLogs = () => {

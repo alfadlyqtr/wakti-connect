@@ -1,6 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { StaffWithSessions as StaffDataWithSessions, WorkSession } from "@/hooks/useStaffData";
 
 export interface StaffWorkLog {
   id: string;
@@ -13,15 +14,11 @@ export interface StaffWorkLog {
   created_at: string;
   updated_at: string;
   job_cards_count?: number;
+  date: string; // Added date property to match WorkSession interface
 }
 
-export interface StaffWithSessions {
-  id: string;
-  name: string;
-  role: string;
-  email: string; // Added email property to match StaffWithSessions from useStaffData
-  sessions: StaffWorkLog[];
-}
+// Use the same interface as useStaffData for compatibility
+export type StaffWithSessions = StaffDataWithSessions;
 
 export const useStaffWorkLogs = () => {
   return useQuery({
@@ -54,9 +51,10 @@ export const useStaffWorkLogs = () => {
             email: staff.email || '', // Ensure email is included
             sessions: staffLogs.map(log => ({
               ...log,
-              job_cards_count: log.job_cards?.count || 0, // Process the job_cards count
+              job_cards_count: log.job_cards ? log.job_cards.count : 0, // Process the job_cards count correctly
+              date: new Date(log.start_time).toISOString().split('T')[0], // Add date property to match WorkSession
               status: (log.status as 'active' | 'completed' | 'cancelled') || 'active'
-            }))
+            })) as WorkSession[]
           };
         });
         

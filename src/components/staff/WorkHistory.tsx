@@ -27,7 +27,7 @@ const WorkHistory: React.FC<WorkHistoryProps> = ({ staffRelationId }) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('staff_work_logs')
-        .select('*, job_cards:job_cards(count)')
+        .select('*, job_cards(count)')
         .eq('staff_relation_id', staffRelationId)
         .not('id', 'eq', null)
         .order('start_time', { ascending: false });
@@ -37,7 +37,7 @@ const WorkHistory: React.FC<WorkHistoryProps> = ({ staffRelationId }) => {
       // Correctly process the job_cards count from Supabase
       return data.map(session => ({
         ...session,
-        job_cards_count: session.job_cards?.count || 0
+        job_cards_count: session.job_cards ? session.job_cards.count : 0
       })) as WorkSession[];
     }
   });
