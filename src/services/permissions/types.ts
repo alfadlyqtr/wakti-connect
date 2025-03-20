@@ -1,7 +1,8 @@
 
-export type PermissionLevel = "admin" | "write" | "read" | "none";
+export type PermissionLevel = "none" | "read" | "write" | "admin";
 
 export interface StaffPermissions {
+  // New fields
   tasks: PermissionLevel;
   events: PermissionLevel;
   messages: PermissionLevel;
@@ -9,20 +10,10 @@ export interface StaffPermissions {
   bookings: PermissionLevel;
   staff: PermissionLevel;
   analytics: PermissionLevel;
-  service_permission?: PermissionLevel; // For backward compatibility
-  booking_permission?: PermissionLevel; // For backward compatibility
-  staff_permission?: PermissionLevel; // For backward compatibility
-  analytics_permission?: PermissionLevel; // For backward compatibility
-}
-
-export interface BusinessPermissionsState {
-  canCreateServices: boolean;
-  canEditServices: boolean;
-  canDeleteServices: boolean;
-  canAssignStaff: boolean;
-  canCreateBookings: boolean;
-  canEditBookings: boolean;
-  canCancelBookings: boolean;
-  canManageStaff: boolean;
-  canViewAnalytics: boolean;
+  
+  // Legacy fields for backward compatibility
+  service_permission?: PermissionLevel;
+  booking_permission?: PermissionLevel;
+  staff_permission?: PermissionLevel;
+  analytics_permission?: PermissionLevel;
 }

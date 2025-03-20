@@ -1,146 +1,280 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
-import { StaffMember } from "./StaffMemberCard";
-import { PermissionLevel, StaffPermissions } from "@/services/permissions/accessControlService";
-import { useAuth } from "@/hooks/useAuth";
-import { normalizePermissions, createDefaultPermissions, createAdminPermissions, createStaffPermissions } from "@/services/permissions/staffPermissions";
+import { StaffMember, StaffInvitation } from "@/types/business.types";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/hooks/auth/useAuth";
+import { normalizePermissions, createDefaultPermissions } from "@/services/permissions/staffPermissions";
+import { StaffPermissions } from "@/services/permissions/types";
 
 export const useStaffManagement = () => {
-  const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
-  const [suspendingStaff, setSuspendingStaff] = useState<StaffMember | null>(null);
-  const [deletingStaff, setDeletingStaff] = useState<StaffMember | null>(null);
-  const [reactivatingStaff, setReactivatingStaff] = useState<StaffMember | null>(null);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [staffList, setStaffList] = useState<StaffMember[]>([]);
+  const [invitations, setInvitations] = useState<StaffInvitation[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const { toast } = useToast();
 
-  // Helper function to ensure we have a valid permission level
-  const getPermissionLevel = (value: any): PermissionLevel => {
-    if (value === 'admin' || value === 'write' || value === 'read') {
-      return value;
+  // Load staff members and invitations on mount
+  useEffect(() => {
+    if (user?.businessId) {
+      fetchStaffMembers(user.businessId);
+      fetchInvitations(user.businessId);
     }
-    return 'none';
-  };
+  }, [user?.businessId]);
 
-  // Fetch staff members
-  const { data: staffMembers, isLoading, error, refetch } = useQuery({
-    queryKey: ['businessStaff', user?.id],
-    queryFn: async () => {
-      if (!user?.id) {
-        throw new Error("Not authenticated or not a business owner");
-      }
-
-      const businessId = user.businessId || user.id;
-      
-      const { data: staffData, error: staffError } = await supabase
+  // Fetch staff members for a business
+  const fetchStaffMembers = async (businessId: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
         .from('business_staff')
         .select('*')
-        .eq('business_id', businessId)
-        .order('created_at', { ascending: false });
-        
-      if (staffError) throw staffError;
-      
-      // Cast to StaffMember[] type with default values for new fields
-      return (staffData || []).map(staff => {
-        // Define default permissions
-        const defaultPermissions = createDefaultPermissions("none");
-        
-        // Get permissions from staff.permissions or use defaults
-        let permissions = defaultPermissions;
-        
-        // If staff has a role, set permissions accordingly
-        if (staff.role === 'co-admin') {
-          permissions = createAdminPermissions();
-        } else if (staff.role === 'admin') {
-          permissions = createAdminPermissions();
-        } else if (staff.permissions && typeof staff.permissions === 'object') {
-          const perms = staff.permissions as Record<string, any>;
-          
-          permissions = {
-            service_permission: getPermissionLevel(perms.service_permission),
-            booking_permission: getPermissionLevel(perms.booking_permission),
-            staff_permission: getPermissionLevel(perms.staff_permission),
-            analytics_permission: getPermissionLevel(perms.analytics_permission)
-          };
-        }
-        
-        return {
-          ...staff,
-          staff_number: staff.staff_number || `TEMP_${staff.id.substring(0, 5)}`,
-          is_service_provider: staff.is_service_provider || false,
-          status: (staff.status as 'active' | 'suspended' | 'deleted') || 'active',
-          profile_image_url: staff.profile_image_url || null,
-          permissions
-        };
-      }) as StaffMember[];
-    },
-    enabled: !!user?.id && (user?.plan === 'business' || !!user?.businessId)
-  });
+        .eq('business_id', businessId);
 
-  const handleStatusChange = async (staff: StaffMember, newStatus: 'active' | 'suspended' | 'deleted') => {
-    try {
-      if (!user?.id) {
-        throw new Error("Not authenticated");
+      if (error) {
+        console.error("Error fetching staff members:", error);
+        setError(error.message);
+        return;
       }
+
+      // Normalize permissions for each staff member
+      const normalizedStaffList = data.map(staff => ({
+        ...staff,
+        permissions: normalizePermissions(staff.permissions)
+      })) as StaffMember[];
+
+      setStaffList(normalizedStaffList);
+    } catch (error) {
+      console.error("Unexpected error fetching staff members:", error);
+      setError("Failed to load staff members.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch staff invitations for a business
+  const fetchInvitations = async (businessId: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('staff_invitations')
+        .select('*')
+        .eq('business_id', businessId);
+
+      if (error) {
+        console.error("Error fetching staff invitations:", error);
+        setError(error.message);
+        return;
+      }
+
+      setInvitations(data as StaffInvitation[]);
+    } catch (error) {
+      console.error("Unexpected error fetching staff invitations:", error);
+      setError("Failed to load staff invitations.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Create a new staff member or invitation
+  const createStaffMember = async (email: string, position: string) => {
+    setLoading(true);
+    setError(null);
+
+    if (!user?.businessId) {
+      setError("Business ID is missing.");
+      setLoading(false);
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Invalid email format.");
+      setLoading(false);
+      return;
+    }
+
+    // Check if the email already exists in staffList
+    const emailExistsInStaff = staffList.some(staff => staff.email === email);
+    if (emailExistsInStaff) {
+      setError("This email is already a staff member.");
+      setLoading(false);
+      return;
+    }
+
+    // Check if the email already exists in invitations
+    const emailExistsInInvitations = invitations.some(invitation => invitation.email === email);
+    if (emailExistsInInvitations) {
+      setError("There is already a pending invitation for this email.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Create permissions object with both new and legacy fields
+      const permissions = createDefaultPermissions("write");
       
+      // Staff can't manage other staff
+      permissions.staff = "none";
+      permissions.staff_permission = "none";
+      
+      const { data, error } = await supabase
+        .from('staff_invitations')
+        .insert([{
+          business_id: user.businessId,
+          email: email,
+          position: position,
+          permissions: permissions
+        }])
+        .select('*')
+        .single();
+
+      if (error) {
+        console.error("Error creating staff invitation:", error);
+        setError(error.message);
+        return;
+      }
+
+      setInvitations(prevInvitations => [...prevInvitations, data as StaffInvitation]);
+      toast({
+        title: "Invitation sent",
+        description: `Invitation sent to ${email} successfully.`,
+      });
+    } catch (error) {
+      console.error("Unexpected error creating staff invitation:", error);
+      setError("Failed to create staff invitation.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update staff member details
+  const updateStaffMember = async (staffId: string, updates: Partial<StaffMember>) => {
+    setLoading(true);
+    setError(null);
+
+    try {
       const { error } = await supabase
         .from('business_staff')
-        .update({ status: newStatus })
-        .eq('id', staff.id)
-        .eq('business_id', user.businessId || user.id);
-        
-      if (error) throw error;
-      
-      let message = '';
-      switch (newStatus) {
-        case 'active':
-          message = `${staff.name} has been reactivated`;
-          break;
-        case 'suspended':
-          message = `${staff.name} has been suspended`;
-          break;
-        case 'deleted':
-          message = `${staff.name} has been deleted`;
-          break;
+        .update(updates)
+        .eq('id', staffId);
+
+      if (error) {
+        console.error("Error updating staff member:", error);
+        setError(error.message);
+        return;
       }
-      
+
+      setStaffList(prevStaffList =>
+        prevStaffList.map(staff => (staff.id === staffId ? { ...staff, ...updates } : staff))
+      );
       toast({
-        title: "Staff status updated",
-        description: message,
+        title: "Staff member updated",
+        description: `${updates.full_name || 'Staff member'} updated successfully.`,
       });
-      
-      refetch();
     } catch (error) {
-      console.error("Error updating staff status:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update staff member status",
-        variant: "destructive"
-      });
+      console.error("Unexpected error updating staff member:", error);
+      setError("Failed to update staff member.");
     } finally {
-      setSuspendingStaff(null);
-      setDeletingStaff(null);
-      setReactivatingStaff(null);
+      setLoading(false);
+    }
+  };
+
+  // Delete a staff member
+  const deleteStaffMember = async (staffId: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase
+        .from('business_staff')
+        .delete()
+        .eq('id', staffId);
+
+      if (error) {
+        console.error("Error deleting staff member:", error);
+        setError(error.message);
+        return;
+      }
+
+      setStaffList(prevStaffList => prevStaffList.filter(staff => staff.id !== staffId));
+      toast({
+        title: "Staff member deleted",
+        description: "Staff member deleted successfully.",
+      });
+    } catch (error) {
+      console.error("Unexpected error deleting staff member:", error);
+      setError("Failed to delete staff member.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Resend invitation
+  const resendInvitation = async (invitationId: string, email: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Logic to resend invitation (e.g., generate a new token and send email)
+      // This is a placeholder, implement your actual resend invitation logic here
+      console.log(`Resending invitation to ${email} (Invitation ID: ${invitationId})`);
+
+      // Simulate success
+      toast({
+        title: "Invitation resent",
+        description: `Invitation resent to ${email} successfully.`,
+      });
+    } catch (error) {
+      console.error("Error resending invitation:", error);
+      setError("Failed to resend invitation.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Revoke invitation
+  const revokeInvitation = async (invitationId: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase
+        .from('staff_invitations')
+        .delete()
+        .eq('id', invitationId);
+
+      if (error) {
+        console.error("Error revoking invitation:", error);
+        setError(error.message);
+        return;
+      }
+
+      setInvitations(prevInvitations => prevInvitations.filter(invitation => invitation.id !== invitationId));
+      toast({
+        title: "Invitation revoked",
+        description: "Invitation revoked successfully.",
+      });
+    } catch (error) {
+      console.error("Unexpected error revoking invitation:", error);
+      setError("Failed to revoke invitation.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return {
-    staffMembers,
-    isLoading,
+    staffList,
+    invitations,
+    loading,
     error,
-    refetch,
-    editingStaff,
-    setEditingStaff,
-    suspendingStaff,
-    setSuspendingStaff,
-    deletingStaff,
-    setDeletingStaff,
-    reactivatingStaff,
-    setReactivatingStaff,
-    createDialogOpen,
-    setCreateDialogOpen,
-    handleStatusChange,
-    isBusinessOwner: user?.plan === 'business'
+    fetchStaffMembers,
+    fetchInvitations,
+    createStaffMember,
+    updateStaffMember,
+    deleteStaffMember,
+    resendInvitation,
+    revokeInvitation
   };
 };

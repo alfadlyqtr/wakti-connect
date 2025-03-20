@@ -1,76 +1,60 @@
 
-import { StaffPermissions, PermissionLevel, BusinessPermissionsState } from "./types";
-import { normalizeStaffPermissions, getDefaultStaffPermissions } from "./staffPermissions";
+import { PermissionLevel, StaffPermissions } from "./types";
+import { normalizePermissions, createDefaultPermissions } from "./staffPermissions";
 
-// Check if a user has the required permission level
-export function meetsPermissionLevel(required: PermissionLevel, actual: PermissionLevel): boolean {
-  const levels: Record<PermissionLevel, number> = {
-    "admin": 3,
-    "write": 2,
-    "read": 1,
-    "none": 0
-  };
+// Check if user has required permission level for the specified resource
+export function hasPermission(
+  permissions: StaffPermissions | null | undefined,
+  resource: keyof StaffPermissions,
+  requiredLevel: PermissionLevel
+): boolean {
+  if (!permissions) return false;
   
-  return levels[actual] >= levels[required];
-}
-
-// Get business permissions based on role and permission levels
-export function getBusinessPermissions(roleInfo: any): BusinessPermissionsState {
-  if (!roleInfo) {
-    return {
-      canCreateServices: false,
-      canEditServices: false,
-      canDeleteServices: false,
-      canAssignStaff: false,
-      canCreateBookings: false,
-      canEditBookings: false,
-      canCancelBookings: false,
-      canManageStaff: false,
-      canViewAnalytics: false
-    };
+  // Normalize permissions to ensure we have all fields
+  const normalizedPermissions = normalizePermissions(permissions);
+  
+  // Get the actual permission level for the resource
+  const userPermissionLevel = normalizedPermissions[resource];
+  
+  // Admin has access to everything
+  if (userPermissionLevel === "admin") return true;
+  
+  // Read permission
+  if (requiredLevel === "read") {
+    return userPermissionLevel === "read" || userPermissionLevel === "write";
   }
   
-  const permissions = normalizeStaffPermissions(roleInfo.permissions || {});
-  const role = roleInfo.role || "staff";
-  
-  // Business owners and admins have full permissions
-  if (role === "business" || role === "admin" || role === "co-admin") {
-    return {
-      canCreateServices: true,
-      canEditServices: true,
-      canDeleteServices: true,
-      canAssignStaff: true,
-      canCreateBookings: true,
-      canEditBookings: true,
-      canCancelBookings: true,
-      canManageStaff: true,
-      canViewAnalytics: true
-    };
+  // Write permission
+  if (requiredLevel === "write") {
+    return userPermissionLevel === "write";
   }
   
-  // For staff members, check specific permissions
-  return {
-    canCreateServices: meetsPermissionLevel("write", permissions.services),
-    canEditServices: meetsPermissionLevel("write", permissions.services),
-    canDeleteServices: meetsPermissionLevel("admin", permissions.services),
-    canAssignStaff: meetsPermissionLevel("write", permissions.services),
-    canCreateBookings: meetsPermissionLevel("write", permissions.bookings),
-    canEditBookings: meetsPermissionLevel("write", permissions.bookings),
-    canCancelBookings: meetsPermissionLevel("write", permissions.bookings),
-    canManageStaff: meetsPermissionLevel("write", permissions.staff),
-    canViewAnalytics: meetsPermissionLevel("read", permissions.analytics)
-  };
+  // None means no permission
+  return false;
 }
 
-// Get user role info - simulate API call for now
-export async function getUserRoleInfo(): Promise<any> {
-  // This would typically be a call to your API or database
-  // For now, return a mock object
-  return {
-    role: "staff",
-    permissions: getDefaultStaffPermissions(),
-    businessId: "some-business-id"
-  };
+// Check if the user is an admin for the specified resource
+export function isAdmin(
+  permissions: StaffPermissions | null | undefined,
+  resource: keyof StaffPermissions
+): boolean {
+  if (!permissions) return false;
+  
+  // Normalize permissions to ensure we have all fields
+  const normalizedPermissions = normalizePermissions(permissions);
+  
+  return normalizedPermissions[resource] === "admin";
 }
 
-export { type PermissionLevel, type StaffPermissions, type BusinessPermissionsState };
+// Check if user has any permissions for the resource
+export function hasAnyPermission(
+  permissions: StaffPermissions | null | undefined,
+  resource: keyof StaffPermissions
+): boolean {
+  if (!permissions) return false;
+  
+  // Normalize permissions to ensure we have all fields
+  const normalizedPermissions = normalizePermissions(permissions);
+  
+  return normalizedPermissions[resource] !== "none";
+}

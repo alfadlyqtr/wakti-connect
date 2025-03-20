@@ -1,85 +1,57 @@
 
-export interface BusinessProfile {
+import { PermissionLevel, StaffPermissions } from "@/services/permissions/types";
+
+export interface StaffMember {
   id: string;
-  business_name: string;
-  display_name?: string;
+  staff_id: string;
+  business_id: string;
   full_name?: string;
-  avatar_url?: string;
-  account_type: string;
-}
-
-export interface BusinessSubscriberWithProfile {
-  id: string;
-  business_id: string;
-  subscriber_id: string;
+  position?: string;
+  email?: string;
+  status: "pending" | "active" | "inactive";
+  permissions: StaffPermissions;
   created_at: string;
-  profile: {
-    display_name: string | null;
-    full_name: string | null;
-    avatar_url: string | null;
-    account_type?: string;
-  };
+  display_name?: string;
+  profile_image_url?: string;
 }
 
-export interface BusinessSubscription {
+export interface StaffInvitation {
   id: string;
   business_id: string;
-  subscriber_id: string;
+  email: string;
+  token: string;
+  status: "pending" | "accepted" | "expired";
   created_at: string;
-  business_profile: BusinessProfile | null;
+  position?: string;
+  permissions?: StaffPermissions;
+  business_name?: string;
 }
 
-// Business Page Types
-export interface BusinessPage {
+export interface WorkSession {
   id: string;
+  staff_id: string;
   business_id: string;
-  page_title: string;
-  page_slug: string;
-  description?: string;
-  logo_url?: string;
-  primary_color?: string;
-  secondary_color?: string;
-  is_published: boolean;
-  chatbot_enabled?: boolean;
-  chatbot_code?: string;
-  created_at?: string;
-  updated_at?: string;
+  start_time: string;
+  end_time?: string;
+  status: "active" | "completed";
+  created_at: string;
+  earnings?: number;
+  notes?: string;
 }
 
-export interface BusinessPageSection {
-  id: string;
-  page_id: string;
-  section_type: SectionType;
-  section_order: number;
-  section_content: any;
-  is_visible: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export type SectionType = 
-  | 'header'
-  | 'about'
-  | 'services'
-  | 'contact'
-  | 'gallery'
-  | 'hours'
-  | 'testimonials';
-
-export interface BusinessSocialLink {
-  id: string;
+export interface NewWorkSession {
   business_id: string;
-  platform: SocialPlatform;
-  url: string;
-  created_at?: string;
+  staff_id: string;
 }
 
-export type SocialPlatform = 
-  | 'facebook'
-  | 'instagram'
-  | 'twitter'
-  | 'linkedin'
-  | 'youtube'
-  | 'tiktok'
-  | 'pinterest'
-  | 'website';
+export interface EndWorkSession {
+  id: string;
+  earnings?: number;
+  notes?: string;
+}
+
+export interface WorkLogSummary {
+  total_hours: number;
+  total_earnings: number;
+  total_sessions: number;
+}
