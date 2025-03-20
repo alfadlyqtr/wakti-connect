@@ -5,17 +5,19 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
-
-interface StaffSignupFormValues {
-  password: string;
-  confirmPassword: string;
-}
+import { StaffFormValues } from "@/hooks/staff/types";
 
 interface StaffSignupFormFieldsProps {
-  form: UseFormReturn<StaffSignupFormValues>; // Changed type to match exact required fields
+  form: UseFormReturn<{
+    password: string;
+    confirmPassword: string;
+  }>; 
   invitation: any;
   isSubmitting: boolean;
-  onSubmit: (values: StaffSignupFormValues) => Promise<void>;
+  onSubmit: (values: {
+    password: string;
+    confirmPassword: string;
+  }) => Promise<void>;
 }
 
 const StaffSignupFormFields: React.FC<StaffSignupFormFieldsProps> = ({ 

@@ -48,3 +48,12 @@ export interface UseStaffInvitationsMutations {
 
 // Combined hook return type
 export interface UseStaffInvitationsReturn extends UseStaffInvitationsQueries, UseStaffInvitationsMutations {}
+
+// Staff form values interface
+export interface StaffFormValues {
+  name: string;
+  email: string;
+  role: string;
+  position?: string;
+  sendInvitation: boolean;
+}

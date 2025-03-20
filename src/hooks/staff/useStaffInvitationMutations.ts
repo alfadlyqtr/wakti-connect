@@ -1,209 +1,232 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { StaffInvitation, CreateInvitationData, VerifyInvitationData, AcceptInvitationData, UseStaffInvitationsMutations } from "./types";
 import { toast } from "@/components/ui/use-toast";
-import { generateRandomToken } from "@/utils/authUtils";
-import { 
-  CreateInvitationData, 
-  StaffInvitation, 
-  VerifyInvitationData, 
-  AcceptInvitationData,
-  UseStaffInvitationsMutations
-} from "./types";
 
 /**
- * Hook for staff invitation mutation operations
+ * Hook for staff invitation mutations (create, resend, cancel, verify, accept)
  */
 export const useStaffInvitationMutations = (): UseStaffInvitationsMutations => {
   const queryClient = useQueryClient();
 
-  // Create a new invitation
+  // Create staff invitation
   const createInvitation = useMutation({
-    mutationFn: async (invitationData: CreateInvitationData) => {
+    mutationFn: async (data: CreateInvitationData): Promise<StaffInvitation> => {
       const { data: session } = await supabase.auth.getSession();
       
       if (!session?.session?.user) {
         throw new Error('Not authenticated');
       }
       
-      // Generate a random token
-      const token = generateRandomToken();
+      // Create a unique token for the invitation
+      const token = crypto.randomUUID();
       
-      // Set expiry to 7 days from now
-      const expiryDate = new Date();
-      expiryDate.setDate(expiryDate.getDate() + 7);
+      // Set expiration date (48 hours from now)
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 48);
       
-      const { data, error } = await supabase
+      // Insert the invitation into the database
+      const { data: invitation, error } = await supabase
         .from('staff_invitations')
         .insert({
           business_id: session.session.user.id,
-          name: invitationData.name,
-          email: invitationData.email,
-          role: invitationData.role,
-          position: invitationData.position || null,
+          name: data.name,
+          email: data.email,
+          role: data.role,
+          position: data.position || null,
           token: token,
           status: 'pending',
-          expires_at: expiryDate.toISOString()
+          expires_at: expiresAt.toISOString()
         })
-        .select()
+        .select('*')
         .single();
-      
+        
       if (error) throw error;
       
-      // TODO: Send email with invitation link
-      // For now, we'll just show a toast with the invitation link
-      toast({
-        title: "Invitation sent",
-        description: `Invitation sent to ${invitationData.email}`
+      // Send invitation email through Supabase Edge Function
+      const { error: emailError } = await supabase.functions.invoke('send-staff-invitation', {
+        body: {
+          invitationId: invitation.id,
+          name: data.name,
+          email: data.email,
+          businessId: session.session.user.id,
+          token: token
+        }
       });
       
-      return data as StaffInvitation;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['staffInvitations'] });
-    }
-  });
-
-  // Verify an invitation token
-  const verifyInvitation = useMutation({
-    mutationFn: async ({ token }: VerifyInvitationData) => {
-      if (!token) {
-        throw new Error('Invalid token');
-      }
-      
-      const { data, error } = await supabase
-        .from('staff_invitations')
-        .select('*')
-        .eq('token', token)
-        .eq('status', 'pending')
-        .single();
-      
-      if (error) throw new Error('Invalid or expired invitation');
-      
-      // Check if the invitation has expired
-      if (new Date(data.expires_at) < new Date()) {
-        throw new Error('Invitation has expired');
-      }
-      
-      return data as StaffInvitation;
-    }
-  });
-
-  // Accept an invitation
-  const acceptInvitation = useMutation({
-    mutationFn: async ({ token, userId }: AcceptInvitationData) => {
-      if (!token || !userId) {
-        throw new Error('Invalid token or user ID');
-      }
-      
-      // Verify the invitation token first
-      const { data: invitation, error: verifyError } = await supabase
-        .from('staff_invitations')
-        .select('*')
-        .eq('token', token)
-        .eq('status', 'pending')
-        .single();
-      
-      if (verifyError) throw new Error('Invalid or expired invitation');
-      
-      // Check if the invitation has expired
-      if (new Date(invitation.expires_at) < new Date()) {
-        throw new Error('Invitation has expired');
-      }
-      
-      // Update the invitation status to accepted
-      const { error: updateError } = await supabase
-        .from('staff_invitations')
-        .update({ 
-          status: 'accepted',
-          updated_at: new Date().toISOString()
-        })
-        .eq('token', token);
-      
-      if (updateError) throw updateError;
-      
-      // Create the business_staff record
-      const { error: staffError } = await supabase
-        .from('business_staff')
-        .insert({
-          business_id: invitation.business_id,
-          staff_id: userId,
-          role: invitation.role,
-          position: invitation.position
+      if (emailError) {
+        console.error("Error sending invitation email:", emailError);
+        toast({
+          title: "Invitation Created",
+          description: "Invitation created, but email could not be sent. You can resend it later.",
+          variant: "destructive"
         });
+      } else {
+        toast({
+          title: "Invitation Sent",
+          description: `Invitation email sent to ${data.email}`
+        });
+      }
       
-      if (staffError) throw staffError;
-      
-      return invitation;
+      return invitation as StaffInvitation;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staffInvitations'] });
-      queryClient.invalidateQueries({ queryKey: ['businessStaff'] });
     }
   });
 
-  // Resend an invitation
+  // Resend staff invitation
   const resendInvitation = useMutation({
-    mutationFn: async (invitationId: string) => {
-      // Get current invitations from query cache
-      const invitations = queryClient.getQueryData<StaffInvitation[]>(['staffInvitations']);
+    mutationFn: async (invitationId: string): Promise<StaffInvitation> => {
+      // Get the invitation
+      const { data: invitation, error: fetchError } = await supabase
+        .from('staff_invitations')
+        .select('*')
+        .eq('id', invitationId)
+        .single();
+        
+      if (fetchError) throw fetchError;
       
-      // Find the invitation in the current data
-      const invitation = invitations?.find(inv => inv.id === invitationId);
+      // Update expiration date
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 48);
       
-      if (!invitation) {
-        throw new Error('Invitation not found');
-      }
-      
-      // Update the expiry date to 7 days from now
-      const expiryDate = new Date();
-      expiryDate.setDate(expiryDate.getDate() + 7);
-      
-      const { data, error } = await supabase
+      // Update invitation
+      const { data: updatedInvitation, error: updateError } = await supabase
         .from('staff_invitations')
         .update({
-          expires_at: expiryDate.toISOString(),
+          expires_at: expiresAt.toISOString(),
           updated_at: new Date().toISOString()
         })
         .eq('id', invitationId)
-        .select()
+        .select('*')
         .single();
+        
+      if (updateError) throw updateError;
       
-      if (error) throw error;
-      
-      // TODO: Send email with invitation link
-      // For now, we'll just show a toast
-      toast({
-        title: "Invitation resent",
-        description: `Invitation resent to ${invitation.email}`
+      // Resend invitation email
+      const { error: emailError } = await supabase.functions.invoke('send-staff-invitation', {
+        body: {
+          invitationId: invitation.id,
+          name: invitation.name,
+          email: invitation.email,
+          businessId: invitation.business_id,
+          token: invitation.token
+        }
       });
       
-      return data as StaffInvitation;
+      if (emailError) {
+        console.error("Error resending invitation email:", emailError);
+        toast({
+          title: "Invitation Updated",
+          description: "Invitation updated, but email could not be sent.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Invitation Resent",
+          description: `Invitation email resent to ${invitation.email}`
+        });
+      }
+      
+      return updatedInvitation as StaffInvitation;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staffInvitations'] });
     }
   });
 
-  // Cancel an invitation
+  // Cancel staff invitation
   const cancelInvitation = useMutation({
-    mutationFn: async (invitationId: string) => {
+    mutationFn: async (invitationId: string): Promise<string> => {
       const { error } = await supabase
         .from('staff_invitations')
         .delete()
         .eq('id', invitationId);
-      
+        
       if (error) throw error;
       
       toast({
-        title: "Invitation cancelled",
-        description: "The invitation has been cancelled."
+        title: "Invitation Cancelled",
+        description: "The staff invitation has been cancelled"
       });
       
       return invitationId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staffInvitations'] });
+    }
+  });
+
+  // Verify staff invitation
+  const verifyInvitation = useMutation({
+    mutationFn: async ({ token }: VerifyInvitationData): Promise<StaffInvitation> => {
+      // Check if token exists and is valid
+      const { data, error } = await supabase
+        .from('staff_invitations')
+        .select('*')
+        .eq('token', token)
+        .eq('status', 'pending')
+        .single();
+        
+      if (error) throw new Error('Invalid or expired invitation link');
+      
+      // Check if invitation has expired
+      const expiresAt = new Date(data.expires_at);
+      const now = new Date();
+      
+      if (now > expiresAt) {
+        throw new Error('This invitation has expired');
+      }
+      
+      return data as StaffInvitation;
+    }
+  });
+
+  // Accept staff invitation
+  const acceptInvitation = useMutation({
+    mutationFn: async ({ token, userId }: AcceptInvitationData): Promise<StaffInvitation> => {
+      // Get the invitation
+      const { data: invitation, error: fetchError } = await supabase
+        .from('staff_invitations')
+        .select('*')
+        .eq('token', token)
+        .eq('status', 'pending')
+        .single();
+        
+      if (fetchError) throw new Error('Invalid invitation');
+      
+      // Update invitation status
+      const { data: updatedInvitation, error: updateError } = await supabase
+        .from('staff_invitations')
+        .update({
+          status: 'accepted',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', invitation.id)
+        .select('*')
+        .single();
+        
+      if (updateError) throw updateError;
+      
+      // Create staff record
+      const { error: staffError } = await supabase
+        .from('business_staff')
+        .insert({
+          business_id: invitation.business_id,
+          staff_id: userId,
+          role: invitation.role,
+          position: invitation.position || 'staff'
+        });
+        
+      if (staffError) throw staffError;
+      
+      // Update staff TypeScript type safety for the returned object
+      return {
+        ...updatedInvitation,
+        status: 'accepted' as const
+      } as StaffInvitation;
     }
   });
 
