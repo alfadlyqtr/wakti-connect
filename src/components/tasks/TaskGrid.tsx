@@ -2,7 +2,6 @@
 import React from "react";
 import TaskCard from "@/components/ui/TaskCard";
 import { Task, TaskTab } from "@/types/task.types";
-import { useIsMobile } from "@/hooks/useResponsive";
 
 interface TaskGridProps {
   tasks: Task[];
@@ -11,17 +10,10 @@ interface TaskGridProps {
 }
 
 const TaskGrid = ({ tasks, userRole, tab }: TaskGridProps) => {
-  const isMobile = useIsMobile();
-  
   if (tasks.length === 0) return null;
   
   return (
-    <div className={cn(
-      "grid gap-4",
-      isMobile 
-        ? "grid-cols-1" 
-        : "md:grid-cols-2 lg:grid-cols-3"
-    )}>
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {tasks.map((task) => (
         <TaskCard
           key={task.id}
@@ -40,8 +32,5 @@ const TaskGrid = ({ tasks, userRole, tab }: TaskGridProps) => {
     </div>
   );
 };
-
-// Add missing import
-const { cn } = require("@/lib/utils");
 
 export default TaskGrid;

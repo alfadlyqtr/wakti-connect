@@ -1,10 +1,11 @@
 
 import React from "react";
-import { Navigate } from "react-router-dom";
+import LandingPage from "@/pages/public/LandingPage";
 
 const Index = () => {
-  // Redirect the root path to landing page
-  return <Navigate to="/" replace />;
+  // Simply render the LandingPage component
+  // The header will be rendered by PublicLayout that wraps this component
+  return <LandingPage />;
 };
 
 export default Index;

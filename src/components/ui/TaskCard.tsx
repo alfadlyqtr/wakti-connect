@@ -10,7 +10,6 @@ import { TaskStatus, TaskPriority } from '@/types/task.types';
 import TaskStatusIcon from '@/components/tasks/TaskStatusIcon';
 import TaskActionsMenu from '@/components/tasks/TaskActionsMenu';
 import TaskBadges from '@/components/tasks/TaskBadges';
-import { useIsMobile } from '@/hooks/useResponsive';
 
 interface TaskCardProps {
   id: string;
@@ -45,15 +44,11 @@ const TaskCard = ({
   isRecurringInstance = false,
   subtasks = []
 }: TaskCardProps) => {
-  const isMobile = useIsMobile();
   const completedSubtasks = subtasks.filter(task => task.is_completed).length;
   const totalSubtasks = subtasks.length;
   
   return (
-    <Card className={cn(
-      "border-border/40 shadow-sm hover:shadow transition-shadow",
-      isMobile ? "active:bg-muted/30 touch-manipulation" : ""
-    )}>
+    <Card className="border-border/40 shadow-sm hover:shadow transition-shadow">
       <CardHeader className="pb-2 flex flex-row items-start justify-between gap-2">
         <div className="space-y-1 w-5/6">
           <div className="flex items-center gap-2 flex-wrap">

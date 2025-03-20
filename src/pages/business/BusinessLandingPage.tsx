@@ -2,6 +2,7 @@
 import React from "react";
 import { useParams, useLocation } from "react-router-dom";
 import BusinessLandingPageComponent from "@/components/business/landing/BusinessLandingPage";
+import Header from "@/components/landing/Header";
 
 const BusinessLandingPage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -19,7 +20,13 @@ const BusinessLandingPage = () => {
     );
   }
   
-  return <BusinessLandingPageComponent />;
+  // Only render the Wakti header if NOT in preview mode
+  return (
+    <>
+      {!isPreviewMode && <Header />}
+      <BusinessLandingPageComponent />
+    </>
+  );
 };
 
 export default BusinessLandingPage;
