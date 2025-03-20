@@ -1,6 +1,6 @@
 
 import { useAIChat } from "./ai/useAIChat";
-import { useAISettings } from "./ai/useAISettings";
+import { useAISettings } from "./ai/settings";
 import { useAIKnowledge } from "./ai/useAIKnowledge";
 import { AIMessage, AISettings, AIKnowledgeUpload } from "@/types/ai-assistant.types";
 
