@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import DashboardShell from "@/components/dashboard/DashboardShell";
 import { Plus, Send, Edit, Clock, Grid3X3, List, Users } from "lucide-react";
 import { EventTab, Event } from "@/types/event.types";
 import { useEvents } from "@/hooks/useEvents";
@@ -133,225 +132,223 @@ const DashboardEvents: React.FC = () => {
   };
 
   return (
-    <DashboardShell>
-      <div className="flex flex-col space-y-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-xl sm:text-2xl font-bold">Events</h1>
-          {!showCreateForm && (
-            <Button onClick={handleCreateOrEditEvent} size={isMobile ? "sm" : "default"}>
-              <Plus className="h-4 w-4 mr-1 sm:mr-2" /> {isMobile ? "Create" : "Create Event"}
-            </Button>
-          )}
+    <div className="flex flex-col space-y-4">
+      <div className="flex justify-between items-center">
+        <h1 className="text-xl sm:text-2xl font-bold">Events</h1>
+        {!showCreateForm && (
+          <Button onClick={handleCreateOrEditEvent} size={isMobile ? "sm" : "default"}>
+            <Plus className="h-4 w-4 mr-1 sm:mr-2" /> {isMobile ? "Create" : "Create Event"}
+          </Button>
+        )}
+      </div>
+
+      {showCreateForm ? (
+        <div className="mb-6">
+          <EventCreationForm 
+            editEvent={editingEvent}
+            onCancel={handleCancelEdit}
+          />
         </div>
-
-        {showCreateForm ? (
-          <div className="mb-6">
-            <EventCreationForm 
-              editEvent={editingEvent}
-              onCancel={handleCancelEdit}
-            />
-          </div>
-        ) : (
-          <>
-            <Tabs value={activeTab} onValueChange={(value) => handleTabChange(value as EventTab)}>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                {/* Responsive TabsList */}
-                <TabsList className="flex w-full sm:w-auto">
-                  <TabsTrigger 
-                    value="my-events" 
-                    className="flex-1 sm:flex-initial px-2 sm:px-3 py-1.5 text-xs sm:text-sm flex items-center"
-                  >
-                    <Send className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" /> 
-                    <span className="truncate">My Events</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="invited-events" 
-                    className="flex-1 sm:flex-initial px-2 sm:px-3 py-1.5 text-xs sm:text-sm flex items-center"
-                  >
-                    <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" /> 
-                    <span className="truncate">Invitations</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="draft-events" 
-                    className="flex-1 sm:flex-initial px-2 sm:px-3 py-1.5 text-xs sm:text-sm flex items-center"
-                  >
-                    <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" /> 
-                    <span className="truncate">Drafts</span>
-                  </TabsTrigger>
-                </TabsList>
-                
-                {/* View type toggle buttons - moved to filter section on mobile */}
-                <div className={`${isMobile ? "hidden" : "flex"} gap-2`}>
-                  <Button 
-                    variant={viewType === 'grid' ? "default" : "outline"} 
-                    size="icon"
-                    onClick={() => setViewType('grid')}
-                  >
-                    <Grid3X3 className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant={viewType === 'list' ? "default" : "outline"} 
-                    size="icon"
-                    onClick={() => setViewType('list')}
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                </div>
+      ) : (
+        <>
+          <Tabs value={activeTab} onValueChange={(value) => handleTabChange(value as EventTab)}>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              {/* Responsive TabsList */}
+              <TabsList className="flex w-full sm:w-auto">
+                <TabsTrigger 
+                  value="my-events" 
+                  className="flex-1 sm:flex-initial px-2 sm:px-3 py-1.5 text-xs sm:text-sm flex items-center"
+                >
+                  <Send className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" /> 
+                  <span className="truncate">My Events</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="invited-events" 
+                  className="flex-1 sm:flex-initial px-2 sm:px-3 py-1.5 text-xs sm:text-sm flex items-center"
+                >
+                  <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" /> 
+                  <span className="truncate">Invitations</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="draft-events" 
+                  className="flex-1 sm:flex-initial px-2 sm:px-3 py-1.5 text-xs sm:text-sm flex items-center"
+                >
+                  <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" /> 
+                  <span className="truncate">Drafts</span>
+                </TabsTrigger>
+              </TabsList>
+              
+              {/* View type toggle buttons - moved to filter section on mobile */}
+              <div className={`${isMobile ? "hidden" : "flex"} gap-2`}>
+                <Button 
+                  variant={viewType === 'grid' ? "default" : "outline"} 
+                  size="icon"
+                  onClick={() => setViewType('grid')}
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant={viewType === 'list' ? "default" : "outline"} 
+                  size="icon"
+                  onClick={() => setViewType('list')}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
               </div>
+            </div>
 
-              {/* Responsive Filter Section */}
-              <div className="my-3 sm:my-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
-                <div className="flex-1">
-                  <Label htmlFor="search" className="sr-only">Search</Label>
-                  <Input
-                    id="search"
-                    placeholder="Search events..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full"
-                  />
-                </div>
-                
-                <div className="flex gap-2 mt-2 sm:mt-0">
-                  {/* View type toggle on mobile only */}
-                  {isMobile && (
-                    <div className="flex gap-1 mr-1">
-                      <Button 
-                        variant={viewType === 'grid' ? "default" : "outline"} 
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => setViewType('grid')}
-                      >
-                        <Grid3X3 className="h-3 w-3" />
-                      </Button>
-                      <Button 
-                        variant={viewType === 'list' ? "default" : "outline"} 
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => setViewType('list')}
-                      >
-                        <List className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
-                  
-                  <div className={isMobile ? "flex-1 min-w-[100px]" : "w-[150px]"}>
-                    <Label htmlFor="status" className="sr-only">Status</Label>
-                    <Select value={filterStatus} onValueChange={setFilterStatus}>
-                      <SelectTrigger id="status" className="h-9">
-                        <SelectValue placeholder="Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="sent">Sent</SelectItem>
-                        <SelectItem value="accepted">Accepted</SelectItem>
-                        <SelectItem value="declined">Declined</SelectItem>
-                        <SelectItem value="recalled">Recalled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className={isMobile ? "flex-1 min-w-[100px]" : "w-[150px]"}>
-                    <DatePicker
-                      date={filterDate}
-                      setDate={setFilterDate}
-                    />
-                  </div>
-                </div>
+            {/* Responsive Filter Section */}
+            <div className="my-3 sm:my-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <div className="flex-1">
+                <Label htmlFor="search" className="sr-only">Search</Label>
+                <Input
+                  id="search"
+                  placeholder="Search events..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full"
+                />
               </div>
-
-              <TabsContent value="my-events" className="mt-2">
-                {isLoading ? (
-                  <div className="text-center py-6 sm:py-10">Loading events...</div>
-                ) : getFilteredTabEvents().length > 0 ? (
-                  <div className={
-                    viewType === 'grid' 
-                      ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4" 
-                      : "space-y-3 sm:space-y-4"
-                  }>
-                    {getFilteredTabEvents().map((event) => (
-                      <EventCard 
-                        key={event.id} 
-                        event={event} 
-                        viewType="sent"
-                        onCardClick={() => handleCardClick(event)}
-                        onDelete={handleDeleteEvent}
-                        onEdit={handleEditEvent}
-                        onViewResponses={handleViewResponses}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 sm:py-10">
-                    <p className="text-muted-foreground text-sm sm:text-base">No events found</p>
+              
+              <div className="flex gap-2 mt-2 sm:mt-0">
+                {/* View type toggle on mobile only */}
+                {isMobile && (
+                  <div className="flex gap-1 mr-1">
                     <Button 
-                      variant="link" 
-                      className="mt-2"
-                      onClick={handleCreateOrEditEvent}
+                      variant={viewType === 'grid' ? "default" : "outline"} 
+                      size="icon"
+                      className="h-9 w-9"
+                      onClick={() => setViewType('grid')}
                     >
-                      Create your first event
+                      <Grid3X3 className="h-3 w-3" />
+                    </Button>
+                    <Button 
+                      variant={viewType === 'list' ? "default" : "outline"} 
+                      size="icon"
+                      className="h-9 w-9"
+                      onClick={() => setViewType('list')}
+                    >
+                      <List className="h-3 w-3" />
                     </Button>
                   </div>
                 )}
-              </TabsContent>
+                
+                <div className={isMobile ? "flex-1 min-w-[100px]" : "w-[150px]"}>
+                  <Label htmlFor="status" className="sr-only">Status</Label>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger id="status" className="h-9">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="sent">Sent</SelectItem>
+                      <SelectItem value="accepted">Accepted</SelectItem>
+                      <SelectItem value="declined">Declined</SelectItem>
+                      <SelectItem value="recalled">Recalled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className={isMobile ? "flex-1 min-w-[100px]" : "w-[150px]"}>
+                  <DatePicker
+                    date={filterDate}
+                    setDate={setFilterDate}
+                  />
+                </div>
+              </div>
+            </div>
 
-              <TabsContent value="invited-events" className="mt-2">
-                {isLoading ? (
-                  <div className="text-center py-6 sm:py-10">Loading invitations...</div>
-                ) : filteredEvents.length > 0 ? (
-                  <div className={
-                    viewType === 'grid' 
-                      ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4" 
-                      : "space-y-3 sm:space-y-4"
-                  }>
-                    {filteredEvents.map((event) => (
-                      <EventCard 
-                        key={event.id} 
-                        event={event} 
-                        viewType="received"
-                        onAccept={handleAcceptInvitation}
-                        onDecline={handleDeclineInvitation}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 sm:py-10">
-                    <p className="text-muted-foreground text-sm sm:text-base">No invitations found</p>
-                  </div>
-                )}
-              </TabsContent>
+            <TabsContent value="my-events" className="mt-2">
+              {isLoading ? (
+                <div className="text-center py-6 sm:py-10">Loading events...</div>
+              ) : getFilteredTabEvents().length > 0 ? (
+                <div className={
+                  viewType === 'grid' 
+                    ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4" 
+                    : "space-y-3 sm:space-y-4"
+                }>
+                  {getFilteredTabEvents().map((event) => (
+                    <EventCard 
+                      key={event.id} 
+                      event={event} 
+                      viewType="sent"
+                      onCardClick={() => handleCardClick(event)}
+                      onDelete={handleDeleteEvent}
+                      onEdit={handleEditEvent}
+                      onViewResponses={handleViewResponses}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 sm:py-10">
+                  <p className="text-muted-foreground text-sm sm:text-base">No events found</p>
+                  <Button 
+                    variant="link" 
+                    className="mt-2"
+                    onClick={handleCreateOrEditEvent}
+                  >
+                    Create your first event
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
 
-              <TabsContent value="draft-events" className="mt-2">
-                {isLoading ? (
-                  <div className="text-center py-6 sm:py-10">Loading drafts...</div>
-                ) : filteredEvents.length > 0 ? (
-                  <div className={
-                    viewType === 'grid' 
-                      ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4" 
-                      : "space-y-3 sm:space-y-4"
-                  }>
-                    {filteredEvents.map((event) => (
-                      <EventCard 
-                        key={event.id} 
-                        event={event} 
-                        viewType="draft"
-                        onCardClick={() => handleCardClick(event)}
-                        onDelete={handleDeleteEvent}
-                        onEdit={handleEditEvent}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 sm:py-10">
-                    <p className="text-muted-foreground text-sm sm:text-base">No draft events found</p>
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </>
-        )}
-      </div>
+            <TabsContent value="invited-events" className="mt-2">
+              {isLoading ? (
+                <div className="text-center py-6 sm:py-10">Loading invitations...</div>
+              ) : filteredEvents.length > 0 ? (
+                <div className={
+                  viewType === 'grid' 
+                    ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4" 
+                    : "space-y-3 sm:space-y-4"
+                }>
+                  {filteredEvents.map((event) => (
+                    <EventCard 
+                      key={event.id} 
+                      event={event} 
+                      viewType="received"
+                      onAccept={handleAcceptInvitation}
+                      onDecline={handleDeclineInvitation}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 sm:py-10">
+                  <p className="text-muted-foreground text-sm sm:text-base">No invitations found</p>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="draft-events" className="mt-2">
+              {isLoading ? (
+                <div className="text-center py-6 sm:py-10">Loading drafts...</div>
+              ) : filteredEvents.length > 0 ? (
+                <div className={
+                  viewType === 'grid' 
+                    ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4" 
+                    : "space-y-3 sm:space-y-4"
+                }>
+                  {filteredEvents.map((event) => (
+                    <EventCard 
+                      key={event.id} 
+                      event={event} 
+                      viewType="draft"
+                      onCardClick={() => handleCardClick(event)}
+                      onDelete={handleDeleteEvent}
+                      onEdit={handleEditEvent}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 sm:py-10">
+                  <p className="text-muted-foreground text-sm sm:text-base">No draft events found</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </>
+      )}
 
       {/* Responses Dialog */}
       <Dialog open={showResponsesDialog} onOpenChange={setShowResponsesDialog}>
@@ -411,7 +408,7 @@ const DashboardEvents: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </DashboardShell>
+    </div>
   );
 };
 
