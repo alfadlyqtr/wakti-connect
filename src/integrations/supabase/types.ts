@@ -1296,6 +1296,18 @@ export type Database = {
           business_logo: string
         }[]
       }
+      get_invitation_details: {
+        Args: {
+          invitation_id: string
+        }
+        Returns: {
+          id: string
+          name: string
+          email: string
+          token: string
+          business_name: string
+        }[]
+      }
       get_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string

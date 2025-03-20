@@ -44,20 +44,14 @@ export const useCreateInvitation = () => {
       if (error) throw error;
       
       try {
-        // Use Supabase Auth's invite user functionality
-        const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(data.email, {
-          data: {
-            invitation_id: invitation.id,
-            business_id: session.session.user.id,
-            role: data.role,
-            invitation_token: token
-          },
-          redirectTo: `${window.location.origin}/auth/staff-signup?token=${token}`
+        // Call the Edge Function to send the invitation email
+        const { error: emailError } = await supabase.functions.invoke('send-staff-invitation', {
+          body: { invitationId: invitation.id }
         });
         
-        if (inviteError) {
-          console.error("Error sending invitation email:", inviteError);
-          throw inviteError;
+        if (emailError) {
+          console.error("Error sending invitation email:", emailError);
+          throw emailError;
         }
         
         toast({
@@ -68,7 +62,7 @@ export const useCreateInvitation = () => {
         console.error("Error with invitation email:", emailError);
         toast({
           title: "Invitation Created",
-          description: "Invitation created, but there was an issue sending the email. The user can still register using the invitation link.",
+          description: "Invitation created, but there was an issue sending the email. You can share the invitation link manually.",
           variant: "destructive"
         });
       }

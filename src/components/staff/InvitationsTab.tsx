@@ -35,8 +35,8 @@ const InvitationsTab = () => {
       <Alert className="mb-4">
         <AlertTitle>About Staff Invitations</AlertTitle>
         <AlertDescription>
-          Invitations are valid for 48 hours. You can extend invitations by clicking "Resend". 
-          Share the invitation link with staff members to let them create an account.
+          Invitations are valid for 48 hours. Staff members will receive an email invitation, but you can also 
+          copy and share the invitation link directly if needed.
         </AlertDescription>
       </Alert>
 
@@ -87,14 +87,14 @@ const InvitationsTab = () => {
                           variant="outline"
                           onClick={() => resendInvitation.mutate(invitation.id)}
                           disabled={resendInvitation.isPending}
-                          title="Extend invitation for another 48 hours"
+                          title="Resend invitation email and extend for another 48 hours"
                         >
                           {resendInvitation.isPending ? (
                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           ) : (
                             <RefreshCw className="h-4 w-4 mr-2" />
                           )}
-                          Extend
+                          Resend
                         </Button>
                         
                         <Button 

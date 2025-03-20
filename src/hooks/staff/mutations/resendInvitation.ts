@@ -38,13 +38,29 @@ export const useResendInvitation = () => {
         
       if (updateError) throw updateError;
       
-      // Note: We're removing the admin invite functionality that was causing the error
-      // Instead, we'll update the invitation and show a message to the user
-      
-      toast({
-        title: "Invitation Updated",
-        description: `Invitation extended for ${invitation.email}. They can still register using the invitation link.`
-      });
+      try {
+        // Call the Edge Function to send the invitation email
+        const { error: emailError } = await supabase.functions.invoke('send-staff-invitation', {
+          body: { invitationId: updatedInvitation.id }
+        });
+        
+        if (emailError) {
+          console.error("Error resending invitation email:", emailError);
+          throw emailError;
+        }
+        
+        toast({
+          title: "Invitation Resent",
+          description: `Invitation email resent to ${invitation.email}`
+        });
+      } catch (emailError) {
+        console.error("Error with invitation email:", emailError);
+        toast({
+          title: "Invitation Extended",
+          description: "Invitation extended, but there was an issue sending the email. You can share the invitation link manually.",
+          variant: "destructive"
+        });
+      }
       
       return updatedInvitation as StaffInvitation;
     },
