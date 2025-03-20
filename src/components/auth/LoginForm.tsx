@@ -30,6 +30,7 @@ const LoginForm = ({ setError }: LoginFormProps) => {
     setIsLoading(true);
 
     try {
+      console.log("Attempting login with:", email);
       await login(email, password);
       
       toast({
@@ -41,13 +42,13 @@ const LoginForm = ({ setError }: LoginFormProps) => {
       navigate('/dashboard');
 
     } catch (error: any) {
+      console.error("Login error:", error);
       setError(error.message || "Failed to log in. Please try again.");
       toast({
         variant: "destructive",
         title: "Login failed",
         description: error.message || "Failed to log in. Please try again.",
       });
-      console.error("Login error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +76,7 @@ const LoginForm = ({ setError }: LoginFormProps) => {
         <div className="flex items-center justify-between">
           <Label htmlFor="password">{t('auth.password')}</Label>
           <Link 
-            to="/forgot-password" 
+            to="/auth/forgot-password" 
             className="text-sm text-muted-foreground hover:text-foreground"
           >
             {t('auth.forgotPassword')}

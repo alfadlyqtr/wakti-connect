@@ -1,12 +1,10 @@
 
-import { User as SupabaseUser } from "@supabase/supabase-js";
-
 export interface User {
   id: string;
-  name?: string;
-  email?: string;
+  email: string;
+  name: string;
   displayName?: string;
-  plan?: "free" | "individual" | "business";
+  plan: 'free' | 'individual' | 'business'; // This maps to account_type in profiles
 }
 
 export interface AuthContextType {

@@ -15,15 +15,28 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // Add a timeout to prevent infinite loading
   useEffect(() => {
+    console.log("ProtectedRoute mounted, auth state:", { isAuthenticated, isLoading });
+    
     const timer = setTimeout(() => {
+      console.log("Auth check timeout reached, forcing completion");
       setIsCheckingAuth(false);
     }, 3000); // 3 seconds timeout
     
-    return () => clearTimeout(timer);
-  }, []);
+    // If auth check completes before timeout, clear the timeout
+    if (!isLoading) {
+      console.log("Auth check completed, clearing timeout");
+      setIsCheckingAuth(false);
+      clearTimeout(timer);
+    }
+    
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [isLoading, isAuthenticated]);
 
   // If auth check is taking too long, redirect to login
   if (isLoading && isCheckingAuth) {
+    console.log("Still checking authentication...");
     return (
       <div className="h-screen flex items-center justify-center">
         <LoadingSpinner />
@@ -31,10 +44,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
+  console.log("Auth check completed, authenticated:", isAuthenticated);
+  
   if (!isAuthenticated) {
+    console.log("Not authenticated, redirecting to login");
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
+  console.log("Authenticated, rendering protected content");
   return <>{children}</>;
 };
 
