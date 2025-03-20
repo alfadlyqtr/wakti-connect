@@ -9,14 +9,21 @@ BEGIN
     id, 
     full_name, 
     account_type,
-    business_name
+    business_name,
+    display_name,
+    created_at,
+    updated_at
   )
   VALUES (
     new.id, 
-    new.raw_user_meta_data->>'full_name', 
-    (new.raw_user_meta_data->>'account_type')::public.account_type,
-    new.raw_user_meta_data->>'business_name'
-  );
+    COALESCE(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)), 
+    COALESCE((new.raw_user_meta_data->>'account_type')::public.account_type, 'free'::public.account_type),
+    new.raw_user_meta_data->>'business_name',
+    new.raw_user_meta_data->>'display_name',
+    now(),
+    now()
+  )
+  ON CONFLICT (id) DO NOTHING;
   RETURN new;
 END;
 $function$

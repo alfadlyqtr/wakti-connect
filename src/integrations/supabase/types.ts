@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      _metadata: {
+        Row: {
+          created_at: string | null
+          id: number
+          table_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          table_name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          table_name?: string
+        }
+        Relationships: []
+      }
+      access_control_manager: {
+        Row: {
+          business_id: string | null
+          created_at: string
+          id: string
+          permissions: Json | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          permissions?: Json | null
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          permissions?: Json | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_assistant_settings: {
         Row: {
           assistant_name: string | null
@@ -95,6 +143,30 @@ export type Database = {
           id?: string
           title?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      auth_logs: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
           user_id?: string
         }
         Relationships: []
@@ -341,30 +413,45 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          is_service_provider: boolean | null
           name: string | null
+          permissions: Json | null
           position: string | null
+          profile_image_url: string | null
           role: string
           staff_id: string
+          staff_number: string | null
+          status: string | null
         }
         Insert: {
           business_id: string
           created_at?: string
           email?: string | null
           id?: string
+          is_service_provider?: boolean | null
           name?: string | null
+          permissions?: Json | null
           position?: string | null
+          profile_image_url?: string | null
           role?: string
           staff_id: string
+          staff_number?: string | null
+          status?: string | null
         }
         Update: {
           business_id?: string
           created_at?: string
           email?: string | null
           id?: string
+          is_service_provider?: boolean | null
           name?: string | null
+          permissions?: Json | null
           position?: string | null
+          profile_image_url?: string | null
           role?: string
           staff_id?: string
+          staff_number?: string | null
+          status?: string | null
         }
         Relationships: []
       }
@@ -671,7 +758,7 @@ export type Database = {
       profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
-          auto_approve_contacts: boolean
+          auto_approve_contacts: boolean | null
           avatar_url: string | null
           business_name: string | null
           created_at: string
@@ -685,7 +772,7 @@ export type Database = {
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["account_type"]
-          auto_approve_contacts?: boolean
+          auto_approve_contacts?: boolean | null
           avatar_url?: string | null
           business_name?: string | null
           created_at?: string
@@ -699,7 +786,7 @@ export type Database = {
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"]
-          auto_approve_contacts?: boolean
+          auto_approve_contacts?: boolean | null
           avatar_url?: string | null
           business_name?: string | null
           created_at?: string
@@ -786,6 +873,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      staff_invitations: {
+        Row: {
+          business_id: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          name: string
+          position: string | null
+          role: string
+          status: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          name: string
+          position?: string | null
+          role?: string
+          status?: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          name?: string
+          position?: string | null
+          role?: string
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       staff_service_assignments: {
         Row: {
@@ -1012,6 +1141,7 @@ export type Database = {
           contact_id: string
           created_at: string | null
           id: string
+          staff_relation_id: string | null
           status: string
           updated_at: string | null
           user_id: string
@@ -1020,6 +1150,7 @@ export type Database = {
           contact_id: string
           created_at?: string | null
           id?: string
+          staff_relation_id?: string | null
           status?: string
           updated_at?: string | null
           user_id: string
@@ -1028,11 +1159,20 @@ export type Database = {
           contact_id?: string
           created_at?: string | null
           id?: string
+          staff_relation_id?: string | null
           status?: string
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_contacts_staff_relation_id_fkey"
+            columns: ["staff_relation_id"]
+            isOneToOne: false
+            referencedRelation: "business_staff"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_monthly_usage: {
         Row: {
@@ -1081,6 +1221,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_table_exists: {
+        Args: {
+          table_name: string
+        }
+        Returns: boolean
+      }
       expire_old_messages: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1094,6 +1240,38 @@ export type Database = {
       get_auth_user_account_type: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      is_business_owner: {
+        Args: {
+          business_id: string
+        }
+        Returns: boolean
+      }
+      is_business_owner_or_staff: {
+        Args: {
+          business_uuid: string
+        }
+        Returns: boolean
+      }
+      is_own_staff_record: {
+        Args: {
+          record_id: string
+        }
+        Returns: boolean
+      }
+      is_staff_member: {
+        Args: {
+          business_id: string
+        }
+        Returns: boolean
+      }
+      populate_access_control: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       user_owns_service: {
         Args: {
