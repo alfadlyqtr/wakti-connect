@@ -11,11 +11,14 @@ const staffSignupSchema = z.object({
   confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-// Define the type for the form values
-type FormValues = z.infer<typeof staffSignupSchema>;
+// Define the type for the form values with optional fields to match useStaffSignup hook
+export type FormValues = z.infer<typeof staffSignupSchema>;
 
 interface StaffSignupFormFieldsProps {
-  form: UseFormReturn<FormValues>;
+  form: UseFormReturn<{ 
+    password?: string; 
+    confirmPassword?: string;
+  }, any, undefined>;
 }
 
 export function StaffSignupFormFields({ form }: StaffSignupFormFieldsProps) {
@@ -51,3 +54,5 @@ export function StaffSignupFormFields({ form }: StaffSignupFormFieldsProps) {
     </div>
   );
 }
+
+export default StaffSignupFormFields;

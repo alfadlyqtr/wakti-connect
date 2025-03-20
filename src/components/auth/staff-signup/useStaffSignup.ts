@@ -1,12 +1,10 @@
 
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useStaffInvitations } from "@/hooks/staff/useStaffInvitations";
+import { z } from "zod";
 
 // Form validation schema
 const staffSignupSchema = z.object({
@@ -22,9 +20,7 @@ const staffSignupSchema = z.object({
 
 export type StaffSignupFormValues = z.infer<typeof staffSignupSchema>;
 
-export const useStaffSignup = () => {
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token") || "";
+export const useStaffSignup = (token?: string) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { verifyInvitation, acceptInvitation } = useStaffInvitations();
@@ -32,14 +28,6 @@ export const useStaffSignup = () => {
   const [invitation, setInvitation] = useState<any>(null);
   const [status, setStatus] = useState<"loading" | "valid" | "invalid">("loading");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const form = useForm<StaffSignupFormValues>({
-    resolver: zodResolver(staffSignupSchema),
-    defaultValues: {
-      password: "",
-      confirmPassword: "",
-    },
-  });
   
   // Verify the invitation token
   useEffect(() => {
@@ -63,7 +51,7 @@ export const useStaffSignup = () => {
   }, [token, verifyInvitation]);
   
   const onSubmit = async (values: StaffSignupFormValues) => {
-    if (!invitation) return;
+    if (!invitation || !token) return;
     
     setIsSubmitting(true);
     
@@ -112,7 +100,6 @@ export const useStaffSignup = () => {
   };
 
   return {
-    form,
     invitation,
     status,
     isSubmitting,

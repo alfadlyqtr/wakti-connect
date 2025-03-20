@@ -6,8 +6,8 @@ import { z } from "zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { useParams } from "react-router-dom";
-import { StaffSignupFormFields } from "./StaffSignupFormFields";
-import { StaffInvitationVerification } from "./StaffInvitationVerification";
+import StaffSignupFormFields from "./StaffSignupFormFields";
+import StaffInvitationVerification from "./StaffInvitationVerification";
 import { useStaffSignup } from "./useStaffSignup";
 
 // Define schema for staff signup
@@ -23,7 +23,12 @@ type FormValues = z.infer<typeof staffSignupSchema>;
 
 export function StaffSignupForm() {
   const { token } = useParams<{ token: string }>();
-  const { invitation, isLoading, error, handleSignup } = useStaffSignup(token);
+  const { 
+    invitation, 
+    status, 
+    isSubmitting, 
+    onSubmit 
+  } = useStaffSignup(token);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(staffSignupSchema),
@@ -34,20 +39,22 @@ export function StaffSignupForm() {
   });
   
   // Handle form submission
-  const onSubmit = (values: FormValues) => {
-    if (invitation && token) {
-      handleSignup(values.password, token, invitation);
-    }
+  const handleSubmit = (values: FormValues) => {
+    return onSubmit(values);
   };
 
-  // If still loading or there's an error, show the verification component
-  if (isLoading || error || !invitation) {
-    return <StaffInvitationVerification isLoading={isLoading} error={error} invitation={invitation} />;
+  // If loading or error, show the verification component
+  if (status === "loading" || status === "invalid" || !invitation) {
+    return <StaffInvitationVerification 
+      isLoading={status === "loading"} 
+      error={status === "invalid" ? "Invalid invitation token" : null} 
+      invitation={invitation} 
+    />;
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="space-y-4">
           <h2 className="text-2xl font-bold">Create Your Account</h2>
           <p className="text-muted-foreground">
@@ -58,8 +65,8 @@ export function StaffSignupForm() {
 
         <StaffSignupFormFields form={form} />
 
-        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? "Creating Account..." : "Create Account"}
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? "Creating Account..." : "Create Account"}
         </Button>
       </form>
     </Form>

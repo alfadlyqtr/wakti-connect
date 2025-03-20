@@ -7,18 +7,20 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 interface StaffInvitationVerificationProps {
-  status: "loading" | "valid" | "invalid";
+  isLoading: boolean;
+  error: string | null;
   invitation: any | null;
 }
 
 const StaffInvitationVerification: React.FC<StaffInvitationVerificationProps> = ({ 
-  status, 
+  isLoading, 
+  error, 
   invitation 
 }) => {
   const navigate = useNavigate();
 
   // Loading state
-  if (status === "loading") {
+  if (isLoading) {
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardContent className="pt-6">
@@ -32,7 +34,7 @@ const StaffInvitationVerification: React.FC<StaffInvitationVerificationProps> = 
   }
   
   // Invalid token state
-  if (status === "invalid" || !invitation) {
+  if (error || !invitation) {
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
@@ -46,7 +48,7 @@ const StaffInvitationVerification: React.FC<StaffInvitationVerificationProps> = 
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
             <AlertDescription>
-              The staff invitation link you used is invalid or has expired. Please contact your business administrator for a new invitation.
+              {error || "The staff invitation link you used is invalid or has expired. Please contact your business administrator for a new invitation."}
             </AlertDescription>
           </Alert>
         </CardContent>
