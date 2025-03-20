@@ -1,25 +1,39 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, RefreshCw, Trash2, Loader2, Mail } from "lucide-react";
+import { Copy, RefreshCw, Trash2, Loader2, Mail, ExternalLink } from "lucide-react";
 import { useStaffInvitations } from "@/hooks/useStaffInvitations";
 import { formatInvitationDate, isInvitationExpired } from "@/utils/authUtils";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const InvitationsTab = () => {
   const { invitations, isLoading, resendInvitation, cancelInvitation } = useStaffInvitations();
-  const { toast } = useToast();
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   
-  const copyInviteLink = (token: string) => {
+  const copyInviteLink = (token: string, id: string) => {
     const inviteUrl = `${window.location.origin}/auth/staff-signup?token=${token}`;
     navigator.clipboard.writeText(inviteUrl);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+    
     toast({
       title: "Link copied",
       description: "Invitation link copied to clipboard"
     });
+  };
+  
+  const openInviteLink = (token: string) => {
+    const inviteUrl = `${window.location.origin}/auth/staff-signup?token=${token}`;
+    window.open(inviteUrl, '_blank');
   };
   
   if (isLoading) {
@@ -35,8 +49,14 @@ const InvitationsTab = () => {
       <Alert className="mb-4">
         <AlertTitle>About Staff Invitations</AlertTitle>
         <AlertDescription>
-          Invitations are valid for 48 hours. Staff members will receive an email invitation, but you can also 
-          copy and share the invitation link directly if needed.
+          <p className="mb-2">
+            Invitations are valid for 48 hours. Share the invitation link with your staff members 
+            by copying it or opening it directly in a new tab.
+          </p>
+          <p>
+            <strong>Note:</strong> We've simplified the process to use invitation links only, 
+            without sending emails directly from the system.
+          </p>
         </AlertDescription>
       </Alert>
 
@@ -73,43 +93,97 @@ const InvitationsTab = () => {
                     
                     {isPending && (
                       <div className="flex flex-wrap items-center gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => copyInviteLink(invitation.token)}
-                        >
-                          <Copy className="h-4 w-4 mr-2" />
-                          Copy Link
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                variant="default"
+                                onClick={() => copyInviteLink(invitation.token, invitation.id)}
+                                className="w-full sm:w-auto"
+                              >
+                                {copiedId === invitation.id ? (
+                                  <>
+                                    <span className="text-green-100">✓</span>
+                                    <span className="ml-1">Copied!</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="h-4 w-4 mr-2" />
+                                    Copy Link
+                                  </>
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Copy invitation link to clipboard
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                         
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => resendInvitation.mutate(invitation.id)}
-                          disabled={resendInvitation.isPending}
-                          title="Resend invitation email and extend for another 48 hours"
-                        >
-                          {resendInvitation.isPending ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          ) : (
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                          )}
-                          Resend
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => openInviteLink(invitation.token)}
+                              >
+                                <ExternalLink className="h-4 w-4 mr-2" />
+                                Open
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Open invitation link in new tab
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                         
-                        <Button 
-                          size="sm" 
-                          variant="destructive"
-                          onClick={() => cancelInvitation.mutate(invitation.id)}
-                          disabled={cancelInvitation.isPending}
-                        >
-                          {cancelInvitation.isPending ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4 mr-2" />
-                          )}
-                          Cancel
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => resendInvitation.mutate(invitation.id)}
+                                disabled={resendInvitation.isPending}
+                              >
+                                {resendInvitation.isPending ? (
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="h-4 w-4 mr-2" />
+                                )}
+                                Extend
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Extend invitation for another 48 hours
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                variant="destructive"
+                                onClick={() => cancelInvitation.mutate(invitation.id)}
+                                disabled={cancelInvitation.isPending}
+                              >
+                                {cancelInvitation.isPending ? (
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                )}
+                                Cancel
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Cancel this invitation
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     )}
                   </div>

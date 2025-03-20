@@ -5,7 +5,8 @@ import { StaffInvitation } from "../types";
 import { toast } from "@/components/ui/use-toast";
 
 /**
- * Hook for resending staff invitations
+ * Hook for extending staff invitations (previously "resending")
+ * Now just extends the expiration date without sending emails
  */
 export const useResendInvitation = () => {
   const queryClient = useQueryClient();
@@ -38,29 +39,10 @@ export const useResendInvitation = () => {
         
       if (updateError) throw updateError;
       
-      try {
-        // Call the Edge Function to send the invitation email
-        const { error: emailError } = await supabase.functions.invoke('send-staff-invitation', {
-          body: { invitationId: updatedInvitation.id }
-        });
-        
-        if (emailError) {
-          console.error("Error resending invitation email:", emailError);
-          throw emailError;
-        }
-        
-        toast({
-          title: "Invitation Resent",
-          description: `Invitation email resent to ${invitation.email}`
-        });
-      } catch (emailError) {
-        console.error("Error with invitation email:", emailError);
-        toast({
-          title: "Invitation Extended",
-          description: "Invitation extended, but there was an issue sending the email. You can share the invitation link manually.",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Invitation Extended",
+        description: `Invitation for ${invitation.email} is now valid for another 48 hours`
+      });
       
       return updatedInvitation as StaffInvitation;
     },

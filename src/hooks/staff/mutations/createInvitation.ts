@@ -5,7 +5,7 @@ import { StaffInvitation, CreateInvitationData } from "../types";
 import { toast } from "@/components/ui/use-toast";
 
 /**
- * Hook for creating staff invitations
+ * Hook for creating staff invitations with link-only approach
  */
 export const useCreateInvitation = () => {
   const queryClient = useQueryClient();
@@ -43,29 +43,11 @@ export const useCreateInvitation = () => {
         
       if (error) throw error;
       
-      try {
-        // Call the Edge Function to send the invitation email
-        const { error: emailError } = await supabase.functions.invoke('send-staff-invitation', {
-          body: { invitationId: invitation.id }
-        });
-        
-        if (emailError) {
-          console.error("Error sending invitation email:", emailError);
-          throw emailError;
-        }
-        
-        toast({
-          title: "Invitation Sent",
-          description: `Invitation email sent to ${data.email}`
-        });
-      } catch (emailError) {
-        console.error("Error with invitation email:", emailError);
-        toast({
-          title: "Invitation Created",
-          description: "Invitation created, but there was an issue sending the email. You can share the invitation link manually.",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Invitation Created",
+        description: "Copy and share the invitation link with your staff member",
+        variant: "success"
+      });
       
       return invitation as StaffInvitation;
     },
