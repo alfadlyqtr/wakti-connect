@@ -12,7 +12,9 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   login: async () => { throw new Error("Not implemented"); },
   logout: async () => { throw new Error("Not implemented"); },
-  register: async () => { throw new Error("Not implemented"); },
+  register: async (email: string, password: string, name: string, accountType?: string, businessName?: string) => { 
+    throw new Error("Not implemented"); 
+  },
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
