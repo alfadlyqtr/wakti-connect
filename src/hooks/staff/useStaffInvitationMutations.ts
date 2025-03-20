@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { StaffInvitation, CreateInvitationData, VerifyInvitationData, AcceptInvitationData, UseStaffInvitationsMutations } from "./types";
@@ -44,28 +43,33 @@ export const useStaffInvitationMutations = (): UseStaffInvitationsMutations => {
         
       if (error) throw error;
       
-      // Send invitation email through Supabase Edge Function
-      const { error: emailError } = await supabase.functions.invoke('send-staff-invitation', {
-        body: {
-          invitationId: invitation.id,
-          name: data.name,
-          email: data.email,
-          businessId: session.session.user.id,
-          token: token
-        }
-      });
-      
-      if (emailError) {
-        console.error("Error sending invitation email:", emailError);
-        toast({
-          title: "Invitation Created",
-          description: "Invitation created, but email could not be sent. You can resend it later.",
-          variant: "destructive"
+      try {
+        // Use Supabase Auth's invite user functionality
+        const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(data.email, {
+          data: {
+            invitation_id: invitation.id,
+            business_id: session.session.user.id,
+            role: data.role,
+            invitation_token: token
+          },
+          redirectTo: `${window.location.origin}/auth/staff-signup?token=${token}`
         });
-      } else {
+        
+        if (inviteError) {
+          console.error("Error sending invitation email:", inviteError);
+          throw inviteError;
+        }
+        
         toast({
           title: "Invitation Sent",
           description: `Invitation email sent to ${data.email}`
+        });
+      } catch (emailError) {
+        console.error("Error with invitation email:", emailError);
+        toast({
+          title: "Invitation Created",
+          description: "Invitation created, but there was an issue sending the email. The user can still register using the invitation link.",
+          variant: "destructive"
         });
       }
       
@@ -105,28 +109,33 @@ export const useStaffInvitationMutations = (): UseStaffInvitationsMutations => {
         
       if (updateError) throw updateError;
       
-      // Resend invitation email
-      const { error: emailError } = await supabase.functions.invoke('send-staff-invitation', {
-        body: {
-          invitationId: invitation.id,
-          name: invitation.name,
-          email: invitation.email,
-          businessId: invitation.business_id,
-          token: invitation.token
-        }
-      });
-      
-      if (emailError) {
-        console.error("Error resending invitation email:", emailError);
-        toast({
-          title: "Invitation Updated",
-          description: "Invitation updated, but email could not be sent.",
-          variant: "destructive"
+      try {
+        // Use Supabase Auth's invite user functionality for resending
+        const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(invitation.email, {
+          data: {
+            invitation_id: invitation.id,
+            business_id: invitation.business_id,
+            role: invitation.role,
+            invitation_token: invitation.token
+          },
+          redirectTo: `${window.location.origin}/auth/staff-signup?token=${invitation.token}`
         });
-      } else {
+        
+        if (inviteError) {
+          console.error("Error resending invitation email:", inviteError);
+          throw inviteError;
+        }
+        
         toast({
           title: "Invitation Resent",
           description: `Invitation email resent to ${invitation.email}`
+        });
+      } catch (emailError) {
+        console.error("Error with invitation email:", emailError);
+        toast({
+          title: "Invitation Updated",
+          description: "Invitation updated, but there was an issue resending the email. The user can still register using the invitation link.",
+          variant: "destructive"
         });
       }
       

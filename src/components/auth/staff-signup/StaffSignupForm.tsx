@@ -1,34 +1,33 @@
 
-import React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import React, { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { useParams } from "react-router-dom";
+import { useStaffSignup } from "./useStaffSignup";
 import StaffSignupFormFields from "./StaffSignupFormFields";
 import StaffInvitationVerification from "./StaffInvitationVerification";
-import { useStaffSignup } from "./useStaffSignup";
 
-// Define schema for staff signup
+// Define the schema for the form
 const staffSignupSchema = z.object({
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string(),
 }).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
+  message: "Passwords don't match",
   path: ["confirmPassword"],
 });
 
 type FormValues = z.infer<typeof staffSignupSchema>;
 
-export function StaffSignupForm() {
-  const { token } = useParams<{ token: string }>();
-  const { 
-    invitation, 
-    status, 
-    isSubmitting, 
-    onSubmit 
-  } = useStaffSignup(token);
+const StaffSignupForm: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token") || undefined;
+  const { invitation, status, isSubmitting, onSubmit } = useStaffSignup(token);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(staffSignupSchema),
@@ -38,39 +37,46 @@ export function StaffSignupForm() {
     },
   });
   
-  // Handle form submission
-  const handleSubmit = (values: FormValues) => {
-    return onSubmit(values);
-  };
-
-  // If loading or error, show the verification component
-  if (status === "loading" || status === "invalid" || !invitation) {
-    return <StaffInvitationVerification 
-      isLoading={status === "loading"} 
-      error={status === "invalid" ? "Invalid invitation token" : null} 
-      invitation={invitation} 
-    />;
+  // If we're loading or the invitation is invalid, show the verification component
+  if (status !== "valid") {
+    return (
+      <StaffInvitationVerification 
+        isLoading={status === "loading"}
+        error={status === "invalid" ? "Invalid or expired invitation" : null}
+        invitation={invitation}
+      />
+    );
   }
-
+  
+  const handleSubmit = (values: FormValues) => {
+    onSubmit(values);
+  };
+  
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Create Your Account</h2>
-          <p className="text-muted-foreground">
-            You've been invited to join {invitation.name}'s team as a {invitation.role}.
-            Set up your password to accept the invitation.
-          </p>
-        </div>
-
-        <StaffSignupFormFields form={form} />
-
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Creating Account..." : "Create Account"}
-        </Button>
-      </form>
-    </Form>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Create Your Staff Account</CardTitle>
+        <CardDescription>
+          Set your password to complete your account setup for {invitation?.name}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <StaffSignupFormFields form={form} />
+            
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Creating Account..." : "Create Account"}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
-}
+};
 
 export default StaffSignupForm;
