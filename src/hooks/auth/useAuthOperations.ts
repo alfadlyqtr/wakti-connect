@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -99,7 +98,7 @@ export function useAuthOperations(
     }
   };
 
-  const register = async (email: string, password: string, name: string, accountType: string = 'free', businessName?: string) => {
+  const register = async (email: string, password: string, name: string) => {
     try {
       console.log("Attempting registration for:", email);
       setIsLoading(true);
@@ -107,13 +106,7 @@ export function useAuthOperations(
       // Prepare metadata with account type included
       const metadata: any = {
         full_name: name,
-        account_type: accountType
       };
-      
-      // Add business name if provided and account type is business
-      if (businessName && accountType === 'business') {
-        metadata.business_name = businessName;
-      }
       
       // Set display name to full name by default
       metadata.display_name = name;
