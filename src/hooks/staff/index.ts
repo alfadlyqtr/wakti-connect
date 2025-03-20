@@ -3,4 +3,5 @@
 export * from './useStaffInvitations';
 export * from './useStaffInvitationMutations';
 export * from './useStaffInvitationQueries';
+export * from './useCreateStaff';
 export * from './types';

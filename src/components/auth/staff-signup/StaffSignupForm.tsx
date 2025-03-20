@@ -1,43 +1,69 @@
 
 import React from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Form } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { useParams } from "react-router-dom";
+import { StaffSignupFormFields } from "./StaffSignupFormFields";
+import { StaffInvitationVerification } from "./StaffInvitationVerification";
 import { useStaffSignup } from "./useStaffSignup";
-import { StaffInvitationVerification } from "./index";
-import StaffSignupFormFields from "./StaffSignupFormFields";
 
-const StaffSignupForm = () => {
-  const { form, invitation, status, isSubmitting, onSubmit } = useStaffSignup();
+// Define schema for staff signup
+const staffSignupSchema = z.object({
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+type FormValues = z.infer<typeof staffSignupSchema>;
+
+export function StaffSignupForm() {
+  const { token } = useParams<{ token: string }>();
+  const { invitation, isLoading, error, handleSignup } = useStaffSignup(token);
   
-  // Show verification UI while checking invitation status
-  if (status === "loading" || status === "invalid") {
-    return <StaffInvitationVerification status={status} invitation={invitation} />;
+  const form = useForm<FormValues>({
+    resolver: zodResolver(staffSignupSchema),
+    defaultValues: {
+      password: "",
+      confirmPassword: "",
+    },
+  });
+  
+  // Handle form submission
+  const onSubmit = (values: FormValues) => {
+    if (invitation && token) {
+      handleSignup(values.password, token, invitation);
+    }
+  };
+
+  // If still loading or there's an error, show the verification component
+  if (isLoading || error || !invitation) {
+    return <StaffInvitationVerification isLoading={isLoading} error={error} invitation={invitation} />;
   }
-  
-  // Valid token, show signup form
+
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle>Staff Signup</CardTitle>
-          <Badge className="bg-green-100 text-green-700 border-green-200">
-            Invitation Valid
-          </Badge>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold">Create Your Account</h2>
+          <p className="text-muted-foreground">
+            You've been invited to join {invitation.name}'s team as a {invitation.role}.
+            Set up your password to accept the invitation.
+          </p>
         </div>
-        <CardDescription>
-          Complete your staff account registration
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <StaffSignupFormFields 
-          form={form} 
-          invitation={invitation} 
-          isSubmitting={isSubmitting} 
-          onSubmit={onSubmit} 
-        />
-      </CardContent>
-    </Card>
+
+        <StaffSignupFormFields form={form} />
+
+        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting ? "Creating Account..." : "Create Account"}
+        </Button>
+      </form>
+    </Form>
   );
-};
+}
 
 export default StaffSignupForm;
