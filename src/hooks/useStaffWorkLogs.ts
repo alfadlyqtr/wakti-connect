@@ -12,12 +12,14 @@ export interface StaffWorkLog {
   status: 'active' | 'completed' | 'cancelled';
   created_at: string;
   updated_at: string;
+  job_cards_count?: number;
 }
 
 export interface StaffWithSessions {
   id: string;
   name: string;
   role: string;
+  email: string; // Added email property to match StaffWithSessions from useStaffData
   sessions: StaffWorkLog[];
 }
 
@@ -36,7 +38,7 @@ export const useStaffWorkLogs = () => {
         // Fetch all work logs
         const { data: logsData, error: logsError } = await supabase
           .from('staff_work_logs')
-          .select('*')
+          .select('*, job_cards(count)')
           .order('start_time', { ascending: false });
           
         if (logsError) throw logsError;
@@ -49,8 +51,10 @@ export const useStaffWorkLogs = () => {
             id: staff.id,
             name: staff.name || 'Unnamed Staff',
             role: staff.role || 'staff',
+            email: staff.email || '', // Ensure email is included
             sessions: staffLogs.map(log => ({
               ...log,
+              job_cards_count: log.job_cards?.count || 0, // Process the job_cards count
               status: (log.status as 'active' | 'completed' | 'cancelled') || 'active'
             }))
           };

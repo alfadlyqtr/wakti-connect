@@ -14,7 +14,7 @@ interface WorkSession {
   notes: string | null;
   status: 'active' | 'completed' | 'cancelled';
   created_at: string;
-  job_cards_count: number;
+  job_cards_count?: number;
 }
 
 interface WorkHistoryProps {
@@ -34,6 +34,7 @@ const WorkHistory: React.FC<WorkHistoryProps> = ({ staffRelationId }) => {
         
       if (error) throw error;
       
+      // Correctly process the job_cards count from Supabase
       return data.map(session => ({
         ...session,
         job_cards_count: session.job_cards?.count || 0
@@ -101,7 +102,7 @@ const WorkHistory: React.FC<WorkHistoryProps> = ({ staffRelationId }) => {
             
             <div className="flex items-center gap-1">
               <FileText className="h-4 w-4 text-muted-foreground" />
-              <span>{session.job_cards_count} job cards</span>
+              <span>{session.job_cards_count || 0} job cards</span>
             </div>
             
             {session.notes && (
