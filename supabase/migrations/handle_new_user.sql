@@ -23,7 +23,12 @@ BEGIN
     now(),
     now()
   )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO UPDATE SET
+    full_name = EXCLUDED.full_name,
+    account_type = EXCLUDED.account_type,
+    business_name = EXCLUDED.business_name,
+    display_name = EXCLUDED.display_name,
+    updated_at = now();
   RETURN new;
 END;
 $function$

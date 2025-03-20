@@ -28,10 +28,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Initialize auth state from Supabase
   useEffect(() => {
-    const loadUser = async () => {
+    const initializeAuth = async () => {
       try {
         setIsLoading(true);
         
+        // First set up the auth listener to catch any auth changes
+        const { data: authListener } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            console.log("Auth state changed:", event, session?.user?.id);
+            
+            if (event === 'SIGNED_IN' && session) {
+              try {
+                // Get user profile data
+                const { data: profile, error: profileError } = await supabase
+                  .from("profiles")
+                  .select("*")
+                  .eq("id", session.user.id)
+                  .single();
+                  
+                if (profileError && profileError.code !== "PGRST116") {
+                  console.error("Error fetching profile:", profileError);
+                }
+                
+                setUser({
+                  id: session.user.id,
+                  email: session.user.email,
+                  name: profile?.full_name || session.user.email?.split('@')[0],
+                  displayName: profile?.display_name || profile?.full_name,
+                  plan: profile?.account_type || "free"
+                });
+              } catch (error) {
+                console.error("Error processing sign in:", error);
+              }
+            } else if (event === 'SIGNED_OUT') {
+              setUser(null);
+            }
+          }
+        );
+        
+        // Then check for existing session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -40,69 +75,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         if (session?.user) {
-          // Get user profile data
-          const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
+          try {
+            // Get user profile data
+            const { data: profile, error: profileError } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", session.user.id)
+              .single();
+              
+            if (profileError && profileError.code !== "PGRST116") {
+              console.error("Error fetching profile:", profileError);
+            }
             
-          if (profileError && profileError.code !== "PGRST116") {
-            console.error("Error fetching profile:", profileError);
+            setUser({
+              id: session.user.id,
+              email: session.user.email,
+              name: profile?.full_name || session.user.email?.split('@')[0],
+              displayName: profile?.display_name || profile?.full_name,
+              plan: profile?.account_type || "free"
+            });
+          } catch (error) {
+            console.error("Error processing existing session:", error);
           }
-          
-          setUser({
-            id: session.user.id,
-            email: session.user.email,
-            name: profile?.full_name || session.user.email?.split('@')[0],
-            displayName: profile?.display_name || profile?.full_name,
-            plan: profile?.account_type || "free"
-          });
         }
+        
+        return () => {
+          authListener?.subscription.unsubscribe();
+        };
       } catch (error) {
-        console.error("Error loading user:", error);
+        console.error("Error initializing auth:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadUser();
-    
-    // Set up auth state listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          // Get user profile data
-          const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", session.user.id)
-            .single();
-            
-          if (profileError && profileError.code !== "PGRST116") {
-            console.error("Error fetching profile:", profileError);
-          }
-          
-          setUser({
-            id: session.user.id,
-            email: session.user.email,
-            name: profile?.full_name || session.user.email?.split('@')[0],
-            displayName: profile?.display_name || profile?.full_name,
-            plan: profile?.account_type || "free"
-          });
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-        }
-      }
-    );
-
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
+    initializeAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
+      setIsLoading(true);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -119,11 +131,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         variant: "destructive",
       });
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const logout = async () => {
     try {
+      setIsLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
@@ -135,11 +150,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: error.message || "An error occurred during logout",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const register = async (email: string, password: string, name: string) => {
     try {
+      setIsLoading(true);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -166,6 +184,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         variant: "destructive",
       });
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
