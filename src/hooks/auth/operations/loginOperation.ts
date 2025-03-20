@@ -16,26 +16,44 @@ export async function loginOperation(
     console.log("Attempting login for:", email);
     setIsLoading(true);
     
-    // First check if Supabase is accessible
+    // First verify Supabase connection and schema
     try {
-      await supabase.from('_metadata').select('*').limit(1);
-    } catch (connectionError) {
-      console.error("Supabase connection test failed:", connectionError);
-      throw new Error("Unable to connect to authentication service. Please check your internet connection and try again.");
-    }
-    
-    // Check if the profiles table exists to catch errors early
-    try {
-      // Simple test query to check if the profiles table exists
-      await supabase.from('profiles').select('id').limit(1);
-    } catch (profilesError: any) {
-      console.error("Profiles table check failed:", profilesError);
-      
-      if (profilesError.message && profilesError.message.includes("does not exist")) {
-        throw new Error("The application is not properly initialized. Please contact the administrator.");
+      // Try to access a simple public table first
+      const { data: metadataCheck, error: metadataError } = await supabase
+        .from('_metadata')
+        .select('*')
+        .limit(1);
+        
+      if (metadataError) {
+        console.warn("Metadata table check failed, might be first run:", metadataError);
+        // Continue as this table might not exist yet
       }
+      
+      // Now check if the profiles table exists
+      const { error: profilesError } = await supabase
+        .from('profiles')
+        .select('count(*)', { count: 'exact', head: true });
+        
+      if (profilesError) {
+        // Log the specific error
+        console.error("Profiles table check failed:", profilesError);
+        
+        if (profilesError.message && 
+            (profilesError.message.includes("does not exist") || 
+             profilesError.message.includes("relation") || 
+             profilesError.message.includes("undefined"))) {
+          // Critical database schema issue
+          throw new Error(
+            "Database schema not properly initialized. Please contact the administrator or ensure migrations have been run."
+          );
+        }
+      }
+    } catch (schemaError: any) {
+      console.error("Schema verification failed:", schemaError);
+      throw schemaError;
     }
     
+    // Proceed with authentication if schema checks passed
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -44,17 +62,13 @@ export async function loginOperation(
     if (error) {
       console.error("Login error:", error);
       
-      // Provide more specific error messages for common issues
+      // Provide more specific error messages
       if (error.message.includes("Email not confirmed")) {
         throw new Error("Please check your email to confirm your account before logging in.");
       }
       
       if (error.message.includes("Invalid login")) {
         throw new Error("Invalid email or password. Please try again.");
-      }
-      
-      if (error.message.includes("database") || error.message.includes("profiles")) {
-        throw new Error("Authentication service is experiencing issues. Please try again in a few moments.");
       }
       
       throw error;
@@ -70,6 +84,8 @@ export async function loginOperation(
     
     if (error.message.includes("Invalid login credentials")) {
       errorMessage = "Invalid email or password";
+    } else if (error.message.includes("schema")) {
+      errorMessage = "Application initialization issue. Please contact support.";
     } else if (error.message.includes("database") || error.message.includes("profiles")) {
       errorMessage = "Authentication service is experiencing issues. Please try again in a few moments.";
     } else if (error.message.includes("connect to authentication service")) {

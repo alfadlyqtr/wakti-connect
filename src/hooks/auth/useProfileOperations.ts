@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "./types";
 import { toast } from "@/components/ui/use-toast";

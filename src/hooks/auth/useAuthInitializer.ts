@@ -17,24 +17,22 @@ export function useAuthInitializer() {
     console.log("Setting up auth state listener...");
     let authCheckComplete = false;
     
-    // First verify the profiles table exists
-    const verifyProfilesTable = async () => {
+    // First check if we can connect to Supabase
+    const checkSupabaseConnection = async () => {
       try {
-        const { error } = await supabase
-          .from('profiles')
-          .select('count(*)', { count: 'exact', head: true });
-          
-        if (error && error.message.includes('does not exist')) {
-          throw new Error('Profiles table does not exist. Database may not be properly initialized.');
+        const { data, error } = await supabase.from('_metadata').select('*').limit(1).maybeSingle();
+        if (error && !error.message.includes("does not exist")) {
+          console.error("Supabase connection test failed:", error);
+          throw new Error("Failed to connect to database service. Please check application configuration.");
         }
       } catch (error) {
-        console.error('Error verifying profiles table:', error);
-        // Don't throw - we'll continue and let normal error handling work
+        console.warn("Metadata table may not exist yet, continuing initialization");
+        // Don't block auth - this might be first run
       }
     };
     
-    // Try to verify the profiles table exists, but don't block the auth flow
-    verifyProfilesTable();
+    // Run connection check but don't await it to avoid blocking auth flow
+    checkSupabaseConnection().catch(console.error);
     
     // Set up Supabase auth listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -48,8 +46,8 @@ export function useAuthInitializer() {
             // Try to get or create profile with retries
             const profileResult = await handleProfileOperation(session.user.id, session.user.email || "");
             
-            // Check if profileResult exists and is not null
-            if (profileResult !== null && profileResult !== undefined) {
+            // Always create a user object, even with minimal data if profile fetch fails
+            if (profileResult) {
               setUser(createUserFromProfile(session.user.id, session.user.email || "", profileResult));
             } else {
               // If we still don't have a profile, create a basic user object
@@ -58,19 +56,17 @@ export function useAuthInitializer() {
             }
           } catch (error: any) {
             console.error("Error processing session:", error);
+            // Even in case of error, set basic user data to prevent blocking the app
+            setUser(createBasicUser(session.user.id, session.user.email || ""));
             
-            // Provide user feedback for database errors
-            if (error.message && (error.message.includes("database") || 
-                error.message.includes("does not exist"))) {
+            // Provide user feedback only for critical errors
+            if (error.message && error.message.includes("database schema")) {
               toast({
-                title: "Database Connection Issue",
-                description: "We're having trouble connecting to our services. Please try again later.",
+                title: "Application Error",
+                description: "There was a problem initializing the application. Please contact support.",
                 variant: "destructive"
               });
             }
-            
-            // Even in case of error, set basic user data to prevent blocking the app
-            setUser(createBasicUser(session.user.id, session.user.email || ""));
           }
         } else {
           console.log("No authenticated user");
@@ -102,8 +98,8 @@ export function useAuthInitializer() {
             // Try to get or create profile with retries
             const profileResult = await handleProfileOperation(session.user.id, session.user.email || "");
             
-            // Check if profileResult exists and is not null
-            if (profileResult !== null && profileResult !== undefined) {
+            // Always create a user object, even with minimal data if profile fetch fails
+            if (profileResult) {
               setUser(createUserFromProfile(session.user.id, session.user.email || "", profileResult));
             } else {
               // If we still don't have a profile, create a basic user object
@@ -112,17 +108,7 @@ export function useAuthInitializer() {
             }
           } catch (error: any) {
             console.error("Error processing existing session:", error);
-            
-            // Display toast for specific database errors
-            if (error.message && error.message.includes("does not exist")) {
-              toast({
-                title: "Database Error",
-                description: "Unable to access user profile. Please try again later or contact support.",
-                variant: "destructive"
-              });
-            }
-            
-            // Even in case of error, set basic user data
+            // Even in case of error, set basic user data to prevent blocking the app
             setUser(createBasicUser(session.user.id, session.user.email || ""));
           }
         } else {
@@ -131,15 +117,6 @@ export function useAuthInitializer() {
       } catch (error: any) {
         console.error("Error checking session:", error);
         setAuthError(error.message || "Error checking authentication");
-        
-        // Show toast for connection errors
-        if (error.message && error.message.includes("fetch")) {
-          toast({
-            title: "Connection Error",
-            description: "Unable to connect to authentication service. Please check your internet connection.",
-            variant: "destructive"
-          });
-        }
       } finally {
         // Ensure we always set loading to false even if errors occur
         if (!authCheckComplete) {
@@ -156,12 +133,6 @@ export function useAuthInitializer() {
         setIsLoading(false);
         setAuthInitialized(true);
         setAuthError("Authentication service timed out. Please reload the page.");
-        
-        toast({
-          title: "Authentication Timeout",
-          description: "We couldn't verify your login status. Please reload the page or try logging in again.",
-          variant: "destructive"
-        });
       }
     }, 10000); // 10 second timeout
     

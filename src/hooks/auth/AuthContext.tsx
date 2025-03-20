@@ -11,11 +11,9 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
   isLoading: true,
-  login: async () => { throw new Error("Not implemented"); },
-  logout: async () => { throw new Error("Not implemented"); },
-  register: async (email: string, password: string, name: string, accountType?: string, businessName?: string) => { 
-    throw new Error("Not implemented"); 
-  },
+  login: async () => { throw new Error("Auth context not initialized"); },
+  logout: async () => { throw new Error("Auth context not initialized"); },
+  register: async () => { throw new Error("Auth context not initialized"); },
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -42,7 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     register,
   };
 
-  // Show a loading state until auth is initialized
+  // Show a loading state until auth is fully initialized
   if (!authInitialized && isLoading) {
     return <AuthLoadingState authError={authError} />;
   }
@@ -52,17 +50,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return <AuthErrorState authError={authError} />;
   }
 
+  // If auth is initialized but still loading, show a simpler loading state
+  if (isLoading) {
+    return <AuthLoadingState authError={null} />;
+  }
+
   return (
     <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 // Custom hook to use the auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
