@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 
 interface LoginFormProps {
@@ -21,6 +21,7 @@ const LoginForm = ({ setError }: LoginFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -28,26 +29,14 @@ const LoginForm = ({ setError }: LoginFormProps) => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (rememberMe) {
-        // Set session expiry to 30 days instead of the default
-        // This is handled by Supabase automatically based on the rememberMe option
-      }
-
+      await login(email, password);
+      
       toast({
         title: "Success!",
         description: "You have been logged in successfully.",
       });
 
-      // Simply redirect to dashboard - we'll handle the routing there
+      // Navigate to dashboard - routing will be handled based on authentication
       navigate('/dashboard');
 
     } catch (error: any) {
@@ -57,6 +46,7 @@ const LoginForm = ({ setError }: LoginFormProps) => {
         title: "Login failed",
         description: error.message || "Failed to log in. Please try again.",
       });
+      console.error("Login error:", error);
     } finally {
       setIsLoading(false);
     }

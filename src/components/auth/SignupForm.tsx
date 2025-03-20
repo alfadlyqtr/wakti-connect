@@ -1,6 +1,4 @@
-
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, User, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 
 interface SignupFormProps {
@@ -24,6 +22,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
   const [fullName, setFullName] = useState("");
   const [accountType, setAccountType] = useState("free");
   const [businessName, setBusinessName] = useState("");
+  const { register } = useAuth();
   
   const needsBusinessName = accountType === "business";
 
@@ -45,21 +44,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
     }
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            account_type: accountType,
-            business_name: needsBusinessName ? businessName : null,
-          },
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
+      await register(email, password, fullName);
 
       toast({
         title: "Account created!",
@@ -74,6 +59,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
         title: "Signup failed",
         description: error.message || "Failed to create account. Please try again.",
       });
+      console.error("Signup error:", error);
     } finally {
       setIsLoading(false);
     }

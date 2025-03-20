@@ -46,8 +46,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   .eq("id", session.user.id)
                   .single();
                   
-                if (profileError && profileError.code !== "PGRST116") {
+                if (profileError) {
                   console.error("Error fetching profile:", profileError);
+                  // Don't throw on PGRST116 (not found) as the trigger might still be creating the profile
+                  if (profileError.code !== "PGRST116") {
+                    throw profileError;
+                  }
                 }
                 
                 setUser({
@@ -83,8 +87,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .eq("id", session.user.id)
               .single();
               
-            if (profileError && profileError.code !== "PGRST116") {
+            if (profileError) {
               console.error("Error fetching profile:", profileError);
+              // Don't throw on PGRST116 (not found) as the profile might not exist yet
+              if (profileError.code !== "PGRST116") {
+                throw profileError;
+              }
             }
             
             setUser({
