@@ -29,9 +29,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   } = useAuthInitializer();
   
   // Use the auth operations hook for login, logout, register functions
-  const { login, logout, register } = useAuthOperations(setUser, setIsLoading => {
-    // Just wrap the setter to maintain the API
-    isLoading ? setIsLoading(true) : setIsLoading(false);
+  const { login, logout, register } = useAuthOperations(setUser, (loading: boolean) => {
+    // Correctly handle the setIsLoading function
+    loading ? setIsLoading(true) : setIsLoading(false);
   });
 
   // Provide the auth context value

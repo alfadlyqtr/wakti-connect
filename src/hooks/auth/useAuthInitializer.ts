@@ -158,6 +158,7 @@ export function useAuthInitializer() {
     user,
     setUser,
     isLoading,
+    setIsLoading,
     authInitialized,
     authError,
     setAuthError
