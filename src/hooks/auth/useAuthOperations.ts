@@ -12,6 +12,15 @@ export function useAuthOperations(
     try {
       console.log("Attempting login for:", email);
       setIsLoading(true);
+      
+      // First check if Supabase is accessible
+      try {
+        await supabase.from('_metadata').select('*').limit(1);
+      } catch (connectionError) {
+        console.error("Supabase connection test failed:", connectionError);
+        throw new Error("Unable to connect to authentication service. Please check your internet connection and try again.");
+      }
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -21,8 +30,16 @@ export function useAuthOperations(
         console.error("Login error:", error);
         
         // Provide more specific error messages for common issues
+        if (error.message.includes("Email not confirmed")) {
+          throw new Error("Please check your email to confirm your account before logging in.");
+        }
+        
+        if (error.message.includes("Invalid login")) {
+          throw new Error("Invalid email or password. Please try again.");
+        }
+        
         if (error.message.includes("database") || error.message.includes("profiles")) {
-          throw new Error("Server connection issue. Please try again in a few moments.");
+          throw new Error("Authentication service is experiencing issues. Please try again in a few moments.");
         }
         
         throw error;
@@ -39,7 +56,9 @@ export function useAuthOperations(
       if (error.message.includes("Invalid login credentials")) {
         errorMessage = "Invalid email or password";
       } else if (error.message.includes("database") || error.message.includes("profiles")) {
-        errorMessage = "Server connection issue. Please try again in a few moments.";
+        errorMessage = "Authentication service is experiencing issues. Please try again in a few moments.";
+      } else if (error.message.includes("connect to authentication service")) {
+        errorMessage = error.message;
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -80,15 +99,24 @@ export function useAuthOperations(
     }
   };
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = async (email: string, password: string, name: string, accountType: string = 'free', businessName?: string) => {
     try {
       console.log("Attempting registration for:", email);
       setIsLoading(true);
       
       // Prepare metadata with account type included
-      const metadata = {
+      const metadata: any = {
         full_name: name,
+        account_type: accountType
       };
+      
+      // Add business name if provided and account type is business
+      if (businessName && accountType === 'business') {
+        metadata.business_name = businessName;
+      }
+      
+      // Set display name to full name by default
+      metadata.display_name = name;
       
       // Sign up the user
       const { data, error } = await supabase.auth.signUp({

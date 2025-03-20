@@ -39,7 +39,7 @@ const LoginForm = ({ setError }: LoginFormProps) => {
         description: "You have been logged in successfully.",
       });
 
-      // Navigate to dashboard - routing will be handled based on authentication
+      // Navigate to dashboard
       navigate('/dashboard');
 
     } catch (error: any) {
@@ -51,8 +51,11 @@ const LoginForm = ({ setError }: LoginFormProps) => {
       // Provide more contextual error messages based on number of attempts
       let errorMessage = error.message || "Failed to log in. Please try again.";
       
-      if (loginAttempts >= 2 && (error.message?.includes("database") || error.message?.includes("profiles"))) {
-        errorMessage = "We're experiencing technical difficulties. Please try again later or contact support.";
+      if (loginAttempts >= 2) {
+        if (error.message?.includes("database") || error.message?.includes("profiles") || 
+            error.message?.includes("Auth service") || error.message?.includes("connection")) {
+          errorMessage = "We're experiencing technical difficulties. Please try again later or contact support.";
+        }
       }
       
       setError(errorMessage);
@@ -153,14 +156,17 @@ const LoginForm = ({ setError }: LoginFormProps) => {
         )}
       </Button>
 
-      {loginAttempts >= 3 && (
+      {loginAttempts >= 2 && (
         <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-sm">
           <p>Having trouble logging in? Try these steps:</p>
           <ul className="list-disc ml-5 mt-1">
             <li>Make sure you've entered the correct email and password</li>
             <li>Try clearing your browser cache and cookies</li>
             <li>Try using a different browser</li>
-            <li>Contact support if the issue persists</li>
+            <li>Check if your internet connection is stable</li>
+            {loginAttempts >= 3 && (
+              <li>If the problem persists, <a href="/auth/signup" className="underline font-medium">create a new account</a> or contact support</li>
+            )}
           </ul>
         </div>
       )}

@@ -46,17 +46,10 @@ const SignupForm = ({ setError }: SignupFormProps) => {
     }
 
     try {
-      // Create metadata object including all relevant user data
-      const userData = {
-        full_name: fullName,
-        account_type: accountType,
-        ...(businessName && { business_name: businessName }),
-        display_name: fullName, // Default display name to full name initially
-      };
+      console.log("Registering with account type:", accountType);
       
-      console.log("Registering with user data:", { email, userData });
-      
-      await register(email, password, fullName);
+      // Call the register function with the appropriate parameters
+      await register(email, password, fullName, accountType, businessName);
 
       toast({
         title: "Account created!",
