@@ -71,10 +71,8 @@ const BusinessLandingPageComponent = () => {
   // Create a BusinessProfile object from businessPage
   const businessProfile: BusinessProfile = {
     id: businessPage.business_id,
-    business_id: businessPage.business_id,
     business_name: businessPage.page_title || "Business",
-    created_at: businessPage.created_at,
-    updated_at: businessPage.updated_at
+    account_type: "business"
   };
   
   return (

@@ -1,82 +1,47 @@
 
-import React from "react";
-import { Card } from "@/components/ui/card";
-import { UserPlus, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import StaffMemberCard from "./StaffMemberCard";
-import { StaffMember } from "@/types/business.types";
+import React, { useState } from "react";
+import { StaffCard } from "./StaffCard";
+import { EmptyStaffState } from "./EmptyStaffState";
+import type { StaffWithSessions } from "@/hooks/useStaffWorkLogs";
 
 interface StaffListProps {
-  staffMembers: StaffMember[] | undefined;
+  staffData: StaffWithSessions[] | undefined;
   isLoading: boolean;
-  hasError: boolean;
-  onCreateStaff: () => void;
-  onEditStaff: (staff: StaffMember) => void;
-  onSuspendStaff: (staff: StaffMember) => void;
-  onDeleteStaff: (staff: StaffMember) => void;
-  onReactivateStaff: (staff: StaffMember) => void;
 }
 
-const StaffList: React.FC<StaffListProps> = ({
-  staffMembers,
-  isLoading,
-  hasError,
-  onCreateStaff,
-  onEditStaff,
-  onSuspendStaff,
-  onDeleteStaff,
-  onReactivateStaff
-}) => {
+export const StaffList = ({ staffData, isLoading }: StaffListProps) => {
+  const [expandedStaff, setExpandedStaff] = useState<string[]>([]);
+
+  const toggleStaffExpansion = (staffId: string) => {
+    if (expandedStaff.includes(staffId)) {
+      setExpandedStaff(expandedStaff.filter(id => id !== staffId));
+    } else {
+      setExpandedStaff([...expandedStaff, staffId]);
+    }
+  };
+
   if (isLoading) {
     return (
-      <Card className="col-span-full flex justify-center p-8">
-        <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
-      </Card>
+      <div className="flex justify-center py-8">
+        <div className="h-8 w-8 border-4 border-t-transparent border-primary rounded-full animate-spin"></div>
+      </div>
     );
   }
 
-  if (hasError) {
-    return (
-      <Card className="col-span-full p-8">
-        <div className="text-center">
-          <AlertCircle className="h-10 w-10 mx-auto text-destructive mb-4" />
-          <p className="text-center text-destructive font-medium mb-2">Error loading staff members</p>
-          <p className="text-muted-foreground mb-4">There was a problem retrieving staff data. This may be due to permissions or network issues.</p>
-        </div>
-      </Card>
-    );
-  }
-
-  if (!staffMembers || staffMembers.length === 0) {
-    return (
-      <Card className="col-span-full p-8">
-        <div className="text-center">
-          <UserPlus className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No Staff Members Yet</h3>
-          <p className="text-muted-foreground mb-4">Add staff members to your business.</p>
-          <Button onClick={onCreateStaff}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Create Staff Member
-          </Button>
-        </div>
-      </Card>
-    );
+  if (!staffData || staffData.length === 0) {
+    return <EmptyStaffState />;
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {staffMembers.map((member) => (
-        <StaffMemberCard
-          key={member.id}
-          member={member}
-          onEdit={onEditStaff}
-          onSuspend={onSuspendStaff}
-          onDelete={onDeleteStaff}
-          onReactivate={onReactivateStaff}
+    <div className="space-y-4">
+      {staffData.map(staff => (
+        <StaffCard 
+          key={staff.id}
+          staff={staff}
+          isExpanded={expandedStaff.includes(staff.id)}
+          onToggle={() => toggleStaffExpansion(staff.id)}
         />
       ))}
     </div>
   );
 };
-
-export default StaffList;

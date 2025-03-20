@@ -1,39 +1,43 @@
 
-import { useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { toast } from '@/components/ui/use-toast';
+import { useEffect } from "react";
+import { subscribeToNotifications, Notification } from "@/services/notifications/notificationService";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/components/ui/use-toast";
 
-export const NotificationListener: React.FC = () => {
-  const { user } = useAuth();
+const NotificationListener = () => {
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!user) return;
+    let unsubscribe: (() => void) | null = null;
+    
+    try {
+      const handleNewNotification = (notification: Notification) => {
+        // Invalidate queries to refresh notification data
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        queryClient.invalidateQueries({ queryKey: ['unreadNotificationsCount'] });
+      };
 
-    // Set up real-time notifications listener
-    const channel = supabase
-      .channel(`notifications:${user.id}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${user.id}`,
-      }, (payload) => {
-        const notification = payload.new as any;
-        
-        // Display a toast notification for the new notification
-        toast({
-          title: notification.title || 'New Notification',
-          description: notification.message,
-          duration: 5000,
-        });
-      })
-      .subscribe();
-
+      // Subscribe to notifications
+      unsubscribe = subscribeToNotifications(handleNewNotification);
+    } catch (error) {
+      console.error("Error in notification listener:", error);
+      toast({
+        title: "Notification System Error",
+        description: "Could not connect to notification service. Notifications may not be real-time.",
+        variant: "destructive",
+      });
+    }
+    
+    // Cleanup subscription when component unmounts
     return () => {
-      supabase.removeChannel(channel);
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
-  }, [user]);
+  }, [queryClient]);
 
+  // This component doesn't render anything
   return null;
 };
+
+export default NotificationListener;

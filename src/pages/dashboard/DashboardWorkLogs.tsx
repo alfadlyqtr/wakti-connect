@@ -1,9 +1,11 @@
 
 import React from "react";
 import { useStaffWorkLogs } from "@/hooks/useStaffWorkLogs";
-import WorkLogsTab from "@/components/staff/WorkLogsTab";
+import { StaffList } from "@/components/staff/StaffList";
 
 const DashboardWorkLogs = () => {
+  const { data: staffData, isLoading } = useStaffWorkLogs();
+
   return (
     <div className="space-y-6">
       <div>
@@ -11,7 +13,7 @@ const DashboardWorkLogs = () => {
         <p className="text-muted-foreground">Track staff hours, sessions, and earnings</p>
       </div>
       
-      <WorkLogsTab />
+      <StaffList staffData={staffData} isLoading={isLoading} />
     </div>
   );
 };

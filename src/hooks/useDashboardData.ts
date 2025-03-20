@@ -1,7 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ensureProfileExists } from "@/services/profileService";
 
 // Define proper type for the profile data
 interface ProfileData {
@@ -16,138 +15,93 @@ interface ProfileData {
 
 export const useDashboardData = () => {
   // Fetch user profile data
-  const { data: profileData, isLoading: profileLoading, error: profileError } = useQuery({
+  const { data: profileData, isLoading: profileLoading } = useQuery({
     queryKey: ['userProfile'],
     queryFn: async () => {
-      console.log("Fetching profile data");
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session?.user) {
-          console.log("No active session, skipping profile fetch");
-          throw new Error("No active session");
-        }
-        
-        // First, ensure the profile exists
-        const profileExists = await ensureProfileExists(session.user.id);
-        
-        if (!profileExists) {
-          console.log("Failed to ensure profile exists");
-          throw new Error("Failed to ensure profile exists");
-        }
-        
-        // Use our security definer function to get user role
-        const { data: roleData } = await supabase.rpc('get_user_role');
-        
-        // Get profile fields except account_type (to avoid recursive RLS)
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('full_name, display_name, business_name, occupation, avatar_url, theme_preference')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (error) {
-          console.error("Error fetching profile:", error);
-          throw error;
-        }
-        
-        console.log("Successfully fetched profile data:", data);
-        
-        // Combine role data with profile data
-        return {
-          ...data,
-          account_type: roleData || 'free'
-        } as ProfileData;
-      } catch (error) {
-        console.error("Error in profile data fetch:", error);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        throw new Error("No active session");
+      }
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, account_type, display_name, business_name, occupation, avatar_url, theme_preference')
+        .eq('id', session.user.id)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching profile:", error);
         throw error;
       }
+      
+      return data as ProfileData;
     },
-    retry: 2,
-    staleTime: 180000, // 3 minutes
-    refetchOnWindowFocus: false
   });
 
   // Fetch today's tasks
   const { data: todayTasks, isLoading: tasksLoading } = useQuery({
     queryKey: ['todayTasks'],
     queryFn: async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session?.user) {
-          console.log("No active session, skipping task fetch");
-          return [];
-        }
-        
-        // Get today's date range
-        const today = new Date();
-        const startOfDay = new Date(today);
-        startOfDay.setHours(0, 0, 0, 0);
-        
-        const endOfDay = new Date(today);
-        endOfDay.setHours(23, 59, 59, 999);
-        
-        const { data, error } = await supabase
-          .from('tasks')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .gte('due_date', startOfDay.toISOString())
-          .lte('due_date', endOfDay.toISOString());
-        
-        if (error) {
-          console.error("Error fetching today's tasks:", error);
-          return [];
-        }
-        
-        return data || [];
-      } catch (error) {
-        console.error("Error in tasks fetch:", error);
-        return [];
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        throw new Error("No active session");
       }
+      
+      // Get today's date range
+      const today = new Date();
+      const startOfDay = new Date(today);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(today);
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .gte('due_date', startOfDay.toISOString())
+        .lte('due_date', endOfDay.toISOString());
+      
+      if (error) {
+        console.error("Error fetching today's tasks:", error);
+        throw error;
+      }
+      
+      return data;
     },
-    enabled: !!profileData, // Only run this query if profile data is loaded
-    retry: 1
   });
 
   // Fetch unread notifications count
   const { data: unreadNotifications, isLoading: notificationsLoading } = useQuery({
     queryKey: ['unreadNotifications'],
     queryFn: async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session?.user) {
-          console.log("No active session, skipping notifications fetch");
-          return [];
-        }
-        
-        const { data, error } = await supabase
-          .from('notifications')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .eq('is_read', false);
-        
-        if (error) {
-          console.error("Error fetching unread notifications:", error);
-          return [];
-        }
-        
-        return data || [];
-      } catch (error) {
-        console.error("Error in notifications fetch:", error);
-        return [];
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        throw new Error("No active session");
       }
+      
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('is_read', false);
+      
+      if (error) {
+        console.error("Error fetching unread notifications:", error);
+        throw error;
+      }
+      
+      return data;
     },
-    enabled: !!profileData, // Only run this query if profile data is loaded
-    retry: 1
   });
 
   return {
     profileData,
     todayTasks,
     unreadNotifications,
-    isLoading: profileLoading || tasksLoading || notificationsLoading,
-    error: profileError
+    isLoading: profileLoading || tasksLoading || notificationsLoading
   };
 };

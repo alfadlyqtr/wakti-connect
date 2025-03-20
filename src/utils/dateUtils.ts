@@ -32,28 +32,3 @@ export const calculateHours = (startTime: string, endTime: string | null) => {
   
   return diffHours.toFixed(1);
 };
-
-/**
- * Filter sessions by date range
- */
-export const filterSessionsByDateRange = (
-  sessions: Array<{ start_time: string }>, 
-  startDate?: Date, 
-  endDate?: Date
-) => {
-  if (!startDate && !endDate) return sessions;
-
-  return sessions.filter(session => {
-    const sessionDate = new Date(session.start_time);
-    
-    const isAfterStartDate = !startDate || sessionDate >= startDate;
-    
-    // Set end date to end of day for proper comparison
-    const endOfDay = endDate 
-      ? new Date(new Date(endDate).setHours(23, 59, 59, 999)) 
-      : undefined;
-    const isBeforeEndDate = !endDate || sessionDate <= endOfDay;
-    
-    return isAfterStartDate && isBeforeEndDate;
-  });
-};

@@ -1,17 +1,15 @@
 
 import React, { useState } from "react";
-import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Mail, Lock, Eye, EyeOff, User, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
-
-// Import refactored components
-import FormField from "./signup/FormField";
-import AccountTypeSelection from "./signup/AccountTypeSelection";
-import BusinessNameField from "./signup/BusinessNameField";
-import TermsAgreement from "./signup/TermsAgreement";
-import SubmitButton from "./signup/SubmitButton";
 
 interface SignupFormProps {
   setError: (error: string) => void;
@@ -81,74 +79,132 @@ const SignupForm = ({ setError }: SignupFormProps) => {
     }
   };
 
-  const passwordToggleButton = (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon"
-      className="absolute right-1 top-1"
-      onClick={() => setShowPassword(!showPassword)}
-      aria-label={showPassword ? "Hide password" : "Show password"}
-    >
-      {showPassword ? (
-        <EyeOff className="h-4 w-4" />
-      ) : (
-        <Eye className="h-4 w-4" />
-      )}
-    </Button>
-  );
-
   return (
     <form onSubmit={handleSignup} className="space-y-4">
-      <FormField
-        id="full-name"
-        label={t('auth.fullName')}
-        type="text"
-        placeholder="John Doe"
-        value={fullName}
-        onChange={(e) => setFullName(e.target.value)}
-        required
-        icon={<User />}
-      />
+      <div className="space-y-2">
+        <Label htmlFor="full-name">{t('auth.fullName')}</Label>
+        <div className="relative">
+          <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+          <Input 
+            id="full-name" 
+            type="text" 
+            placeholder="John Doe" 
+            className="pl-10"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            required
+          />
+        </div>
+      </div>
       
-      <FormField
-        id="signup-email"
-        label={t('auth.email')}
-        type="email"
-        placeholder="name@example.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-        icon={<Mail />}
-      />
+      <div className="space-y-2">
+        <Label htmlFor="signup-email">{t('auth.email')}</Label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+          <Input 
+            id="signup-email" 
+            type="email" 
+            placeholder="name@example.com" 
+            className="pl-10"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+      </div>
       
-      <FormField
-        id="signup-password"
-        label={t('auth.password')}
-        type={showPassword ? "text" : "password"}
-        placeholder="••••••••"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-        icon={<Lock />}
-        showPasswordToggle={passwordToggleButton}
-      />
+      <div className="space-y-2">
+        <Label htmlFor="signup-password">{t('auth.password')}</Label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+          <Input 
+            id="signup-password" 
+            type={showPassword ? "text" : "password"}
+            placeholder="••••••••"
+            className="pl-10 pr-10"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-1 top-1"
+            onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </div>
       
-      <AccountTypeSelection
-        value={accountType}
-        onChange={setAccountType}
-      />
+      <div className="space-y-2">
+        <Label htmlFor="account-type">{t('auth.accountType')}</Label>
+        <RadioGroup 
+          defaultValue="free" 
+          value={accountType}
+          onValueChange={setAccountType}
+          className="grid grid-cols-3 gap-2 pt-2"
+        >
+          <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-accent cursor-pointer">
+            <RadioGroupItem value="free" id="free" />
+            <Label htmlFor="free" className="cursor-pointer">{t('auth.free')}</Label>
+          </div>
+          <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-accent cursor-pointer">
+            <RadioGroupItem value="individual" id="individual" />
+            <Label htmlFor="individual" className="cursor-pointer">{t('auth.individual')}</Label>
+          </div>
+          <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-accent cursor-pointer">
+            <RadioGroupItem value="business" id="business" />
+            <Label htmlFor="business" className="cursor-pointer">{t('auth.business')}</Label>
+          </div>
+        </RadioGroup>
+      </div>
       
+      {/* Show business name field only for business account type */}
       {needsBusinessName && (
-        <BusinessNameField
-          value={businessName}
-          onChange={(e) => setBusinessName(e.target.value)}
-        />
+        <div className="space-y-2">
+          <Label htmlFor="business-name">Business Name <span className="text-destructive">*</span></Label>
+          <div className="relative">
+            <Building className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+            <Input 
+              id="business-name" 
+              type="text" 
+              placeholder="Your Business Name" 
+              className="pl-10"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              required
+            />
+          </div>
+        </div>
       )}
       
-      <TermsAgreement />
+      <div className="flex items-center gap-2">
+        <Checkbox id="terms" required />
+        <Label 
+          htmlFor="terms" 
+          className="text-sm font-normal cursor-pointer"
+        >
+          {t('auth.termsAgreement')}
+        </Label>
+      </div>
       
-      <SubmitButton isLoading={isLoading} />
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? (
+          <div className="flex items-center gap-2">
+            <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <span>{t('auth.creatingAccount')}</span>
+          </div>
+        ) : (
+          <span>{t('auth.createAccount')}</span>
+        )}
+      </Button>
     </form>
   );
 };

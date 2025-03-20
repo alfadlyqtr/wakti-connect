@@ -16,29 +16,13 @@ interface WorkSession {
 
 interface StaffWorkSessionTableProps {
   sessions: WorkSession[];
-  startDate?: Date;
-  endDate?: Date;
 }
 
-export const StaffWorkSessionTable: React.FC<StaffWorkSessionTableProps> = ({ 
-  sessions,
-  startDate,
-  endDate
-}) => {
-  // Filter sessions by date range if dates are specified
-  const filteredSessions = sessions.filter(session => {
-    const sessionDate = new Date(session.start_time);
-    
-    const isAfterStartDate = !startDate || sessionDate >= startDate;
-    const isBeforeEndDate = !endDate || sessionDate <= new Date(endDate ? new Date(endDate).setHours(23, 59, 59, 999) : Date.now());
-    
-    return isAfterStartDate && isBeforeEndDate;
-  });
-  
-  if (filteredSessions.length === 0) {
+export const StaffWorkSessionTable: React.FC<StaffWorkSessionTableProps> = ({ sessions }) => {
+  if (sessions.length === 0) {
     return (
       <div className="text-center py-4 text-muted-foreground">
-        No work sessions found{startDate || endDate ? " in the selected date range" : ""}
+        No work sessions recorded
       </div>
     );
   }
@@ -55,7 +39,7 @@ export const StaffWorkSessionTable: React.FC<StaffWorkSessionTableProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredSessions.map(session => {
+          {sessions.map(session => {
             const startDate = new Date(session.start_time);
             const endDate = session.end_time ? new Date(session.end_time) : null;
             const duration = endDate 

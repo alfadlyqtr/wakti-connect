@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/utils/formatUtils";
 import { formatDate, formatTime } from "@/utils/dateUtils";
 import { Calendar, Clock, DollarSign, CreditCard, Banknote, Receipt } from "lucide-react";
-import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
 interface JobCardsListProps {
   staffRelationId: string;
@@ -73,58 +72,52 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
       <div className="space-y-4">
         <h3 className="font-medium text-lg">Recent Job Cards</h3>
         
-        <ErrorBoundary fallback={
-          <div className="p-4 border rounded-lg border-destructive/50 bg-destructive/10 text-center">
-            <p className="text-sm">Error loading job cards. Please try again.</p>
-          </div>
-        }>
-          {jobCards.map(card => (
-            <Card key={card.id} className="overflow-hidden">
-              <CardHeader className="pb-2">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                  <CardTitle className="text-base">
-                    {card.job?.name || "Unknown Job"}
-                  </CardTitle>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant={card.payment_method === 'cash' ? 'default' : card.payment_method === 'pos' ? 'secondary' : 'outline'}>
-                      {card.payment_method === 'cash' ? (
-                        <Banknote className="h-3 w-3 mr-1" />
-                      ) : card.payment_method === 'pos' ? (
-                        <CreditCard className="h-3 w-3 mr-1" />
-                      ) : null}
-                      {card.payment_method === 'cash' ? 'Cash' : 
-                        card.payment_method === 'pos' ? 'POS' : 'No Payment'}
-                    </Badge>
-                    <Badge variant="outline">
-                      <DollarSign className="h-3 w-3 mr-1" />
-                      {formatCurrency(card.payment_amount)}
-                    </Badge>
-                  </div>
+        {jobCards.map(card => (
+          <Card key={card.id} className="overflow-hidden">
+            <CardHeader className="pb-2">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                <CardTitle className="text-base">
+                  {card.job?.name || "Unknown Job"}
+                </CardTitle>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant={card.payment_method === 'cash' ? 'default' : card.payment_method === 'pos' ? 'secondary' : 'outline'}>
+                    {card.payment_method === 'cash' ? (
+                      <Banknote className="h-3 w-3 mr-1" />
+                    ) : card.payment_method === 'pos' ? (
+                      <CreditCard className="h-3 w-3 mr-1" />
+                    ) : null}
+                    {card.payment_method === 'cash' ? 'Cash' : 
+                      card.payment_method === 'pos' ? 'POS' : 'No Payment'}
+                  </Badge>
+                  <Badge variant="outline">
+                    <DollarSign className="h-3 w-3 mr-1" />
+                    {formatCurrency(card.payment_amount)}
+                  </Badge>
                 </div>
-              </CardHeader>
-              
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-center text-muted-foreground">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    <span>{formatDate(card.created_at)}</span>
-                  </div>
-                  
-                  <div className="flex items-center text-muted-foreground">
-                    <Clock className="h-4 w-4 mr-2" />
-                    <span>{formatTime(card.start_time)}</span>
-                  </div>
-                  
-                  {card.notes && (
-                    <div className="md:col-span-2 mt-2 border-t pt-2">
-                      <p className="text-sm line-clamp-2">{card.notes}</p>
-                    </div>
-                  )}
+              </div>
+            </CardHeader>
+            
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                <div className="flex items-center text-muted-foreground">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  <span>{formatDate(card.created_at)}</span>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </ErrorBoundary>
+                
+                <div className="flex items-center text-muted-foreground">
+                  <Clock className="h-4 w-4 mr-2" />
+                  <span>{formatTime(card.start_time)}</span>
+                </div>
+                
+                {card.notes && (
+                  <div className="md:col-span-2 mt-2 border-t pt-2">
+                    <p className="text-sm line-clamp-2">{card.notes}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

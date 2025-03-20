@@ -1,10 +1,9 @@
 
 import React from "react";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock } from "lucide-react";
-import WorkSessionStatus from "./WorkSessionStatus";
-import WorkStatusActions from "./WorkStatusActions";
-import ErrorBoundary from "@/components/ui/ErrorBoundary";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Clock, PlusCircle, Play, Square } from "lucide-react";
+import { formatTime } from "@/utils/dateUtils";
 
 interface WorkStatusCardProps {
   activeWorkSession: any | null;
@@ -17,42 +16,61 @@ const WorkStatusCard: React.FC<WorkStatusCardProps> = ({
   activeWorkSession,
   onStartWorkDay,
   onEndWorkDay,
-  onCreateJobCard
+  onCreateJobCard,
 }) => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <Clock className="h-5 w-5 mr-2 text-wakti-blue" />
-          Work Status
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ErrorBoundary fallback={
-          <div className="text-destructive text-sm">
-            Error displaying work status. Please refresh the page.
+    <Card className={activeWorkSession ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900" : "bg-muted/50"}>
+      <CardContent className="p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-full ${activeWorkSession ? "bg-green-100 dark:bg-green-900/30" : "bg-muted"}`}>
+              <Clock className={`h-5 w-5 ${activeWorkSession ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`} />
+            </div>
+            <div>
+              <h3 className={`font-medium ${activeWorkSession ? "text-green-700 dark:text-green-400" : ""}`}>
+                {activeWorkSession ? "Currently Working" : "Work Status"}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {activeWorkSession 
+                  ? `Started at ${formatTime(activeWorkSession.start_time)}` 
+                  : "Not currently working"}
+              </p>
+            </div>
           </div>
-        }>
-          <WorkSessionStatus activeWorkSession={activeWorkSession} />
-        </ErrorBoundary>
+          
+          <div className="flex gap-2 sm:ml-auto">
+            {activeWorkSession ? (
+              <>
+                <Button
+                  onClick={onCreateJobCard}
+                  className="flex-1 sm:flex-auto"
+                  variant="default"
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Create Job Card
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={onEndWorkDay}
+                  className="flex-1 sm:flex-auto text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                >
+                  <Square className="h-4 w-4 mr-2" />
+                  End Work Day
+                </Button>
+              </>
+            ) : (
+              <Button
+                onClick={onStartWorkDay}
+                className="w-full sm:w-auto"
+                variant="default"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Start Work Day
+              </Button>
+            )}
+          </div>
+        </div>
       </CardContent>
-      <CardFooter className="flex gap-3 flex-wrap">
-        <ErrorBoundary fallback={
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 rounded-md bg-primary text-primary-foreground w-full"
-          >
-            Refresh Page
-          </button>
-        }>
-          <WorkStatusActions 
-            activeWorkSession={activeWorkSession}
-            onStartWorkDay={onStartWorkDay}
-            onEndWorkDay={onEndWorkDay}
-            onCreateJobCard={onCreateJobCard}
-          />
-        </ErrorBoundary>
-      </CardFooter>
     </Card>
   );
 };

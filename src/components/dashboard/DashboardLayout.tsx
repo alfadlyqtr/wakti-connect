@@ -2,35 +2,111 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 import "@/components/layout/sidebar/sidebar.css";
+import { useQuery } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
-import ErrorBoundary from "@/components/ui/ErrorBoundary";
-import { useDashboardProfile } from "@/hooks/useDashboardProfile";
-import ProfileLoadError from "./error/ProfileLoadError";
-import DashboardFallback from "./fallback/DashboardFallback";
-import DashboardSpinner from "./ui/DashboardSpinner";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
   userRole?: "free" | "individual" | "business";
 }
 
+interface ProfileData {
+  account_type: "free" | "individual" | "business";
+  display_name: string | null;
+  business_name: string | null;
+  full_name: string | null;
+  theme_preference: string | null;
+}
+
 const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
-  const [hasLoadingTimeout, setHasLoadingTimeout] = useState(false);
-  
-  // Get profile data using our custom hook
-  const { profileData, profileLoading, profileError } = useDashboardProfile();
+  const navigate = useNavigate();
 
-  // Set a timeout to prevent infinite loading state
+  // Fetch user profile data for the dashboard
+  const { data: profileData, isLoading: profileLoading } = useQuery({
+    queryKey: ['dashboardUserProfile'],
+    queryFn: async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session?.user) {
+          console.log("No active session found, redirecting to auth page");
+          navigate("/auth");
+          return null;
+        }
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('account_type, display_name, business_name, full_name, theme_preference')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (error) {
+          console.error("Error fetching user profile:", error);
+          if (error.code === 'PGRST116') {
+            console.log("Profile not found, user may need to sign up");
+            navigate("/auth");
+          }
+          return null;
+        }
+        
+        // Store user role in localStorage for use in other components
+        localStorage.setItem('userRole', data.account_type);
+        
+        if (data.account_type === 'business' && !data.business_name) {
+          // If business account but no business name is set, inform the user
+          toast({
+            title: "Complete your business profile",
+            description: "Please set your business name in your profile settings",
+            action: (
+              <button 
+                className="bg-primary text-white px-3 py-1 rounded-md text-xs"
+                onClick={() => navigate("/dashboard/settings")}
+              >
+                Update Profile
+              </button>
+            )
+          });
+        }
+        
+        return data as ProfileData;
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        return null;
+      }
+    },
+    retry: 1,
+  });
+
+  // Set theme based on user preference
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setHasLoadingTimeout(true);
-    }, 7000); // 7 seconds timeout
-    
-    return () => clearTimeout(timeoutId);
-  }, []);
+    if (profileData?.theme_preference) {
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(profileData.theme_preference);
+    }
+  }, [profileData?.theme_preference]);
+
+  // Setup auth listener
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed in dashboard layout:", event);
+      
+      if (event === 'SIGNED_OUT') {
+        // Clear stored user role on sign out
+        localStorage.removeItem('userRole');
+        navigate("/auth");
+      }
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   // Close sidebar when clicking outside on mobile
   useEffect(() => {
@@ -58,22 +134,13 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // Get the correct user role with a fallback mechanism
-  const userRoleValue = profileData?.account_type || 
-                        propUserRole || 
-                        localStorage.getItem('userRole') as "free" | "individual" | "business" || 
-                        "free";
+  // Get the correct user role
+  const userRoleValue = profileData?.account_type || propUserRole || "free";
 
   // Calculate main content padding based on sidebar state
   const mainContentClass = isMobile 
     ? "transition-all duration-300" 
     : "lg:pl-[70px] transition-all duration-300";
-
-  // Show error UI if profile loading error
-  if (profileError) {
-    console.error("Dashboard profile loading error:", profileError);
-    return <ProfileLoadError />;
-  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -84,12 +151,12 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
         
         <main className={`flex-1 overflow-y-auto pt-4 px-4 pb-12 ${mainContentClass}`}>
           <div className="container mx-auto animate-in">
-            {profileLoading && !hasLoadingTimeout ? (
-              <DashboardSpinner />
+            {profileLoading ? (
+              <div className="flex items-center justify-center h-[calc(100vh-100px)]">
+                <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
+              </div>
             ) : (
-              <ErrorBoundary fallback={<DashboardFallback />}>
-                {children}
-              </ErrorBoundary>
+              children
             )}
           </div>
         </main>

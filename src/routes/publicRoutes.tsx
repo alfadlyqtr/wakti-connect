@@ -1,47 +1,52 @@
 
-import { lazy } from "react";
 import { RouteObject } from "react-router-dom";
-
-const LandingPage = lazy(() => import("@/pages/public/LandingPage"));
-const AboutPage = lazy(() => import("@/pages/public/AboutPage"));
-const FeaturesPage = lazy(() => import("@/pages/public/FeaturesPage"));
-const PricingPage = lazy(() => import("@/pages/public/PricingPage"));
-const ContactPage = lazy(() => import("@/pages/public/ContactPage"));
-const FaqPage = lazy(() => import("@/pages/public/FaqPage"));
-const TermsPage = lazy(() => import("@/pages/public/TermsPage"));
-const PrivacyPage = lazy(() => import("@/pages/public/PrivacyPage"));
+import LandingPage from "@/pages/public/LandingPage";
+import AboutPage from "@/pages/public/AboutPage";
+import FeaturesPage from "@/pages/public/FeaturesPage";
+import PricingPage from "@/pages/public/PricingPage";
+import ContactPage from "@/pages/public/ContactPage";
+import FaqPage from "@/pages/public/FaqPage";
+import PrivacyPage from "@/pages/public/PrivacyPage";
+import TermsPage from "@/pages/public/TermsPage";
+import Index from "@/pages/Index";
 
 export const publicRoutes: RouteObject[] = [
   {
-    index: true,
+    path: "/",
+    element: <Index />,
+  },
+  {
+    path: "/landing",
     element: <LandingPage />,
   },
   {
-    path: "about",
+    path: "/about",
     element: <AboutPage />,
   },
   {
-    path: "features",
+    path: "/features",
     element: <FeaturesPage />,
   },
   {
-    path: "pricing",
+    path: "/pricing",
     element: <PricingPage />,
   },
   {
-    path: "contact",
+    path: "/contact",
     element: <ContactPage />,
   },
   {
-    path: "faq",
+    path: "/faq",
     element: <FaqPage />,
   },
   {
-    path: "terms",
-    element: <TermsPage />,
-  },
-  {
-    path: "privacy",
+    path: "/privacy",
     element: <PrivacyPage />,
   },
+  {
+    path: "/terms",
+    element: <TermsPage />,
+  },
 ];
+
+export default publicRoutes;
