@@ -15,7 +15,13 @@ export const canStaffMessageUser = async (userId: string): Promise<boolean> => {
     
     // Check if staff user has permission to message other staff
     const permissions = staffData.permissions || {};
-    const canMessageStaff = !!permissions.can_message_staff;
+    
+    // Ensure permissions is an object before trying to access properties
+    const permissionsObj = typeof permissions === 'object' && permissions !== null 
+      ? permissions as Record<string, boolean>
+      : {};
+    
+    const canMessageStaff = !!permissionsObj.can_message_staff;
     
     // Check if user is a staff member of the same business
     const { data: targetStaffData } = await supabase
@@ -31,7 +37,7 @@ export const canStaffMessageUser = async (userId: string): Promise<boolean> => {
     }
     
     // Check if staff user has permission to message customers
-    const canMessageCustomers = !!permissions.can_message_customers;
+    const canMessageCustomers = !!permissionsObj.can_message_customers;
     
     // Check if user is a customer of the business
     if (canMessageCustomers) {
