@@ -57,9 +57,12 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
             // Check if data exists, is not an error, and contains the profiles object
             if (data && !error && data.profiles && 
                 typeof data.profiles === 'object' && 
-                data.profiles !== null && 
-                'business_name' in data.profiles) {
-              setBusinessName(data.profiles.business_name as string);
+                data.profiles !== null) {
+              // Safely access business_name with type checking
+              const businessProfiles = data.profiles as { business_name?: string };
+              if (businessProfiles && 'business_name' in businessProfiles) {
+                setBusinessName(businessProfiles.business_name || null);
+              }
             }
           } catch (err) {
             console.error("Error fetching business name:", err);
