@@ -11,20 +11,28 @@ import { supabase } from "@/integrations/supabase/client";
 
 const StaffDashboard = () => {
   const { isStaff, businessId, staffRelationId, isLoading } = useStaffStatus();
-  const { data: { user } } = supabase.auth.getUser();
+  
+  // Fix: Use the getUser() method correctly with async/await pattern
+  const { data: userData } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user;
+    }
+  });
   
   // Get task and shift counts
   const { data: counts } = useQuery({
     queryKey: ['staffCounts', staffRelationId],
     queryFn: async () => {
-      if (!staffRelationId) return { tasks: 0, shifts: 0 };
+      if (!staffRelationId || !userData?.id) return { tasks: 0, shifts: 0 };
       
       try {
         // Get pending task count
         const { count: taskCount, error: taskError } = await supabase
           .from('tasks')
           .select('id', { count: 'exact', head: true })
-          .eq('assignee_id', user?.id)
+          .eq('assignee_id', userData.id)
           .eq('status', 'pending');
           
         // Get active shifts count
@@ -43,7 +51,7 @@ const StaffDashboard = () => {
         return { tasks: 0, shifts: 0 };
       }
     },
-    enabled: !!staffRelationId && !!user?.id
+    enabled: !!staffRelationId && !!userData?.id
   });
   
   if (isLoading) {
@@ -65,7 +73,7 @@ const StaffDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <StaffWelcomeMessage businessId={businessId} staffId={user?.id || null} />
+      <StaffWelcomeMessage businessId={businessId} staffId={userData?.id || null} />
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
