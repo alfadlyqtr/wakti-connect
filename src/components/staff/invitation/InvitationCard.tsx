@@ -33,7 +33,7 @@ const InvitationCard = ({
   
   const copyInviteLink = (token: string, id: string, businessName: string) => {
     const businessSlug = slugifyBusinessName(businessName);
-    const inviteUrl = `${window.location.origin}/auth/staff-signup?token=${token}&business=${businessSlug}`;
+    const inviteUrl = `${window.location.origin}/auth/staff-invitation?token=${token}&business=${businessSlug}`;
     navigator.clipboard.writeText(inviteUrl);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
@@ -46,7 +46,7 @@ const InvitationCard = ({
   
   const openInviteLink = (token: string, businessName: string) => {
     const businessSlug = slugifyBusinessName(businessName);
-    const inviteUrl = `${window.location.origin}/auth/staff-signup?token=${token}&business=${businessSlug}`;
+    const inviteUrl = `${window.location.origin}/auth/staff-invitation?token=${token}&business=${businessSlug}`;
     window.open(inviteUrl, '_blank');
   };
 

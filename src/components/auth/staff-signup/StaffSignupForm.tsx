@@ -1,77 +1,93 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { useSearchParams } from "react-router-dom";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { useStaffSignup } from "./useStaffSignup";
-import StaffSignupFormFields from "./StaffSignupFormFields";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Loader2 } from "lucide-react";
+import { useStaffSignup, StaffSignupFormValues } from "./useStaffSignup";
 import StaffInvitationVerification from "./StaffInvitationVerification";
-import { Building2 } from "lucide-react";
+import StaffSignupFormFields from "./StaffSignupFormFields";
 
-// Define the schema for the form
 const staffSignupSchema = z.object({
   password: z
     .string()
     .min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
-}).refine(data => data.password === data.confirmPassword, {
+})
+.refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
 });
 
-type FormValues = z.infer<typeof staffSignupSchema>;
-
 const StaffSignupForm: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get("token") || undefined;
-  const businessSlug = searchParams.get("business") || undefined;
-  const { invitation, status, isSubmitting, onSubmit } = useStaffSignup(token);
+  const token = searchParams.get("token") || "";
+  const businessSlug = searchParams.get("business") || "";
+  const acceptedParam = searchParams.get("accepted") || "";
   
-  const form = useForm<FormValues>({
+  // Only proceed if the invitation has been explicitly accepted
+  const wasAccepted = acceptedParam === "true";
+  
+  const { invitation, status, isSubmitting, onSubmit } = useStaffSignup(wasAccepted ? token : "");
+  
+  const form = useForm<StaffSignupFormValues>({
     resolver: zodResolver(staffSignupSchema),
     defaultValues: {
       password: "",
-      confirmPassword: "",
+      confirmPassword: ""
     },
   });
   
-  // If we're loading or the invitation is invalid, show the verification component
-  if (status !== "valid") {
+  // Redirect to decision page if not accepted yet
+  if (!wasAccepted && token) {
+    window.location.href = `/auth/staff-invitation?token=${token}&business=${businessSlug}`;
+    return null;
+  }
+  
+  if (status === "loading") {
     return (
       <StaffInvitationVerification 
-        isLoading={status === "loading"}
-        error={status === "invalid" ? "Invalid or expired invitation" : null}
-        invitation={invitation}
-        businessName={businessSlug ? businessSlug.replace(/-/g, ' ') : undefined}
+        isLoading={true} 
+        error={null} 
+        invitation={null}
+        businessName={businessSlug.replace(/-/g, ' ')}
       />
     );
   }
   
-  const handleSubmit = (values: FormValues) => {
-    onSubmit(values);
-  };
+  if (status === "invalid") {
+    return (
+      <StaffInvitationVerification 
+        isLoading={false} 
+        error="Invalid or expired invitation" 
+        invitation={null}
+        businessName={businessSlug.replace(/-/g, ' ')}
+      />
+    );
+  }
   
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full">
       <CardHeader>
-        <div className="flex items-center gap-2 mb-2">
-          <Building2 className="h-5 w-5 text-wakti-blue" />
-          <span className="text-sm font-medium text-muted-foreground">
-            {invitation?.business_name || "Business"}
-          </span>
-        </div>
         <CardTitle>Create Your Staff Account</CardTitle>
         <CardDescription>
-          Set your password to complete your account setup for {invitation?.business_name || "the business"}
+          Set up your account to join {invitation?.business_name || businessSlug.replace(/-/g, ' ')}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="border rounded-md p-4 bg-muted/50 mb-4">
+              <h3 className="font-medium mb-2">Your Information</h3>
+              <p className="text-sm"><span className="text-muted-foreground">Name:</span> {invitation?.name}</p>
+              <p className="text-sm"><span className="text-muted-foreground">Email:</span> {invitation?.email}</p>
+              <p className="text-sm"><span className="text-muted-foreground">Role:</span> {invitation?.role}</p>
+            </div>
+            
             <StaffSignupFormFields form={form} />
             
             <Button 
@@ -79,7 +95,14 @@ const StaffSignupForm: React.FC = () => {
               className="w-full" 
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Creating Account..." : "Create Account"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                "Create Account"
+              )}
             </Button>
           </form>
         </Form>

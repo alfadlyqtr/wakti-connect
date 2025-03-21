@@ -64,9 +64,9 @@ serve(async (req) => {
     const invitation = invitationDetails[0];
     console.log("Invitation details:", invitation);
     
-    // Generate the invitation link with business name
+    // Generate the invitation link with business name - updated to go to invitation decision page
     const businessSlug = slugifyBusinessName(invitation.business_name);
-    const inviteUrl = `${req.headers.get("origin")}/auth/staff-signup?token=${invitation.token}&business=${businessSlug}`;
+    const inviteUrl = `${req.headers.get("origin")}/auth/staff-invitation?token=${invitation.token}&business=${businessSlug}`;
     
     // Send the email using Resend
     const { data: emailData, error: emailError } = await resend.emails.send({
@@ -78,10 +78,10 @@ serve(async (req) => {
           <h2>You've been invited to join ${invitation.business_name}</h2>
           <p>Hello ${invitation.name},</p>
           <p>${invitation.business_name} has invited you to join their team on WAKTI as a staff member.</p>
-          <p>To accept this invitation, please click the button below:</p>
+          <p>To review this invitation, please click the button below:</p>
           <div style="text-align: center; margin: 30px 0;">
             <a href="${inviteUrl}" style="background-color: #3B82F6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">
-              Accept Invitation
+              Review Invitation
             </a>
           </div>
           <p>Or copy and paste this URL into your browser:</p>
@@ -89,7 +89,7 @@ serve(async (req) => {
             ${inviteUrl}
           </p>
           <p style="margin-top: 30px; color: #64748b; font-size: 14px;">
-            This invitation is valid for 48 hours. If you didn't expect this invitation, you can ignore this email.
+            This invitation is valid for 48 hours. If you didn't expect this invitation, you can safely ignore this email or decline it directly on the review page.
           </p>
         </div>
       `
