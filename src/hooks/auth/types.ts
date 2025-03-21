@@ -4,7 +4,7 @@ export interface User {
   email: string;
   name: string;
   displayName?: string;
-  plan: 'free' | 'individual' | 'business'; // This maps to account_type in profiles
+  plan: 'free' | 'individual' | 'business' | 'staff'; // Updated to include 'staff'
 }
 
 export interface AuthContextType {

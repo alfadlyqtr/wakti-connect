@@ -1354,7 +1354,7 @@ export type Database = {
       }
     }
     Enums: {
-      account_type: "free" | "individual" | "business"
+      account_type: "free" | "individual" | "business" | "staff"
       appointment_status: "scheduled" | "cancelled" | "completed"
       booking_status: "pending" | "confirmed" | "cancelled" | "completed"
       event_status: "draft" | "sent" | "accepted" | "declined" | "recalled"
