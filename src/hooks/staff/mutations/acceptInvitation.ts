@@ -9,6 +9,8 @@ import { StaffInvitation, AcceptInvitationData } from "../types";
 export const useAcceptInvitation = () => {
   return useMutation({
     mutationFn: async ({ token, userId }: AcceptInvitationData): Promise<StaffInvitation> => {
+      console.log("Accepting invitation with token:", token, "for user:", userId);
+      
       // Get the invitation
       const { data: invitation, error: fetchError } = await supabase
         .from('staff_invitations')
@@ -17,7 +19,12 @@ export const useAcceptInvitation = () => {
         .eq('status', 'pending')
         .single();
         
-      if (fetchError) throw new Error('Invalid invitation');
+      if (fetchError) {
+        console.error("Error fetching invitation:", fetchError);
+        throw new Error('Invalid invitation');
+      }
+      
+      console.log("Found invitation:", invitation);
       
       // Update invitation status
       const { data: updatedInvitation, error: updateError } = await supabase
@@ -30,19 +37,49 @@ export const useAcceptInvitation = () => {
         .select('*')
         .single();
         
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Error updating invitation status:", updateError);
+        throw updateError;
+      }
+      
+      console.log("Updated invitation status to accepted");
       
       // Create staff record
-      const { error: staffError } = await supabase
+      const { data: staffData, error: staffError } = await supabase
         .from('business_staff')
         .insert({
           business_id: invitation.business_id,
           staff_id: userId,
           role: invitation.role,
-          position: invitation.position || 'staff'
-        });
+          position: invitation.position || 'staff',
+          name: invitation.name,
+          email: invitation.email
+        })
+        .select()
+        .single();
         
-      if (staffError) throw staffError;
+      if (staffError) {
+        console.error("Error creating staff record:", staffError);
+        throw staffError;
+      }
+      
+      console.log("Created staff record:", staffData);
+      
+      // IMPORTANT: Update user's profile to set account_type to 'staff'
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          account_type: 'staff',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+        
+      if (profileError) {
+        console.error("Error updating user profile account_type:", profileError);
+        throw profileError;
+      }
+      
+      console.log("Updated user profile account_type to staff");
       
       // Update staff TypeScript type safety for the returned object
       return {
