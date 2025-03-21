@@ -1,20 +1,27 @@
 
-import { useFetchInvitations, useFetchPendingInvitations } from "./queries";
+import { useQuery } from "@tanstack/react-query";
+import { fetchInvitations, fetchPendingInvitations } from "./queries";
 import { UseStaffInvitationsQueries } from "./types";
 
 /**
  * Hook for fetching staff invitations
  */
 export const useStaffInvitationQueries = (): UseStaffInvitationsQueries => {
-  // Use the individual query hooks
+  // Use the fetchInvitations query function with useQuery
   const {
     data: invitations,
     isLoading,
     error
-  } = useFetchInvitations();
+  } = useQuery({
+    queryKey: ['staffInvitations'],
+    queryFn: fetchInvitations
+  });
 
-  // You can also destructure the pending invitations query if needed
-  // const { data: pendingInvitations } = useFetchPendingInvitations();
+  // You can also use the pending invitations query if needed
+  // const { data: pendingInvitations } = useQuery({
+  //   queryKey: ['pendingStaffInvitations'],
+  //   queryFn: fetchPendingInvitations
+  // });
 
   return {
     invitations,
