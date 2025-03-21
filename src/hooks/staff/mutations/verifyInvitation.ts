@@ -12,7 +12,7 @@ export const useVerifyInvitation = () => {
       // Check if token exists and is valid
       const { data, error } = await supabase
         .from('staff_invitations')
-        .select('*, business:business_id(business_name)')
+        .select('*, business:profiles!staff_invitations_business_id_fkey(business_name)')
         .eq('token', token)
         .eq('status', 'pending')
         .single();

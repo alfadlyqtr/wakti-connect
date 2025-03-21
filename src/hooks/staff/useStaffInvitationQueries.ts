@@ -1,6 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { fetchInvitations, fetchPendingInvitations } from "./queries";
+import { fetchInvitations } from "./queries";
 import { UseStaffInvitationsQueries } from "./types";
 
 /**
@@ -20,7 +20,7 @@ export const useStaffInvitationQueries = (): UseStaffInvitationsQueries => {
   // You can also use the pending invitations query if needed
   // const { data: pendingInvitations } = useQuery({
   //   queryKey: ['pendingStaffInvitations'],
-  //   queryFn: fetchPendingInvitations
+  //   queryFn: useFetchPendingInvitations
   // });
 
   return {
