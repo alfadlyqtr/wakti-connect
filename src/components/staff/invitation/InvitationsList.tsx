@@ -26,8 +26,8 @@ const InvitationsList = ({
         <InvitationCard
           key={invitation.id}
           invitation={invitation}
-          resendInvitation={() => resendInvitation.mutate(invitation.id)}
-          cancelInvitation={() => cancelInvitation.mutate(invitation.id)}
+          onResend={(id) => resendInvitation.mutate(id)}
+          onCancel={(id) => cancelInvitation.mutate(id)}
           isResending={resendInvitation.isPending && resendInvitation.variables === invitation.id}
           isCancelling={cancelInvitation.isPending && cancelInvitation.variables === invitation.id}
         />

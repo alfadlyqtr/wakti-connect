@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useStaffInvitations } from "@/hooks/useStaffInvitations";
+import { useStaffInvitations } from "@/hooks/staff/useStaffInvitations";
 import { 
   InvitationsList, 
   InvitationInfoAlert 

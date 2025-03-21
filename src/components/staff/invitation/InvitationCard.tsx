@@ -29,14 +29,18 @@ interface InvitationCardProps {
   invitation: StaffInvitation;
   onResend: (id: string) => void;
   onCancel: (id: string) => void;
-  isProcessing: boolean;
+  isProcessing?: boolean;
+  isResending?: boolean;
+  isCancelling?: boolean;
 }
 
 const InvitationCard: React.FC<InvitationCardProps> = ({
   invitation,
   onResend,
   onCancel,
-  isProcessing
+  isProcessing,
+  isResending,
+  isCancelling
 }) => {
   const isExpired = isAfter(new Date(), new Date(invitation.expires_at));
   
@@ -127,7 +131,7 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
               variant="outline"
               className="flex-1 h-8 text-xs gap-1"
               onClick={() => onResend(invitation.id)}
-              disabled={isProcessing}
+              disabled={isProcessing || isResending}
             >
               <MailCheck className="h-3.5 w-3.5" />
               Resend
@@ -138,7 +142,7 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
               variant="outline"
               className="flex-1 h-8 text-xs gap-1 text-destructive border-destructive hover:bg-destructive/10"
               onClick={() => onCancel(invitation.id)}
-              disabled={isProcessing}
+              disabled={isProcessing || isCancelling}
             >
               <Trash2 className="h-3.5 w-3.5" />
               Cancel
