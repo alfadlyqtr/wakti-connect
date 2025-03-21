@@ -55,7 +55,10 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
               .maybeSingle();
               
             // Check if data exists, is not an error, and contains the profiles object
-            if (data && !error && data.profiles && typeof data.profiles === 'object' && 'business_name' in data.profiles) {
+            if (data && !error && data.profiles && 
+                typeof data.profiles === 'object' && 
+                data.profiles !== null && 
+                'business_name' in data.profiles) {
               setBusinessName(data.profiles.business_name as string);
             }
           } catch (err) {
