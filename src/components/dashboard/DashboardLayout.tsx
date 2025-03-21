@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -27,6 +26,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const [errorLogged, setErrorLogged] = useState(false);
+  const [isStaff, setIsStaff] = useState(false);
 
   // Fetch user profile data for the dashboard
   const { data: profileData, isLoading: profileLoading } = useQuery({
@@ -39,6 +39,19 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           console.log("No active session found, redirecting to auth page");
           navigate("/auth");
           return null;
+        }
+        
+        // Check if user is staff
+        const { data: staffData } = await supabase
+          .from('business_staff')
+          .select('id')
+          .eq('staff_id', session.user.id)
+          .maybeSingle();
+          
+        if (staffData) {
+          setIsStaff(true);
+          localStorage.setItem('isStaff', 'true');
+          localStorage.setItem('userRole', 'staff');
         }
         
         const { data, error } = await supabase
@@ -79,8 +92,11 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           return null;
         }
         
-        // Store user role in localStorage for use in other components
-        if (data?.account_type) {
+        // Store user role in localStorage for use in other components,
+        // but use 'staff' role if user is a staff member
+        if (staffData) {
+          localStorage.setItem('userRole', 'staff');
+        } else if (data?.account_type) {
           localStorage.setItem('userRole', data.account_type);
         }
         
@@ -162,7 +178,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   };
 
   // Get the correct user role
-  const userRoleValue = profileData?.account_type || propUserRole || "free";
+  const userRoleValue = isStaff ? 'staff' : (profileData?.account_type || propUserRole || "free");
 
   // Calculate main content padding based on sidebar state
   const mainContentClass = isMobile 
@@ -174,7 +190,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       <Navbar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
       
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar isOpen={isSidebarOpen} userRole={userRoleValue as "free" | "individual" | "business"} />
+        <Sidebar isOpen={isSidebarOpen} userRole={userRoleValue as "free" | "individual" | "business" | "staff"} />
         
         <main className={`flex-1 overflow-y-auto pt-4 px-4 pb-12 ${mainContentClass}`}>
           <div className="container mx-auto animate-in">

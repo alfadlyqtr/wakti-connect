@@ -1,9 +1,10 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { navItems, NavItem } from "./sidebarNavConfig";
 import SidebarNavItem from "./SidebarNavItem";
+import { isUserStaff } from "@/utils/staffUtils";
 
 interface SidebarNavItemsProps {
   onNavClick: (path: string) => void;
@@ -16,14 +17,38 @@ const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
 }) => {
   const location = useLocation();
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const [isStaff, setIsStaff] = useState(false);
   
   // Get user role from localStorage
-  const userRole = localStorage.getItem('userRole') as 'free' | 'individual' | 'business' || 'free';
+  const userRole = localStorage.getItem('userRole') as 'free' | 'individual' | 'business' | 'staff' || 'free';
+  
+  // Check if user is staff on component mount
+  useEffect(() => {
+    const checkStaffStatus = async () => {
+      const staffStatus = await isUserStaff();
+      setIsStaff(staffStatus);
+      
+      // If user is staff, store this information
+      if (staffStatus) {
+        localStorage.setItem('isStaff', 'true');
+      }
+    };
+    
+    // Check localStorage first for quick loading
+    if (localStorage.getItem('isStaff') === 'true') {
+      setIsStaff(true);
+    } else {
+      checkStaffStatus();
+    }
+  }, []);
   
   // Filter navigation items based on user role
-  const filteredNavItems = navItems.filter(item => 
-    item.showFor.includes(userRole)
-  );
+  const filteredNavItems = navItems.filter(item => {
+    if (isStaff) {
+      return item.showFor.includes('staff');
+    }
+    return item.showFor.includes(userRole);
+  });
   
   // Helper to check if a nav item is active
   const isActive = (item: NavItem) => {

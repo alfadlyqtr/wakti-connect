@@ -12,7 +12,9 @@ import {
   PartyPopper,
   BarChart2,
   FileText,
-  Bot
+  Bot,
+  MessageSquare,
+  Bookmark
 } from "lucide-react";
 
 export type NavItem = {
@@ -20,7 +22,7 @@ export type NavItem = {
   path: string;
   icon: any;
   badge?: number | null;
-  showFor: Array<'free' | 'individual' | 'business'>;
+  showFor: Array<'free' | 'individual' | 'business' | 'staff'>;
 };
 
 export const navItems: NavItem[] = [
@@ -28,19 +30,37 @@ export const navItems: NavItem[] = [
     label: "Dashboard",
     path: "",
     icon: LayoutDashboard,
-    showFor: ['free', 'individual', 'business'],
+    showFor: ['free', 'individual', 'business', 'staff'],
   },
   {
     label: "Tasks",
     path: "tasks",
     icon: ListChecks,
-    showFor: ['free', 'individual', 'business'],
+    showFor: ['free', 'individual', 'business', 'staff'],
   },
   {
     label: "Events",
     path: "events",
     icon: PartyPopper,
     showFor: ['free', 'individual', 'business'],
+  },
+  {
+    label: "Job Cards",
+    path: "job-cards",
+    icon: FileText,
+    showFor: ['staff'],
+  },
+  {
+    label: "Bookings",
+    path: "bookings",
+    icon: Calendar,
+    showFor: ['business', 'staff'],
+  },
+  {
+    label: "Messages",
+    path: "messages",
+    icon: MessageSquare,
+    showFor: ['individual', 'business', 'staff'],
   },
   {
     label: "WAKTI AI",
@@ -52,12 +72,6 @@ export const navItems: NavItem[] = [
     label: "Business Page",
     path: "business-page",
     icon: Building2,
-    showFor: ['business'],
-  },
-  {
-    label: "Bookings",
-    path: "bookings",
-    icon: Calendar,
     showFor: ['business'],
   },
   {
@@ -94,12 +108,12 @@ export const navItems: NavItem[] = [
     label: "Settings",
     path: "settings",
     icon: Settings,
-    showFor: ['free', 'individual', 'business'],
+    showFor: ['free', 'individual', 'business', 'staff'],
   },
   {
     label: "Help",
     path: "help",
     icon: HelpCircle,
-    showFor: ['free', 'individual', 'business'],
+    showFor: ['free', 'individual', 'business', 'staff'],
   },
 ];

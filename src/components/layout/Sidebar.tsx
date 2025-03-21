@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { isUserStaff } from "@/utils/staffUtils";
 
 // Define profile type to ensure TypeScript knows about our new columns
 interface SidebarProfileData {
@@ -22,12 +23,50 @@ interface SidebarProfileData {
 
 interface SidebarProps {
   isOpen: boolean;
-  userRole: "free" | "individual" | "business";
+  userRole: "free" | "individual" | "business" | "staff";
 }
 
 const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(true); // Default to collapsed
+  const [isUserStaffMember, setIsUserStaffMember] = useState(false);
+  const [businessName, setBusinessName] = useState<string | null>(null);
+  
+  // Check if user is staff on component mount
+  useEffect(() => {
+    const checkStaffStatus = async () => {
+      const staffStatus = await isUserStaff();
+      setIsUserStaffMember(staffStatus);
+      
+      if (staffStatus) {
+        // Get business information for staff display
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase
+            .from('business_staff')
+            .select(`
+              business_id,
+              profiles:business_id (
+                business_name
+              )
+            `)
+            .eq('staff_id', user.id)
+            .maybeSingle();
+            
+          if (data && data.profiles) {
+            setBusinessName(data.profiles.business_name);
+          }
+        }
+      }
+    };
+    
+    // Check localStorage first for quick loading
+    if (localStorage.getItem('isStaff') === 'true') {
+      setIsUserStaffMember(true);
+    } else {
+      checkStaffStatus();
+    }
+  }, []);
   
   // Check local storage for saved sidebar state
   useEffect(() => {
@@ -71,6 +110,10 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
 
   // Determine display name for profile
   const getDisplayName = () => {
+    if (isUserStaffMember && profileData) {
+      return profileData.full_name || profileData.display_name || 'Staff Member';
+    }
+    
     if (profileData?.account_type === 'business') {
       return profileData?.business_name || 'Business Account';
     }
@@ -83,6 +126,10 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
   };
   
   const getSubtitle = () => {
+    if (isUserStaffMember) {
+      return businessName ? `Staff at ${businessName}` : 'Staff Member';
+    }
+    
     if (profileData?.account_type === 'business') {
       return profileData?.full_name ? `${profileData.full_name}` : 'Account Admin'; 
     }
@@ -138,6 +185,11 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
                 <p className="font-medium text-sm truncate max-w-[130px]">{getDisplayName()}</p>
                 <div className="flex items-center gap-1">
                   <p className="text-xs text-muted-foreground truncate max-w-[100px]">{getSubtitle()}</p>
+                  {isUserStaffMember && (
+                    <Badge variant="outline" className="text-[10px] py-0 h-4 px-1 border-wakti-blue text-wakti-blue">
+                      Staff
+                    </Badge>
+                  )}
                   {profileData?.account_type === 'business' && (
                     <Badge variant="outline" className="text-[10px] py-0 h-4 px-1 border-wakti-blue text-wakti-blue">
                       Admin
