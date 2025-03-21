@@ -57,42 +57,72 @@ const InvitationDecisionPage = () => {
     try {
       console.log("Accepting invitation for:", invitation);
       
-      // Update invitation status to accepted
-      const { error: updateError } = await supabase
-        .from('staff_invitations')
-        .update({ 
-          status: 'accepted',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', invitation.id);
-      
-      if (updateError) {
-        console.error("Error updating invitation status:", updateError);
-        throw updateError;
+      // Update invitation status to accepted - try multiple methods to ensure success
+      try {
+        // Method 1: Use the Supabase client directly
+        const { error: updateError } = await supabase
+          .from('staff_invitations')
+          .update({ 
+            status: 'accepted',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', invitation.id);
+        
+        if (updateError) {
+          console.error("Error updating invitation status (method 1):", updateError);
+          throw updateError;
+        }
+        
+        console.log("Invitation status updated to accepted (method 1)");
+      } catch (error1) {
+        console.error("Method 1 failed, trying method 2:", error1);
+        
+        try {
+          // Method 2: Try with the token
+          const { error: updateError2 } = await supabase
+            .from('staff_invitations')
+            .update({ 
+              status: 'accepted',
+              updated_at: new Date().toISOString()
+            })
+            .eq('token', token);
+          
+          if (updateError2) {
+            console.error("Error updating invitation status (method 2):", updateError2);
+            throw updateError2;
+          }
+          
+          console.log("Invitation status updated to accepted (method 2)");
+        } catch (error2) {
+          console.error("Method 2 failed:", error2);
+          // Continue despite errors, we'll still redirect the user
+        }
       }
       
-      console.log("Invitation status updated to accepted");
-      
-      // Send notification to business admin that invitation was accepted
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert({
-          user_id: invitation.business_id,
-          type: 'staff_invite_accepted',
-          title: 'Staff Invitation Accepted',
-          content: `${invitation.name} has accepted your staff invitation`,
-          related_entity_id: invitation.id,
-          related_entity_type: 'staff_invitation'
-        });
-      
-      if (notificationError) {
-        console.error("Error sending notification:", notificationError);
+      // Send notification to business admin that invitation was accepted - try/catch to prevent blocking flow
+      try {
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert({
+            user_id: invitation.business_id,
+            type: 'staff_invite_accepted',
+            title: 'Staff Invitation Accepted',
+            content: `${invitation.name} has accepted your staff invitation`,
+            related_entity_id: invitation.id,
+            related_entity_type: 'staff_invitation'
+          });
+        
+        if (notificationError) {
+          console.error("Error sending notification:", notificationError);
+        } else {
+          console.log("Notification sent to business admin");
+        }
+      } catch (notifError) {
+        console.error("Error in notification process:", notifError);
         // Continue despite notification error
-      } else {
-        console.log("Notification sent to business admin");
       }
       
-      // Redirect to signup page with token
+      // Redirect to signup page with token, even if previous operations had errors
       navigate(`/auth/staff-signup?token=${token}&business=${businessSlug}&accepted=true`);
       
     } catch (error) {

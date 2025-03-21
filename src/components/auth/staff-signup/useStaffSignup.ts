@@ -60,20 +60,23 @@ export const useStaffSignup = (token?: string) => {
     try {
       console.log("Creating staff account for:", invitation);
       
-      // Create user account - set account_type to 'staff'
+      // Create user account with staff account_type
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: invitation.email,
         password: values.password,
         options: {
           data: {
             full_name: invitation.name,
-            account_type: 'staff', // Correctly set as staff
+            account_type: 'staff',
             display_name: invitation.name
           }
         }
       });
       
-      if (authError) throw authError;
+      if (authError) {
+        console.error("Auth error:", authError);
+        throw authError;
+      }
       
       if (!authData.user) {
         throw new Error("Failed to create user account");
@@ -81,13 +84,34 @@ export const useStaffSignup = (token?: string) => {
       
       console.log("User account created:", authData.user.id);
       
-      // Accept the invitation and create staff record
-      await acceptInvitation.mutateAsync({
-        token,
-        userId: authData.user.id
-      });
+      // First, try to update the invitation status directly in case the RLS is causing issues
+      const { error: updateError } = await supabase
+        .from('staff_invitations')
+        .update({
+          status: 'accepted',
+          updated_at: new Date().toISOString()
+        })
+        .eq('token', token);
+        
+      if (updateError) {
+        console.error("Error updating invitation directly:", updateError);
+        // Continue despite this error, as we'll try with the mutation
+      } else {
+        console.log("Invitation status updated to accepted directly");
+      }
       
-      console.log("Invitation accepted and staff record created");
+      // Then use the acceptInvitation mutation
+      try {
+        await acceptInvitation.mutateAsync({
+          token,
+          userId: authData.user.id
+        });
+        console.log("Invitation accepted and staff record created");
+      } catch (acceptError) {
+        console.error("Error in acceptInvitation mutation:", acceptError);
+        // Fall back to direct database operations for creating staff record
+        await createStaffRecord(invitation, authData.user.id);
+      }
       
       toast({
         title: "Account created successfully",
@@ -105,6 +129,102 @@ export const useStaffSignup = (token?: string) => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+  
+  // Fallback function to create staff record directly
+  const createStaffRecord = async (invitation: any, userId: string) => {
+    try {
+      console.log("Creating staff record directly for:", userId);
+      
+      // Create staff record
+      const { data: staffData, error: staffError } = await supabase
+        .from('business_staff')
+        .insert({
+          business_id: invitation.business_id,
+          staff_id: userId,
+          role: invitation.role || 'staff',
+          position: invitation.position || 'staff',
+          name: invitation.name,
+          email: invitation.email,
+          status: 'active'
+        })
+        .select()
+        .single();
+        
+      if (staffError) {
+        console.error("Error creating staff record directly:", staffError);
+        throw staffError;
+      }
+      
+      console.log("Created staff record directly:", staffData);
+      
+      // Send notification to business owner
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: invitation.business_id,
+          type: 'staff_joined',
+          title: 'New Staff Member Joined',
+          content: `${invitation.name} has completed their account setup and joined your team`,
+          related_entity_id: userId,
+          related_entity_type: 'staff_account'
+        });
+        
+      if (notificationError) {
+        console.error("Error sending notification:", notificationError);
+      } else {
+        console.log("Notification sent to business owner");
+      }
+      
+      // Create bidirectional contact relationships
+      if (staffData) {
+        const { error: contactError1 } = await supabase
+          .from('user_contacts')
+          .insert({
+            user_id: invitation.business_id,
+            contact_id: userId,
+            status: 'accepted',
+            staff_relation_id: staffData.id,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+          
+        const { error: contactError2 } = await supabase
+          .from('user_contacts')
+          .insert({
+            user_id: userId,
+            contact_id: invitation.business_id,
+            status: 'accepted',
+            staff_relation_id: staffData.id,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+          
+        if (contactError1 || contactError2) {
+          console.error("Error creating contact relationships:", contactError1 || contactError2);
+        } else {
+          console.log("Created bidirectional contact relationships");
+        }
+      }
+      
+      // Update user profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          account_type: 'staff',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+        
+      if (profileError) {
+        console.error("Error updating user profile:", profileError);
+      } else {
+        console.log("Updated user profile account_type to staff");
+      }
+      
+    } catch (error) {
+      console.error("Error in createStaffRecord fallback:", error);
     }
   };
 

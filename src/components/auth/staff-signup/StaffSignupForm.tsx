@@ -1,6 +1,6 @@
 
-import React from "react";
-import { useSearchParams } from "react-router-dom";
+import React, { useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ const staffSignupSchema = z.object({
 });
 
 const StaffSignupForm: React.FC = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") || "";
   const businessSlug = searchParams.get("business") || "";
@@ -31,6 +32,13 @@ const StaffSignupForm: React.FC = () => {
   
   // Only proceed if the invitation has been explicitly accepted
   const wasAccepted = acceptedParam === "true";
+  
+  console.log("Staff signup form loaded with params:", {
+    token,
+    businessSlug,
+    acceptedParam,
+    wasAccepted
+  });
   
   const { invitation, status, isSubmitting, onSubmit } = useStaffSignup(wasAccepted ? token : "");
   
@@ -43,9 +51,15 @@ const StaffSignupForm: React.FC = () => {
   });
   
   // Redirect to decision page if not accepted yet
+  useEffect(() => {
+    if (!wasAccepted && token) {
+      console.log("Redirecting to decision page because invitation not accepted yet");
+      navigate(`/auth/staff-invitation?token=${token}&business=${businessSlug}`);
+    }
+  }, [wasAccepted, token, businessSlug, navigate]);
+  
   if (!wasAccepted && token) {
-    window.location.href = `/auth/staff-invitation?token=${token}&business=${businessSlug}`;
-    return null;
+    return null; // Don't render anything while redirecting
   }
   
   if (status === "loading") {
