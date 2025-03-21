@@ -1,137 +1,173 @@
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { format, isAfter } from "date-fns";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Clock, X, RotateCw, Send } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { 
+  Clock, 
+  MailCheck, 
+  Trash2, 
+  User, 
+  CheckCircle2, 
+  XCircle,
+  ExternalLink,
+  Copy
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { StaffInvitation } from "@/hooks/staff/types";
+import { toast } from "@/components/ui/use-toast";
 
 interface InvitationCardProps {
   invitation: StaffInvitation;
-  resendInvitation: () => void;
-  cancelInvitation: () => void;
-  isResending: boolean;
-  isCancelling: boolean;
+  onResend: (id: string) => void;
+  onCancel: (id: string) => void;
+  isProcessing: boolean;
 }
 
-const InvitationCard = ({
+const InvitationCard: React.FC<InvitationCardProps> = ({
   invitation,
-  resendInvitation,
-  cancelInvitation,
-  isResending,
-  isCancelling
-}: InvitationCardProps) => {
-  // Format expiry date/time
-  const expiryDate = new Date(invitation.expires_at);
-  const expiresIn = formatDistanceToNow(expiryDate, { addSuffix: true });
-  const isExpired = expiryDate < new Date();
+  onResend,
+  onCancel,
+  isProcessing
+}) => {
+  const isExpired = isAfter(new Date(), new Date(invitation.expires_at));
   
-  // Format creation date
-  const createdAt = formatDistanceToNow(new Date(invitation.created_at), { addSuffix: true });
+  // Generate the invitation link
+  const invitationLink = `${window.location.origin}/auth/staff-invitation?token=${invitation.token}`;
   
-  // Status badge styles
-  const getStatusStyles = () => {
-    switch (invitation.status) {
-      case 'accepted':
-        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
-      case 'declined':
-        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
-      case 'pending':
-      default:
-        return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300";
-    }
+  // Function to handle copying link to clipboard
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(invitationLink);
+    toast({
+      title: "Link copied",
+      description: "The invitation link has been copied to clipboard"
+    });
   };
   
-  // Status icon
-  const getStatusIcon = () => {
-    switch (invitation.status) {
-      case 'accepted':
-        return <Check className="h-3 w-3" />;
-      case 'declined':
-        return <X className="h-3 w-3" />;
-      case 'pending':
-      default:
-        return <Clock className="h-3 w-3" />;
-    }
+  // Function to open the invitation link in a new tab
+  const handleOpenLink = () => {
+    window.open(invitationLink, '_blank');
   };
-  
+
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <div className="flex justify-between">
+    <Card className="overflow-hidden shadow-sm">
+      <CardHeader className="py-4">
+        <div className="flex justify-between items-start">
           <div className="flex items-center gap-2">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback>{invitation.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+            <Avatar className="h-10 w-10 border">
+              <AvatarFallback className="bg-primary/10 text-primary">
+                {invitation.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle className="text-lg">{invitation.name}</CardTitle>
-              <CardDescription className="text-xs">{invitation.email}</CardDescription>
+              <CardTitle className="text-base">{invitation.name}</CardTitle>
+              <CardDescription className="text-xs flex items-center gap-1">
+                <User className="h-3 w-3" />
+                {invitation.position || invitation.role}
+              </CardDescription>
             </div>
           </div>
-          <Badge variant="outline" className={`text-xs flex items-center gap-1 ${getStatusStyles()}`}>
-            {getStatusIcon()}
-            {invitation.status.charAt(0).toUpperCase() + invitation.status.slice(1)}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="pb-2 text-sm space-y-2">
-        <div className="flex justify-between text-muted-foreground">
-          <span>Invited {createdAt}</span>
-          {invitation.status === 'pending' && (
-            <span className={isExpired ? "text-destructive" : ""}>
-              Expires {expiresIn}
-            </span>
-          )}
-        </div>
-        <div>
-          <Badge variant="secondary" className="mr-2">
-            {invitation.role.charAt(0).toUpperCase() + invitation.role.slice(1)}
-          </Badge>
-          {invitation.position && (
-            <Badge variant="outline">
-              {invitation.position}
+          
+          {invitation.status === 'pending' ? (
+            <Badge 
+              variant={isExpired ? "destructive" : "outline"} 
+              className="capitalize font-normal text-xs"
+            >
+              {isExpired ? "Expired" : "Pending"}
+            </Badge>
+          ) : (
+            <Badge 
+              variant={invitation.status === 'accepted' ? "success" : "destructive"} 
+              className="capitalize font-normal text-xs flex items-center gap-1"
+            >
+              {invitation.status === 'accepted' ? 
+                <>
+                  <CheckCircle2 className="h-3 w-3" />
+                  Accepted
+                </> : 
+                <>
+                  <XCircle className="h-3 w-3" />
+                  Declined
+                </>
+              }
             </Badge>
           )}
         </div>
+      </CardHeader>
+      
+      <CardContent className="py-2">
+        <div className="text-sm text-muted-foreground flex items-start gap-1 mb-1">
+          <span className="shrink-0">Email:</span>
+          <span className="font-medium text-foreground">{invitation.email}</span>
+        </div>
+        <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+          <Clock className="h-3.5 w-3.5" />
+          <span>
+            {invitation.status === 'pending' ? 
+              `Sent ${format(new Date(invitation.created_at), "MMM d, yyyy")} · Expires ${format(new Date(invitation.expires_at), "MMM d, yyyy")}` :
+              `Updated ${format(new Date(invitation.updated_at), "MMM d, yyyy")}`
+            }
+          </span>
+        </div>
       </CardContent>
-      <CardFooter className="pt-2">
+      
+      <CardFooter className="pt-2 pb-3 flex flex-wrap gap-2">
         {invitation.status === 'pending' ? (
-          <div className="grid grid-cols-2 gap-2 w-full">
-            <Button 
-              variant="outline" 
+          <>
+            <Button
               size="sm"
-              onClick={resendInvitation}
-              disabled={isResending || isCancelling}
-              className="flex items-center gap-1"
+              variant="outline"
+              className="flex-1 h-8 text-xs gap-1"
+              onClick={() => onResend(invitation.id)}
+              disabled={isProcessing}
             >
-              {isResending ? (
-                <RotateCw className="h-3 w-3 animate-spin" />
-              ) : (
-                <Send className="h-3 w-3" />
-              )}
+              <MailCheck className="h-3.5 w-3.5" />
               Resend
             </Button>
-            <Button 
-              variant="outline" 
+            
+            <Button
               size="sm"
-              onClick={cancelInvitation}
-              disabled={isResending || isCancelling}
-              className="text-destructive hover:bg-destructive/10 flex items-center gap-1"
+              variant="outline"
+              className="flex-1 h-8 text-xs gap-1 text-destructive border-destructive hover:bg-destructive/10"
+              onClick={() => onCancel(invitation.id)}
+              disabled={isProcessing}
             >
-              {isCancelling ? (
-                <RotateCw className="h-3 w-3 animate-spin" />
-              ) : (
-                <X className="h-3 w-3" />
-              )}
+              <Trash2 className="h-3.5 w-3.5" />
               Cancel
             </Button>
-          </div>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 h-8 text-xs gap-1"
+              onClick={handleOpenLink}
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Open
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 h-8 text-xs gap-1"
+              onClick={handleCopyLink}
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Copy Link
+            </Button>
+          </>
         ) : (
-          <p className="w-full text-center text-sm text-muted-foreground">
-            {invitation.status === 'accepted' ? 'Staff member has accepted the invitation' : 'Invitation has been declined'}
-          </p>
+          <div className="w-full text-xs text-center text-muted-foreground">
+            This invitation has been {invitation.status}
+          </div>
         )}
       </CardFooter>
     </Card>
