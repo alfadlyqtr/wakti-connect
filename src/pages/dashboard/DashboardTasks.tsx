@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
@@ -10,7 +9,6 @@ import TaskGrid from "@/components/tasks/TaskGrid";
 import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog";
 
 const DashboardTasks = () => {
-  // Updated type to include 'staff' account type
   const [userRole, setUserRole] = useState<"free" | "individual" | "business" | "staff" | null>(null);
   const [activeTab, setActiveTab] = useState<TaskTab>("my-tasks");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -29,7 +27,6 @@ const DashboardTasks = () => {
     userRole: fetchedUserRole
   } = useTasks(activeTab);
 
-  // Fetch user role
   useEffect(() => {
     const getUserRole = async () => {
       try {
@@ -52,7 +49,6 @@ const DashboardTasks = () => {
     getUserRole();
   }, []);
 
-  // Show error toast if query fails
   useEffect(() => {
     if (error) {
       toast({
@@ -63,7 +59,6 @@ const DashboardTasks = () => {
     }
   }, [error]);
 
-  // Update isPaidAccount to consider 'staff' as a paid account as well
   const isPaidAccount = userRole === "individual" || userRole === "business" || userRole === "staff";
 
   const handleCreateTask = async (taskData: any) => {

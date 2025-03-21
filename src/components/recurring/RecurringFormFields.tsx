@@ -8,7 +8,7 @@ import { RecurrenceFrequency } from '@/types/recurring.types';
 
 interface RecurringFormFieldsProps {
   form: any;
-  userRole?: "free" | "individual" | "business";
+  userRole?: "free" | "individual" | "business" | "staff"; // Updated to include 'staff'
   isRecurring?: boolean;
 }
 
@@ -19,7 +19,8 @@ const RecurringFormFields: React.FC<RecurringFormFieldsProps> = ({
 }) => {
   if (!isRecurring) return null;
 
-  const isPaidAccount = userRole === "individual" || userRole === "business";
+  // Update isPaidAccount to consider 'staff' as a paid account as well
+  const isPaidAccount = userRole === "individual" || userRole === "business" || userRole === "staff";
   if (!isPaidAccount) {
     return (
       <div className="p-4 border rounded-md bg-muted/20">

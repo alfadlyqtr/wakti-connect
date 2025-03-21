@@ -24,7 +24,7 @@ interface TaskControlsProps {
   currentTab: TaskTab;
   onTabChange: (tab: TaskTab) => void;
   isPaidAccount: boolean;
-  userRole: "free" | "individual" | "business";
+  userRole: "free" | "individual" | "business" | "staff"; // Updated to include 'staff'
 }
 
 const TaskControls = ({
@@ -42,7 +42,8 @@ const TaskControls = ({
 }: TaskControlsProps) => {
   if (!isPaidAccount) return null;
 
-  const showAssignedTab = userRole === "business" || userRole === "individual";
+  // Update to include staff role
+  const showAssignedTab = userRole === "business" || userRole === "individual" || userRole === "staff";
   
   return (
     <div className="space-y-4">
