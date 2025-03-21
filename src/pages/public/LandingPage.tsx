@@ -6,7 +6,6 @@ import Pricing from "@/components/landing/Pricing";
 import CTA from "@/components/landing/CTA";
 import { SectionContainer } from "@/components/ui/section-container";
 import DashboardPreview from "@/components/landing/DashboardPreview";
-import Footer from "@/components/landing/Footer";
 
 const LandingPage = () => {
   return (
@@ -30,8 +29,7 @@ const LandingPage = () => {
       {/* Call to Action */}
       <CTA />
       
-      {/* Footer is still needed here since PublicLayout only wraps Outlet content */}
-      <Footer />
+      {/* Footer is now handled by PublicLayout.tsx */}
     </div>
   );
 };
