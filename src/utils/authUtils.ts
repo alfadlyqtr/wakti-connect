@@ -1,3 +1,4 @@
+
 /**
  * Generates a random token for use in invitations and auth flows
  * @returns A random string token

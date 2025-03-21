@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
+import { slugifyBusinessName } from "@/utils/authUtils";
 
 export interface DashboardUserProfile {
   account_type: "free" | "individual" | "business";
@@ -150,6 +151,7 @@ export function useDashboardUserProfile() {
     profileLoading,
     userId,
     isStaff,
-    userRole: isStaff ? 'staff' : (profileData?.account_type || "free")
+    userRole: isStaff ? 'staff' : (profileData?.account_type || "free"),
+    businessSlug: profileData?.business_name ? slugifyBusinessName(profileData.business_name) : undefined
   };
 }
