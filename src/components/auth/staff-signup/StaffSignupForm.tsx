@@ -6,22 +6,11 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Loader2 } from "lucide-react";
 import { useStaffSignup, StaffSignupFormValues } from "./useStaffSignup";
+import { staffSignupSchema } from "./validation";
 import StaffInvitationVerification from "./StaffInvitationVerification";
 import StaffSignupFormFields from "./StaffSignupFormFields";
-
-const staffSignupSchema = z.object({
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string(),
-})
-.refine(data => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
 
 const StaffSignupForm: React.FC = () => {
   const navigate = useNavigate();
