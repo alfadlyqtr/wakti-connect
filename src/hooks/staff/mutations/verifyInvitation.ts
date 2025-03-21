@@ -27,19 +27,23 @@ export const useVerifyInvitation = () => {
         throw new Error('This invitation has expired');
       }
       
-      // Get business name from a separate query
+      // Get more comprehensive business information
       const { data: businessData, error: businessError } = await supabase
         .from('profiles')
-        .select('business_name')
+        .select('business_name, avatar_url, full_name')
         .eq('id', data.business_id)
         .single();
       
-      // Use a default business name if the query fails
+      // Use default business info if the query fails
       const businessName = businessError ? 'Business' : (businessData?.business_name || 'Business');
+      const businessAvatar = businessError ? null : businessData?.avatar_url;
+      const businessOwnerName = businessError ? null : businessData?.full_name;
       
       return {
         ...data,
-        business_name: businessName
+        business_name: businessName,
+        business_avatar: businessAvatar,
+        business_owner_name: businessOwnerName
       } as StaffInvitation;
     }
   });

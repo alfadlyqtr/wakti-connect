@@ -6,6 +6,7 @@ import "@/components/layout/sidebar/sidebar.css";
 import { useDashboardUserProfile } from "@/hooks/useDashboardUserProfile";
 import { useSidebarToggle } from "@/hooks/useSidebarToggle";
 import DashboardContent from "./DashboardContent";
+import { useLocation } from "react-router-dom";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ interface DashboardLayoutProps {
 const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutProps) => {
   // Get sidebar toggle state and mobile detection
   const { isSidebarOpen, toggleSidebar, isMobile } = useSidebarToggle();
+  const location = useLocation();
   
   // Fetch user profile data
   const { 
@@ -45,6 +47,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           isStaff={isStaff}
           userId={userId}
           isMobile={isMobile}
+          currentPath={location.pathname}
         >
           {children}
         </DashboardContent>

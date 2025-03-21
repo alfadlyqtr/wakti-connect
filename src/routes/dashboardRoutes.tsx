@@ -1,4 +1,3 @@
-
 import React from "react";
 import DashboardHome from "@/pages/dashboard/DashboardHome";
 import DashboardTasks from "@/pages/dashboard/DashboardTasks";
@@ -14,11 +13,16 @@ import DashboardSubscribers from "@/pages/dashboard/DashboardSubscribers";
 import DashboardNotifications from "@/pages/dashboard/DashboardNotifications";
 import DashboardWorkManagement from "@/pages/dashboard/DashboardWorkManagement";
 import DashboardJobCards from "@/pages/dashboard/DashboardJobCards";
+import StaffDashboard from "@/pages/dashboard/StaffDashboard";
 
 export const dashboardRoutes = [
   {
     path: "",
     element: <DashboardHome />,
+  },
+  {
+    path: "staff-dashboard",
+    element: <StaffDashboard />,
   },
   {
     path: "tasks",
