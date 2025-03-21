@@ -19,36 +19,47 @@ import {
   UserPlus 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { TaskWithSharedInfo } from "@/hooks/useTasks";
+import { TaskStatus } from "@/types/task.types";
 
 interface TaskActionsMenuProps {
-  task: TaskWithSharedInfo;
-  onEdit: (taskId: string) => void;
-  onDelete: (taskId: string) => void;
-  onStatusChange: (taskId: string, newStatus: string) => void;
-  onShare: (taskId: string) => void;
-  onAssign?: (taskId: string) => void;
-  showShareOption?: boolean;
-  showAssignOption?: boolean;
   userRole: "free" | "individual" | "business" | "staff";
+  isShared?: boolean;
+  isAssigned?: boolean;
+  status?: TaskStatus;
+  onEdit?: (taskId: string) => void;
+  onDelete?: (taskId: string) => void;
+  onStatusChange?: (taskId: string, newStatus: string) => void;
+  onShare?: (taskId: string) => void;
+  onAssign?: (taskId: string) => void;
+  taskId?: string;
 }
 
 export function TaskActionsMenu({
-  task,
+  userRole,
+  isShared = false,
+  isAssigned = false,
+  status = "pending",
   onEdit,
   onDelete,
   onStatusChange,
   onShare,
   onAssign,
-  showShareOption = true,
-  showAssignOption = false,
-  userRole
+  taskId = ""
 }: TaskActionsMenuProps) {
   // Update isPaidAccount to include staff as a paid account
   const isPaidAccount = userRole === "individual" || userRole === "business" || userRole === "staff";
   
   // Only business and staff should see assign option
   const canAssignTasks = userRole === "business" || userRole === "staff";
+  
+  // Handle dummy click events when no handlers provided
+  const handleAction = (action: (id: string, ...args: any[]) => void, ...args: any[]) => {
+    if (action && taskId) {
+      action(taskId, ...args);
+    } else {
+      console.log("No handler provided for this action or taskId is missing");
+    }
+  };
   
   return (
     <DropdownMenu>
@@ -63,53 +74,53 @@ export function TaskActionsMenu({
         
         <DropdownMenuSeparator />
         
-        <DropdownMenuItem onClick={() => onEdit(task.id)}>
+        <DropdownMenuItem onClick={() => onEdit && handleAction(onEdit)}>
           <Edit className="h-4 w-4 mr-2" />
           Edit
         </DropdownMenuItem>
         
-        <DropdownMenuItem onClick={() => onDelete(task.id)}>
+        <DropdownMenuItem onClick={() => onDelete && handleAction(onDelete)}>
           <Trash className="h-4 w-4 mr-2" />
           Delete
         </DropdownMenuItem>
         
         <DropdownMenuSeparator />
         
-        {task.status !== "completed" && (
-          <DropdownMenuItem onClick={() => onStatusChange(task.id, "completed")}>
+        {status !== "completed" && (
+          <DropdownMenuItem onClick={() => onStatusChange && handleAction(onStatusChange, "completed")}>
             <CheckSquare className="h-4 w-4 mr-2" />
             Mark Complete
           </DropdownMenuItem>
         )}
         
-        {task.status !== "in-progress" && (
-          <DropdownMenuItem onClick={() => onStatusChange(task.id, "in-progress")}>
+        {status !== "in-progress" && (
+          <DropdownMenuItem onClick={() => onStatusChange && handleAction(onStatusChange, "in-progress")}>
             <SquarePen className="h-4 w-4 mr-2" />
             Mark In Progress
           </DropdownMenuItem>
         )}
         
-        {task.status !== "pending" && (
-          <DropdownMenuItem onClick={() => onStatusChange(task.id, "pending")}>
+        {status !== "pending" && (
+          <DropdownMenuItem onClick={() => onStatusChange && handleAction(onStatusChange, "pending")}>
             <Clock className="h-4 w-4 mr-2" />
             Mark Pending
           </DropdownMenuItem>
         )}
         
-        {isPaidAccount && showShareOption && (
+        {isPaidAccount && !isShared && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onShare(task.id)}>
+            <DropdownMenuItem onClick={() => onShare && handleAction(onShare)}>
               <Share className="h-4 w-4 mr-2" />
               Share Task
             </DropdownMenuItem>
           </>
         )}
         
-        {showAssignOption && canAssignTasks && onAssign && (
+        {canAssignTasks && !isAssigned && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onAssign(task.id)}>
+            <DropdownMenuItem onClick={() => onAssign && handleAction(onAssign)}>
               <UserPlus className="h-4 w-4 mr-2" />
               Assign Task
             </DropdownMenuItem>

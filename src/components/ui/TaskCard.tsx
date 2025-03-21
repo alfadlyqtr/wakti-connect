@@ -68,10 +68,11 @@ const TaskCard = ({
           <h3 className="text-base font-semibold leading-tight">{title}</h3>
         </div>
         <TaskActionsMenu 
-          status={status} 
           userRole={userRole || "free"} 
           isShared={isShared} 
-          isAssigned={isAssigned} 
+          isAssigned={isAssigned}
+          status={status}
+          taskId={id}
         />
       </CardHeader>
       

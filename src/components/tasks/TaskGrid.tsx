@@ -2,9 +2,10 @@
 import React from "react";
 import TaskCard from "@/components/ui/TaskCard";
 import { Task, TaskTab } from "@/types/task.types";
+import { TaskWithSharedInfo } from "@/hooks/useTasks";
 
 interface TaskGridProps {
-  tasks: Task[];
+  tasks: Task[] | TaskWithSharedInfo[];
   userRole: "free" | "individual" | "business" | "staff" | null;
   tab: TaskTab;
 }

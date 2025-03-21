@@ -1,28 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Task } from "@/types/task.types";
 
 export type TaskPriority = "normal" | "medium" | "high" | "urgent";
 export type TaskStatus = "pending" | "in-progress" | "completed" | "late";
 export type TaskCategory = "daily" | "weekly" | "monthly" | "quarterly";
 export type TaskTab = "my-tasks" | "shared-tasks" | "assigned-tasks";
-
-export interface Task {
-  id: string;
-  title: string;
-  description: string;
-  priority: TaskPriority;
-  status: TaskStatus;
-  category: TaskCategory;
-  due_date: string;
-  user_id: string;
-  completed_at: string | null;
-  created_at: string;
-  updated_at: string;
-  is_recurring: boolean;
-  recurring: any;
-  assignee_id: string | null;
-}
 
 export interface TaskWithSharedInfo extends Task {
   shared_with?: string[];
@@ -82,11 +66,12 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
           .eq('user_id', session.user.id);
           
       } else if (tab === "shared-tasks") {
-        // First check if the shared_tasks table exists
+        // Check if the shared_tasks table exists and get the tasks shared with the user
         try {
+          // First check the structure of shared_tasks table
           const { data: sharedTasksData, error: sharedError } = await supabase
             .from('shared_tasks')
-            .select('task_id, shared_by')
+            .select('id, task_id, shared_with')
             .eq('shared_with', session.user.id);
             
           if (sharedError) throw sharedError;
@@ -97,19 +82,13 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
             
             const { data: taskData, error: taskError } = await supabase
               .from('tasks')
-              .select('*')
+              .select('*, user_id as shared_by')
               .in('id', taskIds);
               
             if (taskError) throw taskError;
             
-            // Combine with sharing info
-            result = taskData.map(task => {
-              const sharingInfo = sharedTasksData.find(item => item.task_id === task.id);
-              return {
-                ...task,
-                shared_by: sharingInfo?.shared_by
-              };
-            });
+            // The tasks are now marked with the user_id as shared_by
+            result = taskData;
           } else {
             result = [];
           }
