@@ -39,6 +39,7 @@ export interface UseStaffInvitationsQueries {
   invitations: StaffInvitation[] | undefined;
   isLoading: boolean;
   error: Error | null;
+  refetch: () => Promise<any>;
 }
 
 export interface UseStaffInvitationsMutations {

@@ -11,21 +11,19 @@ export const useStaffInvitationQueries = (): UseStaffInvitationsQueries => {
   const {
     data: invitations,
     isLoading,
-    error
+    error,
+    refetch
   } = useQuery({
     queryKey: ['staffInvitations'],
-    queryFn: fetchInvitations
+    queryFn: fetchInvitations,
+    refetchInterval: 10000, // Refetch every 10 seconds to catch status changes
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
-
-  // You can also use the pending invitations query if needed
-  // const { data: pendingInvitations } = useQuery({
-  //   queryKey: ['pendingStaffInvitations'],
-  //   queryFn: useFetchPendingInvitations
-  // });
 
   return {
     invitations,
     isLoading,
-    error: error as Error | null
+    error: error as Error | null,
+    refetch
   };
 };

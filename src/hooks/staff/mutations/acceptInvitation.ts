@@ -158,8 +158,10 @@ export const useAcceptInvitation = () => {
     },
     onSuccess: () => {
       // Invalidate relevant queries when the invitation is accepted
-      queryClient.invalidateQueries({ queryKey: ['staffBusinessInfo'] });
+      queryClient.invalidateQueries({ queryKey: ['staffInvitations'] });
+      queryClient.invalidateQueries({ queryKey: ['businessStaff'] });
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      queryClient.invalidateQueries({ queryKey: ['staffBusinessInfo'] });
     }
   });
 };

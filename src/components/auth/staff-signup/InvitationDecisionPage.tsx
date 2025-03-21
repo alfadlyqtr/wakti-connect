@@ -48,7 +48,10 @@ const InvitationDecisionPage = () => {
   }, [token, verifyInvitation]);
   
   const handleAccept = async () => {
+    if (isResponding) return; // Prevent multiple submissions
+    
     setIsResponding(true);
+    
     try {
       // Send notification to business admin that invitation was accepted
       const { error: notificationError } = await supabase
@@ -64,15 +67,31 @@ const InvitationDecisionPage = () => {
       
       if (notificationError) {
         console.error("Error sending notification:", notificationError);
+        // Don't block the flow if notification fails
+      }
+      
+      // Update invitation status to accepted
+      const { error: updateError } = await supabase
+        .from('staff_invitations')
+        .update({ 
+          status: 'accepted',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', invitation.id);
+      
+      if (updateError) {
+        console.error("Error updating invitation status:", updateError);
+        throw updateError;
       }
       
       // Redirect to signup page with token
       navigate(`/auth/staff-signup?token=${token}&business=${businessSlug}&accepted=true`);
+      
     } catch (error) {
       console.error("Error accepting invitation:", error);
       toast({
         title: "Error",
-        description: "Failed to process your acceptance",
+        description: "Failed to process your acceptance. Please try again.",
         variant: "destructive"
       });
       setIsResponding(false);
@@ -80,7 +99,10 @@ const InvitationDecisionPage = () => {
   };
   
   const handleDecline = async () => {
+    if (isResponding) return; // Prevent multiple submissions
+    
     setIsResponding(true);
+    
     try {
       // Update invitation status to declined
       const { error: updateError } = await supabase
@@ -107,6 +129,7 @@ const InvitationDecisionPage = () => {
       
       if (notificationError) {
         console.error("Error sending notification:", notificationError);
+        // Don't block the flow if notification fails
       }
       
       toast({
@@ -116,11 +139,12 @@ const InvitationDecisionPage = () => {
       
       // Redirect to landing page
       navigate("/");
+      
     } catch (error) {
       console.error("Error declining invitation:", error);
       toast({
         title: "Error",
-        description: "Failed to decline the invitation",
+        description: "Failed to decline the invitation. Please try again.",
         variant: "destructive"
       });
       setIsResponding(false);
