@@ -33,7 +33,7 @@ const StaffDashboardHeader: React.FC<StaffDashboardHeaderProps> = ({ staffId }) 
           };
         }
         
-        // Then get the business name from profiles table
+        // Then get the business name from profiles table using a separate query
         const { data: businessData, error: businessError } = await supabase
           .from('profiles')
           .select('business_name')
@@ -54,13 +54,18 @@ const StaffDashboardHeader: React.FC<StaffDashboardHeaderProps> = ({ staffId }) 
         };
       } catch (error) {
         console.error("Error in staff dashboard header:", error);
+        // Return fallback data to prevent UI errors
         return {
           businessName: 'Business',
           position: 'Staff Member'
         };
       }
     },
-    enabled: !!staffId
+    // Only run the query if staffId is available
+    enabled: !!staffId,
+    // Add some retry logic for better error handling
+    retry: 1,
+    retryDelay: 1000
   });
 
   if (isLoading) {
