@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import "@/components/layout/sidebar/sidebar.css";
 import { useQuery } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
+import StaffDashboardHeader from "./StaffDashboardHeader";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -200,7 +201,14 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
                 <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
               </div>
             ) : (
-              children
+              <>
+                {isStaff && (
+                  <div className="mb-4">
+                    <StaffDashboardHeader staffId={session?.user?.id || ""} />
+                  </div>
+                )}
+                {children}
+              </>
             )}
           </div>
         </main>

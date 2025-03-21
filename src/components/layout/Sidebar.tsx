@@ -80,8 +80,8 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
         <SidebarNavItems onNavClick={() => {}} isCollapsed={collapsed} />
       </div>
       
-      {/* Upgrade Banner - Only show for free users and when not collapsed */}
-      {userRole === "free" && !collapsed && (
+      {/* Upgrade Banner - Only show for free users, never for staff, and when not collapsed */}
+      {userRole === "free" && !collapsed && userRole !== "staff" && (
         <div className="mt-auto px-3 pb-5">
           <SidebarUpgradeBanner />
         </div>

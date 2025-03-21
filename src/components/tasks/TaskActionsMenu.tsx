@@ -46,8 +46,8 @@ export function TaskActionsMenu({
   onAssign,
   taskId = ""
 }: TaskActionsMenuProps) {
-  // Update isPaidAccount to include staff as a paid account
-  const isPaidAccount = userRole === "individual" || userRole === "business" || userRole === "staff";
+  // Update isPaidAccount to include only individual and business accounts (not staff)
+  const isPaidAccount = userRole === "individual" || userRole === "business";
   
   // Only business and staff should see assign option
   const canAssignTasks = userRole === "business" || userRole === "staff";

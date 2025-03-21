@@ -16,6 +16,18 @@ export async function checkUserAccess(user, supabaseClient) {
     
     console.log("Checking user access for user ID:", user.id);
     
+    // Check if user is a staff member - staff cannot use AI
+    const { data: staffData, error: staffError } = await supabaseClient
+      .from('business_staff')
+      .select('id')
+      .eq('staff_id', user.id)
+      .maybeSingle();
+      
+    if (!staffError && staffData) {
+      console.log("User is a staff member, no AI access");
+      return { canUseAI: false };
+    }
+    
     // First try with RPC function (more reliable)
     console.log("Attempting RPC function can_use_ai_assistant...");
     const { data: canUseAI, error: canUseAIError } = await supabaseClient.rpc(

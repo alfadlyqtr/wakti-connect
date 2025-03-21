@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { AISettingsProvider } from "@/components/settings/ai";
+import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
 
 const DashboardAIAssistant = () => {
   const { user } = useAuth();
@@ -122,46 +123,52 @@ const DashboardAIAssistant = () => {
   }
 
   return (
-    <AISettingsProvider>
-      <div className="space-y-4 md:space-y-6">
-        <div className="flex flex-col gap-1 md:gap-2">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl md:text-3xl font-bold tracking-tight">WAKTI AI Assistant</h1>
-            <Bot className="h-5 w-5 md:h-6 md:w-6 text-wakti-blue" />
+    <StaffRoleGuard 
+      disallowStaff={true}
+      messageTitle="AI Assistant Not Available"
+      messageDescription="AI assistant features are not available for staff accounts."
+    >
+      <AISettingsProvider>
+        <div className="space-y-4 md:space-y-6">
+          <div className="flex flex-col gap-1 md:gap-2">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl md:text-3xl font-bold tracking-tight">WAKTI AI Assistant</h1>
+              <Bot className="h-5 w-5 md:h-6 md:w-6 text-wakti-blue" />
+            </div>
+            <p className="text-sm md:text-base text-muted-foreground">
+              Your AI-powered productivity assistant
+            </p>
           </div>
-          <p className="text-sm md:text-base text-muted-foreground">
-            Your AI-powered productivity assistant
-          </p>
+
+          <Tabs defaultValue="chat" className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-2 overflow-x-auto">
+              <TabsTrigger value="chat" className="text-sm md:text-base py-1 md:py-1.5">Chat</TabsTrigger>
+              <TabsTrigger value="history" className="text-sm md:text-base py-1 md:py-1.5">History</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="chat" className="mt-4 md:mt-6 space-y-4">
+              {!canAccess ? (
+                <AIAssistantUpgradeCard />
+              ) : (
+                <AIAssistantChatCard
+                  messages={messages}
+                  inputMessage={inputMessage}
+                  setInputMessage={setInputMessage}
+                  handleSendMessage={handleSendMessage}
+                  isLoading={isLoading}
+                  canAccess={canAccess}
+                  clearMessages={clearMessages}
+                />
+              )}
+            </TabsContent>
+
+            <TabsContent value="history" className="mt-4 md:mt-6">
+              <AIAssistantHistoryCard canAccess={canAccess} />
+            </TabsContent>
+          </Tabs>
         </div>
-
-        <Tabs defaultValue="chat" className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2 overflow-x-auto">
-            <TabsTrigger value="chat" className="text-sm md:text-base py-1 md:py-1.5">Chat</TabsTrigger>
-            <TabsTrigger value="history" className="text-sm md:text-base py-1 md:py-1.5">History</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="chat" className="mt-4 md:mt-6 space-y-4">
-            {!canAccess ? (
-              <AIAssistantUpgradeCard />
-            ) : (
-              <AIAssistantChatCard
-                messages={messages}
-                inputMessage={inputMessage}
-                setInputMessage={setInputMessage}
-                handleSendMessage={handleSendMessage}
-                isLoading={isLoading}
-                canAccess={canAccess}
-                clearMessages={clearMessages}
-              />
-            )}
-          </TabsContent>
-
-          <TabsContent value="history" className="mt-4 md:mt-6">
-            <AIAssistantHistoryCard canAccess={canAccess} />
-          </TabsContent>
-        </Tabs>
-      </div>
-    </AISettingsProvider>
+      </AISettingsProvider>
+    </StaffRoleGuard>
   );
 };
 

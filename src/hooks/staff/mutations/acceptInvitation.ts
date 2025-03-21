@@ -81,6 +81,36 @@ export const useAcceptInvitation = () => {
       
       console.log("Updated user profile account_type to staff");
       
+      // Create a contact relationship between the staff and business
+      try {
+        // Create from business to staff
+        await supabase
+          .from('user_contacts')
+          .insert({
+            user_id: invitation.business_id,
+            contact_id: userId,
+            status: 'accepted',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+          
+        // Create from staff to business  
+        await supabase
+          .from('user_contacts')
+          .insert({
+            user_id: userId,
+            contact_id: invitation.business_id,
+            status: 'accepted',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+          
+        console.log("Created contact relationship between staff and business");
+      } catch (contactError) {
+        // Log but don't fail the whole process if contact creation fails
+        console.error("Error creating contact relationship:", contactError);
+      }
+      
       // Update staff TypeScript type safety for the returned object
       return {
         ...updatedInvitation,
