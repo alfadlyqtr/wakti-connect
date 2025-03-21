@@ -9,7 +9,7 @@ import { UseStaffInvitationsReturn } from "./types";
  */
 export const useStaffInvitations = (): UseStaffInvitationsReturn => {
   // Get queries (data fetching)
-  const { invitations, isLoading, error } = useStaffInvitationQueries();
+  const { invitations, isLoading, error, refetch } = useStaffInvitationQueries();
   
   // Get mutations (data operations)
   const { 
@@ -25,6 +25,7 @@ export const useStaffInvitations = (): UseStaffInvitationsReturn => {
     invitations,
     isLoading,
     error,
+    refetch,
     createInvitation,
     resendInvitation,
     cancelInvitation,
