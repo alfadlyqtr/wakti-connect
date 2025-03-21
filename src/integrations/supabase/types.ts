@@ -1324,15 +1324,33 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_business_owner_secure: {
+        Args: {
+          business_id_param: string
+        }
+        Returns: boolean
+      }
       is_own_staff_record: {
         Args: {
           record_id: string
         }
         Returns: boolean
       }
+      is_own_staff_record_secure: {
+        Args: {
+          record_id_param: string
+        }
+        Returns: boolean
+      }
       is_staff_member: {
         Args: {
           business_id: string
+        }
+        Returns: boolean
+      }
+      is_staff_of_business_secure: {
+        Args: {
+          business_id_param: string
         }
         Returns: boolean
       }
@@ -1349,6 +1367,12 @@ export type Database = {
       user_owns_staff: {
         Args: {
           staff_id: string
+        }
+        Returns: boolean
+      }
+      verify_invitation_token_secure: {
+        Args: {
+          token_param: string
         }
         Returns: boolean
       }
