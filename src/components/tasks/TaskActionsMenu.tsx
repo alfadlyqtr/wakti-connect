@@ -1,99 +1,121 @@
 
-import React, { useEffect, useState } from "react";
-import { MoreVertical } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+import React from "react";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { TaskStatus } from "@/types/task.types";
-import { isUserStaff } from "@/utils/staffUtils";
+import { 
+  MoreVertical, 
+  Edit, 
+  Trash, 
+  Clock, 
+  CheckSquare, 
+  SquarePen, 
+  Share, 
+  UserPlus 
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TaskWithSharedInfo } from "@/hooks/useTasks";
 
 interface TaskActionsMenuProps {
-  status: TaskStatus;
+  task: TaskWithSharedInfo;
+  onEdit: (taskId: string) => void;
+  onDelete: (taskId: string) => void;
+  onStatusChange: (taskId: string, newStatus: string) => void;
+  onShare: (taskId: string) => void;
+  onAssign?: (taskId: string) => void;
+  showShareOption?: boolean;
+  showAssignOption?: boolean;
   userRole: "free" | "individual" | "business" | "staff";
-  isShared?: boolean;
-  isAssigned?: boolean;
-  isCreator?: boolean;
 }
 
-const TaskActionsMenu: React.FC<TaskActionsMenuProps> = ({ 
-  status, 
-  userRole, 
-  isShared = false, 
-  isAssigned = false,
-  isCreator = true
-}) => {
-  const [isStaff, setIsStaff] = useState(false);
+export function TaskActionsMenu({
+  task,
+  onEdit,
+  onDelete,
+  onStatusChange,
+  onShare,
+  onAssign,
+  showShareOption = true,
+  showAssignOption = false,
+  userRole
+}: TaskActionsMenuProps) {
+  // Update isPaidAccount to include staff as a paid account
+  const isPaidAccount = userRole === "individual" || userRole === "business" || userRole === "staff";
   
-  useEffect(() => {
-    // Check if localStorage has staff status for quick loading
-    if (localStorage.getItem('isStaff') === 'true') {
-      setIsStaff(true);
-    } else {
-      isUserStaff().then(staffStatus => {
-        setIsStaff(staffStatus);
-      });
-    }
-  }, []);
+  // Only business and staff should see assign option
+  const canAssignTasks = userRole === "business" || userRole === "staff";
   
-  // Staff can only change status, not edit or delete tasks
-  if (isStaff || userRole === 'staff') {
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-            <MoreVertical className="h-4 w-4" />
-            <span className="sr-only">Task menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-40">
-          {status !== "completed" ? (
-            <DropdownMenuItem>Mark as Complete</DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem>Mark as Pending</DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  }
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button variant="ghost" size="icon" className="h-8 w-8">
           <MoreVertical className="h-4 w-4" />
-          <span className="sr-only">Task menu</span>
+          <span className="sr-only">Open menu</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
-        {isCreator && <DropdownMenuItem>Edit</DropdownMenuItem>}
-        {status !== "completed" ? (
-          <DropdownMenuItem>Mark as Complete</DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem>Mark as Pending</DropdownMenuItem>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        
+        <DropdownMenuSeparator />
+        
+        <DropdownMenuItem onClick={() => onEdit(task.id)}>
+          <Edit className="h-4 w-4 mr-2" />
+          Edit
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem onClick={() => onDelete(task.id)}>
+          <Trash className="h-4 w-4 mr-2" />
+          Delete
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
+        
+        {task.status !== "completed" && (
+          <DropdownMenuItem onClick={() => onStatusChange(task.id, "completed")}>
+            <CheckSquare className="h-4 w-4 mr-2" />
+            Mark Complete
+          </DropdownMenuItem>
         )}
         
-        {userRole === "individual" && !isShared && !isAssigned && isCreator && (
-          <DropdownMenuItem>Share Task</DropdownMenuItem>
+        {task.status !== "in-progress" && (
+          <DropdownMenuItem onClick={() => onStatusChange(task.id, "in-progress")}>
+            <SquarePen className="h-4 w-4 mr-2" />
+            Mark In Progress
+          </DropdownMenuItem>
         )}
         
-        {userRole === "business" && !isAssigned && isCreator && (
-          <DropdownMenuItem>Assign to Staff</DropdownMenuItem>
+        {task.status !== "pending" && (
+          <DropdownMenuItem onClick={() => onStatusChange(task.id, "pending")}>
+            <Clock className="h-4 w-4 mr-2" />
+            Mark Pending
+          </DropdownMenuItem>
         )}
         
-        {isCreator && (
+        {isPaidAccount && showShareOption && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-500">Delete</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onShare(task.id)}>
+              <Share className="h-4 w-4 mr-2" />
+              Share Task
+            </DropdownMenuItem>
+          </>
+        )}
+        
+        {showAssignOption && canAssignTasks && onAssign && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onAssign(task.id)}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Assign Task
+            </DropdownMenuItem>
           </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
-
-export default TaskActionsMenu;
+}
