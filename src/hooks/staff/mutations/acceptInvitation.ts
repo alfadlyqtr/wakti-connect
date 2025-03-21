@@ -71,7 +71,8 @@ const createStaffRecord = async (
       role: invitation.role,
       position: invitation.position || 'staff',
       name: invitation.name,
-      email: invitation.email
+      email: invitation.email,
+      status: 'active'
     })
     .select()
     .single();
@@ -116,6 +117,8 @@ const createContactRelationships = async (
   staffRelationId: string
 ) => {
   try {
+    console.log("Creating contact relationships between business and staff member");
+    
     // First, check if the relationship already exists
     const { data: existingContactData } = await supabase
       .from('user_contacts')
@@ -155,6 +158,35 @@ const createContactRelationships = async (
   } catch (contactError) {
     // Log but don't fail the whole process if contact creation fails
     console.error("Error creating contact relationship:", contactError);
+  }
+};
+
+/**
+ * Helper function to send notification to business
+ */
+const notifyBusinessOwner = async (invitation: StaffInvitation, userId: string) => {
+  try {
+    console.log("Sending notification to business owner");
+    
+    const { error: notificationError } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: invitation.business_id,
+        type: 'staff_joined',
+        title: 'New Staff Member Joined',
+        content: `${invitation.name} has completed their account setup and joined your team`,
+        related_entity_id: userId,
+        related_entity_type: 'staff_account'
+      });
+      
+    if (notificationError) {
+      console.error("Error sending notification to business owner:", notificationError);
+    } else {
+      console.log("Notification sent to business owner");
+    }
+  } catch (error) {
+    console.error("Error in notifyBusinessOwner:", error);
+    // Don't fail the whole process if notification fails
   }
 };
 
@@ -207,7 +239,10 @@ export const useAcceptInvitation = () => {
       // Step 5: Create bidirectional contact relationship
       await createContactRelationships(invitation.business_id, userId, staffData.id);
       
-      // Step 6: Get business info and show welcome toast
+      // Step 6: Send notification to business owner about staff member joining
+      await notifyBusinessOwner(invitation, userId);
+      
+      // Step 7: Get business info and show welcome toast
       await showWelcomeToast(invitation.business_id);
       
       // Update TypeScript type safety for the returned object

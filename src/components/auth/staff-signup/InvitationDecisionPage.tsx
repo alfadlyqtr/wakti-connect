@@ -36,6 +36,7 @@ const InvitationDecisionPage = () => {
       
       try {
         const invitation = await verifyInvitation.mutateAsync({ token });
+        console.log("Invitation verified:", invitation);
         setInvitation(invitation);
         setIsLoading(false);
       } catch (error) {
@@ -54,6 +55,24 @@ const InvitationDecisionPage = () => {
     setIsResponding(true);
     
     try {
+      console.log("Accepting invitation for:", invitation);
+      
+      // Update invitation status to accepted
+      const { error: updateError } = await supabase
+        .from('staff_invitations')
+        .update({ 
+          status: 'accepted',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', invitation.id);
+      
+      if (updateError) {
+        console.error("Error updating invitation status:", updateError);
+        throw updateError;
+      }
+      
+      console.log("Invitation status updated to accepted");
+      
       // Send notification to business admin that invitation was accepted
       const { error: notificationError } = await supabase
         .from('notifications')
@@ -68,21 +87,9 @@ const InvitationDecisionPage = () => {
       
       if (notificationError) {
         console.error("Error sending notification:", notificationError);
-        // Don't block the flow if notification fails
-      }
-      
-      // Update invitation status to accepted
-      const { error: updateError } = await supabase
-        .from('staff_invitations')
-        .update({ 
-          status: 'accepted',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', invitation.id);
-      
-      if (updateError) {
-        console.error("Error updating invitation status:", updateError);
-        throw updateError;
+        // Continue despite notification error
+      } else {
+        console.log("Notification sent to business admin");
       }
       
       // Redirect to signup page with token

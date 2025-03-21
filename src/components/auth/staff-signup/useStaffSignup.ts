@@ -38,7 +38,9 @@ export const useStaffSignup = (token?: string) => {
       }
       
       try {
+        console.log("Verifying invitation token:", token);
         const invitation = await verifyInvitation.mutateAsync({ token });
+        console.log("Invitation verified:", invitation);
         setInvitation(invitation);
         setStatus("valid");
       } catch (error) {
@@ -56,6 +58,8 @@ export const useStaffSignup = (token?: string) => {
     setIsSubmitting(true);
     
     try {
+      console.log("Creating staff account for:", invitation);
+      
       // Create user account - set account_type to 'staff'
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: invitation.email,
@@ -64,6 +68,7 @@ export const useStaffSignup = (token?: string) => {
           data: {
             full_name: invitation.name,
             account_type: 'staff', // Correctly set as staff
+            display_name: invitation.name
           }
         }
       });
@@ -74,11 +79,15 @@ export const useStaffSignup = (token?: string) => {
         throw new Error("Failed to create user account");
       }
       
+      console.log("User account created:", authData.user.id);
+      
       // Accept the invitation and create staff record
       await acceptInvitation.mutateAsync({
         token,
         userId: authData.user.id
       });
+      
+      console.log("Invitation accepted and staff record created");
       
       toast({
         title: "Account created successfully",
