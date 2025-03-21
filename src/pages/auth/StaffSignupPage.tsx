@@ -2,9 +2,13 @@
 import React from "react";
 import StaffSignupForm from "@/components/auth/StaffSignupForm";
 import { useTheme } from "next-themes";
+import { useSearchParams } from "react-router-dom";
 
 const StaffSignupPage = () => {
   const { theme } = useTheme();
+  const [searchParams] = useSearchParams();
+  const businessSlug = searchParams.get("business");
+  const businessName = businessSlug ? businessSlug.replace(/-/g, ' ') : "Staff";
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -16,7 +20,12 @@ const StaffSignupPage = () => {
         />
       </div>
       
-      <StaffSignupForm />
+      <div className="w-full max-w-md">
+        <h1 className="text-center text-lg font-medium mb-6 text-muted-foreground">
+          {businessName ? `Join ${businessName}` : "Staff Account Setup"}
+        </h1>
+        <StaffSignupForm />
+      </div>
     </div>
   );
 };

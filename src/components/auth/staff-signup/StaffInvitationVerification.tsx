@@ -1,21 +1,24 @@
 
 import React from "react";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { StaffInvitation } from "@/hooks/staff/types";
 
 interface StaffInvitationVerificationProps {
   isLoading: boolean;
   error: string | null;
-  invitation: any | null;
+  invitation: StaffInvitation | null;
+  businessName?: string;
 }
 
 const StaffInvitationVerification: React.FC<StaffInvitationVerificationProps> = ({ 
   isLoading, 
   error, 
-  invitation 
+  invitation,
+  businessName 
 }) => {
   const navigate = useNavigate();
 
@@ -26,7 +29,11 @@ const StaffInvitationVerification: React.FC<StaffInvitationVerificationProps> = 
         <CardContent className="pt-6">
           <div className="flex flex-col items-center justify-center py-10">
             <Loader2 className="h-8 w-8 text-wakti-blue animate-spin mb-4" />
-            <p className="text-center text-muted-foreground">Verifying your invitation...</p>
+            <p className="text-center text-muted-foreground">
+              {businessName ? 
+                `Verifying your invitation to join ${businessName}...` : 
+                "Verifying your invitation..."}
+            </p>
           </div>
         </CardContent>
       </Card>

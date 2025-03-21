@@ -12,7 +12,7 @@ export const useVerifyInvitation = () => {
       // Check if token exists and is valid
       const { data, error } = await supabase
         .from('staff_invitations')
-        .select('*')
+        .select('*, profiles:business_id(business_name)')
         .eq('token', token)
         .eq('status', 'pending')
         .single();
@@ -27,7 +27,13 @@ export const useVerifyInvitation = () => {
         throw new Error('This invitation has expired');
       }
       
-      return data as StaffInvitation;
+      // Extract business_name from the joined table
+      const businessName = data.profiles?.business_name || 'Business';
+      
+      return {
+        ...data,
+        business_name: businessName
+      } as StaffInvitation;
     }
   });
 };

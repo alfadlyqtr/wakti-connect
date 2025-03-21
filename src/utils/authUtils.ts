@@ -1,4 +1,3 @@
-
 /**
  * Generates a random token for use in invitations and auth flows
  * @returns A random string token
@@ -30,3 +29,15 @@ export const formatInvitationDate = (date: string): string => {
 export const isInvitationExpired = (expiryDate: string): boolean => {
   return new Date(expiryDate) < new Date();
 };
+
+/**
+ * Convert business name to URL-friendly slug
+ */
+export function slugifyBusinessName(businessName: string): string {
+  return businessName
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-')     // Replace spaces with hyphens
+    .replace(/-+/g, '-')      // Replace multiple hyphens with single hyphen
+    .trim();
+}

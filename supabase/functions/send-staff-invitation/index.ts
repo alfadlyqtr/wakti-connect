@@ -8,6 +8,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to slugify business name
+function slugifyBusinessName(businessName: string): string {
+  return businessName
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '') // Remove special characters
+    .replace(/\s+/g, '-')     // Replace spaces with hyphens
+    .replace(/-+/g, '-')      // Replace multiple hyphens with single hyphen
+    .trim();
+}
+
 serve(async (req) => {
   console.log("Staff invitation email function called");
   
@@ -54,8 +64,9 @@ serve(async (req) => {
     const invitation = invitationDetails[0];
     console.log("Invitation details:", invitation);
     
-    // Generate the invitation link
-    const inviteUrl = `${req.headers.get("origin")}/auth/staff-signup?token=${invitation.token}`;
+    // Generate the invitation link with business name
+    const businessSlug = slugifyBusinessName(invitation.business_name);
+    const inviteUrl = `${req.headers.get("origin")}/auth/staff-signup?token=${invitation.token}&business=${businessSlug}`;
     
     // Send the email using Resend
     const { data: emailData, error: emailError } = await resend.emails.send({

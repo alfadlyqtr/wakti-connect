@@ -4,6 +4,7 @@ import { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
 export interface StaffInvitation {
   id: string;
   business_id: string;
+  business_name: string; // Added business_name to the interface
   name: string;
   email: string;
   role: string;

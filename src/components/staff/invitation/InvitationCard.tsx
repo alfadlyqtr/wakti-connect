@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Copy, RefreshCw, Trash2, Loader2, ExternalLink } from "lucide-react";
 import { StaffInvitation } from "@/hooks/staff/types";
-import { formatInvitationDate, isInvitationExpired } from "@/utils/authUtils";
+import { formatInvitationDate, isInvitationExpired, slugifyBusinessName } from "@/utils/authUtils";
 import { toast } from "@/components/ui/use-toast";
 import { 
   Tooltip,
@@ -31,8 +31,9 @@ const InvitationCard = ({
 }: InvitationCardProps) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   
-  const copyInviteLink = (token: string, id: string) => {
-    const inviteUrl = `${window.location.origin}/auth/staff-signup?token=${token}`;
+  const copyInviteLink = (token: string, id: string, businessName: string) => {
+    const businessSlug = slugifyBusinessName(businessName);
+    const inviteUrl = `${window.location.origin}/auth/staff-signup?token=${token}&business=${businessSlug}`;
     navigator.clipboard.writeText(inviteUrl);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
@@ -43,8 +44,9 @@ const InvitationCard = ({
     });
   };
   
-  const openInviteLink = (token: string) => {
-    const inviteUrl = `${window.location.origin}/auth/staff-signup?token=${token}`;
+  const openInviteLink = (token: string, businessName: string) => {
+    const businessSlug = slugifyBusinessName(businessName);
+    const inviteUrl = `${window.location.origin}/auth/staff-signup?token=${token}&business=${businessSlug}`;
     window.open(inviteUrl, '_blank');
   };
 
@@ -84,7 +86,7 @@ const InvitationCard = ({
                     <Button 
                       size="sm" 
                       variant="default"
-                      onClick={() => copyInviteLink(invitation.token, invitation.id)}
+                      onClick={() => copyInviteLink(invitation.token, invitation.id, invitation.business_name)}
                       className="w-full sm:w-auto"
                     >
                       {copiedId === invitation.id ? (
@@ -112,7 +114,7 @@ const InvitationCard = ({
                     <Button 
                       size="sm" 
                       variant="outline"
-                      onClick={() => openInviteLink(invitation.token)}
+                      onClick={() => openInviteLink(invitation.token, invitation.business_name)}
                     >
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Open

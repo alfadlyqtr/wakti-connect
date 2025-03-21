@@ -82,7 +82,7 @@ export const useStaffSignup = (token?: string) => {
       
       toast({
         title: "Account created successfully",
-        description: "You can now log in to your staff account",
+        description: `You can now log in to your staff account with ${invitation.business_name}`,
       });
       
       // Navigate to login
