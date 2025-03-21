@@ -42,19 +42,24 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
         // Get business information for staff display
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const { data } = await supabase
-            .from('business_staff')
-            .select(`
-              business_id,
-              profiles:business_id (
-                business_name
-              )
-            `)
-            .eq('staff_id', user.id)
-            .maybeSingle();
-            
-          if (data && data.profiles) {
-            setBusinessName(data.profiles.business_name);
+          try {
+            const { data, error } = await supabase
+              .from('business_staff')
+              .select(`
+                business_id,
+                profiles:business_id (
+                  business_name
+                )
+              `)
+              .eq('staff_id', user.id)
+              .maybeSingle();
+              
+            // Check if data exists, is not an error, and contains the profiles object
+            if (data && !error && data.profiles && typeof data.profiles === 'object' && 'business_name' in data.profiles) {
+              setBusinessName(data.profiles.business_name as string);
+            }
+          } catch (err) {
+            console.error("Error fetching business name:", err);
           }
         }
       }

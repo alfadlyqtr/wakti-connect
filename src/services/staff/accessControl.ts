@@ -93,7 +93,12 @@ export const canStaffMessageUser = async (targetUserId: string): Promise<boolean
     if (targetStaffData) {
       // Check if staff has permission to message other staff
       const permissions = staffData.permissions || {};
-      return !!permissions.can_message_staff;
+      // Make sure permissions is an object and has the property
+      if (typeof permissions === 'object' && permissions !== null && 'can_message_staff' in permissions) {
+        return !!permissions.can_message_staff;
+      }
+      // Default to true for staff-to-staff messaging if permission not explicitly set
+      return true;
     }
     
     // Not a business owner or staff member - deny
