@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +21,7 @@ export interface Task {
   updated_at: string;
   is_recurring: boolean;
   recurring: any;
+  assignee_id: string | null;
 }
 
 export interface TaskWithSharedInfo extends Task {
@@ -73,65 +73,88 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
       if (!session) throw new Error("You must be logged in to view tasks");
       
       let query;
+      let result;
       
       if (tab === "my-tasks") {
         query = supabase
           .from('tasks')
-          .select('*, shared_tasks!inner(*)')
+          .select('*')
           .eq('user_id', session.user.id);
+          
       } else if (tab === "shared-tasks") {
-        query = supabase
-          .from('shared_tasks')
-          .select('tasks!inner(*, shared_tasks!inner(*))')
-          .eq('shared_with', session.user.id);
+        // First check if the shared_tasks table exists
+        try {
+          const { data: sharedTasksData, error: sharedError } = await supabase
+            .from('shared_tasks')
+            .select('task_id, shared_by')
+            .eq('shared_with', session.user.id);
+            
+          if (sharedError) throw sharedError;
+          
+          // If we have shared tasks, fetch the actual task data
+          if (sharedTasksData && sharedTasksData.length > 0) {
+            const taskIds = sharedTasksData.map(item => item.task_id);
+            
+            const { data: taskData, error: taskError } = await supabase
+              .from('tasks')
+              .select('*')
+              .in('id', taskIds);
+              
+            if (taskError) throw taskError;
+            
+            // Combine with sharing info
+            result = taskData.map(task => {
+              const sharingInfo = sharedTasksData.find(item => item.task_id === task.id);
+              return {
+                ...task,
+                shared_by: sharingInfo?.shared_by
+              };
+            });
+          } else {
+            result = [];
+          }
+        } catch (error) {
+          console.error("Error fetching shared tasks:", error);
+          result = [];
+        }
+        
       } else if (tab === "assigned-tasks") {
+        // Check if user is business owner or staff
         if (userRole === "business" || userRole === "staff") {
+          // Just use the tasks table with assignee_id filter
           query = supabase
-            .from('assigned_tasks')
-            .select('tasks!inner(*)')
-            .eq('assigned_by', session.user.id);
+            .from('tasks')
+            .select('*')
+            .eq('assignee_id', session.user.id);
         } else {
-          query = supabase
-            .from('assigned_tasks')
-            .select('tasks!inner(*)')
-            .eq('assigned_to', session.user.id);
+          // For other roles, just return empty array
+          result = [];
         }
       }
       
-      // Apply status filter if not 'all'
-      if (filterStatus !== "all") {
-        query = query.eq('tasks.status', filterStatus);
+      // If we already have results (from shared tasks), return them
+      if (result) return result as TaskWithSharedInfo[];
+      
+      // Otherwise execute the query
+      if (query) {
+        // Apply status filter if not 'all'
+        if (filterStatus !== "all") {
+          query = query.eq('status', filterStatus);
+        }
+        
+        // Apply priority filter if not 'all'
+        if (filterPriority !== "all") {
+          query = query.eq('priority', filterPriority);
+        }
+        
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        
+        return data as TaskWithSharedInfo[];
       }
       
-      // Apply priority filter if not 'all'
-      if (filterPriority !== "all") {
-        query = query.eq('tasks.priority', filterPriority);
-      }
-      
-      // Execute the query
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      
-      // Format the response based on the tab
-      let formattedTasks;
-      
-      if (tab === "shared-tasks") {
-        formattedTasks = data.map((item: any) => ({
-          ...item.tasks,
-          shared_by: item.shared_by
-        }));
-      } else if (tab === "assigned-tasks") {
-        formattedTasks = data.map((item: any) => ({
-          ...item.tasks,
-          assigned_by: item.assigned_by,
-          assigned_to: item.assigned_to
-        }));
-      } else {
-        formattedTasks = data;
-      }
-      
-      return formattedTasks as TaskWithSharedInfo[];
+      return [] as TaskWithSharedInfo[];
     },
     enabled: !!userRole, // Only run the query if we have the user role
   });
@@ -164,7 +187,7 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
   };
 
   return {
-    tasks,
+    tasks: filteredTasks,
     filteredTasks,
     isLoading,
     error,

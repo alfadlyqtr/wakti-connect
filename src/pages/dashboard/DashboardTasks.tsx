@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useTasks, TaskTab } from "@/hooks/useTasks";
+import { useTasks, TaskTab, TaskWithSharedInfo } from "@/hooks/useTasks";
 import TaskControls from "@/components/tasks/TaskControls";
 import EmptyTasksState from "@/components/tasks/EmptyTasksState";
 import TaskGrid from "@/components/tasks/TaskGrid";

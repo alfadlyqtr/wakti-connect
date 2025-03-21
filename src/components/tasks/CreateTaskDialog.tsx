@@ -72,9 +72,6 @@ export function CreateTaskDialog({
     }
   };
 
-  // Update isPaidAccount to consider 'staff' as a paid account as well
-  const isPaidAccount = userRole === "individual" || userRole === "business" || userRole === "staff";
-
   return (
     <Dialog open={open} onOpenChange={(newOpen) => {
       if (!newOpen) {

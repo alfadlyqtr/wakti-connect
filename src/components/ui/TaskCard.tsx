@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import RecurringBadge from '@/components/ui/RecurringBadge';
 import { TaskStatus, TaskPriority } from '@/types/task.types';
 import TaskStatusIcon from '@/components/tasks/TaskStatusIcon';
-import TaskActionsMenu from '@/components/tasks/TaskActionsMenu';
+import { TaskActionsMenu } from '@/components/tasks/TaskActionsMenu';
 import TaskBadges from '@/components/tasks/TaskBadges';
 
 interface TaskCardProps {
