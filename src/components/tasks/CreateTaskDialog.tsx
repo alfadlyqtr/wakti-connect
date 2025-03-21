@@ -26,7 +26,7 @@ interface CreateTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreateTask: (task: TaskFormData, recurringData?: RecurringFormData) => Promise<any>;
-  userRole: "free" | "individual" | "business";
+  userRole: "free" | "individual" | "business" | "staff"; // Updated to include 'staff'
 }
 
 export function CreateTaskDialog({ 
@@ -38,7 +38,8 @@ export function CreateTaskDialog({
   const [isRecurring, setIsRecurring] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const isPaidAccount = userRole === "individual" || userRole === "business";
+  // Update isPaidAccount to consider 'staff' as a paid account as well
+  const isPaidAccount = userRole === "individual" || userRole === "business" || userRole === "staff";
   
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
