@@ -56,14 +56,14 @@ export const useStaffSignup = (token?: string) => {
     setIsSubmitting(true);
     
     try {
-      // Create user account
+      // Create user account - FIXED: Set account_type to 'staff' instead of 'individual'
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: invitation.email,
         password: values.password,
         options: {
           data: {
             full_name: invitation.name,
-            account_type: 'individual',
+            account_type: 'staff', // This was previously set to 'individual', causing the issue
           }
         }
       });

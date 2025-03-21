@@ -1,39 +1,52 @@
 
-import { getStaffRelation, isBusinessOwner, isStaffOfSameBusiness } from './staffQueries';
+import { supabase } from "@/integrations/supabase/client";
+import { getStaffRelation } from "./staffQueries";
 
 /**
- * Check if a staff member can message another user
- * 
- * @param targetUserId The ID of the user to message
+ * Check if the current staff user can message another user
+ * @param userId The user ID to check if can be messaged
  * @returns Promise<boolean>
  */
-export const canStaffMessageUser = async (targetUserId: string): Promise<boolean> => {
+export const canStaffMessageUser = async (userId: string): Promise<boolean> => {
   try {
     const staffData = await getStaffRelation();
     
     if (!staffData) return false;
     
-    // Check if target user is the business owner
-    const isOwner = await isBusinessOwner(targetUserId);
-    if (isOwner) {
-      // Staff can always message the business owner
+    // Check if staff user has permission to message other staff
+    const permissions = staffData.permissions || {};
+    const canMessageStaff = !!permissions.can_message_staff;
+    
+    // Check if user is a staff member of the same business
+    const { data: targetStaffData } = await supabase
+      .from('business_staff')
+      .select('id')
+      .eq('staff_id', userId)
+      .eq('business_id', staffData.business_id)
+      .maybeSingle();
+      
+    // If target is a staff member and staff has permission to message staff
+    if (targetStaffData && canMessageStaff) {
       return true;
     }
     
-    // Check if target user is another staff member of the same business
-    const isColleague = await isStaffOfSameBusiness(targetUserId, staffData.business_id);
-    if (isColleague) {
-      // Check if staff has permission to message other staff
-      const permissions = staffData.permissions || {};
-      // Make sure permissions is an object and has the property
-      if (typeof permissions === 'object' && permissions !== null && 'can_message_staff' in permissions) {
-        return !!permissions.can_message_staff;
+    // Check if staff user has permission to message customers
+    const canMessageCustomers = !!permissions.can_message_customers;
+    
+    // Check if user is a customer of the business
+    if (canMessageCustomers) {
+      const { data: isCustomer } = await supabase
+        .from('business_subscribers')
+        .select('id')
+        .eq('subscriber_id', userId)
+        .eq('business_id', staffData.business_id)
+        .maybeSingle();
+        
+      if (isCustomer) {
+        return true;
       }
-      // Default to true for staff-to-staff messaging if permission not explicitly set
-      return true;
     }
     
-    // Not a business owner or staff member - deny
     return false;
   } catch (error) {
     console.error("Error checking staff messaging permissions:", error);

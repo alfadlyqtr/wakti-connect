@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,7 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
         if (allowedRoles.includes('staff')) {
           const staffStatus = await isUserStaff();
           if (staffStatus) {
+            console.log("User is confirmed as staff");
             setHasAccess(true);
             setIsLoading(false);
             return;
@@ -37,6 +39,7 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
+          console.log("No active session");
           setHasAccess(false);
           setIsLoading(false);
           return;
@@ -48,6 +51,8 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
           .eq('id', session.user.id)
           .single();
           
+        console.log("User role from profile:", data?.account_type);
+        
         if (data && allowedRoles.includes(data.account_type as any)) {
           setHasAccess(true);
         } else {
@@ -73,6 +78,7 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
   }
   
   if (!hasAccess) {
+    console.log("Access denied. Redirecting to:", redirectTo);
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
   
