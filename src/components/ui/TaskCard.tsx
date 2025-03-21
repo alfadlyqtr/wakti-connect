@@ -19,7 +19,7 @@ interface TaskCardProps {
   status: TaskStatus;
   priority: TaskPriority;
   category?: string;
-  userRole: "free" | "individual" | "business" | null;
+  userRole: "free" | "individual" | "business" | "staff" | null;
   isAssigned?: boolean;
   isShared?: boolean;
   isRecurring?: boolean;

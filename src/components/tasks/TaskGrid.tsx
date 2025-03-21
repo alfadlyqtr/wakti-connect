@@ -5,7 +5,7 @@ import { Task, TaskTab } from "@/types/task.types";
 
 interface TaskGridProps {
   tasks: Task[];
-  userRole: "free" | "individual" | "business" | null;
+  userRole: "free" | "individual" | "business" | "staff" | null;
   tab: TaskTab;
 }
 

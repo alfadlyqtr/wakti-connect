@@ -10,7 +10,8 @@ import TaskGrid from "@/components/tasks/TaskGrid";
 import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog";
 
 const DashboardTasks = () => {
-  const [userRole, setUserRole] = useState<"free" | "individual" | "business" | null>(null);
+  // Updated type to include 'staff' account type
+  const [userRole, setUserRole] = useState<"free" | "individual" | "business" | "staff" | null>(null);
   const [activeTab, setActiveTab] = useState<TaskTab>("my-tasks");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   
@@ -62,7 +63,8 @@ const DashboardTasks = () => {
     }
   }, [error]);
 
-  const isPaidAccount = userRole === "individual" || userRole === "business";
+  // Update isPaidAccount to consider 'staff' as a paid account as well
+  const isPaidAccount = userRole === "individual" || userRole === "business" || userRole === "staff";
 
   const handleCreateTask = async (taskData: any) => {
     await createTask(taskData);
