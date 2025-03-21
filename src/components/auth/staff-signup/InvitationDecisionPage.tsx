@@ -56,12 +56,10 @@ const InvitationDecisionPage = () => {
         .insert({
           user_id: invitation.business_id,
           type: 'staff_invite_accepted',
+          title: 'Staff Invitation Accepted',
           content: `${invitation.name} has accepted your staff invitation`,
-          metadata: {
-            staff_name: invitation.name,
-            staff_email: invitation.email,
-            invitation_id: invitation.id
-          }
+          related_entity_id: invitation.id,
+          related_entity_type: 'staff_invitation'
         });
       
       if (notificationError) {
@@ -101,12 +99,10 @@ const InvitationDecisionPage = () => {
         .insert({
           user_id: invitation.business_id,
           type: 'staff_invite_declined',
+          title: 'Staff Invitation Declined',
           content: `${invitation.name} has declined your staff invitation`,
-          metadata: {
-            staff_name: invitation.name,
-            staff_email: invitation.email,
-            invitation_id: invitation.id
-          }
+          related_entity_id: invitation.id,
+          related_entity_type: 'staff_invitation'
         });
       
       if (notificationError) {
