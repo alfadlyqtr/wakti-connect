@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -8,31 +8,57 @@ interface StaffDashboardHeaderProps {
   staffId: string;
 }
 
+interface StaffBusinessInfo {
+  businessName: string;
+  position: string;
+}
+
 const StaffDashboardHeader: React.FC<StaffDashboardHeaderProps> = ({ staffId }) => {
   const { data: businessInfo, isLoading } = useQuery({
     queryKey: ['staffBusinessInfo', staffId],
-    queryFn: async () => {
-      const { data: staffData, error: staffError } = await supabase
-        .from('business_staff')
-        .select(`
-          business_id,
-          position,
-          profiles:business_id (
-            business_name
-          )
-        `)
-        .eq('staff_id', staffId)
-        .maybeSingle();
+    queryFn: async (): Promise<StaffBusinessInfo | null> => {
+      try {
+        // First get the business relation
+        const { data: staffData, error: staffError } = await supabase
+          .from('business_staff')
+          .select('business_id, position')
+          .eq('staff_id', staffId)
+          .maybeSingle();
+          
+        if (staffError || !staffData) {
+          console.error("Error fetching staff business relation:", staffError);
+          return {
+            businessName: 'Business',
+            position: 'Staff Member'
+          };
+        }
         
-      if (staffError) {
-        console.error("Error fetching staff business info:", staffError);
-        return null;
+        // Then get the business name from profiles table
+        const { data: businessData, error: businessError } = await supabase
+          .from('profiles')
+          .select('business_name')
+          .eq('id', staffData.business_id)
+          .maybeSingle();
+          
+        if (businessError || !businessData) {
+          console.error("Error fetching business profile:", businessError);
+          return {
+            businessName: 'Business',
+            position: staffData.position || 'Staff Member'
+          };
+        }
+        
+        return {
+          businessName: businessData.business_name || 'Business',
+          position: staffData.position || 'Staff Member'
+        };
+      } catch (error) {
+        console.error("Error in staff dashboard header:", error);
+        return {
+          businessName: 'Business',
+          position: 'Staff Member'
+        };
       }
-      
-      return {
-        businessName: staffData?.profiles?.business_name || 'Business',
-        position: staffData?.position || 'Staff Member'
-      };
     },
     enabled: !!staffId
   });

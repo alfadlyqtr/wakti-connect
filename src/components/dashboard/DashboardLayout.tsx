@@ -29,6 +29,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const navigate = useNavigate();
   const [errorLogged, setErrorLogged] = useState(false);
   const [isStaff, setIsStaff] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Fetch user profile data for the dashboard
   const { data: profileData, isLoading: profileLoading } = useQuery({
@@ -42,6 +43,9 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           navigate("/auth");
           return null;
         }
+        
+        // Store userId for StaffDashboardHeader
+        setUserId(session.user.id);
         
         // Check if user is staff
         const { data: staffData } = await supabase
@@ -202,9 +206,9 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
               </div>
             ) : (
               <>
-                {isStaff && (
+                {isStaff && userId && (
                   <div className="mb-4">
-                    <StaffDashboardHeader staffId={session?.user?.id || ""} />
+                    <StaffDashboardHeader staffId={userId} />
                   </div>
                 )}
                 {children}
