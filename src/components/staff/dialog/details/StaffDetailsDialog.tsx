@@ -16,6 +16,7 @@ import { StaffDetailsFooter } from "./StaffDetailsFooter";
 import { StaffDetailsHeader } from "./StaffDetailsHeader";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { ErrorState } from "./ErrorState";
+import { SkeletonPlaceholder } from "./SkeletonPlaceholder";
 
 interface StaffDetailsDialogProps {
   staffId: string | null;
@@ -30,8 +31,10 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState("details");
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
   
@@ -48,15 +51,45 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
   useEffect(() => {
     if (open && staffId) {
       console.log("Fetching staff details for ID:", staffId);
-      setLoading(true);
+      setInitialLoading(true);
+      setLoadError(null);
+      
       fetchStaffDetails(staffId)
-        .finally(() => setLoading(false));
+        .then(() => {
+          setLoadError(null);
+        })
+        .catch((error) => {
+          console.error("Error in fetchStaffDetails:", error);
+          setLoadError(error?.message || "Failed to load staff details");
+        })
+        .finally(() => {
+          setInitialLoading(false);
+        });
     } else {
       // Reset form when dialog closes
       form.reset();
       setActiveTab("details");
+      setLoadError(null);
     }
   }, [open, staffId, form, fetchStaffDetails]);
+
+  const handleRetry = () => {
+    if (staffId) {
+      setInitialLoading(true);
+      setLoadError(null);
+      
+      fetchStaffDetails(staffId)
+        .then(() => {
+          setLoadError(null);
+        })
+        .catch((error) => {
+          setLoadError(error?.message || "Failed to load staff details");
+        })
+        .finally(() => {
+          setInitialLoading(false);
+        });
+    }
+  };
 
   return (
     <>
@@ -64,8 +97,15 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <StaffDetailsHeader />
 
-          {loading && !staffData ? (
-            <LoadingSpinner />
+          {initialLoading ? (
+            // Show skeleton placeholder during initial loading
+            <SkeletonPlaceholder activeTab={activeTab} />
+          ) : loadError ? (
+            // Show error state if there was an error
+            <ErrorState 
+              errorMessage={loadError} 
+              onRetry={handleRetry} 
+            />
           ) : staffData ? (
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2">
@@ -84,11 +124,18 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
                 onDelete={() => setConfirmDeleteOpen(true)}
                 onCancel={() => onOpenChange(false)}
                 form={form}
-                handleSaveChanges={handleSaveChanges}
+                handleSaveChanges={(data) => {
+                  setLoading(true);
+                  handleSaveChanges(data)
+                    .finally(() => setLoading(false));
+                }}
               />
             </Tabs>
           ) : (
-            <ErrorState />
+            <ErrorState 
+              errorMessage="Staff member not found" 
+              onRetry={handleRetry} 
+            />
           )}
         </DialogContent>
       </Dialog>

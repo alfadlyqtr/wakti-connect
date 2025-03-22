@@ -1,10 +1,10 @@
 
 import React from "react";
-import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { DialogFooter } from "@/components/ui/dialog";
 import { UseFormReturn } from "react-hook-form";
+import { Trash2, Loader2, Save, X } from "lucide-react";
 import { EditStaffFormValues } from "./hooks/useStaffDetailsForm";
 
 interface StaffDetailsFooterProps {
@@ -12,7 +12,7 @@ interface StaffDetailsFooterProps {
   onDelete: () => void;
   onCancel: () => void;
   form: UseFormReturn<EditStaffFormValues>;
-  handleSaveChanges: (data: EditStaffFormValues) => Promise<void>;
+  handleSaveChanges: (data: EditStaffFormValues) => void;
 }
 
 export const StaffDetailsFooter: React.FC<StaffDetailsFooterProps> = ({
@@ -20,7 +20,7 @@ export const StaffDetailsFooter: React.FC<StaffDetailsFooterProps> = ({
   onDelete,
   onCancel,
   form,
-  handleSaveChanges
+  handleSaveChanges,
 }) => {
   return (
     <>
@@ -31,6 +31,7 @@ export const StaffDetailsFooter: React.FC<StaffDetailsFooterProps> = ({
           type="button"
           variant="destructive"
           onClick={onDelete}
+          disabled={loading}
           className="flex items-center gap-1"
         >
           <Trash2 className="h-4 w-4" />
@@ -41,7 +42,9 @@ export const StaffDetailsFooter: React.FC<StaffDetailsFooterProps> = ({
             type="button" 
             variant="outline" 
             onClick={onCancel}
+            disabled={loading}
           >
+            <X className="mr-2 h-4 w-4" />
             Cancel
           </Button>
           <Button 
@@ -49,7 +52,17 @@ export const StaffDetailsFooter: React.FC<StaffDetailsFooterProps> = ({
             disabled={loading}
             onClick={form.handleSubmit(handleSaveChanges)}
           >
-            {loading ? "Saving..." : "Save Changes"}
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Save Changes
+              </>
+            )}
           </Button>
         </div>
       </DialogFooter>
