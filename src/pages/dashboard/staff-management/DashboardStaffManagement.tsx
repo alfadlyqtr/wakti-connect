@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import CreateStaffDialog from "@/components/staff/CreateStaffDialog";
 import StaffMembersTab from "./StaffMembersTab";
 import WorkLogsTab from "./WorkLogsTab";
-import StaffDetailsDialog from "@/components/staff/dialog/StaffDetailsDialog";
+import StaffDetailsDialog from "@/components/staff/dialog/details/StaffDetailsDialog";
 
 const DashboardStaffManagement = () => {
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
