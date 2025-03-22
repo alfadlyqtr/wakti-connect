@@ -42,6 +42,7 @@ const StaffMembersList: React.FC<StaffMembersListProps> = ({ onEditStaff }) => {
   };
   
   const handleViewDetails = (staffId: string) => {
+    console.log("Opening staff details dialog for ID:", staffId);
     setSelectedStaffId(staffId);
     setDetailsDialogOpen(true);
   };

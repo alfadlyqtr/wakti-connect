@@ -38,10 +38,7 @@ interface StaffDetailsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type StaffFormValues = z.infer<typeof staffFormSchema>;
-
-// Simplified schema for editing existing staff - create it by adding fields to a new schema
-// rather than using omit which isn't available directly on the schema
+// Simplified schema for editing existing staff
 const editStaffSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
@@ -75,11 +72,29 @@ const editStaffSchema = z.object({
 
 type EditStaffFormValues = z.infer<typeof editStaffSchema>;
 
-// Define a type for the profile data
+// Define an interface for the profile data
 interface ProfileData {
   full_name?: string;
   avatar_url?: string;
   email?: string;
+  [key: string]: any;
+}
+
+// Define an interface for the staff relation data to ensure type safety
+interface StaffRelationData {
+  id: string;
+  staff_id: string;
+  business_id: string;
+  name?: string;
+  email?: string;
+  position?: string;
+  role: string;
+  is_service_provider: boolean;
+  status: string;
+  staff_number?: string;
+  permissions: any;
+  profiles?: ProfileData;
+  profile_image_url?: string;
   [key: string]: any;
 }
 
@@ -90,7 +105,7 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState("details");
   const [loading, setLoading] = useState(false);
-  const [staffData, setStaffData] = useState<any>(null);
+  const [staffData, setStaffData] = useState<StaffRelationData | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -150,7 +165,7 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
       if (staffError) throw staffError;
       
       if (staffRelation) {
-        setStaffData(staffRelation);
+        setStaffData(staffRelation as StaffRelationData);
         
         // Parse permissions if it's a string
         const permissions = typeof staffRelation.permissions === 'string' 

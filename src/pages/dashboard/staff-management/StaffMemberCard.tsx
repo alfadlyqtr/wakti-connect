@@ -21,6 +21,11 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({ member, onSelectStaff
     : "ST";
     
   const isActive = member.status === 'active';
+
+  const handleViewDetails = () => {
+    console.log("Viewing staff details for ID:", member.id);
+    onSelectStaff(member.id);
+  };
     
   return (
     <Card className={isActive ? "" : "opacity-75 border-muted bg-muted/20"}>
@@ -85,7 +90,7 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({ member, onSelectStaff
           variant="outline" 
           size="sm" 
           className="w-full"
-          onClick={() => onSelectStaff(member.staff_id)}
+          onClick={handleViewDetails}
         >
           <Eye className="h-3.5 w-3.5 mr-1" />
           View Details
