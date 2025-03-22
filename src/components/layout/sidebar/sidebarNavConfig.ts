@@ -8,7 +8,6 @@ import {
   HelpCircle,
   Building2,
   Scissors,
-  UserPlus,
   PartyPopper,
   BarChart2,
   FileText,
@@ -30,13 +29,13 @@ export const navItems: NavItem[] = [
     label: "Dashboard",
     path: "",
     icon: LayoutDashboard,
-    showFor: ['free', 'individual', 'business', 'staff'],
+    showFor: ['free', 'individual', 'business'],
   },
   {
     label: "Tasks",
     path: "tasks",
     icon: ListChecks,
-    showFor: ['free', 'individual', 'business', 'staff'],
+    showFor: ['free', 'individual', 'business'],
   },
   {
     label: "Events",
@@ -45,22 +44,16 @@ export const navItems: NavItem[] = [
     showFor: ['free', 'individual', 'business'],
   },
   {
-    label: "Job Cards",
-    path: "job-cards",
-    icon: FileText,
-    showFor: ['staff'],
-  },
-  {
     label: "Bookings",
     path: "bookings",
     icon: Calendar,
-    showFor: ['business', 'staff'],
+    showFor: ['business'],
   },
   {
     label: "Messages",
     path: "messages",
     icon: MessageSquare,
-    showFor: ['individual', 'business', 'staff'],
+    showFor: ['individual', 'business'],
   },
   {
     label: "WAKTI AI",
@@ -78,12 +71,6 @@ export const navItems: NavItem[] = [
     label: "Services",
     path: "services",
     icon: Scissors,
-    showFor: ['business'],
-  },
-  {
-    label: "Staff",
-    path: "staff",
-    icon: UserPlus,
     showFor: ['business'],
   },
   {
@@ -108,12 +95,12 @@ export const navItems: NavItem[] = [
     label: "Settings",
     path: "settings",
     icon: Settings,
-    showFor: ['free', 'individual', 'business', 'staff'],
+    showFor: ['free', 'individual', 'business'],
   },
   {
     label: "Help",
     path: "help",
     icon: HelpCircle,
-    showFor: ['free', 'individual', 'business', 'staff'],
+    showFor: ['free', 'individual', 'business'],
   },
 ];
