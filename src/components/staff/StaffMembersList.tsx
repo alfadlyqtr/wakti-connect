@@ -32,6 +32,11 @@ const StaffMembersList: React.FC<StaffMembersListProps> = ({ onEditStaff }) => {
     toggleStaffStatus.mutate({ staffId, newStatus });
     setStaffToToggleStatus(null);
   };
+
+  const handleAddStaffClick = () => {
+    // This would typically open a dialog or navigate to add staff page
+    console.log("Add staff button clicked");
+  };
   
   if (isLoading) {
     return <div className="py-8 text-center">Loading staff members...</div>;
@@ -46,7 +51,7 @@ const StaffMembersList: React.FC<StaffMembersListProps> = ({ onEditStaff }) => {
   }
   
   if (!staffMembers || staffMembers.length === 0) {
-    return <EmptyStaffState />;
+    return <EmptyStaffState onAddStaffClick={handleAddStaffClick} />;
   }
   
   return (
@@ -55,10 +60,8 @@ const StaffMembersList: React.FC<StaffMembersListProps> = ({ onEditStaff }) => {
         {staffMembers.map((staff) => (
           <StaffMemberCard
             key={staff.id}
-            staff={staff}
-            onEdit={onEditStaff}
-            onDelete={setStaffToDelete}
-            onToggleStatus={setStaffToToggleStatus}
+            member={staff}
+            onViewDetails={(staffId) => onEditStaff(staffId)}
           />
         ))}
       </div>
