@@ -32,7 +32,7 @@ export interface StaffMember {
   };
   created_at: string;
   profile?: Profile | null;
-  profiles?: any; // For database query compatibility
+  profile_image_url?: string | null;
 }
 
 export interface WorkLog {

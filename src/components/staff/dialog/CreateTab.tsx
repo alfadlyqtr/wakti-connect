@@ -4,7 +4,7 @@ import { UseFormReturn } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Loader2 } from "lucide-react";
 import StaffFormFields from "./StaffFormFields";
 import { StaffFormValues } from "./StaffFormSchema";
 
@@ -46,11 +46,19 @@ const CreateTab: React.FC<CreateTabProps> = ({
             variant="outline" 
             onClick={onCancel}
             className="mr-2"
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Creating..." : "Create Staff Account"}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              "Create Staff Account"
+            )}
           </Button>
         </DialogFooter>
       </form>

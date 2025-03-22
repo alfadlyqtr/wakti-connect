@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -43,17 +44,21 @@ export const useCreateStaffMutation = () => {
           .select('*', { count: 'exact', head: true })
           .eq('business_id', businessId);
           
-        const staffNumber = `${businessPrefix}_Staff${String(count || 0).padStart(3, '0')}`;
+        const staffNumber = `${businessPrefix}_${String((count || 0) + 1).padStart(3, '0')}`;
         
         // 1. Create the auth user account
-        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        const { data: authData, error: authError } = await supabase.auth.signUp({
           email: values.email,
           password: values.password,
-          email_confirm: true,
-          user_metadata: {
-            full_name: values.fullName,
-            account_type: 'staff',
-            display_name: values.fullName
+          options: {
+            data: {
+              full_name: values.fullName,
+              account_type: 'staff',
+              display_name: values.fullName,
+              business_id: businessId,
+              staff_role: values.isCoAdmin ? 'co-admin' : 'staff',
+              staff_number: staffNumber
+            }
           }
         });
         
@@ -79,6 +84,7 @@ export const useCreateStaffMutation = () => {
             staff_number: staffNumber,
             is_service_provider: values.isServiceProvider,
             permissions: values.permissions,
+            profile_image_url: avatarUrl,
             status: 'active'
           })
           .select()
@@ -127,8 +133,9 @@ export const useCreateStaffMutation = () => {
     },
     onSuccess: () => {
       toast({
-        title: "Staff Created",
+        title: "Staff Account Created",
         description: "The staff account has been created successfully.",
+        variant: "success"
       });
       
       queryClient.invalidateQueries({ queryKey: ['businessStaff'] });

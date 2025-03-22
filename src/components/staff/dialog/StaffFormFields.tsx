@@ -2,7 +2,9 @@
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { StaffFormValues } from "./StaffFormSchema";
-import { StaffInfoFields, RoleIdentityFields, PermissionGroups } from "./fields";
+import { StaffInfoFields } from "./fields";
+import { RoleIdentityFields } from "./fields";
+import { PermissionGroups } from "./fields";
 
 interface StaffFormFieldsProps {
   form: UseFormReturn<StaffFormValues>;

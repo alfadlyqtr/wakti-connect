@@ -16,12 +16,15 @@ import { StaffFormValues } from "../StaffFormSchema";
 import { Separator } from "@/components/ui/separator";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { checkCoAdminLimit } from "@/hooks/staff/creation/staffLimits";
 
 interface RoleIdentityFieldsProps {
   form: UseFormReturn<StaffFormValues>;
 }
 
 const RoleIdentityFields: React.FC<RoleIdentityFieldsProps> = ({ form }) => {
+  const [canBeCoAdmin, setCanBeCoAdmin] = React.useState(true);
+  
   // Generate staff number based on business name
   const { data: businessData } = useQuery({
     queryKey: ['businessProfile'],
@@ -56,6 +59,24 @@ const RoleIdentityFields: React.FC<RoleIdentityFieldsProps> = ({ form }) => {
       return count || 0;
     }
   });
+
+  // Check if a co-admin already exists
+  React.useEffect(() => {
+    const checkCoAdmin = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      
+      const canAdd = await checkCoAdminLimit(session.user.id);
+      setCanBeCoAdmin(canAdd);
+      
+      // If user has selected co-admin but it's not allowed, reset it
+      if (!canAdd && form.getValues().isCoAdmin) {
+        form.setValue('isCoAdmin', false);
+      }
+    };
+    
+    checkCoAdmin();
+  }, [form]);
   
   // Generate staff number
   const staffNumber = React.useMemo(() => {
@@ -66,7 +87,7 @@ const RoleIdentityFields: React.FC<RoleIdentityFieldsProps> = ({ form }) => {
       .toUpperCase()
       .replace(/[^A-Z0-9]/g, '');
       
-    return `${prefix}_${String(staffCount || 0).padStart(3, '0')}`;
+    return `${prefix}_${String((staffCount || 0) + 1).padStart(3, '0')}`;
   }, [businessData, staffCount]);
   
   return (
@@ -97,13 +118,17 @@ const RoleIdentityFields: React.FC<RoleIdentityFieldsProps> = ({ form }) => {
                 <div className="space-y-0.5">
                   <FormLabel className="text-base">Co-Admin</FormLabel>
                   <FormDescription>
-                    Make this staff a co-admin (limit 1)
+                    {canBeCoAdmin 
+                      ? "Make this staff a co-admin (limit 1)" 
+                      : "You already have one co-admin"
+                    }
                   </FormDescription>
                 </div>
                 <FormControl>
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
+                    disabled={!canBeCoAdmin}
                   />
                 </FormControl>
               </FormItem>

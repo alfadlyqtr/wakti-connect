@@ -31,7 +31,8 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
       const { data: staffData, error: staffError } = await supabase
         .from('business_staff')
         .select('*')
-        .eq('business_id', session.session.user.id);
+        .eq('business_id', session.session.user.id)
+        .neq('status', 'deleted');
         
       if (staffError) throw staffError;
       
@@ -48,8 +49,11 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
             ...staff,
             profile: profileError ? { 
               full_name: staff.name, 
-              avatar_url: null 
-            } : profileData
+              avatar_url: staff.profile_image_url || null 
+            } : {
+              ...profileData,
+              avatar_url: profileData?.avatar_url || staff.profile_image_url || null
+            }
           } as StaffMember;
         })
       );
