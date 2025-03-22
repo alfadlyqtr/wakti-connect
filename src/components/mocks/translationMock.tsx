@@ -1,33 +1,34 @@
-import React from 'react';
 
-// This is a mock component for use in development
-// It mimics the behavior of the useTranslation hook from react-i18next
-// but doesn't actually do any translations
+import React, { createContext, useContext } from 'react';
 
-export const useTranslation = () => {
-  const t = (key: string, options?: any) => {
-    // If the key is an object path (e.g. 'namespace.key')
-    if (key.includes('.')) {
-      const parts = key.split('.');
-      return parts[parts.length - 1];
-    }
-    
-    // If options is an object with returnObjects: true, return an empty array
-    if (options && options.returnObjects) {
-      return [];
-    }
-    
-    // Otherwise just return the key itself
-    return key;
+// Create a context for the translation function
+const TranslationContext = createContext<{
+  t: (key: string) => string | React.ReactNode;
+}>({
+  t: (key) => key,
+});
+
+// Create a provider component
+export const TranslationProvider: React.FC<{
+  children: React.ReactNode;
+  translations?: Record<string, string>;
+}> = ({ children, translations = {} }) => {
+  const t = (key: string) => {
+    return translations[key] || key;
   };
 
-  return {
-    t,
-    i18n: {
-      language: 'en',
-      changeLanguage: (lng: string) => Promise.resolve(),
-    }
-  };
+  return (
+    <TranslationContext.Provider value={{ t }}>
+      {children}
+    </TranslationContext.Provider>
+  );
 };
 
-export default { useTranslation };
+// Export the hook
+export const useTranslation = () => {
+  const context = useContext(TranslationContext);
+  if (context === undefined) {
+    throw new Error('useTranslation must be used within a TranslationProvider');
+  }
+  return context;
+};

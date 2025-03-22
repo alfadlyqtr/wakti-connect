@@ -1,75 +1,100 @@
 
-"use client";
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  RadialLinearScale,
+  Filler,
+} from 'chart.js';
+import { Line, Bar, Pie, Doughnut, PolarArea, Radar } from 'react-chartjs-2';
 
-import React from "react";
-import { Chart as ChartJS, registerables, ChartOptions } from "chart.js";
-import { Bar, Line, Pie } from "react-chartjs-2";
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  RadialLinearScale,
+  Filler
+);
 
-// Register all chart.js components
-ChartJS.register(...registerables);
+type ChartDataType = {
+  labels: string[];
+  datasets: any[];
+};
 
-interface ChartProps {
-  data: any;
-  options?: any;
+type ChartOptionsType = {
+  responsive?: boolean;
+  plugins?: any;
+  scales?: any;
+  maintainAspectRatio?: boolean;
+  [key: string]: any;
+};
+
+interface ChartProps extends React.HTMLAttributes<HTMLDivElement> {
+  type: 'line' | 'bar' | 'pie' | 'doughnut' | 'polarArea' | 'radar';
+  data: ChartDataType;
+  options?: ChartOptionsType;
+  height?: number;
+  width?: number;
 }
 
-export const BarChart = ({ data, options = {} }: ChartProps) => {
-  return <Bar data={data} options={options} />;
+const defaultOptions: ChartOptionsType = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'top' as const,
+    },
+  },
 };
 
-export const LineChart = ({ data, options = {} }: ChartProps) => {
-  return <Line data={data} options={options} />;
-};
-
-export const PieChart = ({ data, options = {} }: ChartProps) => {
-  return <Pie data={data} options={options} />;
-};
-
-interface TooltipContentProps {
-  active?: boolean;
-  payload?: Array<{ name: string; value: number; color: string }>;
-  label?: string;
-}
-
-export const ChartContainer: React.FC<{
-  children: React.ReactNode;
-  config: Record<string, { label: string; color: string }>;
-}> = ({ children, config }) => {
-  // Set CSS variables for chart colors
-  React.useEffect(() => {
-    const root = document.documentElement;
-    Object.entries(config).forEach(([key, { color }]) => {
-      root.style.setProperty(`--color-${key}`, color);
-    });
-
-    return () => {
-      Object.keys(config).forEach((key) => {
-        root.style.removeProperty(`--color-${key}`);
-      });
-    };
-  }, [config]);
-
-  return <>{children}</>;
-};
-
-export const ChartTooltip: React.FC<{
-  content: React.ReactNode;
-}> = ({ content }) => {
-  return content;
-};
-
-export const ChartTooltipContent: React.FC<TooltipContentProps> = ({ active, payload, label }) => {
-  if (!active || !payload || !payload.length) return null;
+export function Chart({
+  type,
+  data,
+  options = defaultOptions,
+  className,
+  height,
+  width,
+  ...props
+}: ChartProps) {
+  const chartOptions = { ...defaultOptions, ...options };
+  
+  const renderChart = () => {
+    switch (type) {
+      case 'line':
+        return <Line data={data} options={chartOptions} height={height} width={width} />;
+      case 'bar':
+        return <Bar data={data} options={chartOptions} height={height} width={width} />;
+      case 'pie':
+        return <Pie data={data} options={chartOptions} height={height} width={width} />;
+      case 'doughnut':
+        return <Doughnut data={data} options={chartOptions} height={height} width={width} />;
+      case 'polarArea':
+        return <PolarArea data={data} options={chartOptions} height={height} width={width} />;
+      case 'radar':
+        return <Radar data={data} options={chartOptions} height={height} width={width} />;
+      default:
+        return <div>Unsupported chart type: {type}</div>;
+    }
+  };
 
   return (
-    <div className="bg-background border rounded-md shadow-md p-2 text-sm">
-      <p className="font-medium">{label}</p>
-      {payload.map((item, index) => (
-        <div key={index} className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color || 'var(--color-' + item.name + ')' }}></div>
-          <span>{item.name}: {item.value}</span>
-        </div>
-      ))}
+    <div className={cn("w-full h-full", className)} {...props}>
+      {renderChart()}
     </div>
   );
-};
+}
