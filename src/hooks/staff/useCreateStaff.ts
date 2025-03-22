@@ -109,7 +109,10 @@ export const useCreateStaff = (): UseCreateStaffReturn => {
     },
     onSuccess: (result) => {
       if (result.success) {
+        // Invalidate all staff-related queries to ensure fresh data
         queryClient.invalidateQueries({ queryKey: ['businessStaff'] });
+        queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
+        
         toast({
           title: "Staff Account Created",
           description: "The staff account has been created successfully.",

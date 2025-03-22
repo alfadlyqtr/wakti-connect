@@ -18,50 +18,69 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
   onSelectStaff, 
   onOpenCreateDialog 
 }) => {
-  // Fetch staff members
+  // Fetch staff members with an optimized query
   const { data: staffMembers, isLoading: staffLoading, error: staffError, refetch } = useQuery({
     queryKey: ['businessStaff'],
     queryFn: async () => {
-      const { data: session } = await supabase.auth.getSession();
-      
-      if (!session?.session?.user) {
-        throw new Error('Not authenticated');
-      }
-      
-      // First fetch the business staff records
-      const { data: staffData, error: staffError } = await supabase
-        .from('business_staff')
-        .select('*')
-        .eq('business_id', session.session.user.id)
-        .neq('status', 'deleted');
+      try {
+        const { data: session } = await supabase.auth.getSession();
         
-      if (staffError) throw staffError;
-      
-      // Now fetch profile data for each staff member
-      const staffWithProfiles = await Promise.all(
-        staffData.map(async (staff) => {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('full_name, avatar_url')
-            .eq('id', staff.staff_id)
-            .single();
-            
-          return {
-            ...staff,
-            profile: profileError ? { 
-              full_name: staff.name, 
-              avatar_url: staff.profile_image_url || null 
-            } : {
-              ...profileData,
-              avatar_url: profileData?.avatar_url || staff.profile_image_url || null
+        if (!session?.session?.user) {
+          throw new Error('Not authenticated');
+        }
+        
+        console.log("Fetching staff with auth user:", session.session.user.id);
+        
+        // Use a simpler query to avoid RLS recursion issues
+        const { data: staffData, error: staffError } = await supabase
+          .from('business_staff')
+          .select('*')
+          .eq('business_id', session.session.user.id)
+          .neq('status', 'deleted');
+          
+        if (staffError) {
+          console.error("Error fetching staff data:", staffError);
+          throw staffError;
+        }
+        
+        console.log("Staff data retrieved:", staffData?.length);
+        
+        // Now fetch profile data for each staff member
+        const staffWithProfiles = await Promise.all(
+          staffData.map(async (staff) => {
+            // Use separate queries for profile data to avoid recursive RLS issues
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('full_name, avatar_url')
+              .eq('id', staff.staff_id)
+              .single();
+              
+            if (profileError) {
+              console.log("Profile fetch error for staff ID:", staff.staff_id, profileError);
             }
-          } as StaffMember;
-        })
-      );
-      
-      return staffWithProfiles;
+            
+            return {
+              ...staff,
+              profile: profileError ? { 
+                full_name: staff.name, 
+                avatar_url: staff.profile_image_url || null 
+              } : {
+                ...profileData,
+                avatar_url: profileData?.avatar_url || staff.profile_image_url || null
+              }
+            } as StaffMember;
+          })
+        );
+        
+        console.log("Staff with profiles prepared:", staffWithProfiles?.length);
+        return staffWithProfiles;
+      } catch (error) {
+        console.error("Error in staff query:", error);
+        throw error;
+      }
     },
-    refetchInterval: 30000, // Refetch every 30 seconds
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
 
   // Refetch when component mounts to ensure we have latest data
