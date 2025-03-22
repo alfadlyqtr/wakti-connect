@@ -40,10 +40,37 @@ interface StaffDetailsDialogProps {
 
 type StaffFormValues = z.infer<typeof staffFormSchema>;
 
-// Simplified schema for editing existing staff
-const editStaffSchema = staffFormSchema.omit({ 
-  password: true, 
-  confirmPassword: true 
+// Simplified schema for editing existing staff - create it by adding fields to a new schema
+// rather than using omit which isn't available directly on the schema
+const editStaffSchema = z.object({
+  fullName: z.string().min(2, "Full name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  position: z.string().optional(),
+  isServiceProvider: z.boolean().default(false),
+  isCoAdmin: z.boolean().default(false),
+  permissions: z.object({
+    can_view_tasks: z.boolean().default(true),
+    can_manage_tasks: z.boolean().default(false),
+    can_message_staff: z.boolean().default(true),
+    can_manage_bookings: z.boolean().default(false),
+    can_create_job_cards: z.boolean().default(false),
+    can_track_hours: z.boolean().default(true),
+    can_log_earnings: z.boolean().default(false),
+    can_edit_profile: z.boolean().default(true),
+    can_view_customer_bookings: z.boolean().default(false),
+    can_view_analytics: z.boolean().default(false)
+  }).default({
+    can_view_tasks: true,
+    can_manage_tasks: false,
+    can_message_staff: true,
+    can_manage_bookings: false,
+    can_create_job_cards: false,
+    can_track_hours: true,
+    can_log_earnings: false,
+    can_edit_profile: true,
+    can_view_customer_bookings: false,
+    can_view_analytics: false
+  })
 });
 
 type EditStaffFormValues = z.infer<typeof editStaffSchema>;
@@ -122,10 +149,13 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
           ? JSON.parse(staffRelation.permissions) 
           : staffRelation.permissions;
         
+        // Get profile data safely with optional chaining
+        const profileData = staffRelation.profiles || {};
+
         // Set form values
         form.reset({
-          fullName: staffRelation.name || staffRelation.profiles?.full_name || "",
-          email: staffRelation.email || staffRelation.profiles?.email || "",
+          fullName: staffRelation.name || profileData.full_name || "",
+          email: staffRelation.email || profileData.email || "",
           position: staffRelation.position || "",
           isServiceProvider: staffRelation.is_service_provider || false,
           isCoAdmin: staffRelation.role === "co-admin",
@@ -253,7 +283,7 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
 
   // Generate initials for avatar
   const getInitials = () => {
-    const name = staffData?.name || staffData?.profiles?.full_name || "";
+    const name = staffData?.name || (staffData?.profiles?.full_name || "");
     return name
       .split(" ")
       .map(part => part.charAt(0))
