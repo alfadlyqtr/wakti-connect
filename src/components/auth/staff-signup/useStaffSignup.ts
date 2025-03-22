@@ -9,6 +9,8 @@ export const useStaffSignup = () => {
     invitation: null,
     status: "deprecated",
     isSubmitting: false,
-    onSubmit: () => Promise.resolve(false)
+    onSubmit: () => Promise.resolve(false),
+    error: null,
+    isVerifying: false
   };
 };
