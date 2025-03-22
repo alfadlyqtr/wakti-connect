@@ -2,35 +2,36 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Uploads and sets a staff avatar image
- * @param userId User ID to associate with the avatar
- * @param avatar File to upload
- * @returns Promise with the avatar URL or null if upload failed
+ * Uploads a staff avatar image to storage
  */
-export const uploadStaffAvatar = async (userId: string, avatar?: File): Promise<string | null> => {
-  if (!avatar) return null;
-  
+export const uploadStaffAvatar = async (userId: string, avatarFile: File): Promise<string | null> => {
   try {
-    // Create a unique filename for the staff avatar
-    const fileExt = avatar.name.split('.').pop();
+    // Generate a unique filename
+    const fileExt = avatarFile.name.split('.').pop();
     const fileName = `${userId}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `staff-profiles/${fileName}`;
+    const filePath = `staff_avatars/${fileName}`;
     
-    // Upload to storage
+    // Upload the file to Supabase Storage
     const { error: uploadError } = await supabase.storage
-      .from('profile_images')
-      .upload(filePath, avatar);
+      .from('avatars')
+      .upload(filePath, avatarFile, {
+        cacheControl: '3600',
+        upsert: true
+      });
       
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error("Error uploading avatar:", uploadError);
+      return null;
+    }
     
-    // Get public URL of the uploaded image
-    const { data } = supabase.storage
-      .from('profile_images')
+    // Get the public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('avatars')
       .getPublicUrl(filePath);
       
-    return data.publicUrl;
+    return publicUrl;
   } catch (error) {
-    console.error("Error uploading staff avatar:", error);
+    console.error("Error in avatar upload:", error);
     return null;
   }
 };

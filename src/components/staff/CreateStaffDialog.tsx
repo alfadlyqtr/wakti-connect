@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -34,8 +34,8 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="sticky top-0 z-10 bg-background pt-4 pb-6">
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-hidden flex flex-col p-0">
+        <div className="sticky top-0 z-10 bg-background pt-6 px-6 pb-4">
           <div className="flex items-center space-x-4">
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
               <UserPlus className="h-6 w-6 text-primary" />
@@ -47,35 +47,39 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto pr-2">
+        <div className="flex-1 overflow-y-auto px-6 pb-2">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
               <StaffFormFields form={form} />
-
-              <DialogFooter className="mt-6 pt-4 border-t sticky bottom-0 bg-background">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={handleCancel}
-                  className="mr-2"
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
-                    </>
-                  ) : (
-                    "Create Staff Account"
-                  )}
-                </Button>
-              </DialogFooter>
             </form>
           </Form>
         </div>
+        
+        <DialogFooter className="px-6 py-4 border-t">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={handleCancel}
+            className="mr-2"
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="button" 
+            disabled={isSubmitting}
+            onClick={form.handleSubmit(handleSubmit)}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              "Create Staff Account"
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
