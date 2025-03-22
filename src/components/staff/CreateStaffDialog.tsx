@@ -38,7 +38,7 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
       if (!open) form.reset();
       onOpenChange(open);
     }}>
-      <DialogContent className="sm:max-w-7xl md:max-h-[90vh] p-0 overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-[900px] h-[85vh] p-0 overflow-hidden flex flex-col">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
           <div className="px-6 pt-6 pb-2 sticky top-0 bg-background z-10">
             <DialogHeader>
@@ -54,8 +54,8 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
             </TabsList>
           </div>
           
-          <TabsContent value="create" className="flex-1 overflow-y-auto px-6 pb-6 pt-2">
-            <Card className="border-0 shadow-none">
+          <TabsContent value="create" className="flex-1 overflow-y-auto px-6 pb-6 pt-2 h-full">
+            <Card className="border-0 shadow-none h-full">
               <CreateTab 
                 form={form} 
                 onSubmit={handleSubmit} 

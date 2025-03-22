@@ -23,7 +23,7 @@ const CreateTab: React.FC<CreateTabProps> = ({
 }) => {
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 h-full flex flex-col">
         <div className="sticky top-0 z-10 bg-background pt-4 pb-6">
           <div className="flex items-center space-x-4">
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -36,9 +36,11 @@ const CreateTab: React.FC<CreateTabProps> = ({
           </div>
         </div>
         
-        <StaffFormFields form={form} />
+        <div className="flex-1 overflow-y-auto pr-2">
+          <StaffFormFields form={form} />
+        </div>
         
-        <DialogFooter className="mt-8 pt-4 border-t sticky bottom-0 bg-background">
+        <DialogFooter className="mt-6 pt-4 border-t sticky bottom-0 bg-background">
           <Button 
             type="button" 
             variant="outline" 

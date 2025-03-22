@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { staffFormSchema, StaffFormValues } from "@/components/staff/dialog/StaffFormSchema";
+import { updateProfileAvatar } from "@/services/profile/updateProfileService";
 
 export const useCreateStaff = () => {
   const [activeTab, setActiveTab] = useState("create");
@@ -51,6 +52,19 @@ export const useCreateStaff = () => {
     } catch (error) {
       console.error("Error checking co-admin limit:", error);
       return false;
+    }
+  };
+  
+  // Handle avatar upload
+  const uploadStaffAvatar = async (userId: string, avatar?: File): Promise<string | null> => {
+    if (!avatar) return null;
+    
+    try {
+      const avatarUrl = await updateProfileAvatar(userId, avatar);
+      return avatarUrl;
+    } catch (error) {
+      console.error("Error uploading staff avatar:", error);
+      return null;
     }
   };
   
@@ -105,6 +119,12 @@ export const useCreateStaff = () => {
         
         if (authError) throw authError;
         if (!authData.user) throw new Error("Failed to create user account");
+        
+        // Upload avatar if provided
+        let avatarUrl = null;
+        if (values.avatar) {
+          avatarUrl = await uploadStaffAvatar(authData.user.id, values.avatar);
+        }
         
         // 2. Add staff record to business_staff table
         const { data: staffData, error: staffError } = await supabase
@@ -180,11 +200,12 @@ export const useCreateStaff = () => {
           }
         }
         
-        // Update profile table to set account_type
+        // Update profile table to set account_type and avatar_url
         await supabase
           .from('profiles')
           .update({
             account_type: 'staff',
+            avatar_url: avatarUrl,
             updated_at: new Date().toISOString()
           })
           .eq('id', authData.user.id);
