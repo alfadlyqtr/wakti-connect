@@ -2,40 +2,46 @@
 import React from "react";
 import PriceCard from "./PriceCard";
 import PricingHeading from "./PricingHeading";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/components/mocks/translationMock";
 
 const Pricing = () => {
   const { t } = useTranslation();
   
   const plans = [
     {
-      title: t('pricing.plans.free.title'),
-      price: t('pricing.plans.free.title'),
-      description: t('pricing.plans.free.description'),
-      features: t('pricing.plans.free.features', { returnObjects: true }) as string[],
-      buttonText: t('pricing.plans.free.buttonText'),
+      title: String(t('pricing.plans.free.title')),
+      price: String(t('pricing.plans.free.title')),
+      description: String(t('pricing.plans.free.description')),
+      features: Array.isArray(t('pricing.plans.free.features', { returnObjects: true })) 
+        ? t('pricing.plans.free.features', { returnObjects: true }) as string[] 
+        : [],
+      buttonText: String(t('pricing.plans.free.buttonText')),
       buttonLink: "/auth?tab=register&plan=free",
       variant: "outline",
       popular: false,
       delay: "0ms"
     },
     {
-      title: t('pricing.plans.individual.title'),
+      title: String(t('pricing.plans.individual.title')),
       price: "QAR 20",
-      description: t('pricing.plans.individual.description'),
-      features: t('pricing.plans.individual.features', { returnObjects: true }) as string[],
-      buttonText: t('pricing.plans.individual.buttonText'),
+      description: String(t('pricing.plans.individual.description')),
+      features: Array.isArray(t('pricing.plans.individual.features', { returnObjects: true })) 
+        ? t('pricing.plans.individual.features', { returnObjects: true }) as string[] 
+        : [],
+      buttonText: String(t('pricing.plans.individual.buttonText')),
       buttonLink: "/auth?tab=register&plan=individual",
       variant: "outline",
       popular: false,
       delay: "100ms"
     },
     {
-      title: t('pricing.plans.business.title'),
+      title: String(t('pricing.plans.business.title')),
       price: "QAR 45",
-      description: t('pricing.plans.business.description'),
-      features: t('pricing.plans.business.features', { returnObjects: true }) as string[],
-      buttonText: t('pricing.plans.business.buttonText'),
+      description: String(t('pricing.plans.business.description')),
+      features: Array.isArray(t('pricing.plans.business.features', { returnObjects: true })) 
+        ? t('pricing.plans.business.features', { returnObjects: true }) as string[] 
+        : [],
+      buttonText: String(t('pricing.plans.business.buttonText')),
       buttonLink: "/auth?tab=register&plan=business",
       variant: "default",
       popular: true,
@@ -47,8 +53,8 @@ const Pricing = () => {
     <section id="pricing" className="py-16 md:py-24 px-4">
       <div className="container mx-auto max-w-5xl">
         <PricingHeading 
-          title={t('pricing.title')} 
-          subtitle={t('pricing.subtitle')}
+          title={String(t('pricing.title'))} 
+          subtitle={String(t('pricing.subtitle'))}
         />
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

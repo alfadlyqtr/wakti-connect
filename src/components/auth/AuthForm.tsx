@@ -64,20 +64,20 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
             >
               <Link to="/" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
                 <ChevronLeft className="h-4 w-4" />
-                <span>{t('auth.back')}</span>
+                <span>{String(t('auth.back'))}</span>
               </Link>
             </Button>
             <div className="flex items-center gap-2">
               <LanguageSwitcher />
               <TabsList className="grid w-32 sm:w-48 grid-cols-2">
-                <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
-                <TabsTrigger value="register">{t('auth.signUp')}</TabsTrigger>
+                <TabsTrigger value="login">{String(t('auth.login'))}</TabsTrigger>
+                <TabsTrigger value="register">{String(t('auth.signUp'))}</TabsTrigger>
               </TabsList>
             </div>
           </div>
-          <CardTitle className="text-2xl text-center">{t('auth.welcomeToWakti')}</CardTitle>
+          <CardTitle className="text-2xl text-center">{String(t('auth.welcomeToWakti'))}</CardTitle>
           <CardDescription className="text-center">
-            {t('auth.manageEfficiently')}
+            {String(t('auth.manageEfficiently'))}
           </CardDescription>
         </CardHeader>
 
@@ -103,7 +103,7 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-card px-2 text-muted-foreground">
-                {t('auth.continueWith')}
+                {String(t('auth.continueWith'))}
               </span>
             </div>
           </div>

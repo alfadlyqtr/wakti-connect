@@ -92,7 +92,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
     <form onSubmit={handleSignup} className="space-y-4">
       <FormInputField
         id="full-name"
-        label={t('auth.fullName')}
+        label={String(t('auth.fullName'))}
         type="text"
         placeholder="John Doe"
         value={fullName}
@@ -103,7 +103,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
       
       <FormInputField
         id="signup-email"
-        label={t('auth.email')}
+        label={String(t('auth.email'))}
         type="email"
         placeholder="name@example.com"
         value={email}
@@ -114,7 +114,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
       
       <FormInputField
         id="signup-password"
-        label={t('auth.password')}
+        label={String(t('auth.password'))}
         type={showPassword ? "text" : "password"}
         placeholder="••••••••"
         value={password}

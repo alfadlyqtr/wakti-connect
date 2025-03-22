@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { CircleArrowUp } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/components/mocks/translationMock";
 import { useTheme } from "@/hooks/use-theme";
 
 const ScrollToTop = () => {
@@ -51,7 +51,7 @@ const ScrollToTop = () => {
             type="button"
             className={buttonClasses}
             onClick={scrollToTop}
-            aria-label={t("scrollToTop")}
+            aria-label={String(t("scrollToTop"))}
             style={{
               right: "1.5rem", 
               bottom: "25vh" // Position at 75% down (from top) = 25% up from bottom
@@ -61,7 +61,7 @@ const ScrollToTop = () => {
           </button>
         </TooltipTrigger>
         <TooltipContent side="left">
-          <p>{t("scrollToTop", "Scroll to top")}</p>
+          <p>{String(t("scrollToTop", "Scroll to top"))}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

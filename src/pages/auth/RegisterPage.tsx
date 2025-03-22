@@ -1,7 +1,7 @@
 
 import React from "react";
 import AuthForm from "@/components/auth/AuthForm";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/components/mocks/translationMock";
 
 const RegisterPage = () => {
   const { t } = useTranslation();

@@ -1,7 +1,11 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import ReactMarkdown from "react-markdown";
+
+// Temporary placeholder for ReactMarkdown until we can install the package
+const ReactMarkdown = ({ children }: { children: string }) => {
+  return <div>{children}</div>;
+};
 
 interface MessageContentProps {
   content: string;
