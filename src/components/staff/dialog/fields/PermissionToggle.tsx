@@ -14,7 +14,7 @@ import { LucideIcon } from "lucide-react";
 
 interface PermissionToggleProps {
   form: UseFormReturn<StaffFormValues>;
-  name: `permissions.${string}`;
+  name: keyof StaffFormValues["permissions"] extends infer K ? `permissions.${K & string}` : never;
   label: string;
   description: string;
   icon: LucideIcon;
@@ -44,8 +44,9 @@ const PermissionToggle: React.FC<PermissionToggleProps> = ({
           </div>
           <FormControl>
             <Switch
-              checked={field.value}
+              checked={!!field.value}
               onCheckedChange={field.onChange}
+              className="data-[state=checked]:bg-emerald-500"
             />
           </FormControl>
         </FormItem>
