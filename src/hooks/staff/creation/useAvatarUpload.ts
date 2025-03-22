@@ -109,5 +109,8 @@ export function useAvatarUpload() {
     }
   };
 
-  return { uploadAvatar, uploadProgress };
+  // Adding an isUploading getter derived from uploadProgress state
+  const isUploading = uploadProgress.uploading;
+
+  return { uploadAvatar, uploadProgress, isUploading };
 }

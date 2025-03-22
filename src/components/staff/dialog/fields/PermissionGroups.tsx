@@ -3,7 +3,10 @@ import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { StaffFormValues } from "../StaffFormSchema";
 import { 
-  ShieldCheck
+  ShieldCheck,
+  List,
+  MessageSquare,
+  BarChart4
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,6 +42,8 @@ const PermissionGroups: React.FC<PermissionGroupsProps> = ({ form }) => {
           <PermissionCategoryTab 
             form={form} 
             category="tasks"
+            icon={List}
+            title="Tasks & Work Management"
           />
         </TabsContent>
         
@@ -46,6 +51,8 @@ const PermissionGroups: React.FC<PermissionGroupsProps> = ({ form }) => {
           <PermissionCategoryTab 
             form={form} 
             category="communication"
+            icon={MessageSquare}
+            title="Communication & Bookings"
           />
         </TabsContent>
         
@@ -53,6 +60,8 @@ const PermissionGroups: React.FC<PermissionGroupsProps> = ({ form }) => {
           <PermissionCategoryTab 
             form={form} 
             category="business"
+            icon={BarChart4}
+            title="Business Data & Analytics"
           />
         </TabsContent>
       </Tabs>

@@ -67,7 +67,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({ form }) => {
       </div>
       
       <UploadProgress 
-        progress={uploadProgress} 
+        progress={uploadProgress.progress} 
         isUploading={isUploading} 
         size="sm"
         className="w-24 mt-1"

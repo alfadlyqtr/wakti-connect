@@ -9,7 +9,7 @@ interface PermissionSectionProps {
   form: UseFormReturn<EditStaffFormValues>;
   title: string;
   description: string;
-  name: `permissions.${string}`;
+  name: keyof EditStaffFormValues | `permissions.${keyof EditStaffFormValues["permissions"]}`;
 }
 
 const PermissionSection: React.FC<PermissionSectionProps> = ({
