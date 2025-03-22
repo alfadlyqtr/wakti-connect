@@ -1,4 +1,6 @@
 
+import { Json } from "@/integrations/supabase/types";
+
 export interface Profile {
   full_name: string | null;
   avatar_url: string | null;
@@ -8,9 +10,17 @@ export interface StaffMember {
   id: string;
   staff_id: string;
   business_id: string;
+  name: string;
+  email: string;
+  position: string;
   role: string;
+  staff_number: string;
+  is_service_provider: boolean;
+  status: string;
+  permissions: any; // Using any here to avoid type issues with Json
   created_at: string;
   profile?: Profile | null;
+  profiles?: any; // For database query compatibility
 }
 
 export interface WorkLog {

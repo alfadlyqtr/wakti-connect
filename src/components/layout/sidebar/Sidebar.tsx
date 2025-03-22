@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,29 +9,41 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Menu } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { SidebarProfile } from "./SidebarProfile";
+import SidebarProfile from "./SidebarProfile";
 import { navItems } from "./sidebarNavConfig";
 
 interface SidebarProps {
   collapsed: boolean;
 }
 
+// Define the profile type to match what we're setting in state
+interface ProfileData {
+  id: string;
+  full_name: string | null;
+  display_name: string | null;
+  business_name: string | null;
+  account_type: "free" | "individual" | "business" | "staff";
+  avatar_url: string | null;
+}
+
 const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
-  const [profileData, setProfileData] = useState<{
-    id: string;
-    full_name: string | null;
-    display_name: string | null;
-    business_name: string | null;
-    account_type: "free" | "individual" | "business";
-    avatar_url: string | null;
-  } | null>(null);
-  const { signOut } = useAuth();
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const { user, logout } = useAuth();
   
   useEffect(() => {
     const fetchProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
+        // First check if user is staff
+        const { data: staffData } = await supabase
+          .from('business_staff')
+          .select('id')
+          .eq('staff_id', session.user.id)
+          .maybeSingle();
+        
+        const isStaff = !!staffData;
+        
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
@@ -39,8 +52,18 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
           
         if (error) {
           console.error("Error fetching profile:", error);
-        } else {
-          setProfileData(data);
+        } else if (data) {
+          // Cast the account_type to include 'staff' for staff members
+          const accountType = isStaff ? 'staff' as const : data.account_type;
+          
+          setProfileData({
+            id: data.id,
+            full_name: data.full_name,
+            display_name: data.display_name,
+            business_name: data.business_name,
+            account_type: accountType,
+            avatar_url: data.avatar_url,
+          });
         }
       }
     };
@@ -101,7 +124,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         </ScrollArea>
       </div>
       <div className="p-4">
-        <Button variant="outline" className="w-full" onClick={signOut}>
+        <Button variant="outline" className="w-full" onClick={logout}>
           Sign Out
         </Button>
       </div>

@@ -1,40 +1,57 @@
 
-import React from "react";
-import StaffManagementPanel from "@/components/staff/StaffManagementPanel";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserCog, Clock } from "lucide-react";
+import { UserPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import CreateStaffDialog from "@/components/staff/CreateStaffDialog";
+import InvitationsTab from "@/components/staff/InvitationsTab";
+import StaffMembersTab from "./staff-management/StaffMembersTab";
 import WorkLogsTab from "./staff-management/WorkLogsTab";
 
 const DashboardStaffManagement = () => {
+  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Staff Management</h1>
-        <p className="text-muted-foreground">
-          Create and manage staff accounts, control permissions, and track work logs.
-        </p>
+      <div className="flex flex-col md:flex-row justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Staff Management</h1>
+          <p className="text-muted-foreground">Manage your staff members, track work hours, and assign services.</p>
+        </div>
+        <Button className="md:self-start" onClick={() => setCreateDialogOpen(true)}>
+          <UserPlus className="mr-2 h-4 w-4" />
+          Invite Staff
+        </Button>
       </div>
-      
+
       <Tabs defaultValue="staff">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="staff" className="flex items-center gap-2">
-            <UserCog className="h-4 w-4" />
-            Staff Accounts
-          </TabsTrigger>
-          <TabsTrigger value="work-logs" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Work Logs
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="staff">Staff Members</TabsTrigger>
+          <TabsTrigger value="invitations">Invitations</TabsTrigger>
+          <TabsTrigger value="work-logs">Work Logs</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="staff" className="mt-0">
-          <StaffManagementPanel />
+        <TabsContent value="staff" className="mt-6">
+          <StaffMembersTab 
+            onSelectStaff={setSelectedStaffId} 
+            onOpenCreateDialog={() => setCreateDialogOpen(true)} 
+          />
         </TabsContent>
         
-        <TabsContent value="work-logs" className="mt-0">
-          <WorkLogsTab />
+        <TabsContent value="invitations" className="mt-6">
+          <InvitationsTab />
+        </TabsContent>
+        
+        <TabsContent value="work-logs" className="mt-6">
+          <WorkLogsTab selectedStaffId={selectedStaffId} />
         </TabsContent>
       </Tabs>
+      
+      <CreateStaffDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+      />
     </div>
   );
 };

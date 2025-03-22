@@ -23,7 +23,7 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
     onSubmit, 
     activeTab, 
     setActiveTab, 
-    createInvitation 
+    isSubmitting 
   } = useCreateStaff();
   
   const handleSubmit = async (values: any) => {
@@ -62,7 +62,7 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
               form={form} 
               onSubmit={handleSubmit} 
               onCancel={() => onOpenChange(false)}
-              createInvitation={createInvitation}
+              isSubmitting={isSubmitting}
             />
           </TabsContent>
           

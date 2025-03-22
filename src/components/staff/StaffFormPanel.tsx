@@ -1,15 +1,13 @@
-
 import React, { useEffect } from "react";
-import { useCreateStaff } from "@/hooks/staff/useCreateStaff";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { staffFormSchema, StaffFormValues } from "@/components/auth/staff-signup/validation";
+import { staffFormSchema, StaffFormValues } from "../staff/validation";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -90,6 +88,7 @@ const StaffFormPanel: React.FC<StaffFormPanelProps> = ({ staffId, onSuccess, onC
   useEffect(() => {
     if (staffData) {
       const profileData = staffData.profiles as any || {};
+      const permissions = staffData.permissions as any || {};
       
       form.reset({
         fullName: profileData.full_name || staffData.name || "",
@@ -100,16 +99,16 @@ const StaffFormPanel: React.FC<StaffFormPanelProps> = ({ staffId, onSuccess, onC
         isServiceProvider: staffData.is_service_provider || false,
         isCoAdmin: staffData.role === 'co-admin',
         permissions: {
-          can_view_tasks: staffData.permissions?.can_view_tasks ?? true,
-          can_manage_tasks: staffData.permissions?.can_manage_tasks ?? false,
-          can_message_staff: staffData.permissions?.can_message_staff ?? true,
-          can_manage_bookings: staffData.permissions?.can_manage_bookings ?? false,
-          can_create_job_cards: staffData.permissions?.can_create_job_cards ?? false,
-          can_track_hours: staffData.permissions?.can_track_hours ?? true,
-          can_log_earnings: staffData.permissions?.can_log_earnings ?? false,
-          can_edit_profile: staffData.permissions?.can_edit_profile ?? true,
-          can_view_customer_bookings: staffData.permissions?.can_view_customer_bookings ?? false,
-          can_view_analytics: staffData.permissions?.can_view_analytics ?? false
+          can_view_tasks: permissions.can_view_tasks ?? true,
+          can_manage_tasks: permissions.can_manage_tasks ?? false,
+          can_message_staff: permissions.can_message_staff ?? true,
+          can_manage_bookings: permissions.can_manage_bookings ?? false,
+          can_create_job_cards: permissions.can_create_job_cards ?? false,
+          can_track_hours: permissions.can_track_hours ?? true,
+          can_log_earnings: permissions.can_log_earnings ?? false,
+          can_edit_profile: permissions.can_edit_profile ?? true,
+          can_view_customer_bookings: permissions.can_view_customer_bookings ?? false,
+          can_view_analytics: permissions.can_view_analytics ?? false
         }
       });
     }
@@ -154,6 +153,25 @@ const StaffFormPanel: React.FC<StaffFormPanelProps> = ({ staffId, onSuccess, onC
         if (authError) throw authError;
         if (!authData.user) throw new Error("Failed to create user account");
         
+        // Get business name to generate staff number
+        const { data: businessData } = await supabase
+          .from('profiles')
+          .select('business_name')
+          .eq('id', session.user.id)
+          .single();
+          
+        const businessPrefix = businessData?.business_name 
+          ? businessData.business_name.substring(0, 3).toUpperCase().replace(/[^A-Z0-9]/g, '')
+          : 'BUS';
+          
+        // Get staff count
+        const { count } = await supabase
+          .from('business_staff')
+          .select('*', { count: 'exact', head: true })
+          .eq('business_id', session.user.id);
+          
+        const staffNumber = `${businessPrefix}_Staff${String(count || 0).padStart(3, '0')}`;
+        
         // 2. Create staff record
         const { data: staffData, error: staffError } = await supabase
           .from('business_staff')
@@ -162,6 +180,7 @@ const StaffFormPanel: React.FC<StaffFormPanelProps> = ({ staffId, onSuccess, onC
             staff_id: authData.user.id,
             name: data.fullName,
             email: data.email,
+            staff_number: staffNumber,
             position: data.position || 'Staff Member',
             role: data.isCoAdmin ? 'co-admin' : 'staff',
             is_service_provider: data.isServiceProvider,

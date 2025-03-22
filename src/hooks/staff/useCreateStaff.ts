@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { staffFormSchema, StaffFormValues } from "@/components/auth/staff-signup/validation";
+import { staffFormSchema, StaffFormValues } from "@/components/staff/validation";
 
 export const useCreateStaff = () => {
   const [activeTab, setActiveTab] = useState("create");
@@ -73,6 +73,25 @@ export const useCreateStaff = () => {
           }
         }
         
+        // Get business name to generate staff number
+        const { data: businessData } = await supabase
+          .from('profiles')
+          .select('business_name')
+          .eq('id', businessId)
+          .single();
+          
+        const businessPrefix = businessData?.business_name 
+          ? businessData.business_name.substring(0, 3).toUpperCase().replace(/[^A-Z0-9]/g, '')
+          : 'BUS';
+          
+        // Get staff count
+        const { count } = await supabase
+          .from('business_staff')
+          .select('*', { count: 'exact', head: true })
+          .eq('business_id', businessId);
+          
+        const staffNumber = `${businessPrefix}_Staff${String(count || 0).padStart(3, '0')}`;
+        
         // 1. Create the auth user account
         const { data: authData, error: authError } = await supabase.auth.admin.createUser({
           email: values.email,
@@ -96,6 +115,7 @@ export const useCreateStaff = () => {
             email: values.email,
             position: values.position || 'Staff Member',
             role: values.isCoAdmin ? 'co-admin' : 'staff',
+            staff_number: staffNumber,
             is_service_provider: values.isServiceProvider,
             permissions: values.permissions,
             status: 'active'

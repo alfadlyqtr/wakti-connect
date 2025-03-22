@@ -2,10 +2,10 @@
 import { useState } from "react";
 import { useInvitationVerification } from "./hooks/useInvitationVerification";
 import { useStaffSignupSubmit } from "./hooks/useStaffSignupSubmit";
-import { StaffSignupFormValues } from "./validation";
+import { StaffFormValues } from "./validation";
 
-// Use 'export type' instead of 'export' for type re-exports when isolatedModules is enabled
-export type { StaffSignupFormValues } from "./validation";
+// Use the imported types
+export type { StaffFormValues as StaffSignupFormValues } from "./validation";
 
 export const useStaffSignup = (token?: string) => {
   const { invitation, status } = useInvitationVerification(token);
