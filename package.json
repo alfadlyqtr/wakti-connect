@@ -71,6 +71,7 @@
     "sonner": "^1.5.0",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
+    "ts-jest": "file:latest identity-obj-proxy@latest @testing-library/jest-dom@latest jest@latest",
     "uuid": "^11.1.0",
     "vaul": "^0.9.3",
     "vitest": "^3.0.9",

@@ -1,9 +1,7 @@
 
-import React from "react";
-import { Card } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle } from 'lucide-react';
 
 interface StaffErrorStateProps {
   error: Error | null;
@@ -17,24 +15,32 @@ const StaffErrorState: React.FC<StaffErrorStateProps> = ({
   onRetry 
 }) => {
   return (
-    <Card className="col-span-full p-8">
-      <Alert variant="destructive" className="mb-4">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Error loading staff</AlertTitle>
-        <AlertDescription className="space-y-2">
-          <p>{error instanceof Error ? error.message : "Failed to load staff members"}</p>
-          {authError && (
-            <p className="font-semibold">There appears to be an authentication issue. Please try refreshing the page or signing in again.</p>
-          )}
-        </AlertDescription>
-      </Alert>
-      <div className="flex justify-center mt-4">
-        <Button onClick={onRetry} className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Try Again
-        </Button>
+    <div 
+      className="p-8 rounded-lg border border-red-200 bg-red-50 text-center space-y-4"
+      data-testid="staff-error-state"
+    >
+      <div className="flex justify-center">
+        <AlertTriangle className="h-12 w-12 text-red-500" />
       </div>
-    </Card>
+      
+      <h3 className="text-lg font-semibold text-red-700">
+        {authError ? 'Authentication Error' : 'Failed to Load Staff'}
+      </h3>
+      
+      <p className="text-red-600">
+        {authError 
+          ? 'Your session may have expired. Please try refreshing the page or logging in again.'
+          : error?.message || 'An unexpected error occurred while loading your staff members.'}
+      </p>
+      
+      <Button 
+        variant="outline" 
+        onClick={onRetry}
+        className="border-red-300 hover:bg-red-100"
+      >
+        Retry
+      </Button>
+    </div>
   );
 };
 
