@@ -38,22 +38,24 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
       if (!open) form.reset();
       onOpenChange(open);
     }}>
-      <DialogContent className="sm:max-w-4xl">
-        <DialogHeader>
-          <DialogTitle>Create Staff Account</DialogTitle>
-          <DialogDescription>
-            Manually create a staff account for your business
-          </DialogDescription>
-        </DialogHeader>
-        
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="create">Create Staff</TabsTrigger>
-            <TabsTrigger value="info">Information</TabsTrigger>
-          </TabsList>
+      <DialogContent className="sm:max-w-5xl p-0 max-h-[90vh] overflow-hidden">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
+          <div className="px-6 pt-6 pb-2">
+            <DialogHeader>
+              <DialogTitle className="text-2xl">Create Staff Account</DialogTitle>
+              <DialogDescription>
+                Create a staff account with custom permissions for your business
+              </DialogDescription>
+            </DialogHeader>
+            
+            <TabsList className="grid w-full grid-cols-2 mt-4">
+              <TabsTrigger value="create">Create Staff</TabsTrigger>
+              <TabsTrigger value="info">Information</TabsTrigger>
+            </TabsList>
+          </div>
           
-          <TabsContent value="create">
-            <Card className="border shadow-sm">
+          <TabsContent value="create" className="flex-1 overflow-y-auto p-6 pt-0">
+            <Card className="border-0 shadow-none">
               <CreateTab 
                 form={form} 
                 onSubmit={handleSubmit} 
@@ -63,7 +65,7 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
             </Card>
           </TabsContent>
           
-          <TabsContent value="info">
+          <TabsContent value="info" className="flex-1 overflow-y-auto p-6">
             <InfoTab />
           </TabsContent>
         </Tabs>

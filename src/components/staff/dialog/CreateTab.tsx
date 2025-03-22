@@ -4,6 +4,7 @@ import { UseFormReturn } from "react-hook-form";
 import { Form } from "@/components/ui/form";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { UserPlus } from "lucide-react";
 import StaffFormFields from "./StaffFormFields";
 import { StaffFormValues } from "./StaffFormSchema";
 
@@ -22,15 +23,22 @@ const CreateTab: React.FC<CreateTabProps> = ({
 }) => {
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="sticky top-0 z-10 bg-background pt-2 pb-4 border-b mb-4">
-          <h3 className="text-lg font-semibold">Create New Staff</h3>
-          <p className="text-sm text-muted-foreground">Assign permissions and role below</p>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-5xl mx-auto">
+        <div className="sticky top-0 z-10 bg-background pt-4 pb-6">
+          <div className="flex items-center space-x-4">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <UserPlus className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold">Create New Staff</h3>
+              <p className="text-sm text-muted-foreground">Set up account details and permissions</p>
+            </div>
+          </div>
         </div>
         
         <StaffFormFields form={form} />
         
-        <DialogFooter className="mt-6 pt-4 border-t sticky bottom-0 bg-background">
+        <DialogFooter className="mt-8 pt-4 border-t sticky bottom-0 bg-background">
           <Button 
             type="button" 
             variant="outline" 
