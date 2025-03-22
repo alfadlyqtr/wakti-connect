@@ -2,87 +2,153 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
-import { useStaffInvitations } from "./useStaffInvitations";
-import { staffFormSchema, StaffFormValues } from "@/components/staff/dialog";
+import { staffFormSchema, StaffFormValues } from "@/components/auth/staff-signup/validation";
 
-export function useCreateStaff() {
-  const queryClient = useQueryClient();
-  const { createInvitation } = useStaffInvitations();
+export const useCreateStaff = () => {
   const [activeTab, setActiveTab] = useState("create");
+  const queryClient = useQueryClient();
   
   const form = useForm<StaffFormValues>({
     resolver: zodResolver(staffFormSchema),
     defaultValues: {
-      name: "",
+      fullName: "",
       email: "",
-      role: "staff",
+      password: "",
+      confirmPassword: "",
       position: "",
-      sendInvitation: true
+      isServiceProvider: false,
+      isCoAdmin: false,
+      permissions: {
+        can_view_tasks: true,
+        can_manage_tasks: false,
+        can_message_staff: true,
+        can_manage_bookings: false,
+        can_create_job_cards: false,
+        can_track_hours: true,
+        can_log_earnings: false,
+        can_edit_profile: true,
+        can_view_customer_bookings: false,
+        can_view_analytics: false
+      }
     }
   });
   
-  const onSubmit = async (values: StaffFormValues) => {
+  // Check co-admin limit
+  const checkCoAdminLimit = async (businessId: string): Promise<boolean> => {
     try {
-      // Get the current user's ID (the business ID)
-      const { data: session } = await supabase.auth.getSession();
-      
-      if (!session?.session?.user) {
-        throw new Error('Not authenticated');
-      }
-      
-      if (values.sendInvitation && values.email) {
-        // Send invitation to staff
-        await createInvitation.mutateAsync({
-          name: values.name,
-          email: values.email,
-          role: values.role,
-          position: values.position
-        });
-      } else {
-        // Create staff without invitation (legacy method)
-        const { error } = await supabase
-          .from('business_staff')
-          .insert({
-            business_id: session.session.user.id,
-            name: values.name,
-            email: values.email || null,
-            role: values.role,
-            position: values.position || 'staff',
-            staff_id: session.session.user.id // Using business owner's ID as staff_id for now
-          });
-          
-        if (error) throw error;
+      const { data, error } = await supabase
+        .from('business_staff')
+        .select('id')
+        .eq('business_id', businessId)
+        .eq('role', 'co-admin')
+        .eq('status', 'active');
         
-        toast({
-          title: "Staff member created",
-          description: "The staff member has been added successfully."
-        });
-      }
+      if (error) throw error;
       
-      queryClient.invalidateQueries({ queryKey: ['staffData'] });
-      queryClient.invalidateQueries({ queryKey: ['businessStaff'] });
-      
-      form.reset();
-      return true;
+      return data.length === 0;
     } catch (error) {
-      console.error("Error creating staff:", error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create staff member",
-        variant: "destructive"
-      });
+      console.error("Error checking co-admin limit:", error);
       return false;
     }
   };
   
+  // Create staff account mutation
+  const createStaffAccount = useMutation({
+    mutationFn: async (values: StaffFormValues) => {
+      try {
+        // Get current business ID
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error("Not authenticated");
+        
+        const businessId = session.user.id;
+        
+        // If trying to create a co-admin, check the limit
+        if (values.isCoAdmin) {
+          const canAddCoAdmin = await checkCoAdminLimit(businessId);
+          if (!canAddCoAdmin) {
+            throw new Error("Only one Co-Admin is allowed per business");
+          }
+        }
+        
+        // 1. Create the auth user account
+        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+          email: values.email,
+          password: values.password,
+          email_confirm: true,
+          user_metadata: {
+            full_name: values.fullName
+          }
+        });
+        
+        if (authError) throw authError;
+        if (!authData.user) throw new Error("Failed to create user account");
+        
+        // 2. Add staff record to business_staff table
+        const { data: staffData, error: staffError } = await supabase
+          .from('business_staff')
+          .insert({
+            business_id: businessId,
+            staff_id: authData.user.id,
+            name: values.fullName,
+            email: values.email,
+            position: values.position || 'Staff Member',
+            role: values.isCoAdmin ? 'co-admin' : 'staff',
+            is_service_provider: values.isServiceProvider,
+            permissions: values.permissions,
+            status: 'active'
+          })
+          .select()
+          .single();
+        
+        if (staffError) throw staffError;
+        
+        // Add to messages contacts automatically
+        await supabase
+          .from('user_contacts')
+          .insert({
+            user_id: businessId,
+            contact_id: authData.user.id,
+            status: 'accepted',
+            staff_relation_id: staffData.id
+          });
+          
+        return staffData;
+      } catch (error: any) {
+        console.error("Error creating staff account:", error);
+        throw new Error(error.message || "Failed to create staff account");
+      }
+    },
+    onSuccess: () => {
+      toast({
+        title: "Staff Created",
+        description: "The staff account has been created successfully.",
+      });
+      form.reset();
+      queryClient.invalidateQueries({ queryKey: ['businessStaff'] });
+      queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error Creating Staff",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const onSubmit = async (values: StaffFormValues) => {
+    await createStaffAccount.mutateAsync(values);
+    return true;
+  };
+  
   return {
     form,
-    onSubmit,
     activeTab,
     setActiveTab,
-    createInvitation
+    onSubmit,
+    isSubmitting: createStaffAccount.isPending
   };
-}
+};

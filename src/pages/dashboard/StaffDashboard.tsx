@@ -1,133 +1,200 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useStaffStatus } from "@/hooks/useStaffStatus";
-import { Briefcase, Calendar, CheckSquare, MessageSquare } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import StaffWelcomeMessage from "@/components/staff/StaffWelcomeMessage";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import StaffDashboardHeader from "@/components/dashboard/StaffDashboardHeader";
+import { useStaffStatus } from "@/hooks/useStaffStatus";
+import { Users, BookOpen, Clock, Calendar, Briefcase, AlertCircle } from "lucide-react";
 
 const StaffDashboard = () => {
-  const { isStaff, businessId, staffRelationId, isLoading } = useStaffStatus();
+  const { isStaff, staffRelationId } = useStaffStatus();
+  const { data: staffData, isLoading } = useQuery({
+    queryKey: ['staffDetails', staffRelationId],
+    queryFn: async () => {
+      if (!staffRelationId) return null;
+      
+      const { data, error } = await supabase
+        .from('business_staff')
+        .select(`
+          *,
+          business:business_id (
+            business_name,
+            avatar_url
+          )
+        `)
+        .eq('id', staffRelationId)
+        .single();
+        
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!staffRelationId
+  });
   
-  // Fix: Use the getUser() method correctly with async/await pattern
-  const { data: userData } = useQuery({
+  const { data: { user } = { user: null } } = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
       const { data } = await supabase.auth.getUser();
-      return data.user;
+      return data;
     }
   });
   
-  // Get task and shift counts
-  const { data: counts } = useQuery({
-    queryKey: ['staffCounts', staffRelationId],
+  const { data: stats } = useQuery({
+    queryKey: ['staffStats', staffRelationId],
     queryFn: async () => {
-      if (!staffRelationId || !userData?.id) return { tasks: 0, shifts: 0 };
+      if (!staffRelationId) return null;
       
-      try {
-        // Get pending task count
-        const { count: taskCount, error: taskError } = await supabase
-          .from('tasks')
-          .select('id', { count: 'exact', head: true })
-          .eq('assignee_id', userData.id)
-          .eq('status', 'pending');
-          
-        // Get active shifts count
-        const { count: shiftCount, error: shiftError } = await supabase
-          .from('staff_work_logs')
-          .select('id', { count: 'exact', head: true })
-          .eq('staff_relation_id', staffRelationId)
-          .eq('status', 'active');
-          
-        return {
-          tasks: taskCount || 0,
-          shifts: shiftCount || 0
-        };
-      } catch (error) {
-        console.error("Error fetching staff counts:", error);
-        return { tasks: 0, shifts: 0 };
-      }
+      // Get tasks count
+      const { count: tasksCount, error: tasksError } = await supabase
+        .from('tasks')
+        .select('*', { count: 'exact', head: true })
+        .eq('assignee_id', user?.id);
+        
+      // Get bookings count
+      const { count: bookingsCount, error: bookingsError } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .eq('staff_assigned_id', user?.id);
+        
+      // Get work logs count
+      const { count: workLogsCount, error: workLogsError } = await supabase
+        .from('staff_work_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('staff_relation_id', staffRelationId);
+        
+      // Get job cards count
+      const { count: jobCardsCount, error: jobCardsError } = await supabase
+        .from('job_cards')
+        .select('*', { count: 'exact', head: true })
+        .eq('staff_relation_id', staffRelationId);
+        
+      return {
+        tasksCount: tasksCount || 0,
+        bookingsCount: bookingsCount || 0,
+        workLogsCount: workLogsCount || 0,
+        jobCardsCount: jobCardsCount || 0
+      };
     },
-    enabled: !!staffRelationId && !!userData?.id
+    enabled: !!staffRelationId && !!user
   });
   
-  if (isLoading) {
-    return <div className="space-y-6 animate-pulse">
-      <div className="h-20 bg-muted rounded-lg w-full"></div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="h-40 bg-muted rounded-lg"></div>
-        <div className="h-40 bg-muted rounded-lg"></div>
-        <div className="h-40 bg-muted rounded-lg"></div>
-      </div>
-    </div>;
+  if (!isStaff) {
+    return (
+      <Card className="p-8 text-center">
+        <div className="flex flex-col items-center justify-center">
+          <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-2xl font-medium">Not a Staff Account</h3>
+          <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+            This dashboard is only available for staff accounts. If you're a staff member, 
+            please contact your business administrator.
+          </p>
+        </div>
+      </Card>
+    );
   }
   
-  if (!isStaff) {
-    return <div className="text-center py-10">
-      <p className="text-muted-foreground">You are not registered as a staff member.</p>
-    </div>;
+  if (isLoading || !staffData) {
+    return <div className="py-8 text-center">Loading staff dashboard...</div>;
   }
-
+  
+  const permissions = staffData.permissions || {};
+  const businessInfo = staffData.business as any || {};
+  
   return (
     <div className="space-y-6">
-      <StaffWelcomeMessage businessId={businessId} staffId={userData?.id || null} />
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center text-lg">
-              <CheckSquare className="mr-2 h-5 w-5 text-wakti-blue" />
-              Tasks
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold mb-3">{counts?.tasks || 0}</p>
-            <p className="text-muted-foreground text-sm mb-4">Pending tasks assigned to you</p>
-            <Button variant="outline" className="w-full" asChild>
-              <Link to="/dashboard/tasks">View Tasks</Link>
-            </Button>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center text-lg">
-              <Calendar className="mr-2 h-5 w-5 text-green-600" />
-              Work Logs
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold mb-3">{counts?.shifts || 0}</p>
-            <p className="text-muted-foreground text-sm mb-4">Active work sessions</p>
-            <Button variant="outline" className="w-full" asChild>
-              <Link to="/dashboard/work-logs">Manage Shifts</Link>
-            </Button>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center text-lg">
-              <MessageSquare className="mr-2 h-5 w-5 text-purple-600" />
-              Communication
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-sm mb-4">Stay connected with your team</p>
-            <div className="space-y-2">
-              <Button variant="outline" className="w-full" asChild>
-                <Link to="/dashboard/messages">Messages</Link>
-              </Button>
-              <Button variant="outline" className="w-full" asChild>
-                <Link to="/dashboard/contacts">Contacts</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Staff Dashboard</h1>
+        <p className="text-muted-foreground">
+          Welcome to your staff dashboard. Manage your tasks, bookings, and track your work.
+        </p>
       </div>
+      
+      {user && <StaffDashboardHeader staffId={user.id} />}
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {permissions.can_view_tasks && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium flex items-center">
+                <Users className="h-4 w-4 mr-2 text-wakti-blue" />
+                Tasks
+              </CardTitle>
+              <CardDescription>Assigned to you</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{stats?.tasksCount || 0}</p>
+            </CardContent>
+          </Card>
+        )}
+        
+        {permissions.can_manage_bookings && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium flex items-center">
+                <Calendar className="h-4 w-4 mr-2 text-wakti-blue" />
+                Bookings
+              </CardTitle>
+              <CardDescription>Your appointments</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{stats?.bookingsCount || 0}</p>
+            </CardContent>
+          </Card>
+        )}
+        
+        {permissions.can_track_hours && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium flex items-center">
+                <Clock className="h-4 w-4 mr-2 text-wakti-blue" />
+                Work Logs
+              </CardTitle>
+              <CardDescription>Your work sessions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{stats?.workLogsCount || 0}</p>
+            </CardContent>
+          </Card>
+        )}
+        
+        {permissions.can_create_job_cards && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium flex items-center">
+                <Briefcase className="h-4 w-4 mr-2 text-wakti-blue" />
+                Job Cards
+              </CardTitle>
+              <CardDescription>Completed jobs</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{stats?.jobCardsCount || 0}</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Your Permissions</CardTitle>
+          <CardDescription>Here are the features you have access to:</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+            {Object.entries(permissions)
+              .filter(([_, value]) => value)
+              .map(([key]) => (
+                <div key={key} className="flex items-center space-x-2">
+                  <div className="h-2 w-2 rounded-full bg-wakti-blue"></div>
+                  <span className="text-sm">
+                    {key.replace('can_', '').replace(/_/g, ' ')}
+                  </span>
+                </div>
+              ))
+            }
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
