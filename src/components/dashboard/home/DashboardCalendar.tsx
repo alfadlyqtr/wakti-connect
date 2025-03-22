@@ -7,7 +7,7 @@ import CalendarDayCell from "./CalendarDayCell";
 import { format, isSameDay } from "date-fns";
 import CalendarLegend from "./CalendarLegend";
 import { TaskList } from "./TaskList";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/components/mocks/translationMock";
 
 interface DashboardCalendarProps {
   events: CalendarEvent[];

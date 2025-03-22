@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, BellRing, Clock } from "lucide-react";
 import { format } from "date-fns";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/components/mocks/translationMock";
 
 interface ProfileDataType {
   account_type: "free" | "individual" | "business";
