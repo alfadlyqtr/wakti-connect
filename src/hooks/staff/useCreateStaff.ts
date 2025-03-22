@@ -44,6 +44,8 @@ export const useCreateStaff = (): UseCreateStaffReturn => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error("Not authenticated");
         
+        console.log("Session retrieved for create staff:", !!session);
+        
         // Prepare payload
         const staffData: Record<string, any> = {
           fullName: values.fullName,
