@@ -6,10 +6,18 @@ import { Button } from "@/components/ui/button";
 import CreateStaffDialog from "@/components/staff/CreateStaffDialog";
 import StaffMembersTab from "./StaffMembersTab";
 import WorkLogsTab from "./WorkLogsTab";
+import StaffDetailsDialog from "@/components/staff/dialog/StaffDetailsDialog";
 
 const DashboardStaffManagement = () => {
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+
+  const handleSelectStaff = (staffId: string) => {
+    console.log("Selected staff ID in parent component:", staffId);
+    setSelectedStaffId(staffId);
+    setDetailsDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -32,7 +40,7 @@ const DashboardStaffManagement = () => {
         
         <TabsContent value="staff" className="mt-6">
           <StaffMembersTab 
-            onSelectStaff={setSelectedStaffId} 
+            onSelectStaff={handleSelectStaff} 
             onOpenCreateDialog={() => setCreateDialogOpen(true)} 
           />
         </TabsContent>
@@ -45,6 +53,12 @@ const DashboardStaffManagement = () => {
       <CreateStaffDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
+      />
+
+      <StaffDetailsDialog
+        staffId={selectedStaffId}
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
       />
     </div>
   );

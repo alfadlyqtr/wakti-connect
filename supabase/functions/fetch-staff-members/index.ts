@@ -48,6 +48,8 @@ serve(async (req) => {
       throw new Error('Missing business ID');
     }
     
+    console.log("Fetch staff members for business:", businessId, "by user:", user.id);
+    
     // Verify the user is the business owner
     if (user.id !== businessId) {
       // Check if user is a co-admin
@@ -76,14 +78,31 @@ serve(async (req) => {
       throw new Error(`Failed to fetch staff: ${staffError.message}`);
     }
     
+    console.log("Found", staffData.length, "staff members");
+    
     // Fetch profiles for each staff member
     const staffWithProfiles = await Promise.all(
       staffData.map(async (staff) => {
+        if (!staff.staff_id) {
+          console.log("Staff record has no staff_id:", staff.id);
+          return {
+            ...staff,
+            profile: { 
+              full_name: staff.name, 
+              avatar_url: staff.profile_image_url || null 
+            }
+          };
+        }
+        
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('full_name, avatar_url')
           .eq('id', staff.staff_id)
           .single();
+          
+        if (profileError) {
+          console.log("Could not fetch profile for staff_id", staff.staff_id, profileError);
+        }
           
         return {
           ...staff,

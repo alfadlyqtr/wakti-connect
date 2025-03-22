@@ -65,6 +65,11 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
     refetch();
   }, [refetch]);
 
+  const handleSelectStaffMember = (staffId: string) => {
+    console.log("Staff selected in tab component:", staffId);
+    onSelectStaff(staffId);
+  };
+
   if (staffLoading) {
     return (
       <Card className="col-span-full flex justify-center p-8">
@@ -112,7 +117,7 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
         <StaffMemberCard 
           key={member.id} 
           member={member} 
-          onSelectStaff={onSelectStaff} 
+          onSelectStaff={handleSelectStaffMember} 
         />
       ))}
     </div>

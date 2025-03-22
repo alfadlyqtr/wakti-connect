@@ -137,6 +137,7 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
   // Fetch staff details when dialog opens
   useEffect(() => {
     if (open && staffId) {
+      console.log("Fetching staff details for ID:", staffId);
       fetchStaffDetails(staffId);
     } else {
       // Reset form when dialog closes
@@ -148,6 +149,8 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
   const fetchStaffDetails = async (id: string) => {
     setLoading(true);
     try {
+      console.log("Fetching details for staff ID:", id);
+      
       // Fetch staff details from business_staff table
       const { data: staffRelation, error: staffError } = await supabase
         .from("business_staff")
@@ -162,7 +165,12 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
         .eq("id", id)
         .single();
 
-      if (staffError) throw staffError;
+      if (staffError) {
+        console.error("Error fetching staff relation:", staffError);
+        throw staffError;
+      }
+      
+      console.log("Staff relation data:", staffRelation);
       
       if (staffRelation) {
         setStaffData(staffRelation as StaffRelationData);
@@ -174,6 +182,14 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
         
         // Get profile data safely with optional chaining
         const profileData: ProfileData = staffRelation.profiles || {};
+
+        console.log("Setting form values:", {
+          fullName: staffRelation.name || profileData.full_name || "",
+          email: staffRelation.email || profileData.email || "",
+          position: staffRelation.position || "",
+          isServiceProvider: staffRelation.is_service_provider || false,
+          isCoAdmin: staffRelation.role === "co-admin",
+        });
 
         // Set form values
         form.reset({
@@ -213,6 +229,8 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
     
     setLoading(true);
     try {
+      console.log("Saving changes for staff ID:", staffId, data);
+      
       // Update permissions and staff info in the staff relation
       const { error: updateError } = await supabase
         .from("business_staff")
@@ -271,6 +289,8 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
     
     setIsDeleting(true);
     try {
+      console.log("Deleting staff ID:", staffId);
+      
       // Update status to deleted in business_staff table
       const { error: deleteError } = await supabase
         .from("business_staff")
