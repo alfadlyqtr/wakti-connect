@@ -17,7 +17,7 @@ import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import SocialAuth from "./SocialAuth";
 import LanguageSwitcher from "@/components/ui/language-switcher";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/components/mocks/translationMock";
 
 interface AuthFormProps {
   defaultTab?: 'login' | 'register';

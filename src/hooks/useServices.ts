@@ -1,61 +1,84 @@
 
-import { useState } from 'react';
-import { Service, ServiceFormValues } from "@/types/service.types";
-import { useServiceCrud } from './useServiceCrud';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Service } from './useServiceCrud';
 
 export const useServices = () => {
-  const {
-    services,
-    isLoading,
-    error,
-    openAddService,
-    setOpenAddService,
-    editingService,
-    setEditingService,
-    addServiceMutation,
-    updateServiceMutation,
-    deleteServiceMutation
-  } = useServiceCrud();
-
-  // Get staff assignments count by service
-  const staffAssignments = services?.reduce((acc, service) => {
-    acc[service.id] = service.assigned_staff?.length || 0;
-    return acc;
-  }, {} as Record<string, number>) || {};
-
-  const handleSubmit = (values: ServiceFormValues) => {
-    if (editingService) {
-      updateServiceMutation.mutate({ id: editingService.id, formData: values });
-    } else {
-      addServiceMutation.mutate(values);
+  const [services, setServices] = useState<Service[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  
+  useEffect(() => {
+    const fetchServices = async () => {
+      setIsLoading(true);
+      try {
+        // Mock services data
+        const mockServices: Service[] = [
+          {
+            id: 'service-1',
+            name: 'Consultation',
+            description: 'Initial consultation service',
+            price: 99.99,
+            duration: 60,
+            status: 'active'
+          },
+          {
+            id: 'service-2',
+            name: 'Follow-up',
+            description: 'Follow-up appointment',
+            price: 49.99,
+            duration: 30,
+            status: 'active'
+          }
+        ];
+        
+        setServices(mockServices);
+        setIsLoading(false);
+      } catch (err: any) {
+        setError(err);
+        setIsLoading(false);
+      }
+    };
+    
+    fetchServices();
+  }, []);
+  
+  const refresh = async () => {
+    setIsLoading(true);
+    try {
+      // Re-fetch services
+      // Same mock data for now
+      const mockServices: Service[] = [
+        {
+          id: 'service-1',
+          name: 'Consultation',
+          description: 'Initial consultation service',
+          price: 99.99,
+          duration: 60,
+          status: 'active'
+        },
+        {
+          id: 'service-2',
+          name: 'Follow-up',
+          description: 'Follow-up appointment',
+          price: 49.99,
+          duration: 30,
+          status: 'active'
+        }
+      ];
+      
+      setServices(mockServices);
+      setIsLoading(false);
+    } catch (err: any) {
+      setError(err);
+      setIsLoading(false);
     }
   };
-
-  const handleEditService = (service: Service) => {
-    setEditingService(service);
-    setOpenAddService(true);
-  };
-
-  const handleDeleteService = (id: string) => {
-    if (confirm("Are you sure you want to delete this service?")) {
-      deleteServiceMutation.mutate(id);
-    }
-  };
-
+  
   return {
     services,
     isLoading,
     error,
-    openAddService,
-    setOpenAddService,
-    editingService,
-    setEditingService,
-    handleSubmit,
-    handleEditService,
-    handleDeleteService,
-    isPendingAdd: addServiceMutation.isPending,
-    isPendingUpdate: updateServiceMutation.isPending,
-    isPendingDelete: deleteServiceMutation.isPending,
-    staffAssignments
+    refresh
   };
 };

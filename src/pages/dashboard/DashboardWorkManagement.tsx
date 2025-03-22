@@ -1,69 +1,38 @@
 
-import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { PlusCircle, Briefcase, FileText } from "lucide-react";
+import React, { useState, lazy, Suspense } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { Card } from '@/components/ui/card';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { JobsTab } from '@/components/jobs/JobsTab';
+import { JobCardsTab } from '@/components/jobs/JobCardsTab';
 
-// Reusing the existing functionality but with tabs
-const DashboardWorkManagement = () => {
+export default function DashboardWorkManagement() {
   const [activeTab, setActiveTab] = useState("jobs");
   
-  // Import the components dynamically to avoid circular dependencies
-  const JobsTab = React.lazy(() => import("@/components/jobs/JobsTab"));
-  const JobCardsTab = React.lazy(() => import("@/components/jobs/JobCardsTab"));
-  
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold mb-1">Work Management</h1>
-          <p className="text-muted-foreground">
-            Manage jobs, create job cards, and track work progress
-          </p>
-        </div>
-        
-        {activeTab === "jobs" ? (
-          <Button onClick={() => document.getElementById("create-job-button")?.click()}>
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Create New Job
-          </Button>
-        ) : (
-          <Button 
-            onClick={() => document.getElementById("create-job-card-button")?.click()}
-            disabled={document.getElementById("create-job-card-button")?.hasAttribute("disabled")}
-          >
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Create Job Card
-          </Button>
-        )}
-      </div>
+    <DashboardShell>
+      <DashboardHeader
+        heading="Work Management"
+        description="Manage jobs and work cards for your team"
+      />
       
-      <Tabs defaultValue="jobs" onValueChange={setActiveTab}>
+      <Tabs defaultValue="jobs" className="w-full" onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="jobs" className="flex items-center gap-2">
-            <Briefcase className="h-4 w-4" />
-            Jobs
-          </TabsTrigger>
-          <TabsTrigger value="job-cards" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Job Cards
-          </TabsTrigger>
+          <TabsTrigger value="jobs">Jobs</TabsTrigger>
+          <TabsTrigger value="job-cards">Job Cards</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="jobs" className="mt-0">
-          <React.Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<LoadingSpinner />}>
+          <TabsContent value="jobs" className="m-0">
             <JobsTab />
-          </React.Suspense>
-        </TabsContent>
-        
-        <TabsContent value="job-cards" className="mt-0">
-          <React.Suspense fallback={<div>Loading...</div>}>
+          </TabsContent>
+          <TabsContent value="job-cards" className="m-0">
             <JobCardsTab />
-          </React.Suspense>
-        </TabsContent>
+          </TabsContent>
+        </Suspense>
       </Tabs>
-    </div>
+    </DashboardShell>
   );
-};
-
-export default DashboardWorkManagement;
+}

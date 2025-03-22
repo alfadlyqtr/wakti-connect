@@ -1,120 +1,91 @@
 
-import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AIAssistantChat } from "@/components/ai/assistant";
-import AIAssistantUpgradeCard from "@/components/ai/AIAssistantUpgradeCard";
-import AIAssistantHistoryCard from "@/components/ai/AIAssistantHistoryCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAISettings } from "@/hooks/ai/useAISettings";
-import { toast } from "@/hooks/use-toast";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Settings } from 'lucide-react';
+import { AIAssistantUpgradeCard } from '@/components/ai/AIAssistantUpgradeCard';
+import { AIAssistantHistoryCard } from '@/components/ai/AIAssistantHistoryCard';
+import { AIAssistantChat } from '@/components/ai/assistant/AIAssistantChat';
+import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { useAIAssistant } from '@/hooks/useAIAssistant';
 
-const DashboardAIAssistant = () => {
-  const [activeTab, setActiveTab] = useState("chat");
-  const { settings, isLoading } = useAISettings();
-
-  const handleActivateAI = () => {
-    toast({
-      title: "AI Assistant feature requires upgrade",
-      description: "Please upgrade to a premium plan to access this feature.",
-      variant: "destructive",
-    });
+export default function DashboardAIAssistant() {
+  const navigate = useNavigate();
+  const { aiSettings, isLoadingSettings, settingsError, canUseAI } = useAIAssistant();
+  const [messages, setMessages] = useState<any[]>([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const handleSendMessage = async (message: string) => {
+    if (!message.trim()) return;
+    
+    // Add user message to chat
+    const newMessages = [
+      ...messages,
+      {
+        role: 'user',
+        content: message,
+        timestamp: new Date()
+      }
+    ];
+    setMessages(newMessages);
+    setInputMessage('');
+    setIsLoading(true);
+    
+    // Mock AI response after a short delay
+    setTimeout(() => {
+      setMessages([
+        ...newMessages,
+        {
+          role: 'assistant',
+          content: 'This is a mock AI response. The AI assistant feature is coming soon!',
+          timestamp: new Date()
+        }
+      ]);
+      setIsLoading(false);
+    }, 1500);
   };
-
-  const showUpgradeCard = false; // Replace with actual permission check
+  
+  const clearMessages = () => {
+    setMessages([]);
+  };
   
   return (
-    <div className="container py-6 space-y-6">
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">AI Assistant</h1>
-        <p className="text-muted-foreground">
-          Get help, suggestions, and automate tasks using WAKTI's AI
-        </p>
+    <DashboardShell>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-2xl font-bold">AI Assistant</h2>
+          <p className="text-muted-foreground">Chat with your personal AI assistant</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1"
+          onClick={() => navigate('/dashboard/settings?tab=ai')}
+        >
+          <Settings className="h-4 w-4" />
+          Configure
+        </Button>
       </div>
-
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-6">
-          {showUpgradeCard ? (
-            <AIAssistantUpgradeCard onActivate={handleActivateAI} />
-          ) : (
-            <Card className="border-none shadow-none">
-              <CardHeader className="px-0 pt-0">
-                <Tabs
-                  defaultValue="chat"
-                  className="w-full"
-                  value={activeTab}
-                  onValueChange={setActiveTab}
-                >
-                  <TabsList className="grid w-full grid-cols-3 mb-4">
-                    <TabsTrigger value="chat">Chat</TabsTrigger>
-                    <TabsTrigger value="business">
-                      Business Automation
-                    </TabsTrigger>
-                    <TabsTrigger value="personal">
-                      Personal Assistant
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="chat" className="mt-0">
-                    <CardContent className="p-0">
-                      <AIAssistantChat />
-                    </CardContent>
-                  </TabsContent>
-
-                  <TabsContent value="business" className="mt-0">
-                    <CardContent className="p-0">
-                      <div className="min-h-[60vh] flex items-center justify-center">
-                        <div className="text-center">
-                          <p className="text-muted-foreground">
-                            Business automation features coming soon!
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </TabsContent>
-
-                  <TabsContent value="personal" className="mt-0">
-                    <CardContent className="p-0">
-                      <div className="min-h-[60vh] flex items-center justify-center">
-                        <div className="text-center">
-                          <p className="text-muted-foreground">
-                            Personal assistant features coming soon!
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </TabsContent>
-                </Tabs>
-              </CardHeader>
-            </Card>
-          )}
+        <div className="md:col-span-2">
+          <AIAssistantChat
+            messages={messages}
+            inputMessage={inputMessage}
+            setInputMessage={setInputMessage}
+            handleSendMessage={handleSendMessage}
+            isLoading={isLoading}
+            canAccess={canUseAI}
+            clearMessages={clearMessages}
+          />
         </div>
-        
         <div className="space-y-6">
-          <AIAssistantHistoryCard />
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Settings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Configure how the AI assistant works with your data and preferences.
-              </p>
-              <div className="space-y-2">
-                {isLoading ? (
-                  <p>Loading settings...</p>
-                ) : (
-                  <div className="text-sm text-muted-foreground">
-                    <p>Language: {settings?.language || "English"}</p>
-                    <p>Personality: {settings?.personality || "Professional"}</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <AIAssistantHistoryCard canAccess={canUseAI} />
         </div>
       </div>
-    </div>
+    </DashboardShell>
   );
-};
-
-export default DashboardAIAssistant;
+}

@@ -2,7 +2,7 @@
 import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { useTranslation } from "react-i18next";
+import { useTranslation } from "@/components/mocks/translationMock";
 
 const TermsCheckbox: React.FC = () => {
   const { t } = useTranslation();
