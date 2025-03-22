@@ -4,6 +4,9 @@ import React from 'react';
 interface StaffRoleGuardProps {
   children: React.ReactNode;
   allowedRoles?: string[];
+  disallowStaff?: boolean;
+  messageTitle?: string;
+  messageDescription?: string;
   fallback?: React.ReactNode;
 }
 

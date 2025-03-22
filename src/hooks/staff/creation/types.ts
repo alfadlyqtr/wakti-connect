@@ -24,3 +24,26 @@ export interface StaffUpdateData {
   permissions?: Record<string, boolean>;
   avatar?: File | null;
 }
+
+export interface CreateStaffResult {
+  success: boolean;
+  data?: any;
+  error?: string;
+}
+
+export interface StaffCreationResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+}
+
+export interface StaffFormValues {
+  email: string;
+  fullName: string;
+  password: string;
+  position: string;
+  isCoAdmin: boolean;
+  isServiceProvider: boolean;
+  permissions: Record<string, boolean>;
+  avatar?: File | null;
+}

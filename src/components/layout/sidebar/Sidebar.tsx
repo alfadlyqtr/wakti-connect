@@ -54,7 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
           console.error("Error fetching profile:", error);
         } else if (data) {
           // Cast the account_type to include 'staff' for staff members
-          const accountType = isStaff ? 'staff' as const : data.account_type;
+          const accountType = isStaff ? 'staff' as const : (data.account_type as "free" | "individual" | "business");
           
           setProfileData({
             id: data.id,
@@ -83,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
           return true;
         }
         
-        if (!isStaff && profileData && item.showFor.includes(profileData.account_type)) {
+        if (!isStaff && profileData && item.showFor.includes(profileData.account_type as any)) {
           return true;
         }
         

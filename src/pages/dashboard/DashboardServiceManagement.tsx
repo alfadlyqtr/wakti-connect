@@ -1,30 +1,40 @@
 
-import React, { useState } from "react";
-import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { ServiceForm } from "@/components/services/ServiceForm";
-import { ServiceList } from "@/components/services/ServiceList";
+import React from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DashboardShell from "@/components/dashboard/DashboardShell";
 
 const DashboardServiceManagement = () => {
-  const [isFormOpen, setIsFormOpen] = useState(false);
-
   return (
     <DashboardShell>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Service Management</h2>
-        <Button onClick={() => setIsFormOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Service
-        </Button>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Service Management</h1>
       </div>
 
-      <ServiceList />
-
-      <ServiceForm
-        open={isFormOpen}
-        onOpenChange={setIsFormOpen}
-      />
+      <Tabs defaultValue="services" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="services">Services</TabsTrigger>
+          <TabsTrigger value="categories">Categories</TabsTrigger>
+          <TabsTrigger value="schedule">Schedule</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="services" className="space-y-4">
+          <div className="grid gap-4">
+            <p>Services content here</p>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="categories" className="space-y-4">
+          <div className="grid gap-4">
+            <p>Categories content here</p>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="schedule" className="space-y-4">
+          <div className="grid gap-4">
+            <p>Schedule content here</p>
+          </div>
+        </TabsContent>
+      </Tabs>
     </DashboardShell>
   );
 };

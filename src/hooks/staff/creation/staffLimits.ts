@@ -14,7 +14,7 @@ export async function checkStaffLimits(): Promise<{ canAdd: boolean; message?: s
   return { canAdd: true };
 }
 
-export async function checkCoAdminLimit(): Promise<{ canAdd: boolean; message?: string }> {
+export async function checkCoAdminLimit(businessId?: string): Promise<boolean> {
   // Mock implementation - always allow adding co-admin
-  return { canAdd: true };
+  return true;
 }

@@ -1,34 +1,31 @@
 
-import React, { useState } from "react";
-import { DashboardShell } from "@/components/dashboard/DashboardShell";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { CreateJobDialog } from "@/components/jobs/CreateJobDialog";
+import React from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DashboardShell from "@/components/dashboard/DashboardShell";
+import { JobsTab } from "@/components/jobs/JobsTab";
+import { JobCardsTab } from "@/components/jobs/JobCardsTab";
 
 const DashboardJobs = () => {
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-
   return (
     <DashboardShell>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Jobs Management</h2>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Job
-        </Button>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Job Management</h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Job list would go here */}
-        <div className="border rounded-lg p-6 text-center">
-          <p className="text-muted-foreground">No jobs created yet</p>
-        </div>
-      </div>
-
-      <CreateJobDialog 
-        open={isCreateDialogOpen} 
-        onOpenChange={setIsCreateDialogOpen} 
-      />
+      <Tabs defaultValue="jobs" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="jobs">Jobs</TabsTrigger>
+          <TabsTrigger value="jobCards">Job Cards</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="jobs" className="space-y-4">
+          <JobsTab />
+        </TabsContent>
+        
+        <TabsContent value="jobCards" className="space-y-4">
+          <JobCardsTab />
+        </TabsContent>
+      </Tabs>
     </DashboardShell>
   );
 };
