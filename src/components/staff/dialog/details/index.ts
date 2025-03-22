@@ -6,3 +6,5 @@ export { ErrorState } from "./ErrorState";
 export { SkeletonPlaceholder } from "./SkeletonPlaceholder";
 export * from "./hooks/useStaffDetailsForm";
 export * from "./schemas/staffDetailsSchema";
+export * from "./permissions";
+
