@@ -1,10 +1,11 @@
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { StaffFormValues } from "@/components/staff/dialog/StaffFormSchema";
 import { checkCoAdminLimit } from "./staffLimits";
 import { uploadStaffAvatar } from "./avatarUpload";
-import { CreateStaffResult } from "./types";
+import { CreateStaffResult, StaffCreationResponse } from "./types";
 
 export const useCreateStaffMutation = () => {
   const queryClient = useQueryClient();

@@ -13,3 +13,9 @@ export interface StaffCreationResponse {
   data?: any;
   error?: string;
 }
+
+export interface CreateStaffResult {
+  success: boolean;
+  data?: any;
+  error?: string;
+}
