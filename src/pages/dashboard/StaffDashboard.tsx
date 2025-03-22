@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import StaffDashboardHeader from "@/components/dashboard/StaffDashboardHeader";
-import { useStaffStatus } from "@/hooks/useStaffStatus";
+import { useStaffStatus } from "@/hooks/staff/useStaffStatus";
 import { Users, BookOpen, Clock, Calendar, Briefcase, AlertCircle } from "lucide-react";
 
 interface StaffPermissions {
