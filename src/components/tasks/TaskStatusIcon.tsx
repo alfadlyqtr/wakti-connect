@@ -12,7 +12,7 @@ const TaskStatusIcon = ({ status }: TaskStatusIconProps) => {
   const { t } = useTranslation();
   
   // Helper function to create icon with accessible title
-  const createIconWithTitle = (Icon: any, className: string, titleText: string) => {
+  const createIconWithTitle = (Icon: React.ElementType, className: string, titleText: string) => {
     return (
       <span className="relative inline-block" title={titleText} aria-label={titleText}>
         <Icon className={className} />

@@ -14,9 +14,10 @@ const DashboardAIAssistant = () => {
   const inputMessage = '';
   const setInputMessage = () => {};
   
-  // Fix the type by returning a Promise
+  // Fix the type by ensuring we return a Promise
   const sendMessage = async (e: React.FormEvent) => { 
     e.preventDefault();
+    console.log("Message sent");
     return Promise.resolve(); 
   };
   
