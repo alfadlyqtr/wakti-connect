@@ -25,28 +25,34 @@ export const useAvatarUpload = () => {
       const fileName = `${userId}-${uuidv4()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
-      setUploadProgress({ progress: 0, isComplete: false });
+      // Set initial progress
+      setUploadProgress({ progress: 10, isComplete: false });
 
       // Upload the file
       const { error: uploadError } = await supabase.storage
         .from('staff-avatars')
         .upload(filePath, avatarFile, {
           cacheControl: '3600',
-          upsert: true,
-          onUploadProgress: (progress) => {
-            const percent = Math.round((progress.loaded / progress.total) * 100);
-            setUploadProgress({ progress: percent, isComplete: percent === 100 });
-          },
+          upsert: true
         });
+
+      // Set progress to 50% after upload starts
+      setUploadProgress({ progress: 50, isComplete: false });
 
       if (uploadError) {
         throw uploadError;
       }
 
+      // Set progress to 75% after successful upload
+      setUploadProgress({ progress: 75, isComplete: false });
+
       // Get the public URL
       const { data: publicUrlData } = supabase.storage
         .from('staff-avatars')
         .getPublicUrl(filePath);
+
+      // Set progress to 100% after getting URL
+      setUploadProgress({ progress: 100, isComplete: true });
 
       toast({
         title: "Avatar uploaded",
@@ -56,6 +62,8 @@ export const useAvatarUpload = () => {
       return publicUrlData.publicUrl;
     } catch (error) {
       console.error("Error uploading avatar:", error);
+      setUploadProgress({ progress: 0, isComplete: false });
+      
       toast({
         title: "Upload failed",
         description: error instanceof Error ? error.message : "An unknown error occurred",
