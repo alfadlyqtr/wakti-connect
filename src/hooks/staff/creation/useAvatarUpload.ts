@@ -1,116 +1,76 @@
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from "uuid";
+import { toast } from "@/hooks/use-toast";
 
 export interface UploadProgress {
   progress: number;
-  error: string | null;
-  uploading: boolean;
-  url: string | null;
+  isComplete: boolean;
 }
 
-export function useAvatarUpload() {
+export const useAvatarUpload = () => {
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({
     progress: 0,
-    error: null,
-    uploading: false,
-    url: null
+    isComplete: false,
   });
 
-  const uploadAvatar = async (userId: string, avatarFile: File): Promise<string | null> => {
-    if (!avatarFile) return null;
-    
+  const uploadAvatar = async (userId: string, avatarFile: File): Promise<string> => {
     try {
-      setUploadProgress(prev => ({ ...prev, uploading: true, error: null }));
-      
-      // Generate a unique filename
+      if (!avatarFile) {
+        throw new Error("No file selected");
+      }
+
       const fileExt = avatarFile.name.split('.').pop();
-      const fileName = `${userId}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `staff_avatars/${fileName}`;
-      
-      // Create a custom upload function that tracks progress
-      const fileReader = new FileReader();
-      fileReader.readAsArrayBuffer(avatarFile);
-      
-      const uploadWithProgress = () => new Promise<string | null>((resolve, reject) => {
-        fileReader.onload = async () => {
-          try {
-            // Upload the file to Supabase Storage
-            const { data, error: uploadError } = await supabase.storage
-              .from('avatars')
-              .upload(filePath, avatarFile, {
-                cacheControl: '3600',
-                upsert: true
-              });
-              
-            if (uploadError) {
-              console.error("Error uploading avatar:", uploadError);
-              setUploadProgress(prev => ({ 
-                ...prev, 
-                uploading: false,
-                error: uploadError.message
-              }));
-              reject(uploadError);
-              return;
-            }
-            
-            // Simulate progress updates
-            const progressInterval = setInterval(() => {
-              setUploadProgress(prev => {
-                const newProgress = Math.min(prev.progress + 15, 90);
-                return { ...prev, progress: newProgress };
-              });
-            }, 200);
-            
-            // Get the public URL
-            const { data: { publicUrl } } = supabase.storage
-              .from('avatars')
-              .getPublicUrl(filePath);
-              
-            clearInterval(progressInterval);
-            setUploadProgress({ 
-              progress: 100, 
-              uploading: false, 
-              error: null,
-              url: publicUrl
-            });
-            
-            resolve(publicUrl);
-          } catch (error: any) {
-            console.error("Error in avatar upload:", error);
-            setUploadProgress(prev => ({ 
-              ...prev, 
-              uploading: false,
-              error: error?.message || "Upload failed"
-            }));
-            reject(error);
-          }
-        };
-        
-        fileReader.onerror = () => {
-          setUploadProgress(prev => ({ 
-            ...prev, 
-            uploading: false,
-            error: "Failed to read file"
-          }));
-          reject(new Error("Failed to read file"));
-        };
+      const fileName = `${userId}-${uuidv4()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      setUploadProgress({ progress: 0, isComplete: false });
+
+      // Upload the file
+      const { error: uploadError } = await supabase.storage
+        .from('staff-avatars')
+        .upload(filePath, avatarFile, {
+          cacheControl: '3600',
+          upsert: true,
+          onUploadProgress: (progress) => {
+            const percent = Math.round((progress.loaded / progress.total) * 100);
+            setUploadProgress({ progress: percent, isComplete: percent === 100 });
+          },
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get the public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('staff-avatars')
+        .getPublicUrl(filePath);
+
+      toast({
+        title: "Avatar uploaded",
+        description: "Your profile picture has been updated successfully",
       });
-      
-      return await uploadWithProgress();
-    } catch (error: any) {
-      console.error("Avatar upload error:", error);
-      setUploadProgress(prev => ({ 
-        ...prev, 
-        uploading: false,
-        error: error?.message || "Upload failed"
-      }));
-      return null;
+
+      return publicUrlData.publicUrl;
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      toast({
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+      throw error;
     }
   };
 
-  // Adding an isUploading getter derived from uploadProgress state
-  const isUploading = uploadProgress.uploading;
+  // Add isUploading property derived from progress
+  const isUploading = uploadProgress.progress > 0 && !uploadProgress.isComplete;
 
-  return { uploadAvatar, uploadProgress, isUploading };
-}
+  return {
+    uploadAvatar,
+    uploadProgress,
+    isUploading
+  };
+};
