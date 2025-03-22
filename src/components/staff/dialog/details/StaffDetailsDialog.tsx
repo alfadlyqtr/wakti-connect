@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -13,7 +12,7 @@ import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useStaffDetailsForm } from "./hooks/useStaffDetailsForm";
 import { StaffDetailsTabs } from "./StaffDetailsTabs";
 import { StaffDetailsFooter } from "./StaffDetailsFooter";
-import { StaffDetailsHeader } from "./StaffDetailsHeader";
+import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { ErrorState } from "./ErrorState";
 import { SkeletonPlaceholder } from "./SkeletonPlaceholder";
@@ -23,6 +22,17 @@ interface StaffDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+const StaffDetailsHeader: React.FC = () => {
+  return (
+    <DialogHeader>
+      <div className="flex items-center gap-2">
+        <UserIcon className="h-5 w-5 text-primary" />
+        <DialogTitle>Staff Details</DialogTitle>
+      </div>
+    </DialogHeader>
+  );
+};
 
 const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
   staffId,
@@ -47,7 +57,6 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
     handleDeleteStaff,
   } = useStaffDetailsForm({ staffId, queryClient, onOpenChange });
 
-  // Fetch staff details when dialog opens
   useEffect(() => {
     if (open && staffId) {
       console.log("Fetching staff details for ID:", staffId);
@@ -66,7 +75,6 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
           setInitialLoading(false);
         });
     } else {
-      // Reset form when dialog closes
       form.reset();
       setActiveTab("details");
       setLoadError(null);
@@ -98,10 +106,8 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
           <StaffDetailsHeader />
 
           {initialLoading ? (
-            // Show skeleton placeholder during initial loading
             <SkeletonPlaceholder activeTab={activeTab} />
           ) : loadError ? (
-            // Show error state if there was an error
             <ErrorState 
               errorMessage={loadError} 
               onRetry={handleRetry} 
@@ -140,7 +146,6 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Confirmation Dialog for Deleting Staff */}
       <ConfirmationDialog
         title="Delete Staff Member?"
         description={`This will remove "${staffData?.name || 'this staff member'}" from your business. This action cannot be undone.`}
