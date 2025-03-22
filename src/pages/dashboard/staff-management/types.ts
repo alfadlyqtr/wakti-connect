@@ -17,7 +17,19 @@ export interface StaffMember {
   staff_number: string;
   is_service_provider: boolean;
   status: string;
-  permissions: any; // Using any here to avoid type issues with Json
+  permissions: {
+    can_view_tasks?: boolean;
+    can_manage_tasks?: boolean;
+    can_message_staff?: boolean;
+    can_manage_bookings?: boolean;
+    can_create_job_cards?: boolean;
+    can_track_hours?: boolean;
+    can_log_earnings?: boolean;
+    can_edit_profile?: boolean;
+    can_view_customer_bookings?: boolean;
+    can_view_analytics?: boolean;
+    [key: string]: boolean | undefined;
+  };
   created_at: string;
   profile?: Profile | null;
   profiles?: any; // For database query compatibility

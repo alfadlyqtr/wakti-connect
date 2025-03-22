@@ -14,13 +14,15 @@ interface CreateTabProps {
   onSubmit: (values: StaffFormValues) => void;
   onCancel: () => void;
   createInvitation: UseMutationResult<StaffInvitation, Error, CreateInvitationData>;
+  isSubmitting?: boolean;
 }
 
 const CreateTab: React.FC<CreateTabProps> = ({ 
   form, 
   onSubmit, 
   onCancel,
-  createInvitation
+  createInvitation,
+  isSubmitting = false
 }) => {
   return (
     <Form {...form}>
@@ -35,8 +37,8 @@ const CreateTab: React.FC<CreateTabProps> = ({
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={createInvitation.isPending}>
-            {createInvitation.isPending ? "Adding..." : "Add Staff Member"}
+          <Button type="submit" disabled={createInvitation.isPending || isSubmitting}>
+            {createInvitation.isPending || isSubmitting ? "Adding..." : "Add Staff Member"}
           </Button>
         </DialogFooter>
       </form>

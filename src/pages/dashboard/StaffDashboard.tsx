@@ -6,6 +6,21 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import StaffDashboardHeader from "@/components/dashboard/StaffDashboardHeader";
 import { useStaffStatus } from "@/hooks/useStaffStatus";
 import { Users, BookOpen, Clock, Calendar, Briefcase, AlertCircle } from "lucide-react";
+import { Json } from "@/integrations/supabase/types";
+
+interface StaffPermissions {
+  can_view_tasks?: boolean;
+  can_manage_tasks?: boolean;
+  can_message_staff?: boolean;
+  can_manage_bookings?: boolean;
+  can_create_job_cards?: boolean;
+  can_track_hours?: boolean;
+  can_log_earnings?: boolean;
+  can_edit_profile?: boolean;
+  can_view_customer_bookings?: boolean;
+  can_view_analytics?: boolean;
+  [key: string]: boolean | undefined;
+}
 
 const StaffDashboard = () => {
   const { isStaff, staffRelationId } = useStaffStatus();
@@ -27,6 +42,14 @@ const StaffDashboard = () => {
         .single();
         
       if (error) throw error;
+      
+      // Ensure permissions is properly parsed
+      if (data) {
+        data.permissions = typeof data.permissions === 'string'
+          ? JSON.parse(data.permissions)
+          : data.permissions;
+      }
+      
       return data;
     },
     enabled: !!staffRelationId
@@ -98,7 +121,7 @@ const StaffDashboard = () => {
     return <div className="py-8 text-center">Loading staff dashboard...</div>;
   }
   
-  const permissions = staffData.permissions || {};
+  const permissions = staffData.permissions as StaffPermissions || {};
   const businessInfo = staffData.business as any || {};
   
   return (

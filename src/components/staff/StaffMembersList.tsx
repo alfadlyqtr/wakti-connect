@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,24 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-interface StaffMember {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  position: string;
-  staff_id: string;
-  status: string;
-  staff_number: string;
-  is_service_provider: boolean;
-  permissions: Record<string, boolean>;
-  created_at: string;
-  profiles?: {
-    avatar_url: string | null;
-    full_name: string | null;
-  } | null;
-}
+import { StaffMember } from "@/pages/dashboard/staff-management/types";
 
 interface StaffMembersListProps {
   onEditStaff: (staffId: string) => void;
@@ -67,7 +49,22 @@ const StaffMembersList: React.FC<StaffMembersListProps> = ({ onEditStaff }) => {
         .order('created_at', { ascending: false });
         
       if (error) throw error;
-      return data as StaffMember[];
+
+      // Map the data to match our StaffMember interface
+      return (data as any[]).map(staff => {
+        const profileData = staff.profiles ? {
+          avatar_url: staff.profiles.avatar_url,
+          full_name: staff.profiles.full_name
+        } : null;
+
+        return {
+          ...staff,
+          permissions: typeof staff.permissions === 'string' 
+            ? JSON.parse(staff.permissions) 
+            : staff.permissions,
+          profile: profileData
+        } as StaffMember;
+      });
     }
   });
   
@@ -149,8 +146,8 @@ const StaffMembersList: React.FC<StaffMembersListProps> = ({ onEditStaff }) => {
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {staffMembers.map((staff) => {
-          const fullName = staff.profiles?.full_name || staff.name;
-          const avatarUrl = staff.profiles?.avatar_url || null;
+          const fullName = staff.profile?.full_name || staff.name;
+          const avatarUrl = staff.profile?.avatar_url || null;
           const isActive = staff.status === 'active';
           
           return (
@@ -257,7 +254,7 @@ const StaffMembersList: React.FC<StaffMembersListProps> = ({ onEditStaff }) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Staff Member?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the staff member "{staffToDelete?.profiles?.full_name || staffToDelete?.name}".
+              This will permanently delete the staff member "{staffToDelete?.profile?.full_name || staffToDelete?.name}".
               They will no longer be able to access your business dashboard.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -285,8 +282,8 @@ const StaffMembersList: React.FC<StaffMembersListProps> = ({ onEditStaff }) => {
             </AlertDialogTitle>
             <AlertDialogDescription>
               {staffToToggleStatus?.status === 'active' 
-                ? `This will suspend access for "${staffToToggleStatus?.profiles?.full_name || staffToToggleStatus?.name}". They will not be able to log in until reactivated.`
-                : `This will restore access for "${staffToToggleStatus?.profiles?.full_name || staffToToggleStatus?.name}". They will be able to log in again.`
+                ? `This will suspend access for "${staffToToggleStatus?.profile?.full_name || staffToToggleStatus?.name}". They will not be able to log in until reactivated.`
+                : `This will restore access for "${staffToToggleStatus?.profile?.full_name || staffToToggleStatus?.name}". They will be able to log in again.`
               }
             </AlertDialogDescription>
           </AlertDialogHeader>

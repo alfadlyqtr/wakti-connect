@@ -63,6 +63,7 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
               onSubmit={handleSubmit} 
               onCancel={() => onOpenChange(false)}
               isSubmitting={isSubmitting}
+              createInvitation={{ isPending: isSubmitting } as any}
             />
           </TabsContent>
           
