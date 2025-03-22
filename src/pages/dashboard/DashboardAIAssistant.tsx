@@ -1,174 +1,119 @@
 
-import React, { useState, useEffect } from "react";
-import { useAIAssistant } from "@/hooks/useAIAssistant";
-import { Bot } from "lucide-react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/hooks/useAuth";
-import { AIAssistantUpgradeCard } from "@/components/ai/AIAssistantUpgradeCard";
-import { AIAssistantChatCard } from "@/components/ai/assistant";
-import { AIAssistantLoader } from "@/components/ai/assistant";
-import { AIAssistantHistoryCard } from "@/components/ai/AIAssistantHistoryCard";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
-import { useBreakpoint } from "@/hooks/useBreakpoint";
-import { AISettingsProvider } from "@/components/settings/ai";
-import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
+import { AIAssistantChat } from "@/components/ai/assistant";
+import AIAssistantUpgradeCard from "@/components/ai/AIAssistantUpgradeCard";
+import AIAssistantHistoryCard from "@/components/ai/AIAssistantHistoryCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAISettings } from "@/hooks/ai/useAISettings";
+import { toast } from "@/hooks/use-toast";
 
 const DashboardAIAssistant = () => {
-  const { user } = useAuth();
-  const { 
-    messages, 
-    sendMessage, 
-    isLoading, 
-    canUseAI: hookCanUseAI, 
-    clearMessages 
-  } = useAIAssistant();
-  const [inputMessage, setInputMessage] = useState("");
-  const [isChecking, setIsChecking] = useState(true);
-  const [canAccess, setCanAccess] = useState(false);
-  const isMobile = !useBreakpoint().includes("md");
+  const [activeTab, setActiveTab] = useState("chat");
+  const { settings, isLoading } = useAISettings();
 
-  // Check if user has access to AI
-  useEffect(() => {
-    const checkAccess = async () => {
-      if (!user) {
-        console.log("No authenticated user, no AI access");
-        setCanAccess(false);
-        setIsChecking(false);
-        return;
-      }
-
-      try {
-        console.log("Checking AI access for user:", user.id);
-        
-        // Try RPC function first
-        const { data: canUse, error: rpcError } = await supabase.rpc("can_use_ai_assistant");
-        
-        if (!rpcError && canUse !== null) {
-          console.log("RPC check result:", canUse);
-          setCanAccess(canUse);
-          setIsChecking(false);
-          return;
-        }
-        
-        console.log("RPC check failed with error:", rpcError?.message);
-        console.log("Falling back to direct profile check");
-        
-        // Fallback to direct profile check
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("account_type")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error("Error checking access:", profileError);
-          toast({
-            title: "Error checking access",
-            description: "Could not verify your account type. Please try again.",
-            variant: "destructive",
-          });
-          setCanAccess(false);
-        } else {
-          // Check the account type
-          const hasAccess = profile?.account_type === "business" || profile?.account_type === "individual";
-          setCanAccess(hasAccess);
-          
-          // Log the account type for debugging
-          console.log("Account type:", profile?.account_type, "Has access:", hasAccess);
-        }
-      } catch (error) {
-        console.error("Error checking AI access:", error);
-        setCanAccess(false);
-      }
-      
-      setIsChecking(false);
-    };
-
-    checkAccess();
-  }, [user]);
-
-  // Also use the hook's canUseAI value as a backup
-  useEffect(() => {
-    if (hookCanUseAI !== undefined && !isChecking) {
-      console.log("Hook canUseAI value:", hookCanUseAI);
-      // Only update if our direct check said false but hook says true
-      if (!canAccess && hookCanUseAI) {
-        console.log("Using hook's canUseAI value as backup");
-        setCanAccess(hookCanUseAI);
-      }
-    }
-  }, [hookCanUseAI, isChecking, canAccess]);
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputMessage.trim() || isLoading || !canAccess) {
-      console.log("Cannot send message:", {
-        emptyMessage: !inputMessage.trim(), 
-        isLoading, 
-        noAccess: !canAccess
-      });
-      return;
-    }
-    
-    console.log("Sending message:", inputMessage);
-    await sendMessage.mutateAsync(inputMessage);
-    setInputMessage("");
+  const handleActivateAI = () => {
+    toast({
+      title: "AI Assistant feature requires upgrade",
+      description: "Please upgrade to a premium plan to access this feature.",
+      variant: "destructive",
+    });
   };
 
-  // If still checking access, show loading
-  if (isChecking) {
-    console.log("Still checking access, showing loader");
-    return <AIAssistantLoader />;
-  }
-
+  const showUpgradeCard = false; // Replace with actual permission check
+  
   return (
-    <StaffRoleGuard 
-      disallowStaff={true}
-      messageTitle="AI Assistant Not Available"
-      messageDescription="AI assistant features are not available for staff accounts."
-    >
-      <AISettingsProvider>
-        <div className="space-y-4 md:space-y-6">
-          <div className="flex flex-col gap-1 md:gap-2">
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl md:text-3xl font-bold tracking-tight">WAKTI AI Assistant</h1>
-              <Bot className="h-5 w-5 md:h-6 md:w-6 text-wakti-blue" />
-            </div>
-            <p className="text-sm md:text-base text-muted-foreground">
-              Your AI-powered productivity assistant
-            </p>
-          </div>
+    <div className="container py-6 space-y-6">
+      <div className="flex flex-col space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">AI Assistant</h1>
+        <p className="text-muted-foreground">
+          Get help, suggestions, and automate tasks using WAKTI's AI
+        </p>
+      </div>
 
-          <Tabs defaultValue="chat" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-2 overflow-x-auto">
-              <TabsTrigger value="chat" className="text-sm md:text-base py-1 md:py-1.5">Chat</TabsTrigger>
-              <TabsTrigger value="history" className="text-sm md:text-base py-1 md:py-1.5">History</TabsTrigger>
-            </TabsList>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-6">
+          {showUpgradeCard ? (
+            <AIAssistantUpgradeCard onActivate={handleActivateAI} />
+          ) : (
+            <Card className="border-none shadow-none">
+              <CardHeader className="px-0 pt-0">
+                <Tabs
+                  defaultValue="chat"
+                  className="w-full"
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                >
+                  <TabsList className="grid w-full grid-cols-3 mb-4">
+                    <TabsTrigger value="chat">Chat</TabsTrigger>
+                    <TabsTrigger value="business">
+                      Business Automation
+                    </TabsTrigger>
+                    <TabsTrigger value="personal">
+                      Personal Assistant
+                    </TabsTrigger>
+                  </TabsList>
 
-            <TabsContent value="chat" className="mt-4 md:mt-6 space-y-4">
-              {!canAccess ? (
-                <AIAssistantUpgradeCard />
-              ) : (
-                <AIAssistantChatCard
-                  messages={messages}
-                  inputMessage={inputMessage}
-                  setInputMessage={setInputMessage}
-                  handleSendMessage={handleSendMessage}
-                  isLoading={isLoading}
-                  canAccess={canAccess}
-                  clearMessages={clearMessages}
-                />
-              )}
-            </TabsContent>
+                  <TabsContent value="chat" className="mt-0">
+                    <CardContent className="p-0">
+                      <AIAssistantChat />
+                    </CardContent>
+                  </TabsContent>
 
-            <TabsContent value="history" className="mt-4 md:mt-6">
-              <AIAssistantHistoryCard canAccess={canAccess} />
-            </TabsContent>
-          </Tabs>
+                  <TabsContent value="business" className="mt-0">
+                    <CardContent className="p-0">
+                      <div className="min-h-[60vh] flex items-center justify-center">
+                        <div className="text-center">
+                          <p className="text-muted-foreground">
+                            Business automation features coming soon!
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </TabsContent>
+
+                  <TabsContent value="personal" className="mt-0">
+                    <CardContent className="p-0">
+                      <div className="min-h-[60vh] flex items-center justify-center">
+                        <div className="text-center">
+                          <p className="text-muted-foreground">
+                            Personal assistant features coming soon!
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </TabsContent>
+                </Tabs>
+              </CardHeader>
+            </Card>
+          )}
         </div>
-      </AISettingsProvider>
-    </StaffRoleGuard>
+        
+        <div className="space-y-6">
+          <AIAssistantHistoryCard />
+          <Card>
+            <CardHeader>
+              <CardTitle>AI Settings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Configure how the AI assistant works with your data and preferences.
+              </p>
+              <div className="space-y-2">
+                {isLoading ? (
+                  <p>Loading settings...</p>
+                ) : (
+                  <div className="text-sm text-muted-foreground">
+                    <p>Language: {settings?.language || "English"}</p>
+                    <p>Personality: {settings?.personality || "Professional"}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
   );
 };
 

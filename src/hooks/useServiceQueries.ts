@@ -1,72 +1,68 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Service } from "@/types/service.types";
+import { useState, useEffect } from 'react';
+
+export interface Service {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  duration: number;
+  status: 'active' | 'inactive';
+}
 
 export const useServiceQueries = () => {
-  // Fetch services with staff assignments
-  const { 
-    data: services, 
-    isLoading, 
-    error 
-  } = useQuery({
-    queryKey: ['businessServices'],
-    queryFn: async () => {
-      const { data: session } = await supabase.auth.getSession();
-      
-      if (!session?.session?.user) {
-        throw new Error('Not authenticated');
+  const [services, setServices] = useState<Service[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const loadServices = async () => {
+      try {
+        // Mock data
+        setServices([
+          {
+            id: '1',
+            name: 'Basic Consultation',
+            description: 'Initial consultation for new clients',
+            price: 50,
+            duration: 60,
+            status: 'active'
+          },
+          {
+            id: '2',
+            name: 'Premium Service',
+            description: 'Complete premium service package',
+            price: 150,
+            duration: 120,
+            status: 'active'
+          }
+        ]);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setIsLoading(false);
       }
-      
-      // Fetch services
-      const { data: servicesData, error: servicesError } = await supabase
-        .from('business_services')
-        .select('*')
-        .order('name');
-        
-      if (servicesError) throw servicesError;
+    };
 
-      // Fetch service staff assignments
-      const { data: assignmentsData, error: assignmentsError } = await supabase
-        .from('staff_service_assignments')
-        .select(`
-          service_id,
-          staff_id,
-          business_staff:staff_id(
-            id,
-            name,
-            role
-          )
-        `);
+    loadServices();
+  }, []);
 
-      if (assignmentsError) throw assignmentsError;
-
-      // Map staff assignments to services
-      const servicesWithStaff = servicesData.map((service: Service) => {
-        const serviceAssignments = assignmentsData.filter(
-          (assignment: any) => assignment.service_id === service.id
-        );
-
-        // Map staff assignments to staff members
-        const assignedStaff = serviceAssignments.map((assignment: any) => ({
-          id: assignment.staff_id,
-          name: assignment.business_staff?.name || 'Unknown',
-          role: assignment.business_staff?.role || 'staff'
-        }));
-
-        return {
-          ...service,
-          assigned_staff: assignedStaff
-        };
-      });
-
-      return servicesWithStaff as Service[];
+  const refetch = async () => {
+    setIsLoading(true);
+    try {
+      // Mock refetch
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setIsLoading(false);
     }
-  });
+  };
 
   return {
-    services: services || [],
+    services,
     isLoading,
-    error: error as Error | null
+    error,
+    refetch
   };
 };

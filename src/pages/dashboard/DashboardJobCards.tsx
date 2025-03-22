@@ -1,195 +1,68 @@
 
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { JobCardsTab } from "@/components/jobs/JobCardsTab";
+import { JobsTab } from "@/components/jobs/JobsTab";
+import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-
-import CreateJobCardDialog from "@/components/jobs/CreateJobCardDialog";
-import JobCardsList from "@/components/jobs/JobCardsList";
-import WorkStatusCard from "@/components/staff/WorkStatusCard";
-import WorkHistory from "@/components/staff/WorkHistory";
-import ActiveWorkSession from "@/components/staff/ActiveWorkSession";
+import { CreateJobDialog } from "@/components/jobs/CreateJobDialog";
+import { CreateJobCardDialog } from "@/components/jobs/CreateJobCardDialog";
 
 const DashboardJobCards = () => {
-  const { toast } = useToast();
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [staffRelationId, setStaffRelationId] = useState<string | null>(null);
-  const [activeWorkSession, setActiveWorkSession] = useState<any | null>(null);
-  
-  // Fetch staff relation ID for the current user
-  useEffect(() => {
-    const getStaffRelation = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) return;
-        
-        const { data, error } = await supabase
-          .from('business_staff')
-          .select('id')
-          .eq('staff_id', user.id)
-          .single();
-          
-        if (error) throw error;
-        
-        setStaffRelationId(data.id);
-        
-        // Also check for active work session
-        const { data: activeSessions, error: sessionsError } = await supabase
-          .from('staff_work_logs')
-          .select('*')
-          .eq('staff_relation_id', data.id)
-          .is('end_time', null)
-          .eq('status', 'active')
-          .maybeSingle();
-          
-        if (sessionsError) throw sessionsError;
-        
-        setActiveWorkSession(activeSessions);
-        
-      } catch (error) {
-        console.error("Error fetching staff relation:", error);
-        toast({
-          title: "Error",
-          description: "Could not fetch your staff relationship",
-          variant: "destructive"
-        });
-      }
-    };
-    
-    getStaffRelation();
-  }, [toast]);
-  
-  // Start/End work session
-  const startWorkDay = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('staff_work_logs')
-        .insert({
-          staff_relation_id: staffRelationId,
-          start_time: new Date().toISOString(),
-          status: 'active'
-        })
-        .select()
-        .single();
-        
-      if (error) throw error;
-      
-      setActiveWorkSession(data);
-      
-      toast({
-        title: "Work day started",
-        description: "Your work day has been started successfully",
-      });
-    } catch (error) {
-      console.error("Error starting work day:", error);
-      toast({
-        title: "Error",
-        description: "Could not start your work day",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  const endWorkDay = async () => {
-    if (!activeWorkSession) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('staff_work_logs')
-        .update({
-          end_time: new Date().toISOString(),
-          status: 'completed'
-        })
-        .eq('id', activeWorkSession.id)
-        .select()
-        .single();
-        
-      if (error) throw error;
-      
-      setActiveWorkSession(null);
-      
-      toast({
-        title: "Work day ended",
-        description: "Your work day has been ended successfully",
-      });
-    } catch (error) {
-      console.error("Error ending work day:", error);
-      toast({
-        title: "Error",
-        description: "Could not end your work day",
-        variant: "destructive"
-      });
-    }
-  };
-  
+  const [createJobOpen, setCreateJobOpen] = useState(false);
+  const [createJobCardOpen, setCreateJobCardOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("job-cards");
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="container py-6 space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-1">Job Cards</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Jobs & Cards</h1>
           <p className="text-muted-foreground">
-            Record completed jobs and track your daily earnings
+            Manage job entries and job cards for your business
           </p>
         </div>
+        <div className="flex items-center gap-2">
+          {activeTab === "jobs" ? (
+            <Button onClick={() => setCreateJobOpen(true)}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              New Job
+            </Button>
+          ) : (
+            <Button onClick={() => setCreateJobCardOpen(true)}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              New Job Card
+            </Button>
+          )}
+        </div>
       </div>
-      
-      {staffRelationId ? (
-        <>
-          <WorkStatusCard 
-            activeWorkSession={activeWorkSession}
-            onStartWorkDay={startWorkDay}
-            onEndWorkDay={endWorkDay}
-            onCreateJobCard={() => setIsCreateOpen(true)}
-          />
-          
-          <Tabs defaultValue="job-cards">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="job-cards">Job Cards</TabsTrigger>
-              <TabsTrigger value="work-history">Work History</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="job-cards" className="mt-6">
-              <div className="mb-4 flex justify-end">
-                <Button 
-                  onClick={() => setIsCreateOpen(true)}
-                  disabled={!activeWorkSession}
-                >
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Create Job Card
-                </Button>
-              </div>
-              <JobCardsList staffRelationId={staffRelationId} />
-            </TabsContent>
-            
-            <TabsContent value="work-history" className="mt-6">
-              <div className="space-y-6">
-                <h3 className="font-medium text-lg">Work Session History</h3>
-                <ActiveWorkSession session={activeWorkSession} />
-                <WorkHistory staffRelationId={staffRelationId} />
-              </div>
-            </TabsContent>
-          </Tabs>
-          
-          <CreateJobCardDialog
-            open={isCreateOpen}
-            onOpenChange={setIsCreateOpen}
-            staffRelationId={staffRelationId}
-          />
-        </>
-      ) : (
-        <Card>
-          <CardContent className="p-6 text-center">
-            <h3 className="text-lg font-medium mb-2">Staff Account Required</h3>
-            <p className="text-muted-foreground mb-4">
-              You need to be registered as staff to access job cards.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+
+      <Tabs
+        defaultValue="job-cards"
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="w-full"
+      >
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="job-cards">Job Cards</TabsTrigger>
+          <TabsTrigger value="jobs">Jobs</TabsTrigger>
+        </TabsList>
+        <TabsContent value="job-cards" className="mt-6">
+          <JobCardsTab />
+        </TabsContent>
+        <TabsContent value="jobs" className="mt-6">
+          <JobsTab />
+        </TabsContent>
+      </Tabs>
+
+      <CreateJobDialog
+        open={createJobOpen}
+        onOpenChange={setCreateJobOpen}
+      />
+      <CreateJobCardDialog
+        open={createJobCardOpen}
+        onOpenChange={setCreateJobCardOpen}
+      />
     </div>
   );
 };

@@ -1,69 +1,51 @@
 
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { DollarSign, Plus } from "lucide-react";
-import ServiceCard from "./ServiceCard";
-import { Service } from "@/types/service.types";
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Service } from '@/hooks/useServiceQueries';
+import ServiceCard from './ServiceCard';
 
 interface ServiceListProps {
   services: Service[];
-  searchQuery: string;
   isLoading: boolean;
   error: Error | null;
-  onAddService: () => void;
-  onEditService: (service: Service) => void;
-  onDeleteService: (service: Service) => void;
-  isDeleting: boolean;
-  staffAssignments?: Record<string, number>;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-const ServiceList: React.FC<ServiceListProps> = ({ 
-  services, 
-  searchQuery,
-  isLoading, 
-  error, 
-  onAddService, 
-  onEditService, 
-  onDeleteService,
-  isDeleting,
-  staffAssignments = {}
+export const ServiceList: React.FC<ServiceListProps> = ({
+  services,
+  isLoading,
+  error,
+  onEdit,
+  onDelete
 }) => {
-  // Filter services based on search query
-  const filteredServices = services.filter(service => 
-    service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (service.description && service.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
   if (isLoading) {
     return (
-      <div className="flex justify-center p-8">
-        <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
+      <div className="flex justify-center py-12">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-8 text-destructive">
-        <p>Error loading services: {error.message}</p>
-      </div>
+      <Card className="border-red-200 bg-red-50 dark:bg-red-900/10">
+        <CardContent className="py-6 text-center">
+          <h3 className="font-semibold text-red-600 dark:text-red-400">Error Loading Services</h3>
+          <p className="text-sm text-red-500 dark:text-red-300">{error.message}</p>
+        </CardContent>
+      </Card>
     );
   }
 
-  if (filteredServices.length === 0) {
+  if (services.length === 0) {
     return (
-      <Card className="text-center py-8">
-        <CardContent className="pt-6">
-          <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-xl font-semibold mb-2">No Services</h3>
-          <p className="text-muted-foreground mb-6">
-            {searchQuery ? "No services match your search." : "You haven't added any services yet."}
+      <Card className="border-dashed border-2 bg-muted/50">
+        <CardContent className="py-12 flex flex-col items-center justify-center text-center">
+          <h3 className="text-lg font-semibold mb-2">No services found</h3>
+          <p className="text-muted-foreground mb-4">
+            Create your first service to start receiving bookings
           </p>
-          <Button onClick={onAddService} size="lg">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Your First Service
-          </Button>
         </CardContent>
       </Card>
     );
@@ -71,18 +53,19 @@ const ServiceList: React.FC<ServiceListProps> = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredServices.map((service) => (
-        <ServiceCard 
-          key={service.id} 
-          service={service} 
-          onEdit={onEditService} 
-          onDelete={() => onDeleteService(service)}
-          isDeleting={isDeleting}
-          staffCount={staffAssignments[service.id] || 0}
+      {services.map((service) => (
+        <ServiceCard
+          key={service.id}
+          id={service.id}
+          name={service.name}
+          description={service.description}
+          price={service.price}
+          duration={service.duration}
+          status={service.status}
+          onEdit={onEdit}
+          onDelete={onDelete}
         />
       ))}
     </div>
   );
 };
-
-export default ServiceList;

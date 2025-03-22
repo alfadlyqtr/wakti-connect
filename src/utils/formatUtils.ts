@@ -1,32 +1,58 @@
 
-export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
+/**
+ * Format a number as currency
+ */
+export const formatCurrency = (
+  amount: number,
+  currency = 'QAR',
+  locale = 'en-US'
+): string => {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(amount);
 };
 
-export const formatDateTimeToISO = (
-  date: Date, 
-  startTime: string, 
-  endTime?: string
-): { start_time: string, end_time?: string } => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  
-  const [startHour, startMinute] = startTime.split(':');
-  const startTimestamp = `${year}-${month}-${day}T${startHour}:${startMinute}:00`;
-  
-  let endTimestamp;
-  if (endTime) {
-    const [endHour, endMinute] = endTime.split(':');
-    endTimestamp = `${year}-${month}-${day}T${endHour}:${endMinute}:00`;
+/**
+ * Format a number with appropriate unit suffix (K, M, B)
+ */
+export const formatNumberWithSuffix = (num: number): string => {
+  if (num < 1000) {
+    return num.toString();
+  } else if (num < 1000000) {
+    return (num / 1000).toFixed(1) + 'K';
+  } else if (num < 1000000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  } else {
+    return (num / 1000000000).toFixed(1) + 'B';
   }
+};
+
+/**
+ * Format a percentage
+ */
+export const formatPercentage = (value: number): string => {
+  return `${value.toFixed(1)}%`;
+};
+
+/**
+ * Format a date
+ */
+export const formatDate = (
+  date: Date | string,
+  format: 'short' | 'medium' | 'long' = 'medium',
+  locale = 'en-US'
+): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
   
-  return {
-    start_time: startTimestamp,
-    end_time: endTimestamp
-  };
+  const options: Intl.DateTimeFormatOptions = 
+    format === 'short' 
+      ? { month: 'numeric', day: 'numeric' }
+      : format === 'medium'
+        ? { year: 'numeric', month: 'short', day: 'numeric' }
+        : { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+  
+  return new Intl.DateTimeFormat(locale, options).format(dateObj);
 };

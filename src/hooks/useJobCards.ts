@@ -1,165 +1,79 @@
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { JobCard, JobCardFormData } from "@/types/jobs.types";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from 'react';
 
-export const useJobCards = (staffRelationId?: string) => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+export interface JobCard {
+  id: string;
+  title: string;
+  reference: string;
+  status: string;
+  customerName: string;
+  customerId: string;
+  createdAt: string;
+  deadline: string | null;
+  totalAmount: number;
+}
 
-  // Fetch job cards for a specific staff member or all if business
-  const { data: jobCards, isLoading, error } = useQuery({
-    queryKey: ['jobCards', staffRelationId],
-    queryFn: async () => {
-      let query = supabase
-        .from('job_cards')
-        .select(`
-          *,
-          jobs:job_id (
-            id,
-            name,
-            description,
-            duration,
-            default_price
-          )
-        `);
+export const useJobCards = () => {
+  const [jobCards, setJobCards] = useState<JobCard[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const loadJobCards = async () => {
+      try {
+        // Mock data
+        const mockJobCards: JobCard[] = [
+          {
+            id: '1',
+            title: 'Website Redesign',
+            reference: 'JC-001',
+            status: 'in_progress',
+            customerName: 'Acme Inc',
+            customerId: 'cust-001',
+            createdAt: new Date().toISOString(),
+            deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            totalAmount: 2500
+          },
+          {
+            id: '2',
+            title: 'Logo Design',
+            reference: 'JC-002',
+            status: 'pending',
+            customerName: 'TechStart LLC',
+            customerId: 'cust-002',
+            createdAt: new Date().toISOString(),
+            deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+            totalAmount: 750
+          }
+        ];
         
-      if (staffRelationId) {
-        query = query.eq('staff_relation_id', staffRelationId);
+        setJobCards(mockJobCards);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setIsLoading(false);
       }
-      
-      query = query.order('created_at', { ascending: false });
-      
-      const { data, error } = await query;
-        
-      if (error) {
-        toast({
-          title: "Error fetching job cards",
-          description: error.message,
-          variant: "destructive"
-        });
-        throw error;
-      }
-      
-      return data as JobCard[];
+    };
+
+    loadJobCards();
+  }, []);
+
+  const refetch = async () => {
+    setIsLoading(true);
+    try {
+      // Mock refetch
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setIsLoading(false);
     }
-  });
-
-  // Create a new job card
-  const createJobCard = useMutation({
-    mutationFn: async (data: JobCardFormData & { staff_relation_id: string }) => {
-      const { data: jobCard, error } = await supabase
-        .from('job_cards')
-        .insert([data])
-        .select(`
-          *,
-          jobs:job_id (
-            id,
-            name,
-            description,
-            duration,
-            default_price
-          )
-        `)
-        .single();
-        
-      if (error) {
-        toast({
-          title: "Error creating job card",
-          description: error.message,
-          variant: "destructive"
-        });
-        throw error;
-      }
-      
-      toast({
-        title: "Job card created",
-        description: "New job card has been created successfully",
-      });
-      
-      return jobCard as JobCard;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['jobCards'] });
-    }
-  });
-
-  // Update an existing job card
-  const updateJobCard = useMutation({
-    mutationFn: async ({ id, data }: { id: string, data: Partial<JobCardFormData> }) => {
-      const { data: updatedCard, error } = await supabase
-        .from('job_cards')
-        .update(data)
-        .eq('id', id)
-        .select(`
-          *,
-          jobs:job_id (
-            id,
-            name,
-            description,
-            duration,
-            default_price
-          )
-        `)
-        .single();
-        
-      if (error) {
-        toast({
-          title: "Error updating job card",
-          description: error.message,
-          variant: "destructive"
-        });
-        throw error;
-      }
-      
-      toast({
-        title: "Job card updated",
-        description: "Job card has been updated successfully",
-      });
-      
-      return updatedCard as JobCard;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['jobCards'] });
-    }
-  });
-
-  // Delete a job card
-  const deleteJobCard = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('job_cards')
-        .delete()
-        .eq('id', id);
-        
-      if (error) {
-        toast({
-          title: "Error deleting job card",
-          description: error.message,
-          variant: "destructive"
-        });
-        throw error;
-      }
-      
-      toast({
-        title: "Job card deleted",
-        description: "Job card has been deleted successfully",
-      });
-      
-      return id;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['jobCards'] });
-    }
-  });
+  };
 
   return {
     jobCards,
     isLoading,
     error,
-    createJobCard,
-    updateJobCard,
-    deleteJobCard
+    refetch
   };
 };
