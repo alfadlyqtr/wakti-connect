@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,9 +20,11 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
   onSelectStaff, 
   onOpenCreateDialog 
 }) => {
+  const [retryCount, setRetryCount] = useState(0);
+
   // Use edge function to get staff members (bypassing RLS issues)
   const { data: staffMembers, isLoading: staffLoading, error: staffError, refetch } = useQuery({
-    queryKey: ['businessStaff'],
+    queryKey: ['businessStaff', retryCount],
     queryFn: async () => {
       try {
         const { data: session } = await supabase.auth.getSession();
@@ -73,6 +75,11 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
     console.log("StaffMembersTab mounted - refetching data");
     refetch();
   }, [refetch]);
+
+  const handleManualRefetch = () => {
+    setRetryCount(prev => prev + 1);
+    refetch();
+  };
 
   const handleSelectStaffMember = (staffId: string) => {
     console.log("Staff selected in tab component:", staffId);
@@ -125,7 +132,7 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
           </AlertDescription>
         </Alert>
         <div className="flex justify-center mt-4">
-          <Button onClick={() => refetch()} className="gap-2">
+          <Button onClick={handleManualRefetch} className="gap-2">
             <RefreshCw className="h-4 w-4" />
             Try Again
           </Button>
@@ -151,15 +158,28 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {staffMembers.map((member) => (
-        <StaffMemberCard 
-          key={member.id} 
-          member={member} 
-          onSelectStaff={handleSelectStaffMember} 
-        />
-      ))}
-    </div>
+    <>
+      <div className="flex justify-end mb-4">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleManualRefetch}
+          className="gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </Button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {staffMembers.map((member) => (
+          <StaffMemberCard 
+            key={member.id} 
+            member={member} 
+            onSelectStaff={handleSelectStaffMember} 
+          />
+        ))}
+      </div>
+    </>
   );
 };
 

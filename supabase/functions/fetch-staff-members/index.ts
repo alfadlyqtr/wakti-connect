@@ -14,6 +14,7 @@ interface RequestBody {
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log("Handling OPTIONS preflight request");
     return new Response(null, { headers: corsHeaders })
   }
 
@@ -39,20 +40,33 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const { businessId } = await req.json() as RequestBody
+    const requestData = await req.json();
+    const businessId = requestData.businessId;
+    
+    if (!businessId) {
+      console.error("Missing businessId in request");
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing businessId parameter' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    
     console.log(`Fetching staff for business ID: ${businessId}`);
+    console.log(`Authenticated user ID: ${user.id}`);
 
     // Verify the user is either the business owner or a staff member
-    const isBusinessOwner = user.id === businessId
+    const isBusinessOwner = user.id === businessId;
+    console.log(`Is business owner: ${isBusinessOwner}`);
     
     if (!isBusinessOwner) {
       // Check if user is a staff member of this business
+      console.log("Not business owner, checking if staff member");
       const { data: staffData, error: staffError } = await supabaseClient
         .from('business_staff')
         .select('id')
         .eq('staff_id', user.id)
         .eq('business_id', businessId)
-        .single()
+        .single();
 
       if (staffError || !staffData) {
         console.error("Authorization error:", staffError);
@@ -61,9 +75,12 @@ serve(async (req) => {
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
+      
+      console.log("User is a staff member, proceeding");
     }
 
     // Get all staff members for this business
+    console.log("Fetching business_staff records");
     const { data: staffMembers, error: fetchError } = await supabaseClient
       .from('business_staff')
       .select(`
@@ -74,9 +91,8 @@ serve(async (req) => {
         )
       `)
       .eq('business_id', businessId)
-      .neq('status', 'deleted')
-      .order('created_at', { ascending: false })
-
+      .neq('status', 'deleted');
+      
     if (fetchError) {
       console.error('Error fetching staff:', fetchError);
       return new Response(
@@ -85,19 +101,30 @@ serve(async (req) => {
       )
     }
 
-    console.log(`Successfully retrieved ${staffMembers.length} staff members`);
+    console.log(`Found ${staffMembers?.length || 0} staff members`);
 
     // Format the permissions for each staff member
-    const formattedStaff = staffMembers.map(staff => ({
-      ...staff,
-      permissions: typeof staff.permissions === 'string' 
-        ? JSON.parse(staff.permissions) 
-        : staff.permissions,
-      profile: staff.profiles ? {
-        avatar_url: staff.profiles.avatar_url,
-        full_name: staff.profiles.full_name
-      } : null
-    }))
+    const formattedStaff = staffMembers?.map(staff => {
+      // Parse JSON permissions if stored as string
+      let parsedPermissions;
+      try {
+        parsedPermissions = typeof staff.permissions === 'string' 
+          ? JSON.parse(staff.permissions) 
+          : staff.permissions;
+      } catch (e) {
+        console.error("Error parsing permissions:", e);
+        parsedPermissions = {};
+      }
+      
+      return {
+        ...staff,
+        permissions: parsedPermissions,
+        profile: staff.profiles ? {
+          avatar_url: staff.profiles.avatar_url,
+          full_name: staff.profiles.full_name
+        } : null
+      };
+    }) || [];
 
     // Return the staff members
     return new Response(
