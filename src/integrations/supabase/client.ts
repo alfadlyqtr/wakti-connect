@@ -50,17 +50,78 @@ const createMockSupabaseClient = () => {
   return {
     // Auth methods
     auth: {
-      getSession: () => Promise.resolve({ data: { session: { user: { id: 'mock-user-id', email: 'user@example.com', user_metadata: {}, app_metadata: {} } } }, error: null }),
+      getSession: () => Promise.resolve({ 
+        data: { 
+          session: { 
+            user: { 
+              id: 'mock-user-id', 
+              email: 'user@example.com', 
+              user_metadata: {}, 
+              app_metadata: { provider: 'email' } 
+            } 
+          } 
+        }, 
+        error: null 
+      }),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-      signInWithPassword: () => Promise.resolve({ data: { user: { id: 'mock-user-id', email: 'user@example.com' } }, error: null }),
+      signInWithPassword: () => Promise.resolve({ 
+        data: { 
+          user: { 
+            id: 'mock-user-id', 
+            email: 'user@example.com',
+            user_metadata: {},
+            app_metadata: { provider: 'email' }
+          },
+          session: { 
+            user: { 
+              id: 'mock-user-id', 
+              email: 'user@example.com',
+              access_token: 'mock-token',
+              user_metadata: {},
+              app_metadata: { provider: 'email' }
+            } 
+          }
+        }, 
+        error: null 
+      }),
       signInWithOAuth: () => Promise.resolve({ data: { provider: 'google' }, error: null }),
-      signUp: () => Promise.resolve({ data: { user: { id: 'mock-user-id', email: 'user@example.com' } }, error: null }),
+      signUp: () => Promise.resolve({ 
+        data: { 
+          user: { 
+            id: 'mock-user-id', 
+            email: 'user@example.com',
+            user_metadata: {},
+            app_metadata: { provider: 'email' }
+          } 
+        }, 
+        error: null 
+      }),
       signOut: () => Promise.resolve({ error: null }),
       resetPasswordForEmail: () => Promise.resolve({ error: null }),
-      updateUser: () => Promise.resolve({ data: { user: { id: 'mock-user-id', email: 'user@example.com' } }, error: null }),
+      updateUser: () => Promise.resolve({ 
+        data: { 
+          user: { 
+            id: 'mock-user-id', 
+            email: 'user@example.com',
+            user_metadata: {},
+            app_metadata: { provider: 'email' }
+          } 
+        }, 
+        error: null 
+      }),
       verifyOtp: () => Promise.resolve({ error: null }),
       resend: () => Promise.resolve({ error: null }),
-      getUser: () => Promise.resolve({ data: { user: { id: 'mock-user-id', email: 'user@example.com' } }, error: null }),
+      getUser: () => Promise.resolve({ 
+        data: { 
+          user: { 
+            id: 'mock-user-id', 
+            email: 'user@example.com',
+            user_metadata: {},
+            app_metadata: { provider: 'email' }
+          } 
+        }, 
+        error: null 
+      }),
       admin: {
         createUser: () => Promise.resolve({ data: null, error: null }),
         deleteUser: () => Promise.resolve({ data: null, error: null }),

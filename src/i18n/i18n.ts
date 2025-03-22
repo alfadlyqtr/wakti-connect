@@ -26,6 +26,39 @@ const resources = {
       'taskStatus.completed': 'Completed',
       'taskStatus.canceled': 'Canceled',
       'taskStatus.onHold': 'On Hold',
+
+      'pricing.title': 'Simple, Transparent Pricing',
+      'pricing.subtitle': 'Choose the plan that works best for you or your business',
+      'pricing.plans.free.title': 'Free',
+      'pricing.plans.free.description': 'Basic access for individual use',
+      'pricing.plans.free.buttonText': 'Get Started',
+      'pricing.plans.free.features': [
+        '1 task per month',
+        'View appointments',
+        'Individual messaging (1 per month)',
+        'No business profile',
+        'No staff management'
+      ],
+      'pricing.plans.individual.title': 'Individual',
+      'pricing.plans.individual.description': 'Perfect for freelancers and professionals',
+      'pricing.plans.individual.buttonText': 'Try Individual',
+      'pricing.plans.individual.features': [
+        'Unlimited tasks',
+        'Create & manage appointments',
+        'Unlimited individual messaging',
+        'No business profile',
+        'No staff management'
+      ],
+      'pricing.plans.business.title': 'Business',
+      'pricing.plans.business.description': 'Full features for growing businesses',
+      'pricing.plans.business.buttonText': 'Try Business',
+      'pricing.plans.business.features': [
+        'Unlimited tasks',
+        'Full appointment system',
+        'Business & customer messaging',
+        'Customizable business profile',
+        'Up to 6 staff members'
+      ],
       
       // Add more translations as needed
     }

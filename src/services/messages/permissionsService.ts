@@ -2,65 +2,64 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Check if a user can message another user
+ * Check if the current user can message another user
+ * @param userId The user ID to check messaging permissions for
+ * @returns boolean indicating if messaging is allowed
  */
-export const canMessageUser = async (
-  recipientId: string
-): Promise<boolean> => {
+export const canMessageUser = async (userId: string): Promise<boolean> => {
   try {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session?.user) return false;
-
-    const currentUserId = session.user.id;
-
-    // Check if they're in contacts
-    const { data: contactData, error: contactError } = await supabase
-      .from("user_contacts")
-      .select("*")
-      .eq("user_id", currentUserId)
-      .eq("contact_id", recipientId)
-      .eq("status", "accepted")
-      .maybeSingle();
-
-    if (contactError) {
-      console.error("Error checking contact:", contactError);
+    const { data: sessionData } = await supabase.auth.getSession();
+    
+    if (!sessionData.session) {
       return false;
     }
-
-    // If they're in contacts, allow messaging
-    if (contactData) {
+    
+    const currentUserId = sessionData.session.user.id;
+    
+    // Users can't message themselves
+    if (currentUserId === userId) {
+      return false;
+    }
+    
+    const { data: contactData } = await supabase
+      .from('contacts')
+      .select('*');
+      
+    // Check if they are in each other's contacts
+    const isContact = contactData && contactData.some(contact => 
+      (contact.user_id === currentUserId && contact.contact_id === userId && contact.status === 'accepted') ||
+      (contact.user_id === userId && contact.contact_id === currentUserId && contact.status === 'accepted')
+    );
+    
+    if (isContact) {
       return true;
     }
-
-    // Check if the current user is a business and the recipient is a subscriber
-    const { data: currentUserData } = await supabase
-      .from("profiles")
-      .select("account_type")
-      .eq("id", currentUserId)
-      .single();
-
-    if (currentUserData?.account_type === "business") {
-      // Check if recipient is a subscriber
-      const { data: subscriptionData, error: subscriptionError } = await supabase
-        .from("business_subscribers")
-        .select("*")
-        .eq("business_id", currentUserId)
-        .eq("subscriber_id", recipientId)
-        .maybeSingle();
-
-      if (subscriptionError) {
-        console.error("Error checking subscription:", subscriptionError);
-        return false;
-      }
-
-      if (subscriptionData) {
-        return true;
-      }
+    
+    // Check if it's a business account that accepts messages from anyone
+    const { data: businessData } = await supabase
+      .from('businesses')
+      .select('*');
+      
+    const isBusiness = businessData && businessData.some(business => 
+      business.owner_id === userId && business.settings?.accept_messages === true
+    );
+    
+    if (isBusiness) {
+      return true;
     }
-
-    return false;
+    
+    // Check if the user is subscribed to the business
+    const { data: subscriptionData } = await supabase
+      .from('business_subscribers')
+      .select('*');
+      
+    const isSubscribed = subscriptionData && subscriptionData.some(sub => 
+      sub.business_id === userId && sub.subscriber_id === currentUserId && sub.status === 'active'
+    );
+    
+    return isSubscribed || false;
   } catch (error) {
-    console.error("Error in canMessageUser:", error);
+    console.error("Error checking message permissions:", error);
     return false;
   }
 };

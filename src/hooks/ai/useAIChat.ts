@@ -1,130 +1,93 @@
 
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
-import { useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
-import { AIMessage } from "@/types/ai-assistant.types";
+import { useState, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Message } from '@/types/ai-assistant.types';
 
 export const useAIChat = () => {
-  const { user } = useAuth();
-  const [messages, setMessages] = useState<AIMessage[]>([
-    {
-      id: "welcome-message",
-      role: "assistant",
-      content: `Hello there! I'm your WAKTI AI assistant. How can I help you with your tasks, events, or business needs today?`,
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Send message to AI assistant
-  const sendMessage = useMutation({
-    mutationFn: async (message: string) => {
-      if (!user) throw new Error("User not authenticated");
-      
-      // Add user message to the list
-      const userMessage: AIMessage = {
-        id: `user-${Date.now()}`,
-        role: "user",
-        content: message,
-        timestamp: new Date(),
-      };
-      
-      setMessages((prev) => [...prev, userMessage]);
-      
-      // Get authentication token
-      const { data: authData } = await supabase.auth.getSession();
-      const token = authData.session?.access_token;
-      
-      if (!token) throw new Error("Authentication token not found");
-      
-      console.log("Sending message to AI assistant", { message, token: token.substring(0, 10) + "..." });
-      
-      // Call the edge function with the correct URL format
-      const response = await fetch("https://sqdjqehcxpzsudhzjwbu.supabase.co/functions/v1/ai-assistant", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({ message }),
-      });
-      
-      // Log response status for debugging
-      console.log("AI assistant response status:", response.status);
-      
-      if (!response.ok) {
-        let errorMessage = "Error communicating with AI assistant";
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-          console.error("AI assistant error:", errorData);
-        } catch (e) {
-          console.error("Failed to parse error response:", e);
-        }
-        throw new Error(errorMessage);
-      }
-      
-      let data;
-      try {
-        data = await response.json();
-        console.log("AI assistant response data:", data);
-      } catch (e) {
-        console.error("Failed to parse response JSON:", e);
-        throw new Error("Invalid response from AI assistant");
-      }
-      
-      if (!data || !data.response) {
-        console.error("Unexpected response format:", data);
-        throw new Error("Unexpected response format from AI assistant");
-      }
-      
-      // Add AI response to the list
-      const aiMessage: AIMessage = {
-        id: `assistant-${Date.now()}`,
-        role: "assistant",
-        content: data.response,
-        timestamp: new Date(),
-      };
-      
-      setMessages((prev) => [...prev, aiMessage]);
-      
-      return data;
-    },
-    onError: (error) => {
-      console.error("AI assistant error:", error);
-      
-      // Add error message to the list
-      const errorMessage: AIMessage = {
-        id: `error-${Date.now()}`,
-        role: "assistant",
-        content: `I apologize, but I encountered an error: ${error.message}. Please try again.`,
-        timestamp: new Date(),
-      };
-      
-      setMessages((prev) => [...prev, errorMessage]);
-      
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  const clearMessages = useCallback(() => {
+    setMessages([]);
+  }, []);
 
-  const clearMessages = () => setMessages([
-    {
-      id: "welcome-message",
-      role: "assistant",
-      content: `Hello there! I'm your WAKTI AI assistant. How can I help you with your tasks, events, or business needs today?`,
-      timestamp: new Date(),
-    },
-  ]);
+  const sendMessage = useCallback(async (content: string) => {
+    if (!content.trim()) return;
+
+    setIsLoading(true);
+    
+    // Add user message to the chat
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content,
+      role: 'user',
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+
+    try {
+      // Get the current session for authentication
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error("Not authenticated");
+      }
+
+      // Create a mock AI response 
+      // (In a real application, this would call an API endpoint)
+      const mockAssistantResponse = await simulateAIResponse(content);
+      
+      // Add AI response to the chat
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: mockAssistantResponse,
+        role: 'assistant',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      
+      // Add error message
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "Sorry, I encountered an error processing your request. Please try again later.",
+        role: 'assistant',
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Function to simulate an AI response with a delay
+  const simulateAIResponse = async (userMessage: string): Promise<string> => {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Simple response logic
+    if (userMessage.toLowerCase().includes('hello') || userMessage.toLowerCase().includes('hi')) {
+      return "Hello! How can I assist you with WAKTI today?";
+    }
+    
+    if (userMessage.toLowerCase().includes('task') || userMessage.toLowerCase().includes('to-do')) {
+      return "I can help you manage your tasks. Would you like me to show you how to create a new task?";
+    }
+    
+    if (userMessage.toLowerCase().includes('appointment') || userMessage.toLowerCase().includes('booking')) {
+      return "WAKTI's appointment system allows you to schedule and manage bookings efficiently. Would you like to know more?";
+    }
+    
+    return "I understand your message. Is there anything specific about WAKTI's features that you'd like to know more about?";
+  };
 
   return {
     messages,
+    isLoading,
     sendMessage,
-    isLoading: sendMessage.isPending,
-    clearMessages,
+    clearMessages
   };
 };
