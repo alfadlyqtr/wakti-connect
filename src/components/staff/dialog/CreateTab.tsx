@@ -23,7 +23,7 @@ const CreateTab: React.FC<CreateTabProps> = ({
 }) => {
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-5xl mx-auto">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="sticky top-0 z-10 bg-background pt-4 pb-6">
           <div className="flex items-center space-x-4">
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -43,6 +43,7 @@ const CreateTab: React.FC<CreateTabProps> = ({
             type="button" 
             variant="outline" 
             onClick={onCancel}
+            className="mr-2"
           >
             Cancel
           </Button>

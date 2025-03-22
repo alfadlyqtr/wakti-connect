@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { UseFormReturn } from "react-hook-form";
 import { StaffFormValues } from "../StaffFormSchema";
 import { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface PermissionToggleProps {
   form: UseFormReturn<StaffFormValues>;
@@ -31,26 +32,36 @@ const PermissionToggle: React.FC<PermissionToggleProps> = ({
     <FormField
       control={form.control}
       name={name}
-      render={({ field }) => (
-        <FormItem className="flex flex-row items-center justify-between p-4 rounded-lg border">
-          <div className="space-y-0.5 flex items-start gap-3">
-            <Icon className="h-5 w-5 text-muted-foreground mt-0.5" />
-            <div>
-              <FormLabel className="text-base font-normal">{label}</FormLabel>
-              <FormDescription>
-                {description}
-              </FormDescription>
+      render={({ field }) => {
+        const isEnabled = !!field.value;
+        
+        return (
+          <FormItem className={cn(
+            "flex flex-row items-center justify-between p-4 rounded-lg border transition-colors",
+            isEnabled ? "bg-emerald-50 border-emerald-200" : ""
+          )}>
+            <div className="space-y-0.5 flex items-start gap-3">
+              <Icon className={cn(
+                "h-5 w-5 mt-0.5",
+                isEnabled ? "text-emerald-600" : "text-muted-foreground"
+              )} />
+              <div>
+                <FormLabel className="text-base font-medium">{label}</FormLabel>
+                <FormDescription>
+                  {description}
+                </FormDescription>
+              </div>
             </div>
-          </div>
-          <FormControl>
-            <Switch
-              checked={!!field.value}
-              onCheckedChange={field.onChange}
-              className="data-[state=checked]:bg-emerald-500"
-            />
-          </FormControl>
-        </FormItem>
-      )}
+            <FormControl>
+              <Switch
+                checked={!!field.value}
+                onCheckedChange={field.onChange}
+                className="data-[state=checked]:bg-emerald-500"
+              />
+            </FormControl>
+          </FormItem>
+        );
+      }}
     />
   );
 };
