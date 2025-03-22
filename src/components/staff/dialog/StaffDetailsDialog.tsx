@@ -75,6 +75,14 @@ const editStaffSchema = z.object({
 
 type EditStaffFormValues = z.infer<typeof editStaffSchema>;
 
+// Define a type for the profile data
+interface ProfileData {
+  full_name?: string;
+  avatar_url?: string;
+  email?: string;
+  [key: string]: any;
+}
+
 const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
   staffId,
   open,
@@ -150,7 +158,7 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
           : staffRelation.permissions;
         
         // Get profile data safely with optional chaining
-        const profileData = staffRelation.profiles || {};
+        const profileData: ProfileData = staffRelation.profiles || {};
 
         // Set form values
         form.reset({
