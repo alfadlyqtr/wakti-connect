@@ -1,10 +1,11 @@
+
 import React from "react";
 import DashboardHome from "@/pages/dashboard/DashboardHome";
 import DashboardTasks from "@/pages/dashboard/DashboardTasks";
 import DashboardEvents from "@/pages/dashboard/DashboardEvents";
 import DashboardSettings from "@/pages/dashboard/DashboardSettings";
 import DashboardBusinessAnalytics from "@/pages/dashboard/DashboardBusinessAnalytics";
-import DashboardStaffManagement from "@/pages/dashboard/DashboardStaffManagement";
+import DashboardStaffManagement from "@/pages/dashboard/staff-management";
 import DashboardWorkLogs from "@/pages/dashboard/DashboardWorkLogs";
 import DashboardAIAssistant from "@/pages/dashboard/DashboardAIAssistant";
 import DashboardMessages from "@/pages/dashboard/DashboardMessages";

@@ -18,6 +18,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Edge function called: fetch-staff-members");
+    
     // Create a Supabase client with the Auth context of the logged in user
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -29,6 +31,7 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
 
     if (authError || !user) {
+      console.error("Authentication error:", authError);
       return new Response(
         JSON.stringify({ success: false, error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -37,6 +40,7 @@ serve(async (req) => {
 
     // Parse request body
     const { businessId } = await req.json() as RequestBody
+    console.log(`Fetching staff for business ID: ${businessId}`);
 
     // Verify the user is either the business owner or a staff member
     const isBusinessOwner = user.id === businessId
@@ -51,6 +55,7 @@ serve(async (req) => {
         .single()
 
       if (staffError || !staffData) {
+        console.error("Authorization error:", staffError);
         return new Response(
           JSON.stringify({ success: false, error: 'Not authorized to view this business data' }),
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -73,12 +78,14 @@ serve(async (req) => {
       .order('created_at', { ascending: false })
 
     if (fetchError) {
-      console.error('Error fetching staff:', fetchError)
+      console.error('Error fetching staff:', fetchError);
       return new Response(
         JSON.stringify({ success: false, error: fetchError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+
+    console.log(`Successfully retrieved ${staffMembers.length} staff members`);
 
     // Format the permissions for each staff member
     const formattedStaff = staffMembers.map(staff => ({
@@ -99,7 +106,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error in fetch-staff-members function:', error)
+    console.error('Error in fetch-staff-members function:', error);
     
     return new Response(
       JSON.stringify({ success: false, error: error.message || 'An unexpected error occurred' }),

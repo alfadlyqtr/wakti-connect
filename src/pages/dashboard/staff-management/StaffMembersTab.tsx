@@ -1,14 +1,15 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, UserPlus, AlertTriangle } from "lucide-react";
+import { Users, UserPlus, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StaffMember } from "./types";
 import StaffMemberCard from "./StaffMemberCard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/hooks/use-toast";
 
 interface StaffMembersTabProps {
   onSelectStaff: (staffId: string) => void;
@@ -19,7 +20,7 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
   onSelectStaff, 
   onOpenCreateDialog 
 }) => {
-  // Use a different approach that doesn't trigger RLS recursion
+  // Use edge function to get staff members (bypassing RLS issues)
   const { data: staffMembers, isLoading: staffLoading, error: staffError, refetch } = useQuery({
     queryKey: ['businessStaff'],
     queryFn: async () => {
@@ -46,6 +47,7 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
         }
         
         if (!data?.success) {
+          console.error("Error in function response:", data?.error);
           throw new Error(data?.error || "Failed to fetch staff members");
         }
         
@@ -54,6 +56,11 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
         return data.staffMembers || [];
       } catch (error: any) {
         console.error("Error in staff query:", error);
+        toast({
+          title: "Error loading staff members",
+          description: error.message || "Failed to fetch staff data",
+          variant: "destructive",
+        });
         throw error;
       }
     },
@@ -62,7 +69,8 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
   });
 
   // Refetch when component mounts to ensure we have latest data
-  React.useEffect(() => {
+  useEffect(() => {
+    console.log("StaffMembersTab mounted - refetching data");
     refetch();
   }, [refetch]);
 
@@ -117,7 +125,10 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
           </AlertDescription>
         </Alert>
         <div className="flex justify-center mt-4">
-          <Button onClick={() => refetch()}>Try Again</Button>
+          <Button onClick={() => refetch()} className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Try Again
+          </Button>
         </div>
       </Card>
     );
