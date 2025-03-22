@@ -1,58 +1,60 @@
 
-import React, { createContext, useContext } from 'react';
+import React, { ReactNode, createContext, useContext } from 'react';
 
-// Create a context for the translation function
-const TranslationContext = createContext<{
-  t: (key: string, options?: any) => string | React.ReactNode;
+interface TranslationContextType {
+  t: (key: string, options?: any) => ReactNode;
   i18n: {
     language: string;
     changeLanguage: (lng: string) => void;
   };
-}>({
-  t: (key) => key,
+}
+
+const TranslationContext = createContext<TranslationContextType>({
+  t: (key: string) => key,
   i18n: {
     language: 'en',
-    changeLanguage: () => {},
+    changeLanguage: () => {}
   }
 });
 
-// Create a provider component
-export const TranslationProvider: React.FC<{
-  children: React.ReactNode;
-  translations?: Record<string, string | any[]>;
-  language?: string;
-}> = ({ children, translations = {}, language = 'en' }) => {
-  const [currentLanguage, setCurrentLanguage] = React.useState(language);
-  
-  const t = (key: string, options?: any) => {
-    if (options?.returnObjects && typeof translations[key] === 'object') {
-      return translations[key];
+export const TranslationProvider: React.FC<{children: ReactNode}> = ({ children }) => {
+  const translations: Record<string, Record<string, string>> = {
+    en: {
+      'common.search': 'Search',
+      'common.account': 'Account',
+      'common.logOut': 'Log Out',
+      'common.logIn': 'Log In',
+      'common.signUp': 'Sign Up',
+      'dashboard.settings': 'Settings',
+    },
+    ar: {
+      'common.search': 'بحث',
+      'common.account': 'حساب',
+      'common.logOut': 'تسجيل خروج',
+      'common.logIn': 'تسجيل دخول',
+      'common.signUp': 'إنشاء حساب',
+      'dashboard.settings': 'الإعدادات',
     }
-    return translations[key] || key;
   };
-  
-  const changeLanguage = (lng: string) => {
-    setCurrentLanguage(lng);
+
+  const t = (key: string, options?: any): string => {
+    const language = localStorage.getItem('i18nextLng') || 'en';
+    return translations[language]?.[key] || key;
+  };
+
+  const i18n = {
+    language: localStorage.getItem('i18nextLng') || 'en',
+    changeLanguage: (lng: string) => {
+      localStorage.setItem('i18nextLng', lng);
+      // Force rerender in a real implementation
+    }
   };
 
   return (
-    <TranslationContext.Provider value={{ 
-      t, 
-      i18n: {
-        language: currentLanguage,
-        changeLanguage
-      }
-    }}>
+    <TranslationContext.Provider value={{ t, i18n }}>
       {children}
     </TranslationContext.Provider>
   );
 };
 
-// Export the hook
-export const useTranslation = () => {
-  const context = useContext(TranslationContext);
-  if (context === undefined) {
-    throw new Error('useTranslation must be used within a TranslationProvider');
-  }
-  return context;
-};
+export const useTranslation = () => useContext(TranslationContext);

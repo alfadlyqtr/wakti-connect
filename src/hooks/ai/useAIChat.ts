@@ -1,10 +1,10 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Message } from '@/types/ai-assistant.types';
+import { AIMessage } from '@/types/ai-assistant.types';
 
 export const useAIChat = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<AIMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const clearMessages = useCallback(() => {
@@ -17,7 +17,7 @@ export const useAIChat = () => {
     setIsLoading(true);
     
     // Add user message to the chat
-    const userMessage: Message = {
+    const userMessage: AIMessage = {
       id: Date.now().toString(),
       content,
       role: 'user',
@@ -38,7 +38,7 @@ export const useAIChat = () => {
       const mockAssistantResponse = await simulateAIResponse(content);
       
       // Add AI response to the chat
-      const aiMessage: Message = {
+      const aiMessage: AIMessage = {
         id: (Date.now() + 1).toString(),
         content: mockAssistantResponse,
         role: 'assistant',
@@ -50,7 +50,7 @@ export const useAIChat = () => {
       console.error("Error sending message:", error);
       
       // Add error message
-      const errorMessage: Message = {
+      const errorMessage: AIMessage = {
         id: (Date.now() + 1).toString(),
         content: "Sorry, I encountered an error processing your request. Please try again later.",
         role: 'assistant',

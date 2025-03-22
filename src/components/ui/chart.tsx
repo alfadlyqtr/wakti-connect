@@ -109,9 +109,10 @@ export const DoughnutChart = ({ data, options, className }: ChartProps) => {
 interface ChartContainerProps {
   children: React.ReactNode;
   className?: string;
+  config?: any; // Adding config prop to support additional configuration
 }
 
-export const ChartContainer = ({ children, className }: ChartContainerProps) => {
+export const ChartContainer = ({ children, className, config }: ChartContainerProps) => {
   return (
     <div className={cn("relative p-4 bg-card rounded-lg border", className)}>
       {children}
@@ -119,7 +120,11 @@ export const ChartContainer = ({ children, className }: ChartContainerProps) => 
   );
 };
 
-export const ChartTooltip = ({ children }: { children: React.ReactNode }) => {
+interface ChartTooltipProps {
+  children: React.ReactNode;
+}
+
+export const ChartTooltip = ({ children }: ChartTooltipProps) => {
   return (
     <div className="absolute z-50 p-2 bg-popover text-popover-foreground rounded-md shadow-md text-sm">
       {children}
@@ -127,7 +132,12 @@ export const ChartTooltip = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export const ChartTooltipContent = ({ title, value }: { title: string; value: string | number }) => {
+interface ChartTooltipContentProps {
+  title: string;
+  value: string | number;
+}
+
+export const ChartTooltipContent = ({ title, value }: ChartTooltipContentProps) => {
   return (
     <div className="flex flex-col">
       <span className="text-xs text-muted-foreground">{title}</span>

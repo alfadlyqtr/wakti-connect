@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
@@ -19,9 +18,9 @@ const AccountVerification = () => {
       try {
         setIsLoading(true);
         
-        const { data } = await supabase.auth.getSession();
+        const { data: sessionData } = await supabase.auth.getSession();
         
-        if (!data.session) {
+        if (!sessionData.session) {
           setError("No active session found. Please log in again.");
           setIsLoading(false);
           return;
@@ -41,11 +40,11 @@ const AccountVerification = () => {
         const userProfile = profileData[0];
         
         // Set email for display
-        setEmail(data.session.user.email);
+        setEmail(sessionData.session.user.email);
         
         // Set provider (OAuth or email)
-        const userAppMetadata = data.session.user.app_metadata || {};
-        setProvider(userAppMetadata.provider || 'email');
+        const providerName = sessionData.session?.user?.app_metadata?.provider || 'email';
+        setProvider(providerName);
         
         // Check if account is verified
         if (provider === 'google' || provider === 'facebook' || userProfile.email_verified) {

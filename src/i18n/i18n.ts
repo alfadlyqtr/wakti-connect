@@ -32,6 +32,8 @@ const resources = {
       'pricing.plans.free.title': 'Free',
       'pricing.plans.free.description': 'Basic access for individual use',
       'pricing.plans.free.buttonText': 'Get Started',
+      'pricing.plans.free.price.monthly': '0',
+      'pricing.plans.free.price.yearly': '0',
       'pricing.plans.free.features': [
         '1 task per month',
         'View appointments',
@@ -42,6 +44,8 @@ const resources = {
       'pricing.plans.individual.title': 'Individual',
       'pricing.plans.individual.description': 'Perfect for freelancers and professionals',
       'pricing.plans.individual.buttonText': 'Try Individual',
+      'pricing.plans.individual.price.monthly': '20',
+      'pricing.plans.individual.price.yearly': '200',
       'pricing.plans.individual.features': [
         'Unlimited tasks',
         'Create & manage appointments',
@@ -52,6 +56,8 @@ const resources = {
       'pricing.plans.business.title': 'Business',
       'pricing.plans.business.description': 'Full features for growing businesses',
       'pricing.plans.business.buttonText': 'Try Business',
+      'pricing.plans.business.price.monthly': '45',
+      'pricing.plans.business.price.yearly': '400',
       'pricing.plans.business.features': [
         'Unlimited tasks',
         'Full appointment system',
@@ -59,6 +65,13 @@ const resources = {
         'Customizable business profile',
         'Up to 6 staff members'
       ],
+      
+      'common.search': 'Search',
+      'common.account': 'Account',
+      'common.logOut': 'Log Out',
+      'common.logIn': 'Log In',
+      'common.signUp': 'Sign Up',
+      'dashboard.settings': 'Settings',
       
       // Add more translations as needed
     }
@@ -74,6 +87,13 @@ const resources = {
       'auth.fullName': 'الاسم الكامل',
       'auth.email': 'البريد الإلكتروني',
       'auth.password': 'كلمة المرور',
+      
+      'common.search': 'بحث',
+      'common.account': 'حساب',
+      'common.logOut': 'تسجيل خروج',
+      'common.logIn': 'تسجيل دخول',
+      'common.signUp': 'إنشاء حساب',
+      'dashboard.settings': 'الإعدادات',
       
       // Add more translations as needed
     }

@@ -9,7 +9,7 @@ vi.mock('@/lib/utils', () => ({
   cn: (...classes: string[]) => classes.join(' '),
 }));
 
-vi.mock('@/hooks/useAIChat', () => ({
+vi.mock('@/hooks/ai/useAIChat', () => ({
   useAIChat: () => ({
     sendMessage: vi.fn(),
     messages: [],

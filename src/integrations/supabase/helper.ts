@@ -11,15 +11,15 @@ export const fromTable = <T = any>(tableName: string) => {
   return {
     select: (query = '*') => {
       // Type assertion to handle dynamic table names
-      return supabase.from(tableName) as any;
+      return supabase.from(tableName);
     },
     insert: (values: any) => {
       // Type assertion to handle dynamic table names
-      return supabase.from(tableName) as any;
+      return supabase.from(tableName);
     },
     update: (values: any, conditions?: Record<string, any>) => {
       // Type assertion to handle dynamic table names
-      let query = supabase.from(tableName) as any;
+      let query = supabase.from(tableName);
       if (conditions) {
         Object.entries(conditions).forEach(([key, value]) => {
           query = query.eq(key, value);
@@ -29,7 +29,7 @@ export const fromTable = <T = any>(tableName: string) => {
     },
     delete: (conditions?: Record<string, any>) => {
       // Type assertion to handle dynamic table names
-      let query = supabase.from(tableName) as any;
+      let query = supabase.from(tableName);
       if (conditions) {
         Object.entries(conditions).forEach(([key, value]) => {
           query = query.eq(key, value);
@@ -39,7 +39,7 @@ export const fromTable = <T = any>(tableName: string) => {
     },
     upsert: (values: any) => {
       // Type assertion to handle dynamic table names
-      return supabase.from(tableName) as any;
+      return supabase.from(tableName);
     }
   };
 };

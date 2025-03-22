@@ -56,7 +56,12 @@ const createMockSupabaseClient = () => {
             user: { 
               id: 'mock-user-id', 
               email: 'user@example.com', 
-              user_metadata: {}, 
+              user_metadata: { 
+                full_name: 'Mock User',
+                display_name: 'Mock',
+                account_type: 'free',
+                business_name: 'Mock Business'
+              }, 
               app_metadata: { provider: 'email' } 
             } 
           } 
@@ -69,7 +74,12 @@ const createMockSupabaseClient = () => {
           user: { 
             id: 'mock-user-id', 
             email: 'user@example.com',
-            user_metadata: {},
+            user_metadata: {
+              full_name: 'Mock User',
+              display_name: 'Mock',
+              account_type: 'free',
+              business_name: 'Mock Business'
+            },
             app_metadata: { provider: 'email' }
           },
           session: { 
@@ -77,7 +87,12 @@ const createMockSupabaseClient = () => {
               id: 'mock-user-id', 
               email: 'user@example.com',
               access_token: 'mock-token',
-              user_metadata: {},
+              user_metadata: {
+                full_name: 'Mock User',
+                display_name: 'Mock',
+                account_type: 'free',
+                business_name: 'Mock Business'
+              },
               app_metadata: { provider: 'email' }
             } 
           }
@@ -90,7 +105,12 @@ const createMockSupabaseClient = () => {
           user: { 
             id: 'mock-user-id', 
             email: 'user@example.com',
-            user_metadata: {},
+            user_metadata: {
+              full_name: 'Mock User',
+              display_name: 'Mock',
+              account_type: 'free',
+              business_name: 'Mock Business'
+            },
             app_metadata: { provider: 'email' }
           } 
         }, 
@@ -103,7 +123,12 @@ const createMockSupabaseClient = () => {
           user: { 
             id: 'mock-user-id', 
             email: 'user@example.com',
-            user_metadata: {},
+            user_metadata: {
+              full_name: 'Mock User',
+              display_name: 'Mock',
+              account_type: 'free',
+              business_name: 'Mock Business'
+            },
             app_metadata: { provider: 'email' }
           } 
         }, 
@@ -116,7 +141,12 @@ const createMockSupabaseClient = () => {
           user: { 
             id: 'mock-user-id', 
             email: 'user@example.com',
-            user_metadata: {},
+            user_metadata: {
+              full_name: 'Mock User',
+              display_name: 'Mock',
+              account_type: 'free',
+              business_name: 'Mock Business'
+            },
             app_metadata: { provider: 'email' }
           } 
         }, 
