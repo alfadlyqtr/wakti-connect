@@ -1,11 +1,10 @@
-
 import { z } from "zod";
 
-// Form validation schema
+// Keep the same schema for backward compatibility
 export const staffSignupSchema = z.object({
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters"),
+  fullName: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
 })
 .refine(data => data.password === data.confirmPassword, {
@@ -13,4 +12,4 @@ export const staffSignupSchema = z.object({
   path: ["confirmPassword"],
 });
 
-export type StaffSignupFormValues = z.infer<typeof staffSignupSchema>;
+export type StaffFormValues = z.infer<typeof staffSignupSchema>;

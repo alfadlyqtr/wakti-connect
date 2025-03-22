@@ -1,175 +1,110 @@
 
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "@/components/ui/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { useTranslation } from "react-i18next";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 interface LoginFormProps {
-  setError: (error: string) => void;
+  setError?: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const LoginForm = ({ setError }: LoginFormProps) => {
-  const { t } = useTranslation();
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+const LoginForm = ({ setError }: LoginFormProps = {}) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [internalError, setInternalError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { login } = useAuth();
-
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
-
+  const { toast } = useToast();
+  
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setLoading(true);
+    setInternalError(null);
+    if (setError) setError("");
+    
     try {
-      console.log("Attempting login with:", email);
-      await login(email, password);
-      
-      toast({
-        title: "Success!",
-        description: "You have been logged in successfully.",
+      // Login with Supabase Auth
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
-
-      // Navigate to dashboard
-      navigate('/dashboard');
-
-    } catch (error: any) {
-      console.error("Login error in form handler:", error);
       
-      // Track login attempts
-      setLoginAttempts(prev => prev + 1);
+      if (error) throw error;
       
-      // Provide more contextual error messages based on number of attempts
-      let errorMessage = error.message || "Failed to log in. Please try again.";
-      
-      if (loginAttempts >= 2) {
-        if (error.message?.includes("database") || error.message?.includes("profiles") || 
-            error.message?.includes("Auth service") || error.message?.includes("connection")) {
-          errorMessage = "We're experiencing technical difficulties. Please try again later or contact support.";
-        }
+      // After login, check if user is a staff member
+      const { data: staffData, error: staffError } = await supabase
+        .from('business_staff')
+        .select('id, business_id, role')
+        .eq('staff_id', data.user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+        
+      if (!staffError && staffData) {
+        // Store staff status and info in localStorage for quicker access
+        localStorage.setItem('isStaff', 'true');
+        localStorage.setItem('staffRelationId', staffData.id);
+        localStorage.setItem('staffBusinessId', staffData.business_id);
+        localStorage.setItem('userRole', staffData.role);
+        
+        // Redirect staff to staff dashboard
+        navigate('/dashboard/staff-dashboard');
+      } else {
+        // Regular user redirect
+        navigate('/dashboard');
       }
-      
-      setError(errorMessage);
-      
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: errorMessage,
-      });
+    } catch (error: any) {
+      console.error("Error signing in:", error);
+      const errorMessage = error.message || "Invalid email or password";
+      setInternalError(errorMessage);
+      if (setError) setError(errorMessage);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-
+  
   return (
-    <form onSubmit={handleLogin} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="email">{t('auth.email')}</Label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-          <Input 
-            id="email" 
-            type="email" 
-            placeholder="name@example.com" 
-            className="pl-10"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="password">{t('auth.password')}</Label>
-          <Link 
-            to="/auth/forgot-password" 
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            {t('auth.forgotPassword')}
-          </Link>
-        </div>
-        <div className="relative">
-          <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-          <Input 
-            id="password" 
-            type={showPassword ? "text" : "password"}
-            placeholder="••••••••"
-            className="pl-10 pr-10"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute right-1 top-1"
-            onClick={() => setShowPassword(!showPassword)}
-            aria-label={showPassword ? "Hide password" : "Show password"}
-          >
-            {showPassword ? (
-              <EyeOff className="h-4 w-4" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
-      </div>
-      
-      <div className="flex items-center gap-2">
-        <Checkbox 
-          id="remember" 
-          checked={rememberMe} 
-          onCheckedChange={(checked) => 
-            setRememberMe(checked as boolean)
-          }
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid gap-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
         />
-        <Label 
-          htmlFor="remember" 
-          className="text-sm font-normal cursor-pointer"
-        >
-          {t('auth.rememberMe')}
-        </Label>
       </div>
+      <div className="grid gap-2">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          type="password"
+          placeholder="Enter your password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+      </div>
+      {internalError && (
+        <p className="text-sm text-destructive text-center">{internalError}</p>
+      )}
       
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? (
-          <div className="flex items-center gap-2">
-            <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            <span>{t('auth.loggingIn')}</span>
-          </div>
+      <Button className="w-full" type="submit" disabled={loading}>
+        {loading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Logging in...
+          </>
         ) : (
-          <div className="flex items-center gap-2">
-            <LogIn className="h-4 w-4" />
-            <span>{t('auth.login')}</span>
-          </div>
+          "Login"
         )}
       </Button>
-
-      {loginAttempts >= 2 && (
-        <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-sm">
-          <p>Having trouble logging in? Try these steps:</p>
-          <ul className="list-disc ml-5 mt-1">
-            <li>Make sure you've entered the correct email and password</li>
-            <li>Try clearing your browser cache and cookies</li>
-            <li>Try using a different browser</li>
-            <li>Check if your internet connection is stable</li>
-            {loginAttempts >= 3 && (
-              <li>If the problem persists, <a href="/auth/signup" className="underline font-medium">create a new account</a> or contact support</li>
-            )}
-          </ul>
-        </div>
-      )}
     </form>
   );
 };

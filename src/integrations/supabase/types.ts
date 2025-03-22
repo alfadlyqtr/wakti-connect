@@ -1256,8 +1256,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_own_staff_record: {
+        Args: {
+          record_id_param: string
+        }
+        Returns: boolean
+      }
       check_profiles_table: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      check_staff_member_access: {
+        Args: {
+          business_id_param: string
+        }
         Returns: boolean
       }
       check_table_exists: {

@@ -1,11 +1,12 @@
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Eye, Mail, Phone } from "lucide-react";
 import { StaffMember } from "./types";
+import { format } from "date-fns";
 
 interface StaffMemberCardProps {
   member: StaffMember;
@@ -13,41 +14,80 @@ interface StaffMemberCardProps {
 }
 
 const StaffMemberCard: React.FC<StaffMemberCardProps> = ({ member, onSelectStaff }) => {
+  // Get initials for avatar fallback
+  const fullName = member.profile?.full_name || member.name;
+  const initials = fullName
+    ? fullName.split(" ").map(part => part.charAt(0)).join("").toUpperCase().substring(0, 2)
+    : "ST";
+    
+  const isActive = member.status === 'active';
+    
   return (
-    <Card className="overflow-hidden">
+    <Card className={isActive ? "" : "opacity-75 border-muted bg-muted/20"}>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <Avatar className="h-12 w-12">
-            <AvatarImage src={member.profile?.avatar_url || ""} alt={member.profile?.full_name || "Staff"} />
-            <AvatarFallback>
-              {member.profile?.full_name?.substring(0, 2) || "ST"}
+            <AvatarImage src={member.profile?.avatar_url || ""} alt={fullName} />
+            <AvatarFallback className="bg-primary/10 text-primary">
+              {initials}
             </AvatarFallback>
           </Avatar>
-          <Badge variant={member.role === "admin" ? "secondary" : "outline"}>
-            {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-          </Badge>
-        </div>
-        <CardTitle className="mt-2">{member.profile?.full_name || "Unnamed Staff"}</CardTitle>
-        <CardDescription>Joined {new Date(member.created_at).toLocaleDateString()}</CardDescription>
-      </CardHeader>
-      <CardContent className="pb-2">
-        <div className="space-y-1 text-sm">
-          <div className="flex items-center">
-            <Briefcase className="h-4 w-4 mr-2 text-muted-foreground" />
-            <span>3 services assigned</span>
+          <div className="flex flex-wrap gap-2">
+            {member.role === 'co-admin' && (
+              <Badge variant="secondary">Co-Admin</Badge>
+            )}
+            {member.is_service_provider && (
+              <Badge variant="outline">Service Provider</Badge>
+            )}
+            {!isActive && (
+              <Badge variant="destructive">Suspended</Badge>
+            )}
           </div>
-          <div className="flex items-center">
-            <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-            <span>12 bookings this month</span>
+        </div>
+        <CardTitle className="mt-2">{fullName}</CardTitle>
+        <CardDescription className="flex flex-col">
+          <span>{member.position || "Staff Member"}</span>
+          {member.staff_number && (
+            <span className="text-xs font-mono mt-1">{member.staff_number}</span>
+          )}
+        </CardDescription>
+      </CardHeader>
+      
+      <CardContent className="pb-2">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Mail className="h-3.5 w-3.5" />
+          <span className="truncate">{member.email}</span>
+        </div>
+        
+        <div className="mt-4">
+          <p className="text-xs text-muted-foreground mb-1">Permissions:</p>
+          <div className="flex flex-wrap gap-1">
+            {Object.entries(member.permissions || {})
+              .filter(([_, value]) => value)
+              .slice(0, 5)
+              .map(([key]) => (
+                <Badge key={key} variant="outline" className="text-[9px]">
+                  {key.replace('can_', '').replace(/_/g, ' ')}
+                </Badge>
+              ))
+            }
+            {Object.entries(member.permissions || {}).filter(([_, v]) => v).length > 5 && (
+              <Badge variant="outline" className="text-[9px]">
+                +{Object.entries(member.permissions || {}).filter(([_, v]) => v).length - 5} more
+              </Badge>
+            )}
           </div>
         </div>
       </CardContent>
-      <CardFooter className="pt-2 flex gap-2">
+      
+      <CardFooter className="pt-2">
         <Button 
           variant="outline" 
-          className="flex-1"
-          onClick={() => onSelectStaff(member.id)}
+          size="sm" 
+          className="w-full"
+          onClick={() => onSelectStaff(member.staff_id)}
         >
+          <Eye className="h-3.5 w-3.5 mr-1" />
           View Details
         </Button>
       </CardFooter>
