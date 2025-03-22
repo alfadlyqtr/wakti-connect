@@ -30,7 +30,7 @@ const PermissionSection: React.FC<PermissionSectionProps> = ({
           </div>
           <FormControl>
             <Switch
-              checked={field.value}
+              checked={Boolean(field.value)}
               onCheckedChange={field.onChange}
             />
           </FormControl>

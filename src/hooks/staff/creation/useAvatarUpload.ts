@@ -1,71 +1,113 @@
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
 
-export const useAvatarUpload = () => {
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
+export interface UploadProgress {
+  progress: number;
+  error: string | null;
+  uploading: boolean;
+  url: string | null;
+}
+
+export function useAvatarUpload() {
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress>({
+    progress: 0,
+    error: null,
+    uploading: false,
+    url: null
+  });
 
   const uploadAvatar = async (userId: string, avatarFile: File): Promise<string | null> => {
+    if (!avatarFile) return null;
+    
     try {
-      setIsUploading(true);
-      setUploadProgress(0);
+      setUploadProgress(prev => ({ ...prev, uploading: true, error: null }));
       
       // Generate a unique filename
       const fileExt = avatarFile.name.split('.').pop();
       const fileName = `${userId}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `staff_avatars/${fileName}`;
       
-      // Upload the file to Supabase Storage with progress tracking
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, avatarFile, {
-          cacheControl: '3600',
-          upsert: true,
-          onUploadProgress: (progress) => {
-            const percent = Math.round((progress.loaded / progress.total) * 100);
-            setUploadProgress(percent);
+      // Create a custom upload function that tracks progress
+      const fileReader = new FileReader();
+      fileReader.readAsArrayBuffer(avatarFile);
+      
+      const uploadWithProgress = () => new Promise<string | null>((resolve, reject) => {
+        fileReader.onload = async () => {
+          try {
+            // Upload the file to Supabase Storage
+            const { data, error: uploadError } = await supabase.storage
+              .from('avatars')
+              .upload(filePath, avatarFile, {
+                cacheControl: '3600',
+                upsert: true
+              });
+              
+            if (uploadError) {
+              console.error("Error uploading avatar:", uploadError);
+              setUploadProgress(prev => ({ 
+                ...prev, 
+                uploading: false,
+                error: uploadError.message
+              }));
+              reject(uploadError);
+              return;
+            }
+            
+            // Simulate progress updates
+            const progressInterval = setInterval(() => {
+              setUploadProgress(prev => {
+                const newProgress = Math.min(prev.progress + 15, 90);
+                return { ...prev, progress: newProgress };
+              });
+            }, 200);
+            
+            // Get the public URL
+            const { data: { publicUrl } } = supabase.storage
+              .from('avatars')
+              .getPublicUrl(filePath);
+              
+            clearInterval(progressInterval);
+            setUploadProgress({ 
+              progress: 100, 
+              uploading: false, 
+              error: null,
+              url: publicUrl
+            });
+            
+            resolve(publicUrl);
+          } catch (error: any) {
+            console.error("Error in avatar upload:", error);
+            setUploadProgress(prev => ({ 
+              ...prev, 
+              uploading: false,
+              error: error?.message || "Upload failed"
+            }));
+            reject(error);
           }
-        });
+        };
         
-      if (uploadError) {
-        console.error("Error uploading avatar:", uploadError);
-        toast({
-          title: "Upload failed",
-          description: uploadError.message || "Failed to upload image",
-          variant: "destructive"
-        });
-        return null;
-      }
-      
-      // Get the public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-      
-      toast({
-        title: "Upload successful",
-        description: "Profile image has been uploaded"
+        fileReader.onerror = () => {
+          setUploadProgress(prev => ({ 
+            ...prev, 
+            uploading: false,
+            error: "Failed to read file"
+          }));
+          reject(new Error("Failed to read file"));
+        };
       });
-        
-      return publicUrl;
-    } catch (error) {
-      console.error("Error in avatar upload:", error);
-      toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive"
-      });
+      
+      return await uploadWithProgress();
+    } catch (error: any) {
+      console.error("Avatar upload error:", error);
+      setUploadProgress(prev => ({ 
+        ...prev, 
+        uploading: false,
+        error: error?.message || "Upload failed"
+      }));
       return null;
-    } finally {
-      setIsUploading(false);
     }
   };
 
-  return {
-    uploadAvatar,
-    uploadProgress,
-    isUploading
-  };
-};
+  return { uploadAvatar, uploadProgress };
+}
