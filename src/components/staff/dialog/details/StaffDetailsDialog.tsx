@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -12,7 +13,7 @@ import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { useStaffDetailsForm } from "./hooks/useStaffDetailsForm";
 import { StaffDetailsTabs } from "./StaffDetailsTabs";
 import { StaffDetailsFooter } from "./StaffDetailsFooter";
-import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import StaffDetailsHeader from "./StaffDetailsHeader";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { ErrorState } from "./ErrorState";
 import { SkeletonPlaceholder } from "./SkeletonPlaceholder";
@@ -22,17 +23,6 @@ interface StaffDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const StaffDetailsHeader: React.FC = () => {
-  return (
-    <DialogHeader>
-      <div className="flex items-center gap-2">
-        <UserIcon className="h-5 w-5 text-primary" />
-        <DialogTitle>Staff Details</DialogTitle>
-      </div>
-    </DialogHeader>
-  );
-};
 
 const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
   staffId,
