@@ -10,7 +10,7 @@ const DashboardShell = ({
   <div className="min-h-screen flex flex-col">
     <main className="flex-1 p-4">
       <Outlet />
-      {children}
+      {/* We only render children when there is no matching route */}
     </main>
   </div>
 );

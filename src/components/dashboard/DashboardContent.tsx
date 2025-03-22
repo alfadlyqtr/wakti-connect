@@ -1,8 +1,6 @@
 
-import React, { useEffect } from 'react';
-import StaffDashboardHeader from './StaffDashboardHeader';
+import React from 'react';
 import DashboardLoading from './DashboardLoading';
-import { useNavigate } from 'react-router-dom';
 
 interface DashboardContentProps {
   children: React.ReactNode;
@@ -16,20 +14,10 @@ interface DashboardContentProps {
 const DashboardContent: React.FC<DashboardContentProps> = ({
   children,
   isLoading,
-  isStaff,
   userId,
   isMobile,
   currentPath = ''
 }) => {
-  const navigate = useNavigate();
-  
-  // Redirect staff to staff dashboard on login, but only if they're on the main dashboard
-  useEffect(() => {
-    if (isStaff && !isLoading && currentPath === '/dashboard' && userId) {
-      navigate('/dashboard/staff-dashboard');
-    }
-  }, [isStaff, isLoading, currentPath, userId, navigate]);
-  
   // Calculate main content padding based on sidebar state
   const mainContentClass = isMobile 
     ? "transition-all duration-300" 
@@ -42,11 +30,6 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           <DashboardLoading />
         ) : (
           <>
-            {isStaff && userId && (
-              <div className="mb-4">
-                <StaffDashboardHeader staffId={userId} />
-              </div>
-            )}
             {children}
           </>
         )}
