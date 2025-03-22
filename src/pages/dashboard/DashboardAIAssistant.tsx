@@ -13,10 +13,13 @@ const DashboardAIAssistant = () => {
   const isLoading = false;
   const inputMessage = '';
   const setInputMessage = () => {};
+  
+  // Fix the type by returning a Promise
   const sendMessage = async (e: React.FormEvent) => { 
     e.preventDefault();
     return Promise.resolve(); 
   };
+  
   const clearMessages = () => {};
   const canUseAI = true;
   const aiSettings = {};

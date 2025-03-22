@@ -1,7 +1,7 @@
 
 import React from "react";
 import { CheckCircle2, Clock, AlertCircle } from "lucide-react";
-import { TaskStatus } from "@/types/task.types";
+import { TaskStatus } from "@/types";
 import { useTranslation } from "react-i18next";
 
 interface TaskStatusIconProps {
