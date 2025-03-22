@@ -5,6 +5,8 @@ import { StaffFormValues } from "../StaffFormSchema";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Upload, X } from "lucide-react";
+import { useAvatarUpload } from "@/hooks/staff/creation/useAvatarUpload";
+import { UploadProgress } from "@/components/ui/upload-progress";
 
 interface AvatarUploadProps {
   form: UseFormReturn<StaffFormValues>;
@@ -12,6 +14,7 @@ interface AvatarUploadProps {
 
 const AvatarUpload: React.FC<AvatarUploadProps> = ({ form }) => {
   const [preview, setPreview] = useState<string | null>(null);
+  const { uploadProgress, isUploading } = useAvatarUpload();
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,7 +53,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({ form }) => {
           <AvatarFallback className="text-lg bg-primary/10 text-primary">{initials}</AvatarFallback>
         </Avatar>
         
-        {preview && (
+        {preview && !isUploading && (
           <Button
             type="button"
             variant="destructive"
@@ -63,8 +66,15 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({ form }) => {
         )}
       </div>
       
+      <UploadProgress 
+        progress={uploadProgress} 
+        isUploading={isUploading} 
+        size="sm"
+        className="w-24 mt-1"
+      />
+      
       <div className="flex justify-center">
-        <label htmlFor="avatar-upload" className="cursor-pointer">
+        <label htmlFor="avatar-upload" className={`cursor-pointer ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
           <div className="flex items-center text-sm text-primary gap-1 hover:underline">
             <Upload className="h-3 w-3" />
             {preview ? 'Change photo' : 'Upload photo'}
@@ -75,6 +85,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({ form }) => {
             accept="image/*"
             className="hidden"
             onChange={handleFileChange}
+            disabled={isUploading}
           />
         </label>
       </div>

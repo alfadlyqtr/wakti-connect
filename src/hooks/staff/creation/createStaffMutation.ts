@@ -4,12 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { StaffFormValues } from "@/components/staff/dialog/StaffFormSchema";
 import { checkCoAdminLimit } from "./staffLimits";
-import { uploadStaffAvatar } from "./avatarUpload";
+import { useAvatarUpload } from "./useAvatarUpload";
 import { CreateStaffResult, StaffCreationResponse } from "./types";
 
 export const useCreateStaffMutation = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { uploadAvatar } = useAvatarUpload();
   
   return useMutation({
     mutationFn: async (values: StaffFormValues): Promise<CreateStaffResult> => {
@@ -66,10 +67,10 @@ export const useCreateStaffMutation = () => {
         if (authError) throw authError;
         if (!authData.user) throw new Error("Failed to create user account");
         
-        // Upload avatar if provided
+        // Upload avatar if provided using the new hook with progress tracking
         let avatarUrl = null;
         if (values.avatar) {
-          avatarUrl = await uploadStaffAvatar(authData.user.id, values.avatar);
+          avatarUrl = await uploadAvatar(authData.user.id, values.avatar);
         }
         
         // 2. Add staff record to business_staff table

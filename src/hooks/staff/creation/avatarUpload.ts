@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Uploads a staff avatar image to storage
+ * @deprecated Use useAvatarUpload hook instead for progress tracking
  */
 export const uploadStaffAvatar = async (userId: string, avatarFile: File): Promise<string | null> => {
   try {

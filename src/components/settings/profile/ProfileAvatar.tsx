@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { updateProfileAvatar } from "@/services/profile/updateProfileService";
 import { Tables } from "@/integrations/supabase/types";
+import { UploadProgress } from "@/components/ui/upload-progress";
+import { Upload } from "lucide-react";
 
 interface ProfileAvatarProps {
   profile: Tables<"profiles"> & {
@@ -14,6 +16,7 @@ interface ProfileAvatarProps {
 
 const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ profile }) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null);
 
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,13 +25,33 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ profile }) => {
     
     try {
       setIsUploading(true);
-      const newAvatarUrl = await updateProfileAvatar(profile.id, file);
-      setAvatarUrl(newAvatarUrl);
+      setUploadProgress(0);
       
-      toast({
-        title: "Avatar updated",
-        description: "Your profile picture has been updated successfully."
-      });
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          const next = prev + Math.random() * 15;
+          return next > 90 ? 90 : next;
+        });
+      }, 300);
+      
+      const newAvatarUrl = await updateProfileAvatar(profile.id, file);
+      
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      
+      // Delay to show 100% completion
+      setTimeout(() => {
+        setAvatarUrl(newAvatarUrl);
+        
+        toast({
+          title: "Avatar updated",
+          description: "Your profile picture has been updated successfully."
+        });
+        
+        setIsUploading(false);
+      }, 500);
+      
     } catch (error) {
       console.error("Error uploading avatar:", error);
       toast({
@@ -36,19 +59,26 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ profile }) => {
         description: "There was a problem uploading your profile picture.",
         variant: "destructive"
       });
-    } finally {
       setIsUploading(false);
     }
   };
 
   return (
-    <>
+    <div className="flex flex-col items-center gap-2">
       <Avatar className="w-20 h-20">
         <AvatarImage src={avatarUrl || profile?.avatar_url || ''} />
         <AvatarFallback>
           {profile?.display_name?.charAt(0) || profile?.full_name?.charAt(0) || 'U'}
         </AvatarFallback>
       </Avatar>
+      
+      <UploadProgress 
+        progress={uploadProgress} 
+        isUploading={isUploading}
+        className="w-20"
+        size="sm"
+      />
+      
       <div>
         <input
           type="file"
@@ -56,6 +86,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ profile }) => {
           accept="image/*"
           className="hidden"
           onChange={handleAvatarChange}
+          disabled={isUploading}
         />
         <label htmlFor="avatar">
           <Button 
@@ -67,11 +98,18 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ profile }) => {
               document.getElementById('avatar')?.click();
             }}
           >
-            {isUploading ? "Uploading..." : "Change Picture"}
+            {isUploading ? (
+              "Uploading..."
+            ) : (
+              <>
+                <Upload className="h-4 w-4 mr-2" />
+                Change Picture
+              </>
+            )}
           </Button>
         </label>
       </div>
-    </>
+    </div>
   );
 };
 

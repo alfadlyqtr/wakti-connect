@@ -1,47 +1,42 @@
 
 import React from "react";
-import { LucideIcon } from "lucide-react";
-import PermissionToggle from "../../fields/PermissionToggle";
+import { FormField, FormItem, FormControl, FormLabel, FormDescription } from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
 import { UseFormReturn } from "react-hook-form";
 import { EditStaffFormValues } from "../hooks/useStaffDetailsForm";
 
 interface PermissionSectionProps {
   form: UseFormReturn<EditStaffFormValues>;
   title: string;
-  icon: LucideIcon;
-  permissions: Array<{
-    name: string;
-    label: string;
-    description: string;
-    icon: LucideIcon;
-  }>;
+  description: string;
+  name: `permissions.${string}`;
 }
 
 const PermissionSection: React.FC<PermissionSectionProps> = ({
   form,
   title,
-  icon: SectionIcon,
-  permissions
+  description,
+  name,
 }) => {
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <SectionIcon className="h-4 w-4 text-primary" />
-        <h5 className="text-sm font-medium">{title}</h5>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-2">
-        {permissions.map((permission) => (
-          <PermissionToggle
-            key={permission.name}
-            form={form}
-            name={`permissions.${permission.name}`}
-            label={permission.label}
-            description={permission.description}
-            icon={permission.icon}
-          />
-        ))}
-      </div>
-    </div>
+    <FormField
+      control={form.control}
+      name={name}
+      render={({ field }) => (
+        <FormItem className="flex flex-row items-center justify-between p-3 border rounded-md">
+          <div className="space-y-0.5">
+            <FormLabel className="text-base">{title}</FormLabel>
+            <FormDescription>{description}</FormDescription>
+          </div>
+          <FormControl>
+            <Switch
+              checked={field.value}
+              onCheckedChange={field.onChange}
+            />
+          </FormControl>
+        </FormItem>
+      )}
+    />
   );
 };
 
