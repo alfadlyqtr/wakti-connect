@@ -1,5 +1,5 @@
 
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useStaffMembers } from '../useStaffMembers';
 import { supabase } from '@/integrations/supabase/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -11,6 +11,7 @@ jest.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {
       getSession: jest.fn(),
+      refreshSession: jest.fn(),
     },
     functions: {
       invoke: jest.fn(),
@@ -83,14 +84,13 @@ describe('useStaffMembers', () => {
       error: null,
     });
 
-    const { result, waitFor } = renderHook(() => useStaffMembers(), {
+    const { result } = renderHook(() => useStaffMembers(), {
       wrapper,
     });
 
     // Wait for the hook to finish fetching
-    await waitFor(() => !result.current.isLoading);
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(result.current.isLoading).toBe(false);
     expect(result.current.staffMembers).toEqual(mockStaffMembers);
     expect(result.current.error).toBeNull();
     expect(result.current.authError).toBe(false);
@@ -101,14 +101,13 @@ describe('useStaffMembers', () => {
     const mockError = new Error('Failed to fetch staff members');
     (supabase.functions.invoke as jest.Mock).mockRejectedValue(mockError);
 
-    const { result, waitFor } = renderHook(() => useStaffMembers(), {
+    const { result } = renderHook(() => useStaffMembers(), {
       wrapper,
     });
 
     // Wait for the hook to finish attempting to fetch
-    await waitFor(() => !result.current.isLoading);
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(result.current.isLoading).toBe(false);
     expect(result.current.staffMembers).toBeUndefined();
     expect(result.current.error).toEqual(mockError);
     expect(toast).toHaveBeenCalledWith(
@@ -126,14 +125,13 @@ describe('useStaffMembers', () => {
       error: { message: 'Not authenticated' },
     });
 
-    const { result, waitFor } = renderHook(() => useStaffMembers(), {
+    const { result } = renderHook(() => useStaffMembers(), {
       wrapper,
     });
 
     // Wait for the hook to finish attempting to fetch
-    await waitFor(() => !result.current.isLoading);
+    await waitFor(() => expect(result.current.authError).toBe(true));
 
-    expect(result.current.authError).toBe(true);
     expect(toast).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'Error loading staff members',
@@ -149,14 +147,13 @@ describe('useStaffMembers', () => {
       data: null,
     });
 
-    const { result, waitFor } = renderHook(() => useStaffMembers(), {
+    const { result } = renderHook(() => useStaffMembers(), {
       wrapper,
     });
 
     // Wait for the hook to finish attempting to fetch
-    await waitFor(() => !result.current.isLoading);
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(result.current.isLoading).toBe(false);
     expect(result.current.error).toBeTruthy();
     expect(toast).toHaveBeenCalled();
   });
@@ -169,18 +166,17 @@ describe('useStaffMembers', () => {
     });
     
     // Mock successful token refresh
-    (supabase.auth.refreshSession as jest.Mock) = jest.fn().mockResolvedValue({
+    (supabase.auth.refreshSession as jest.Mock).mockResolvedValue({
       error: null,
     });
 
-    const { result, waitFor } = renderHook(() => useStaffMembers(), {
+    const { result } = renderHook(() => useStaffMembers(), {
       wrapper,
     });
 
     // Wait for the hook to finish attempting to fetch
-    await waitFor(() => !result.current.isLoading);
+    await waitFor(() => expect(result.current.authError).toBe(true));
 
-    expect(result.current.authError).toBe(true);
     expect(supabase.auth.refreshSession).toHaveBeenCalled();
   });
 
@@ -203,12 +199,12 @@ describe('useStaffMembers', () => {
       error: null,
     });
 
-    const { result, waitFor } = renderHook(() => useStaffMembers(), {
+    const { result } = renderHook(() => useStaffMembers(), {
       wrapper,
     });
 
     // Wait for the initial fetch to complete
-    await waitFor(() => !result.current.isLoading);
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     // Reset the mock to track the refetch
     jest.clearAllMocks();

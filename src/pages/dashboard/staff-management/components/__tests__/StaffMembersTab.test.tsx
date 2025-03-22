@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import StaffMembersTab from '../StaffMembersTab';
+import StaffMembersTab from '../../StaffMembersTab';
 import { useStaffMembers } from '@/hooks/staff/useStaffMembers';
 
 // Mock dependencies
