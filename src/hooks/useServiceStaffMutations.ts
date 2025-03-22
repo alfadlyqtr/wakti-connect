@@ -1,10 +1,10 @@
 
-// Service staff mutations hook - simplified after staff management removal
+// Service staff mutations hook - functionality removed
 export const useServiceStaffMutations = () => {
   return {
     selectedStaff: [],
     setSelectedStaff: () => {},
-    assignStaffToService: () => {},
+    assignStaffToService: () => Promise.resolve(),
     staffAssignmentMutation: {
       isPending: false
     }

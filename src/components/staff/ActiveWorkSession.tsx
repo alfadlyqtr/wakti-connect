@@ -12,7 +12,7 @@ const ActiveWorkSession: React.FC = () => {
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground">
-          This feature has been removed.
+          Work management functionality has been removed.
         </p>
       </CardContent>
     </Card>

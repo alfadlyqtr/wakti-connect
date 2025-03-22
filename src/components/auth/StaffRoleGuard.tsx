@@ -11,12 +11,11 @@ interface StaffRoleGuardProps {
 }
 
 /**
- * Simplified version that just renders children
- * Staff-related functionality has been removed
+ * Staff role guard - functionality removed
+ * Now just renders children as staff functionality has been removed
  */
 export const StaffRoleGuard: React.FC<StaffRoleGuardProps> = ({ 
-  children, 
-  fallback 
+  children
 }) => {
   return <>{children}</>;
 };

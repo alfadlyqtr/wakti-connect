@@ -1,6 +1,6 @@
 
-// Service staff queries hook - simplified after staff management removal
-export const useServiceStaffQueries = (serviceId?: string) => {
+// Service staff queries hook - functionality removed
+export const useServiceStaffQueries = () => {
   return {
     staffAssignments: [],
     isLoading: false,

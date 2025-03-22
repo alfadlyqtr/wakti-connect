@@ -12,8 +12,7 @@ import {
   BarChart2,
   FileText,
   Bot,
-  MessageSquare,
-  Bookmark
+  MessageSquare
 } from "lucide-react";
 
 export type NavItem = {

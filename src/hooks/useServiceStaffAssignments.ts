@@ -1,11 +1,11 @@
 
-// Service staff assignments hook - simplified after staff management removal
-export const useServiceStaffAssignments = (serviceId: string) => {
+// Service staff assignments hook - functionality removed
+export const useServiceStaffAssignments = () => {
   return {
     staffAssignments: [],
     isLoading: false,
     error: null,
-    assignStaffToService: () => {},
+    assignStaffToService: () => Promise.resolve(),
     isPending: false
   };
 };
