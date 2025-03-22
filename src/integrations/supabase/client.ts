@@ -1,55 +1,70 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Create a placeholder for the supabase client that mocks all the required methods
+// Create a mock Supabase client that matches the required API shape
 const createMockSupabaseClient = () => {
-  // Create a base function to return in the chain
-  const chainableFunction = () => {
-    const obj = {
-      // Data query methods
-      select: () => obj,
-      insert: () => obj,
-      update: () => obj,
-      upsert: () => obj,
-      delete: () => obj,
-      eq: () => obj,
-      neq: () => obj,
-      gt: () => obj,
-      lt: () => obj,
-      gte: () => obj,
-      lte: () => obj,
-      like: () => obj,
-      ilike: () => obj,
-      in: () => obj,
-      is: () => obj,
-      or: () => obj,
-      and: () => obj,
-      order: () => obj,
-      limit: () => obj,
-      range: () => obj,
-      single: () => Promise.resolve({ data: null, error: null }),
-      maybeSingle: () => Promise.resolve({ data: null, error: null }),
-      throwOnError: () => Promise.resolve({ data: null, error: null }),
+  // Create a chainable response to handle method chaining
+  const createChainableResponse = () => {
+    const response: any = {
+      // Data method
+      data: null,
+      error: null,
+      // Promise chaining
       then: (callback: any) => Promise.resolve({ data: null, error: null }).then(callback),
     };
-    return obj;
+
+    // Basic chainable methods
+    const chainableMethods = ['select', 'limit', 'single', 'maybeSingle', 'csv', 'throwOnError'];
+    chainableMethods.forEach(method => {
+      response[method] = () => createChainableResponse();
+    });
+
+    // Filter methods
+    const filterMethods = ['eq', 'neq', 'gt', 'lt', 'gte', 'lte', 'like', 'ilike', 'in', 'is', 'not', 'or', 'and'];
+    filterMethods.forEach(method => {
+      response[method] = () => createChainableResponse();
+    });
+
+    // Order methods
+    response.order = () => createChainableResponse();
+    response.range = () => createChainableResponse();
+
+    return response;
   };
 
-  // Create a mock supabase client
+  // Table query builder
+  const createQueryBuilder = () => {
+    const builder: any = {};
+    
+    // Basic table operations
+    builder.select = () => createChainableResponse();
+    builder.insert = () => createChainableResponse();
+    builder.update = () => createChainableResponse();
+    builder.upsert = () => createChainableResponse();
+    builder.delete = () => createChainableResponse();
+    
+    return builder;
+  };
+
+  // Create a mock supabase client with the required structure
   return {
     // Auth methods
     auth: {
-      getSession: () => Promise.resolve({ data: { session: { user: { id: 'mock-user-id' } } }, error: null }),
+      getSession: () => Promise.resolve({ data: { session: { user: { id: 'mock-user-id', email: 'user@example.com', user_metadata: {}, app_metadata: {} } } }, error: null }),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-      signInWithPassword: () => Promise.resolve({ data: { user: { id: 'mock-user-id' } }, error: null }),
+      signInWithPassword: () => Promise.resolve({ data: { user: { id: 'mock-user-id', email: 'user@example.com' } }, error: null }),
       signInWithOAuth: () => Promise.resolve({ data: { provider: 'google' }, error: null }),
-      signUp: () => Promise.resolve({ data: { user: { id: 'mock-user-id' } }, error: null }),
+      signUp: () => Promise.resolve({ data: { user: { id: 'mock-user-id', email: 'user@example.com' } }, error: null }),
       signOut: () => Promise.resolve({ error: null }),
       resetPasswordForEmail: () => Promise.resolve({ error: null }),
-      updateUser: () => Promise.resolve({ data: { user: { id: 'mock-user-id' } }, error: null }),
+      updateUser: () => Promise.resolve({ data: { user: { id: 'mock-user-id', email: 'user@example.com' } }, error: null }),
       verifyOtp: () => Promise.resolve({ error: null }),
       resend: () => Promise.resolve({ error: null }),
-      getUser: () => Promise.resolve({ data: { user: { id: 'mock-user-id' } }, error: null }),
+      getUser: () => Promise.resolve({ data: { user: { id: 'mock-user-id', email: 'user@example.com' } }, error: null }),
+      admin: {
+        createUser: () => Promise.resolve({ data: null, error: null }),
+        deleteUser: () => Promise.resolve({ data: null, error: null }),
+      }
     },
     
     // Storage methods
@@ -58,6 +73,7 @@ const createMockSupabaseClient = () => {
         upload: () => Promise.resolve({ data: { path: 'mock-path' }, error: null }),
         getPublicUrl: () => ({ data: { publicUrl: 'mock-url' } }),
         remove: () => Promise.resolve({ error: null }),
+        listBuckets: () => Promise.resolve({ data: [], error: null }),
       }),
     },
     
@@ -68,10 +84,10 @@ const createMockSupabaseClient = () => {
     removeChannel: () => Promise.resolve(),
     
     // RPC methods
-    rpc: (name: string) => Promise.resolve({ data: null, error: null }),
+    rpc: () => Promise.resolve({ data: null, error: null }),
     
-    // Table operation methods
-    from: (table: string) => chainableFunction(),
+    // Table operations
+    from: () => createQueryBuilder(),
   };
 };
 

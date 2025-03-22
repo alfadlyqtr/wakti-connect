@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
@@ -37,14 +36,14 @@ const LoginForm = ({ setError }: LoginFormProps = {}) => {
       if (error) throw error;
       
       // After login, check if user is a staff member
-      const { data: staffData, error: staffError } = await supabase
+      const { data: staffData } = await supabase
         .from('business_staff')
         .select('id, business_id, role')
         .eq('staff_id', data.user.id)
         .eq('status', 'active')
         .maybeSingle();
         
-      if (!staffError && staffData) {
+      if (staffData) {
         // Store staff status and info in localStorage for quicker access
         localStorage.setItem('isStaff', 'true');
         localStorage.setItem('staffRelationId', staffData.id);

@@ -30,7 +30,7 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data, error } = await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
       if (data?.session) {
         navigate("/dashboard");
       }

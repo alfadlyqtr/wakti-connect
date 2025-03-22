@@ -24,24 +24,24 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
         setIsLoading(true);
         
         // Check regular role
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data } = await supabase.auth.getSession();
         
-        if (!session) {
+        if (!data.session) {
           console.log("No active session");
           setHasAccess(false);
           setIsLoading(false);
           return;
         }
         
-        const { data } = await supabase
+        const { data: profileData } = await supabase
           .from('profiles')
           .select('account_type')
-          .eq('id', session.user.id)
+          .eq('id', data.session.user.id)
           .single();
           
-        console.log("User role from profile:", data?.account_type);
+        console.log("User role from profile:", profileData?.account_type);
         
-        if (data && allowedRoles.includes(data.account_type as any)) {
+        if (profileData && allowedRoles.includes(profileData.account_type as any)) {
           setHasAccess(true);
         } else {
           setHasAccess(false);

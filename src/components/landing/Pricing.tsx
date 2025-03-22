@@ -12,9 +12,7 @@ const Pricing = () => {
       title: String(t('pricing.plans.free.title')),
       price: String(t('pricing.plans.free.title')),
       description: String(t('pricing.plans.free.description')),
-      features: Array.isArray(t('pricing.plans.free.features', { returnObjects: true })) 
-        ? t('pricing.plans.free.features', { returnObjects: true }) as string[] 
-        : [],
+      features: t('pricing.plans.free.features', { returnObjects: true }) as string[] || [],
       buttonText: String(t('pricing.plans.free.buttonText')),
       buttonLink: "/auth?tab=register&plan=free",
       variant: "outline",
@@ -25,9 +23,7 @@ const Pricing = () => {
       title: String(t('pricing.plans.individual.title')),
       price: "QAR 20",
       description: String(t('pricing.plans.individual.description')),
-      features: Array.isArray(t('pricing.plans.individual.features', { returnObjects: true })) 
-        ? t('pricing.plans.individual.features', { returnObjects: true }) as string[] 
-        : [],
+      features: t('pricing.plans.individual.features', { returnObjects: true }) as string[] || [],
       buttonText: String(t('pricing.plans.individual.buttonText')),
       buttonLink: "/auth?tab=register&plan=individual",
       variant: "outline",
@@ -38,9 +34,7 @@ const Pricing = () => {
       title: String(t('pricing.plans.business.title')),
       price: "QAR 45",
       description: String(t('pricing.plans.business.description')),
-      features: Array.isArray(t('pricing.plans.business.features', { returnObjects: true })) 
-        ? t('pricing.plans.business.features', { returnObjects: true }) as string[] 
-        : [],
+      features: t('pricing.plans.business.features', { returnObjects: true }) as string[] || [],
       buttonText: String(t('pricing.plans.business.buttonText')),
       buttonLink: "/auth?tab=register&plan=business",
       variant: "default",
