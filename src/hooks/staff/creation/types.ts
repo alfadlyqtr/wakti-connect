@@ -1,14 +1,15 @@
 
+import { UseFormReturn } from "react-hook-form";
 import { StaffFormValues } from "@/components/staff/dialog/StaffFormSchema";
 
-export interface CreateStaffResult {
-  success: boolean;
-  error?: string;
-  data?: any;
-}
-
 export interface UseCreateStaffReturn {
-  form: any;
+  form: UseFormReturn<StaffFormValues>;
   onSubmit: (values: StaffFormValues) => Promise<boolean>;
   isSubmitting: boolean;
+}
+
+export interface StaffCreationResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
 }
