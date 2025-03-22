@@ -3,8 +3,6 @@ import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryClient } from "@tanstack/react-query";
@@ -64,12 +62,7 @@ const StaffDetailsDialog: React.FC<StaffDetailsDialogProps> = ({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-center gap-2">
-              <UserIcon className="h-5 w-5 text-primary" />
-              <DialogTitle>Staff Details</DialogTitle>
-            </div>
-          </DialogHeader>
+          <StaffDetailsHeader />
 
           {loading && !staffData ? (
             <LoadingSpinner />
