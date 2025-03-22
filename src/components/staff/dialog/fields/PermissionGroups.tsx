@@ -1,58 +1,17 @@
 
-import React from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
+import React from "react";
 
-interface PermissionGroupsProps {
-  permissions: Record<string, boolean>;
-  onChange: (permissions: Record<string, boolean>) => void;
+export interface PermissionGroupsProps {
+  // Define only the props needed for the interface
+  // No need to include form
 }
 
-const PermissionGroups: React.FC<PermissionGroupsProps> = ({ permissions, onChange }) => {
-  const handleChange = (group: string, checked: boolean) => {
-    onChange({
-      ...permissions,
-      [group]: checked
-    });
-  };
-
+const PermissionGroups: React.FC<PermissionGroupsProps> = () => {
   return (
     <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <Checkbox 
-          id="perm-tasks" 
-          checked={permissions?.tasks || false}
-          onCheckedChange={(checked) => handleChange('tasks', checked as boolean)}
-        />
-        <Label htmlFor="perm-tasks">Tasks Management</Label>
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        <Checkbox 
-          id="perm-bookings" 
-          checked={permissions?.bookings || false}
-          onCheckedChange={(checked) => handleChange('bookings', checked as boolean)}
-        />
-        <Label htmlFor="perm-bookings">Bookings Management</Label>
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        <Checkbox 
-          id="perm-services" 
-          checked={permissions?.services || false}
-          onCheckedChange={(checked) => handleChange('services', checked as boolean)}
-        />
-        <Label htmlFor="perm-services">Services Management</Label>
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        <Checkbox 
-          id="perm-reports" 
-          checked={permissions?.reports || false}
-          onCheckedChange={(checked) => handleChange('reports', checked as boolean)}
-        />
-        <Label htmlFor="perm-reports">Reports Access</Label>
-      </div>
+      <p className="text-muted-foreground">
+        Staff permissions management has been removed from this version.
+      </p>
     </div>
   );
 };
