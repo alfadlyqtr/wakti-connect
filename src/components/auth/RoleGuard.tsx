@@ -2,9 +2,10 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { isUserStaff } from "@/utils/staffUtils";
 
 interface RoleGuardProps {
-  allowedRoles: Array<'free' | 'individual' | 'business'>;
+  allowedRoles: Array<'free' | 'individual' | 'business' | 'staff'>;
   children: React.ReactNode;
   redirectTo?: string;
 }
@@ -23,25 +24,36 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
       try {
         setIsLoading(true);
         
-        // Check regular role
-        const { data } = await supabase.auth.getSession();
+        // Check if staff role is allowed and if user is staff
+        if (allowedRoles.includes('staff')) {
+          const staffStatus = await isUserStaff();
+          if (staffStatus) {
+            console.log("User is confirmed as staff");
+            setHasAccess(true);
+            setIsLoading(false);
+            return;
+          }
+        }
         
-        if (!data.session) {
+        // Otherwise check regular role
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
           console.log("No active session");
           setHasAccess(false);
           setIsLoading(false);
           return;
         }
         
-        const { data: profileData } = await supabase
+        const { data } = await supabase
           .from('profiles')
           .select('account_type')
-          .eq('id', data.session.user.id)
+          .eq('id', session.user.id)
           .single();
           
-        console.log("User role from profile:", profileData?.account_type);
+        console.log("User role from profile:", data?.account_type);
         
-        if (profileData && allowedRoles.includes(profileData.account_type as any)) {
+        if (data && allowedRoles.includes(data.account_type as any)) {
           setHasAccess(true);
         } else {
           setHasAccess(false);

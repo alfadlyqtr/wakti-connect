@@ -21,7 +21,7 @@ interface SidebarProfileData {
 
 interface SidebarProps {
   isOpen: boolean;
-  userRole: "free" | "individual" | "business";
+  userRole: "free" | "individual" | "business" | "staff";
 }
 
 const Sidebar = ({ isOpen, userRole }: SidebarProps) => {

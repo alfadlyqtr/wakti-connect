@@ -8,11 +8,13 @@ import {
   HelpCircle,
   Building2,
   Scissors,
+  UserPlus,
   PartyPopper,
   BarChart2,
   FileText,
   Bot,
-  MessageSquare
+  MessageSquare,
+  Bookmark
 } from "lucide-react";
 
 export type NavItem = {
@@ -20,7 +22,7 @@ export type NavItem = {
   path: string;
   icon: any;
   badge?: number | null;
-  showFor: Array<'free' | 'individual' | 'business'>;
+  showFor: Array<'free' | 'individual' | 'business' | 'staff'>;
 };
 
 export const navItems: NavItem[] = [
@@ -28,13 +30,13 @@ export const navItems: NavItem[] = [
     label: "Dashboard",
     path: "",
     icon: LayoutDashboard,
-    showFor: ['free', 'individual', 'business'],
+    showFor: ['free', 'individual', 'business', 'staff'],
   },
   {
     label: "Tasks",
     path: "tasks",
     icon: ListChecks,
-    showFor: ['free', 'individual', 'business'],
+    showFor: ['free', 'individual', 'business', 'staff'],
   },
   {
     label: "Events",
@@ -43,16 +45,22 @@ export const navItems: NavItem[] = [
     showFor: ['free', 'individual', 'business'],
   },
   {
+    label: "Job Cards",
+    path: "job-cards",
+    icon: FileText,
+    showFor: ['staff'],
+  },
+  {
     label: "Bookings",
     path: "bookings",
     icon: Calendar,
-    showFor: ['business'],
+    showFor: ['business', 'staff'],
   },
   {
     label: "Messages",
     path: "messages",
     icon: MessageSquare,
-    showFor: ['individual', 'business'],
+    showFor: ['individual', 'business', 'staff'],
   },
   {
     label: "WAKTI AI",
@@ -70,6 +78,12 @@ export const navItems: NavItem[] = [
     label: "Services",
     path: "services",
     icon: Scissors,
+    showFor: ['business'],
+  },
+  {
+    label: "Staff",
+    path: "staff",
+    icon: UserPlus,
     showFor: ['business'],
   },
   {
@@ -94,12 +108,12 @@ export const navItems: NavItem[] = [
     label: "Settings",
     path: "settings",
     icon: Settings,
-    showFor: ['free', 'individual', 'business'],
+    showFor: ['free', 'individual', 'business', 'staff'],
   },
   {
     label: "Help",
     path: "help",
     icon: HelpCircle,
-    showFor: ['free', 'individual', 'business'],
+    showFor: ['free', 'individual', 'business', 'staff'],
   },
 ];

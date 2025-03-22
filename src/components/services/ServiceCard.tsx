@@ -1,76 +1,66 @@
 
-import React from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import React from "react";
+import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Users } from "lucide-react";
-import { formatCurrency } from "@/utils/formatUtils";
+import { Badge } from "@/components/ui/badge";
+import { Clock, Edit, Trash2 } from "lucide-react";
+import { Service } from "@/types/service.types";
+import StaffAssignmentButton from "./StaffAssignmentButton";
 
 interface ServiceCardProps {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-  duration: number;
-  status: "active" | "inactive";
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
+  service: Service;
+  onEdit: (service: Service) => void;
+  onDelete: (service: Service) => void;
+  isDeleting: boolean;
+  staffCount?: number;
 }
 
-const ServiceCard = ({
-  id,
-  name,
-  price,
-  description,
-  duration,
-  status,
-  onEdit,
-  onDelete
-}: ServiceCardProps) => {
-  const formatDuration = (mins: number) => {
-    if (mins < 60) return `${mins} minutes`;
-    const hours = Math.floor(mins / 60);
-    const minutes = mins % 60;
-    return `${hours} ${hours === 1 ? 'hour' : 'hours'}${minutes > 0 ? ` ${minutes} mins` : ''}`;
-  };
-  
+const ServiceCard: React.FC<ServiceCardProps> = ({ 
+  service, 
+  onEdit, 
+  onDelete,
+  isDeleting,
+  staffCount = 0
+}) => {
   return (
     <Card className="h-full flex flex-col">
-      <CardHeader>
+      <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <CardTitle className="text-lg">{name}</CardTitle>
-          <Badge variant={status === "active" ? "default" : "secondary"}>
-            {status === "active" ? "Active" : "Inactive"}
-          </Badge>
+          <CardTitle className="text-xl">{service.name}</CardTitle>
+          {service.price && (
+            <Badge variant="secondary" className="ml-2">
+              QAR {service.price.toFixed(2)}
+            </Badge>
+          )}
         </div>
+        <CardDescription className="line-clamp-2">
+          {service.description || "No description provided"}
+        </CardDescription>
       </CardHeader>
-      <CardContent className="flex-1">
-        <div className="space-y-3">
-          <div className="text-xl font-semibold">
-            {formatCurrency(price)}
-          </div>
-          <div className="text-sm text-muted-foreground">
-            Duration: {formatDuration(duration)}
-          </div>
-          <p className="text-sm text-muted-foreground line-clamp-3">
-            {description}
-          </p>
+      
+      <CardContent className="pb-2 flex-grow space-y-4">
+        <div className="flex items-center">
+          <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+          <span>{service.duration} minutes</span>
         </div>
+        
+        <StaffAssignmentButton 
+          serviceId={service.id} 
+          serviceName={service.name}
+          staffCount={staffCount}
+        />
       </CardContent>
-      <CardFooter className="border-t pt-4 flex justify-between">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onEdit(id)}
-        >
-          <Pencil className="h-4 w-4 mr-2" />
+      
+      <CardFooter className="flex justify-between pt-4 border-t">
+        <Button variant="outline" size="sm" onClick={() => onEdit(service)}>
+          <Edit className="h-4 w-4 mr-2" />
           Edit
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onDelete(id)}
-          className="text-destructive hover:text-destructive"
+        <Button 
+          variant="destructive" 
+          size="sm" 
+          onClick={() => onDelete(service)}
+          disabled={isDeleting}
         >
           <Trash2 className="h-4 w-4 mr-2" />
           Delete

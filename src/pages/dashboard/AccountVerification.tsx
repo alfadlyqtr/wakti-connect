@@ -1,215 +1,168 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { CheckIcon, XCircleIcon, MailIcon, AlertCircleIcon } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import React from "react";
+import AccountVerificationTester from "@/components/testing/AccountVerificationTester";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ShieldAlert, ShieldCheck, AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const AccountVerification = () => {
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationStatus, setVerificationStatus] = useState<'pending' | 'verified' | 'error'>('pending');
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [emailProvider, setEmailProvider] = useState<string | null>(null);
-  
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        
-        if (!sessionData.session) {
-          toast({
-            title: "Not logged in",
-            description: "Please log in to verify your account.",
-            variant: "destructive"
-          });
-          return;
-        }
-        
-        const user = sessionData.session.user;
-        setUserEmail(user.email || null);
-        
-        // Check if the user's email is from a corporate domain
-        if (user.email) {
-          const domain = user.email.split('@')[1];
-          const provider = domain.includes('gmail.com') ? 'gmail' : 
-                        domain.includes('outlook.com') ? 'outlook' :
-                        domain.includes('yahoo.com') ? 'yahoo' : 
-                        'other';
-          setEmailProvider(provider);
-        }
-        
-        // Check verification status
-        // In a real app, we'd check some verification flag in the user's metadata
-        const metadata = user.user_metadata || {};
-        
-        if (metadata.email_verified === true) {
-          setVerificationStatus('verified');
-        } else {
-          setVerificationStatus('pending');
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch account information. Please try again.",
-          variant: "destructive"
-        });
+  const navigate = useNavigate();
+
+  // Fetch auth session and profile data
+  const { data } = useQuery({
+    queryKey: ['verificationPageData'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        return { session: null, profile: null };
       }
-    };
-    
-    fetchUserData();
-  }, []);
-  
-  const handleSendVerification = async () => {
-    setIsVerifying(true);
-    try {
-      // Mock sending a verification email
-      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      toast({
-        title: "Verification Email Sent",
-        description: `We've sent a verification email to ${userEmail}. Please check your inbox.`,
-      });
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
       
-      // In a real app, we'd actually send the email through Supabase
-      // const { error } = await supabase.auth.resend({
-      //   type: 'signup',
-      //   email: userEmail
-      // });
-      
-      // if (error) throw error;
-    } catch (error) {
-      console.error("Error sending verification:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send verification email. Please try again later.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsVerifying(false);
-    }
-  };
-  
-  const handleCheckVerification = async () => {
-    setIsVerifying(true);
-    try {
-      // Mock checking verification status
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const { data } = await supabase.auth.getUser();
-      const appMetadata = data?.user?.app_metadata || {};
-      const userMetadata = data?.user?.user_metadata || {};
-      
-      // In a real app, we'd check if the user's email is verified
-      // This is just a mock implementation
-      if (appMetadata.provider === 'email' && !userMetadata.email_verified) {
-        setVerificationStatus('pending');
-        toast({
-          title: "Not Verified",
-          description: "Your email hasn't been verified yet. Please check your inbox.",
-          variant: "warning"
-        });
-      } else {
-        setVerificationStatus('verified');
-        toast({
-          title: "Verified",
-          description: "Your account has been successfully verified.",
-        });
-      }
-    } catch (error) {
-      console.error("Error checking verification:", error);
-      toast({
-        title: "Error",
-        description: "Failed to check verification status. Please try again later.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsVerifying(false);
-    }
-  };
+      return { session, profile };
+    },
+  });
 
   return (
-    <div className="container max-w-lg py-8">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Account Verification</CardTitle>
-          <CardDescription>
-            Verify your email address to access all features
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <MailIcon className="h-5 w-5 text-muted-foreground" />
-              <span>{userEmail || 'Loading...'}</span>
-            </div>
-            
-            {verificationStatus === 'verified' ? (
-              <div className="bg-green-50 text-green-700 px-2 py-1 rounded-full text-xs font-medium flex items-center">
-                <CheckIcon className="h-3 w-3 mr-1" />
-                Verified
-              </div>
-            ) : verificationStatus === 'pending' ? (
-              <div className="bg-amber-50 text-amber-700 px-2 py-1 rounded-full text-xs font-medium flex items-center">
-                <AlertCircleIcon className="h-3 w-3 mr-1" />
-                Pending
+    <div className="space-y-6">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">Account Verification</h1>
+        <p className="text-muted-foreground">
+          Verify account access controls, data isolation, and feature separation
+        </p>
+      </div>
+
+      <div className="grid gap-6">
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Testing Mode</AlertTitle>
+          <AlertDescription>
+            This page is for testing and verification purposes. It helps confirm that users only have access to features and data appropriate for their account type.
+          </AlertDescription>
+        </Alert>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Current Session Information</CardTitle>
+            <CardDescription>Details about your current user session</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {data?.session ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-muted rounded-md">
+                  <h3 className="font-medium mb-2">Authentication</h3>
+                  <p><span className="font-semibold">User ID:</span> {data.session.user.id}</p>
+                  <p><span className="font-semibold">Email:</span> {data.session.user.email}</p>
+                  <p><span className="font-semibold">Auth Provider:</span> {data.session.user.app_metadata.provider || 'email'}</p>
+                </div>
+                
+                {data.profile && (
+                  <div className="p-4 bg-muted rounded-md">
+                    <h3 className="font-medium mb-2">Profile</h3>
+                    <p><span className="font-semibold">Account Type:</span> {data.profile.account_type}</p>
+                    <p><span className="font-semibold">Full Name:</span> {data.profile.full_name || 'Not set'}</p>
+                    <p><span className="font-semibold">Display Name:</span> {data.profile.display_name || 'Not set'}</p>
+                    {data.profile.account_type === 'business' && (
+                      <p><span className="font-semibold">Business Name:</span> {data.profile.business_name || 'Not set'}</p>
+                    )}
+                  </div>
+                )}
+                
+                <Alert variant="default" className="bg-green-50 border-green-200">
+                  <ShieldCheck className="h-4 w-4 text-green-600" />
+                  <AlertTitle className="text-green-800">Authenticated Session</AlertTitle>
+                  <AlertDescription className="text-green-700">
+                    You are currently logged in with a valid session.
+                  </AlertDescription>
+                </Alert>
               </div>
             ) : (
-              <div className="bg-red-50 text-red-700 px-2 py-1 rounded-full text-xs font-medium flex items-center">
-                <XCircleIcon className="h-3 w-3 mr-1" />
-                Error
+              <div className="space-y-4">
+                <Alert variant="destructive">
+                  <ShieldAlert className="h-4 w-4" />
+                  <AlertTitle>No Active Session</AlertTitle>
+                  <AlertDescription>
+                    You are not currently logged in. Please sign in to continue.
+                  </AlertDescription>
+                </Alert>
+                
+                <Button onClick={() => navigate('/auth/login')}>
+                  Sign In
+                </Button>
               </div>
             )}
-          </div>
-          
-          <Separator />
-          
-          {verificationStatus === 'pending' && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-amber-800">Verification Required</h3>
-              <p className="text-xs text-amber-700 mt-1">
-                To access all features of WAKTI, please verify your email address by clicking the link in the verification email.
+          </CardContent>
+        </Card>
+
+        <AccountVerificationTester />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Feature Test: Navigate Dashboard</CardTitle>
+              <CardDescription>
+                Navigate to different dashboard sections to verify your account has the correct access
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Your account type ({data?.profile?.account_type || 'unknown'}) should only see features relevant to that account level.
               </p>
-            </div>
-          )}
+              <div className="grid grid-cols-2 gap-3">
+                <Button variant="outline" onClick={() => navigate('/dashboard')}>
+                  Dashboard Home
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/dashboard/tasks')}>
+                  Tasks
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/dashboard/events')}>
+                  Events
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/dashboard/settings')}>
+                  Settings
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
           
-          {verificationStatus === 'verified' && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-green-800">Account Verified</h3>
-              <p className="text-xs text-green-700 mt-1">
-                Your account has been verified. You now have full access to all features of WAKTI.
+          <Card>
+            <CardHeader>
+              <CardTitle>Business Features Test</CardTitle>
+              <CardDescription>
+                Verify access to business-only features
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                These pages should only be accessible if you have a business account. For other account types, you should see an upgrade prompt.
               </p>
-            </div>
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          {verificationStatus === 'pending' && (
-            <>
-              <Button 
-                variant="outline"
-                onClick={handleCheckVerification}
-                disabled={isVerifying}
-              >
-                Check Status
-              </Button>
-              <Button 
-                onClick={handleSendVerification}
-                disabled={isVerifying}
-              >
-                {isVerifying ? 'Sending...' : 'Resend Verification'}
-              </Button>
-            </>
-          )}
-          
-          {verificationStatus === 'verified' && (
-            <Button variant="outline" className="ml-auto" onClick={() => window.history.back()}>
-              Back to Dashboard
-            </Button>
-          )}
-        </CardFooter>
-      </Card>
+              <div className="grid grid-cols-2 gap-3">
+                <Button variant="outline" onClick={() => navigate('/dashboard/business-page')}>
+                  Business Page
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/dashboard/services')}>
+                  Services
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/dashboard/staff')}>
+                  Staff
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/dashboard/bookings')}>
+                  Bookings
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

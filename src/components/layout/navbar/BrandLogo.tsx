@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { useTranslation } from "@/components/mocks/translationMock";
+import { useTranslation } from "react-i18next";
 
 const BrandLogo = () => {
   const { t } = useTranslation();

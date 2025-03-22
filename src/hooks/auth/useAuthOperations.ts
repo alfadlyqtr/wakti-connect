@@ -1,5 +1,4 @@
 
-import React from "react";
 import { User } from "./types";
 import { loginOperation, logoutOperation, registerOperation } from "./operations";
 

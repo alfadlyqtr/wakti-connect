@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { useTranslation } from "@/components/mocks/translationMock";
+import { useTranslation } from "react-i18next";
 
 interface NoTasksProps {
   message: string;

@@ -1,75 +1,174 @@
 
-import React from "react";
-import DashboardShell from "@/components/dashboard/DashboardShell";
+import React, { useState, useEffect } from "react";
+import { useAIAssistant } from "@/hooks/useAIAssistant";
+import { Bot } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/hooks/useAuth";
 import { AIAssistantUpgradeCard } from "@/components/ai/AIAssistantUpgradeCard";
+import { AIAssistantChatCard } from "@/components/ai/assistant";
+import { AIAssistantLoader } from "@/components/ai/assistant";
 import { AIAssistantHistoryCard } from "@/components/ai/AIAssistantHistoryCard";
-import { AIAssistantChatCard } from "@/components/ai/assistant/AIAssistantChatCard";
-import { AISettingsProvider } from "@/components/settings/ai/context/AISettingsContext";
-import { Card } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
+import { useBreakpoint } from "@/hooks/useBreakpoint";
+import { AISettingsProvider } from "@/components/settings/ai";
+import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
 
 const DashboardAIAssistant = () => {
-  // Simplified implementation since we don't have all the hooks available
-  const messages = [];
-  const isLoading = false;
-  const inputMessage = '';
-  const setInputMessage = () => {};
-  
-  // Fix the type by ensuring we return a Promise
-  const sendMessage = async (e: React.FormEvent) => { 
+  const { user } = useAuth();
+  const { 
+    messages, 
+    sendMessage, 
+    isLoading, 
+    canUseAI: hookCanUseAI, 
+    clearMessages 
+  } = useAIAssistant();
+  const [inputMessage, setInputMessage] = useState("");
+  const [isChecking, setIsChecking] = useState(true);
+  const [canAccess, setCanAccess] = useState(false);
+  const isMobile = !useBreakpoint().includes("md");
+
+  // Check if user has access to AI
+  useEffect(() => {
+    const checkAccess = async () => {
+      if (!user) {
+        console.log("No authenticated user, no AI access");
+        setCanAccess(false);
+        setIsChecking(false);
+        return;
+      }
+
+      try {
+        console.log("Checking AI access for user:", user.id);
+        
+        // Try RPC function first
+        const { data: canUse, error: rpcError } = await supabase.rpc("can_use_ai_assistant");
+        
+        if (!rpcError && canUse !== null) {
+          console.log("RPC check result:", canUse);
+          setCanAccess(canUse);
+          setIsChecking(false);
+          return;
+        }
+        
+        console.log("RPC check failed with error:", rpcError?.message);
+        console.log("Falling back to direct profile check");
+        
+        // Fallback to direct profile check
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("account_type")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error("Error checking access:", profileError);
+          toast({
+            title: "Error checking access",
+            description: "Could not verify your account type. Please try again.",
+            variant: "destructive",
+          });
+          setCanAccess(false);
+        } else {
+          // Check the account type
+          const hasAccess = profile?.account_type === "business" || profile?.account_type === "individual";
+          setCanAccess(hasAccess);
+          
+          // Log the account type for debugging
+          console.log("Account type:", profile?.account_type, "Has access:", hasAccess);
+        }
+      } catch (error) {
+        console.error("Error checking AI access:", error);
+        setCanAccess(false);
+      }
+      
+      setIsChecking(false);
+    };
+
+    checkAccess();
+  }, [user]);
+
+  // Also use the hook's canUseAI value as a backup
+  useEffect(() => {
+    if (hookCanUseAI !== undefined && !isChecking) {
+      console.log("Hook canUseAI value:", hookCanUseAI);
+      // Only update if our direct check said false but hook says true
+      if (!canAccess && hookCanUseAI) {
+        console.log("Using hook's canUseAI value as backup");
+        setCanAccess(hookCanUseAI);
+      }
+    }
+  }, [hookCanUseAI, isChecking, canAccess]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Message sent");
-    return Promise.resolve(); 
+    if (!inputMessage.trim() || isLoading || !canAccess) {
+      console.log("Cannot send message:", {
+        emptyMessage: !inputMessage.trim(), 
+        isLoading, 
+        noAccess: !canAccess
+      });
+      return;
+    }
+    
+    console.log("Sending message:", inputMessage);
+    await sendMessage.mutateAsync(inputMessage);
+    setInputMessage("");
   };
-  
-  const clearMessages = () => {};
-  const canUseAI = true;
-  const aiSettings = {};
-  const isLoadingSettings = false;
+
+  // If still checking access, show loading
+  if (isChecking) {
+    console.log("Still checking access, showing loader");
+    return <AIAssistantLoader />;
+  }
 
   return (
-    <DashboardShell>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">WAKTI AI Assistant</h2>
-      </div>
+    <StaffRoleGuard 
+      disallowStaff={true}
+      messageTitle="AI Assistant Not Available"
+      messageDescription="AI assistant features are not available for staff accounts."
+    >
+      <AISettingsProvider>
+        <div className="space-y-4 md:space-y-6">
+          <div className="flex flex-col gap-1 md:gap-2">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl md:text-3xl font-bold tracking-tight">WAKTI AI Assistant</h1>
+              <Bot className="h-5 w-5 md:h-6 md:w-6 text-wakti-blue" />
+            </div>
+            <p className="text-sm md:text-base text-muted-foreground">
+              Your AI-powered productivity assistant
+            </p>
+          </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Main Chat Area */}
-        <div className="col-span-1 md:col-span-2 space-y-4">
-          {!canUseAI && (
-            <AIAssistantUpgradeCard />
-          )}
+          <Tabs defaultValue="chat" className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-2 overflow-x-auto">
+              <TabsTrigger value="chat" className="text-sm md:text-base py-1 md:py-1.5">Chat</TabsTrigger>
+              <TabsTrigger value="history" className="text-sm md:text-base py-1 md:py-1.5">History</TabsTrigger>
+            </TabsList>
 
-          {canUseAI && (
-            <AIAssistantChatCard
-              messages={messages}
-              isLoading={isLoading}
-              inputMessage={inputMessage}
-              setInputMessage={setInputMessage}
-              handleSendMessage={sendMessage}
-              clearMessages={clearMessages}
-              canAccess={true}
-            />
-          )}
+            <TabsContent value="chat" className="mt-4 md:mt-6 space-y-4">
+              {!canAccess ? (
+                <AIAssistantUpgradeCard />
+              ) : (
+                <AIAssistantChatCard
+                  messages={messages}
+                  inputMessage={inputMessage}
+                  setInputMessage={setInputMessage}
+                  handleSendMessage={handleSendMessage}
+                  isLoading={isLoading}
+                  canAccess={canAccess}
+                  clearMessages={clearMessages}
+                />
+              )}
+            </TabsContent>
+
+            <TabsContent value="history" className="mt-4 md:mt-6">
+              <AIAssistantHistoryCard canAccess={canAccess} />
+            </TabsContent>
+          </Tabs>
         </div>
-
-        {/* Sidebar */}
-        <div className="col-span-1 space-y-4">
-          {canUseAI && (
-            <AISettingsProvider>
-              <Card className="p-4">
-                <h3 className="font-medium mb-2">AI Assistant Settings</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Configure how the AI assistant interacts with you.
-                </p>
-                {/* Settings content */}
-              </Card>
-            </AISettingsProvider>
-          )}
-
-          <AIAssistantHistoryCard canAccess={true} />
-        </div>
-      </div>
-    </DashboardShell>
+      </AISettingsProvider>
+    </StaffRoleGuard>
   );
 };
 

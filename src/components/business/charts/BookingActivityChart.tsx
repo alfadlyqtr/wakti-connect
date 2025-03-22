@@ -1,93 +1,56 @@
 
-import React, { useState } from 'react';
-import { Chart } from '@/components/ui/chart';
-import { format, subDays } from 'date-fns';
-import { Line } from 'react-chartjs-2';
+import React from "react";
+import { Card, CardHeader, CardContent, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { BarChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Bar } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { bookingData } from "@/utils/businessReportsUtils";
 
-const BookingActivityChart = () => {
-  const [activeTooltip, setActiveTooltip] = useState<{x: number, y: number, value: number, date: string} | null>(null);
-
-  // Mock data for demonstration
-  const dates = Array.from({ length: 7 }, (_, i) => format(subDays(new Date(), i), 'MMM dd'));
-  const values = [8, 12, 5, 18, 10, 14, 7];
-  
-  const chartData = {
-    labels: dates.reverse(),
-    datasets: [
-      {
-        label: 'Bookings',
-        data: values,
-        borderColor: '#4361ee',
-        backgroundColor: 'rgba(67, 97, 238, 0.1)',
-        tension: 0.3,
-        fill: true,
-      }
-    ]
-  };
-
+export const BookingActivityChart = () => {
   return (
-    <Chart.Container 
-      className="h-[300px]" 
-      config={{ bookings: { label: 'Bookings', color: '#4361ee' } }}
-    >
-      <Line
-        data={chartData}
-        options={{
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: {
-              beginAtZero: true,
-              grid: {
-                color: 'rgba(0, 0, 0, 0.05)',
-              },
+    <Card>
+      <CardHeader>
+        <CardTitle>Booking Activity</CardTitle>
+        <CardDescription>
+          Monthly booking trends
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="h-80">
+        <ChartContainer 
+          config={{
+            bookings: {
+              label: 'Bookings',
+              color: '#10b981',
             },
-            x: {
-              grid: {
-                display: false,
-              },
-            },
-          },
-          interaction: {
-            intersect: false,
-            mode: 'index',
-          },
-          plugins: {
-            legend: {
-              display: false,
-            },
-            tooltip: {
-              enabled: false,
-              external: (context) => {
-                const { chart, tooltip } = context;
-                if (tooltip.opacity === 0) {
-                  setActiveTooltip(null);
-                  return;
+          }}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={bookingData}
+              margin={{
+                top: 20,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip 
+                content={
+                  <ChartTooltipContent />
                 }
-                
-                const index = tooltip.dataPoints[0].dataIndex;
-                setActiveTooltip({
-                  x: chart.canvas.offsetLeft + tooltip.caretX,
-                  y: chart.canvas.offsetTop + tooltip.caretY,
-                  value: values[index],
-                  date: dates[index]
-                });
-              }
-            }
-          }
-        }}
-      />
-      
-      {activeTooltip && (
-        <Chart.Tooltip>
-          <Chart.TooltipContent 
-            title={activeTooltip.date}
-            value={`${activeTooltip.value} bookings`}
-          />
-        </Chart.Tooltip>
-      )}
-    </Chart.Container>
+              />
+              <Bar dataKey="bookings" fill="var(--color-bookings)" barSize={30} radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartContainer>
+      </CardContent>
+      <CardFooter>
+        <p className="text-sm text-muted-foreground">
+          350% increase in bookings over the past 6 months
+        </p>
+      </CardFooter>
+    </Card>
   );
 };
-
-export default BookingActivityChart;

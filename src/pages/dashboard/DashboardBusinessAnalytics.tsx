@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { SectionContainer } from "@/components/ui/section-container";
-import { useTranslation } from "@/components/mocks/translationMock";
+import { useTranslation } from "react-i18next";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useBusinessAnalytics } from "@/hooks/useBusinessAnalytics";
@@ -43,7 +43,7 @@ const DashboardBusinessAnalytics = () => {
   return (
     <div className="container py-6 space-y-8">
       <h1 className="text-3xl font-bold tracking-tight">
-        {String(t("dashboard.analytics"))}
+        {t("dashboard.analytics")}
       </h1>
 
       {error && (

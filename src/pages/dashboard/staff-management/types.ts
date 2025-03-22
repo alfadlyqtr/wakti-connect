@@ -1,17 +1,25 @@
 
+export interface Profile {
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
 export interface StaffMember {
   id: string;
-  business_id: string;
   staff_id: string;
-  name: string;
-  email: string;
-  position: string;
+  business_id: string;
   role: string;
-  status: string;
   created_at: string;
-  permissions: Record<string, boolean>;
-  profile?: {
-    avatar_url?: string;
-    full_name?: string;
-  };
+  profile?: Profile | null;
+}
+
+export interface WorkLog {
+  id: string;
+  staff_relation_id: string;
+  start_time: string;
+  end_time: string | null;
+  earnings: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 }

@@ -1,159 +1,75 @@
 
-import React from 'react';
-import { cn } from "@/lib/utils";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  ChartData,
-  ChartOptions,
-  defaults,
-} from 'chart.js';
-import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
+"use client";
 
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import React from "react";
+import { Chart as ChartJS, registerables, ChartOptions } from "chart.js";
+import { Bar, Line, Pie } from "react-chartjs-2";
 
-// Set default options
-defaults.font.family = 'Inter, sans-serif';
-defaults.plugins.tooltip.backgroundColor = 'hsl(var(--background)';
-defaults.plugins.tooltip.titleColor = 'hsl(var(--foreground)';
-defaults.plugins.tooltip.bodyColor = 'hsl(var(--foreground)';
-defaults.plugins.tooltip.borderColor = 'hsl(var(--border)';
-defaults.plugins.tooltip.borderWidth = 1;
+// Register all chart.js components
+ChartJS.register(...registerables);
 
 interface ChartProps {
-  data: ChartData<any>;
-  options?: ChartOptions<any>;
-  className?: string;
+  data: any;
+  options?: any;
 }
 
-export const LineChart = ({ data, options, className }: ChartProps) => {
-  return (
-    <div className={cn("w-full h-full", className)}>
-      <Line 
-        data={data}
-        options={{
-          responsive: true,
-          maintainAspectRatio: false,
-          ...options
-        }}
-      />
-    </div>
-  );
+export const BarChart = ({ data, options = {} }: ChartProps) => {
+  return <Bar data={data} options={options} />;
 };
 
-export const BarChart = ({ data, options, className }: ChartProps) => {
-  return (
-    <div className={cn("w-full h-full", className)}>
-      <Bar 
-        data={data}
-        options={{
-          responsive: true,
-          maintainAspectRatio: false,
-          ...options
-        }}
-      />
-    </div>
-  );
+export const LineChart = ({ data, options = {} }: ChartProps) => {
+  return <Line data={data} options={options} />;
 };
 
-export const PieChart = ({ data, options, className }: ChartProps) => {
-  return (
-    <div className={cn("w-full h-full", className)}>
-      <Pie 
-        data={data}
-        options={{
-          responsive: true,
-          maintainAspectRatio: false,
-          ...options
-        }}
-      />
-    </div>
-  );
+export const PieChart = ({ data, options = {} }: ChartProps) => {
+  return <Pie data={data} options={options} />;
 };
 
-export const DoughnutChart = ({ data, options, className }: ChartProps) => {
-  return (
-    <div className={cn("w-full h-full", className)}>
-      <Doughnut 
-        data={data}
-        options={{
-          responsive: true,
-          maintainAspectRatio: false,
-          ...options
-        }}
-      />
-    </div>
-  );
-};
+interface TooltipContentProps {
+  active?: boolean;
+  payload?: Array<{ name: string; value: number; color: string }>;
+  label?: string;
+}
 
-// Additional UI components for chart containers and tooltips
-interface ChartContainerProps {
+export const ChartContainer: React.FC<{
   children: React.ReactNode;
-  className?: string;
-  config?: any; // Adding config prop to support additional configuration
-}
+  config: Record<string, { label: string; color: string }>;
+}> = ({ children, config }) => {
+  // Set CSS variables for chart colors
+  React.useEffect(() => {
+    const root = document.documentElement;
+    Object.entries(config).forEach(([key, { color }]) => {
+      root.style.setProperty(`--color-${key}`, color);
+    });
 
-export const ChartContainer = ({ children, className, config }: ChartContainerProps) => {
+    return () => {
+      Object.keys(config).forEach((key) => {
+        root.style.removeProperty(`--color-${key}`);
+      });
+    };
+  }, [config]);
+
+  return <>{children}</>;
+};
+
+export const ChartTooltip: React.FC<{
+  content: React.ReactNode;
+}> = ({ content }) => {
+  return content;
+};
+
+export const ChartTooltipContent: React.FC<TooltipContentProps> = ({ active, payload, label }) => {
+  if (!active || !payload || !payload.length) return null;
+
   return (
-    <div className={cn("relative p-4 bg-card rounded-lg border", className)}>
-      {children}
+    <div className="bg-background border rounded-md shadow-md p-2 text-sm">
+      <p className="font-medium">{label}</p>
+      {payload.map((item, index) => (
+        <div key={index} className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color || 'var(--color-' + item.name + ')' }}></div>
+          <span>{item.name}: {item.value}</span>
+        </div>
+      ))}
     </div>
   );
 };
-
-interface ChartTooltipProps {
-  children: React.ReactNode;
-}
-
-export const ChartTooltip = ({ children }: ChartTooltipProps) => {
-  return (
-    <div className="absolute z-50 p-2 bg-popover text-popover-foreground rounded-md shadow-md text-sm">
-      {children}
-    </div>
-  );
-};
-
-interface ChartTooltipContentProps {
-  title: string;
-  value: string | number;
-}
-
-export const ChartTooltipContent = ({ title, value }: ChartTooltipContentProps) => {
-  return (
-    <div className="flex flex-col">
-      <span className="text-xs text-muted-foreground">{title}</span>
-      <span className="font-medium">{value}</span>
-    </div>
-  );
-};
-
-export const Chart = {
-  Line: LineChart,
-  Bar: BarChart,
-  Pie: PieChart,
-  Doughnut: DoughnutChart,
-  Container: ChartContainer,
-  Tooltip: ChartTooltip,
-  TooltipContent: ChartTooltipContent,
-};
-
-export default Chart;

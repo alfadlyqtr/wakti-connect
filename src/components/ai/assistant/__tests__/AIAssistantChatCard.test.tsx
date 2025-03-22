@@ -1,44 +1,69 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { vi, describe, it, expect } from 'vitest';
+import '@testing-library/jest-dom'; // Add this import for the matchers
 import { AIAssistantChatCard } from '../AIAssistantChatCard';
+import { AISettingsProvider } from '@/components/settings/ai';
 
-// Mock the dependencies
-vi.mock('@/lib/utils', () => ({
-  cn: (...classes: string[]) => classes.join(' '),
-}));
+// Mock the useAISettings hook
+vi.mock('@/components/settings/ai', async () => {
+  const actual = await vi.importActual('@/components/settings/ai');
+  return {
+    ...actual,
+    useAISettings: vi.fn().mockReturnValue({
+      settings: {
+        assistant_name: 'Custom AI Name'
+      }
+    }),
+    AISettingsProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
+  };
+});
 
-vi.mock('@/hooks/ai/useAIChat', () => ({
-  useAIChat: () => ({
-    sendMessage: vi.fn(),
-    messages: [],
-    isLoading: false,
-  }),
-}));
-
-vi.mock('@/components/settings/ai/context/AISettingsContext', () => ({
-  useAISettings: () => ({
-    settings: {
-      assistant_name: 'Test Assistant'
-    }
-  })
+// Mock the useIsMobile hook
+vi.mock('@/hooks/use-mobile', () => ({
+  useIsMobile: vi.fn().mockReturnValue(false)
 }));
 
 describe('AIAssistantChatCard', () => {
-  it('renders correctly', () => {
+  it('displays the correct assistant name from context', () => {
+    // Render the component with mocked props
     render(
-      <AIAssistantChatCard 
+      <AIAssistantChatCard
         messages={[]}
         inputMessage=""
-        setInputMessage={() => {}}
-        handleSendMessage={async () => {}}
+        setInputMessage={vi.fn()}
+        handleSendMessage={vi.fn()}
         isLoading={false}
         canAccess={true}
-        clearMessages={() => {}}
+        clearMessages={vi.fn()}
       />
     );
-    // Example assertions - update these based on your implementation
-    expect(screen.getByPlaceholderText(/Type your message/i)).toBeInTheDocument();
+
+    // Check that the custom assistant name is displayed
+    expect(screen.getByText(/Chat with Custom AI Name/i)).toBeInTheDocument();
+  });
+
+  it('falls back to default name if settings are not available', () => {
+    // Override the mock to return null settings
+    vi.mocked(require('@/components/settings/ai').useAISettings).mockReturnValueOnce({
+      settings: null
+    });
+
+    // Render the component
+    render(
+      <AIAssistantChatCard
+        messages={[]}
+        inputMessage=""
+        setInputMessage={vi.fn()}
+        handleSendMessage={vi.fn()}
+        isLoading={false}
+        canAccess={true}
+        clearMessages={vi.fn()}
+      />
+    );
+
+    // Check that the default name is used
+    expect(screen.getByText(/Chat with WAKTI AI/i)).toBeInTheDocument();
   });
 });

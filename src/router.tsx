@@ -56,12 +56,6 @@ export const router = createBrowserRouter([
     children: businessRoutes,
   },
 
-  // Redirect any staff management routes to dashboard
-  {
-    path: "/dashboard/staff*",
-    element: <Navigate to="/dashboard" replace />
-  },
-
   // 404 route
   {
     path: "*",

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
@@ -17,7 +16,7 @@ import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import SocialAuth from "./SocialAuth";
 import LanguageSwitcher from "@/components/ui/language-switcher";
-import { useTranslation } from "@/components/mocks/translationMock";
+import { useTranslation } from "react-i18next";
 
 interface AuthFormProps {
   defaultTab?: 'login' | 'register';
@@ -30,7 +29,7 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
       if (data?.session) {
         navigate("/dashboard");
       }
@@ -64,20 +63,20 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
             >
               <Link to="/" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
                 <ChevronLeft className="h-4 w-4" />
-                <span>{String(t('auth.back'))}</span>
+                <span>{t('auth.back')}</span>
               </Link>
             </Button>
             <div className="flex items-center gap-2">
               <LanguageSwitcher />
               <TabsList className="grid w-32 sm:w-48 grid-cols-2">
-                <TabsTrigger value="login">{String(t('auth.login'))}</TabsTrigger>
-                <TabsTrigger value="register">{String(t('auth.signUp'))}</TabsTrigger>
+                <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
+                <TabsTrigger value="register">{t('auth.signUp')}</TabsTrigger>
               </TabsList>
             </div>
           </div>
-          <CardTitle className="text-2xl text-center">{String(t('auth.welcomeToWakti'))}</CardTitle>
+          <CardTitle className="text-2xl text-center">{t('auth.welcomeToWakti')}</CardTitle>
           <CardDescription className="text-center">
-            {String(t('auth.manageEfficiently'))}
+            {t('auth.manageEfficiently')}
           </CardDescription>
         </CardHeader>
 
@@ -103,7 +102,7 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-card px-2 text-muted-foreground">
-                {String(t('auth.continueWith'))}
+                {t('auth.continueWith')}
               </span>
             </div>
           </div>

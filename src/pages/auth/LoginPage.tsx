@@ -1,7 +1,7 @@
 
 import React from "react";
 import AuthForm from "@/components/auth/AuthForm";
-import { useTranslation } from "@/components/mocks/translationMock";
+import { useTranslation } from "react-i18next";
 
 const LoginPage = () => {
   const { t } = useTranslation();

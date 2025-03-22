@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Moon, Sun, User, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
-import { useTranslation } from "@/components/mocks/translationMock";
+import { useTranslation } from "react-i18next";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import LanguageSwitcher from "@/components/ui/language-switcher";
 
@@ -27,37 +27,37 @@ const Header = () => {
             <div className="w-10 h-10 rounded-md bg-wakti-blue flex items-center justify-center">
               <span className="text-white font-bold text-lg">W</span>
             </div>
-            <span className="font-bold text-xl">{String(t('common.wakti'))}</span>
+            <span className="font-bold text-xl">{t('common.wakti')}</span>
           </Link>
         </div>
         
         {/* Desktop navigation */}
         <div className="hidden md:flex items-center space-x-4">
           <Link to="/pricing" className="text-sm font-medium hover:text-primary transition-colors">
-            {String(t('header.pricing'))}
+            {t('header.pricing')}
           </Link>
           <Link to="/features" className="text-sm font-medium hover:text-primary transition-colors">
-            {String(t('header.features'))}
+            {t('header.features')}
           </Link>
           <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors">
-            {String(t('header.contact'))}
+            {t('header.contact')}
           </Link>
           <LanguageSwitcher />
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")} 
-            aria-label={theme === "dark" ? String(t('header.lightMode')) : String(t('header.darkMode'))} 
-            title={theme === "dark" ? String(t('header.lightMode')) : String(t('header.darkMode'))} 
+            aria-label={theme === "dark" ? t('header.lightMode') : t('header.darkMode')} 
+            title={theme === "dark" ? t('header.lightMode') : t('header.darkMode')} 
             className="text-foreground hover:text-foreground"
           >
             {theme === "dark" ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
           </Button>
           <Button asChild size="sm" className="ml-2">
-            <Link to="/auth">{String(t('common.getStarted'))}</Link>
+            <Link to="/auth">{t('common.getStarted')}</Link>
           </Button>
           <Button asChild variant="ghost" size="icon" className="rounded-full bg-muted text-foreground ml-2">
-            <Link to="/auth" aria-label={String(t('header.signIn'))} title={String(t('header.signIn'))}>
+            <Link to="/auth" aria-label={t('header.signIn')} title={t('header.signIn')}>
               <User className="h-[1.2rem] w-[1.2rem]" />
             </Link>
           </Button>
@@ -70,8 +70,8 @@ const Header = () => {
             variant="ghost" 
             size="icon" 
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")} 
-            aria-label={theme === "dark" ? String(t('header.lightMode')) : String(t('header.darkMode'))} 
-            title={theme === "dark" ? String(t('header.lightMode')) : String(t('header.darkMode'))} 
+            aria-label={theme === "dark" ? t('header.lightMode') : t('header.darkMode')} 
+            title={theme === "dark" ? t('header.lightMode') : t('header.darkMode')} 
             className="text-foreground hover:text-foreground"
           >
             {theme === "dark" ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
@@ -81,7 +81,7 @@ const Header = () => {
             className="flex items-center gap-1 px-4 py-2 rounded-md bg-background/70"
             onClick={toggleMenu}
           >
-            <span className="font-medium">{String(t('header.menu'))}</span>
+            <span className="font-medium">{t('header.menu')}</span>
             {isMenuOpen ? 
               <ChevronUp className="h-4 w-4" /> : 
               <ChevronDown className="h-4 w-4" />
@@ -99,21 +99,21 @@ const Header = () => {
               className="flex items-center px-4 py-3 hover:bg-muted rounded-md transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              <span className="font-medium">{String(t('header.pricing'))}</span>
+              <span className="font-medium">{t('header.pricing')}</span>
             </Link>
             <Link 
               to="/features" 
               className="flex items-center px-4 py-3 hover:bg-muted rounded-md transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              <span className="font-medium">{String(t('header.features'))}</span>
+              <span className="font-medium">{t('header.features')}</span>
             </Link>
             <Link 
               to="/contact" 
               className="flex items-center px-4 py-3 hover:bg-muted rounded-md transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              <span className="font-medium">{String(t('header.contact'))}</span>
+              <span className="font-medium">{t('header.contact')}</span>
             </Link>
             <Link 
               to="/auth" 
@@ -121,14 +121,14 @@ const Header = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               <User className={`h-4 w-4 ${isRtl ? 'ml-2' : 'mr-2'}`} />
-              <span className="font-medium">{String(t('header.signIn'))}</span>
+              <span className="font-medium">{t('header.signIn')}</span>
             </Link>
             <div className="pt-2 px-4">
               <Button asChild size="sm" className="w-full">
                 <Link 
                   to="/auth"
                   onClick={() => setIsMenuOpen(false)}
-                >{String(t('common.getStarted'))}</Link>
+                >{t('common.getStarted')}</Link>
               </Button>
             </div>
           </div>

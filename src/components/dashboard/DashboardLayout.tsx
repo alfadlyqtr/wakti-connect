@@ -28,7 +28,9 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   } = useDashboardUserProfile();
 
   // Use provided role or detected role
-  const userRoleValue = propUserRole || detectedUserRole || "free";
+  const userRoleValue = isStaff 
+    ? 'staff' 
+    : (propUserRole || detectedUserRole || "free");
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -37,12 +39,12 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       <div className="flex flex-1 overflow-hidden">
         <Sidebar 
           isOpen={isSidebarOpen} 
-          userRole={userRoleValue as "free" | "individual" | "business"} 
+          userRole={userRoleValue as "free" | "individual" | "business" | "staff"} 
         />
         
         <DashboardContent
           isLoading={profileLoading}
-          isStaff={false} // Always set to false since we're removing staff functionality
+          isStaff={isStaff}
           userId={userId}
           isMobile={isMobile}
           currentPath={location.pathname}

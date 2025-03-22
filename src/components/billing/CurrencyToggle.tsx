@@ -2,7 +2,7 @@
 import React from "react";
 import { Currency } from "@/components/pricing/usePricingPlans";
 import { Button } from "@/components/ui/button";
-import { useTranslation } from "@/components/mocks/translationMock";
+import { useTranslation } from "react-i18next";
 
 interface CurrencyToggleProps {
   currency: Currency;

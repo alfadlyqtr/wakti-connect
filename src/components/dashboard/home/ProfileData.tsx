@@ -2,7 +2,7 @@
 import React from "react";
 import { Building, UserCircle, Briefcase } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useTranslation } from "@/components/mocks/translationMock";
+import { useTranslation } from "react-i18next";
 
 interface ProfileDataProps {
   profileData: {

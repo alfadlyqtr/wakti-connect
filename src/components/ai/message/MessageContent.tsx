@@ -1,7 +1,7 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import ReactMarkdown from "react-markdown";
+import Markdown from "react-markdown";
 
 interface MessageContentProps {
   content: string;
@@ -18,7 +18,7 @@ export function MessageContent({ content, timestamp, isUser }: MessageContentPro
       )}
     >
       <div className="prose prose-xs sm:prose-sm max-w-none dark:prose-invert overflow-auto">
-        <ReactMarkdown>{content}</ReactMarkdown>
+        <Markdown>{content}</Markdown>
       </div>
       <div className={cn(
         "text-[8px] sm:text-[10px] mt-1 text-right",

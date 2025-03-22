@@ -1,30 +1,63 @@
 
+import { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
+
 export interface StaffInvitation {
   id: string;
   business_id: string;
-  email: string;
+  business_name: string;
+  business_avatar?: string | null;
+  business_owner_name?: string | null;
   name: string;
-  role?: string;
+  email: string;
+  role: string;
   position?: string;
   token: string;
+  status: 'pending' | 'accepted' | 'declined';
   created_at: string;
   expires_at: string;
-  status: 'pending' | 'accepted' | 'expired';
+  updated_at: string;
 }
 
-export interface StaffMember {
-  id: string;
-  business_id: string;
-  staff_id: string;
+export interface CreateInvitationData {
   name: string;
   email: string;
-  position: string;
   role: string;
-  status: string;
-  created_at: string;
-  permissions: Record<string, boolean>;
-  profile?: {
-    avatar_url?: string;
-    full_name?: string;
-  };
+  position?: string;
+}
+
+export interface VerifyInvitationData {
+  token: string;
+}
+
+export interface AcceptInvitationData {
+  token: string;
+  userId: string;
+}
+
+// Hook return types
+export interface UseStaffInvitationsQueries {
+  invitations: StaffInvitation[] | undefined;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => Promise<any>;
+}
+
+export interface UseStaffInvitationsMutations {
+  createInvitation: UseMutationResult<StaffInvitation, Error, CreateInvitationData>;
+  resendInvitation: UseMutationResult<StaffInvitation, Error, string>;
+  cancelInvitation: UseMutationResult<string, Error, string>;
+  verifyInvitation: UseMutationResult<StaffInvitation, Error, VerifyInvitationData>;
+  acceptInvitation: UseMutationResult<StaffInvitation, Error, AcceptInvitationData>;
+}
+
+// Combined hook return type
+export interface UseStaffInvitationsReturn extends UseStaffInvitationsQueries, UseStaffInvitationsMutations {}
+
+// Staff form values interface
+export interface StaffFormValues {
+  name: string;
+  email: string;
+  role: string;
+  position?: string;
+  sendInvitation: boolean;
 }

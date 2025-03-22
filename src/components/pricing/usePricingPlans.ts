@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useTranslation } from "@/components/mocks/translationMock";
+import { useTranslation } from "react-i18next";
 
 export type BillingCycle = "monthly" | "yearly";
 export type Currency = "QAR" | "USD";
@@ -63,44 +63,38 @@ export const usePricingPlans = () => {
 
   const pricingPlans: PricingPlan[] = [
     {
-      name: String(t('pricing.plans.free.title')),
-      description: String(t('pricing.plans.free.description')),
+      name: t('pricing.plans.free.title'),
+      description: t('pricing.plans.free.description'),
       price: "0",
-      period: String(t('pricing.forever')),
-      features: Array.isArray(t('pricing.plans.free.features', { returnObjects: true })) 
-        ? t('pricing.plans.free.features', { returnObjects: true }) as string[] 
-        : [],
-      buttonText: String(t('pricing.plans.free.buttonText')),
+      period: t('pricing.forever'),
+      features: t('pricing.plans.free.features', { returnObjects: true }) as string[],
+      buttonText: t('pricing.plans.free.buttonText'),
       buttonLink: "/auth?tab=register&plan=free",
       highlight: false,
     },
     {
-      name: String(t('pricing.plans.individual.title')),
-      description: String(t('pricing.plans.individual.description')),
+      name: t('pricing.plans.individual.title'),
+      description: t('pricing.plans.individual.description'),
       price: billingCycle === "monthly" 
         ? `${getCurrencyPrefix()} ${formatPrice(getPrice(20))}` 
         : `${getCurrencyPrefix()} ${formatPrice(getPrice(20))}`,
-      period: billingCycle === "monthly" ? String(t('pricing.perMonth')) : String(t('pricing.perYear')),
-      savings: billingCycle === "yearly" ? `${String(t('pricing.save'))} ${getCurrencyPrefix()} ${formatPrice(getSavings(20))}/${String(t('pricing.year'))}` : null,
-      features: Array.isArray(t('pricing.plans.individual.features', { returnObjects: true })) 
-        ? t('pricing.plans.individual.features', { returnObjects: true }) as string[] 
-        : [],
-      buttonText: String(t('pricing.plans.individual.buttonText')),
+      period: billingCycle === "monthly" ? t('pricing.perMonth') : t('pricing.perYear'),
+      savings: billingCycle === "yearly" ? `${t('pricing.save')} ${getCurrencyPrefix()} ${formatPrice(getSavings(20))}/${t('pricing.year')}` : null,
+      features: t('pricing.plans.individual.features', { returnObjects: true }) as string[],
+      buttonText: t('pricing.plans.individual.buttonText'),
       buttonLink: "/auth?tab=register&plan=individual",
       highlight: false,
     },
     {
-      name: String(t('pricing.plans.business.title')),
-      description: String(t('pricing.plans.business.description')),
+      name: t('pricing.plans.business.title'),
+      description: t('pricing.plans.business.description'),
       price: billingCycle === "monthly" 
         ? `${getCurrencyPrefix()} ${formatPrice(getPrice(45))}` 
         : `${getCurrencyPrefix()} ${formatPrice(getPrice(45))}`,
-      period: billingCycle === "monthly" ? String(t('pricing.perMonth')) : String(t('pricing.perYear')),
-      savings: billingCycle === "yearly" ? `${String(t('pricing.save'))} ${getCurrencyPrefix()} ${formatPrice(getSavings(45))}/${String(t('pricing.year'))}` : null,
-      features: Array.isArray(t('pricing.plans.business.features', { returnObjects: true })) 
-        ? t('pricing.plans.business.features', { returnObjects: true }) as string[] 
-        : [],
-      buttonText: String(t('pricing.plans.business.buttonText')),
+      period: billingCycle === "monthly" ? t('pricing.perMonth') : t('pricing.perYear'),
+      savings: billingCycle === "yearly" ? `${t('pricing.save')} ${getCurrencyPrefix()} ${formatPrice(getSavings(45))}/${t('pricing.year')}` : null,
+      features: t('pricing.plans.business.features', { returnObjects: true }) as string[],
+      buttonText: t('pricing.plans.business.buttonText'),
       buttonLink: "/auth?tab=register&plan=business",
       highlight: true,
     },

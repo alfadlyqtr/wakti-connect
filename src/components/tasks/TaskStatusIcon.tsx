@@ -1,8 +1,8 @@
 
 import React from "react";
 import { CheckCircle2, Clock, AlertCircle } from "lucide-react";
-import { TaskStatus } from "@/types";
-import { useTranslation } from "@/components/mocks/translationMock";
+import { TaskStatus } from "@/types/task.types";
+import { useTranslation } from "react-i18next";
 
 interface TaskStatusIconProps {
   status: TaskStatus;
@@ -12,7 +12,7 @@ const TaskStatusIcon = ({ status }: TaskStatusIconProps) => {
   const { t } = useTranslation();
   
   // Helper function to create icon with accessible title
-  const createIconWithTitle = (Icon: React.ElementType, className: string, titleText: string) => {
+  const createIconWithTitle = (Icon: any, className: string, titleText: string) => {
     return (
       <span className="relative inline-block" title={titleText} aria-label={titleText}>
         <Icon className={className} />
@@ -25,25 +25,25 @@ const TaskStatusIcon = ({ status }: TaskStatusIconProps) => {
       return createIconWithTitle(
         CheckCircle2, 
         "h-5 w-5 text-green-500", 
-        String(t('task.status.completed'))
+        t('task.status.completed')
       );
     case "in-progress":
       return createIconWithTitle(
         Clock, 
         "h-5 w-5 text-blue-500", 
-        String(t('task.status.inProgress'))
+        t('task.status.inProgress')
       );
     case "late":
       return createIconWithTitle(
         AlertCircle, 
         "h-5 w-5 text-red-500", 
-        String(t('task.status.late'))
+        t('task.status.late')
       );
     default:
       return createIconWithTitle(
         Clock, 
         "h-5 w-5 text-amber-500", 
-        String(t('task.status.pending'))
+        t('task.status.pending')
       );
   }
 };

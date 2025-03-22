@@ -1,92 +1,129 @@
-
 import { useState } from 'react';
-import { toast } from '@/hooks/use-toast';
-import { Service } from './useServiceQueries';
-
-export interface ServiceFormData {
-  name: string;
-  description: string;
-  price: number;
-  duration: number;
-  status: 'active' | 'inactive';
-}
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Service, ServiceFormValues } from "@/types/service.types";
+import { toast } from "@/components/ui/use-toast";
+import { useServiceStaffMutations } from './useServiceStaffMutations';
 
 export const useServiceMutations = () => {
-  const [isCreating, setIsCreating] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const queryClient = useQueryClient();
+  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [openAddService, setOpenAddService] = useState(false);
 
-  const createService = async (data: ServiceFormData) => {
-    setIsCreating(true);
-    try {
-      // Mock create
-      await new Promise(resolve => setTimeout(resolve, 500));
+  // Add service mutation
+  const addServiceMutation = useMutation({
+    mutationFn: async (formData: ServiceFormValues) => {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        throw new Error('Not authenticated');
+      }
+
+      // Insert the service
+      const { data: serviceData, error: serviceError } = await supabase
+        .from('business_services')
+        .insert({
+          name: formData.name,
+          description: formData.description || null,
+          price: formData.price ? parseFloat(formData.price) : null,
+          duration: parseInt(formData.duration),
+          business_id: session.session.user.id
+        })
+        .select()
+        .single();
+
+      if (serviceError) throw serviceError;
+      return serviceData;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['businessServices'] });
       toast({
-        title: "Service created",
-        description: `${data.name} has been created successfully.`,
+        title: "Service added",
+        description: "The service has been added successfully.",
       });
-      return { id: Math.random().toString(), ...data };
-    } catch (error) {
+      setOpenAddService(false);
+    },
+    onError: (error) => {
       toast({
-        title: "Failed to create service",
-        description: "Please try again later.",
-        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to add service",
+        variant: "destructive"
       });
-      throw error;
-    } finally {
-      setIsCreating(false);
     }
-  };
+  });
 
-  const updateService = async (id: string, data: ServiceFormData) => {
-    setIsUpdating(true);
-    try {
-      // Mock update
-      await new Promise(resolve => setTimeout(resolve, 500));
+  // Update service mutation
+  const updateServiceMutation = useMutation({
+    mutationFn: async ({ id, formData }: { id: string, formData: ServiceFormValues }) => {
+      // Update the service
+      const { data, error } = await supabase
+        .from('business_services')
+        .update({
+          name: formData.name,
+          description: formData.description || null,
+          price: formData.price ? parseFloat(formData.price) : null,
+          duration: parseInt(formData.duration),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['businessServices'] });
       toast({
         title: "Service updated",
-        description: `${data.name} has been updated successfully.`,
+        description: "The service has been updated successfully.",
       });
-      return { id, ...data };
-    } catch (error) {
+      setOpenAddService(false);
+      setEditingService(null);
+    },
+    onError: (error) => {
       toast({
-        title: "Failed to update service",
-        description: "Please try again later.",
-        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to update service",
+        variant: "destructive"
       });
-      throw error;
-    } finally {
-      setIsUpdating(false);
     }
-  };
+  });
 
-  const deleteService = async (id: string) => {
-    setIsDeleting(true);
-    try {
-      // Mock delete
-      await new Promise(resolve => setTimeout(resolve, 500));
+  // Delete service mutation
+  const deleteServiceMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('business_services')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['businessServices'] });
       toast({
         title: "Service deleted",
         description: "The service has been deleted successfully.",
       });
-    } catch (error) {
+    },
+    onError: (error) => {
       toast({
-        title: "Failed to delete service",
-        description: "Please try again later.",
-        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to delete service",
+        variant: "destructive"
       });
-      throw error;
-    } finally {
-      setIsDeleting(false);
     }
-  };
+  });
 
   return {
-    createService,
-    updateService,
-    deleteService,
-    isCreating,
-    isUpdating,
-    isDeleting
+    editingService,
+    setEditingService,
+    openAddService,
+    setOpenAddService,
+    addServiceMutation,
+    updateServiceMutation,
+    deleteServiceMutation
   };
 };

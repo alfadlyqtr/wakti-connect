@@ -1,35 +1,61 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Service } from "./useServiceCrud";
+import { useState } from 'react';
+import { Service, ServiceFormValues } from "@/types/service.types";
+import { useServiceCrud } from './useServiceCrud';
 
 export const useServices = () => {
-  const query = useQuery({
-    queryKey: ["services"],
-    queryFn: async (): Promise<Service[]> => {
-      const { data, error } = await supabase
-        .from("business_services")
-        .select("*")
-        .order("name");
+  const {
+    services,
+    isLoading,
+    error,
+    openAddService,
+    setOpenAddService,
+    editingService,
+    setEditingService,
+    addServiceMutation,
+    updateServiceMutation,
+    deleteServiceMutation
+  } = useServiceCrud();
 
-      if (error) throw error;
+  // Get staff assignments count by service
+  const staffAssignments = services?.reduce((acc, service) => {
+    acc[service.id] = service.assigned_staff?.length || 0;
+    return acc;
+  }, {} as Record<string, number>) || {};
 
-      // Transform the database records to match our Service type
-      return data.map((service) => ({
-        id: service.id,
-        name: service.name,
-        description: service.description || "",
-        price: service.price || 0,
-        duration: service.duration || 60,
-        status: "active", // Default status
-      }));
-    },
-  });
+  const handleSubmit = (values: ServiceFormValues) => {
+    if (editingService) {
+      updateServiceMutation.mutate({ id: editingService.id, formData: values });
+    } else {
+      addServiceMutation.mutate(values);
+    }
+  };
+
+  const handleEditService = (service: Service) => {
+    setEditingService(service);
+    setOpenAddService(true);
+  };
+
+  const handleDeleteService = (id: string) => {
+    if (confirm("Are you sure you want to delete this service?")) {
+      deleteServiceMutation.mutate(id);
+    }
+  };
 
   return {
-    services: query.data || [],
-    isLoading: query.isLoading,
-    error: query.error,
-    refetch: query.refetch,
+    services,
+    isLoading,
+    error,
+    openAddService,
+    setOpenAddService,
+    editingService,
+    setEditingService,
+    handleSubmit,
+    handleEditService,
+    handleDeleteService,
+    isPendingAdd: addServiceMutation.isPending,
+    isPendingUpdate: updateServiceMutation.isPending,
+    isPendingDelete: deleteServiceMutation.isPending,
+    staffAssignments
   };
 };
