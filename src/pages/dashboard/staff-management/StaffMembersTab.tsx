@@ -46,18 +46,20 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
         console.log("Fetching staff with auth user:", session.session.user.id);
         
         // Call the edge function to bypass RLS issues
-        const { data, error, status } = await supabase.functions.invoke("fetch-staff-members", {
+        const response = await supabase.functions.invoke("fetch-staff-members", {
           body: { businessId: session.session.user.id },
           headers: {
             Authorization: `Bearer ${session.session.access_token}`
           }
         });
         
-        if (error) {
-          console.error("Edge function error:", error, "Status:", status);
+        // Check if response has error
+        if (response.error) {
+          console.error("Edge function error:", response.error);
           
-          // If we get a 401, could be expired token - try to refresh
-          if (status === 401) {
+          // Handle 401 error (unauthorized)
+          const statusCode = response.error?.code || 500;
+          if (statusCode === 401) {
             console.log("Attempting to refresh auth token...");
             setAuthError(true);
             const { error: refreshError } = await supabase.auth.refreshSession();
@@ -68,8 +70,11 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
             }
           }
           
-          throw new Error(`Edge function error (${status}): ${error.message}`);
+          throw new Error(`Edge function error (${statusCode}): ${response.error.message}`);
         }
+        
+        // Extract data from the response
+        const data = response.data;
         
         if (!data?.success) {
           console.error("Error in function response:", data?.error, data?.details);
