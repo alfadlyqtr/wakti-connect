@@ -21,7 +21,7 @@ export type NavItem = {
   path: string;
   icon: any;
   badge?: number | null;
-  showFor: Array<'free' | 'individual' | 'business' | 'staff'>;
+  showFor: Array<'free' | 'individual' | 'business'>;
 };
 
 export const navItems: NavItem[] = [

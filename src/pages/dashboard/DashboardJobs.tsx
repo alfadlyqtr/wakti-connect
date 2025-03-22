@@ -1,33 +1,36 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import { DashboardShell } from '@/components/dashboard/DashboardShell';
-import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
-import { CreateJobDialog } from '@/components/jobs/CreateJobDialog';
-import { JobsTab } from '@/components/jobs/JobsTab';
+import React, { useState } from "react";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { CreateJobDialog } from "@/components/jobs/CreateJobDialog";
 
-export default function DashboardJobs() {
-  const [openCreateJob, setOpenCreateJob] = useState(false);
-  
+const DashboardJobs = () => {
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
   return (
     <DashboardShell>
-      <DashboardHeader
-        heading="Jobs Management"
-        description="Manage your jobs and assign them to staff members"
-      >
-        <Button onClick={() => setOpenCreateJob(true)}>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Jobs Management</h2>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          New Job
+          Create Job
         </Button>
-      </DashboardHeader>
-      
-      <JobsTab />
-      
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Job list would go here */}
+        <div className="border rounded-lg p-6 text-center">
+          <p className="text-muted-foreground">No jobs created yet</p>
+        </div>
+      </div>
+
       <CreateJobDialog 
-        open={openCreateJob}
-        onOpenChange={setOpenCreateJob}
+        open={isCreateDialogOpen} 
+        onOpenChange={setIsCreateDialogOpen} 
       />
     </DashboardShell>
   );
-}
+};
+
+export default DashboardJobs;

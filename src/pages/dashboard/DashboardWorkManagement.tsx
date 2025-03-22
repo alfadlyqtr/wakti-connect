@@ -1,38 +1,50 @@
 
-import React, { useState, lazy, Suspense } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
-import { DashboardShell } from '@/components/dashboard/DashboardShell';
-import { Card } from '@/components/ui/card';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { JobsTab } from '@/components/jobs/JobsTab';
-import { JobCardsTab } from '@/components/jobs/JobCardsTab';
+import React, { Suspense, lazy } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { Loader2 } from "lucide-react";
 
-export default function DashboardWorkManagement() {
-  const [activeTab, setActiveTab] = useState("jobs");
-  
+// Update to properly import components with named exports
+const JobsTab = lazy(() => import("@/components/jobs/JobsTab").then(module => ({ default: module.JobsTab })));
+const JobCardsTab = lazy(() => import("@/components/jobs/JobCardsTab").then(module => ({ default: module.JobCardsTab })));
+
+const DashboardWorkManagement: React.FC = () => {
+  const [activeTab, setActiveTab] = React.useState("jobs");
+
   return (
     <DashboardShell>
-      <DashboardHeader
-        heading="Work Management"
-        description="Manage jobs and work cards for your team"
-      />
-      
-      <Tabs defaultValue="jobs" className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="jobs">Jobs</TabsTrigger>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">Work Management</h2>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2 md:w-auto">
+          <TabsTrigger value="jobs">Jobs & Services</TabsTrigger>
           <TabsTrigger value="job-cards">Job Cards</TabsTrigger>
         </TabsList>
-        
-        <Suspense fallback={<LoadingSpinner />}>
-          <TabsContent value="jobs" className="m-0">
+
+        <TabsContent value="jobs" className="space-y-4">
+          <Suspense fallback={
+            <div className="flex justify-center p-8">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          }>
             <JobsTab />
-          </TabsContent>
-          <TabsContent value="job-cards" className="m-0">
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="job-cards" className="space-y-4">
+          <Suspense fallback={
+            <div className="flex justify-center p-8">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          }>
             <JobCardsTab />
-          </TabsContent>
-        </Suspense>
+          </Suspense>
+        </TabsContent>
       </Tabs>
     </DashboardShell>
   );
-}
+};
+
+export default DashboardWorkManagement;

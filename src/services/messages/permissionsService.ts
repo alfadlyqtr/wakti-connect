@@ -1,76 +1,66 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { fromTable } from "@/integrations/supabase/helper";
-import { canStaffMessageUser } from "../staff/accessControl";
-import { isUserStaff } from "@/utils/staffUtils";
 
 /**
- * Checks if the current user can message a given user
+ * Check if a user can message another user
  */
-export const canMessageUser = async (userId: string): Promise<boolean> => {
+export const canMessageUser = async (
+  recipientId: string
+): Promise<boolean> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.user) {
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.user) return false;
+
+    const currentUserId = session.user.id;
+
+    // Check if they're in contacts
+    const { data: contactData, error: contactError } = await supabase
+      .from("user_contacts")
+      .select("*")
+      .eq("user_id", currentUserId)
+      .eq("contact_id", recipientId)
+      .eq("status", "accepted")
+      .maybeSingle();
+
+    if (contactError) {
+      console.error("Error checking contact:", contactError);
       return false;
     }
-    
-    // Check if current user is staff
-    const isStaff = await isUserStaff();
-    if (isStaff) {
-      return canStaffMessageUser(userId);
-    }
-    
-    // Get the current user's profile
-    const { data: profile } = await fromTable('profiles')
-      .select('account_type')
-      .eq('id', session.user.id)
-      .single();
-      
-    if (!profile) return false;
-    
-    // Free users cannot message anyone
-    if (profile.account_type === 'free') {
-      return false;
-    }
-    
-    // Business users can message anyone
-    if (profile.account_type === 'business') {
+
+    // If they're in contacts, allow messaging
+    if (contactData) {
       return true;
     }
-    
-    // Get the target user's profile
-    const { data: targetProfile } = await fromTable('profiles')
-      .select('account_type')
-      .eq('id', userId)
-      .maybeSingle();
-      
-    if (!targetProfile) return false;
-    
-    // Individual users messaging individual users: check contacts
-    if (targetProfile.account_type === 'individual') {
-      const { data: contactData } = await fromTable('user_contacts')
-        .select('id')
-        .or(`and(user_id.eq.${session.user.id},contact_id.eq.${userId},status.eq.accepted),and(user_id.eq.${userId},contact_id.eq.${session.user.id},status.eq.accepted)`)
+
+    // Check if the current user is a business and the recipient is a subscriber
+    const { data: currentUserData } = await supabase
+      .from("profiles")
+      .select("account_type")
+      .eq("id", currentUserId)
+      .single();
+
+    if (currentUserData?.account_type === "business") {
+      // Check if recipient is a subscriber
+      const { data: subscriptionData, error: subscriptionError } = await supabase
+        .from("business_subscribers")
+        .select("*")
+        .eq("business_id", currentUserId)
+        .eq("subscriber_id", recipientId)
         .maybeSingle();
-        
-      return !!contactData;
+
+      if (subscriptionError) {
+        console.error("Error checking subscription:", subscriptionError);
+        return false;
+      }
+
+      if (subscriptionData) {
+        return true;
+      }
     }
-    
-    // Individual users messaging business: check subscription
-    if (targetProfile.account_type === 'business') {
-      const { data: subscriptionData } = await fromTable('business_subscribers')
-        .select('id')
-        .eq('subscriber_id', session.user.id)
-        .eq('business_id', userId)
-        .maybeSingle();
-        
-      return !!subscriptionData;
-    }
-    
+
     return false;
   } catch (error) {
-    console.error("Error checking messaging permissions:", error);
+    console.error("Error in canMessageUser:", error);
     return false;
   }
 };

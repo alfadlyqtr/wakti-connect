@@ -1,8 +1,9 @@
 
 /**
- * Checks if a staff member can message a specific user
+ * Stub implementation of staff access control
+ * Always returns true to maintain functionality
  */
 export const canStaffMessageUser = async (userId: string): Promise<boolean> => {
-  // Mock implementation - always return true
+  // Always return true
   return true;
 };

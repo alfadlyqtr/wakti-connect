@@ -1,103 +1,132 @@
 
-import { useState } from 'react';
-import { toast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from "react";
+import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-export type ServiceFormData = {
+export interface ServiceFormData {
   name: string;
   description: string;
   price: number;
   duration: number;
-  status: 'active' | 'inactive';
-};
+}
 
-export type Service = ServiceFormData & {
+export interface Service {
   id: string;
-};
+  name: string;
+  description: string;
+  price: number;
+  duration: number;
+  status: "active" | "inactive";
+}
 
 export const useServiceCrud = () => {
+  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [openAddService, setOpenAddService] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [editingService, setEditingService] = useState<Service | null>(null);
-  const [openAddService, setOpenAddService] = useState(false);
-  
-  const createService = async (data: ServiceFormData) => {
+
+  const createService = async (data: ServiceFormData): Promise<Service> => {
     setIsCreating(true);
     try {
-      // Mock creating a service
-      const mockService = {
-        ...data,
-        id: `service-${Date.now()}`
-      };
-      
+      const { data: serviceData, error } = await supabase
+        .from("business_services")
+        .insert({
+          name: data.name,
+          description: data.description,
+          price: data.price,
+          duration: data.duration,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
       toast({
         title: "Service created",
-        description: "Your service has been created successfully"
+        description: "Your service has been created successfully.",
       });
-      
-      setIsCreating(false);
-      return mockService;
+
+      return {
+        ...serviceData,
+        status: "active",
+      } as Service;
     } catch (error: any) {
       toast({
-        title: "Error creating service",
-        description: error.message || "There was an error creating the service",
-        variant: "destructive"
+        title: "Error",
+        description: error.message || "Failed to create service",
+        variant: "destructive",
       });
-      setIsCreating(false);
       throw error;
+    } finally {
+      setIsCreating(false);
     }
   };
-  
-  const updateService = async (id: string, data: Partial<ServiceFormData>) => {
+
+  const updateService = async (id: string, data: Partial<ServiceFormData>): Promise<Service> => {
     setIsUpdating(true);
     try {
-      // Mock updating a service
-      const mockService = {
-        ...data,
-        id
-      } as Service;
-      
+      const { data: serviceData, error } = await supabase
+        .from("business_services")
+        .update({
+          name: data.name,
+          description: data.description,
+          price: data.price,
+          duration: data.duration,
+        })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
       toast({
         title: "Service updated",
-        description: "Your service has been updated successfully"
+        description: "Your service has been updated successfully.",
       });
-      
-      setIsUpdating(false);
-      return mockService;
+
+      return {
+        ...serviceData,
+        status: "active",
+      } as Service;
     } catch (error: any) {
       toast({
-        title: "Error updating service",
-        description: error.message || "There was an error updating the service",
-        variant: "destructive"
+        title: "Error",
+        description: error.message || "Failed to update service",
+        variant: "destructive",
       });
-      setIsUpdating(false);
       throw error;
+    } finally {
+      setIsUpdating(false);
     }
   };
-  
-  const deleteService = async (id: string) => {
+
+  const deleteService = async (id: string): Promise<void> => {
     setIsDeleting(true);
     try {
-      // Mock deleting a service
+      const { error } = await supabase
+        .from("business_services")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
       toast({
         title: "Service deleted",
-        description: "Your service has been deleted successfully"
+        description: "Your service has been deleted successfully.",
       });
-      
-      setIsDeleting(false);
-      return true;
     } catch (error: any) {
       toast({
-        title: "Error deleting service",
-        description: error.message || "There was an error deleting the service",
-        variant: "destructive"
+        title: "Error",
+        description: error.message || "Failed to delete service",
+        variant: "destructive",
       });
-      setIsDeleting(false);
       throw error;
+    } finally {
+      setIsDeleting(false);
     }
   };
-  
+
   return {
     createService,
     updateService,
@@ -105,9 +134,10 @@ export const useServiceCrud = () => {
     isCreating,
     isUpdating,
     isDeleting,
+    // State for the UI
     editingService,
     setEditingService,
     openAddService,
-    setOpenAddService
+    setOpenAddService,
   };
 };
