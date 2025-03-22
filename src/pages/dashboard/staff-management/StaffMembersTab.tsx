@@ -21,22 +21,32 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
   onOpenCreateDialog 
 }) => {
   const [retryCount, setRetryCount] = useState(0);
+  const [authError, setAuthError] = useState<boolean>(false);
 
   // Use edge function to get staff members (bypassing RLS issues)
   const { data: staffMembers, isLoading: staffLoading, error: staffError, refetch } = useQuery({
     queryKey: ['businessStaff', retryCount],
     queryFn: async () => {
       try {
-        const { data: session } = await supabase.auth.getSession();
+        // Get fresh session
+        const { data: session, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          setAuthError(true);
+          throw new Error('Authentication error: ' + sessionError.message);
+        }
         
         if (!session?.session?.user) {
+          console.error("No authenticated user found");
+          setAuthError(true);
           throw new Error('Not authenticated');
         }
         
         console.log("Fetching staff with auth user:", session.session.user.id);
         
         // Call the edge function to bypass RLS issues
-        const { data, error } = await supabase.functions.invoke("fetch-staff-members", {
+        const { data, error, status } = await supabase.functions.invoke("fetch-staff-members", {
           body: { businessId: session.session.user.id },
           headers: {
             Authorization: `Bearer ${session.session.access_token}`
@@ -44,16 +54,30 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
         });
         
         if (error) {
-          console.error("Error calling fetch-staff-members:", error);
-          throw new Error(error.message || "Failed to fetch staff members");
+          console.error("Edge function error:", error, "Status:", status);
+          
+          // If we get a 401, could be expired token - try to refresh
+          if (status === 401) {
+            console.log("Attempting to refresh auth token...");
+            setAuthError(true);
+            const { error: refreshError } = await supabase.auth.refreshSession();
+            if (refreshError) {
+              console.error("Error refreshing token:", refreshError);
+            } else {
+              console.log("Token refreshed successfully, please try again");
+            }
+          }
+          
+          throw new Error(`Edge function error (${status}): ${error.message}`);
         }
         
         if (!data?.success) {
-          console.error("Error in function response:", data?.error);
+          console.error("Error in function response:", data?.error, data?.details);
           throw new Error(data?.error || "Failed to fetch staff members");
         }
         
         console.log("Staff members retrieved:", data.staffMembers?.length);
+        setAuthError(false);
         
         return data.staffMembers || [];
       } catch (error: any) {
@@ -66,7 +90,7 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
         throw error;
       }
     },
-    retry: 1,
+    retry: 2,
     refetchOnWindowFocus: false,
   });
 
@@ -77,6 +101,7 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
   }, [refetch]);
 
   const handleManualRefetch = () => {
+    console.log("Manual refresh triggered");
     setRetryCount(prev => prev + 1);
     refetch();
   };
@@ -121,14 +146,17 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
     );
   }
 
-  if (staffError) {
+  if (staffError || authError) {
     return (
       <Card className="col-span-full p-8">
         <Alert variant="destructive" className="mb-4">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Error loading staff</AlertTitle>
-          <AlertDescription>
-            {staffError instanceof Error ? staffError.message : "Failed to load staff members"}
+          <AlertDescription className="space-y-2">
+            <p>{staffError instanceof Error ? staffError.message : "Failed to load staff members"}</p>
+            {authError && (
+              <p className="font-semibold">There appears to be an authentication issue. Please try refreshing the page or signing in again.</p>
+            )}
           </AlertDescription>
         </Alert>
         <div className="flex justify-center mt-4">

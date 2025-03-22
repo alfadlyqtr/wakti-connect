@@ -21,11 +21,25 @@ serve(async (req) => {
   try {
     console.log("Edge function called: fetch-staff-members");
     
+    // Extract authorization token
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error("Missing Authorization header");
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing Authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Create a Supabase client with the Auth context of the logged in user
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+      { 
+        global: { 
+          headers: { Authorization: authHeader } 
+        } 
+      }
     )
 
     // Get the session to verify the user is authenticated
@@ -34,29 +48,40 @@ serve(async (req) => {
     if (authError || !user) {
       console.error("Authentication error:", authError);
       return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        JSON.stringify({ success: false, error: 'Unauthorized', details: authError?.message }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     // Parse request body
-    const requestData = await req.json();
-    const businessId = requestData.businessId;
-    
-    if (!businessId) {
-      console.error("Missing businessId in request");
+    let businessId;
+    try {
+      const requestData = await req.json();
+      businessId = requestData.businessId;
+      
+      if (!businessId) {
+        console.error("Missing businessId in request");
+        return new Response(
+          JSON.stringify({ success: false, error: 'Missing businessId parameter' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+      
+      console.log(`Fetching staff for business ID: ${businessId}`);
+      console.log(`Authenticated user ID: ${user.id}`);
+    } catch (parseError) {
+      console.error("Error parsing request body:", parseError);
       return new Response(
-        JSON.stringify({ success: false, error: 'Missing businessId parameter' }),
+        JSON.stringify({ success: false, error: 'Invalid request body format' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
-    
-    console.log(`Fetching staff for business ID: ${businessId}`);
-    console.log(`Authenticated user ID: ${user.id}`);
 
     // Verify the user is either the business owner or a staff member
     const isBusinessOwner = user.id === businessId;
     console.log(`Is business owner: ${isBusinessOwner}`);
+    
+    let isStaffMember = false;
     
     if (!isBusinessOwner) {
       // Check if user is a staff member of this business
@@ -66,20 +91,30 @@ serve(async (req) => {
         .select('id')
         .eq('staff_id', user.id)
         .eq('business_id', businessId)
-        .single();
+        .neq('status', 'deleted')
+        .maybeSingle();
 
-      if (staffError || !staffData) {
-        console.error("Authorization error:", staffError);
+      if (staffError) {
+        console.error("Error checking staff status:", staffError);
+      } else {
+        isStaffMember = !!staffData;
+      }
+      
+      console.log("Is staff member:", isStaffMember);
+      
+      if (!isStaffMember) {
         return new Response(
-          JSON.stringify({ success: false, error: 'Not authorized to view this business data' }),
+          JSON.stringify({ 
+            success: false, 
+            error: 'Not authorized to view this business data',
+            details: 'User is neither the business owner nor a staff member'
+          }),
           { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
-      
-      console.log("User is a staff member, proceeding");
     }
 
-    // Get all staff members for this business
+    // Get all staff members for this business - using service role to bypass RLS
     console.log("Fetching business_staff records");
     const { data: staffMembers, error: fetchError } = await supabaseClient
       .from('business_staff')
@@ -96,7 +131,11 @@ serve(async (req) => {
     if (fetchError) {
       console.error('Error fetching staff:', fetchError);
       return new Response(
-        JSON.stringify({ success: false, error: fetchError.message }),
+        JSON.stringify({ 
+          success: false, 
+          error: fetchError.message,
+          details: 'Error occurred while querying the business_staff table' 
+        }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -136,7 +175,11 @@ serve(async (req) => {
     console.error('Error in fetch-staff-members function:', error);
     
     return new Response(
-      JSON.stringify({ success: false, error: error.message || 'An unexpected error occurred' }),
+      JSON.stringify({ 
+        success: false, 
+        error: error.message || 'An unexpected error occurred',
+        details: 'Exception caught in the main try/catch block'
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
