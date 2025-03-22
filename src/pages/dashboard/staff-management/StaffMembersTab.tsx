@@ -3,10 +3,11 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, UserPlus } from "lucide-react";
+import { Users, UserPlus, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StaffMember } from "./types";
 import StaffMemberCard from "./StaffMemberCard";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface StaffMembersTabProps {
   onSelectStaff: (staffId: string) => void;
@@ -71,7 +72,7 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
   if (staffLoading) {
     return (
       <Card className="col-span-full flex justify-center p-8">
-        <div className="h-8 w-8 border-4 border-t-transparent border-wakti-blue rounded-full animate-spin"></div>
+        <div className="h-8 w-8 border-4 border-t-transparent border-primary rounded-full animate-spin"></div>
       </Card>
     );
   }
@@ -79,7 +80,16 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
   if (staffError) {
     return (
       <Card className="col-span-full p-8">
-        <p className="text-center text-destructive">Error loading staff members</p>
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error loading staff</AlertTitle>
+          <AlertDescription>
+            {staffError instanceof Error ? staffError.message : "Failed to load staff members"}
+          </AlertDescription>
+        </Alert>
+        <div className="flex justify-center mt-4">
+          <Button onClick={() => refetch()}>Try Again</Button>
+        </div>
       </Card>
     );
   }

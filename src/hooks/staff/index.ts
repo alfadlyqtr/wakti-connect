@@ -1,6 +1,4 @@
 
-// Re-export all staff hooks for easier imports
+// Export all staff-related hooks
 export * from './useCreateStaff';
-export * from './creation/types';
-export * from './creation/staffLimits';
-export * from './creation/avatarUpload';
+export * from './useStaffStatus';

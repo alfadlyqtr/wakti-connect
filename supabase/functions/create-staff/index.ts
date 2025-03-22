@@ -30,8 +30,9 @@ serve(async (req) => {
     // Get auth header
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error("Missing Authorization header")
       return new Response(
-        JSON.stringify({ error: 'Authorization header is required' }),
+        JSON.stringify({ success: false, error: 'Authorization header is required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -70,7 +71,7 @@ serve(async (req) => {
     if (authError || !user) {
       console.error("Auth error:", authError)
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -85,7 +86,7 @@ serve(async (req) => {
     if (profileError || profile?.account_type !== 'business') {
       console.error("Profile error:", profileError)
       return new Response(
-        JSON.stringify({ error: 'Only business accounts can create staff' }),
+        JSON.stringify({ success: false, error: 'Only business accounts can create staff' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -97,7 +98,7 @@ serve(async (req) => {
     // Validation
     if (!staffData.fullName || !staffData.email || !staffData.password) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
+        JSON.stringify({ success: false, error: 'Missing required fields' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -107,14 +108,14 @@ serve(async (req) => {
     if (existingUserError) {
       console.error("Error checking existing users:", existingUserError)
       return new Response(
-        JSON.stringify({ error: 'Failed to check existing users' }),
+        JSON.stringify({ success: false, error: 'Failed to check existing users' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     if (existingUser.users.some(u => u.email === staffData.email)) {
       return new Response(
-        JSON.stringify({ error: 'Email already exists' }),
+        JSON.stringify({ success: false, error: 'Email already exists' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -131,14 +132,14 @@ serve(async (req) => {
       if (coAdminError) {
         console.error("Error checking co-admin:", coAdminError)
         return new Response(
-          JSON.stringify({ error: 'Failed to check existing co-admin' }),
+          JSON.stringify({ success: false, error: 'Failed to check existing co-admin' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
       if (coAdmins && coAdmins.length > 0) {
         return new Response(
-          JSON.stringify({ error: 'Only one Co-Admin is allowed per business' }),
+          JSON.stringify({ success: false, error: 'Only one Co-Admin is allowed per business' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
@@ -154,7 +155,7 @@ serve(async (req) => {
     if (businessError) {
       console.error("Error fetching business:", businessError)
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch business information' }),
+        JSON.stringify({ success: false, error: 'Failed to fetch business information' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -175,7 +176,7 @@ serve(async (req) => {
     if (countError) {
       console.error("Error counting staff:", countError)
       return new Response(
-        JSON.stringify({ error: 'Failed to count existing staff' }),
+        JSON.stringify({ success: false, error: 'Failed to count existing staff' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -199,44 +200,67 @@ serve(async (req) => {
     if (authCreateError || !authData.user) {
       console.error("Error creating user:", authCreateError)
       return new Response(
-        JSON.stringify({ error: authCreateError?.message || 'Failed to create user account' }),
+        JSON.stringify({ success: false, error: authCreateError?.message || 'Failed to create user account' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     console.log("Created auth user:", authData.user.id)
 
+    // Check if avatars bucket exists, if not, try to create it
+    try {
+      const { data: buckets } = await supabaseAdmin
+        .storage
+        .listBuckets();
+        
+      const avatarBucketExists = buckets?.some(bucket => bucket.name === 'avatars');
+      
+      if (!avatarBucketExists) {
+        console.log("Avatars bucket doesn't exist, attempting to create it...");
+        await supabaseAdmin
+          .storage
+          .createBucket('avatars', {
+            public: true,
+            fileSizeLimit: 1024 * 1024 * 5 // 5MB limit
+          });
+      }
+    } catch (err) {
+      console.error("Error with storage bucket:", err);
+      // Continue execution, don't block staff creation if bucket error
+    }
+
     // Handle avatar upload if provided
-    let avatarUrl = null
+    let avatarUrl = null;
     if (staffData.avatar && staffData.avatar.startsWith('data:image')) {
       try {
-        const base64Data = staffData.avatar.split(',')[1]
-        const mimeType = staffData.avatar.split(';')[0].split(':')[1]
-        const fileExt = mimeType.split('/')[1]
-        const fileName = `${authData.user.id}_${Date.now()}.${fileExt}`
+        const base64Data = staffData.avatar.split(',')[1];
+        const mimeType = staffData.avatar.split(';')[0].split(':')[1];
+        const fileExt = mimeType.split('/')[1];
+        const fileName = `staff/${authData.user.id}_${Date.now()}.${fileExt}`;
 
         // Upload to storage
         const { data: uploadData, error: uploadError } = await supabaseAdmin
           .storage
           .from('avatars')
-          .upload(`staff/${fileName}`, decode(base64Data), {
+          .upload(fileName, decode(base64Data), {
             contentType: mimeType,
             upsert: true
-          })
+          });
 
         if (uploadError) {
-          console.error("Avatar upload error:", uploadError)
+          console.error("Avatar upload error:", uploadError);
         } else if (uploadData) {
           // Get public URL
           const { data: urlData } = await supabaseAdmin
             .storage
             .from('avatars')
-            .getPublicUrl(`staff/${fileName}`)
+            .getPublicUrl(fileName);
 
-          avatarUrl = urlData.publicUrl
+          avatarUrl = urlData.publicUrl;
         }
       } catch (error) {
-        console.error("Error processing avatar:", error)
+        console.error("Error processing avatar:", error);
+        // Continue without avatar if there's an error
       }
     }
 
@@ -268,19 +292,25 @@ serve(async (req) => {
         status: 'active'
       })
       .select()
-      .single()
+      .single();
 
     if (staffError) {
-      console.error("Error creating staff record:", staffError)
-      // Try to clean up the auth user if staff record fails
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
+      console.error("Error creating staff record:", staffError);
+      // Clean up the auth user if staff record creation fails
+      try {
+        await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+        console.log("Cleaned up auth user after staff record creation failure");
+      } catch (cleanupError) {
+        console.error("Failed to clean up auth user:", cleanupError);
+      }
+      
       return new Response(
-        JSON.stringify({ error: staffError.message || 'Failed to create staff record' }),
+        JSON.stringify({ success: false, error: staffError.message || 'Failed to create staff record' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      );
     }
 
-    console.log("Created staff record:", staffRecord.id)
+    console.log("Created staff record:", staffRecord.id);
 
     // Create automatic contact relationship for messaging
     try {
@@ -299,7 +329,7 @@ serve(async (req) => {
             status: 'accepted',
             staff_relation_id: staffRecord.id
           }
-        ])
+        ]);
 
       // Also add contacts between existing staff and the new staff member
       const { data: existingStaff, error: existingStaffError } = await supabaseAdmin
@@ -307,10 +337,10 @@ serve(async (req) => {
         .select('staff_id, id')
         .eq('business_id', user.id)
         .neq('staff_id', authData.user.id)
-        .eq('status', 'active')
+        .eq('status', 'active');
 
       if (!existingStaffError && existingStaff && existingStaff.length > 0) {
-        const contactInserts = []
+        const contactInserts = [];
 
         for (const staff of existingStaff) {
           contactInserts.push({
@@ -318,22 +348,22 @@ serve(async (req) => {
             contact_id: staff.staff_id,
             status: 'accepted',
             staff_relation_id: staff.id
-          })
+          });
 
           contactInserts.push({
             user_id: staff.staff_id,
             contact_id: authData.user.id,
             status: 'accepted',
             staff_relation_id: staffRecord.id
-          })
+          });
         }
 
         if (contactInserts.length > 0) {
-          await supabaseAdmin.from('user_contacts').insert(contactInserts)
+          await supabaseAdmin.from('user_contacts').insert(contactInserts);
         }
       }
     } catch (error) {
-      console.error("Error creating contacts:", error)
+      console.error("Error creating contacts:", error);
       // Not critical, don't fail the overall operation
     }
 
@@ -348,9 +378,9 @@ serve(async (req) => {
           full_name: staffData.fullName,
           display_name: staffData.fullName
         })
-        .eq('id', authData.user.id)
+        .eq('id', authData.user.id);
     } catch (error) {
-      console.error("Error updating profile:", error)
+      console.error("Error updating profile:", error);
       // Not critical, don't fail the overall operation
     }
 
@@ -358,22 +388,22 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ success: true, data: staffRecord }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    );
   } catch (error) {
-    console.error("Unexpected error:", error)
+    console.error("Unexpected error:", error);
     return new Response(
-      JSON.stringify({ error: error.message || 'An unexpected error occurred' }),
+      JSON.stringify({ success: false, error: error.message || 'An unexpected error occurred' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    );
   }
-})
+});
 
 // Helper function to decode base64
 function decode(base64: string): Uint8Array {
-  const binary = atob(base64)
-  const bytes = new Uint8Array(binary.length)
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i)
+    bytes[i] = binary.charCodeAt(i);
   }
-  return bytes
+  return bytes;
 }

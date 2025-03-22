@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { staffFormSchema, StaffFormValues } from "@/components/staff/dialog/StaffFormSchema";
@@ -46,7 +45,7 @@ export const useCreateStaff = (): UseCreateStaffReturn => {
         if (!session) throw new Error("Not authenticated");
         
         // Prepare payload
-        const staffData = {
+        const staffData: Record<string, any> = {
           fullName: values.fullName,
           email: values.email,
           password: values.password,
@@ -66,8 +65,10 @@ export const useCreateStaff = (): UseCreateStaffReturn => {
           });
           
           const avatarBase64 = await base64Promise;
-          Object.assign(staffData, { avatar: avatarBase64 });
+          staffData.avatar = avatarBase64;
         }
+        
+        console.log("Calling create-staff edge function...");
         
         // Call the edge function to create staff
         const response = await supabase.functions.invoke("create-staff", {
@@ -78,10 +79,12 @@ export const useCreateStaff = (): UseCreateStaffReturn => {
         });
         
         if (response.error) {
+          console.error("Edge function error:", response.error);
           throw new Error(response.error.message || "Failed to create staff account");
         }
         
         const result = response.data;
+        console.log("Edge function response:", result);
         
         if (!result.success) {
           throw new Error(result.error || "Failed to create staff account");
