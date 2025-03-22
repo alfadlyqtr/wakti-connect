@@ -407,54 +407,6 @@ export type Database = {
         }
         Relationships: []
       }
-      business_staff: {
-        Row: {
-          business_id: string
-          created_at: string
-          email: string | null
-          id: string
-          is_service_provider: boolean | null
-          name: string | null
-          permissions: Json | null
-          position: string | null
-          profile_image_url: string | null
-          role: string
-          staff_id: string
-          staff_number: string | null
-          status: string | null
-        }
-        Insert: {
-          business_id: string
-          created_at?: string
-          email?: string | null
-          id?: string
-          is_service_provider?: boolean | null
-          name?: string | null
-          permissions?: Json | null
-          position?: string | null
-          profile_image_url?: string | null
-          role?: string
-          staff_id: string
-          staff_number?: string | null
-          status?: string | null
-        }
-        Update: {
-          business_id?: string
-          created_at?: string
-          email?: string | null
-          id?: string
-          is_service_provider?: boolean | null
-          name?: string | null
-          permissions?: Json | null
-          position?: string | null
-          profile_image_url?: string | null
-          role?: string
-          staff_id?: string
-          staff_number?: string | null
-          status?: string | null
-        }
-        Relationships: []
-      }
       business_subscribers: {
         Row: {
           business_id: string
@@ -638,13 +590,6 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "job_cards_staff_relation_id_fkey"
-            columns: ["staff_relation_id"]
-            isOneToOne: false
-            referencedRelation: "business_staff"
             referencedColumns: ["id"]
           },
           {
@@ -978,13 +923,6 @@ export type Database = {
             referencedRelation: "business_services"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "staff_service_assignments_staff_id_fkey"
-            columns: ["staff_id"]
-            isOneToOne: false
-            referencedRelation: "business_staff"
-            referencedColumns: ["id"]
-          },
         ]
       }
       staff_work_logs: {
@@ -1021,15 +959,7 @@ export type Database = {
           status?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "staff_work_logs_staff_relation_id_fkey"
-            columns: ["staff_relation_id"]
-            isOneToOne: false
-            referencedRelation: "business_staff"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       task_label_assignments: {
         Row: {
@@ -1199,15 +1129,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_contacts_staff_relation_id_fkey"
-            columns: ["staff_relation_id"]
-            isOneToOne: false
-            referencedRelation: "business_staff"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_monthly_usage: {
         Row: {
