@@ -83,8 +83,16 @@ serve(async (req) => {
       .eq('id', user.id)
       .single()
 
-    if (profileError || profile?.account_type !== 'business') {
+    if (profileError) {
       console.error("Profile error:", profileError)
+      return new Response(
+        JSON.stringify({ success: false, error: 'Error retrieving profile' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (profile?.account_type !== 'business') {
+      console.error("Not a business account:", profile?.account_type)
       return new Response(
         JSON.stringify({ success: false, error: 'Only business accounts can create staff' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -92,10 +100,19 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const staffData: StaffData = await req.json()
-    console.log("Creating staff with data:", { ...staffData, password: "[REDACTED]" })
+    let staffData: StaffData;
+    try {
+      staffData = await req.json()
+      console.log("Creating staff with data:", { ...staffData, password: "[REDACTED]" })
+    } catch (error) {
+      console.error("Error parsing request:", error)
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid request format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-    // Validation
+    // Basic validation
     if (!staffData.fullName || !staffData.email || !staffData.password) {
       return new Response(
         JSON.stringify({ success: false, error: 'Missing required fields' }),
@@ -264,6 +281,20 @@ serve(async (req) => {
       }
     }
 
+    // Prepare staff record permissions
+    const staffPermissions = staffData.permissions || {
+      can_view_tasks: true,
+      can_manage_tasks: false,
+      can_message_staff: true,
+      can_manage_bookings: false,
+      can_create_job_cards: false,
+      can_track_hours: true,
+      can_log_earnings: false,
+      can_edit_profile: true,
+      can_view_customer_bookings: false,
+      can_view_analytics: false
+    };
+
     // Create staff record in business_staff table
     const { data: staffRecord, error: staffError } = await supabaseAdmin
       .from('business_staff')
@@ -276,18 +307,7 @@ serve(async (req) => {
         role: staffData.isCoAdmin ? 'co-admin' : 'staff',
         staff_number: staffNumber,
         is_service_provider: staffData.isServiceProvider || false,
-        permissions: staffData.permissions || {
-          can_view_tasks: true,
-          can_manage_tasks: false,
-          can_message_staff: true,
-          can_manage_bookings: false,
-          can_create_job_cards: false,
-          can_track_hours: true,
-          can_log_earnings: false,
-          can_edit_profile: true,
-          can_view_customer_bookings: false,
-          can_view_analytics: false
-        },
+        permissions: staffPermissions,
         profile_image_url: avatarUrl,
         status: 'active'
       })

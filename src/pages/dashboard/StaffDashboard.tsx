@@ -23,40 +23,45 @@ interface StaffPermissions {
 
 const StaffDashboard = () => {
   const { isStaff, staffRelationId } = useStaffStatus();
-  const { data: staffData, isLoading } = useQuery({
+  const { data: staffData, isLoading, error } = useQuery({
     queryKey: ['staffDetails', staffRelationId],
     queryFn: async () => {
       if (!staffRelationId) return null;
       
-      const { data, error } = await supabase
-        .from('business_staff')
-        .select(`
-          *,
-          business:business_id (
-            business_name,
-            avatar_url
-          )
-        `)
-        .eq('id', staffRelationId)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('business_staff')
+          .select(`
+            *,
+            business:business_id (
+              business_name,
+              avatar_url
+            )
+          `)
+          .eq('id', staffRelationId)
+          .single();
+          
+        if (error) throw error;
         
-      if (error) throw error;
-      
-      // Parse permissions JSON to an object if it's a string
-      if (data) {
-        try {
-          if (typeof data.permissions === 'string') {
-            data.permissions = JSON.parse(data.permissions);
-          } else if (typeof data.permissions !== 'object') {
-            data.permissions = {}; // Default empty object if not valid
+        // Parse permissions JSON to an object if it's a string
+        if (data) {
+          try {
+            if (typeof data.permissions === 'string') {
+              data.permissions = JSON.parse(data.permissions);
+            } else if (typeof data.permissions !== 'object') {
+              data.permissions = {}; // Default empty object if not valid
+            }
+          } catch (e) {
+            console.error("Error parsing permissions:", e);
+            data.permissions = {}; // Default to empty object on parse error
           }
-        } catch (e) {
-          console.error("Error parsing permissions:", e);
-          data.permissions = {}; // Default to empty object on parse error
         }
+        
+        return data;
+      } catch (e) {
+        console.error("Error fetching staff details:", e);
+        throw e;
       }
-      
-      return data;
     },
     enabled: !!staffRelationId
   });
@@ -69,41 +74,59 @@ const StaffDashboard = () => {
     }
   });
   
-  const { data: stats } = useQuery({
+  const { data: stats, error: statsError } = useQuery({
     queryKey: ['staffStats', staffRelationId],
     queryFn: async () => {
-      if (!staffRelationId) return null;
+      if (!staffRelationId || !user) return null;
       
-      // Get tasks count
-      const { count: tasksCount, error: tasksError } = await supabase
-        .from('tasks')
-        .select('*', { count: 'exact', head: true })
-        .eq('assignee_id', user?.id);
+      try {
+        // Get tasks count
+        const { count: tasksCount, error: tasksError } = await supabase
+          .from('tasks')
+          .select('*', { count: 'exact', head: true })
+          .eq('assignee_id', user.id);
+          
+        if (tasksError) throw tasksError;
         
-      // Get bookings count
-      const { count: bookingsCount, error: bookingsError } = await supabase
-        .from('bookings')
-        .select('*', { count: 'exact', head: true })
-        .eq('staff_assigned_id', user?.id);
+        // Get bookings count
+        const { count: bookingsCount, error: bookingsError } = await supabase
+          .from('bookings')
+          .select('*', { count: 'exact', head: true })
+          .eq('staff_assigned_id', user.id);
+          
+        if (bookingsError) throw bookingsError;
         
-      // Get work logs count
-      const { count: workLogsCount, error: workLogsError } = await supabase
-        .from('staff_work_logs')
-        .select('*', { count: 'exact', head: true })
-        .eq('staff_relation_id', staffRelationId);
+        // Get work logs count
+        const { count: workLogsCount, error: workLogsError } = await supabase
+          .from('staff_work_logs')
+          .select('*', { count: 'exact', head: true })
+          .eq('staff_relation_id', staffRelationId);
+          
+        if (workLogsError) throw workLogsError;
         
-      // Get job cards count
-      const { count: jobCardsCount, error: jobCardsError } = await supabase
-        .from('job_cards')
-        .select('*', { count: 'exact', head: true })
-        .eq('staff_relation_id', staffRelationId);
+        // Get job cards count
+        const { count: jobCardsCount, error: jobCardsError } = await supabase
+          .from('job_cards')
+          .select('*', { count: 'exact', head: true })
+          .eq('staff_relation_id', staffRelationId);
+          
+        if (jobCardsError) throw jobCardsError;
         
-      return {
-        tasksCount: tasksCount || 0,
-        bookingsCount: bookingsCount || 0,
-        workLogsCount: workLogsCount || 0,
-        jobCardsCount: jobCardsCount || 0
-      };
+        return {
+          tasksCount: tasksCount || 0,
+          bookingsCount: bookingsCount || 0,
+          workLogsCount: workLogsCount || 0,
+          jobCardsCount: jobCardsCount || 0
+        };
+      } catch (error) {
+        console.error("Error fetching staff stats:", error);
+        return {
+          tasksCount: 0,
+          bookingsCount: 0,
+          workLogsCount: 0,
+          jobCardsCount: 0
+        };
+      }
     },
     enabled: !!staffRelationId && !!user
   });
@@ -125,6 +148,23 @@ const StaffDashboard = () => {
   
   if (isLoading || !staffData) {
     return <div className="py-8 text-center">Loading staff dashboard...</div>;
+  }
+
+  if (error) {
+    return (
+      <Card className="p-8 text-center">
+        <div className="flex flex-col items-center justify-center">
+          <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+          <h3 className="text-2xl font-medium">Error Loading Dashboard</h3>
+          <p className="text-muted-foreground mt-2 max-w-md mx-auto">
+            We encountered a problem loading your staff dashboard. Please try again or contact support.
+          </p>
+          <pre className="mt-4 p-4 bg-muted text-xs overflow-auto max-w-md">
+            {error.message || "Unknown error"}
+          </pre>
+        </div>
+      </Card>
+    );
   }
   
   const permissions = staffData.permissions as StaffPermissions || {};

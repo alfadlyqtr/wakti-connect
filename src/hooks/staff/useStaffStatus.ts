@@ -32,11 +32,16 @@ export const useStaffStatus = (): StaffStatus => {
           .from('business_staff')
           .select('id, business_id')
           .eq('staff_id', user.id)
-          .maybeSingle();
+          .single();
           
         if (error) {
-          console.error("Error checking staff status:", error);
-          setIsStaff(false);
+          if (error.code === 'PGRST116') {
+            // No data found error, just means they're not staff
+            setIsStaff(false);
+          } else {
+            console.error("Error checking staff status:", error);
+            setIsStaff(false);
+          }
         } else {
           setIsStaff(!!data);
           if (data) {

@@ -57,15 +57,20 @@ export const useCreateStaff = (): UseCreateStaffReturn => {
         
         // Add avatar to payload if provided
         if (values.avatar) {
-          // Convert file to base64
-          const reader = new FileReader();
-          const base64Promise = new Promise<string>((resolve) => {
-            reader.onload = (e) => resolve(e.target?.result as string);
-            reader.readAsDataURL(values.avatar);
-          });
-          
-          const avatarBase64 = await base64Promise;
-          staffData.avatar = avatarBase64;
+          try {
+            // Convert file to base64
+            const reader = new FileReader();
+            const base64Promise = new Promise<string>((resolve) => {
+              reader.onload = (e) => resolve(e.target?.result as string);
+              reader.readAsDataURL(values.avatar);
+            });
+            
+            const avatarBase64 = await base64Promise;
+            staffData.avatar = avatarBase64;
+          } catch (error) {
+            console.error("Error converting avatar to base64:", error);
+            // Continue without avatar
+          }
         }
         
         console.log("Calling create-staff edge function...");
@@ -78,13 +83,14 @@ export const useCreateStaff = (): UseCreateStaffReturn => {
           }
         });
         
+        console.log("Edge function response:", response);
+        
         if (response.error) {
           console.error("Edge function error:", response.error);
           throw new Error(response.error.message || "Failed to create staff account");
         }
         
         const result = response.data;
-        console.log("Edge function response:", result);
         
         if (!result.success) {
           throw new Error(result.error || "Failed to create staff account");
