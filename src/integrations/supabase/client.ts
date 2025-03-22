@@ -1,6 +1,4 @@
 
-import { createClient } from '@supabase/supabase-js';
-
 // Create a mock Supabase client that matches the required API shape
 const createMockSupabaseClient = () => {
   // Create a chainable response to handle method chaining

@@ -17,6 +17,14 @@ vi.mock('@/hooks/ai/useAIChat', () => ({
   }),
 }));
 
+vi.mock('@/components/settings/ai/context/AISettingsContext', () => ({
+  useAISettings: () => ({
+    settings: {
+      assistant_name: 'Test Assistant'
+    }
+  })
+}));
+
 describe('AIAssistantChatCard', () => {
   it('renders correctly', () => {
     render(

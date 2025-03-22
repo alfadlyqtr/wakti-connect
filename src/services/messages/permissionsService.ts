@@ -1,65 +1,102 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Check if the current user can message another user
- * @param userId The user ID to check messaging permissions for
- * @returns boolean indicating if messaging is allowed
+ * Fetches permissions for a conversation or creates default permissions
  */
-export const canMessageUser = async (userId: string): Promise<boolean> => {
+export const getConversationPermissions = async (conversationId: string) => {
   try {
     const { data: sessionData } = await supabase.auth.getSession();
     
     if (!sessionData.session) {
-      return false;
+      throw new Error('User not authenticated');
     }
     
-    const currentUserId = sessionData.session.user.id;
+    const userId = sessionData.session.user.id;
     
-    // Users can't message themselves
-    if (currentUserId === userId) {
-      return false;
-    }
-    
-    const { data: contactData } = await supabase
-      .from('contacts')
-      .select('*');
+    // Check if permissions already exist
+    const { data: existingPermissions, error } = await supabase
+      .from('conversation_permissions')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .eq('user_id', userId);
       
-    // Check if they are in each other's contacts
-    const isContact = contactData && contactData.some(contact => 
-      (contact.user_id === currentUserId && contact.contact_id === userId && contact.status === 'accepted') ||
-      (contact.user_id === userId && contact.contact_id === currentUserId && contact.status === 'accepted')
-    );
-    
-    if (isContact) {
-      return true;
+    if (error) {
+      console.error('Error fetching permissions:', error);
+      throw error;
     }
     
-    // Check if it's a business account that accepts messages from anyone
-    const { data: businessData } = await supabase
-      .from('businesses')
-      .select('*');
-      
-    const isBusiness = businessData && businessData.some(business => 
-      business.owner_id === userId && business.settings?.accept_messages === true
-    );
-    
-    if (isBusiness) {
-      return true;
+    // Return existing permissions if found
+    if (existingPermissions && existingPermissions.length > 0) {
+      return existingPermissions[0];
     }
     
-    // Check if the user is subscribed to the business
-    const { data: subscriptionData } = await supabase
-      .from('business_subscribers')
-      .select('*');
-      
-    const isSubscribed = subscriptionData && subscriptionData.some(sub => 
-      sub.business_id === userId && sub.subscriber_id === currentUserId && sub.status === 'active'
-    );
+    // Create default permissions
+    const defaultPermissions = {
+      user_id: userId,
+      conversation_id: conversationId,
+      can_read: true,
+      can_write: true,
+      can_delete: true,
+      is_owner: true
+    };
     
-    return isSubscribed || false;
+    const { data: newPermissions, error: createError } = await supabase
+      .from('conversation_permissions')
+      .insert(defaultPermissions)
+      .select()
+      .single();
+      
+    if (createError) {
+      console.error('Error creating permissions:', createError);
+      throw createError;
+    }
+    
+    return newPermissions;
   } catch (error) {
-    console.error("Error checking message permissions:", error);
-    return false;
+    console.error('Error in permission service:', error);
+    throw error;
+  }
+};
+
+/**
+ * Updates permissions for a conversation
+ */
+export const updatePermissions = async (conversationId: string, permissions: Partial<any>) => {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    
+    if (!sessionData.session) {
+      throw new Error('User not authenticated');
+    }
+    
+    const userId = sessionData.session.user.id;
+    
+    // Only allow updating permissions if user is the owner
+    const { data: ownerCheck, error: ownerError } = await supabase
+      .from('conversation_permissions')
+      .select('is_owner')
+      .eq('conversation_id', conversationId)
+      .eq('user_id', userId)
+      .single();
+      
+    if (ownerError || !ownerCheck?.is_owner) {
+      throw new Error('Not authorized to update permissions');
+    }
+    
+    const { error } = await supabase
+      .from('conversation_permissions')
+      .update(permissions)
+      .eq('conversation_id', conversationId)
+      .eq('user_id', userId);
+      
+    if (error) {
+      throw error;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating permissions:', error);
+    throw error;
   }
 };

@@ -1,56 +1,93 @@
 
-import React from "react";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { BarChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Bar } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { subscriberData } from "@/utils/businessReportsUtils";
+import React, { useState } from 'react';
+import { Chart } from '@/components/ui/chart';
+import { format, subMonths } from 'date-fns';
+import { Line } from 'react-chartjs-2';
 
-export const SubscriberGrowthChart = () => {
+const SubscriberGrowthChart = () => {
+  const [activeTooltip, setActiveTooltip] = useState<{x: number, y: number, value: number, date: string} | null>(null);
+
+  // Mock data for demonstration
+  const months = Array.from({ length: 6 }, (_, i) => format(subMonths(new Date(), i), 'MMM'));
+  const values = [45, 52, 68, 74, 89, 112];
+  
+  const chartData = {
+    labels: months.reverse(),
+    datasets: [
+      {
+        label: 'Subscribers',
+        data: values,
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        tension: 0.3,
+        fill: true,
+      }
+    ]
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Subscriber Growth</CardTitle>
-        <CardDescription>
-          Monthly subscriber acquisition trend
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="h-80">
-        <ChartContainer 
-          config={{
-            subscribers: {
-              label: 'Subscribers',
-              color: '#2563eb',
+    <Chart.Container 
+      className="h-[300px]" 
+      config={{ subscribers: { label: 'Subscribers', color: '#10b981' } }}
+    >
+      <Line
+        data={chartData}
+        options={{
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: {
+                color: 'rgba(0, 0, 0, 0.05)',
+              },
             },
-          }}
-        >
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={subscriberData}
-              margin={{
-                top: 20,
-                right: 30,
-                left: 20,
-                bottom: 5,
-              }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip 
-                content={
-                  <ChartTooltipContent />
+            x: {
+              grid: {
+                display: false,
+              },
+            },
+          },
+          interaction: {
+            intersect: false,
+            mode: 'index',
+          },
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              enabled: false,
+              external: (context) => {
+                const { chart, tooltip } = context;
+                if (tooltip.opacity === 0) {
+                  setActiveTooltip(null);
+                  return;
                 }
-              />
-              <Bar dataKey="subscribers" fill="var(--color-subscribers)" barSize={30} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartContainer>
-      </CardContent>
-      <CardFooter>
-        <p className="text-sm text-muted-foreground">
-          600% growth in subscribers over the past 6 months
-        </p>
-      </CardFooter>
-    </Card>
+                
+                const index = tooltip.dataPoints[0].dataIndex;
+                setActiveTooltip({
+                  x: chart.canvas.offsetLeft + tooltip.caretX,
+                  y: chart.canvas.offsetTop + tooltip.caretY,
+                  value: values[index],
+                  date: months[index]
+                });
+              }
+            }
+          }
+        }}
+      />
+      
+      {activeTooltip && (
+        <Chart.Tooltip>
+          <Chart.TooltipContent 
+            title={activeTooltip.date}
+            value={`${activeTooltip.value} subscribers`}
+          />
+        </Chart.Tooltip>
+      )}
+    </Chart.Container>
   );
 };
+
+export default SubscriberGrowthChart;
