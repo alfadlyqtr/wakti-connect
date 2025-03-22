@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Sheet,
@@ -15,8 +16,6 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ProfileData } from "../dashboard/home/ProfileData";
-import { MobileSearch } from "./navbar/MobileSearch";
 
 interface SidebarProps {
   navigation: SidebarNavItem[];
@@ -52,12 +51,9 @@ const Sidebar: React.FC<SidebarProps> = ({ navigation }) => {
     if (!userType) return false;
     if (requiredType === 'any') return true;
     
-    // Handle deprecated 'staff' account type
-    if (userType === 'staff') {
-      return ['free', 'individual', 'business'].includes(requiredType);
-    }
-    
-    return requiredType === userType;
+    // Handle account types
+    return ['free', 'individual', 'business'].includes(requiredType) && 
+           (userType === requiredType || userType === 'business');
   };
 
   return (
@@ -79,18 +75,31 @@ const Sidebar: React.FC<SidebarProps> = ({ navigation }) => {
           </SheetDescription>
         </SheetHeader>
         
-        <MobileSearch />
-
+        {/* Profile section */}
         <div className="py-4">
           {isLoading ? (
             <div className="h-16 animate-pulse bg-muted rounded w-full"></div>
           ) : profileData ? (
-            <ProfileData profileData={profileData} />
+            <div className="p-3 border rounded-md">
+              <div className="font-medium">{profileData.display_name || profileData.full_name}</div>
+              <div className="text-sm text-muted-foreground">{profileData.account_type}</div>
+            </div>
           ) : (
             <p className="text-muted-foreground">
               Could not load profile data.
             </p>
           )}
+        </div>
+
+        {/* Search section */}
+        <div className="mb-4">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search..."
+              className="w-full bg-background border rounded-md py-2 px-3 text-sm"
+            />
+          </div>
         </div>
 
         <div className="grid gap-4">

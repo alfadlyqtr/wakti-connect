@@ -1,16 +1,16 @@
 
-// Replace with a stub implementation since we're removing staff functionality
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface StaffDetailsDialogProps {
   open: boolean;
-  onClose: () => void;
+  onOpenChange: (open: boolean) => void;
+  staffId?: string | null;
 }
 
-const StaffDetailsDialog = ({ open, onClose }: StaffDetailsDialogProps) => {
+const StaffDetailsDialog = ({ open, onOpenChange, staffId }: StaffDetailsDialogProps) => {
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Staff Management Removed</DialogTitle>

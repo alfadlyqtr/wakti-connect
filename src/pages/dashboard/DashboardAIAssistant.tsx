@@ -13,7 +13,10 @@ const DashboardAIAssistant = () => {
   const isLoading = false;
   const inputMessage = '';
   const setInputMessage = () => {};
-  const sendMessage = async () => { return Promise.resolve(); }; // Make it return a Promise
+  const sendMessage = async (e: React.FormEvent) => { 
+    e.preventDefault();
+    return Promise.resolve(); 
+  };
   const clearMessages = () => {};
   const canUseAI = true;
   const aiSettings = {};
