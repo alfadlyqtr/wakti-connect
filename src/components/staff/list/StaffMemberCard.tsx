@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "lucide-react";
+import { Calendar, Eye } from "lucide-react";
 
 interface StaffMember {
   id: string;
@@ -14,6 +14,11 @@ interface StaffMember {
   position: string;
   created_at: string;
   staff_id: string;
+  status?: string;
+  profile?: {
+    full_name?: string;
+    avatar_url?: string;
+  };
 }
 
 interface StaffMemberCardProps {
@@ -22,30 +27,45 @@ interface StaffMemberCardProps {
 }
 
 const StaffMemberCard: React.FC<StaffMemberCardProps> = ({ member, onViewDetails }) => {
+  // Get the displayed name - from profile if available, fallback to staff record
+  const displayName = member.profile?.full_name || member.name || "Unnamed Staff";
+  
+  // Generate avatar initials
+  const initials = displayName
+    .split(" ")
+    .map(part => part.charAt(0))
+    .join("")
+    .toUpperCase()
+    .substring(0, 2);
+    
+  // Check if staff is active
+  const isActive = member.status !== "deleted" && member.status !== "suspended";
+  
   return (
-    <Card key={member.id} className="overflow-hidden">
+    <Card key={member.id} className={!isActive ? "opacity-75 border-muted" : ""}>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <Avatar className="h-12 w-12">
+            <AvatarImage src={member.profile?.avatar_url || ""} alt={displayName} />
             <AvatarFallback>
-              {member.name ? member.name.substring(0, 2).toUpperCase() : "ST"}
+              {initials || "ST"}
             </AvatarFallback>
           </Avatar>
-          <Badge variant={member.role === "admin" ? "secondary" : "outline"}>
-            {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-          </Badge>
+          <div className="flex flex-wrap gap-1">
+            <Badge variant={member.role === "co-admin" ? "secondary" : "outline"}>
+              {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+            </Badge>
+            {!isActive && (
+              <Badge variant="destructive">
+                {member.status?.charAt(0).toUpperCase() + member.status?.slice(1) || "Inactive"}
+              </Badge>
+            )}
+          </div>
         </div>
-        <CardTitle className="mt-2">{member.name || "Unnamed Staff"}</CardTitle>
+        <CardTitle className="mt-2">{displayName}</CardTitle>
         <CardDescription>{member.position || "Staff Member"}</CardDescription>
         {member.email && (
-          <CardDescription className="text-xs">{member.email}</CardDescription>
-        )}
-        {member.staff_id !== member.id && (
-          <div className="mt-1">
-            <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-              Active Account
-            </Badge>
-          </div>
+          <CardDescription className="text-xs truncate">{member.email}</CardDescription>
         )}
       </CardHeader>
       <CardContent className="pb-2">
@@ -59,9 +79,10 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({ member, onViewDetails
       <CardFooter className="pt-2 flex gap-2">
         <Button 
           variant="outline" 
-          className="flex-1"
+          className="flex-1 flex items-center justify-center"
           onClick={() => onViewDetails(member.id)}
         >
+          <Eye className="h-4 w-4 mr-2" />
           View Details
         </Button>
       </CardFooter>

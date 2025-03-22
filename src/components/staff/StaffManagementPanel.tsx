@@ -39,8 +39,13 @@ const StaffManagementPanel = () => {
   };
   
   const handleEditStaff = (staffId: string) => {
-    setEditingStaffId(staffId);
-    setActiveTab("create");
+    if (staffId === "new") {
+      setEditingStaffId(null);
+      setActiveTab("create");
+    } else {
+      setEditingStaffId(staffId);
+      setActiveTab("create");
+    }
   };
   
   const handleStaffCreated = () => {

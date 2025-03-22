@@ -6,6 +6,7 @@ import StaffMemberCard from "./list/StaffMemberCard";
 import DeleteStaffDialog from "./list/DeleteStaffDialog";
 import ToggleStatusDialog from "./list/ToggleStatusDialog";
 import EmptyStaffState from "./list/EmptyStaffState";
+import StaffDetailsDialog from "./dialog/StaffDetailsDialog";
 
 interface StaffMembersListProps {
   onEditStaff: (staffId: string) => void;
@@ -14,6 +15,8 @@ interface StaffMembersListProps {
 const StaffMembersList: React.FC<StaffMembersListProps> = ({ onEditStaff }) => {
   const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null);
   const [staffToToggleStatus, setStaffToToggleStatus] = useState<StaffMember | null>(null);
+  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   
   const { 
     staffMembers, 
@@ -35,7 +38,12 @@ const StaffMembersList: React.FC<StaffMembersListProps> = ({ onEditStaff }) => {
 
   const handleAddStaffClick = () => {
     // This would typically open a dialog or navigate to add staff page
-    console.log("Add staff button clicked");
+    onEditStaff("new");
+  };
+  
+  const handleViewDetails = (staffId: string) => {
+    setSelectedStaffId(staffId);
+    setDetailsDialogOpen(true);
   };
   
   if (isLoading) {
@@ -61,7 +69,7 @@ const StaffMembersList: React.FC<StaffMembersListProps> = ({ onEditStaff }) => {
           <StaffMemberCard
             key={staff.id}
             member={staff}
-            onViewDetails={(staffId) => onEditStaff(staffId)}
+            onViewDetails={handleViewDetails}
           />
         ))}
       </div>
@@ -76,6 +84,12 @@ const StaffMembersList: React.FC<StaffMembersListProps> = ({ onEditStaff }) => {
         staffToToggle={staffToToggleStatus}
         onOpenChange={(open) => !open && setStaffToToggleStatus(null)}
         onConfirmToggle={handleToggleStatus}
+      />
+      
+      <StaffDetailsDialog
+        staffId={selectedStaffId}
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
       />
     </>
   );
