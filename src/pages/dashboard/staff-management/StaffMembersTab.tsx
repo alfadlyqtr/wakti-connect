@@ -3,9 +3,8 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users } from "lucide-react";
+import { Users, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { UserPlus } from "lucide-react";
 import { StaffMember } from "./types";
 import StaffMemberCard from "./StaffMemberCard";
 
@@ -19,7 +18,7 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
   onOpenCreateDialog 
 }) => {
   // Fetch staff members
-  const { data: staffMembers, isLoading: staffLoading, error: staffError } = useQuery({
+  const { data: staffMembers, isLoading: staffLoading, error: staffError, refetch } = useQuery({
     queryKey: ['businessStaff'],
     queryFn: async () => {
       const { data: session } = await supabase.auth.getSession();
@@ -47,14 +46,23 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
             
           return {
             ...staff,
-            profile: profileError ? null : profileData
+            profile: profileError ? { 
+              full_name: staff.name, 
+              avatar_url: null 
+            } : profileData
           } as StaffMember;
         })
       );
       
       return staffWithProfiles;
-    }
+    },
+    refetchInterval: 30000, // Refetch every 30 seconds
   });
+
+  // Refetch when component mounts to ensure we have latest data
+  React.useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   if (staffLoading) {
     return (
@@ -78,10 +86,10 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
         <div className="text-center">
           <Users className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">No Staff Members Yet</h3>
-          <p className="text-muted-foreground mb-4">Invite new staff members to your business.</p>
+          <p className="text-muted-foreground mb-4">Add new staff members to your business.</p>
           <Button onClick={onOpenCreateDialog}>
             <UserPlus className="mr-2 h-4 w-4" />
-            Invite Staff
+            Create Staff Account
           </Button>
         </div>
       </Card>

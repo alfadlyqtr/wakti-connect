@@ -23,9 +23,14 @@ const CreateTab: React.FC<CreateTabProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="sticky top-0 z-10 bg-background pt-2 pb-4 border-b mb-4">
+          <h3 className="text-lg font-semibold">Create New Staff</h3>
+          <p className="text-sm text-muted-foreground">Assign permissions and role below</p>
+        </div>
+        
         <StaffFormFields form={form} />
         
-        <DialogFooter className="mt-6">
+        <DialogFooter className="mt-6 pt-4 border-t sticky bottom-0 bg-background">
           <Button 
             type="button" 
             variant="outline" 

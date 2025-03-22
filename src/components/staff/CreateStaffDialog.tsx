@@ -10,6 +10,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreateTab, InfoTab } from "./dialog";
 import { useCreateStaff } from "@/hooks/staff/useCreateStaff";
+import { Card } from "@/components/ui/card";
 
 interface CreateStaffDialogProps {
   open: boolean;
@@ -37,7 +38,7 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
       if (!open) form.reset();
       onOpenChange(open);
     }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Create Staff Account</DialogTitle>
           <DialogDescription>
@@ -46,18 +47,20 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="create">Create Staff</TabsTrigger>
             <TabsTrigger value="info">Information</TabsTrigger>
           </TabsList>
           
           <TabsContent value="create">
-            <CreateTab 
-              form={form} 
-              onSubmit={handleSubmit} 
-              onCancel={() => onOpenChange(false)}
-              isSubmitting={isSubmitting}
-            />
+            <Card className="border shadow-sm">
+              <CreateTab 
+                form={form} 
+                onSubmit={handleSubmit} 
+                onCancel={() => onOpenChange(false)}
+                isSubmitting={isSubmitting}
+              />
+            </Card>
           </TabsContent>
           
           <TabsContent value="info">
