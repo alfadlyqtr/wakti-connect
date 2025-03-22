@@ -7,7 +7,6 @@ import { useCreateStaffMutation } from "./creation/createStaffMutation";
 import { UseCreateStaffReturn } from "./creation/types";
 
 export const useCreateStaff = (): UseCreateStaffReturn => {
-  const [activeTab, setActiveTab] = useState("create");
   const createStaffMutation = useCreateStaffMutation();
   
   const form = useForm<StaffFormValues>({
@@ -46,8 +45,6 @@ export const useCreateStaff = (): UseCreateStaffReturn => {
   
   return {
     form,
-    activeTab,
-    setActiveTab,
     onSubmit,
     isSubmitting: createStaffMutation.isPending
   };

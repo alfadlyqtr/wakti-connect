@@ -1,8 +1,11 @@
 
 import React from "react";
-import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CreateTab } from "./dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Form } from "@/components/ui/form";
+import { DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { UserPlus, Loader2 } from "lucide-react";
+import StaffFormFields from "./dialog/StaffFormFields";
 import { useCreateStaff } from "@/hooks/staff";
 
 interface CreateStaffDialogProps {
@@ -14,12 +17,13 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
   open,
   onOpenChange,
 }) => {
-  const { form, activeTab, setActiveTab, onSubmit, isSubmitting } = useCreateStaff();
+  const { form, onSubmit, isSubmitting } = useCreateStaff();
 
   const handleSubmit = async (values: any) => {
     const success = await onSubmit(values);
     if (success) {
       onOpenChange(false);
+      form.reset();
     }
   };
 
@@ -30,29 +34,48 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] h-[90vh] max-h-[800px] flex flex-col">
-        <Tabs defaultValue="create" value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-          <TabsList className="grid grid-cols-2">
-            <TabsTrigger value="create">Create New</TabsTrigger>
-            <TabsTrigger value="invite">Invite via Email</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="create" className="flex-1 flex flex-col">
-            <CreateTab
-              form={form}
-              onSubmit={handleSubmit}
-              onCancel={handleCancel}
-              isSubmitting={isSubmitting}
-            />
-          </TabsContent>
-          
-          <TabsContent value="invite" className="flex-1">
-            {/* Invite tab content will go here */}
-            <div className="p-6 text-center text-muted-foreground">
-              Email invitation feature coming soon.
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="sticky top-0 z-10 bg-background pt-4 pb-6">
+          <div className="flex items-center space-x-4">
+            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <UserPlus className="h-6 w-6 text-primary" />
             </div>
-          </TabsContent>
-        </Tabs>
+            <div>
+              <h3 className="text-xl font-semibold">Create New Staff</h3>
+              <p className="text-sm text-muted-foreground">Set up account details and permissions</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto pr-2">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
+              <StaffFormFields form={form} />
+
+              <DialogFooter className="mt-6 pt-4 border-t sticky bottom-0 bg-background">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleCancel}
+                  className="mr-2"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    "Create Staff Account"
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );

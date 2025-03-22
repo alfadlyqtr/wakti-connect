@@ -12,7 +12,7 @@ interface StaffFormFieldsProps {
 
 const StaffFormFields: React.FC<StaffFormFieldsProps> = ({ form }) => {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 w-full">
       <StaffInfoFields form={form} />
       <RoleIdentityFields form={form} />
       <PermissionGroups form={form} />

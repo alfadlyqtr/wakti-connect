@@ -9,8 +9,6 @@ export interface CreateStaffResult {
 
 export interface UseCreateStaffReturn {
   form: any;
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
   onSubmit: (values: StaffFormValues) => Promise<boolean>;
   isSubmitting: boolean;
 }

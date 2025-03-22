@@ -1,7 +1,6 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { StaffFormValues } from "@/components/staff/dialog/StaffFormSchema";
 import { checkCoAdminLimit } from "./staffLimits";
 import { uploadStaffAvatar } from "./avatarUpload";
@@ -9,6 +8,7 @@ import { CreateStaffResult } from "./types";
 
 export const useCreateStaffMutation = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (values: StaffFormValues): Promise<CreateStaffResult> => {
@@ -125,28 +125,27 @@ export const useCreateStaffMutation = () => {
           })
           .eq('id', authData.user.id);
           
+        toast({
+          title: "Staff Account Created",
+          description: "The staff account has been created successfully.",
+          variant: "default"
+        });
+        
         return { success: true, data: staffData };
       } catch (error: any) {
         console.error("Error creating staff account:", error);
+        
+        toast({
+          title: "Error Creating Staff",
+          description: error.message || "Failed to create staff account",
+          variant: "destructive",
+        });
+        
         return { success: false, error: error.message || "Failed to create staff account" };
       }
     },
     onSuccess: () => {
-      toast({
-        title: "Staff Account Created",
-        description: "The staff account has been created successfully.",
-        variant: "success"
-      });
-      
       queryClient.invalidateQueries({ queryKey: ['businessStaff'] });
-      queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error Creating Staff",
-        description: error.message,
-        variant: "destructive",
-      });
     }
   });
 };
