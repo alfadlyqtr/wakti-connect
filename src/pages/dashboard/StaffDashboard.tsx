@@ -6,7 +6,6 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import StaffDashboardHeader from "@/components/dashboard/StaffDashboardHeader";
 import { useStaffStatus } from "@/hooks/useStaffStatus";
 import { Users, BookOpen, Clock, Calendar, Briefcase, AlertCircle } from "lucide-react";
-import { Json } from "@/integrations/supabase/types";
 
 interface StaffPermissions {
   can_view_tasks?: boolean;
@@ -43,11 +42,18 @@ const StaffDashboard = () => {
         
       if (error) throw error;
       
-      // Ensure permissions is properly parsed
+      // Parse permissions JSON to an object if it's a string
       if (data) {
-        data.permissions = typeof data.permissions === 'string'
-          ? JSON.parse(data.permissions)
-          : data.permissions;
+        try {
+          if (typeof data.permissions === 'string') {
+            data.permissions = JSON.parse(data.permissions);
+          } else if (typeof data.permissions !== 'object') {
+            data.permissions = {}; // Default empty object if not valid
+          }
+        } catch (e) {
+          console.error("Error parsing permissions:", e);
+          data.permissions = {}; // Default to empty object on parse error
+        }
       }
       
       return data;

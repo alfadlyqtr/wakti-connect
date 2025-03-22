@@ -6,14 +6,11 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import StaffFormFields from "./StaffFormFields";
 import { StaffFormValues } from "./StaffFormSchema";
-import { UseMutationResult } from "@tanstack/react-query";
-import { StaffInvitation, CreateInvitationData } from "@/hooks/staff/types";
 
 interface CreateTabProps {
   form: UseFormReturn<StaffFormValues>;
   onSubmit: (values: StaffFormValues) => void;
   onCancel: () => void;
-  createInvitation: UseMutationResult<StaffInvitation, Error, CreateInvitationData>;
   isSubmitting?: boolean;
 }
 
@@ -21,7 +18,6 @@ const CreateTab: React.FC<CreateTabProps> = ({
   form, 
   onSubmit, 
   onCancel,
-  createInvitation,
   isSubmitting = false
 }) => {
   return (
@@ -37,8 +33,8 @@ const CreateTab: React.FC<CreateTabProps> = ({
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={createInvitation.isPending || isSubmitting}>
-            {createInvitation.isPending || isSubmitting ? "Adding..." : "Add Staff Member"}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Creating..." : "Create Staff Account"}
           </Button>
         </DialogFooter>
       </form>

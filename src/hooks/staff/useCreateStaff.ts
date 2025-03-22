@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { staffFormSchema, StaffFormValues } from "@/components/staff/validation";
+import { staffFormSchema, StaffFormValues } from "@/components/staff/dialog/StaffFormSchema";
 
 export const useCreateStaff = () => {
   const [activeTab, setActiveTab] = useState("create");
@@ -98,7 +97,9 @@ export const useCreateStaff = () => {
           password: values.password,
           email_confirm: true,
           user_metadata: {
-            full_name: values.fullName
+            full_name: values.fullName,
+            account_type: 'staff',
+            display_name: values.fullName
           }
         });
         
@@ -125,7 +126,7 @@ export const useCreateStaff = () => {
         
         if (staffError) throw staffError;
         
-        // Add to messages contacts automatically
+        // Add to messages contacts automatically - business to staff
         await supabase
           .from('user_contacts')
           .insert({
@@ -134,6 +135,59 @@ export const useCreateStaff = () => {
             status: 'accepted',
             staff_relation_id: staffData.id
           });
+          
+        // Staff to business contact
+        await supabase
+          .from('user_contacts')
+          .insert({
+            user_id: authData.user.id,
+            contact_id: businessId,
+            status: 'accepted',
+            staff_relation_id: staffData.id
+          });
+          
+        // Get other staff members to create contacts with
+        const { data: otherStaff, error: otherStaffError } = await supabase
+          .from('business_staff')
+          .select('staff_id, id')
+          .eq('business_id', businessId)
+          .neq('staff_id', authData.user.id);
+          
+        if (!otherStaffError && otherStaff && otherStaff.length > 0) {
+          // Create contacts between all staff members
+          const contactInserts = [];
+          
+          for (const staff of otherStaff) {
+            // New staff to existing staff
+            contactInserts.push({
+              user_id: authData.user.id,
+              contact_id: staff.staff_id,
+              status: 'accepted',
+              staff_relation_id: staff.id
+            });
+            
+            // Existing staff to new staff
+            contactInserts.push({
+              user_id: staff.staff_id,
+              contact_id: authData.user.id,
+              status: 'accepted',
+              staff_relation_id: staffData.id
+            });
+          }
+          
+          if (contactInserts.length > 0) {
+            await supabase.from('user_contacts').insert(contactInserts);
+          }
+        }
+        
+        // Update profile table to set account_type
+        await supabase
+          .from('profiles')
+          .update({
+            account_type: 'staff',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', authData.user.id);
           
         return staffData;
       } catch (error: any) {

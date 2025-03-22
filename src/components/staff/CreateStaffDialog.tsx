@@ -10,7 +10,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreateTab, InfoTab } from "./dialog";
 import { useCreateStaff } from "@/hooks/staff/useCreateStaff";
-import { InvitationInfoAlert } from "./invitation";
 
 interface CreateStaffDialogProps {
   open: boolean;
@@ -40,9 +39,9 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
     }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Staff Member</DialogTitle>
+          <DialogTitle>Create Staff Account</DialogTitle>
           <DialogDescription>
-            Create a new staff member for your business
+            Manually create a staff account for your business
           </DialogDescription>
         </DialogHeader>
         
@@ -53,17 +52,11 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({ open, onOpenChang
           </TabsList>
           
           <TabsContent value="create">
-            {/* Use the InvitationInfoAlert component for consistent messaging */}
-            <div className="mb-4">
-              <InvitationInfoAlert />
-            </div>
-            
             <CreateTab 
               form={form} 
               onSubmit={handleSubmit} 
               onCancel={() => onOpenChange(false)}
               isSubmitting={isSubmitting}
-              createInvitation={{ isPending: isSubmitting } as any}
             />
           </TabsContent>
           

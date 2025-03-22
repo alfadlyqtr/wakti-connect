@@ -6,12 +6,12 @@ import {
   FormItem, 
   FormLabel, 
   FormControl, 
-  FormMessage 
+  FormMessage,
+  FormDescription 
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { StaffFormValues } from "./StaffFormSchema";
 
 interface StaffFormFieldsProps {
@@ -23,7 +23,7 @@ const StaffFormFields: React.FC<StaffFormFieldsProps> = ({ form }) => {
     <div className="space-y-4">
       <FormField
         control={form.control}
-        name="name"
+        name="fullName"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Full Name <span className="text-destructive">*</span></FormLabel>
@@ -40,7 +40,7 @@ const StaffFormFields: React.FC<StaffFormFieldsProps> = ({ form }) => {
         name="email"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Email</FormLabel>
+            <FormLabel>Email <span className="text-destructive">*</span></FormLabel>
             <FormControl>
               <Input type="email" placeholder="staff@example.com" {...field} />
             </FormControl>
@@ -51,25 +51,27 @@ const StaffFormFields: React.FC<StaffFormFieldsProps> = ({ form }) => {
       
       <FormField
         control={form.control}
-        name="role"
+        name="password"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Role <span className="text-destructive">*</span></FormLabel>
-            <Select 
-              onValueChange={field.onChange} 
-              defaultValue={field.value}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="co-admin">Co-Admin</SelectItem>
-                <SelectItem value="staff">Staff</SelectItem>
-              </SelectContent>
-            </Select>
+            <FormLabel>Password <span className="text-destructive">*</span></FormLabel>
+            <FormControl>
+              <Input type="password" placeholder="Minimum 8 characters" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={form.control}
+        name="confirmPassword"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Confirm Password <span className="text-destructive">*</span></FormLabel>
+            <FormControl>
+              <Input type="password" placeholder="Confirm password" {...field} />
+            </FormControl>
             <FormMessage />
           </FormItem>
         )}
@@ -89,28 +91,197 @@ const StaffFormFields: React.FC<StaffFormFieldsProps> = ({ form }) => {
         )}
       />
       
-      <FormField
-        control={form.control}
-        name="sendInvitation"
-        render={({ field }) => (
-          <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
-            <FormControl>
-              <Checkbox
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-            </FormControl>
-            <div className="space-y-1 leading-none">
-              <Label htmlFor="send-invitation">
-                Send invitation email
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Allow this staff member to create their own account
-              </p>
-            </div>
-          </FormItem>
-        )}
-      />
+      <div className="mt-6">
+        <h3 className="text-sm font-medium mb-2">Staff Permissions</h3>
+        
+        <div className="space-y-3">
+          <FormField
+            control={form.control}
+            name="isCoAdmin"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <FormLabel>Co-Admin</FormLabel>
+                  <FormDescription className="text-xs">
+                    Make this staff a co-admin (limit 1)
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="isServiceProvider"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <FormLabel>Service Provider</FormLabel>
+                  <FormDescription className="text-xs">
+                    Allow this staff to provide services to customers
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="permissions.can_view_tasks"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <FormLabel>View Tasks</FormLabel>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="permissions.can_manage_tasks"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <FormLabel>Manage Tasks</FormLabel>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="permissions.can_message_staff"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <FormLabel>Message Other Staff</FormLabel>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="permissions.can_manage_bookings"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <FormLabel>Manage Bookings</FormLabel>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="permissions.can_create_job_cards"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <FormLabel>Create/Close Job Cards</FormLabel>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="permissions.can_track_hours"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <FormLabel>Track Working Hours</FormLabel>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="permissions.can_log_earnings"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <FormLabel>Log Daily Earnings</FormLabel>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="permissions.can_view_analytics"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                <div className="space-y-0.5">
+                  <FormLabel>View Analytics (Read-only)</FormLabel>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+      </div>
     </div>
   );
 };
