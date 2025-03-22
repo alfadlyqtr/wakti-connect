@@ -1,114 +1,23 @@
 
-import React, { useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Loader2 } from "lucide-react";
-import { useStaffSignup, StaffSignupFormValues } from "./useStaffSignup";
-import { staffSignupSchema } from "./validation";
-import StaffInvitationVerification from "./StaffInvitationVerification";
-import StaffSignupFormFields from "./StaffSignupFormFields";
 
+/**
+ * This component has been deprecated since staff accounts are now created directly 
+ * by business owners rather than through invitations.
+ */
 const StaffSignupForm: React.FC = () => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token") || "";
-  const businessSlug = searchParams.get("business") || "";
-  const acceptedParam = searchParams.get("accepted") || "";
-  
-  // Only proceed if the invitation has been explicitly accepted
-  const wasAccepted = acceptedParam === "true";
-  
-  console.log("Staff signup form loaded with params:", {
-    token,
-    businessSlug,
-    acceptedParam,
-    wasAccepted
-  });
-  
-  const { invitation, status, isSubmitting, onSubmit } = useStaffSignup(wasAccepted ? token : "");
-  
-  const form = useForm<StaffSignupFormValues>({
-    resolver: zodResolver(staffSignupSchema),
-    defaultValues: {
-      password: "",
-      confirmPassword: ""
-    },
-  });
-  
-  // Redirect to decision page if not accepted yet
-  useEffect(() => {
-    if (!wasAccepted && token) {
-      console.log("Redirecting to decision page because invitation not accepted yet");
-      navigate(`/auth/staff-invitation?token=${token}&business=${businessSlug}`);
-    }
-  }, [wasAccepted, token, businessSlug, navigate]);
-  
-  if (!wasAccepted && token) {
-    return null; // Don't render anything while redirecting
-  }
-  
-  if (status === "loading") {
-    return (
-      <StaffInvitationVerification 
-        isLoading={true} 
-        error={null} 
-        invitation={null}
-        businessName={businessSlug.replace(/-/g, ' ')}
-      />
-    );
-  }
-  
-  if (status === "invalid") {
-    return (
-      <StaffInvitationVerification 
-        isLoading={false} 
-        error="Invalid or expired invitation" 
-        invitation={null}
-        businessName={businessSlug.replace(/-/g, ' ')}
-      />
-    );
-  }
-  
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Create Your Staff Account</CardTitle>
+        <CardTitle>Staff Sign Up</CardTitle>
         <CardDescription>
-          Set up your account to join {invitation?.business_name || businessSlug.replace(/-/g, ' ')}
+          Staff accounts are now created directly by business owners.
+          Please contact your business administrator for access.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="border rounded-md p-4 bg-muted/50 mb-4">
-              <h3 className="font-medium mb-2">Your Information</h3>
-              <p className="text-sm"><span className="text-muted-foreground">Name:</span> {invitation?.name}</p>
-              <p className="text-sm"><span className="text-muted-foreground">Email:</span> {invitation?.email}</p>
-              <p className="text-sm"><span className="text-muted-foreground">Role:</span> {invitation?.role}</p>
-            </div>
-            
-            <StaffSignupFormFields form={form} />
-            
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating account...
-                </>
-              ) : (
-                "Create Account"
-              )}
-            </Button>
-          </form>
-        </Form>
+        <p>This page has been deprecated.</p>
       </CardContent>
     </Card>
   );

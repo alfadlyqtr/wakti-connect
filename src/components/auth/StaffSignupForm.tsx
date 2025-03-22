@@ -1,4 +1,3 @@
 
-// This file is now a re-export of the refactored component
-// to maintain backward compatibility with existing imports
+// Re-export the simplified staff signup form component
 export { default } from './staff-signup/StaffSignupForm';

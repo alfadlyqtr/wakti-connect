@@ -10,8 +10,6 @@ import VerifySuccess from "@/pages/auth/VerifySuccessPage";
 import PlanSelection from "@/pages/auth/PlanSelectionPage";
 import WelcomeSetup from "@/pages/auth/WelcomeSetupPage";
 import PaymentSuccess from "@/pages/auth/PaymentSuccessPage";
-import StaffSignupPage from "@/pages/auth/StaffSignupPage";
-import StaffInvitationPage from "@/pages/auth/StaffInvitationPage";
 
 export const authRoutes: RouteObject[] = [
   {
@@ -53,14 +51,6 @@ export const authRoutes: RouteObject[] = [
   {
     path: "payment-success",
     element: <PaymentSuccess />
-  },
-  {
-    path: "staff-signup",
-    element: <StaffSignupPage />
-  },
-  {
-    path: "staff-invitation",
-    element: <StaffInvitationPage />
   }
 ];
 

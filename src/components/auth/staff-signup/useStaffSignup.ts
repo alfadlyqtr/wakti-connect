@@ -1,20 +1,14 @@
 
-import { useState } from "react";
-import { useInvitationVerification } from "./hooks/useInvitationVerification";
-import { useStaffSignupSubmit } from "./hooks/useStaffSignupSubmit";
 import { StaffFormValues } from "./validation";
 
 // Use the imported types
 export type { StaffFormValues as StaffSignupFormValues } from "./validation";
 
-export const useStaffSignup = (token?: string) => {
-  const { invitation, status } = useInvitationVerification(token);
-  const { isSubmitting, onSubmit } = useStaffSignupSubmit(invitation, token);
-  
+export const useStaffSignup = () => {
   return {
-    invitation,
-    status,
-    isSubmitting,
-    onSubmit
+    invitation: null,
+    status: "deprecated",
+    isSubmitting: false,
+    onSubmit: () => Promise.resolve(false)
   };
 };
