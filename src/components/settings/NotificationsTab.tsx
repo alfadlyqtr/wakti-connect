@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -10,14 +10,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const NotificationsTab = () => {
   const { settings, loading, handleToggle, saveNotificationSettings } = useNotificationSettings();
-  
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("notifications");
+  
+  // Get the user role from localStorage
+  useEffect(() => {
+    const storedRole = localStorage.getItem('userRole');
+    setUserRole(storedRole);
+  }, []);
+  
+  // Check if user is staff
+  const isStaff = userRole === 'staff';
 
   return (
     <Tabs defaultValue="notifications" value={activeTab} onValueChange={setActiveTab}>
       <TabsList className="mb-4">
         <TabsTrigger value="notifications">Notifications</TabsTrigger>
-        <TabsTrigger value="ai-assistant">AI Assistant</TabsTrigger>
+        {!isStaff && (
+          <TabsTrigger value="ai-assistant">AI Assistant</TabsTrigger>
+        )}
       </TabsList>
       
       <TabsContent value="notifications">
@@ -92,9 +103,11 @@ const NotificationsTab = () => {
         </Card>
       </TabsContent>
       
-      <TabsContent value="ai-assistant">
-        <AIAssistantSettings />
-      </TabsContent>
+      {!isStaff && (
+        <TabsContent value="ai-assistant">
+          <AIAssistantSettings />
+        </TabsContent>
+      )}
     </Tabs>
   );
 };
