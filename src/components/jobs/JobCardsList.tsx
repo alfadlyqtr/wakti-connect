@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { useJobCards } from "@/hooks/jobs";
 import { Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { FilterPeriod } from "./jobCardUtils";
 import EmptyJobCards from "./EmptyJobCards";
@@ -15,33 +14,18 @@ interface JobCardsListProps {
 
 const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
   const { toast } = useToast();
-  const { jobCards, isLoading, refetch } = useJobCards(staffRelationId);
+  const { 
+    jobCards, 
+    isLoading, 
+    refetch, 
+    completeJobCard 
+  } = useJobCards(staffRelationId);
+  
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>("all");
   
   const handleCompleteJob = async (jobCardId: string) => {
     try {
-      // Update the job card with the end time
-      const { data, error } = await supabase
-        .from('job_cards')
-        .update({
-          end_time: new Date().toISOString()
-        })
-        .eq('id', jobCardId)
-        .select();
-        
-      if (error) {
-        toast({
-          title: "Error",
-          description: "Failed to complete job: " + error.message,
-          variant: "destructive"
-        });
-        throw error;
-      }
-      
-      // Refetch job cards to update the list
-      setTimeout(() => {
-        refetch();
-      }, 500);
+      await completeJobCard.mutateAsync(jobCardId);
       
       toast({
         title: "Job completed",
@@ -49,6 +33,11 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
       });
     } catch (error) {
       console.error("Error completing job:", error);
+      toast({
+        title: "Error",
+        description: "Failed to complete job",
+        variant: "destructive"
+      });
     }
   };
   

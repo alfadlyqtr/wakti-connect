@@ -1,8 +1,8 @@
 
 import React, { useState } from "react";
-import { Loader2 } from "lucide-react";
 import { JobCard } from "@/types/jobs.types";
 import ActiveJobCard from "./ActiveJobCard";
+import { useCompleteJobCardMutation } from "@/hooks/jobs/mutations";
 
 interface ActiveJobsSectionProps {
   activeJobs: JobCard[];
