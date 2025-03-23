@@ -1,89 +1,28 @@
-import React, { useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { UserPlus, Users, RefreshCcw } from "lucide-react";
+
+import React, { useState } from "react";
 import { StaffList } from "@/components/staff/StaffList";
 import { StaffDialog } from "@/components/staff/StaffDialog";
 import { useToast } from "@/components/ui/use-toast";
-import { StaffMember } from "@/types/staff";
+import StaffHeader from "@/components/staff/StaffHeader";
+import StaffLimitWarning from "@/components/staff/StaffLimitWarning";
+import { useStaffMembers } from "@/hooks/staff/useStaffMembers";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function StaffPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
-  
-  const { data: sessionData } = useQuery({
-    queryKey: ['sessionData'],
-    queryFn: async () => {
-      const { data } = await supabase.auth.getSession();
-      return data;
-    }
-  });
   
   const { 
-    data: staffMembersData, 
-    isLoading, 
+    staffMembers,
+    isLoading,
     error,
-    refetch
-  } = useQuery({
-    queryKey: ['staffMembers'],
-    queryFn: async () => {
-      if (!sessionData?.session?.user?.id) {
-        throw new Error("Not authenticated");
-      }
-      
-      const businessId = sessionData.session.user.id;
-      console.log("Staff page fetching staff for business:", businessId);
-      
-      const { data, error } = await supabase
-        .from('business_staff')
-        .select('*')
-        .eq('business_id', businessId)
-        .neq('status', 'deleted')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error("Error fetching staff:", error);
-        throw new Error(error.message || "Failed to fetch staff members");
-      }
-      
-      console.log(`Staff page found ${data?.length || 0} staff members:`, data);
-      
-      return data || [];
-    },
-    enabled: !!sessionData?.session?.user?.id,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true
-  });
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  const staffMembers: StaffMember[] = (staffMembersData || []).map(staff => ({
-    id: staff.id,
-    staff_id: staff.staff_id,
-    business_id: staff.business_id,
-    name: staff.name,
-    email: staff.email,
-    position: staff.position || '',
-    role: staff.role,
-    status: staff.status,
-    is_service_provider: !!staff.is_service_provider,
-    permissions: typeof staff.permissions === 'string' 
-      ? JSON.parse(staff.permissions as string) 
-      : staff.permissions || {},
-    staff_number: staff.staff_number || '',
-    profile_image_url: staff.profile_image_url,
-    created_at: staff.created_at
-  }));
-
-  const staffCount = staffMembers?.length || 0;
-  const canAddMoreStaff = staffCount < 6;
+    refetch,
+    canAddMoreStaff,
+    handleSyncStaff,
+    isSyncing
+  } = useStaffMembers();
 
   const handleAddStaff = () => {
     setSelectedStaffId(null);
@@ -109,107 +48,15 @@ export default function StaffPage() {
     setStaffDialogOpen(false);
   };
 
-  const handleSyncStaff = async () => {
-    if (!sessionData?.session?.access_token) {
-      toast({
-        title: "Error",
-        description: "You must be signed in to sync staff records",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsSyncing(true);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke("sync-staff-records", {
-        headers: {
-          Authorization: `Bearer ${sessionData.session.access_token}`
-        }
-      });
-      
-      if (error) {
-        console.error("Error syncing staff records:", error);
-        toast({
-          title: "Sync Failed",
-          description: error.message || "Failed to sync staff records",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      if (data.success) {
-        const syncedCount = data.data.synced.length;
-        
-        toast({
-          title: "Staff Records Synced",
-          description: syncedCount > 0 
-            ? `Successfully synced ${syncedCount} staff records.` 
-            : "All staff records are already in sync.",
-          variant: "default"
-        });
-        
-        queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
-        refetch();
-      } else {
-        toast({
-          title: "Sync Failed",
-          description: data.error || "Failed to sync staff records",
-          variant: "destructive"
-        });
-      }
-    } catch (err) {
-      console.error("Error in sync operation:", err);
-      toast({
-        title: "Sync Error",
-        description: "An unexpected error occurred during sync",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold mb-1">Staff Management</h1>
-          <p className="text-muted-foreground">
-            Manage your team members and their permissions
-          </p>
-        </div>
-        
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={() => refetch()}
-            title="Refresh"
-          >
-            <RefreshCcw className="h-4 w-4" />
-          </Button>
-          
-          <Button 
-            onClick={handleAddStaff} 
-            disabled={!canAddMoreStaff}
-          >
-            <UserPlus className="mr-2 h-4 w-4" />
-            Add Staff Member
-          </Button>
-        </div>
-      </div>
+      <StaffHeader 
+        onAddStaff={handleAddStaff}
+        onRefresh={refetch}
+        canAddMoreStaff={canAddMoreStaff}
+      />
       
-      {!canAddMoreStaff && (
-        <Card className="p-4 bg-amber-50 border-amber-200">
-          <div className="flex items-center gap-2 text-amber-700">
-            <Users className="h-5 w-5" />
-            <p className="text-sm font-medium">
-              Staff limit reached (6/6). Business plan allows up to 6 staff members.
-            </p>
-          </div>
-        </Card>
-      )}
+      <StaffLimitWarning show={!canAddMoreStaff} />
       
       <StaffList 
         staffMembers={staffMembers}
@@ -227,4 +74,4 @@ export default function StaffPage() {
       />
     </div>
   );
-};
+}
