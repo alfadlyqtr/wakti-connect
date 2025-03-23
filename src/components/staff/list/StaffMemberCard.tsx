@@ -1,103 +1,111 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { MoreHorizontal, UserCog, UserX } from "lucide-react";
-import { StaffMember } from "@/types/staff";
-import {
-  DropdownMenu,
+import { 
+  DropdownMenu, 
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { StaffMember } from "@/types/staff";
 
 export interface StaffMemberCardProps {
-  member?: StaffMember;
-  staff?: StaffMember; // Alternative prop name
+  staff?: StaffMember;
+  member?: StaffMember; // For backward compatibility
   data?: StaffMember; // For backward compatibility
   onEdit: () => void;
   onDelete: () => void;
   onToggleStatus: () => void;
 }
 
-const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
-  member,
+export const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
   staff,
+  member,
   data,
   onEdit,
   onDelete,
-  onToggleStatus,
+  onToggleStatus
 }) => {
-  // Use whichever prop is provided (member, staff, or data)
-  const staffData = member || staff || data || {} as StaffMember;
-  const isActive = staffData.status === "active";
-  const roleLabel = staffData.role === "co-admin" ? "Co-Admin" : "Staff";
+  // Use the first non-undefined prop in order of preference
+  const staffMember = staff || member || data;
   
+  if (!staffMember) {
+    console.error("No staff data provided to StaffMemberCard");
+    return null;
+  }
+
+  const isActive = staffMember.status === 'active';
+  const initials = staffMember.name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2);
+
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-0">
-        <div className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src="" alt={staffData.name} />
-                <AvatarFallback>
-                  {staffData.name?.charAt(0).toUpperCase() || "S"}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="font-medium">{staffData.name || "Staff Member"}</h3>
-                <p className="text-sm text-muted-foreground">{staffData.position || "Staff Member"}</p>
-              </div>
+        <div className="flex p-4 items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10 border">
+              {staffMember.profile_image_url ? (
+                <AvatarImage src={staffMember.profile_image_url} alt={staffMember.name} />
+              ) : (
+                <AvatarFallback>{initials}</AvatarFallback>
+              )}
+            </Avatar>
+            <div>
+              <h3 className="font-medium text-sm">{staffMember.name}</h3>
+              <p className="text-xs text-muted-foreground">{staffMember.position || 'Staff Member'}</p>
             </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Badge variant={isActive ? "outline" : "secondary"} className="capitalize">
+              {staffMember.status}
+            </Badge>
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
                   <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">Open menu</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={onEdit}>
                   <UserCog className="h-4 w-4 mr-2" />
-                  Edit Staff
+                  Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={onToggleStatus}>
-                  <UserX className="h-4 w-4 mr-2" />
-                  {isActive ? "Deactivate" : "Activate"}
+                  {isActive ? (
+                    <>
+                      <UserX className="h-4 w-4 mr-2" />
+                      Suspend
+                    </>
+                  ) : (
+                    <>
+                      <UserCog className="h-4 w-4 mr-2" />
+                      Activate
+                    </>
+                  )}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={onDelete}
                   className="text-destructive focus:text-destructive"
                 >
+                  <UserX className="h-4 w-4 mr-2" />
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Badge variant={staffData.role === "co-admin" ? "default" : "outline"}>
-                {roleLabel}
-              </Badge>
-              {staffData.is_service_provider && (
-                <Badge variant="secondary">Service Provider</Badge>
-              )}
-            </div>
-            <Badge variant={isActive ? "success" : "secondary"}>
-              {isActive ? "Active" : "Inactive"}
-            </Badge>
-          </div>
-          
-          {staffData.staff_number && (
-            <p className="text-xs text-muted-foreground mt-2">
-              ID: {staffData.staff_number}
-            </p>
-          )}
         </div>
       </CardContent>
     </Card>

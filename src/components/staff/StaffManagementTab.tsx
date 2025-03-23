@@ -30,8 +30,8 @@ const StaffManagementTab: React.FC = () => {
     created_at: staff.created_at
   }));
 
-  const handleViewDetails = (memberId: string) => {
-    console.log("View details for staff member:", memberId);
+  const handleViewDetails = (staffId: string) => {
+    console.log("View details for staff member:", staffId);
     // Implement view details functionality here
   };
 

@@ -29,12 +29,17 @@ export const useStaffQuery = () => {
         throw new Error("Not authenticated");
       }
       
+      const businessId = session.session.user.id;
+      console.log("Fetching staff for business ID:", businessId);
+      
       const { data: staffData, error: staffError } = await supabase
         .from('business_staff')
         .select('*')
-        .eq('business_id', session.session.user.id);
+        .eq('business_id', businessId);
         
       if (staffError) throw staffError;
+      
+      console.log(`Found ${staffData?.length || 0} staff members`);
       
       return staffData as StaffQueryResult[];
     }

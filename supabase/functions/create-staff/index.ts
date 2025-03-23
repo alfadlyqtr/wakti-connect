@@ -57,6 +57,21 @@ serve(async (req) => {
       throw new Error('Missing required fields');
     }
     
+    // Check if the user is a business account
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('account_type')
+      .eq('id', user.id)
+      .single();
+      
+    if (profileError) {
+      throw new Error(`Failed to verify account type: ${profileError.message}`);
+    }
+    
+    if (profile.account_type !== 'business') {
+      throw new Error('Only business accounts can create staff members');
+    }
+    
     // Create the auth user account
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: email,
@@ -78,11 +93,37 @@ serve(async (req) => {
       throw new Error("Failed to create user account");
     }
     
+    console.log("Created auth user:", authData.user.id);
+    console.log("Business ID:", user.id);
+    
+    // Get staff count for numbering
+    const { count, error: countError } = await supabase
+      .from('business_staff')
+      .select('*', { count: 'exact', head: true })
+      .eq('business_id', user.id);
+      
+    if (countError) {
+      console.error("Error getting staff count:", countError);
+    }
+    
+    // Generate staff number
+    const { data: businessData } = await supabase
+      .from('profiles')
+      .select('business_name')
+      .eq('id', user.id)
+      .single();
+      
+    const businessPrefix = businessData?.business_name 
+      ? businessData.business_name.substring(0, 3).toUpperCase().replace(/[^A-Z0-9]/g, '')
+      : 'BUS';
+      
+    const staffNumber = `${businessPrefix}_Staff${String((count || 0) + 1).padStart(3, '0')}`;
+    
     // Add staff record to business_staff table
     const { data: staffRecord, error: staffError } = await supabase
       .from('business_staff')
       .insert({
-        business_id: user.id,
+        business_id: user.id, // Ensure staff is tied to the business that created them
         staff_id: authData.user.id,
         name: fullName,
         email: email,
@@ -90,6 +131,7 @@ serve(async (req) => {
         role: role,
         is_service_provider: isServiceProvider,
         permissions: permissions,
+        staff_number: staffNumber,
         status: 'active'
       })
       .select()

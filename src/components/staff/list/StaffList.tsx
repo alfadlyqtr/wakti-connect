@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { StaffMember } from "@/types/staff";
 import { StaffMembersList } from "@/components/staff/StaffMembersList";
 import EmptyStaffState from "./EmptyStaffState";
@@ -23,9 +23,9 @@ export const StaffList: React.FC<StaffListProps> = ({
   onRefresh
 }) => {
   // Initialize state for confirm dialogs
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
-  const [confirmToggleOpen, setConfirmToggleOpen] = React.useState(false);
-  const [selectedStaff, setSelectedStaff] = React.useState<StaffMember | null>(null);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [confirmToggleOpen, setConfirmToggleOpen] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   
   // Get staff operations
   const { 
@@ -34,21 +34,8 @@ export const StaffList: React.FC<StaffListProps> = ({
   } = useStaffListOperations();
 
   // Handle toggle status
-  const handleToggleStatus = (staffId: string) => {
-    const staff = staffMembers.find(s => s.id === staffId);
-    if (staff) {
-      setSelectedStaff(staff);
-      setConfirmToggleOpen(true);
-    }
-  };
-
-  // Handle delete
-  const handleDelete = (staffId: string) => {
-    const staff = staffMembers.find(s => s.id === staffId);
-    if (staff) {
-      setSelectedStaff(staff);
-      setConfirmDeleteOpen(true);
-    }
+  const handleToggleStatus = (staffId: string, status: string) => {
+    toggleStaffStatus.mutate({ staffId, newStatus: status });
   };
 
   // Show loading state
@@ -68,20 +55,13 @@ export const StaffList: React.FC<StaffListProps> = ({
 
   // Render staff list
   return (
-    <>
-      <StaffMembersList
-        staffMembers={staffMembers}
-        isLoading={isLoading}
-        error={error}
-        onEdit={onEdit}
-        onUpdateStatus={(staffId, status) => {
-          const staff = staffMembers.find(s => s.id === staffId);
-          if (staff) {
-            toggleStaffStatus.mutate({ staffId, newStatus: status });
-          }
-        }}
-      />
-    </>
+    <StaffMembersList
+      staffMembers={staffMembers}
+      isLoading={isLoading}
+      error={error}
+      onEdit={onEdit}
+      onUpdateStatus={handleToggleStatus}
+    />
   );
 };
 
