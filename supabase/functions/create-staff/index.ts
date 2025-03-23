@@ -49,31 +49,12 @@ serve(async (req) => {
       position,
       role = 'staff',
       isServiceProvider = false,
-      permissions,
-      avatar
+      permissions
     } = await req.json();
     
     // Validate required fields
     if (!fullName || !email || !password) {
       throw new Error('Missing required fields');
-    }
-    
-    // Check if a co-admin already exists (if we're creating a co-admin)
-    if (role === 'co-admin') {
-      const { data: coAdmins, error: coAdminError } = await supabase
-        .from('business_staff')
-        .select('id')
-        .eq('business_id', user.id)
-        .eq('role', 'co-admin')
-        .eq('status', 'active');
-        
-      if (coAdminError) {
-        throw new Error(`Failed to check existing co-admins: ${coAdminError.message}`);
-      }
-      
-      if (coAdmins && coAdmins.length > 0) {
-        throw new Error("Only one Co-Admin is allowed per business");
-      }
     }
     
     // Create the auth user account
@@ -97,60 +78,6 @@ serve(async (req) => {
       throw new Error("Failed to create user account");
     }
     
-    // Generate staff number
-    const { data: businessData } = await supabase
-      .from('profiles')
-      .select('business_name')
-      .eq('id', user.id)
-      .single();
-      
-    const businessPrefix = (businessData?.business_name || 'BUS')
-      .substring(0, 3)
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, '');
-      
-    const { count } = await supabase
-      .from('business_staff')
-      .select('*', { count: 'exact', head: true })
-      .eq('business_id', user.id);
-      
-    const staffNumber = `${businessPrefix}${String((count || 0) + 1).padStart(3, '0')}`;
-    
-    // Handle avatar upload if provided
-    let avatarUrl = null;
-    if (avatar) {
-      try {
-        // Extract base64 data
-        const base64Data = avatar.split(',')[1];
-        const fileExt = avatar.split(';')[0].split('/')[1];
-        
-        if (base64Data) {
-          const avatarBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-          const filePath = `${authData.user.id}/profile.${fileExt}`;
-          
-          const { data: uploadData, error: uploadError } = await supabase
-            .storage
-            .from('avatars')
-            .upload(filePath, avatarBuffer, {
-              contentType: `image/${fileExt}`,
-              upsert: true
-            });
-            
-          if (!uploadError) {
-            const { data: urlData } = await supabase
-              .storage
-              .from('avatars')
-              .getPublicUrl(filePath);
-              
-            avatarUrl = urlData.publicUrl;
-          }
-        }
-      } catch (uploadErr) {
-        console.error("Error processing avatar:", uploadErr);
-        // Continue without avatar - non-fatal error
-      }
-    }
-    
     // Add staff record to business_staff table
     const { data: staffRecord, error: staffError } = await supabase
       .from('business_staff')
@@ -162,15 +89,7 @@ serve(async (req) => {
         position: position || 'Staff Member',
         role: role,
         is_service_provider: isServiceProvider,
-        staff_number: staffNumber,
-        permissions: permissions || {
-          can_manage_tasks: false,
-          can_manage_bookings: false,
-          can_track_hours: true,
-          can_log_earnings: false,
-          can_view_analytics: false
-        },
-        profile_image_url: avatarUrl,
+        permissions: permissions,
         status: 'active'
       })
       .select()
@@ -187,11 +106,10 @@ serve(async (req) => {
         id: authData.user.id,
         full_name: fullName,
         account_type: 'staff',
-        avatar_url: avatarUrl,
         updated_at: new Date().toISOString()
       });
     
-    // Create automatic contact relationships
+    // Create automatic contact relationship for messaging
     await supabase
       .from('user_contacts')
       .insert([
