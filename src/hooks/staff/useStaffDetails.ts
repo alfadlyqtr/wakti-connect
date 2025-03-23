@@ -62,14 +62,15 @@ export const useStaffDetails = (staffRelationId: string | null) => {
         if (data.business && typeof data.business === 'object') {
           // Use a type guard to check for error property
           if (!('error' in data.business)) {
-            // Create a typed reference with more explicit typing to help TypeScript
-            const businessData = data.business as { 
-              business_name?: string; 
-              avatar_url?: string | null 
-            } | null;
-            
-            // Now access properties with proper null checking
-            if (businessData) {
+            // First check if business data exists at all before accessing it
+            if (data.business !== null) {
+              // Create a typed reference with more explicit typing to help TypeScript
+              const businessData = data.business as { 
+                business_name?: string; 
+                avatar_url?: string | null 
+              };
+              
+              // Now access properties with proper null checking
               staffDetails.business = {
                 business_name: businessData.business_name || 'Unknown Business',
                 avatar_url: businessData.avatar_url || null
