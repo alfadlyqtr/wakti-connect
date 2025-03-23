@@ -28,7 +28,7 @@ export const useJobCardsManager = (staffRelationId: string) => {
     }
     
     // Active jobs are those without an end_time
-    const active = cards.filter(card => card.end_time === null);
+    const active = cards.filter(card => !card.end_time);
     // Completed jobs are those with an end_time
     const completed = cards.filter(card => card.end_time !== null);
     
@@ -42,14 +42,14 @@ export const useJobCardsManager = (staffRelationId: string) => {
   useEffect(() => {
     setCompletionError(null);
     separateJobCards(jobCards);
-  }, [jobCards, separateJobCards, staffRelationId]);
+  }, [jobCards, separateJobCards]);
   
   const handleCompleteJob = async (jobCardId: string) => {
     console.log("[useJobCardsManager] Completing job:", jobCardId);
     setCompletionError(null);
     
     try {
-      // The mutation will handle toast notifications internally
+      // Use the mutation to complete the job
       await completeJobCard.mutateAsync(jobCardId);
       console.log("[useJobCardsManager] Job completed successfully:", jobCardId);
       
@@ -57,8 +57,7 @@ export const useJobCardsManager = (staffRelationId: string) => {
       await refetch();
     } catch (error) {
       console.error("[useJobCardsManager] Error completing job:", error);
-      
-      setCompletionError(error instanceof Error ? error : new Error("Failed to complete job. Please try again."));
+      setCompletionError(error instanceof Error ? error : new Error("Failed to complete job"));
       
       // Force refetch to ensure we're in sync
       await refetch();
@@ -73,6 +72,7 @@ export const useJobCardsManager = (staffRelationId: string) => {
     try {
       await refetch();
       console.log("[useJobCardsManager] Data refetched successfully");
+      
       toast({
         title: "Refresh successful",
         description: "Job cards have been refreshed",
@@ -80,6 +80,7 @@ export const useJobCardsManager = (staffRelationId: string) => {
       });
     } catch (err) {
       console.error("[useJobCardsManager] Error refreshing data:", err);
+      
       toast({
         title: "Error refreshing data",
         description: "Failed to refresh job cards. Please try again.",

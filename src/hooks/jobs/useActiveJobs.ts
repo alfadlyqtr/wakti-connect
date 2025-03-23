@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { JobCard } from "@/types/jobs.types";
 import { useToast } from "@/hooks/use-toast";
