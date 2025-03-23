@@ -41,16 +41,16 @@ export const canMessageUser = async (userId: string): Promise<boolean> => {
       return false;
     }
     
-    // Free users cannot message anyone
-    if (profile.account_type === 'free') {
-      console.log("Free users cannot message anyone");
-      return false;
-    }
-    
     // Business users can message anyone
     if (profile.account_type === 'business') {
       console.log("Business users can message anyone");
       return true;
+    }
+    
+    // Free users cannot message anyone
+    if (profile.account_type === 'free') {
+      console.log("Free users cannot message anyone");
+      return false;
     }
     
     // First check contacts - this is the most common case

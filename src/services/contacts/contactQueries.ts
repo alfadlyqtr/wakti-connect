@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { UserContact } from "@/types/invitation.types";
 import { fromTable } from "@/integrations/supabase/helper";
@@ -32,19 +33,31 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
       throw error;
     }
     
-    console.log("Raw contacts data:", data);
+    // Create a Set to track unique contactIds to avoid duplicates
+    const uniqueContactIds = new Set();
+    const uniqueContacts = [];
+    
+    for (const contact of data) {
+      const contactId = contact.user_id === session.user.id ? contact.contact_id : contact.user_id;
+      
+      // Skip if we've already processed this contact
+      if (uniqueContactIds.has(contactId)) continue;
+      
+      uniqueContactIds.add(contactId);
+      uniqueContacts.push(contact);
+    }
+    
+    console.log("Filtered unique contacts:", uniqueContacts.length);
     
     // Fetch all profile data in a single query for better performance
-    const contactIds = data.map(contact => 
-      contact.user_id === session.user.id ? contact.contact_id : contact.user_id
-    );
+    const contactIds = Array.from(uniqueContactIds);
     
     if (contactIds.length === 0) {
       return [];
     }
     
     const { data: profilesData, error: profilesError } = await fromTable('profiles')
-      .select('id, full_name, display_name, avatar_url')
+      .select('id, full_name, display_name, avatar_url, email, account_type')
       .in('id', contactIds);
       
     if (profilesError) {
@@ -53,13 +66,13 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
     }
     
     // Create a map of profiles for easy lookup
-    const profilesMap = profilesData.reduce((acc, profile) => {
-      acc[profile.id] = profile;
-      return acc;
-    }, {});
+    const profilesMap = {};
+    profilesData.forEach(profile => {
+      profilesMap[profile.id] = profile;
+    });
     
     // Map the contact data with the profiles
-    return data.map(contact => {
+    return uniqueContacts.map(contact => {
       const isInverted = contact.contact_id === session.user.id;
       const profileId = isInverted ? contact.user_id : contact.contact_id;
       const profile = profilesMap[profileId];
@@ -75,11 +88,15 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
         contactProfile: profile ? {
           fullName: profile.full_name,
           displayName: profile.display_name,
-          avatarUrl: profile.avatar_url
+          avatarUrl: profile.avatar_url,
+          email: profile.email,
+          accountType: profile.account_type
         } : {
           fullName: "",
           displayName: "",
-          avatarUrl: ""
+          avatarUrl: "",
+          email: "",
+          accountType: "free"
         }
       };
     });
@@ -112,7 +129,9 @@ export const fetchPendingRequests = async (): Promise<UserContact[]> => {
         profiles:user_id(
           full_name,
           display_name,
-          avatar_url
+          avatar_url,
+          email,
+          account_type
         )
       `)
       .eq('contact_id', session.user.id)
@@ -131,7 +150,9 @@ export const fetchPendingRequests = async (): Promise<UserContact[]> => {
       contactProfile: {
         fullName: request.profiles?.full_name,
         displayName: request.profiles?.display_name,
-        avatarUrl: request.profiles?.avatar_url
+        avatarUrl: request.profiles?.avatar_url,
+        email: request.profiles?.email,
+        accountType: request.profiles?.account_type
       }
     }));
   } catch (error) {

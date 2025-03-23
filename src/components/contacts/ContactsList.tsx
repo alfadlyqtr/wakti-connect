@@ -24,6 +24,10 @@ const ContactItem = ({ contact }: { contact: UserContact }) => {
   const avatarUrl = contact.contactProfile?.avatarUrl;
   const displayInitial = displayName.charAt(0) || 'U';
   
+  // Check if the contact is a business owner or staff
+  const isBusinessOwner = contact.contactProfile?.accountType === 'business';
+  const hasStaffRelation = !!contact.staffRelationId;
+  
   const handleMessageClick = () => {
     const contactUserId = contact.userId === contact.contactId ? 
                           contact.contactId : 
@@ -35,19 +39,22 @@ const ContactItem = ({ contact }: { contact: UserContact }) => {
     <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/10">
       <div className="flex items-center gap-3">
         <Avatar>
-          <AvatarImage src={avatarUrl || ''} />
+          <AvatarImage src={avatarUrl || ''} alt={displayName} />
           <AvatarFallback>{displayInitial}</AvatarFallback>
         </Avatar>
         <div>
           <p className="font-medium">{displayName}</p>
           <p className="text-sm text-muted-foreground truncate max-w-[200px]">
-            {contact.contactId}
+            {contact.contactProfile?.email || 'No email available'}
           </p>
         </div>
       </div>
       <div className="flex items-center gap-2">
-        {contact.staffRelationId && (
-          <Badge variant="outline" className="bg-blue-50">Staff</Badge>
+        {isBusinessOwner && (
+          <Badge variant="outline" className="bg-blue-50">Business</Badge>
+        )}
+        {hasStaffRelation && !isBusinessOwner && (
+          <Badge variant="outline" className="bg-green-50">Staff</Badge>
         )}
         <Button 
           size="sm" 

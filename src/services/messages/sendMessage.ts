@@ -39,6 +39,21 @@ export const sendMessage = async (recipientId: string, content: string): Promise
       throw new Error("Recipient not found");
     }
     
+    // If current user is business, allow them to message anyone
+    if (profile?.account_type === 'business') {
+      // Insert the message directly - business users have this privilege
+      const { error } = await fromTable('messages')
+        .insert({
+          sender_id: session.user.id,
+          recipient_id: recipientId,
+          content,
+          is_read: false
+        });
+      
+      if (error) throw error;
+      return true;
+    }
+    
     // If current user is an individual account and recipient is an individual account,
     // check if they are contacts
     if (profile?.account_type === 'individual' && recipientProfile?.account_type === 'individual') {

@@ -1,88 +1,66 @@
 
 import React from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { Conversation } from "@/types/message.types";
+import { formatDistanceToNow } from "date-fns";
 import { useMessaging } from "@/hooks/useMessaging";
+import { Conversation } from "@/types/message.types";
 
 const ConversationsList = () => {
-  const navigate = useNavigate();
-  const { userId: currentChatUserId } = useParams<{ userId: string }>();
   const { conversations, isLoadingConversations } = useMessaging();
-
-  const handleSelectConversation = (userId: string) => {
-    // Use a full path to ensure proper navigation
-    navigate(`/dashboard/messages/${userId}`);
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-  };
-
+  const navigate = useNavigate();
+  
   if (isLoadingConversations) {
     return (
-      <div className="p-4">
-        <div className="flex items-center space-x-4 animate-pulse">
-          <div className="rounded-full bg-muted h-12 w-12"></div>
-          <div className="space-y-2 flex-1">
-            <div className="h-4 bg-muted rounded w-1/3"></div>
-            <div className="h-3 bg-muted rounded w-2/3"></div>
-          </div>
-        </div>
+      <div className="p-4 text-center">
+        <p className="text-sm text-muted-foreground">Loading conversations...</p>
       </div>
     );
   }
-
-  if (conversations.length === 0) {
+  
+  if (!conversations || conversations.length === 0) {
     return (
-      <div className="p-6 text-center">
-        <p className="text-muted-foreground text-sm">No conversations yet</p>
+      <div className="p-4 text-center">
+        <p className="text-sm text-muted-foreground">No conversations yet</p>
       </div>
     );
   }
-
+  
   return (
     <div className="divide-y">
       {conversations.map((conversation: Conversation) => (
-        <div
-          key={conversation.userId}
-          className={`p-4 hover:bg-muted/50 cursor-pointer flex items-center gap-3 ${
-            conversation.userId === currentChatUserId ? 'bg-muted' : ''
-          }`}
-          onClick={() => handleSelectConversation(conversation.userId)}
+        <NavLink
+          key={conversation.id}
+          to={`/dashboard/messages/${conversation.userId}`}
+          className={({ isActive }) => 
+            `flex items-center gap-3 p-4 hover:bg-accent/20 transition-colors ${
+              isActive ? 'bg-accent/10' : ''
+            }`
+          }
         >
-          <Avatar className="h-12 w-12">
-            <AvatarImage src={conversation.avatar || ''} />
-            <AvatarFallback>{getInitials(conversation.displayName)}</AvatarFallback>
+          <Avatar>
+            <AvatarImage src={conversation.avatar || ''} alt={conversation.displayName} />
+            <AvatarFallback>{conversation.displayName.charAt(0)}</AvatarFallback>
           </Avatar>
           
           <div className="flex-1 min-w-0">
             <div className="flex justify-between items-start">
               <h3 className="font-medium truncate">{conversation.displayName}</h3>
-              <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
-                {format(new Date(conversation.lastMessageTime), 'h:mm a')}
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                {formatDistanceToNow(new Date(conversation.lastMessageTime), { addSuffix: true })}
               </span>
             </div>
             
-            <div className="flex items-center justify-between mt-1">
-              <p className="text-sm text-muted-foreground truncate max-w-[180px]">
-                {conversation.lastMessage}
-              </p>
-              {conversation.unread && (
-                <Badge variant="default" className="ml-2 h-5 w-5 p-0 flex items-center justify-center rounded-full">
-                  •
-                </Badge>
-              )}
-            </div>
+            <p className="text-sm text-muted-foreground truncate">
+              {conversation.lastMessage}
+            </p>
           </div>
-        </div>
+          
+          {conversation.unread && (
+            <Badge variant="default" className="ml-auto">New</Badge>
+          )}
+        </NavLink>
       ))}
     </div>
   );
