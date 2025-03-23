@@ -32,7 +32,10 @@ export const useCreateStaff = (): UseCreateStaffReturn => {
         can_log_earnings: false,
         can_edit_profile: true,
         can_view_customer_bookings: false,
-        can_view_analytics: false
+        can_view_analytics: false,
+        can_update_task_status: false,
+        can_update_booking_status: false,
+        can_update_profile: true
       }
     }
   });
@@ -52,6 +55,7 @@ export const useCreateStaff = (): UseCreateStaffReturn => {
           email: values.email,
           password: values.password,
           position: values.position,
+          staffNumber: values.staffNumber,
           isServiceProvider: values.isServiceProvider,
           isCoAdmin: values.isCoAdmin,
           permissions: values.permissions

@@ -74,6 +74,22 @@ serve(async (req) => {
       throw new Error('Only business accounts can create staff members');
     }
     
+    // Check if a co-admin already exists when trying to create one
+    if (role === 'co-admin' || permissions?.isCoAdmin) {
+      const { data: coAdmins, error: coAdminError } = await supabase
+        .from('business_staff')
+        .select('id')
+        .eq('business_id', user.id)
+        .eq('role', 'co-admin')
+        .eq('status', 'active');
+        
+      if (coAdminError) {
+        console.error("Error checking co-admin:", coAdminError);
+      } else if (coAdmins && coAdmins.length > 0) {
+        throw new Error("Only one Co-Admin is allowed per business");
+      }
+    }
+    
     // Create the auth user account
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: email,
@@ -82,6 +98,7 @@ serve(async (req) => {
       user_metadata: {
         full_name: fullName,
         account_type: 'staff',
+        display_name: fullName,
         business_id: user.id,
         is_staff: true
       }
@@ -113,11 +130,17 @@ serve(async (req) => {
     
     if (!finalStaffNumber) {
       // Get business information for generating staff number
-      const { data: businessData } = await supabase
+      // FIX: Explicitly specify the table name to avoid ambiguous column reference
+      const { data: businessData, error: businessError } = await supabase
         .from('profiles')
         .select('business_name')
         .eq('id', user.id)
         .single();
+        
+      if (businessError) {
+        console.error("Error getting business data:", businessError);
+        throw new Error(`Failed to get business data: ${businessError.message}`);
+      }
         
       const businessPrefix = businessData?.business_name 
         ? businessData.business_name.substring(0, 3).toUpperCase().replace(/[^A-Z0-9]/g, '')
@@ -154,8 +177,30 @@ serve(async (req) => {
         }
       } catch (error) {
         console.error("Error processing avatar:", error);
+        // Continue without avatar - don't fail the entire staff creation
       }
     }
+    
+    // Prepare final permissions object
+    const finalPermissions = {
+      can_view_tasks: true,
+      can_manage_tasks: false,
+      can_message_staff: true,
+      can_manage_bookings: false,
+      can_create_job_cards: false,
+      can_track_hours: true,
+      can_log_earnings: false,
+      can_edit_profile: true,
+      can_view_customer_bookings: false,
+      can_view_analytics: false,
+      can_update_task_status: false,
+      can_update_booking_status: false,
+      can_update_profile: true,
+      ...permissions
+    };
+    
+    // If isCoAdmin is true in the permissions, set role to co-admin
+    const finalRole = permissions?.isCoAdmin ? 'co-admin' : role;
     
     // Add staff record to business_staff table
     const { data: staffRecord, error: staffError } = await supabase
@@ -166,9 +211,9 @@ serve(async (req) => {
         name: fullName,
         email: email,
         position: position || 'Staff Member',
-        role: role,
+        role: finalRole,
         is_service_provider: isServiceProvider,
-        permissions: permissions,
+        permissions: finalPermissions,
         staff_number: finalStaffNumber,
         profile_image_url: avatarUrl,
         status: 'active'
