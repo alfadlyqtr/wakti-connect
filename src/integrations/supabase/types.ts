@@ -407,6 +407,57 @@ export type Database = {
         }
         Relationships: []
       }
+      business_staff: {
+        Row: {
+          business_id: string
+          created_at: string
+          email: string
+          id: string
+          is_service_provider: boolean | null
+          name: string
+          permissions: Json | null
+          position: string | null
+          profile_image_url: string | null
+          role: string
+          staff_id: string
+          staff_number: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          email: string
+          id?: string
+          is_service_provider?: boolean | null
+          name: string
+          permissions?: Json | null
+          position?: string | null
+          profile_image_url?: string | null
+          role?: string
+          staff_id: string
+          staff_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          is_service_provider?: boolean | null
+          name?: string
+          permissions?: Json | null
+          position?: string | null
+          profile_image_url?: string | null
+          role?: string
+          staff_id?: string
+          staff_number?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       business_subscribers: {
         Row: {
           business_id: string

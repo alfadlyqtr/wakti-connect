@@ -1,72 +1,67 @@
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { fromTable } from "@/integrations/supabase/helper";
 
-interface ToggleStatusParams {
-  staffId: string;
-  newStatus: 'active' | 'suspended';
+interface StaffStatusReturn {
+  isStaff: boolean;
+  staffRelationId: string | null;
+  isCoAdmin: boolean;
+  isLoading: boolean;
 }
 
-export function useStaffStatus() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
+export function useStaffStatus(): StaffStatusReturn {
+  const [isStaff, setIsStaff] = useState<boolean>(false);
+  const [staffRelationId, setStaffRelationId] = useState<string | null>(null);
+  const [isCoAdmin, setIsCoAdmin] = useState<boolean>(false);
   
-  const toggleStatus = useMutation({
-    mutationFn: async ({ staffId, newStatus }: ToggleStatusParams) => {
-      const { error } = await supabase
-        .from('business_staff')
-        .update({ status: newStatus })
-        .eq('id', staffId);
-        
-      if (error) throw error;
-      return { staffId, newStatus };
-    },
-    onSuccess: (data) => {
-      const statusText = data.newStatus === 'active' ? 'activated' : 'suspended';
-      toast({
-        title: `Staff ${statusText}`,
-        description: `Staff member has been ${statusText} successfully.`
-      });
-      queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update staff status",
-        variant: "destructive"
-      });
+  const { data: user, isLoading: isUserLoading } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return data.user;
     }
   });
   
-  const deleteStaff = useMutation({
-    mutationFn: async (staffId: string) => {
-      const { error } = await supabase
-        .from('business_staff')
-        .update({ status: 'deleted' })
-        .eq('id', staffId);
-        
-      if (error) throw error;
-      return staffId;
+  const { data: staffData, isLoading: isStaffLoading } = useQuery({
+    queryKey: ['staffStatus', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      // Use the dynamic helper to avoid TypeScript issues with the missing table
+      const { data, error } = await fromTable('business_staff')
+        .select()
+        .eq('staff_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Error checking staff status:", error);
+        return null;
+      }
+      
+      return data;
     },
-    onSuccess: () => {
-      toast({
-        title: "Staff Deleted",
-        description: "Staff member has been deleted successfully."
-      });
-      queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete staff member",
-        variant: "destructive"
-      });
-    }
+    enabled: !!user
   });
+  
+  useEffect(() => {
+    if (staffData) {
+      setIsStaff(true);
+      setStaffRelationId(staffData.id);
+      setIsCoAdmin(staffData.role === 'co-admin');
+    } else {
+      setIsStaff(false);
+      setStaffRelationId(null);
+      setIsCoAdmin(false);
+    }
+  }, [staffData]);
   
   return {
-    toggleStatus,
-    deleteStaff
+    isStaff,
+    staffRelationId,
+    isCoAdmin,
+    isLoading: isUserLoading || isStaffLoading
   };
 }

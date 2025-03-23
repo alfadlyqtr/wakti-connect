@@ -30,7 +30,7 @@ serve(async (req) => {
       throw new Error('Missing Supabase environment variables');
     }
     
-    // Create Supabase client with service role for admin operations
+    // Create Supabase client with service role
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     // Get the user making the request to verify they're authenticated
@@ -41,42 +41,26 @@ serve(async (req) => {
       throw new Error('Unauthorized: Invalid token');
     }
     
-    // Parse request body for businessId
+    // Parse request body
     const { businessId } = await req.json();
     
     if (!businessId) {
-      throw new Error('Missing businessId parameter');
+      throw new Error('Missing business ID');
     }
     
-    // Only allow if the requesting user is the business owner or a co-admin
-    const isBusinessOwner = user.id === businessId;
-    
-    if (!isBusinessOwner) {
-      const { data: isCoAdmin, error: coAdminError } = await supabase
-        .from('business_staff')
-        .select('id')
-        .eq('staff_id', user.id)
-        .eq('business_id', businessId)
-        .eq('role', 'co-admin')
-        .eq('status', 'active')
-        .maybeSingle();
-        
-      if (coAdminError) throw coAdminError;
-      
-      if (!isCoAdmin) {
-        throw new Error('Unauthorized: Only business owners or co-admins can manage staff');
-      }
+    // Verify that the requesting user is the business owner
+    if (businessId !== user.id) {
+      throw new Error('Not authorized: Only business owners can access their staff');
     }
     
-    // Fetch staff members for this business with profile data
+    // Fetch staff members
     const { data: staffMembers, error: staffError } = await supabase
       .from('business_staff')
       .select(`
         *,
         profiles:staff_id (
           avatar_url,
-          full_name,
-          email
+          full_name
         )
       `)
       .eq('business_id', businessId)
@@ -84,14 +68,13 @@ serve(async (req) => {
       .order('created_at', { ascending: false });
       
     if (staffError) {
-      console.error("Error fetching staff:", staffError);
-      throw new Error(`Failed to fetch staff: ${staffError.message}`);
+      throw new Error(`Failed to fetch staff members: ${staffError.message}`);
     }
     
     return new Response(
       JSON.stringify({ 
         success: true, 
-        staffMembers: staffMembers 
+        staffMembers 
       }),
       { 
         headers: { 

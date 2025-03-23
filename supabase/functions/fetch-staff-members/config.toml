@@ -1,4 +1,2 @@
 
-# This configuration file is used for all functions
-auth_methods = ["jwt"]
-log_level = "debug"
+project_id = "sqdjqehcxpzsudhzjwbu"

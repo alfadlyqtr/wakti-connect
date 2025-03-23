@@ -14,48 +14,46 @@ export default function StaffPage() {
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   
-  // Fetch staff members
+  // Fetch current user session
+  const { data: sessionData } = useQuery({
+    queryKey: ['sessionData'],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getSession();
+      return data;
+    }
+  });
+  
+  // Fetch staff members using the edge function
   const { 
-    data: staffMembers, 
+    data: staffResponse, 
     isLoading, 
     error,
     refetch
   } = useQuery({
-    queryKey: ['staffMembers'],
+    queryKey: ['staffMembersEdge'],
     queryFn: async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error('Not authenticated');
-        
-        const { data, error } = await supabase
-          .from('business_staff')
-          .select(`
-            *,
-            profiles:staff_id (
-              avatar_url,
-              full_name
-            )
-          `)
-          .eq('business_id', session.user.id)
-          .neq('status', 'deleted')
-          .order('created_at', { ascending: false });
-          
-        if (error) throw error;
-        return data;
-      } catch (error: any) {
-        console.error("Error fetching staff:", error.message);
-        toast({
-          title: "Error loading staff",
-          description: error.message,
-          variant: "destructive"
-        });
-        return [];
+      if (!sessionData?.session?.user?.id) {
+        throw new Error("Not authenticated");
       }
-    }
+      
+      const response = await supabase.functions.invoke("fetch-staff-members", {
+        body: { businessId: sessionData.session.user.id },
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        }
+      });
+      
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to fetch staff members");
+      }
+      
+      return response.data;
+    },
+    enabled: !!sessionData?.session?.user?.id
   });
 
   // Staff count for checking limits
-  const staffCount = staffMembers?.length || 0;
+  const staffCount = staffResponse?.staffMembers?.length || 0;
   const canAddMoreStaff = staffCount < 6;
 
   const handleAddStaff = () => {
@@ -115,7 +113,7 @@ export default function StaffPage() {
       )}
       
       <StaffList 
-        staffMembers={staffMembers || []}
+        staffMembers={staffResponse?.staffMembers || []}
         isLoading={isLoading}
         error={error as Error | null}
         onEdit={handleEditStaff}
