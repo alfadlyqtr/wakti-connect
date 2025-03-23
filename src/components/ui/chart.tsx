@@ -1,7 +1,6 @@
-
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Chart as ChartJS, registerables, ChartOptions } from "chart.js";
 import { Bar, Line, Pie } from "react-chartjs-2";
 
@@ -14,15 +13,42 @@ interface ChartProps {
 }
 
 export const BarChart = ({ data, options = {} }: ChartProps) => {
-  return <Bar data={data} options={options} />;
+  // Ensure data and datasets are properly structured
+  const chartData = React.useMemo(() => {
+    if (!data || !data.datasets) {
+      console.error("Invalid chart data format:", data);
+      return { labels: [], datasets: [] };
+    }
+    return data;
+  }, [data]);
+
+  return <Bar data={chartData} options={options} />;
 };
 
 export const LineChart = ({ data, options = {} }: ChartProps) => {
-  return <Line data={data} options={options} />;
+  // Ensure data and datasets are properly structured
+  const chartData = React.useMemo(() => {
+    if (!data || !data.datasets) {
+      console.error("Invalid chart data format:", data);
+      return { labels: [], datasets: [] };
+    }
+    return data;
+  }, [data]);
+  
+  return <Line data={chartData} options={options} />;
 };
 
 export const PieChart = ({ data, options = {} }: ChartProps) => {
-  return <Pie data={data} options={options} />;
+  // Ensure data and datasets are properly structured
+  const chartData = React.useMemo(() => {
+    if (!data || !data.datasets) {
+      console.error("Invalid chart data format:", data);
+      return { labels: [], datasets: [] };
+    }
+    return data;
+  }, [data]);
+  
+  return <Pie data={chartData} options={options} />;
 };
 
 interface TooltipContentProps {

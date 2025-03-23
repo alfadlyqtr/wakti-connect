@@ -24,10 +24,15 @@ export const accountTypeVerification = {
         .from('profiles')
         .select('account_type')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
         
       if (error) {
         console.error("Error fetching profile:", error);
+        return false;
+      }
+      
+      if (!data) {
+        console.error("No profile found for user:", session.user.id);
         return false;
       }
       

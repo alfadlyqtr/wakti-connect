@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { SectionContainer } from "@/components/ui/section-container";
 import { useTranslation } from "react-i18next";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useBusinessAnalytics } from "@/hooks/useBusinessAnalytics";
 import { AnalyticsSummaryCards } from "@/components/business/analytics/AnalyticsSummaryCards";
@@ -18,6 +18,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const DashboardBusinessAnalytics = () => {
   const { t } = useTranslation();
   const [tab, setTab] = useState<string>("overview");
+  const [isVerifying, setIsVerifying] = useState(true);
   const { isLoading, error, data } = useBusinessAnalytics("month");
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -25,20 +26,41 @@ const DashboardBusinessAnalytics = () => {
   // Verify that the user has a business account when accessing this page
   useEffect(() => {
     const verifyBusinessAccount = async () => {
-      const isBusinessAccount = await accountTypeVerification.verifyAccountType('business');
-      
-      if (!isBusinessAccount) {
+      try {
+        setIsVerifying(true);
+        const isBusinessAccount = await accountTypeVerification.verifyAccountType('business');
+        
+        if (!isBusinessAccount) {
+          toast({
+            title: "Access Denied",
+            description: "You need a business account to access analytics.",
+            variant: "destructive"
+          });
+          navigate("/dashboard");
+        }
+      } catch (error) {
+        console.error("Error verifying account type:", error);
         toast({
-          title: "Access Denied",
-          description: "You need a business account to access analytics.",
+          title: "Verification Error",
+          description: "Could not verify your account type. Please try again.",
           variant: "destructive"
         });
-        navigate("/dashboard");
+      } finally {
+        setIsVerifying(false);
       }
     };
     
     verifyBusinessAccount();
   }, [navigate]);
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
+        <p>Verifying account access...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-6 space-y-8">
