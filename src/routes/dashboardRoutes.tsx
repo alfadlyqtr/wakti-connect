@@ -1,9 +1,11 @@
+
 import React from "react";
 import DashboardHome from "@/pages/dashboard/DashboardHome";
 import DashboardTasks from "@/pages/dashboard/DashboardTasks";
 import DashboardEvents from "@/pages/dashboard/DashboardEvents";
 import DashboardSettings from "@/pages/dashboard/DashboardSettings";
 import DashboardBusinessAnalytics from "@/pages/dashboard/DashboardBusinessAnalytics";
+import DashboardBusinessReports from "@/pages/dashboard/DashboardBusinessReports";
 import DashboardStaffManagement from "@/pages/dashboard/DashboardStaffManagement";
 import DashboardWorkLogs from "@/pages/dashboard/DashboardWorkLogs";
 import DashboardAIAssistant from "@/pages/dashboard/DashboardAIAssistant";
@@ -43,6 +45,10 @@ export const dashboardRoutes = [
   {
     path: "analytics",
     element: <DashboardBusinessAnalytics />,
+  },
+  {
+    path: "reports",
+    element: <DashboardBusinessReports />,
   },
   {
     path: "staff",
