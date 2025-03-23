@@ -25,6 +25,7 @@ interface TaskControlsProps {
   onTabChange: (tab: TaskTab) => void;
   isPaidAccount: boolean;
   userRole: "free" | "individual" | "business" | "staff"; // Updated to include 'staff'
+  isStaff?: boolean;
 }
 
 const TaskControls = ({
@@ -38,12 +39,14 @@ const TaskControls = ({
   currentTab,
   onTabChange,
   isPaidAccount,
-  userRole
+  userRole,
+  isStaff
 }: TaskControlsProps) => {
   if (!isPaidAccount) return null;
 
-  // Update to include staff role
-  const showAssignedTab = userRole === "business" || userRole === "individual" || userRole === "staff";
+  // Update to determine which tabs to show
+  const showSharedTab = !isStaff; // Staff don't see shared tasks
+  const showAssignedTab = true; // Everyone can see assigned to them
   
   return (
     <div className="space-y-4">
@@ -52,12 +55,19 @@ const TaskControls = ({
         onValueChange={(value) => onTabChange(value as TaskTab)}
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
-          <TabsTrigger value="shared-tasks">Shared Tasks</TabsTrigger>
-          <TabsTrigger value="assigned-tasks">
-            {userRole === "business" ? "Team Tasks" : "Assigned Tasks"}
+        <TabsList className={`grid w-full ${isStaff ? 'grid-cols-1' : 'grid-cols-3'}`}>
+          <TabsTrigger value="my-tasks">
+            {isStaff ? "Assigned Tasks" : "My Tasks"}
           </TabsTrigger>
+          
+          {!isStaff && (
+            <>
+              <TabsTrigger value="shared-tasks">Shared Tasks</TabsTrigger>
+              <TabsTrigger value="assigned-tasks">
+                {userRole === "business" ? "Team Tasks" : "Assigned Tasks"}
+              </TabsTrigger>
+            </>
+          )}
         </TabsList>
       </Tabs>
       
@@ -99,14 +109,16 @@ const TaskControls = ({
             </SelectContent>
           </Select>
           
-          <Button onClick={onCreateTask} className="flex items-center gap-2">
-            <Plus size={16} />
-            <span className="hidden sm:inline">
-              {currentTab === "assigned-tasks" && userRole === "business" 
-                ? "Assign Task" 
-                : "Create Task"}
-            </span>
-          </Button>
+          {!isStaff && (
+            <Button onClick={onCreateTask} className="flex items-center gap-2">
+              <Plus size={16} />
+              <span className="hidden sm:inline">
+                {currentTab === "assigned-tasks" && userRole === "business" 
+                  ? "Assign Task" 
+                  : "Create Task"}
+              </span>
+            </Button>
+          )}
         </div>
       </div>
     </div>

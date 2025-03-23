@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,37 +18,38 @@ const DashboardJobCards = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [staffRelationId, setStaffRelationId] = useState<string | null>(null);
   const [activeWorkSession, setActiveWorkSession] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Fetch staff relation ID for the current user
   useEffect(() => {
     const getStaffRelation = async () => {
       try {
+        setIsLoading(true);
         const { data: { user } } = await supabase.auth.getUser();
         
-        if (!user) return;
+        if (!user) {
+          setIsLoading(false);
+          return;
+        }
         
         const { data, error } = await supabase
           .from('business_staff')
           .select('id')
           .eq('staff_id', user.id)
-          .single();
-          
-        if (error) throw error;
-        
-        setStaffRelationId(data.id);
-        
-        // Also check for active work session
-        const { data: activeSessions, error: sessionsError } = await supabase
-          .from('staff_work_logs')
-          .select('*')
-          .eq('staff_relation_id', data.id)
-          .is('end_time', null)
           .eq('status', 'active')
           .maybeSingle();
           
-        if (sessionsError) throw sessionsError;
+        if (error) {
+          console.error("Error fetching staff relation:", error);
+          setIsLoading(false);
+          return;
+        }
         
-        setActiveWorkSession(activeSessions);
+        if (data) {
+          setStaffRelationId(data.id);
+          // Also check for active work session
+          await fetchActiveWorkSession(data.id);
+        }
         
       } catch (error) {
         console.error("Error fetching staff relation:", error);
@@ -57,14 +58,46 @@ const DashboardJobCards = () => {
           description: "Could not fetch your staff relationship",
           variant: "destructive"
         });
+      } finally {
+        setIsLoading(false);
       }
     };
     
     getStaffRelation();
   }, [toast]);
   
+  const fetchActiveWorkSession = async (relationId: string) => {
+    try {
+      const { data: activeSessions, error: sessionsError } = await supabase
+        .from('staff_work_logs')
+        .select('*')
+        .eq('staff_relation_id', relationId)
+        .is('end_time', null)
+        .eq('status', 'active')
+        .maybeSingle();
+        
+      if (sessionsError) {
+        console.error("Error fetching active work session:", sessionsError);
+        return;
+      }
+      
+      setActiveWorkSession(activeSessions);
+    } catch (error) {
+      console.error("Error fetching active work session:", error);
+    }
+  };
+  
   // Start/End work session
   const startWorkDay = async () => {
+    if (!staffRelationId) {
+      toast({
+        title: "Error",
+        description: "Staff relationship not found",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
       const { data, error } = await supabase
         .from('staff_work_logs')
@@ -76,7 +109,10 @@ const DashboardJobCards = () => {
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error starting work day:", error);
+        throw error;
+      }
       
       setActiveWorkSession(data);
       
@@ -88,7 +124,7 @@ const DashboardJobCards = () => {
       console.error("Error starting work day:", error);
       toast({
         title: "Error",
-        description: "Could not start your work day",
+        description: "Could not start your work day. " + (error instanceof Error ? error.message : ""),
         variant: "destructive"
       });
     }
@@ -108,7 +144,10 @@ const DashboardJobCards = () => {
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error ending work day:", error);
+        throw error;
+      }
       
       setActiveWorkSession(null);
       
@@ -125,6 +164,26 @@ const DashboardJobCards = () => {
       });
     }
   };
+  
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-1">Job Cards</h1>
+            <p className="text-muted-foreground">
+              Record completed jobs and track your daily earnings
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin text-wakti-blue" />
+          <span className="ml-2">Loading job cards...</span>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">

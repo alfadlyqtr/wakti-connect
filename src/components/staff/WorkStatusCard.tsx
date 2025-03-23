@@ -32,7 +32,7 @@ const WorkStatusCard: React.FC<WorkStatusCardProps> = ({
               </h3>
               <p className="text-sm text-muted-foreground">
                 {activeWorkSession 
-                  ? `Started at ${formatTime(activeWorkSession.start_time)}` 
+                  ? `Started at ${formatTime(new Date(activeWorkSession.start_time))}` 
                   : "Not currently working"}
               </p>
             </div>
@@ -50,9 +50,9 @@ const WorkStatusCard: React.FC<WorkStatusCardProps> = ({
                   Create Job Card
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="destructive"
                   onClick={onEndWorkDay}
-                  className="flex-1 sm:flex-auto text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                  className="flex-1 sm:flex-auto"
                 >
                   <Square className="h-4 w-4 mr-2" />
                   End Work Day
@@ -62,7 +62,8 @@ const WorkStatusCard: React.FC<WorkStatusCardProps> = ({
               <Button
                 onClick={onStartWorkDay}
                 className="w-full sm:w-auto"
-                variant="default"
+                variant="success"
+                style={{ backgroundColor: "#10B981", color: "white" }}
               >
                 <Play className="h-4 w-4 mr-2" />
                 Start Work Day

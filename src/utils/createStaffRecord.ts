@@ -118,6 +118,15 @@ export const createStaffRecord = async (staffData: StaffData) => {
         staff_relation_id: staffRecord.id
       });
       
+    // Add reverse relationship to automatically add business account to staff contacts
+    await supabase
+      .from('user_contacts')
+      .insert({
+        user_id: authData.user.id,
+        contact_id: businessId,
+        status: 'accepted'
+      });
+      
     // Also add contacts between existing staff and the new staff member
     const { data: existingStaff, error: existingStaffError } = await supabase
       .from('business_staff')

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Task } from "@/types/task.types";
+import { isUserStaff, getStaffBusinessId } from "@/utils/staffUtils";
 
 export type TaskPriority = "normal" | "medium" | "high" | "urgent";
 export type TaskStatus = "pending" | "in-progress" | "completed" | "late";
@@ -20,6 +21,7 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPriority, setFilterPriority] = useState("all");
   const [userRole, setUserRole] = useState<"free" | "individual" | "business" | "staff" | null>(null);
+  const [isStaff, setIsStaff] = useState<boolean>(false);
   const queryClient = useQueryClient();
 
   // Fetch user role for permission checks
@@ -30,13 +32,21 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
         
         if (!session?.user) return;
         
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('account_type')
-          .eq('id', session.user.id)
-          .single();
+        // Check if user is staff first
+        const staffStatus = await isUserStaff();
+        setIsStaff(staffStatus);
         
-        setUserRole(profileData?.account_type || "free");
+        if (staffStatus) {
+          setUserRole("staff");
+        } else {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('account_type')
+            .eq('id', session.user.id)
+            .single();
+          
+          setUserRole(profileData?.account_type || "free");
+        }
       } catch (error) {
         console.error("Error fetching user role:", error);
       }
@@ -46,7 +56,7 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
   }, []);
 
   // Define the query key based on the active tab
-  const queryKey = ['tasks', tab, filterStatus, filterPriority];
+  const queryKey = ['tasks', tab, filterStatus, filterPriority, isStaff];
 
   // Task fetching query
   const { data: tasks = [], isLoading, error } = useQuery({
@@ -59,55 +69,75 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
       let query;
       let result;
       
-      if (tab === "my-tasks") {
-        query = supabase
-          .from('tasks')
-          .select('*')
-          .eq('user_id', session.user.id);
-          
-      } else if (tab === "shared-tasks") {
-        // Check if the shared_tasks table exists and get the tasks shared with the user
-        try {
-          // First check the structure of shared_tasks table
-          const { data: sharedTasksData, error: sharedError } = await supabase
-            .from('shared_tasks')
-            .select('id, task_id, shared_with')
-            .eq('shared_with', session.user.id);
-            
-          if (sharedError) throw sharedError;
-          
-          // If we have shared tasks, fetch the actual task data
-          if (sharedTasksData && sharedTasksData.length > 0) {
-            const taskIds = sharedTasksData.map(item => item.task_id);
-            
-            const { data: taskData, error: taskError } = await supabase
-              .from('tasks')
-              .select('*, user_id as shared_by')
-              .in('id', taskIds);
-              
-            if (taskError) throw taskError;
-            
-            // The tasks are now marked with the user_id as shared_by
-            result = taskData;
-          } else {
-            result = [];
-          }
-        } catch (error) {
-          console.error("Error fetching shared tasks:", error);
-          result = [];
-        }
-        
-      } else if (tab === "assigned-tasks") {
-        // Check if user is business owner or staff
-        if (userRole === "business" || userRole === "staff") {
-          // Just use the tasks table with assignee_id filter
+      // Special handling for staff members
+      if (isStaff) {
+        // For staff members, we only show assigned tasks regardless of tab
+        if (tab === "my-tasks" || tab === "assigned-tasks") {
+          // In staff view, my-tasks tab will show tasks assigned to them
           query = supabase
             .from('tasks')
             .select('*')
             .eq('assignee_id', session.user.id);
         } else {
-          // For other roles, just return empty array
-          result = [];
+          // Staff should not see shared tasks, return empty array
+          return [] as TaskWithSharedInfo[];
+        }
+      } else {
+        // Normal processing for non-staff users
+        if (tab === "my-tasks") {
+          query = supabase
+            .from('tasks')
+            .select('*')
+            .eq('user_id', session.user.id);
+            
+        } else if (tab === "shared-tasks") {
+          // Check if the shared_tasks table exists and get the tasks shared with the user
+          try {
+            // First check the structure of shared_tasks table
+            const { data: sharedTasksData, error: sharedError } = await supabase
+              .from('shared_tasks')
+              .select('id, task_id, shared_with')
+              .eq('shared_with', session.user.id);
+              
+            if (sharedError) throw sharedError;
+            
+            // If we have shared tasks, fetch the actual task data
+            if (sharedTasksData && sharedTasksData.length > 0) {
+              const taskIds = sharedTasksData.map(item => item.task_id);
+              
+              const { data: taskData, error: taskError } = await supabase
+                .from('tasks')
+                .select('*, user_id as shared_by')
+                .in('id', taskIds);
+                
+              if (taskError) throw taskError;
+              
+              // The tasks are now marked with the user_id as shared_by
+              result = taskData;
+            } else {
+              result = [];
+            }
+          } catch (error) {
+            console.error("Error fetching shared tasks:", error);
+            result = [];
+          }
+          
+        } else if (tab === "assigned-tasks") {
+          // Check if user is business owner or staff
+          if (userRole === "business") {
+            // Get all tasks where this business assigned tasks
+            const businessId = session.user.id;
+            query = supabase
+              .from('tasks')
+              .select('*')
+              .eq('user_id', businessId);
+          } else {
+            // For staff and other roles with assigned tasks
+            query = supabase
+              .from('tasks')
+              .select('*')
+              .eq('assignee_id', session.user.id);
+          }
         }
       }
       
@@ -153,6 +183,11 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
     
     if (!session) throw new Error("You must be logged in to create a task");
     
+    // If staff, throw error (staff should not create tasks)
+    if (isStaff) {
+      throw new Error("Staff members cannot create tasks");
+    }
+    
     const { data, error } = await supabase
       .from('tasks')
       .insert([{ ...taskData, user_id: session.user.id }])
@@ -177,6 +212,7 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
     filterPriority,
     setFilterPriority,
     createTask,
-    userRole
+    userRole,
+    isStaff
   };
 };

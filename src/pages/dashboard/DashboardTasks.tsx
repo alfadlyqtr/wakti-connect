@@ -8,9 +8,11 @@ import TaskControls from "@/components/tasks/TaskControls";
 import EmptyTasksState from "@/components/tasks/EmptyTasksState";
 import TaskGrid from "@/components/tasks/TaskGrid";
 import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog";
+import { isUserStaff } from "@/utils/staffUtils";
 
 const DashboardTasks = () => {
   const [userRole, setUserRole] = useState<"free" | "individual" | "business" | "staff" | null>(null);
+  const [isUserStaffMember, setIsUserStaffMember] = useState(false);
   const [activeTab, setActiveTab] = useState<TaskTab>("my-tasks");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   
@@ -25,7 +27,8 @@ const DashboardTasks = () => {
     filterPriority,
     setFilterPriority,
     createTask,
-    userRole: fetchedUserRole
+    userRole: fetchedUserRole,
+    isStaff: isStaffFromHook
   } = useTasks(activeTab);
 
   useEffect(() => {
@@ -35,13 +38,22 @@ const DashboardTasks = () => {
         
         if (!session?.user) return;
         
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('account_type')
-          .eq('id', session.user.id)
-          .single();
+        // Check if user is staff
+        const staffStatus = await isUserStaff();
+        setIsUserStaffMember(staffStatus);
         
-        setUserRole(profileData?.account_type || "free");
+        if (staffStatus) {
+          setUserRole('staff');
+        } else {
+          // Get regular user role from profile
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('account_type')
+            .eq('id', session.user.id)
+            .single();
+          
+          setUserRole(profileData?.account_type || "free");
+        }
       } catch (error) {
         console.error("Error fetching user role:", error);
       }
@@ -96,7 +108,9 @@ const DashboardTasks = () => {
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
         <p className="text-muted-foreground">
-          Manage your tasks and track your progress.
+          {isUserStaffMember 
+            ? "View and manage tasks assigned to you."
+            : "Manage your tasks and track your progress."}
         </p>
       </div>
       
@@ -112,6 +126,7 @@ const DashboardTasks = () => {
         onTabChange={handleTabChange}
         isPaidAccount={isPaidAccount}
         userRole={userRole || "free"}
+        isStaff={isUserStaffMember}
       />
       
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
@@ -126,16 +141,19 @@ const DashboardTasks = () => {
             isPaidAccount={isPaidAccount} 
             onCreateTask={() => setCreateDialogOpen(true)} 
             tab={activeTab}
+            isStaff={isUserStaffMember}
           />
         )}
       </div>
       
-      <CreateTaskDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onCreateTask={handleCreateTask}
-        userRole={userRole || "free"}
-      />
+      {!isUserStaffMember && (
+        <CreateTaskDialog
+          open={createDialogOpen}
+          onOpenChange={setCreateDialogOpen}
+          onCreateTask={handleCreateTask}
+          userRole={userRole || "free"}
+        />
+      )}
     </div>
   );
 };

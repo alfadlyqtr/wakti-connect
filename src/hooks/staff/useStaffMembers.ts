@@ -15,7 +15,21 @@ export const useStaffMembers = () => {
     queryFn: async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session?.user?.id) {
-        setBusinessId(data.session.user.id);
+        // Check if user is a staff member
+        const { data: staffData } = await supabase
+          .from('business_staff')
+          .select('business_id')
+          .eq('staff_id', data.session.user.id)
+          .eq('status', 'active')
+          .maybeSingle();
+          
+        if (staffData) {
+          // If user is staff, set the business_id from their record
+          setBusinessId(staffData.business_id);
+        } else {
+          // If user is business owner, set their own ID
+          setBusinessId(data.session.user.id);
+        }
       }
       return data.session;
     },
@@ -85,6 +99,7 @@ export const useStaffMembers = () => {
     canAddMoreStaff,
     handleSyncStaff,
     isSyncing,
-    session
+    session,
+    businessId
   };
 };
