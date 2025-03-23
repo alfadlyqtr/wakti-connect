@@ -8,7 +8,7 @@ import EmptyJobCards from "./EmptyJobCards";
 import ActiveJobsSection from "./ActiveJobsSection";
 import CompletedJobsSection from "./CompletedJobsSection";
 import ErrorDisplay from "./ErrorDisplay";
-import { Button } from "@/components/ui/card";
+import { Button } from "@/components/ui/button"; // Fixed import
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface JobCardsListProps {
