@@ -49,7 +49,8 @@ serve(async (req) => {
       position,
       role = 'staff',
       isServiceProvider = false,
-      permissions
+      permissions,
+      avatar // Accept avatar from request
     } = await req.json();
     
     // Validate required fields
@@ -119,6 +120,37 @@ serve(async (req) => {
       
     const staffNumber = `${businessPrefix}_Staff${String((count || 0) + 1).padStart(3, '0')}`;
     
+    // Upload avatar if provided
+    let avatarUrl = null;
+    if (avatar && avatar.startsWith('data:')) {
+      try {
+        // Extract the base64 data
+        const base64Data = avatar.split(',')[1];
+        const fileExt = avatar.split(';')[0].split('/')[1];
+        const fileName = `staff-avatar-${authData.user.id}.${fileExt}`;
+        
+        // Upload to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(`staff/${fileName}`, Uint8Array.from(atob(base64Data), c => c.charCodeAt(0)), {
+            contentType: `image/${fileExt}`,
+            upsert: true
+          });
+          
+        if (uploadError) {
+          console.error("Avatar upload error:", uploadError);
+        } else {
+          const { data: { publicUrl } } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(`staff/${fileName}`);
+            
+          avatarUrl = publicUrl;
+        }
+      } catch (error) {
+        console.error("Error processing avatar:", error);
+      }
+    }
+    
     // Add staff record to business_staff table
     const { data: staffRecord, error: staffError } = await supabase
       .from('business_staff')
@@ -132,6 +164,7 @@ serve(async (req) => {
         is_service_provider: isServiceProvider,
         permissions: permissions,
         staff_number: staffNumber,
+        profile_image_url: avatarUrl,
         status: 'active'
       })
       .select()
@@ -148,6 +181,7 @@ serve(async (req) => {
         id: authData.user.id,
         full_name: fullName,
         account_type: 'staff',
+        avatar_url: avatarUrl,
         updated_at: new Date().toISOString()
       });
     
