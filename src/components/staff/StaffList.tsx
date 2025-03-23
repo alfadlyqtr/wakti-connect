@@ -1,11 +1,10 @@
-
 import React, { useState } from "react";
 import {
   Card,
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, UserPlus, RefreshCw, Sync } from "lucide-react";
+import { AlertCircle, UserPlus, RefreshCw } from "lucide-react";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +29,6 @@ interface StaffListProps {
   onRefresh: () => void;
 }
 
-// EmptyStaffState component with its props interface
 interface EmptyStaffStateProps {
   onAddStaffClick: () => void;
   onSyncStaffClick?: () => void;
@@ -61,7 +59,7 @@ const EmptyStaffState: React.FC<EmptyStaffStateProps> = ({
             {isSyncing ? (
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
             ) : (
-              <Sync className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4 mr-2" />
             )}
             {isSyncing ? "Syncing..." : "Sync Staff Records"}
           </Button>
@@ -79,7 +77,6 @@ export const StaffList: React.FC<StaffListProps> = ({
   onEdit,
   onRefresh,
 }) => {
-  // Use staffData if it's provided, otherwise use staffMembers
   const displayStaff = staffData || staffMembers;
   const { toast } = useToast();
   
@@ -138,7 +135,6 @@ export const StaffList: React.FC<StaffListProps> = ({
           variant: "default"
         });
         
-        // Refresh the staff list
         onRefresh();
       } else {
         toast({
@@ -184,7 +180,7 @@ export const StaffList: React.FC<StaffListProps> = ({
             {isSyncing ? (
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
             ) : (
-              <Sync className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4 mr-2" />
             )}
             {isSyncing ? "Syncing..." : "Sync Staff Records"}
           </Button>
@@ -210,7 +206,7 @@ export const StaffList: React.FC<StaffListProps> = ({
           {isSyncing ? (
             <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
           ) : (
-            <Sync className="h-4 w-4 mr-2" />
+            <RefreshCw className="h-4 w-4 mr-2" />
           )}
           {isSyncing ? "Syncing..." : "Sync Staff Records"}
         </Button>
@@ -228,7 +224,6 @@ export const StaffList: React.FC<StaffListProps> = ({
         ))}
       </div>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -241,7 +236,6 @@ export const StaffList: React.FC<StaffListProps> = ({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                // Delete staff functionality will be handled in parent component
                 setDeleteConfirmOpen(false);
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -252,7 +246,6 @@ export const StaffList: React.FC<StaffListProps> = ({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Toggle Status Dialog */}
       <AlertDialog open={toggleStatusConfirmOpen} onOpenChange={setToggleStatusConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -267,7 +260,6 @@ export const StaffList: React.FC<StaffListProps> = ({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                // Toggle status functionality will be handled in parent component
                 setToggleStatusConfirmOpen(false);
               }}
             >

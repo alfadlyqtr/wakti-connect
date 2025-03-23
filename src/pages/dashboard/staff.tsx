@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Users, RefreshCcw, Sync } from "lucide-react";
+import { UserPlus, Users, RefreshCcw } from "lucide-react";
 import { StaffList } from "@/components/staff/StaffList";
 import { StaffDialog } from "@/components/staff/StaffDialog";
 import { useToast } from "@/components/ui/use-toast";
@@ -17,7 +16,6 @@ export default function StaffPage() {
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   
-  // Fetch current user session
   const { data: sessionData } = useQuery({
     queryKey: ['sessionData'],
     queryFn: async () => {
@@ -26,7 +24,6 @@ export default function StaffPage() {
     }
   });
   
-  // Fetch staff members
   const { 
     data: staffMembersData, 
     isLoading, 
@@ -63,12 +60,10 @@ export default function StaffPage() {
     refetchOnWindowFocus: true
   });
 
-  // Force refetch when component mounts
   useEffect(() => {
     refetch();
   }, [refetch]);
 
-  // Convert to StaffMember type
   const staffMembers: StaffMember[] = (staffMembersData || []).map(staff => ({
     id: staff.id,
     staff_id: staff.staff_id,
@@ -87,7 +82,6 @@ export default function StaffPage() {
     created_at: staff.created_at
   }));
 
-  // Staff count for checking limits
   const staffCount = staffMembers?.length || 0;
   const canAddMoreStaff = staffCount < 6;
 
@@ -109,13 +103,12 @@ export default function StaffPage() {
         : "Staff member added successfully",
     });
     
-    // Force refetch from the server
     queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
     refetch();
     
     setStaffDialogOpen(false);
   };
-  
+
   const handleSyncStaff = async () => {
     if (!sessionData?.session?.access_token) {
       toast({
@@ -156,7 +149,6 @@ export default function StaffPage() {
           variant: "default"
         });
         
-        // Refresh the staff list
         queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
         refetch();
       } else {
@@ -207,7 +199,7 @@ export default function StaffPage() {
             {isSyncing ? (
               <RefreshCcw className="h-4 w-4 animate-spin" />
             ) : (
-              <Sync className="h-4 w-4" />
+              <RefreshCcw className="h-4 w-4" />
             )}
           </Button>
           
