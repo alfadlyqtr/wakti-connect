@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -71,13 +70,11 @@ export const useStaffDetails = (staffRelationId: string | null) => {
               avatar_url?: string | null 
             };
             
-            // Now access properties with optional chaining
-            if (typedBusinessData.business_name) {
-              staffDetails.business = {
-                business_name: typedBusinessData.business_name,
-                avatar_url: typedBusinessData.avatar_url || null
-              };
-            }
+            // Now access properties with optional chaining and null checks
+            staffDetails.business = {
+              business_name: typedBusinessData.business_name || 'Unknown Business',
+              avatar_url: typedBusinessData.avatar_url || null
+            };
           } else {
             console.error("Business data contains an error:", businessData);
           }
