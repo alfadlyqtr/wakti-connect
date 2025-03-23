@@ -46,7 +46,7 @@ const StaffMembersList: React.FC<StaffMembersListProps> = ({ onEditStaff }) => {
   }
   
   if (!staffMembers || staffMembers.length === 0) {
-    return <EmptyStaffState />;
+    return <EmptyStaffState onAddStaffClick={() => onEditStaff("")} />;
   }
   
   return (
@@ -55,10 +55,8 @@ const StaffMembersList: React.FC<StaffMembersListProps> = ({ onEditStaff }) => {
         {staffMembers.map((staff) => (
           <StaffMemberCard
             key={staff.id}
-            staff={staff}
-            onEdit={onEditStaff}
-            onDelete={setStaffToDelete}
-            onToggleStatus={setStaffToToggleStatus}
+            member={staff}
+            onViewDetails={() => onEditStaff(staff.id)}
           />
         ))}
       </div>

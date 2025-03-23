@@ -13,7 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { fromTable } from "@/integrations/supabase/helper";
 import { supabase } from "@/integrations/supabase/client";
-import { Tab, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";

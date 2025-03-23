@@ -61,6 +61,7 @@ const EmptyStaffState: React.FC<EmptyStaffStateProps> = ({ onAddStaffClick }) =>
 
 interface StaffListProps {
   staffMembers: StaffMember[];
+  staffData?: any[]; // Add this to support both prop patterns
   isLoading: boolean;
   error: Error | null;
   onEdit: (staffId: string) => void;
@@ -69,11 +70,15 @@ interface StaffListProps {
 
 export const StaffList: React.FC<StaffListProps> = ({
   staffMembers,
+  staffData,
   isLoading,
   error,
   onEdit,
   onRefresh,
 }) => {
+  // Use staffData if it's provided, otherwise use staffMembers
+  const displayStaff = staffData || staffMembers;
+  
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [toggleStatusConfirmOpen, setToggleStatusConfirmOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
@@ -112,14 +117,14 @@ export const StaffList: React.FC<StaffListProps> = ({
     );
   }
 
-  if (staffMembers.length === 0) {
+  if (!displayStaff || displayStaff.length === 0) {
     return <EmptyStaffState onAddStaffClick={() => onEdit("")} />;
   }
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {staffMembers.map((staff) => (
+        {displayStaff.map((staff) => (
           <StaffMemberCard
             key={staff.id}
             data={staff}
