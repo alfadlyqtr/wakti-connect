@@ -102,7 +102,14 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
   
   const onSubmit = async (values: JobCardFormValues) => {
     try {
-      await createJobCard.mutateAsync(values);
+      // Ensure job_id is included and required
+      await createJobCard.mutateAsync({
+        job_id: values.job_id,
+        payment_method: values.payment_method,
+        payment_amount: values.payment_amount,
+        notes: values.notes || null
+      });
+      
       form.reset({
         job_id: "",
         payment_method: "cash",

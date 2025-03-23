@@ -24,6 +24,7 @@ export interface JobCard {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  work_log_id?: string | null;
   
   // Joined data
   job?: Job;
@@ -42,3 +43,4 @@ export interface JobCardFormData {
   payment_amount: number;
   notes?: string | null;
 }
+

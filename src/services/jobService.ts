@@ -1,6 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { Job, JobCard, JobFormData, JobCardFormData } from "@/types/job.types";
+import { Job, JobCard, JobFormData, JobCardFormData, PaymentMethod } from "@/types/job.types";
 
 // Jobs API
 export const fetchJobs = async (): Promise<Job[]> => {
@@ -76,7 +75,12 @@ export const fetchJobCards = async (staffRelationId?: string): Promise<JobCard[]
   const { data, error } = await query.order('created_at', { ascending: false });
     
   if (error) throw new Error(`Error fetching job cards: ${error.message}`);
-  return data;
+  
+  // Ensure payment_method is properly typed
+  return data.map(card => ({
+    ...card,
+    payment_method: card.payment_method as PaymentMethod
+  })) as JobCard[];
 };
 
 export const createJobCard = async (
@@ -108,7 +112,12 @@ export const createJobCard = async (
     .single();
     
   if (error) throw new Error(`Error creating job card: ${error.message}`);
-  return data;
+  
+  // Type cast the payment_method to ensure it's the correct type
+  return {
+    ...data,
+    payment_method: data.payment_method as PaymentMethod
+  } as JobCard;
 };
 
 export const completeJobCard = async (jobCardId: string): Promise<JobCard> => {
@@ -131,7 +140,12 @@ export const completeJobCard = async (jobCardId: string): Promise<JobCard> => {
     .single();
     
   if (error) throw new Error(`Error completing job card: ${error.message}`);
-  return data;
+  
+  // Type cast the payment_method to ensure it's the correct type
+  return {
+    ...data,
+    payment_method: data.payment_method as PaymentMethod
+  } as JobCard;
 };
 
 // Fetch business jobs from jobs table for a staff member
