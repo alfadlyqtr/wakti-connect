@@ -1,133 +1,93 @@
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Job, JobFormData } from "@/types/jobs.types";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
+import { fetchJobs, createJob, updateJob, deleteJob } from '@/services/jobService';
+import { JobFormData } from '@/types/job.types';
 
 export const useJobs = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [error, setError] = useState<Error | null>(null);
 
-  // Fetch jobs owned by the business
-  const { data: jobs, isLoading, error } = useQuery({
+  // Query to fetch all jobs
+  const { data: jobs = [], isLoading, refetch } = useQuery({
     queryKey: ['jobs'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('jobs')
-        .select('*')
-        .order('created_at', { ascending: false });
-        
-      if (error) {
+      try {
+        setError(null);
+        return await fetchJobs();
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error('Failed to fetch jobs');
+        setError(error);
         toast({
-          title: "Error fetching jobs",
+          title: 'Error fetching jobs',
           description: error.message,
-          variant: "destructive"
+          variant: 'destructive',
         });
-        throw error;
+        return [];
       }
-      
-      return data as Job[];
     }
   });
 
-  // Create a new job
-  const createJob = useMutation({
-    mutationFn: async (jobData: JobFormData) => {
-      // Get the current user (business)
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) {
-        throw new Error("User not authenticated");
-      }
-      
-      const businessId = userData.user.id;
-      
-      const { data, error } = await supabase
-        .from('jobs')
-        .insert([{
-          ...jobData,
-          business_id: businessId
-        }])
-        .select()
-        .single();
-        
-      if (error) {
-        toast({
-          title: "Error creating job",
-          description: error.message,
-          variant: "destructive"
-        });
-        throw error;
-      }
-      
-      toast({
-        title: "Job created",
-        description: "New job has been created successfully",
-      });
-      
-      return data as Job;
-    },
+  // Mutation to create a job
+  const createJobMutation = useMutation({
+    mutationFn: (data: JobFormData) => createJob(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      toast({
+        title: 'Job created',
+        description: 'The job has been created successfully.',
+        variant: 'success'
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error creating job',
+        description: error.message,
+        variant: 'destructive'
+      });
     }
   });
 
-  // Update an existing job
-  const updateJob = useMutation({
-    mutationFn: async ({ id, data }: { id: string, data: Partial<JobFormData> }) => {
-      const { data: updatedJob, error } = await supabase
-        .from('jobs')
-        .update(data)
-        .eq('id', id)
-        .select()
-        .single();
-        
-      if (error) {
-        toast({
-          title: "Error updating job",
-          description: error.message,
-          variant: "destructive"
-        });
-        throw error;
-      }
-      
-      toast({
-        title: "Job updated",
-        description: "Job has been updated successfully",
-      });
-      
-      return updatedJob as Job;
-    },
+  // Mutation to update a job
+  const updateJobMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string, data: Partial<JobFormData> }) => 
+      updateJob(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      toast({
+        title: 'Job updated',
+        description: 'The job has been updated successfully.',
+        variant: 'success'
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error updating job',
+        description: error.message,
+        variant: 'destructive'
+      });
     }
   });
 
-  // Delete a job
-  const deleteJob = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('jobs')
-        .delete()
-        .eq('id', id);
-        
-      if (error) {
-        toast({
-          title: "Error deleting job",
-          description: error.message,
-          variant: "destructive"
-        });
-        throw error;
-      }
-      
-      toast({
-        title: "Job deleted",
-        description: "Job has been deleted successfully",
-      });
-      
-      return id;
-    },
+  // Mutation to delete a job
+  const deleteJobMutation = useMutation({
+    mutationFn: deleteJob,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      toast({
+        title: 'Job deleted',
+        description: 'The job has been deleted successfully.',
+        variant: 'success'
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error deleting job',
+        description: error.message,
+        variant: 'destructive'
+      });
     }
   });
 
@@ -135,8 +95,9 @@ export const useJobs = () => {
     jobs,
     isLoading,
     error,
-    createJob,
-    updateJob,
-    deleteJob
+    refetch,
+    createJob: createJobMutation,
+    updateJob: updateJobMutation,
+    deleteJob: deleteJobMutation
   };
 };
