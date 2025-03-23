@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { JobCard } from "@/types/jobs.types";
 import ActiveJobCard from "./ActiveJobCard";
 import { useToast } from "@/hooks/use-toast";
@@ -25,11 +25,6 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
     setError(null);
   }, [activeJobs]);
 
-  // No active jobs, don't render anything
-  if (activeJobs.length === 0) {
-    return null;
-  }
-
   // Filter out jobs that are locally marked as completed or already have an end_time
   const visibleActiveJobs = activeJobs.filter(job => 
     !job.end_time && !localCompletedIds.includes(job.id)
@@ -48,12 +43,14 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
     
     // Mark as completing and locally completed immediately for UI responsiveness
     setCompletingJobId(jobCardId);
-    setLocalCompletedIds(prev => [...prev, jobCardId]);
     
     try {
       // Attempt to complete the job
       await onCompleteJob(jobCardId);
       console.log("Job completed successfully in ActiveJobsSection:", jobCardId);
+      
+      // Add to local completed IDs after successful completion
+      setLocalCompletedIds(prev => [...prev, jobCardId]);
       
       toast({
         title: "Job completed",
@@ -61,9 +58,8 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
         variant: "success"
       });
     } catch (error) {
-      // If there's an error, remove from local completed list
+      // If there's an error, don't add to local completed list
       console.error("Error completing job in ActiveJobsSection:", error);
-      setLocalCompletedIds(prev => prev.filter(id => id !== jobCardId));
       
       // Set the error message
       setError(error instanceof Error ? error.message : "Failed to complete job. Please try again.");

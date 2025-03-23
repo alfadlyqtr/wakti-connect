@@ -8,7 +8,7 @@ import EmptyJobCards from "./EmptyJobCards";
 import ActiveJobsSection from "./ActiveJobsSection";
 import CompletedJobsSection from "./CompletedJobsSection";
 import ErrorDisplay from "./ErrorDisplay";
-import { Button } from "@/components/ui/button"; // Fixed import
+import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface JobCardsListProps {
@@ -50,9 +50,6 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
         : "Failed to complete job. Please try again.";
       
       setCompletionError(errorMessage);
-      
-      // Rethrow so the ActiveJobsSection can handle the error state
-      throw error;
     }
   };
   

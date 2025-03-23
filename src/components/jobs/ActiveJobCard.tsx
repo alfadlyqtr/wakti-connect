@@ -22,6 +22,7 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
   const [isCompleted, setIsCompleted] = useState(false);
   const [duration, setDuration] = useState<string>("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const mountedRef = useRef<boolean>(true);
   
   // Reset timer and cleanup function
   const setupTimer = () => {
@@ -31,13 +32,15 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
       timerRef.current = null;
     }
     
-    // Only start a new timer if the job is not completed
-    if (jobCard.end_time || isCompleted) {
+    // Only start a new timer if the job is not completed and component is mounted
+    if ((jobCard.end_time || isCompleted) || !mountedRef.current) {
       return;
     }
     
     // Update duration calculation function
     const updateDuration = () => {
+      if (!mountedRef.current) return;
+      
       try {
         const startTime = new Date(jobCard.start_time);
         const now = new Date();
@@ -71,10 +74,12 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
   
   // Setup timer on initial render and when job card or completion state changes
   useEffect(() => {
+    mountedRef.current = true;
     setupTimer();
     
     // Cleanup function
     return () => {
+      mountedRef.current = false;
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -96,8 +101,8 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
       // Call the parent handler
       await onCompleteJob(jobCard.id);
     } catch (error) {
-      // If there's an error, reset the completion state
       console.error("Error in handleComplete:", error);
+      // If there's an error, reset the completion state
       setIsCompleted(false);
       
       // Restart the timer
