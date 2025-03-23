@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useJobCards } from "@/hooks/useJobCards";
+import { useJobCards } from "@/hooks/jobs";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";

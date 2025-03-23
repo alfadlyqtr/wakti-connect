@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { jobCardFormSchema, JobCardFormValues } from "./JobCardFormSchema";
-import { useJobCards } from "@/hooks/useJobCards";
+import { useJobCards } from "@/hooks/jobs";
 import { JobCardFormData } from "@/types/jobs.types";
 import JobCardFormFields from "./JobCardFormFields";
 import JobCardDialogControls from "./JobCardDialogControls";
