@@ -107,7 +107,10 @@ const JobCardFormFields: React.FC<JobCardFormFieldsProps> = ({
         name="payment_method"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Payment Method</FormLabel>
+            <FormLabel className="flex items-center">
+              Payment Method
+              <span className="text-destructive ml-1">*</span>
+            </FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
                 <SelectTrigger>

@@ -44,7 +44,7 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
     resolver: zodResolver(jobCardFormSchema),
     defaultValues: {
       job_id: "",
-      payment_method: "none",
+      payment_method: "cash", // Set default to cash instead of none
       payment_amount: 0,
       notes: ""
     }
@@ -99,7 +99,12 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
         staff_relation_id: staffRelationId
       });
       
-      form.reset();
+      form.reset({
+        job_id: "",
+        payment_method: "cash", // Reset to cash as default
+        payment_amount: 0,
+        notes: ""
+      });
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to create job card:", error);
@@ -112,13 +117,25 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
   };
   
   const handleCancel = () => {
-    form.reset();
+    form.reset({
+      job_id: "",
+      payment_method: "cash", // Reset to cash as default
+      payment_amount: 0,
+      notes: ""
+    });
     onOpenChange(false);
   };
   
   return (
     <Dialog open={open} onOpenChange={(open) => {
-      if (!open) form.reset();
+      if (!open) {
+        form.reset({
+          job_id: "",
+          payment_method: "cash", // Reset to cash as default
+          payment_amount: 0,
+          notes: ""
+        });
+      }
       onOpenChange(open);
     }}>
       <DialogContent className="sm:max-w-md">
