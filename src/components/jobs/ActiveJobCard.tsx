@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle } from "lucide-react";
@@ -21,34 +21,61 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
 }) => {
   const [duration, setDuration] = useState<string>("");
   const [now, setNow] = useState(new Date());
-  const [isActive, setIsActive] = useState(true);
+  const activeRef = useRef(true);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Don't show this component if the job has an end_time
+  // Set up effect to track if the job has an end_time
   useEffect(() => {
     if (jobCard.end_time) {
-      setIsActive(false);
+      activeRef.current = false;
+      
+      // Clean up the timer if it exists
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     }
+    
+    // Cleanup function
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [jobCard.end_time]);
   
-  if (!isActive) {
+  // If job is not active, don't render the component
+  if (jobCard.end_time) {
     return null;
   }
   
+  // Set up timer effect
   useEffect(() => {
     // Update the current time every second for the timer
-    const timer = setInterval(() => {
-      if (!isActive) {
-        clearInterval(timer);
+    timerRef.current = setInterval(() => {
+      if (!activeRef.current) {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
         return;
       }
       setNow(new Date());
     }, 1000);
     
-    return () => clearInterval(timer);
-  }, [isActive]);
+    // Cleanup function
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, []);
   
+  // Calculate duration effect
   useEffect(() => {
-    if (!isActive) return; // Don't update duration if job is completed
+    if (!activeRef.current) return;
     
     const startTime = new Date(jobCard.start_time);
     const duration = intervalToDuration({ start: startTime, end: now });
@@ -67,10 +94,19 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
     formattedDuration += `${duration.seconds}s`;
     
     setDuration(formattedDuration);
-  }, [jobCard, now, isActive]);
+  }, [jobCard, now]);
   
   const handleComplete = () => {
-    setIsActive(false); // Immediately stop the timer
+    // Immediately mark as inactive to stop the timer
+    activeRef.current = false;
+    
+    // Clean up timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    // Complete the job
     onCompleteJob(jobCard.id);
   };
   

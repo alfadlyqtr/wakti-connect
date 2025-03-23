@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Clock, PlusCircle, Play, Square } from "lucide-react";
+import { Clock, PlusCircle, LogIn, LogOut } from "lucide-react";
 import { formatTime } from "@/utils/dateUtils";
 
 interface WorkStatusCardProps {
@@ -32,8 +32,8 @@ const WorkStatusCard: React.FC<WorkStatusCardProps> = ({
               </h3>
               <p className="text-sm text-muted-foreground">
                 {activeWorkSession 
-                  ? `Started at ${formatTime(activeWorkSession.start_time)}` 
-                  : "Not currently working"}
+                  ? `Clocked in at ${formatTime(activeWorkSession.start_time)}` 
+                  : "Not currently clocked in"}
               </p>
             </div>
           </div>
@@ -54,8 +54,8 @@ const WorkStatusCard: React.FC<WorkStatusCardProps> = ({
                   onClick={onEndWorkDay}
                   className="flex-1 sm:flex-auto"
                 >
-                  <Square className="h-4 w-4 mr-2" />
-                  End Work Day
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Clock Out
                 </Button>
               </>
             ) : (
@@ -65,8 +65,8 @@ const WorkStatusCard: React.FC<WorkStatusCardProps> = ({
                 variant="default"
                 style={{ backgroundColor: "#10B981", color: "white" }}
               >
-                <Play className="h-4 w-4 mr-2" />
-                Start Work Day
+                <LogIn className="h-4 w-4 mr-2" />
+                Clock In
               </Button>
             )}
           </div>
