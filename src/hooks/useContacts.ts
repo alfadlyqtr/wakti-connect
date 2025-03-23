@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { UserContact } from "@/types/invitation.types";
@@ -8,7 +9,7 @@ import {
   sendContactRequest as sendRequest,
   respondToContactRequest as respondToRequest,
   syncStaffBusinessContacts
-} from "@/services/contacts/contactsService";
+} from "@/services/contacts";
 import {
   fetchAutoApproveSetting,
   updateAutoApproveContacts
@@ -55,13 +56,15 @@ export const useContacts = () => {
   } = useQuery({
     queryKey: ['contacts'],
     queryFn: fetchContacts,
-    onError: (error) => {
-      console.error("Error fetching contacts:", error);
-      toast({
-        title: "Error loading contacts",
-        description: "Could not load your contacts. Please try again later.",
-        variant: "destructive"
-      });
+    meta: {
+      onError: (error: any) => {
+        console.error("Error fetching contacts:", error);
+        toast({
+          title: "Error loading contacts",
+          description: "Could not load your contacts. Please try again later.",
+          variant: "destructive"
+        });
+      }
     }
   });
 
@@ -73,8 +76,10 @@ export const useContacts = () => {
   } = useQuery({
     queryKey: ['contactRequests'],
     queryFn: fetchPendingRequests,
-    onError: (error) => {
-      console.error("Error fetching pending requests:", error);
+    meta: {
+      onError: (error: any) => {
+        console.error("Error fetching pending requests:", error);
+      }
     }
   });
 
