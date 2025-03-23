@@ -1,11 +1,10 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { StaffFormValues } from "@/components/staff/dialog/StaffFormSchema";
 import { checkCoAdminLimit } from "./staffLimits";
 import { uploadStaffAvatar } from "./avatarUpload";
-import { CreateStaffResult, StaffCreationResponse } from "./types";
+import { CreateStaffResult } from "./types";
 
 export const useCreateStaffMutation = () => {
   const queryClient = useQueryClient();
@@ -28,25 +27,6 @@ export const useCreateStaffMutation = () => {
           }
         }
         
-        // Get business name to generate staff number
-        const { data: businessData } = await supabase
-          .from('profiles')
-          .select('business_name')
-          .eq('id', businessId)
-          .single();
-          
-        const businessPrefix = businessData?.business_name 
-          ? businessData.business_name.substring(0, 3).toUpperCase().replace(/[^A-Z0-9]/g, '')
-          : 'BUS';
-          
-        // Get staff count
-        const { count } = await supabase
-          .from('business_staff')
-          .select('*', { count: 'exact', head: true })
-          .eq('business_id', businessId);
-          
-        const staffNumber = `${businessPrefix}_${String((count || 0) + 1).padStart(3, '0')}`;
-        
         // 1. Create the auth user account
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: values.email,
@@ -57,8 +37,7 @@ export const useCreateStaffMutation = () => {
               account_type: 'staff',
               display_name: values.fullName,
               business_id: businessId,
-              staff_role: values.isCoAdmin ? 'co-admin' : 'staff',
-              staff_number: staffNumber
+              staff_role: values.isCoAdmin ? 'co-admin' : 'staff'
             }
           }
         });
@@ -82,7 +61,6 @@ export const useCreateStaffMutation = () => {
             email: values.email,
             position: values.position || 'Staff Member',
             role: values.isCoAdmin ? 'co-admin' : 'staff',
-            staff_number: staffNumber,
             is_service_provider: values.isServiceProvider,
             permissions: values.permissions,
             profile_image_url: avatarUrl,
