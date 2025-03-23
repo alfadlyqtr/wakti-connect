@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -60,15 +61,15 @@ export const useStaffDetails = (staffRelationId: string | null) => {
         // Check if business data exists and has the expected structure
         // Using a separate variable to help TypeScript with null checks
         const businessData = data.business;
-        if (businessData && 
-            typeof businessData === 'object' && 
-            !('error' in businessData) && 
-            'business_name' in businessData) {
-          // Valid business data, use it
-          staffDetails.business = {
-            business_name: businessData.business_name,
-            avatar_url: businessData.avatar_url
-          };
+        if (businessData && typeof businessData === 'object') {
+          // Now we've checked businessData is not null and is an object
+          if (!('error' in businessData) && 'business_name' in businessData) {
+            // Valid business data, use it with non-null assertion since we've checked
+            staffDetails.business = {
+              business_name: businessData.business_name as string,
+              avatar_url: businessData.avatar_url
+            };
+          }
         } else {
           console.error("Business data is missing or malformed:", businessData);
           // Keep the default business object we already set
