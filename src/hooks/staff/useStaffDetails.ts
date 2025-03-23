@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -60,24 +59,21 @@ export const useStaffDetails = (staffRelationId: string | null) => {
         
         // Check if business data exists and has the expected structure
         if (data.business && typeof data.business === 'object') {
-          // Use a type guard to check for error property
-          if (!('error' in data.business)) {
-            // First check if business data exists at all before accessing it
-            if (data.business !== null) {
-              // Create a typed reference with more explicit typing to help TypeScript
-              const businessData = data.business as { 
-                business_name?: string; 
-                avatar_url?: string | null 
-              };
-              
-              // Now access properties with proper null checking
-              staffDetails.business = {
-                business_name: businessData.business_name || 'Unknown Business',
-                avatar_url: businessData.avatar_url || null
-              };
-            }
+          // Use a type guard to check if data.business is null before accessing properties
+          if (data.business !== null) {
+            // Create a typed reference with more explicit typing to help TypeScript
+            const businessData = data.business as { 
+              business_name?: string; 
+              avatar_url?: string | null 
+            };
+            
+            // Now access properties with proper null checking
+            staffDetails.business = {
+              business_name: businessData.business_name || 'Unknown Business',
+              avatar_url: businessData.avatar_url || null
+            };
           } else {
-            console.error("Business data contains an error:", data.business);
+            console.error("Business data is null");
           }
         } else {
           console.error("Business data is missing or malformed:", data.business);
