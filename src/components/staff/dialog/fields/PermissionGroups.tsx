@@ -12,7 +12,10 @@ import {
   DollarSign,
   ShieldCheck,
   UserCog,
-  Users
+  Users,
+  CheckSquare,
+  RefreshCw,
+  Edit
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import PermissionToggle from "./PermissionToggle";
@@ -61,6 +64,14 @@ const PermissionGroups: React.FC<PermissionGroupsProps> = ({ form }) => {
           
           <PermissionToggle
             form={form}
+            name="permissions.can_update_task_status"
+            label="Update Task Status"
+            description="Can change task status"
+            icon={CheckSquare}
+          />
+          
+          <PermissionToggle
+            form={form}
             name="permissions.can_track_hours"
             label="Track Hours"
             description="Can track working hours"
@@ -104,6 +115,14 @@ const PermissionGroups: React.FC<PermissionGroupsProps> = ({ form }) => {
           
           <PermissionToggle
             form={form}
+            name="permissions.can_update_booking_status"
+            label="Update Booking Status"
+            description="Can change booking status"
+            icon={RefreshCw}
+          />
+          
+          <PermissionToggle
+            form={form}
             name="permissions.can_view_customer_bookings"
             label="View Customer Bookings"
             description="Can view booking details"
@@ -143,6 +162,14 @@ const PermissionGroups: React.FC<PermissionGroupsProps> = ({ form }) => {
             label="Edit Profile"
             description="Can edit their own profile"
             icon={UserCog}
+          />
+          
+          <PermissionToggle
+            form={form}
+            name="permissions.can_update_profile"
+            label="Update Profile"
+            description="Can update their profile details"
+            icon={Edit}
           />
         </div>
       </div>

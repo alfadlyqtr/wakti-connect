@@ -7,6 +7,7 @@ export const staffFormSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
   position: z.string().optional(),
+  staffNumber: z.string().optional(),
   avatar: z.instanceof(File).optional(),
   isServiceProvider: z.boolean().default(false),
   isCoAdmin: z.boolean().default(false),
@@ -20,7 +21,10 @@ export const staffFormSchema = z.object({
     can_log_earnings: z.boolean().default(false),
     can_edit_profile: z.boolean().default(true),
     can_view_customer_bookings: z.boolean().default(false),
-    can_view_analytics: z.boolean().default(false)
+    can_view_analytics: z.boolean().default(false),
+    can_update_task_status: z.boolean().default(false),
+    can_update_booking_status: z.boolean().default(false),
+    can_update_profile: z.boolean().default(true)
   }).default({
     can_view_tasks: true,
     can_manage_tasks: false,
@@ -31,7 +35,10 @@ export const staffFormSchema = z.object({
     can_log_earnings: false,
     can_edit_profile: true,
     can_view_customer_bookings: false,
-    can_view_analytics: false
+    can_view_analytics: false,
+    can_update_task_status: false,
+    can_update_booking_status: false,
+    can_update_profile: true
   })
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match",

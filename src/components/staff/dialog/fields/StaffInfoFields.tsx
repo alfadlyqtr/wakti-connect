@@ -13,6 +13,7 @@ import { User } from "lucide-react";
 import { StaffFormValues } from "../StaffFormSchema";
 import { Separator } from "@/components/ui/separator";
 import AvatarUpload from "./AvatarUpload";
+import StaffNumberInput from "./StaffNumberInput";
 
 interface StaffInfoFieldsProps {
   form: UseFormReturn<StaffFormValues>;
@@ -26,7 +27,9 @@ const StaffInfoFields: React.FC<StaffInfoFieldsProps> = ({ form }) => {
         <h4 className="text-lg font-medium">Staff Information</h4>
       </div>
       
-      <AvatarUpload form={form} />
+      <div className="flex flex-col items-center mb-6">
+        <AvatarUpload form={form} />
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
@@ -56,6 +59,8 @@ const StaffInfoFields: React.FC<StaffInfoFieldsProps> = ({ form }) => {
             </FormItem>
           )}
         />
+        
+        <StaffNumberInput form={form} />
         
         <FormField
           control={form.control}

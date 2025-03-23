@@ -47,6 +47,7 @@ serve(async (req) => {
       email,
       password,
       position,
+      staffNumber,
       role = 'staff',
       isServiceProvider = false,
       permissions,
@@ -107,18 +108,23 @@ serve(async (req) => {
       console.error("Error getting staff count:", countError);
     }
     
-    // Generate staff number
-    const { data: businessData } = await supabase
-      .from('profiles')
-      .select('business_name')
-      .eq('id', user.id)
-      .single();
-      
-    const businessPrefix = businessData?.business_name 
-      ? businessData.business_name.substring(0, 3).toUpperCase().replace(/[^A-Z0-9]/g, '')
-      : 'BUS';
-      
-    const staffNumber = `${businessPrefix}_Staff${String((count || 0) + 1).padStart(3, '0')}`;
+    // Generate staff number if not provided
+    let finalStaffNumber = staffNumber;
+    
+    if (!finalStaffNumber) {
+      // Get business information for generating staff number
+      const { data: businessData } = await supabase
+        .from('profiles')
+        .select('business_name')
+        .eq('id', user.id)
+        .single();
+        
+      const businessPrefix = businessData?.business_name 
+        ? businessData.business_name.substring(0, 3).toUpperCase().replace(/[^A-Z0-9]/g, '')
+        : 'BUS';
+        
+      finalStaffNumber = `${businessPrefix}_Staff${String((count || 0) + 1).padStart(3, '0')}`;
+    }
     
     // Upload avatar if provided
     let avatarUrl = null;
@@ -163,7 +169,7 @@ serve(async (req) => {
         role: role,
         is_service_provider: isServiceProvider,
         permissions: permissions,
-        staff_number: staffNumber,
+        staff_number: finalStaffNumber,
         profile_image_url: avatarUrl,
         status: 'active'
       })
