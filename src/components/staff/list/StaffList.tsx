@@ -5,7 +5,7 @@ import { StaffMembersList } from "@/components/staff/StaffMembersList";
 import EmptyStaffState from "./EmptyStaffState";
 import StaffMembersLoading from "./StaffMembersLoading";
 import StaffMembersError from "./StaffMembersError";
-import useStaffListOperations from "./useStaffListOperations";
+import { useStaffListOperations } from "./useStaffListOperations";
 
 interface StaffListProps {
   staffMembers: StaffMember[];
@@ -37,12 +37,12 @@ export const StaffList: React.FC<StaffListProps> = ({
 
   // Show error state
   if (error) {
-    return <StaffMembersError error={error} onRetry={onRefresh} />;
+    return <StaffMembersError errorMessage={error.message} onRetry={onRefresh} />;
   }
 
   // Show empty state
   if (!staffMembers || staffMembers.length === 0) {
-    return <EmptyStaffState />;
+    return <EmptyStaffState onAddStaffClick={() => onEdit("")} />;
   }
 
   // Render staff list

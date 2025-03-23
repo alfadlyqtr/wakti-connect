@@ -3,9 +3,6 @@ import React, { useState } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, UserPlus, RefreshCw } from "lucide-react";
@@ -20,23 +17,18 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { StaffMemberCard } from "./StaffMemberCard";
+import { StaffMember } from "@/types/staff";
 
-interface StaffMember {
-  id: string;
-  name: string;
-  email: string;
-  position?: string;
-  role: string;
-  is_service_provider: boolean;
-  staff_number?: string;
-  status: string;
-  created_at: string;
-  profiles?: {
-    avatar_url?: string;
-    full_name?: string;
-  };
+interface StaffListProps {
+  staffMembers: StaffMember[];
+  staffData?: any[]; // For backwards compatibility
+  isLoading: boolean;
+  error: Error | null;
+  onEdit: (staffId: string) => void;
+  onRefresh: () => void;
 }
 
+// EmptyStaffState component with its props interface
 interface EmptyStaffStateProps {
   onAddStaffClick: () => void;
 }
@@ -58,15 +50,6 @@ const EmptyStaffState: React.FC<EmptyStaffStateProps> = ({ onAddStaffClick }) =>
     </div>
   </Card>
 );
-
-interface StaffListProps {
-  staffMembers: StaffMember[];
-  staffData?: any[]; // Add this to support both prop patterns
-  isLoading: boolean;
-  error: Error | null;
-  onEdit: (staffId: string) => void;
-  onRefresh: () => void;
-}
 
 export const StaffList: React.FC<StaffListProps> = ({
   staffMembers,
@@ -127,7 +110,7 @@ export const StaffList: React.FC<StaffListProps> = ({
         {displayStaff.map((staff) => (
           <StaffMemberCard
             key={staff.id}
-            data={staff}
+            member={staff}
             onEdit={() => onEdit(staff.id)}
             onDelete={() => handleDeleteClick(staff)} 
             onToggleStatus={() => handleToggleStatusClick(staff)}
@@ -186,3 +169,5 @@ export const StaffList: React.FC<StaffListProps> = ({
     </div>
   );
 };
+
+export default StaffList;

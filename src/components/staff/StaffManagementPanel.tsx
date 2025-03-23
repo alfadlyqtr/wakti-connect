@@ -9,6 +9,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 
+// Update the StaffMembersList props
+interface StaffMembersListProps {
+  onEdit?: (staffId: string) => void;
+  onEditStaff?: (staffId: string) => void; // Alternative prop name
+}
+
 const StaffManagementPanel = () => {
   const [activeTab, setActiveTab] = React.useState("list");
   const [editingStaffId, setEditingStaffId] = React.useState<string | null>(null);
@@ -80,7 +86,7 @@ const StaffManagementPanel = () => {
         </TabsList>
         
         <TabsContent value="list" className="pt-4">
-          <StaffMembersList onEditStaff={handleEditStaff} />
+          <StaffMembersList onEdit={handleEditStaff} />
         </TabsContent>
         
         <TabsContent value="create" className="pt-4">

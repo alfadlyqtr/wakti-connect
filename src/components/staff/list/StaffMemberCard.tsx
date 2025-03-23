@@ -19,16 +19,20 @@ export interface StaffMemberCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onToggleStatus: () => void;
+  data?: StaffMember; // For backward compatibility
 }
 
 const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
   member,
+  data, // Support legacy data prop
   onEdit,
   onDelete,
   onToggleStatus,
 }) => {
-  const isActive = member.status === "active";
-  const roleLabel = member.role === "co-admin" ? "Co-Admin" : "Staff";
+  // Use either member or data prop for backward compatibility
+  const staffData = member || data;
+  const isActive = staffData.status === "active";
+  const roleLabel = staffData.role === "co-admin" ? "Co-Admin" : "Staff";
   
   return (
     <Card className="overflow-hidden">
@@ -37,14 +41,14 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Avatar className="h-10 w-10">
-                <AvatarImage src="" alt={member.name} />
+                <AvatarImage src="" alt={staffData.name} />
                 <AvatarFallback>
-                  {member.name.charAt(0).toUpperCase()}
+                  {staffData.name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="font-medium">{member.name}</h3>
-                <p className="text-sm text-muted-foreground">{member.position || "Staff Member"}</p>
+                <h3 className="font-medium">{staffData.name}</h3>
+                <p className="text-sm text-muted-foreground">{staffData.position || "Staff Member"}</p>
               </div>
             </div>
             <DropdownMenu>
@@ -75,10 +79,10 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
           
           <div className="mt-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Badge variant={member.role === "co-admin" ? "default" : "outline"}>
+              <Badge variant={staffData.role === "co-admin" ? "default" : "outline"}>
                 {roleLabel}
               </Badge>
-              {member.is_service_provider && (
+              {staffData.is_service_provider && (
                 <Badge variant="secondary">Service Provider</Badge>
               )}
             </div>
@@ -87,9 +91,9 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
             </Badge>
           </div>
           
-          {member.staff_number && (
+          {staffData.staff_number && (
             <p className="text-xs text-muted-foreground mt-2">
-              ID: {member.staff_number}
+              ID: {staffData.staff_number}
             </p>
           )}
         </div>

@@ -1,8 +1,10 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { StaffMember } from "@/types/staff";
 
-export interface StaffMember {
+// Local StaffMember interface matching the DB response
+export interface StaffQueryResult {
   id: string;
   name: string;
   email: string;
@@ -10,18 +12,31 @@ export interface StaffMember {
   position: string;
   created_at: string;
   staff_id: string;
+  business_id: string;
+  status?: string;
+  is_service_provider?: boolean;
+  permissions?: Record<string, boolean>;
+  staff_number?: string;
+  profile_image_url?: string;
 }
 
 export const useStaffQuery = () => {
   return useQuery({
     queryKey: ['businessStaff'],
     queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        throw new Error("Not authenticated");
+      }
+      
       const { data: staffData, error: staffError } = await supabase
         .from('business_staff')
-        .select('*');
+        .select('*')
+        .eq('business_id', session.session.user.id);
         
       if (staffError) throw staffError;
-      return staffData as StaffMember[];
+      
+      return staffData as StaffQueryResult[];
     }
   });
 };
