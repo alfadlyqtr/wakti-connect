@@ -83,7 +83,7 @@ export const completeJobCard = async (jobCardId: string): Promise<JobCard> => {
   
   // Use the database function for completing the job card
   const { data: success, error: rpcError } = await supabase.rpc(
-    'complete_job_card',
+    'complete_job_card' as any, // Type assertion to bypass TypeScript error
     {
       job_card_id: jobCardId,
       end_timestamp: now

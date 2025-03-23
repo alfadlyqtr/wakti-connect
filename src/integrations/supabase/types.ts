@@ -1174,6 +1174,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      complete_job_card: {
+        Args: {
+          job_card_id: string
+          end_timestamp: string
+        }
+        Returns: boolean
+      }
       expire_old_messages: {
         Args: Record<PropertyKey, never>
         Returns: undefined
