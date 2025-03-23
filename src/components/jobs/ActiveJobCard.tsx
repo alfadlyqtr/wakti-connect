@@ -22,6 +22,11 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
   const [duration, setDuration] = useState<string>("");
   const [now, setNow] = useState(new Date());
   
+  // Don't show this component if the job has an end_time
+  if (jobCard.end_time) {
+    return null;
+  }
+  
   useEffect(() => {
     // Update the current time every second for the timer
     const timer = setInterval(() => {
@@ -32,6 +37,8 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
   }, []);
   
   useEffect(() => {
+    if (jobCard.end_time) return; // Don't update duration if job is completed
+    
     const startTime = new Date(jobCard.start_time);
     const duration = intervalToDuration({ start: startTime, end: now });
     

@@ -125,6 +125,46 @@ export const useJobCards = (staffRelationId?: string) => {
     }
   });
 
+  // Complete a job card by setting the end time
+  const completeJobCard = useMutation({
+    mutationFn: async (id: string) => {
+      const { data: updatedCard, error } = await supabase
+        .from('job_cards')
+        .update({ end_time: new Date().toISOString() })
+        .eq('id', id)
+        .select(`
+          *,
+          jobs:job_id (
+            id,
+            name,
+            description,
+            duration,
+            default_price
+          )
+        `)
+        .single();
+        
+      if (error) {
+        toast({
+          title: "Error completing job card",
+          description: error.message,
+          variant: "destructive"
+        });
+        throw error;
+      }
+      
+      toast({
+        title: "Job card completed",
+        description: "Job card has been marked as completed successfully",
+      });
+      
+      return updatedCard as JobCard;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['jobCards'] });
+    }
+  });
+
   // Delete a job card
   const deleteJobCard = useMutation({
     mutationFn: async (id: string) => {
@@ -161,6 +201,7 @@ export const useJobCards = (staffRelationId?: string) => {
     refetch,
     createJobCard,
     updateJobCard,
+    completeJobCard,
     deleteJobCard
   };
 };
