@@ -9,7 +9,7 @@ export interface StaffDetails {
   permissions: Record<string, boolean>;
   business: {
     business_name: string;
-    avatar_url?: string;
+    avatar_url?: string | null;
   };
   [key: string]: any;
 }
@@ -34,6 +34,12 @@ export const useStaffDetails = (staffRelationId: string | null) => {
           .single();
           
         if (error) throw error;
+        
+        // Check if business property exists and has expected structure
+        if (!data || !data.business || typeof data.business !== 'object' || !('business_name' in data.business)) {
+          console.error("Business data is missing or malformed:", data?.business);
+          throw new Error("Business data is missing or malformed");
+        }
         
         // Parse permissions JSON to an object if it's a string
         if (data) {
