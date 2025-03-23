@@ -26,23 +26,29 @@ import { Clock, Calendar, Filter, Timer } from "lucide-react";
 
 interface WorkHistoryProps {
   staffRelationId: string;
+  limit?: number;
 }
 
 type FilterPeriod = "all" | "today" | "thisWeek" | "thisMonth";
 
-const WorkHistory: React.FC<WorkHistoryProps> = ({ staffRelationId }) => {
+const WorkHistory: React.FC<WorkHistoryProps> = ({ staffRelationId, limit }) => {
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>("all");
   
   const { data: workSessions, isLoading } = useQuery({
     queryKey: ['staffWorkSessions', staffRelationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('staff_work_logs')
         .select('*')
         .eq('staff_relation_id', staffRelationId)
         .eq('status', 'completed')
         .order('start_time', { ascending: false });
+      
+      if (limit) {
+        query = query.limit(limit);
+      }
         
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     }

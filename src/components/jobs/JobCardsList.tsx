@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { formatDateTime } from "@/utils/dateUtils";
 import { formatCurrency, formatDuration } from "@/utils/formatUtils";
-import { FileText, Loader2, Filter, Calendar, CheckSquare } from "lucide-react";
+import { FileText, Loader2, Filter, Calendar, CheckSquare, Clock } from "lucide-react";
 import ActiveJobCard from "./ActiveJobCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
