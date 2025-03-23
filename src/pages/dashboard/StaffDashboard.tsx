@@ -1,11 +1,14 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import StaffDashboardHeader from "@/components/dashboard/StaffDashboardHeader";
 import { useStaffStatus } from "@/hooks/staff/useStaffStatus";
 import { Users, BookOpen, Clock, Calendar, Briefcase, AlertCircle } from "lucide-react";
+import WorkStatusCard from "@/components/staff/WorkStatusCard";
+import ActiveWorkSession from "@/components/staff/ActiveWorkSession";
+import WorkHistory from "@/components/staff/WorkHistory";
 
 interface StaffPermissions {
   can_view_tasks?: boolean;
@@ -23,6 +26,8 @@ interface StaffPermissions {
 
 const StaffDashboard = () => {
   const { isStaff, staffRelationId } = useStaffStatus();
+  const [activeWorkSession, setActiveWorkSession] = useState<any | null>(null);
+  
   const { data: staffData, isLoading, error } = useQuery({
     queryKey: ['staffDetails', staffRelationId],
     queryFn: async () => {
@@ -73,6 +78,96 @@ const StaffDashboard = () => {
       return data;
     }
   });
+  
+  // Fetch active work session
+  useEffect(() => {
+    const fetchActiveWorkSession = async () => {
+      if (!staffRelationId) return;
+      
+      try {
+        console.log("Fetching active work session for staff relation:", staffRelationId);
+        
+        const { data: activeSessions, error: sessionsError } = await supabase
+          .from('staff_work_logs')
+          .select('*')
+          .eq('staff_relation_id', staffRelationId)
+          .is('end_time', null)
+          .eq('status', 'active')
+          .maybeSingle();
+          
+        if (sessionsError) {
+          console.error("Error fetching active work session:", sessionsError);
+          return;
+        }
+        
+        console.log("Active work session:", activeSessions);
+        setActiveWorkSession(activeSessions);
+      } catch (error: any) {
+        console.error("Error fetching active work session:", error);
+      }
+    };
+    
+    if (staffRelationId) {
+      fetchActiveWorkSession();
+    }
+  }, [staffRelationId]);
+  
+  // Start/End work session
+  const startWorkDay = async () => {
+    if (!staffRelationId) return;
+    
+    try {
+      console.log("Starting work day for staff relation:", staffRelationId);
+      
+      const { data, error } = await supabase
+        .from('staff_work_logs')
+        .insert({
+          staff_relation_id: staffRelationId,
+          start_time: new Date().toISOString(),
+          status: 'active'
+        })
+        .select()
+        .single();
+        
+      if (error) {
+        console.error("Error starting work day:", error);
+        return;
+      }
+      
+      console.log("Work day started:", data);
+      setActiveWorkSession(data);
+    } catch (error: any) {
+      console.error("Error starting work day:", error);
+    }
+  };
+  
+  const endWorkDay = async () => {
+    if (!activeWorkSession) return;
+    
+    try {
+      console.log("Ending work day for session:", activeWorkSession.id);
+      
+      const { data, error } = await supabase
+        .from('staff_work_logs')
+        .update({
+          end_time: new Date().toISOString(),
+          status: 'completed'
+        })
+        .eq('id', activeWorkSession.id)
+        .select()
+        .single();
+        
+      if (error) {
+        console.error("Error ending work day:", error);
+        return;
+      }
+      
+      console.log("Work day ended:", data);
+      setActiveWorkSession(null);
+    } catch (error: any) {
+      console.error("Error ending work day:", error);
+    }
+  };
   
   const { data: stats, error: statsError } = useQuery({
     queryKey: ['staffStats', staffRelationId],
@@ -181,6 +276,20 @@ const StaffDashboard = () => {
       
       {user && <StaffDashboardHeader staffId={user.id} />}
       
+      {/* Work Status Section */}
+      {permissions.can_track_hours && (
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold mb-3">Work Day Tracking</h2>
+          <WorkStatusCard 
+            activeWorkSession={activeWorkSession}
+            onStartWorkDay={startWorkDay}
+            onEndWorkDay={endWorkDay}
+            onCreateJobCard={() => window.location.href = "/dashboard/job-cards"}
+          />
+          <ActiveWorkSession session={activeWorkSession} />
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {permissions.can_view_tasks && (
           <Card>
@@ -242,6 +351,17 @@ const StaffDashboard = () => {
           </Card>
         )}
       </div>
+      
+      {permissions.can_track_hours && (
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold mb-3">Recent Work History</h2>
+          <Card>
+            <CardContent className="p-6">
+              <WorkHistory staffRelationId={staffRelationId} limit={5} />
+            </CardContent>
+          </Card>
+        </div>
+      )}
       
       <Card>
         <CardHeader>

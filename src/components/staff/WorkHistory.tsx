@@ -1,119 +1,163 @@
 
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
-import { Clock, DollarSign, FileText } from "lucide-react";
-
-interface WorkSession {
-  id: string;
-  start_time: string;
-  end_time: string | null;
-  earnings: number | null;
-  notes: string | null;
-  status: 'active' | 'completed' | 'cancelled';
-  created_at: string;
-  job_cards_count?: number;
-}
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { formatDate, formatTime } from "@/utils/dateUtils";
+import { Loader2, Clock } from "lucide-react";
 
 interface WorkHistoryProps {
   staffRelationId: string;
+  limit?: number;
 }
 
-const WorkHistory: React.FC<WorkHistoryProps> = ({ staffRelationId }) => {
-  const { data: workSessions, isLoading } = useQuery({
-    queryKey: ['staffWorkHistory', staffRelationId],
+const WorkHistory: React.FC<WorkHistoryProps> = ({ staffRelationId, limit }) => {
+  const [page, setPage] = useState(1);
+  const pageSize = limit || 10;
+  
+  const { data: workLogs, isLoading, error } = useQuery({
+    queryKey: ['staffWorkHistory', staffRelationId, page, pageSize],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('staff_work_logs')
-        .select('*, job_cards(count)')
-        .eq('staff_relation_id', staffRelationId)
-        .not('id', 'eq', null)
-        .order('start_time', { ascending: false });
-        
-      if (error) throw error;
+      if (!staffRelationId) {
+        return { logs: [], count: 0 };
+      }
       
-      // Correctly process the job_cards count from Supabase
-      return data.map(session => ({
-        ...session,
-        job_cards_count: session.job_cards?.[0]?.count || 0
-      })) as WorkSession[];
+      try {
+        // Count total logs
+        const { count, error: countError } = await supabase
+          .from('staff_work_logs')
+          .select('*', { count: 'exact', head: true })
+          .eq('staff_relation_id', staffRelationId);
+          
+        if (countError) throw countError;
+        
+        // Get paginated logs
+        const { data: logs, error: logsError } = await supabase
+          .from('staff_work_logs')
+          .select('*')
+          .eq('staff_relation_id', staffRelationId)
+          .order('start_time', { ascending: false })
+          .range((page - 1) * pageSize, page * pageSize - 1);
+          
+        if (logsError) throw logsError;
+        
+        return { logs, count: count || 0 };
+      } catch (error) {
+        console.error("Error fetching work logs:", error);
+        throw error;
+      }
     }
   });
   
   if (isLoading) {
     return (
-      <div className="h-40 flex items-center justify-center">
-        <div className="h-8 w-8 border-4 border-t-transparent border-primary rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center p-6">
+        <Loader2 className="h-8 w-8 animate-spin text-wakti-blue" />
+        <span className="ml-2">Loading work history...</span>
       </div>
     );
   }
   
-  if (!workSessions || workSessions.length === 0) {
+  if (error) {
     return (
-      <div className="text-center py-10 border border-dashed rounded-md">
-        <Clock className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium mb-2">No Work History</h3>
-        <p className="text-muted-foreground">No work sessions found</p>
-      </div>
+      <Card>
+        <CardContent className="p-4 text-center">
+          <p className="text-destructive">Error loading work history</p>
+        </CardContent>
+      </Card>
     );
   }
+  
+  if (!workLogs?.logs || workLogs.logs.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-4 text-center">
+          <p className="text-muted-foreground">No work history found</p>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  const totalPages = Math.ceil((workLogs.count || 0) / pageSize);
   
   return (
     <div className="space-y-4">
-      {workSessions.map(session => (
-        <div key={session.id} className="border rounded-md p-4">
-          <div className="flex justify-between items-center mb-3">
-            <h4 className="font-medium">
-              {format(new Date(session.start_time), "PPP")}
-            </h4>
-            <Badge variant={
-              session.status === 'active' ? "secondary" : 
-              session.status === 'completed' ? "outline" : 
-              "destructive"
-            }>
-              {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
-            </Badge>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <p className="text-muted-foreground">Start Time</p>
-              <p>{format(new Date(session.start_time), "h:mm a")}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">End Time</p>
-              <p>
-                {session.end_time 
-                  ? format(new Date(session.end_time), "h:mm a")
-                  : "Not ended"}
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-1">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-              <span>
-                {session.earnings 
-                  ? `$${session.earnings.toFixed(2)}` 
-                  : "$0.00"} earned
-              </span>
-            </div>
-            
-            <div className="flex items-center gap-1">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              <span>{session.job_cards_count || 0} job cards</span>
-            </div>
-            
-            {session.notes && (
-              <div className="col-span-2 mt-2">
-                <p className="text-muted-foreground">Notes</p>
-                <p>{session.notes}</p>
+      <div className="grid gap-3">
+        {workLogs.logs.map((log: any) => (
+          <Card key={log.id} className="bg-card">
+            <CardContent className="p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                <div>
+                  <p className="text-sm font-medium flex items-center">
+                    <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
+                    Start
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {formatDate(log.start_time)} at {formatTime(log.start_time)}
+                  </p>
+                </div>
+                
+                <div>
+                  <p className="text-sm font-medium">End</p>
+                  <p className="text-sm text-muted-foreground">
+                    {log.end_time ? `${formatDate(log.end_time)} at ${formatTime(log.end_time)}` : 'Active'}
+                  </p>
+                </div>
+                
+                <div>
+                  <p className="text-sm font-medium">Status</p>
+                  <div className={`text-sm inline-flex items-center px-2 py-1 rounded-full ${
+                    log.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                    log.status === 'completed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                    'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                  }`}>
+                    {log.status}
+                  </div>
+                </div>
+                
+                {log.earnings > 0 && (
+                  <div>
+                    <p className="text-sm font-medium">Earnings</p>
+                    <p className="text-sm text-muted-foreground">${log.earnings}</p>
+                  </div>
+                )}
+                
+                {log.notes && (
+                  <div className="sm:col-span-2">
+                    <p className="text-sm font-medium">Notes</p>
+                    <p className="text-sm text-muted-foreground">{log.notes}</p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      
+      {!limit && totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-4">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <span className="flex items-center px-3">
+            Page {page} of {totalPages}
+          </span>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            Next
+          </Button>
         </div>
-      ))}
+      )}
     </div>
   );
 };

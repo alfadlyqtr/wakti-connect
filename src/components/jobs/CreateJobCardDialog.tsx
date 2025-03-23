@@ -16,10 +16,9 @@ import { JobCardFormData } from "@/types/jobs.types";
 import { formatDateTimeToISO } from "@/utils/formatUtils";
 import JobCardFormFields from "./JobCardFormFields";
 import JobCardDialogControls from "./JobCardDialogControls";
-import { supabase } from "@/integrations/supabase/client";
-import { getStaffBusinessId } from "@/utils/staffUtils";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { getBusinessJobs } from "@/utils/staffUtils";
 
 interface CreateJobCardDialogProps {
   open: boolean;
@@ -52,45 +51,25 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
     }
   });
   
-  // Fetch jobs from business when dialog opens
+  // Fetch jobs when dialog opens
   useEffect(() => {
     if (open) {
       const fetchJobs = async () => {
         try {
           setLoading(true);
-          // Get the business ID for the staff member
-          const businessId = await getStaffBusinessId();
+          console.log("Fetching jobs for staff relation ID:", staffRelationId);
           
-          if (!businessId) {
-            console.error("No business ID found for staff");
-            toast({
-              title: "Error",
-              description: "Could not determine your business",
-              variant: "destructive"
-            });
-            return;
-          }
+          const jobsList = await getBusinessJobs();
           
-          // Fetch jobs for this business
-          const { data, error } = await supabase
-            .from('jobs')
-            .select('*')
-            .eq('business_id', businessId)
-            .order('name');
-            
-          if (error) {
-            console.error("Error fetching jobs:", error);
-            toast({
-              title: "Error",
-              description: "Could not load jobs",
-              variant: "destructive"
-            });
-            return;
-          }
-          
-          setJobs(data || []);
+          console.log("Fetched jobs:", jobsList.length);
+          setJobs(jobsList);
         } catch (error) {
           console.error("Error in fetchJobs:", error);
+          toast({
+            title: "Error",
+            description: "Could not load jobs",
+            variant: "destructive"
+          });
         } finally {
           setLoading(false);
         }
@@ -98,7 +77,7 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
       
       fetchJobs();
     }
-  }, [open, toast]);
+  }, [open, staffRelationId, toast]);
   
   const onSubmit = async (data: JobCardFormValues) => {
     try {

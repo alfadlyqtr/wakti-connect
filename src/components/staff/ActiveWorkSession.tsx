@@ -1,7 +1,7 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { format, intervalToDuration } from "date-fns";
+import { format, intervalToDuration, formatDuration } from "date-fns";
 import { Clock, Calendar } from "lucide-react";
 
 interface ActiveWorkSessionProps {
@@ -9,36 +9,47 @@ interface ActiveWorkSessionProps {
 }
 
 const ActiveWorkSession: React.FC<ActiveWorkSessionProps> = ({ session }) => {
-  const [duration, setDuration] = React.useState<string>("");
+  const [duration, setDuration] = useState<string>("");
+  const [now, setNow] = useState(new Date());
   
-  React.useEffect(() => {
+  useEffect(() => {
     if (!session) return;
     
-    const updateDuration = () => {
-      const startTime = new Date(session.start_time);
-      const now = new Date();
-      
-      const duration = intervalToDuration({ start: startTime, end: now });
-      
-      // Format the duration
-      const hours = duration.hours ? `${duration.hours}h ` : '';
-      const minutes = duration.minutes ? `${duration.minutes}m` : '0m';
-      
-      setDuration(`${hours}${minutes}`);
-    };
+    // Update the current time every second
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
     
-    // Update immediately
-    updateDuration();
-    
-    // Then update every minute
-    const interval = setInterval(updateDuration, 60000);
-    return () => clearInterval(interval);
+    return () => clearInterval(timer);
   }, [session]);
+  
+  useEffect(() => {
+    if (!session) return;
+    
+    const startTime = new Date(session.start_time);
+    
+    const duration = intervalToDuration({ start: startTime, end: now });
+    
+    // Format the duration
+    let formattedDuration = "";
+    
+    if (duration.hours) {
+      formattedDuration += `${duration.hours}h `;
+    }
+    
+    if (duration.minutes) {
+      formattedDuration += `${duration.minutes}m `;
+    }
+    
+    formattedDuration += `${duration.seconds}s`;
+    
+    setDuration(formattedDuration);
+  }, [session, now]);
   
   if (!session) return null;
   
   return (
-    <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900">
+    <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900 my-4">
       <CardContent className="p-4">
         <div className="flex items-center gap-3 mb-3">
           <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-full">
@@ -50,6 +61,11 @@ const ActiveWorkSession: React.FC<ActiveWorkSessionProps> = ({ session }) => {
               Started at {format(new Date(session.start_time), "h:mm a")}
             </p>
           </div>
+          <div className="ml-auto text-right">
+            <span className="text-xl font-bold text-green-700 dark:text-green-400">
+              {duration}
+            </span>
+          </div>
         </div>
         
         <div className="grid grid-cols-2 gap-2 text-sm">
@@ -59,7 +75,7 @@ const ActiveWorkSession: React.FC<ActiveWorkSessionProps> = ({ session }) => {
           </div>
           <div className="flex items-center">
             <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-            <span>Duration: {duration}</span>
+            <span>Today's Date: {format(new Date(), "MMMM d, yyyy")}</span>
           </div>
         </div>
       </CardContent>
