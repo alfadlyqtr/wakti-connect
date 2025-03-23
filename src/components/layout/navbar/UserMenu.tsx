@@ -15,6 +15,8 @@ import AccountMenuItems from "./AccountMenuItems";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchUnreadNotificationsCount } from "@/services/notifications/notificationService";
+import { useStaffWorkingStatus } from "@/hooks/staff/useStaffWorkingStatus";
+import { cn } from "@/lib/utils";
 
 interface UserMenuProps {
   isAuthenticated: boolean;
@@ -24,6 +26,8 @@ interface UserMenuProps {
 
 const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: UserMenuProps) => {
   const { t } = useTranslation();
+  const { data: staffStatus } = useStaffWorkingStatus();
+  const isWorking = staffStatus?.isWorking || false;
   
   // Fetch user profile data for displaying name
   const { data: profileData } = useQuery({
@@ -113,12 +117,30 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 bg-muted" aria-label="User menu">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className={cn(
+            "rounded-full h-8 w-8 bg-muted relative", 
+            isWorking && "ring-2 ring-green-500"
+          )} 
+          aria-label="User menu"
+        >
           <User className="h-4 w-4" />
+          {isWorking && (
+            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 border-2 border-background" />
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>{getDisplayName()}</DropdownMenuLabel>
+        <DropdownMenuLabel className="flex items-center gap-2">
+          {getDisplayName()}
+          {isWorking && (
+            <span className="text-xs font-normal text-green-600">
+              (Working)
+            </span>
+          )}
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
         
         {/* Mobile menu items - only visible on small screens */}

@@ -55,3 +55,35 @@ export const getTotalDuration = (cards: JobCard[]) => {
   
   return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 };
+
+/**
+ * Calculate total earnings from job cards
+ */
+export const getTotalEarnings = (cards: JobCard[]) => {
+  return cards.reduce((total, card) => {
+    // Only add payment amount if it's cash or POS (not 'none')
+    if (card.payment_method !== 'none') {
+      return total + (card.payment_amount || 0);
+    }
+    return total;
+  }, 0);
+};
+
+/**
+ * Get payment method distribution
+ */
+export const getPaymentMethodSummary = (cards: JobCard[]) => {
+  const summary = {
+    cash: 0,
+    pos: 0,
+    none: 0
+  };
+  
+  cards.forEach(card => {
+    if (card.payment_method in summary) {
+      summary[card.payment_method as keyof typeof summary]++;
+    }
+  });
+  
+  return summary;
+};

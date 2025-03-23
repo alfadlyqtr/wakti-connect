@@ -21,23 +21,34 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
 }) => {
   const [duration, setDuration] = useState<string>("");
   const [now, setNow] = useState(new Date());
+  const [isActive, setIsActive] = useState(true);
   
   // Don't show this component if the job has an end_time
-  if (jobCard.end_time) {
+  useEffect(() => {
+    if (jobCard.end_time) {
+      setIsActive(false);
+    }
+  }, [jobCard.end_time]);
+  
+  if (!isActive) {
     return null;
   }
   
   useEffect(() => {
     // Update the current time every second for the timer
     const timer = setInterval(() => {
+      if (!isActive) {
+        clearInterval(timer);
+        return;
+      }
       setNow(new Date());
     }, 1000);
     
     return () => clearInterval(timer);
-  }, []);
+  }, [isActive]);
   
   useEffect(() => {
-    if (jobCard.end_time) return; // Don't update duration if job is completed
+    if (!isActive) return; // Don't update duration if job is completed
     
     const startTime = new Date(jobCard.start_time);
     const duration = intervalToDuration({ start: startTime, end: now });
@@ -56,7 +67,12 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
     formattedDuration += `${duration.seconds}s`;
     
     setDuration(formattedDuration);
-  }, [jobCard, now]);
+  }, [jobCard, now, isActive]);
+  
+  const handleComplete = () => {
+    setIsActive(false); // Immediately stop the timer
+    onCompleteJob(jobCard.id);
+  };
   
   return (
     <Card className="mb-4 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
@@ -100,7 +116,7 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
         
         <div className="mt-4">
           <Button 
-            onClick={() => onCompleteJob(jobCard.id)} 
+            onClick={handleComplete} 
             className="w-full" 
             disabled={isCompleting}
             variant="default"

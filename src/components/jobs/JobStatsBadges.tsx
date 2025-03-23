@@ -1,18 +1,21 @@
 
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { CheckSquare, Clock, Calendar } from "lucide-react";
+import { CheckSquare, Clock, Calendar, DollarSign } from "lucide-react";
 import { format } from "date-fns";
+import { formatCurrency } from "@/utils/formatUtils";
 
 interface JobStatsBadgesProps {
   jobCount: number;
   totalDuration: string;
+  totalEarnings: number;
   filterPeriod: string;
 }
 
 const JobStatsBadges: React.FC<JobStatsBadgesProps> = ({ 
   jobCount, 
   totalDuration, 
+  totalEarnings,
   filterPeriod 
 }) => {
   return (
@@ -25,6 +28,11 @@ const JobStatsBadges: React.FC<JobStatsBadgesProps> = ({
       <Badge variant="outline" className="flex items-center gap-1">
         <Clock className="h-3 w-3" />
         <span>Total time: {totalDuration}</span>
+      </Badge>
+      
+      <Badge variant="outline" className="flex items-center gap-1">
+        <DollarSign className="h-3 w-3" />
+        <span>Earnings: {formatCurrency(totalEarnings)}</span>
       </Badge>
       
       {filterPeriod === "today" && (

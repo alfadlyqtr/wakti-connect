@@ -39,7 +39,9 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
       }
       
       // Refetch job cards to update the list
-      refetch();
+      setTimeout(() => {
+        refetch();
+      }, 500);
       
       toast({
         title: "Job completed",

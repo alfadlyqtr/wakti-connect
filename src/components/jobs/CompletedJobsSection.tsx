@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { JobCard } from "@/types/jobs.types";
-import { FilterPeriod, filterJobCards, getJobCountByDate, getTotalDuration } from "./jobCardUtils";
+import { FilterPeriod, filterJobCards, getJobCountByDate, getTotalDuration, getTotalEarnings } from "./jobCardUtils";
 import JobsFilterPeriod from "./JobsFilterPeriod";
 import JobStatsBadges from "./JobStatsBadges";
 import CompletedJobsTable from "./CompletedJobsTable";
@@ -27,6 +27,7 @@ const CompletedJobsSection: React.FC<CompletedJobsSectionProps> = ({
   const filteredCompletedJobs = filterJobCards(completedJobs, filterPeriod);
   const jobCountByDate = getJobCountByDate(filteredCompletedJobs);
   const totalDuration = getTotalDuration(filteredCompletedJobs);
+  const totalEarnings = getTotalEarnings(filteredCompletedJobs);
 
   return (
     <Card>
@@ -46,6 +47,7 @@ const CompletedJobsSection: React.FC<CompletedJobsSectionProps> = ({
         <JobStatsBadges 
           jobCount={filteredCompletedJobs.length}
           totalDuration={totalDuration}
+          totalEarnings={totalEarnings}
           filterPeriod={filterPeriod}
         />
         
