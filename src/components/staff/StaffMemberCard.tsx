@@ -1,134 +1,139 @@
 
-import React from "react";
-import { formatDistanceToNow } from "date-fns";
-import { 
-  Card, 
-  CardContent, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
+import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, UserCog, UserCheck, UserX, Trash2 } from "lucide-react";
-
-interface StaffData {
-  id: string;
-  name: string;
-  email: string;
-  position?: string;
-  role: string;
-  is_service_provider: boolean;
-  staff_number?: string;
-  status: string;
-  created_at: string;
-  profiles?: {
-    avatar_url?: string;
-    full_name?: string;
-  };
-}
+import { Edit, MoreVertical, UserCheck, UserX } from "lucide-react";
+import { StaffMember } from "@/types/staff";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 interface StaffMemberCardProps {
-  data: StaffData;
+  staff: StaffMember;
   onEdit: () => void;
-  onDelete: () => void;
-  onToggleStatus: () => void;
+  onUpdateStatus?: (status: string) => void;
 }
 
 export const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
-  data,
+  staff,
   onEdit,
-  onDelete,
-  onToggleStatus
+  onUpdateStatus
 }) => {
-  const isActive = data.status === "active";
   const getInitials = (name: string) => {
     return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
   };
 
-  const createdAt = new Date(data.created_at);
-  const timeAgo = formatDistanceToNow(createdAt, { addSuffix: true });
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'active':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'inactive':
+        return 'bg-amber-100 text-amber-800 border-amber-200';
+      case 'deleted':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getRoleBadge = (role?: string) => {
+    if (role === 'co-admin') {
+      return <Badge variant="secondary" className="ml-2">Co-Admin</Badge>;
+    }
+    return null;
+  };
 
   return (
-    <Card className={`${!isActive ? "opacity-75" : ""}`}>
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={data.profiles?.avatar_url || ""} alt={data.name} />
-              <AvatarFallback>{getInitials(data.name)}</AvatarFallback>
-            </Avatar>
-            <div>
-              <CardTitle className="text-base font-semibold">{data.name}</CardTitle>
-              <p className="text-sm text-muted-foreground">{data.email}</p>
+    <Card className="overflow-hidden">
+      <CardContent className="p-0">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={staff.profile_image_url} />
+                <AvatarFallback>{getInitials(staff.name)}</AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="flex items-center">
+                  <h3 className="font-medium text-lg">{staff.name}</h3>
+                  {getRoleBadge(staff.role)}
+                  {staff.is_service_provider && (
+                    <Badge variant="outline" className="ml-2">Service Provider</Badge>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">{staff.position || 'Staff Member'}</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <div className={`text-xs rounded-full px-2 py-1 border ${getStatusColor(staff.status)}`}>
+                {staff.status === 'active' ? 'Active' : 
+                 staff.status === 'inactive' ? 'Inactive' : 
+                 staff.status === 'deleted' ? 'Deleted' : 'Unknown'}
+              </div>
+              
+              <Button variant="ghost" size="icon" onClick={onEdit} title="Edit">
+                <Edit className="h-4 w-4" />
+              </Button>
+              
+              {onUpdateStatus && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {staff.status !== 'active' && (
+                      <DropdownMenuItem onClick={() => onUpdateStatus('active')}>
+                        <UserCheck className="mr-2 h-4 w-4" />
+                        Activate
+                      </DropdownMenuItem>
+                    )}
+                    {staff.status !== 'inactive' && (
+                      <DropdownMenuItem onClick={() => onUpdateStatus('inactive')}>
+                        <UserX className="mr-2 h-4 w-4" />
+                        Deactivate
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={onEdit}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onEdit}>
-                <UserCog className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onToggleStatus}>
-                {isActive ? (
-                  <>
-                    <UserX className="mr-2 h-4 w-4" />
-                    Suspend
-                  </>
-                ) : (
-                  <>
-                    <UserCheck className="mr-2 h-4 w-4" />
-                    Activate
-                  </>
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
-                onClick={onDelete}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </CardHeader>
-      <CardContent className="pb-3">
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <div>
-            <p className="text-muted-foreground">Position</p>
-            <p>{data.position || "-"}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">Role</p>
-            <p className="capitalize">{data.role}</p>
+          
+          <div className="flex flex-wrap gap-2 text-sm">
+            {staff.email && (
+              <div className="bg-gray-100 rounded-md px-2 py-1">
+                {staff.email}
+              </div>
+            )}
+            {staff.staff_number && (
+              <div className="bg-gray-100 rounded-md px-2 py-1">
+                ID: {staff.staff_number}
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
-      <CardFooter className="justify-between pt-3 border-t">
-        <Badge variant={data.is_service_provider ? "default" : "outline"}>
-          {data.is_service_provider ? "Service Provider" : "Staff"}
-        </Badge>
-        <Badge variant={isActive ? "success" : "destructive"} className="capitalize">
-          {data.status}
-        </Badge>
-      </CardFooter>
     </Card>
   );
 };
+
+export default StaffMemberCard;

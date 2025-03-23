@@ -1,6 +1,8 @@
 
 export interface StaffMember {
   id: string;
+  staff_id: string;
+  business_id: string;
   name: string;
   email?: string;
   position?: string;
@@ -9,6 +11,7 @@ export interface StaffMember {
   is_service_provider?: boolean;
   permissions?: Record<string, boolean>;
   staff_number?: string;
+  profile_image_url?: string;
   created_at?: string;
   updated_at?: string;
 }

@@ -13,6 +13,23 @@ interface FetchStaffMembersRequest {
   businessId: string;
 }
 
+interface StaffMember {
+  id: string;
+  staff_id: string;
+  business_id: string;
+  name: string;
+  email?: string;
+  position?: string;
+  role?: string;
+  status?: string;
+  is_service_provider?: boolean;
+  permissions?: Record<string, boolean>;
+  staff_number?: string;
+  profile_image_url?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 serve(async (req) => {
   console.log("Processing fetch-staff-members request");
   
@@ -64,12 +81,30 @@ serve(async (req) => {
       throw new Error(staffError.message);
     }
     
-    // Use service role to fetch additional profile data
-    console.log(`Found ${staffMembers?.length || 0} staff members`);
+    // Process staff members to ensure proper typing
+    const processedStaffMembers = staffMembers?.map(staff => {
+      // Ensure permissions is an object, not a string
+      let permissions = staff.permissions;
+      if (typeof permissions === 'string') {
+        try {
+          permissions = JSON.parse(permissions);
+        } catch (e) {
+          console.error("Error parsing permissions:", e);
+          permissions = {};
+        }
+      }
+      
+      return {
+        ...staff,
+        permissions
+      };
+    }) || [];
+    
+    console.log(`Found ${processedStaffMembers.length} staff members`);
     
     return new Response(JSON.stringify({
       success: true,
-      staffMembers: staffMembers || [],
+      staffMembers: processedStaffMembers,
     }), {
       headers: {
         ...corsHeaders,

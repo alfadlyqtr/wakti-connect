@@ -1,111 +1,151 @@
 
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Users, UserPlus, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { StaffMember } from "./types";
-import StaffMemberCard from "./StaffMemberCard";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { RefreshCcw, UserPlus, Users } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { StaffMember } from "@/types/staff";
+import { StaffMembersList } from "@/components/staff/StaffMembersList";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface StaffMembersTabProps {
-  onSelectStaff: (staffId: string) => void;
+  onSelectStaff: (staffId: string | null) => void;
   onOpenCreateDialog: () => void;
 }
 
 const StaffMembersTab: React.FC<StaffMembersTabProps> = ({ 
-  onSelectStaff, 
-  onOpenCreateDialog 
+  onSelectStaff,
+  onOpenCreateDialog
 }) => {
-  // Directly query the business_staff table with proper auth
-  const { data: staffMembers, isLoading: staffLoading, error: staffError, refetch } = useQuery({
-    queryKey: ['businessStaff'],
+  // Session and business ID
+  const [businessId, setBusinessId] = useState<string | null>(null);
+  
+  // Get the current session to check the business ID
+  const { data: session, isLoading: isSessionLoading } = useQuery({
+    queryKey: ['session'],
     queryFn: async () => {
-      try {
-        const { data: session } = await supabase.auth.getSession();
-        
-        if (!session?.session?.user) {
-          throw new Error('Not authenticated');
-        }
-        
-        // Direct database query instead of edge function
-        const { data, error } = await supabase
-          .from('business_staff')
-          .select('*')
-          .eq('business_id', session.session.user.id)
-          .order('created_at', { ascending: false });
-        
-        if (error) {
-          console.error("Error fetching staff members:", error);
-          throw new Error(error.message || "Failed to fetch staff members");
-        }
-        
-        return data || [];
-      } catch (error: any) {
-        console.error("Error in staff query:", error);
-        throw error;
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user?.id) {
+        setBusinessId(data.session.user.id);
       }
+      return data.session;
     },
-    retry: 1,
-    refetchOnWindowFocus: false,
+  });
+  
+  // Fetch staff members directly from the database
+  const { 
+    data: staffMembers, 
+    isLoading, 
+    error,
+    refetch 
+  } = useQuery({
+    queryKey: ['staffMembers', businessId],
+    queryFn: async () => {
+      if (!businessId) throw new Error("Business ID not available");
+      
+      const { data, error } = await supabase
+        .from('business_staff')
+        .select('*')
+        .eq('business_id', businessId)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw new Error(error.message);
+      
+      // Convert permissions from JSON if needed
+      return data.map(staff => ({
+        ...staff,
+        permissions: typeof staff.permissions === 'string' 
+          ? JSON.parse(staff.permissions) 
+          : staff.permissions
+      })) as StaffMember[];
+    },
+    enabled: !!businessId,
   });
 
-  // Refetch when component mounts to ensure we have latest data
-  React.useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  if (staffLoading) {
+  // Staff count for checking limits
+  const staffCount = staffMembers?.length || 0;
+  const canAddMoreStaff = staffCount < 6;
+  
+  const handleEditStaff = (staffId: string) => {
+    onSelectStaff(staffId);
+    onOpenCreateDialog();
+  };
+  
+  // Show loading state while fetching session
+  if (isSessionLoading) {
     return (
-      <Card className="col-span-full flex justify-center p-8">
-        <div className="h-8 w-8 border-4 border-t-transparent border-primary rounded-full animate-spin"></div>
-      </Card>
+      <div className="space-y-4">
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-center text-muted-foreground">Loading session data...</p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
-
-  if (staffError) {
+  
+  // Handle no session case
+  if (!session) {
     return (
-      <Card className="col-span-full p-8">
-        <Alert variant="destructive" className="mb-4">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Error loading staff</AlertTitle>
-          <AlertDescription>
-            {staffError instanceof Error ? staffError.message : "Failed to load staff members"}
-          </AlertDescription>
-        </Alert>
-        <div className="flex justify-center mt-4">
-          <Button onClick={() => refetch()}>Try Again</Button>
-        </div>
-      </Card>
-    );
-  }
-
-  if (!staffMembers || staffMembers.length === 0) {
-    return (
-      <Card className="col-span-full p-8">
-        <div className="text-center">
-          <Users className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No Staff Members Yet</h3>
-          <p className="text-muted-foreground mb-4">Add new staff members to your business.</p>
-          <Button onClick={onOpenCreateDialog}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Create Staff Account
-          </Button>
-        </div>
-      </Card>
+      <Alert variant="destructive">
+        <AlertTitle>Authentication Error</AlertTitle>
+        <AlertDescription>
+          You need to be logged in to view staff members.
+        </AlertDescription>
+      </Alert>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {staffMembers.map((member) => (
-        <StaffMemberCard 
-          key={member.id} 
-          member={member} 
-          onSelectStaff={onSelectStaff} 
-        />
-      ))}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-lg font-medium">Staff Members ({staffCount}/6)</h3>
+          <p className="text-sm text-muted-foreground">
+            Manage your team members and their permissions
+          </p>
+        </div>
+        
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={() => refetch()}
+            title="Refresh staff list"
+          >
+            <RefreshCcw className="h-4 w-4" />
+          </Button>
+          
+          <Button 
+            onClick={onOpenCreateDialog} 
+            disabled={!canAddMoreStaff}
+          >
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add Staff
+          </Button>
+        </div>
+      </div>
+      
+      {!canAddMoreStaff && (
+        <Card className="bg-amber-50 border-amber-200">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-amber-700">
+              <Users className="h-5 w-5" />
+              <p className="text-sm font-medium">
+                Staff limit reached (6/6). Business plan allows up to 6 staff members.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      <StaffMembersList
+        staffMembers={staffMembers || []}
+        isLoading={isLoading}
+        error={error as Error | null}
+        onEdit={handleEditStaff}
+      />
     </div>
   );
 };

@@ -1,57 +1,61 @@
 
-import React from "react";
-import StaffMemberCard from "./StaffMemberCard";
+import React from 'react';
+import { StaffMember } from "@/types/staff";
+import { StaffMembersList } from "@/components/staff/StaffMembersList";
+import EmptyStaffState from "./EmptyStaffState";
 import StaffMembersLoading from "./StaffMembersLoading";
 import StaffMembersError from "./StaffMembersError";
-import EmptyStaffState from "./EmptyStaffState";
-
-interface StaffMember {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  position: string;
-  created_at: string;
-  staff_id: string;
-}
+import useStaffListOperations from "./useStaffListOperations";
 
 interface StaffListProps {
-  staffMembers: StaffMember[] | undefined;
+  staffMembers: StaffMember[];
   isLoading: boolean;
   error: Error | null;
-  onViewDetails: (memberId: string) => void;
-  onAddStaffClick: () => void;
+  onEdit: (staffId: string) => void;
+  onRefresh: () => void;
 }
 
-const StaffList: React.FC<StaffListProps> = ({ 
-  staffMembers, 
-  isLoading, 
-  error, 
-  onViewDetails,
-  onAddStaffClick
+export const StaffList: React.FC<StaffListProps> = ({
+  staffMembers,
+  isLoading,
+  error,
+  onEdit,
+  onRefresh
 }) => {
+  const { 
+    handleToggleStatus, 
+    handleDelete, 
+    confirmDeleteOpen, 
+    setConfirmDeleteOpen, 
+    selectedStaffId 
+  } = useStaffListOperations(onRefresh);
+
+  // Show loading state
   if (isLoading) {
     return <StaffMembersLoading />;
   }
 
+  // Show error state
   if (error) {
-    return <StaffMembersError errorMessage="Error loading staff members" />;
+    return <StaffMembersError error={error} onRetry={onRefresh} />;
   }
 
+  // Show empty state
   if (!staffMembers || staffMembers.length === 0) {
-    return <EmptyStaffState onAddStaffClick={onAddStaffClick} />;
+    return <EmptyStaffState />;
   }
 
+  // Render staff list
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {staffMembers.map((member) => (
-        <StaffMemberCard
-          key={member.id}
-          member={member}
-          onViewDetails={onViewDetails}
-        />
-      ))}
-    </div>
+    <>
+      <StaffMembersList
+        staffMembers={staffMembers}
+        isLoading={isLoading}
+        error={error}
+        onEdit={onEdit}
+        onUpdateStatus={handleToggleStatus}
+      />
+    </>
   );
 };
 
