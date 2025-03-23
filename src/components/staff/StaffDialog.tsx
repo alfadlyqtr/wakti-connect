@@ -27,7 +27,8 @@ export function StaffDialog({
     isEditing,
     activeTab,
     setActiveTab,
-    handleSubmit
+    handleSubmit,
+    error
   } = useStaffDialog(staffId, onSuccess, onOpenChange);
   
   return (
@@ -42,6 +43,7 @@ export function StaffDialog({
           setActiveTab={setActiveTab}
           handleSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
+          error={error}
         />
       </DialogContent>
     </Dialog>

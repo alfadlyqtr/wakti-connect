@@ -5,8 +5,9 @@ import { StaffFormValues } from "./StaffFormSchema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { StaffFormFields } from "./index";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface DialogContentProps {
   form: UseFormReturn<StaffFormValues>;
@@ -16,6 +17,7 @@ interface DialogContentProps {
   setActiveTab: (tab: string) => void;
   handleSubmit: (values: StaffFormValues) => Promise<void>;
   onCancel: () => void;
+  error?: string | null;
 }
 
 const DialogContent: React.FC<DialogContentProps> = ({
@@ -25,7 +27,8 @@ const DialogContent: React.FC<DialogContentProps> = ({
   activeTab,
   setActiveTab,
   handleSubmit,
-  onCancel
+  onCancel,
+  error
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -34,6 +37,13 @@ const DialogContent: React.FC<DialogContentProps> = ({
       </TabsList>
       
       <TabsContent value="create" className="space-y-4 py-4">
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <StaffFormFields form={form} isEditing={isEditing} />

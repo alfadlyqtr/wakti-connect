@@ -1,154 +1,90 @@
 
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { StaffMember } from "@/types/staff";
 
-export function useStaffMembers() {
-  const { toast } = useToast();
+export const useStaffMembers = () => {
+  const [businessId, setBusinessId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const [isSyncing, setIsSyncing] = useState(false);
   
-  // Fetch authenticated session
-  const { data: sessionData } = useQuery({
-    queryKey: ['sessionData'],
+  // Get the current session to check the business ID
+  const { data: session } = useQuery({
+    queryKey: ['session'],
     queryFn: async () => {
       const { data } = await supabase.auth.getSession();
-      return data;
-    }
+      if (data.session?.user?.id) {
+        setBusinessId(data.session.user.id);
+      }
+      return data.session;
+    },
   });
   
-  // Fetch staff members
+  // Fetch staff members directly from the database
   const { 
-    data: staffMembersData, 
+    data: staffMembers, 
     isLoading, 
     error,
-    refetch
+    refetch 
   } = useQuery({
-    queryKey: ['staffMembers'],
+    queryKey: ['staffMembers', businessId],
     queryFn: async () => {
-      if (!sessionData?.session?.user?.id) {
-        throw new Error("Not authenticated");
-      }
-      
-      const businessId = sessionData.session.user.id;
-      console.log("Fetching staff for business:", businessId);
+      console.log("Fetching staff members for business ID:", businessId);
+      if (!businessId) throw new Error("Business ID not available");
       
       const { data, error } = await supabase
         .from('business_staff')
-        .select('*')
+        .select('*, profiles:staff_id(avatar_url)')
         .eq('business_id', businessId)
-        .neq('status', 'deleted')
+        .eq('status', 'active')
         .order('created_at', { ascending: false });
-      
+        
       if (error) {
-        console.error("Error fetching staff:", error);
-        throw new Error(error.message || "Failed to fetch staff members");
+        console.error("Error fetching staff members:", error);
+        throw new Error(error.message);
       }
       
-      console.log(`Found ${data?.length || 0} staff members:`, data);
+      console.log("Retrieved staff members:", data?.length);
       
-      return data || [];
+      // Convert permissions from JSON if needed
+      return data.map(staff => ({
+        ...staff,
+        permissions: typeof staff.permissions === 'string' 
+          ? JSON.parse(staff.permissions) 
+          : staff.permissions
+      })) as StaffMember[];
     },
-    enabled: !!sessionData?.session?.user?.id,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true
+    enabled: !!businessId,
+    staleTime: 5000, // Consider data fresh for 5 seconds
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
-  // Transform raw data to StaffMember type
-  const staffMembers: StaffMember[] = (staffMembersData || []).map(staff => ({
-    id: staff.id,
-    staff_id: staff.staff_id,
-    business_id: staff.business_id,
-    name: staff.name,
-    email: staff.email,
-    position: staff.position || '',
-    role: staff.role,
-    status: staff.status,
-    is_service_provider: !!staff.is_service_provider,
-    permissions: typeof staff.permissions === 'string' 
-      ? JSON.parse(staff.permissions as string) 
-      : staff.permissions || {},
-    staff_number: staff.staff_number || '',
-    profile_image_url: staff.profile_image_url,
-    created_at: staff.created_at
-  }));
-
-  // Sync staff records function
+  // Function to manually trigger a sync with the server
   const handleSyncStaff = async () => {
-    if (!sessionData?.session?.access_token) {
-      toast({
-        title: "Error",
-        description: "You must be signed in to sync staff records",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     setIsSyncing(true);
-    
     try {
-      const { data, error } = await supabase.functions.invoke("sync-staff-records", {
-        headers: {
-          Authorization: `Bearer ${sessionData.session.access_token}`
-        }
-      });
-      
-      if (error) {
-        console.error("Error syncing staff records:", error);
-        toast({
-          title: "Sync Failed",
-          description: error.message || "Failed to sync staff records",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      if (data.success) {
-        const syncedCount = data.data.synced.length;
-        
-        toast({
-          title: "Staff Records Synced",
-          description: syncedCount > 0 
-            ? `Successfully synced ${syncedCount} staff records.` 
-            : "All staff records are already in sync.",
-          variant: "default"
-        });
-        
-        queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
-        refetch();
-      } else {
-        toast({
-          title: "Sync Failed",
-          description: data.error || "Failed to sync staff records",
-          variant: "destructive"
-        });
-      }
-    } catch (err) {
-      console.error("Error in sync operation:", err);
-      toast({
-        title: "Sync Error",
-        description: "An unexpected error occurred during sync",
-        variant: "destructive"
-      });
+      await refetch();
+      queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
+    } catch (e) {
+      console.error("Error syncing staff:", e);
     } finally {
       setIsSyncing(false);
     }
   };
 
-  // Count staff and determine if more can be added
+  // Staff count for checking limits
   const staffCount = staffMembers?.length || 0;
   const canAddMoreStaff = staffCount < 6;
-
+  
   return {
     staffMembers,
-    isLoading, 
-    error, 
+    isLoading,
+    error,
     refetch,
-    isSyncing,
+    canAddMoreStaff,
     handleSyncStaff,
-    staffCount,
-    canAddMoreStaff
+    isSyncing,
+    session
   };
-}
+};

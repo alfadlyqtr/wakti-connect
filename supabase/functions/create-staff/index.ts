@@ -52,6 +52,34 @@ async function checkCoAdminLimit(supabase: any, businessId: string, isCoAdmin: b
   }
 }
 
+// Check if email is already in use
+async function checkEmailExists(supabase: any, email: string) {
+  const { data, error } = await supabase
+    .from('auth.users')
+    .select('email')
+    .eq('email', email)
+    .maybeSingle();
+    
+  if (error) {
+    console.warn("Email check warning (non-critical):", error.message);
+    return false;
+  }
+  
+  return !!data;
+}
+
+// Generate a staff number directly in the function
+function generateStaffNumber(businessName: string, staffCount: number) {
+  // Use the first 3 chars of business name (or fewer if name is shorter)
+  const prefix = businessName
+    .substring(0, 3)
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
+  
+  // Format: BUS_Staff001, BUS_Staff002, etc.
+  return `${prefix}_Staff${String(staffCount).padStart(3, '0')}`;
+}
+
 // Process and upload avatar image
 async function processAvatar(supabase: any, avatarData: string, userId: string) {
   if (!avatarData || !avatarData.startsWith('data:')) {
@@ -110,98 +138,172 @@ function preparePermissions(permissions: any) {
 
 // Create the auth user account
 async function createAuthUser(supabase: any, userData: any, businessId: string) {
-  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-    email: userData.email,
-    password: userData.password,
-    email_confirm: true,
-    user_metadata: {
-      full_name: userData.fullName,
-      account_type: 'staff',
-      display_name: userData.fullName,
-      business_id: businessId,
-      is_staff: true
+  try {
+    // Check if the email already exists
+    const emailExists = await checkEmailExists(supabase, userData.email);
+    if (emailExists) {
+      throw new Error(`User with email ${userData.email} already exists`);
     }
-  });
+    
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: userData.email,
+      password: userData.password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: userData.fullName,
+        account_type: 'staff',
+        display_name: userData.fullName,
+        business_id: businessId,
+        is_staff: true
+      }
+    });
+    
+    if (authError) {
+      console.error("Auth user creation error:", authError);
+      throw new Error(`Failed to create auth user: ${authError.message}`);
+    }
+    
+    if (!authData.user) {
+      throw new Error("Failed to create user account (no user returned)");
+    }
   
-  if (authError) {
-    throw new Error(`Failed to create auth user: ${authError.message}`);
+    console.log("Created auth user:", authData.user.id);
+    
+    return authData.user;
+  } catch (error) {
+    console.error("Error in createAuthUser:", error);
+    throw error;
   }
-  
-  if (!authData.user) {
-    throw new Error("Failed to create user account");
-  }
-
-  console.log("Created auth user:", authData.user.id);
-  
-  return authData.user;
 }
 
-// Create staff record in business_staff table
+// Create staff record in business_staff table with manual staff number
 async function createStaffRecord(supabase: any, staffData: any, userId: string, authUser: any, avatarUrl: string | null) {
-  const permissions = preparePermissions(staffData.permissions);
-  const role = staffData.permissions?.isCoAdmin ? 'co-admin' : staffData.role || 'staff';
-  
-  const { data: staffRecord, error: staffError } = await supabase
-    .from('business_staff')
-    .insert({
-      business_id: userId,
-      staff_id: authUser.id,
-      name: staffData.fullName,
-      email: staffData.email,
-      position: staffData.position || 'Staff Member',
-      role: role,
-      is_service_provider: staffData.isServiceProvider || false,
-      permissions: permissions,
-      profile_image_url: avatarUrl,
-      status: 'active'
-    })
-    .select()
-    .single();
+  try {
+    const permissions = preparePermissions(staffData.permissions);
+    const role = staffData.permissions?.isCoAdmin ? 'co-admin' : staffData.role || 'staff';
     
-  if (staffError) {
-    throw new Error(`Failed to create staff record: ${staffError.message}`);
+    // Get business name for staff number generation
+    const { data: businessData, error: businessError } = await supabase
+      .from('profiles')
+      .select('business_name, full_name')
+      .eq('id', userId)
+      .single();
+      
+    if (businessError) {
+      console.error("Error fetching business data:", businessError);
+      throw new Error(`Failed to fetch business data: ${businessError.message}`);
+    }
+    
+    // Get current staff count for staff number generation
+    const { count, error: countError } = await supabase
+      .from('business_staff')
+      .select('*', { count: 'exact', head: true })
+      .eq('business_id', userId);
+      
+    if (countError) {
+      console.error("Error getting staff count:", countError);
+      throw new Error(`Failed to get staff count: ${countError.message}`);
+    }
+    
+    // Generate staff number manually
+    const businessName = businessData.business_name || businessData.full_name || 'BUS';
+    const staffNumber = generateStaffNumber(businessName, count || 0);
+    
+    const { data: staffRecord, error: staffError } = await supabase
+      .from('business_staff')
+      .insert({
+        business_id: userId,
+        staff_id: authUser.id,
+        name: staffData.fullName,
+        email: staffData.email,
+        position: staffData.position || 'Staff Member',
+        role: role,
+        staff_number: staffNumber, // Use manually generated staff number
+        is_service_provider: staffData.isServiceProvider || false,
+        permissions: permissions,
+        profile_image_url: avatarUrl,
+        status: 'active'
+      })
+      .select()
+      .single();
+      
+    if (staffError) {
+      console.error("Staff record creation error:", staffError);
+      throw new Error(`Failed to create staff record: ${staffError.message}`);
+    }
+    
+    console.log("Created staff record with ID:", staffRecord.id);
+    return staffRecord;
+  } catch (error) {
+    console.error("Error in createStaffRecord:", error);
+    throw error;
   }
-  
-  return staffRecord;
 }
 
 // Update profile table with staff information
 async function updateProfile(supabase: any, userId: string, fullName: string, avatarUrl: string | null) {
-  await supabase
-    .from('profiles')
-    .upsert({
-      id: userId,
-      full_name: fullName,
-      account_type: 'staff',
-      avatar_url: avatarUrl,
-      updated_at: new Date().toISOString()
-    });
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({
+        id: userId,
+        full_name: fullName,
+        account_type: 'staff',
+        avatar_url: avatarUrl,
+        updated_at: new Date().toISOString()
+      });
+      
+    if (error) {
+      console.error("Error updating profile:", error);
+      throw new Error(`Failed to update profile: ${error.message}`);
+    }
+    
+    console.log("Updated profile for user:", userId);
+  } catch (error) {
+    console.error("Error in updateProfile:", error);
+    throw error;
+  }
 }
 
 // Create automatic contact relationships for messaging
 async function createContactRelationships(supabase: any, businessId: string, staffId: string, relationId: string) {
-  await supabase
-    .from('user_contacts')
-    .insert([
-      {
-        user_id: businessId,
-        contact_id: staffId,
-        status: 'accepted',
-        staff_relation_id: relationId
-      },
-      {
-        user_id: staffId,
-        contact_id: businessId,
-        status: 'accepted',
-        staff_relation_id: relationId
-      }
-    ]);
+  try {
+    const { error } = await supabase
+      .from('user_contacts')
+      .insert([
+        {
+          user_id: businessId,
+          contact_id: staffId,
+          status: 'accepted',
+          staff_relation_id: relationId
+        },
+        {
+          user_id: staffId,
+          contact_id: businessId,
+          status: 'accepted',
+          staff_relation_id: relationId
+        }
+      ]);
+      
+    if (error) {
+      console.error("Error creating contact relationships:", error);
+      throw new Error(`Failed to create contact relationships: ${error.message}`);
+    }
+    
+    console.log("Created contact relationships between", businessId, "and", staffId);
+  } catch (error) {
+    console.error("Error in createContactRelationships:", error);
+    throw error;
+  }
 }
 
 // Main handler function
 serve(async (req) => {
+  console.log("Edge function called with method:", req.method);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log("Handling OPTIONS request");
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -220,6 +322,8 @@ serve(async (req) => {
       throw new Error('Missing Supabase environment variables');
     }
     
+    console.log("Creating Supabase client");
+    
     // Create Supabase client with service role for admin operations
     const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey);
     
@@ -231,8 +335,15 @@ serve(async (req) => {
       throw new Error('Unauthorized: Invalid token');
     }
     
+    console.log("Authenticated as user:", user.id);
+    
     // Parse request body
     const requestData = await req.json();
+    console.log("Request data received:", JSON.stringify({
+      ...requestData,
+      password: "[REDACTED]", // Don't log passwords
+    }));
+    
     const {
       fullName,
       email,
@@ -250,15 +361,19 @@ serve(async (req) => {
     
     // Verify business account
     await verifyBusinessAccount(supabase, user.id);
+    console.log("Verified business account");
     
     // Check co-admin limit if applicable
     await checkCoAdminLimit(supabase, user.id, permissions?.isCoAdmin);
+    console.log("Checked co-admin limit");
     
     // Create the auth user account
     const authUser = await createAuthUser(supabase, { email, password, fullName }, user.id);
+    console.log("Auth user created:", authUser.id);
     
     // Upload avatar if provided
     const avatarUrl = await processAvatar(supabase, avatar, authUser.id);
+    console.log("Avatar processed:", avatarUrl ? "Image uploaded" : "No avatar or upload failed");
     
     // Create staff record
     const staffRecord = await createStaffRecord(
@@ -268,12 +383,15 @@ serve(async (req) => {
       authUser, 
       avatarUrl
     );
+    console.log("Staff record created:", staffRecord.id);
     
     // Update profile
     await updateProfile(supabase, authUser.id, fullName, avatarUrl);
+    console.log("Profile updated");
     
     // Create contact relationships
     await createContactRelationships(supabase, user.id, authUser.id, staffRecord.id);
+    console.log("Contact relationships created");
     
     return new Response(
       JSON.stringify({ 
@@ -292,17 +410,27 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error in create-staff function:", error.message);
     
+    let statusCode = 400;
+    const errorMessage = error.message || "An unknown error occurred";
+    
+    // Handle specific error cases
+    if (errorMessage.includes("already exists")) {
+      statusCode = 409; // Conflict
+    } else if (errorMessage.includes("Unauthorized")) {
+      statusCode = 401; // Unauthorized
+    }
+    
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || "An unknown error occurred"
+        error: errorMessage
       }),
       { 
         headers: { 
           ...corsHeaders,
           'Content-Type': 'application/json' 
         },
-        status: 400 
+        status: statusCode
       }
     );
   }

@@ -14,6 +14,7 @@ export function useStaffDialog(
 ) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const isEditing = !!staffId;
   const [activeTab, setActiveTab] = useState<string>("create");
   
@@ -80,6 +81,7 @@ export function useStaffDialog(
           }
         } catch (error) {
           console.error("Error fetching staff data:", error);
+          setError("Failed to load staff data");
           toast({
             title: "Error",
             description: "Failed to load staff data",
@@ -89,10 +91,14 @@ export function useStaffDialog(
       };
       
       fetchStaffData();
+    } else {
+      // Reset the error when opening the dialog for creating a new staff
+      setError(null);
     }
   }, [isEditing, staffId, form, toast]);
   
   const handleSubmit = async (values: StaffFormValues) => {
+    setError(null);
     setIsSubmitting(true);
     
     try {
@@ -137,6 +143,10 @@ export function useStaffDialog(
         if (response.error) {
           throw new Error(response.error.message || "Failed to create staff account");
         }
+        
+        if (response.data && !response.data.success) {
+          throw new Error(response.data.error || "Failed to create staff account");
+        }
 
         toast({
           title: "Staff Created",
@@ -149,6 +159,14 @@ export function useStaffDialog(
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error saving staff:", error);
+      
+      // Set specific error message based on the error
+      if (error.message.includes("already exists")) {
+        setError("A user with this email already exists. Please use a different email address.");
+      } else {
+        setError(error.message || "Failed to save staff");
+      }
+      
       toast({
         title: "Error",
         description: error.message || "Failed to save staff",
@@ -165,6 +183,7 @@ export function useStaffDialog(
     isEditing,
     activeTab,
     setActiveTab,
-    handleSubmit
+    handleSubmit,
+    error
   };
 }
