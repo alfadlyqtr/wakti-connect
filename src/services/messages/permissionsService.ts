@@ -12,13 +12,22 @@ export const canMessageUser = async (userId: string): Promise<boolean> => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
+      console.log("No active session found");
       return false;
+    }
+
+    // Always allow users to message themselves (for testing)
+    if (userId === session.user.id) {
+      console.log("User can message themselves");
+      return true;
     }
     
     // Check if current user is staff
     const isStaff = await isUserStaff();
     if (isStaff) {
-      return canStaffMessageUser(userId);
+      const canMessage = await canStaffMessageUser(userId);
+      console.log("Staff user can message:", canMessage);
+      return canMessage;
     }
     
     // Get the current user's profile
@@ -27,15 +36,31 @@ export const canMessageUser = async (userId: string): Promise<boolean> => {
       .eq('id', session.user.id)
       .single();
       
-    if (!profile) return false;
+    if (!profile) {
+      console.log("Current user profile not found");
+      return false;
+    }
     
     // Free users cannot message anyone
     if (profile.account_type === 'free') {
+      console.log("Free users cannot message anyone");
       return false;
     }
     
     // Business users can message anyone
     if (profile.account_type === 'business') {
+      console.log("Business users can message anyone");
+      return true;
+    }
+    
+    // First check contacts - this is the most common case
+    const { data: contactData } = await fromTable('user_contacts')
+      .select('id')
+      .or(`and(user_id.eq.${session.user.id},contact_id.eq.${userId},status.eq.accepted),and(user_id.eq.${userId},contact_id.eq.${session.user.id},status.eq.accepted)`)
+      .maybeSingle();
+      
+    if (contactData) {
+      console.log("Contact relationship found, can message");
       return true;
     }
     
@@ -45,16 +70,9 @@ export const canMessageUser = async (userId: string): Promise<boolean> => {
       .eq('id', userId)
       .maybeSingle();
       
-    if (!targetProfile) return false;
-    
-    // Individual users messaging individual users: check contacts
-    if (targetProfile.account_type === 'individual') {
-      const { data: contactData } = await fromTable('user_contacts')
-        .select('id')
-        .or(`and(user_id.eq.${session.user.id},contact_id.eq.${userId},status.eq.accepted),and(user_id.eq.${userId},contact_id.eq.${session.user.id},status.eq.accepted)`)
-        .maybeSingle();
-        
-      return !!contactData;
+    if (!targetProfile) {
+      console.log("Target user profile not found");
+      return false;
     }
     
     // Individual users messaging business: check subscription
@@ -64,10 +82,13 @@ export const canMessageUser = async (userId: string): Promise<boolean> => {
         .eq('subscriber_id', session.user.id)
         .eq('business_id', userId)
         .maybeSingle();
-        
-      return !!subscriptionData;
+      
+      const canMessage = !!subscriptionData;
+      console.log("Check if subscribed to business:", canMessage);
+      return canMessage;
     }
     
+    console.log("No permission to message user");
     return false;
   } catch (error) {
     console.error("Error checking messaging permissions:", error);

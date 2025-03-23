@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { UserContact } from "@/types/invitation.types";
 import { fromTable } from "@/integrations/supabase/helper";
@@ -14,7 +13,7 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
       throw new Error("No active session");
     }
     
-    // Get contacts where the user is either the requester or recipient
+    // Get all contacts where the user is either the requester or recipient
     const { data, error } = await fromTable('user_contacts')
       .select(`
         id, 
@@ -23,12 +22,7 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
         status,
         created_at,
         updated_at,
-        staff_relation_id,
-        contact_profiles:profiles!contact_id(
-          full_name,
-          display_name,
-          avatar_url
-        )
+        staff_relation_id
       `)
       .or(`user_id.eq.${session.user.id},contact_id.eq.${session.user.id}`)
       .eq('status', 'accepted');
@@ -38,33 +32,38 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
       throw error;
     }
     
-    console.log("Fetched contacts data:", data);
+    console.log("Raw contacts data:", data);
     
-    // For contacts where the current user is the contact_id, we need to flip the relationship
-    // to show the other person's profile
+    // Fetch all profile data in a single query for better performance
+    const contactIds = data.map(contact => 
+      contact.user_id === session.user.id ? contact.contact_id : contact.user_id
+    );
+    
+    if (contactIds.length === 0) {
+      return [];
+    }
+    
+    const { data: profilesData, error: profilesError } = await fromTable('profiles')
+      .select('id, full_name, display_name, avatar_url')
+      .in('id', contactIds);
+      
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
+      throw profilesError;
+    }
+    
+    // Create a map of profiles for easy lookup
+    const profilesMap = profilesData.reduce((acc, profile) => {
+      acc[profile.id] = profile;
+      return acc;
+    }, {});
+    
+    // Map the contact data with the profiles
     return data.map(contact => {
       const isInverted = contact.contact_id === session.user.id;
+      const profileId = isInverted ? contact.user_id : contact.contact_id;
+      const profile = profilesMap[profileId];
       
-      if (isInverted) {
-        // For inverted relationships, we need to fetch the user's profile
-        return {
-          id: contact.id,
-          userId: contact.user_id,
-          contactId: contact.contact_id,
-          status: contact.status,
-          createdAt: contact.created_at,
-          updatedAt: contact.updated_at,
-          staffRelationId: contact.staff_relation_id,
-          // Will fetch the profile separately in the component
-          contactProfile: {
-            fullName: "",
-            displayName: "",
-            avatarUrl: ""
-          }
-        };
-      }
-      
-      // For regular relationship, use the joined profile data
       return {
         id: contact.id,
         userId: contact.user_id,
@@ -73,15 +72,19 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
         createdAt: contact.created_at,
         updatedAt: contact.updated_at,
         staffRelationId: contact.staff_relation_id,
-        contactProfile: {
-          fullName: contact.contact_profiles?.full_name,
-          displayName: contact.contact_profiles?.display_name,
-          avatarUrl: contact.contact_profiles?.avatar_url
+        contactProfile: profile ? {
+          fullName: profile.full_name,
+          displayName: profile.display_name,
+          avatarUrl: profile.avatar_url
+        } : {
+          fullName: "",
+          displayName: "",
+          avatarUrl: ""
         }
       };
     });
   } catch (error) {
-    console.error("Error fetching contacts:", error);
+    console.error("Error in fetchContacts:", error);
     return [];
   }
 };

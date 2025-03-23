@@ -48,7 +48,8 @@ export const useMessaging = (otherUserId?: string) => {
   // Get conversations list
   const { 
     data: conversations = [],
-    isLoading: isLoadingConversations 
+    isLoading: isLoadingConversations,
+    error: conversationsError
   } = useQuery({
     queryKey: ['conversations'],
     queryFn: fetchConversations,
@@ -57,7 +58,7 @@ export const useMessaging = (otherUserId?: string) => {
 
   // Check if the current user can message a given user
   const { 
-    data: canMessage,
+    data: canMessage = false,
     isLoading: isCheckingPermission 
   } = useQuery({
     queryKey: ['canMessage', otherUserId],
@@ -65,9 +66,10 @@ export const useMessaging = (otherUserId?: string) => {
     enabled: !!otherUserId
   });
 
-  // Get unread messages count - Fixed: removed the direct function reference and used inline function
+  // Get unread messages count
   const { 
-    data: unreadCount = 0
+    data: unreadCount = 0,
+    isLoading: isLoadingUnreadCount
   } = useQuery({
     queryKey: ['unreadMessages'],
     queryFn: () => getUnreadMessagesCount(),
@@ -83,8 +85,10 @@ export const useMessaging = (otherUserId?: string) => {
     isSending: sendMessageMutation.isPending,
     conversations,
     isLoadingConversations,
+    conversationsError,
     canMessage,
     isCheckingPermission,
-    unreadCount
+    unreadCount,
+    isLoadingUnreadCount
   };
 };
