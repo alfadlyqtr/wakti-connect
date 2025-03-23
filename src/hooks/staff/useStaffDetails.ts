@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -59,28 +58,25 @@ export const useStaffDetails = (staffRelationId: string | null) => {
         };
         
         // Check if business data exists and has the expected structure
-        const businessData = data.business;
-        
-        // First ensure businessData exists and is an object before trying to access its properties
-        if (businessData && typeof businessData === 'object') {
+        if (data.business && typeof data.business === 'object') {
           // Use a type guard to check for error property
-          if (!('error' in businessData)) {
+          if (!('error' in data.business)) {
             // Create a typed reference with more explicit typing to help TypeScript
-            const typedBusinessData = businessData as { 
+            const typedBusinessData = data.business as { 
               business_name?: string; 
               avatar_url?: string | null 
             };
             
             // Now access properties with proper null checking
             staffDetails.business = {
-              business_name: typedBusinessData?.business_name || 'Unknown Business',
-              avatar_url: typedBusinessData?.avatar_url || null
+              business_name: typedBusinessData.business_name || 'Unknown Business',
+              avatar_url: typedBusinessData.avatar_url || null
             };
           } else {
-            console.error("Business data contains an error:", businessData);
+            console.error("Business data contains an error:", data.business);
           }
         } else {
-          console.error("Business data is missing or malformed:", businessData);
+          console.error("Business data is missing or malformed:", data.business);
           // Keep the default business object we already set
         }
         
