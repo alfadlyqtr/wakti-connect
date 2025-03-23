@@ -52,20 +52,25 @@ export const useCompleteJobCardMutation = () => {
         // Force refresh the job card first to ensure we have the latest state
         await queryClient.invalidateQueries({ queryKey: ['jobCards'] });
         
-        const { data: updatedCard, error: updateError } = await supabase
-          .rpc('complete_job_card', { 
-            job_card_id: id,
-            end_timestamp: endTime
-          });
+        // Instead of using RPC, we'll use a direct update since the function isn't in the TypeScript types
+        const { data: updatedResult, error: updateError } = await supabase
+          .from('job_cards')
+          .update({ 
+            end_time: endTime,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', id)
+          .eq('end_time', null) // Only update if end_time is null (not already completed)
+          .select();
           
         if (updateError) {
           console.error("[useCompleteJobCardMutation] Error completing job card:", updateError);
           throw new Error(`Failed to complete job card: ${updateError.message}`);
         }
         
-        if (!updatedCard) {
-          console.error("[useCompleteJobCardMutation] No rows updated by RPC function");
-          throw new Error("Failed to update job card. No changes were made.");
+        if (!updatedResult || updatedResult.length === 0) {
+          console.error("[useCompleteJobCardMutation] No rows updated");
+          throw new Error("Failed to update job card. It may have been completed by another session.");
         }
         
         console.log("[useCompleteJobCardMutation] Job card updated successfully:", id);
