@@ -9,7 +9,7 @@ export const useJobCards = (staffRelationId?: string) => {
   const queryClient = useQueryClient();
 
   // Fetch job cards for a specific staff member or all if business
-  const { data: jobCards, isLoading, error } = useQuery({
+  const { data: jobCards, isLoading, error, refetch } = useQuery({
     queryKey: ['jobCards', staffRelationId],
     queryFn: async () => {
       let query = supabase
@@ -158,6 +158,7 @@ export const useJobCards = (staffRelationId?: string) => {
     jobCards,
     isLoading,
     error,
+    refetch,
     createJobCard,
     updateJobCard,
     deleteJobCard

@@ -13,13 +13,12 @@ import { Form } from "@/components/ui/form";
 import { jobCardFormSchema, JobCardFormValues } from "./JobCardFormSchema";
 import { useJobCards } from "@/hooks/useJobCards";
 import { JobCardFormData } from "@/types/jobs.types";
-import { formatDateTimeToISO } from "@/utils/formatUtils";
 import JobCardFormFields from "./JobCardFormFields";
 import JobCardDialogControls from "./JobCardDialogControls";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, AlertCircle } from "lucide-react";
-import { getBusinessJobs } from "@/utils/staffUtils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { getBusinessJobs } from "@/utils/staffUtils";
 
 interface CreateJobCardDialogProps {
   open: boolean;
@@ -35,8 +34,6 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
   const { toast } = useToast();
   const { createJobCard } = useJobCards(staffRelationId);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [startTime, setStartTime] = useState<string>("09:00");
-  const [endTime, setEndTime] = useState<string>("10:00");
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,9 +44,7 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
       job_id: "",
       payment_method: "none",
       payment_amount: 0,
-      notes: "",
-      start_time: "",
-      end_time: ""
+      notes: ""
     }
   });
   
@@ -85,16 +80,15 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
   
   const onSubmit = async (data: JobCardFormValues) => {
     try {
-      // Convert the selected date and times to ISO format
-      const timeData = formatDateTimeToISO(selectedDate, startTime, endTime);
+      // Use current time as start time for the job card
+      const now = new Date();
       
-      // Make sure required fields are present
+      // Create job card data
       const jobCardData: JobCardFormData = {
         job_id: data.job_id,
         payment_method: data.payment_method,
         payment_amount: data.payment_amount,
-        start_time: timeData.start_time,
-        end_time: timeData.end_time,
+        start_time: now.toISOString(),
         notes: data.notes
       };
       
@@ -129,7 +123,7 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Create Job Card</DialogTitle>
           <DialogDescription>
-            Record a completed job and payment details
+            Record a job and payment details
           </DialogDescription>
         </DialogHeader>
         
@@ -164,10 +158,6 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
                 jobs={jobs}
                 selectedDate={selectedDate}
                 setSelectedDate={setSelectedDate}
-                startTime={startTime}
-                setStartTime={setStartTime}
-                endTime={endTime}
-                setEndTime={setEndTime}
               />
               
               <JobCardDialogControls 

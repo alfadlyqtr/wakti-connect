@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import {
   FormField,
@@ -26,20 +26,12 @@ interface JobCardFormFieldsProps {
   jobs?: Job[] | null;
   selectedDate: Date;
   setSelectedDate: (date: Date) => void;
-  startTime: string;
-  setStartTime: (time: string) => void;
-  endTime: string;
-  setEndTime: (time: string) => void;
 }
 
 const JobCardFormFields: React.FC<JobCardFormFieldsProps> = ({
   jobs,
   selectedDate,
-  setSelectedDate,
-  startTime,
-  setStartTime,
-  endTime,
-  setEndTime
+  setSelectedDate
 }) => {
   const form = useFormContext<JobCardFormValues>();
   const selectedJobId = form.watch("job_id");
@@ -85,35 +77,13 @@ const JobCardFormFields: React.FC<JobCardFormFieldsProps> = ({
         )}
       />
       
-      <div className="space-y-4">
-        <FormItem>
-          <FormLabel>Date</FormLabel>
-          <DatePicker 
-            date={selectedDate} 
-            setDate={setSelectedDate}
-          />
-        </FormItem>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <FormItem>
-            <FormLabel>Start Time</FormLabel>
-            <Input 
-              type="time" 
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-            />
-          </FormItem>
-          
-          <FormItem>
-            <FormLabel>End Time</FormLabel>
-            <Input 
-              type="time" 
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-            />
-          </FormItem>
-        </div>
-      </div>
+      <FormItem>
+        <FormLabel>Date</FormLabel>
+        <DatePicker 
+          date={selectedDate} 
+          setDate={setSelectedDate}
+        />
+      </FormItem>
       
       <FormField
         control={form.control}

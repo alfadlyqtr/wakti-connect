@@ -5,9 +5,7 @@ export const jobCardFormSchema = z.object({
   job_id: z.string().min(1, "Job selection is required"),
   payment_method: z.enum(["cash", "pos", "none"]),
   payment_amount: z.coerce.number().min(0),
-  notes: z.string().optional(),
-  start_time: z.string().optional(),
-  end_time: z.string().optional()
+  notes: z.string().optional()
 });
 
 export type JobCardFormValues = z.infer<typeof jobCardFormSchema>;
