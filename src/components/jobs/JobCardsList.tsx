@@ -42,6 +42,9 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
       // The mutation will handle toast notifications internally
       await completeJobCard.mutateAsync(jobCardId);
       console.log("[JobCardsList] Job completed successfully:", jobCardId);
+      
+      // Force refetch to ensure we have the latest data
+      await refetch();
     } catch (error) {
       console.error("[JobCardsList] Error completing job:", error);
       
@@ -51,6 +54,9 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
         : "Failed to complete job. Please try again.";
       
       setCompletionError(errorMessage);
+      
+      // Force refetch to ensure we're in sync
+      await refetch();
     }
   };
   
@@ -132,8 +138,11 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
   }
   
   // Separate active and completed job cards
-  const activeJobCards = jobCards.filter(card => !card.end_time) || [];
-  const completedJobCards = jobCards.filter(card => card.end_time) || [];
+  // Use end_time as the discriminator for completed vs active
+  const activeJobCards = jobCards.filter(card => !card.end_time);
+  const completedJobCards = jobCards.filter(card => card.end_time);
+  
+  console.log("[JobCardsList] Active jobs:", activeJobCards.length, "Completed jobs:", completedJobCards.length);
   
   return (
     <div className="space-y-6">

@@ -17,7 +17,6 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
 }) => {
   const { toast } = useToast();
   const [completingJobId, setCompletingJobId] = useState<string | null>(null);
-  const [localCompletedIds, setLocalCompletedIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   // Reset error if active jobs change
@@ -25,10 +24,8 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
     setError(null);
   }, [activeJobs]);
 
-  // Filter out jobs that are locally marked as completed or already have an end_time
-  const visibleActiveJobs = activeJobs.filter(job => 
-    !job.end_time && !localCompletedIds.includes(job.id)
-  );
+  // Filter out jobs that already have an end_time to prevent any potential duplicates
+  const visibleActiveJobs = activeJobs.filter(job => !job.end_time);
 
   // If all active jobs are now completed, don't render the section
   if (visibleActiveJobs.length === 0) {
@@ -41,7 +38,7 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
     // Clear any previous errors
     setError(null);
     
-    // Mark as completing and locally completed immediately for UI responsiveness
+    // Mark as completing
     setCompletingJobId(jobCardId);
     
     try {
@@ -49,16 +46,12 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
       await onCompleteJob(jobCardId);
       console.log("[ActiveJobsSection] Job completed successfully:", jobCardId);
       
-      // Add to local completed IDs after successful completion
-      setLocalCompletedIds(prev => [...prev, jobCardId]);
-      
       toast({
         title: "Job completed",
         description: "Job has been marked as completed successfully",
         variant: "success"
       });
     } catch (error) {
-      // If there's an error, don't add to local completed list
       console.error("[ActiveJobsSection] Error completing job:", error);
       
       // Set the error message

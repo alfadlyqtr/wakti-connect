@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { JobCard } from "@/types/jobs.types";
 import { useToast } from "@/hooks/use-toast";
-import { fromTable } from "@/integrations/supabase/helper";
 
 export const useCompleteJobCardMutation = () => {
   const { toast } = useToast();
@@ -22,22 +21,12 @@ export const useCompleteJobCardMutation = () => {
         
       if (checkError) {
         console.error("[useCompleteJobCardMutation] Error checking job card:", checkError);
-        toast({
-          title: "Error completing job card",
-          description: checkError.message,
-          variant: "destructive"
-        });
         throw new Error(`Failed to verify job card: ${checkError.message}`);
       }
       
       if (!existingCard) {
         const notFoundError = new Error(`Job card with ID ${id} not found`);
         console.error("[useCompleteJobCardMutation]", notFoundError.message);
-        toast({
-          title: "Error completing job card",
-          description: "Job card not found",
-          variant: "destructive"
-        });
         throw notFoundError;
       }
       
@@ -45,11 +34,6 @@ export const useCompleteJobCardMutation = () => {
       if (existingCard.end_time) {
         const alreadyCompletedError = new Error(`Job card with ID ${id} is already completed`);
         console.error("[useCompleteJobCardMutation]", alreadyCompletedError.message);
-        toast({
-          title: "Job card already completed",
-          description: "This job card is already marked as completed",
-          variant: "destructive"
-        });
         throw alreadyCompletedError;
       }
       
@@ -57,7 +41,6 @@ export const useCompleteJobCardMutation = () => {
       const endTime = new Date().toISOString();
       console.log("[useCompleteJobCardMutation] Setting end_time for job card:", id, endTime);
       
-      // Use a transaction to ensure atomicity
       try {
         const { data: updatedCard, error: updateError } = await supabase
           .from('job_cards')
@@ -77,18 +60,12 @@ export const useCompleteJobCardMutation = () => {
           
         if (updateError) {
           console.error("[useCompleteJobCardMutation] Error updating job card:", updateError);
-          toast({
-            title: "Error completing job card",
-            description: updateError.message,
-            variant: "destructive"
-          });
           throw new Error(`Failed to update job card: ${updateError.message}`);
         }
         
         console.log("[useCompleteJobCardMutation] Job card updated successfully:", updatedCard?.id);
         
         // If no data was returned by the update operation, create a response based on existing data
-        // This handles race conditions where the update succeeded but didn't return data
         if (!updatedCard) {
           console.warn("[useCompleteJobCardMutation] No data returned from update operation. Creating synthetic response.");
           
@@ -137,15 +114,18 @@ export const useCompleteJobCardMutation = () => {
       } catch (error) {
         console.error("[useCompleteJobCardMutation] Unexpected error during job completion:", error);
         const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+        
         toast({
           title: "Error completing job card",
           description: errorMessage,
           variant: "destructive"
         });
+        
         throw error;
       }
     },
     onSuccess: () => {
+      // Invalidate both the specific job card query and the general job cards list
       queryClient.invalidateQueries({ queryKey: ['jobCards'] });
     }
   });

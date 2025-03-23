@@ -18,7 +18,6 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
   onCompleteJob,
   isCompleting
 }) => {
-  const [isCompleted, setIsCompleted] = useState(false);
   const [duration, setDuration] = useState<string>("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef<boolean>(true);
@@ -37,7 +36,7 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
     cleanupTimer();
     
     // Only start a new timer if the job is not completed and component is mounted
-    if ((jobCard.end_time || isCompleted) || !mountedRef.current) {
+    if (jobCard.end_time || !mountedRef.current) {
       return;
     }
     
@@ -89,7 +88,13 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
       mountedRef.current = false;
       cleanupTimer();
     };
-  }, [jobCard.start_time, jobCard.end_time, isCompleted]);
+  }, [jobCard.start_time, jobCard.end_time]);
+  
+  // If job already has an end_time, don't render
+  if (jobCard.end_time) {
+    console.log("[ActiveJobCard] Skipping render for completed job:", jobCard.id);
+    return null;
+  }
   
   const handleComplete = async () => {
     console.log("[ActiveJobCard] Completing job:", jobCard.id);
@@ -98,29 +103,19 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
       // Immediately clean up the timer to stop counting
       cleanupTimer();
       
-      // Set local completion state immediately for UI
-      setIsCompleted(true);
-      
       // Call the parent handler
       await onCompleteJob(jobCard.id);
       console.log("[ActiveJobCard] Job completed successfully:", jobCard.id);
     } catch (error) {
       console.error("[ActiveJobCard] Error in handleComplete:", error);
-      // If there's an error, reset the completion state
-      setIsCompleted(false);
       
-      // Restart the timer
+      // If there's an error, restart the timer
       setupTimer();
       
       // Throw error to be caught by parent component
       throw error;
     }
   };
-  
-  // If job already has an end_time or is locally marked as completed, don't render
-  if (jobCard.end_time || isCompleted) {
-    return null;
-  }
   
   return (
     <Card className="mb-4 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
@@ -166,7 +161,7 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
           <Button 
             onClick={handleComplete} 
             className="w-full" 
-            disabled={isCompleting || isCompleted}
+            disabled={isCompleting}
             variant="default"
           >
             {isCompleting ? (
