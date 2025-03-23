@@ -32,7 +32,7 @@ const WorkStatusCard: React.FC<WorkStatusCardProps> = ({
               </h3>
               <p className="text-sm text-muted-foreground">
                 {activeWorkSession 
-                  ? `Started at ${formatTime(new Date(activeWorkSession.start_time))}` 
+                  ? `Started at ${formatTime(activeWorkSession.start_time)}` 
                   : "Not currently working"}
               </p>
             </div>
@@ -62,7 +62,7 @@ const WorkStatusCard: React.FC<WorkStatusCardProps> = ({
               <Button
                 onClick={onStartWorkDay}
                 className="w-full sm:w-auto"
-                variant="success"
+                variant="default"
                 style={{ backgroundColor: "#10B981", color: "white" }}
               >
                 <Play className="h-4 w-4 mr-2" />
