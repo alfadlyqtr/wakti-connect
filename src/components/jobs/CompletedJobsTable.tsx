@@ -58,7 +58,7 @@ const CompletedJobsTable: React.FC<CompletedJobsTableProps> = ({
             format(new Date(completedJobs[index-1].start_time), "yyyy-MM-dd") !== dateStr;
           
           return (
-            <React.Fragment key={jobCard.id}>
+            <React.Fragment key={`${jobCard.id}-${index}`}>
               {isFirstInGroup && (
                 <TableRow className="bg-muted/30">
                   <TableCell colSpan={5}>
@@ -86,8 +86,9 @@ const CompletedJobsTable: React.FC<CompletedJobsTableProps> = ({
                 </TableCell>
                 <TableCell>
                   <div className="inline-flex items-center justify-center px-2.5 py-1 rounded-md 
-                                 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300
-                                 border border-green-300 dark:border-green-800 rotate-[-5deg] font-bold text-xs">
+                               bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300
+                               border border-green-300 dark:border-green-800 rotate-[-5deg] font-bold text-xs
+                               shadow-sm">
                     <CheckCircle className="h-3.5 w-3.5 mr-1" />
                     COMPLETED
                   </div>

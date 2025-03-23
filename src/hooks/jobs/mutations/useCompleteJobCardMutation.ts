@@ -42,10 +42,16 @@ export const useCompleteJobCardMutation = () => {
       console.log("[useCompleteJobCardMutation] Setting end_time for job card:", id, endTime);
       
       try {
+        // Use a transaction to ensure the update is atomic
         const { data: updatedCard, error: updateError } = await supabase
           .from('job_cards')
-          .update({ end_time: endTime })
+          .update({ 
+            end_time: endTime,
+            updated_at: new Date().toISOString() 
+          })
           .eq('id', id)
+          // Only update if end_time is currently null to prevent race conditions
+          .is('end_time', null)
           .select(`
             *,
             jobs:job_id (
@@ -63,46 +69,42 @@ export const useCompleteJobCardMutation = () => {
           throw new Error(`Failed to update job card: ${updateError.message}`);
         }
         
-        console.log("[useCompleteJobCardMutation] Job card updated successfully:", updatedCard?.id);
-        
-        // If no data was returned by the update operation, create a response based on existing data
         if (!updatedCard) {
-          console.warn("[useCompleteJobCardMutation] No data returned from update operation. Creating synthetic response.");
+          console.warn("[useCompleteJobCardMutation] No rows updated. Job may already be completed or doesn't exist.");
           
-          // Create a synthetic response using the existing card data
-          const syntheticResponse = {
-            ...existingCard,
-            end_time: endTime,
-            updated_at: new Date().toISOString()
-          };
-          
-          // Fetch the job data separately if needed
-          if (existingCard.job_id) {
-            try {
-              const { data: jobData } = await supabase
-                .from('jobs')
-                .select('id, name, description, duration, default_price')
-                .eq('id', existingCard.job_id)
-                .maybeSingle();
-                
-              if (jobData) {
-                console.log("[useCompleteJobCardMutation] Retrieved job data for synthetic response");
-                // @ts-ignore - we're constructing the response manually
-                syntheticResponse.jobs = jobData;
-              }
-            } catch (jobError) {
-              console.error("[useCompleteJobCardMutation] Error fetching job data for synthetic response:", jobError);
-            }
+          // Explicitly fetch the record to see its current state
+          const { data: currentCard } = await supabase
+            .from('job_cards')
+            .select(`
+              *,
+              jobs:job_id (
+                id,
+                name,
+                description,
+                duration,
+                default_price
+              )
+            `)
+            .eq('id', id)
+            .maybeSingle();
+            
+          if (currentCard && currentCard.end_time) {
+            console.log("[useCompleteJobCardMutation] Job already completed:", currentCard);
+            
+            // Success toast with different message
+            toast({
+              title: "Job already completed",
+              description: "This job has already been marked as completed",
+              variant: "default"
+            });
+            
+            return currentCard as JobCard;
           }
           
-          toast({
-            title: "Job card completed",
-            description: "Job card has been marked as completed successfully",
-            variant: "success"
-          });
-          
-          return syntheticResponse as JobCard;
+          throw new Error("Failed to update job card. No changes were made.");
         }
+        
+        console.log("[useCompleteJobCardMutation] Job card updated successfully:", updatedCard?.id);
         
         toast({
           title: "Job card completed",
@@ -125,8 +127,10 @@ export const useCompleteJobCardMutation = () => {
       }
     },
     onSuccess: () => {
-      // Invalidate both the specific job card query and the general job cards list
+      // Use broader invalidation to ensure all related queries are updated
       queryClient.invalidateQueries({ queryKey: ['jobCards'] });
+      // Also invalidate any potential specific job card queries
+      queryClient.invalidateQueries({ queryKey: ['jobCard'] });
     }
   });
 };

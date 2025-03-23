@@ -18,17 +18,20 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
   const { toast } = useToast();
   const [completingJobId, setCompletingJobId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [localJobs, setLocalJobs] = useState<JobCard[]>([]);
 
   // Reset error if active jobs change
   useEffect(() => {
     setError(null);
+    
+    // Filter out jobs that already have an end_time to prevent any potential duplicates
+    // This ensures we only show truly active jobs
+    const filteredJobs = activeJobs.filter(job => !job.end_time);
+    setLocalJobs(filteredJobs);
   }, [activeJobs]);
 
-  // Filter out jobs that already have an end_time to prevent any potential duplicates
-  const visibleActiveJobs = activeJobs.filter(job => !job.end_time);
-
   // If all active jobs are now completed, don't render the section
-  if (visibleActiveJobs.length === 0) {
+  if (localJobs.length === 0) {
     return null;
   }
 
@@ -45,6 +48,9 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
       // Attempt to complete the job
       await onCompleteJob(jobCardId);
       console.log("[ActiveJobsSection] Job completed successfully:", jobCardId);
+      
+      // Immediately remove this job from the local state to prevent flicker or reappearance
+      setLocalJobs(prevJobs => prevJobs.filter(job => job.id !== jobCardId));
       
       toast({
         title: "Job completed",
@@ -79,7 +85,7 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
         </Alert>
       )}
       
-      {visibleActiveJobs.map(jobCard => (
+      {localJobs.map(jobCard => (
         <ActiveJobCard
           key={jobCard.id}
           jobCard={jobCard}

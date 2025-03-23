@@ -137,10 +137,11 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
     );
   }
   
-  // Separate active and completed job cards
+  // Strictly separate active and completed job cards
   // Use end_time as the discriminator for completed vs active
-  const activeJobCards = jobCards.filter(card => !card.end_time);
-  const completedJobCards = jobCards.filter(card => card.end_time);
+  // This explicit filtering should prevent any overlap
+  const activeJobCards = jobCards.filter(card => card.end_time === null);
+  const completedJobCards = jobCards.filter(card => card.end_time !== null);
   
   console.log("[JobCardsList] Active jobs:", activeJobCards.length, "Completed jobs:", completedJobCards.length);
   
