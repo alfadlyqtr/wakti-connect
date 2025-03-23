@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { UserContact } from "@/types/invitation.types";
 import { fromTable } from "@/integrations/supabase/helper";
@@ -23,6 +22,7 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
         status,
         created_at,
         updated_at,
+        staff_relation_id,
         profiles:contact_id(
           full_name,
           display_name,
@@ -32,21 +32,50 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
       .or(`user_id.eq.${session.user.id},contact_id.eq.${session.user.id}`)
       .eq('status', 'accepted');
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching contacts:", error);
+      throw error;
+    }
     
-    return data.map(contact => ({
-      id: contact.id,
-      userId: contact.user_id,
-      contactId: contact.contact_id,
-      status: contact.status,
-      createdAt: contact.created_at,
-      updatedAt: contact.updated_at,
-      contactProfile: {
-        fullName: contact.profiles?.full_name,
-        displayName: contact.profiles?.display_name,
-        avatarUrl: contact.profiles?.avatar_url
+    // For contacts where the current user is the contact_id, we need to flip the relationship
+    // to show the other person's profile
+    return data.map(contact => {
+      const isInverted = contact.contact_id === session.user.id;
+      
+      // If the relationship is inverted, we need to fetch the other user's profile separately
+      if (isInverted) {
+        return {
+          id: contact.id,
+          userId: contact.user_id,
+          contactId: contact.contact_id,
+          status: contact.status,
+          createdAt: contact.created_at,
+          updatedAt: contact.updated_at,
+          staffRelationId: contact.staff_relation_id,
+          // Will be filled in the second step
+          contactProfile: {
+            fullName: "",
+            displayName: "",
+            avatarUrl: ""
+          }
+        };
       }
-    }));
+      
+      return {
+        id: contact.id,
+        userId: contact.user_id,
+        contactId: contact.contact_id,
+        status: contact.status,
+        createdAt: contact.created_at,
+        updatedAt: contact.updated_at,
+        staffRelationId: contact.staff_relation_id,
+        contactProfile: {
+          fullName: contact.profiles?.full_name,
+          displayName: contact.profiles?.display_name,
+          avatarUrl: contact.profiles?.avatar_url
+        }
+      };
+    });
   } catch (error) {
     console.error("Error fetching contacts:", error);
     return [];
@@ -135,6 +164,7 @@ export const fetchPendingRequests = async (): Promise<UserContact[]> => {
         status,
         created_at,
         updated_at,
+        staff_relation_id,
         profiles:user_id(
           full_name,
           display_name,
@@ -153,6 +183,7 @@ export const fetchPendingRequests = async (): Promise<UserContact[]> => {
       status: request.status,
       createdAt: request.created_at,
       updatedAt: request.updated_at,
+      staffRelationId: request.staff_relation_id,
       contactProfile: {
         fullName: request.profiles?.full_name,
         displayName: request.profiles?.display_name,
@@ -191,3 +222,62 @@ export const updateAutoApproveContacts = async (autoApprove: boolean): Promise<b
     return false;
   }
 };
+
+/**
+ * Ensures that staff and business contacts are correctly set up
+ * This can be called to fix any missing relationships
+ */
+export const syncStaffBusinessContacts = async (): Promise<boolean> => {
+  try {
+    // First check if the user is a staff member
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      throw new Error("No active session");
+    }
+    
+    const userId = session.user.id;
+    
+    // Check for a staff relation
+    const { data: staffData } = await supabase
+      .from('business_staff')
+      .select('id, business_id, staff_id')
+      .or(`staff_id.eq.${userId},business_id.eq.${userId}`)
+      .eq('status', 'active');
+      
+    if (!staffData || staffData.length === 0) {
+      return false; // Not a staff member or business with staff
+    }
+    
+    // Create missing contacts
+    const promises = staffData.map(async (relation) => {
+      if (relation.staff_id === userId) {
+        // This user is staff, ensure they have contact with their business
+        await fromTable('user_contacts')
+          .upsert({
+            user_id: relation.staff_id,
+            contact_id: relation.business_id,
+            status: 'accepted',
+            staff_relation_id: relation.id
+          })
+          .on_conflict('user_id, contact_id');
+      } else if (relation.business_id === userId) {
+        // This user is a business, ensure they have contact with their staff
+        await fromTable('user_contacts')
+          .upsert({
+            user_id: relation.business_id,
+            contact_id: relation.staff_id,
+            status: 'accepted',
+            staff_relation_id: relation.id
+          })
+          .on_conflict('user_id, contact_id');
+      }
+    });
+    
+    await Promise.all(promises);
+    return true;
+  } catch (error) {
+    console.error("Error syncing staff-business contacts:", error);
+    return false;
+  }
+};
+

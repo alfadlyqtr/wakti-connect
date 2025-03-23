@@ -1,4 +1,3 @@
-
 export type InvitationBackground = {
   type: 'solid' | 'gradient' | 'image';
   value: string;
@@ -65,15 +64,14 @@ export interface UserContact {
   id: string;
   userId: string;
   contactId: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: string;
   createdAt: string;
   updatedAt: string;
-  // Join fields
+  staffRelationId?: string;
   contactProfile?: {
     fullName?: string;
     displayName?: string;
     avatarUrl?: string;
-    email?: string;
   };
 }
 
@@ -95,7 +93,6 @@ export interface InvitationRecipient {
   type: 'contact' | 'email';
 }
 
-// Adding the missing types for invitation service
 export interface InvitationTarget {
   type: 'user' | 'email';
   id: string;

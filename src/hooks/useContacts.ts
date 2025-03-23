@@ -7,7 +7,8 @@ import {
   fetchContacts, 
   fetchPendingRequests,
   sendContactRequest as sendRequest,
-  respondToContactRequest as respondToRequest
+  respondToContactRequest as respondToRequest,
+  syncStaffBusinessContacts
 } from "@/services/contacts/contactsService";
 import {
   fetchAutoApproveSetting,
@@ -18,6 +19,21 @@ export const useContacts = () => {
   const queryClient = useQueryClient();
   const [autoApprove, setAutoApprove] = useState<boolean>(false);
   const [isUpdatingAutoApprove, setIsUpdatingAutoApprove] = useState<boolean>(false);
+
+  // Sync staff-business contacts
+  useEffect(() => {
+    const syncContacts = async () => {
+      try {
+        await syncStaffBusinessContacts();
+        // After syncing, refresh contacts
+        queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      } catch (error) {
+        console.error("Error syncing staff-business contacts:", error);
+      }
+    };
+    
+    syncContacts();
+  }, [queryClient]);
 
   // Fetch user's contacts
   const { 
