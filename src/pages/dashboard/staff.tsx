@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Users, RefreshCcw } from "lucide-react";
+import { UserPlus, Users, RefreshCcw, Sync } from "lucide-react";
 import { StaffList } from "@/components/staff/StaffList";
 import { StaffDialog } from "@/components/staff/StaffDialog";
 import { useToast } from "@/components/ui/use-toast";
@@ -15,6 +15,7 @@ export default function StaffPage() {
   const queryClient = useQueryClient();
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   // Fetch current user session
   const { data: sessionData } = useQuery({
@@ -45,6 +46,7 @@ export default function StaffPage() {
         .from('business_staff')
         .select('*')
         .eq('business_id', businessId)
+        .neq('status', 'deleted')
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -113,6 +115,68 @@ export default function StaffPage() {
     
     setStaffDialogOpen(false);
   };
+  
+  const handleSyncStaff = async () => {
+    if (!sessionData?.session?.access_token) {
+      toast({
+        title: "Error",
+        description: "You must be signed in to sync staff records",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSyncing(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-staff-records", {
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        }
+      });
+      
+      if (error) {
+        console.error("Error syncing staff records:", error);
+        toast({
+          title: "Sync Failed",
+          description: error.message || "Failed to sync staff records",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (data.success) {
+        const syncedCount = data.data.synced.length;
+        
+        toast({
+          title: "Staff Records Synced",
+          description: syncedCount > 0 
+            ? `Successfully synced ${syncedCount} staff records.` 
+            : "All staff records are already in sync.",
+          variant: "default"
+        });
+        
+        // Refresh the staff list
+        queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
+        refetch();
+      } else {
+        toast({
+          title: "Sync Failed",
+          description: data.error || "Failed to sync staff records",
+          variant: "destructive"
+        });
+      }
+    } catch (err) {
+      console.error("Error in sync operation:", err);
+      toast({
+        title: "Sync Error",
+        description: "An unexpected error occurred during sync",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -132,6 +196,19 @@ export default function StaffPage() {
             title="Refresh"
           >
             <RefreshCcw className="h-4 w-4" />
+          </Button>
+          
+          <Button 
+            variant="outline"
+            onClick={handleSyncStaff}
+            disabled={isSyncing}
+            title="Sync staff records"
+          >
+            {isSyncing ? (
+              <RefreshCcw className="h-4 w-4 animate-spin" />
+            ) : (
+              <Sync className="h-4 w-4" />
+            )}
           </Button>
           
           <Button 
