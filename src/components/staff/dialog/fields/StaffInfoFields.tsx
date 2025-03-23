@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import AvatarUpload from "./AvatarUpload";
-import StaffNumberInput from "./StaffNumberInput";
 
 interface StaffInfoFieldsProps {
   form: UseFormReturn<StaffFormValues>;
@@ -95,8 +94,6 @@ const StaffInfoFields: React.FC<StaffInfoFieldsProps> = ({ form }) => {
             </FormItem>
           )}
         />
-        
-        <StaffNumberInput form={form} />
       </div>
     </div>
   );

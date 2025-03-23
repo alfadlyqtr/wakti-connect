@@ -7,7 +7,6 @@ export const staffFormSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
   position: z.string().optional(),
-  staffNumber: z.string().optional(),
   avatar: z.instanceof(File).optional(),
   isServiceProvider: z.boolean().default(false),
   isCoAdmin: z.boolean().default(false),

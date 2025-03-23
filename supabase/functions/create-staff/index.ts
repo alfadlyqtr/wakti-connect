@@ -47,7 +47,6 @@ serve(async (req) => {
       email,
       password,
       position,
-      staffNumber,
       role = 'staff',
       isServiceProvider = false,
       permissions,
@@ -115,40 +114,6 @@ serve(async (req) => {
     console.log("Created auth user:", authData.user.id);
     console.log("Business ID:", user.id);
     
-    // Get staff count for numbering
-    const { count, error: countError } = await supabase
-      .from('business_staff')
-      .select('*', { count: 'exact', head: true })
-      .eq('business_id', user.id);
-      
-    if (countError) {
-      console.error("Error getting staff count:", countError);
-    }
-    
-    // Generate staff number if not provided
-    let finalStaffNumber = staffNumber;
-    
-    if (!finalStaffNumber) {
-      // Get business information for generating staff number
-      // FIX: Explicitly specify the table name to avoid ambiguous column reference
-      const { data: businessData, error: businessError } = await supabase
-        .from('profiles')
-        .select('business_name')
-        .eq('id', user.id)
-        .single();
-        
-      if (businessError) {
-        console.error("Error getting business data:", businessError);
-        throw new Error(`Failed to get business data: ${businessError.message}`);
-      }
-        
-      const businessPrefix = businessData?.business_name 
-        ? businessData.business_name.substring(0, 3).toUpperCase().replace(/[^A-Z0-9]/g, '')
-        : 'BUS';
-        
-      finalStaffNumber = `${businessPrefix}_Staff${String((count || 0) + 1).padStart(3, '0')}`;
-    }
-    
     // Upload avatar if provided
     let avatarUrl = null;
     if (avatar && avatar.startsWith('data:')) {
@@ -214,7 +179,6 @@ serve(async (req) => {
         role: finalRole,
         is_service_provider: isServiceProvider,
         permissions: finalPermissions,
-        staff_number: finalStaffNumber,
         profile_image_url: avatarUrl,
         status: 'active'
       })

@@ -55,7 +55,6 @@ export const useCreateStaff = (): UseCreateStaffReturn => {
           email: values.email,
           password: values.password,
           position: values.position,
-          staffNumber: values.staffNumber,
           isServiceProvider: values.isServiceProvider,
           isCoAdmin: values.isCoAdmin,
           permissions: values.permissions
