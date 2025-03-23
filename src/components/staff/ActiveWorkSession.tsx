@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { format, intervalToDuration, formatDuration } from "date-fns";
+import { format, intervalToDuration } from "date-fns";
 import { Clock, Calendar } from "lucide-react";
 
 interface ActiveWorkSessionProps {
@@ -48,6 +48,8 @@ const ActiveWorkSession: React.FC<ActiveWorkSessionProps> = ({ session }) => {
   
   if (!session) return null;
   
+  const startDate = new Date(session.start_time);
+  
   return (
     <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900 my-4">
       <CardContent className="p-4">
@@ -58,7 +60,7 @@ const ActiveWorkSession: React.FC<ActiveWorkSessionProps> = ({ session }) => {
           <div>
             <h3 className="font-medium text-green-700 dark:text-green-400">Active Work Session</h3>
             <p className="text-sm text-muted-foreground">
-              Started at {format(new Date(session.start_time), "h:mm a")}
+              Started at {format(startDate, "h:mm a")} on {format(startDate, "MMMM d, yyyy")}
             </p>
           </div>
           <div className="ml-auto text-right">
@@ -68,14 +70,14 @@ const ActiveWorkSession: React.FC<ActiveWorkSessionProps> = ({ session }) => {
           </div>
         </div>
         
-        <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mt-2 p-2 bg-green-100/50 dark:bg-green-900/20 rounded">
           <div className="flex items-center">
             <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-            <span>{format(new Date(session.start_time), "MMMM d, yyyy")}</span>
+            <span>Started: {format(startDate, "MMMM d, yyyy")}</span>
           </div>
           <div className="flex items-center">
             <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-            <span>Today's Date: {format(new Date(), "MMMM d, yyyy")}</span>
+            <span>Current Time: {format(now, "h:mm:ss a")}</span>
           </div>
         </div>
       </CardContent>

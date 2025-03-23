@@ -66,3 +66,52 @@ export const formatTimeString = (dateString: string): string => {
     minute: '2-digit'
   });
 };
+
+/**
+ * Format duration between two dates in human-readable format
+ */
+export const formatDuration = (startDate: Date, endDate: Date): string => {
+  const durationMs = endDate.getTime() - startDate.getTime();
+  
+  if (durationMs < 0) return '0m';
+  
+  const hours = Math.floor(durationMs / (1000 * 60 * 60));
+  const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  
+  return `${minutes}m`;
+};
+
+/**
+ * Format time remaining or elapsed in a more readable way
+ */
+export const formatElapsedTime = (timestamp: string): string => {
+  const now = new Date();
+  const date = new Date(timestamp);
+  const diffMs = now.getTime() - date.getTime();
+  
+  // Future date
+  if (diffMs < 0) return 'Soon';
+  
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  
+  if (diffDays > 0) {
+    return `${diffDays}d ago`;
+  }
+  
+  if (diffHours > 0) {
+    return `${diffHours}h ago`;
+  }
+  
+  if (diffMinutes > 0) {
+    return `${diffMinutes}m ago`;
+  }
+  
+  return 'Just now';
+};

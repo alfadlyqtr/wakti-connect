@@ -243,11 +243,12 @@ export const getActiveWorkSession = async (staffRelationId: string): Promise<any
  */
 export const getBusinessJobs = async (): Promise<any[]> => {
   try {
+    // Get the business ID for the current staff user
     const businessId = await getStaffBusinessId();
     
     if (!businessId) {
       console.error("No business ID found for staff");
-      return [];
+      throw new Error("No business ID found for current staff user");
     }
     
     console.log("Fetching jobs for business ID:", businessId);
@@ -261,13 +262,17 @@ export const getBusinessJobs = async (): Promise<any[]> => {
       
     if (error) {
       console.error("Error fetching jobs:", error);
-      return [];
+      throw error;
     }
     
     console.log("Found jobs:", data?.length || 0);
+    if (data && data.length > 0) {
+      console.log("Sample job:", data[0]);
+    }
+    
     return data || [];
   } catch (error) {
-    console.error("Error fetching business jobs:", error);
-    return [];
+    console.error("Error fetching business jobs:", error.message);
+    throw new Error(`Failed to fetch business jobs: ${error.message}`);
   }
 };

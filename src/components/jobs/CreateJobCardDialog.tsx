@@ -17,8 +17,9 @@ import { formatDateTimeToISO } from "@/utils/formatUtils";
 import JobCardFormFields from "./JobCardFormFields";
 import JobCardDialogControls from "./JobCardDialogControls";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { getBusinessJobs } from "@/utils/staffUtils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface CreateJobCardDialogProps {
   open: boolean;
@@ -38,6 +39,7 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
   const [endTime, setEndTime] = useState<string>("10:00");
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const form = useForm<JobCardFormValues>({
     resolver: zodResolver(jobCardFormSchema),
@@ -57,6 +59,7 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
       const fetchJobs = async () => {
         try {
           setLoading(true);
+          setError(null);
           console.log("Fetching jobs for staff relation ID:", staffRelationId);
           
           const jobsList = await getBusinessJobs();
@@ -65,9 +68,10 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
           setJobs(jobsList);
         } catch (error) {
           console.error("Error in fetchJobs:", error);
+          setError(error.message || "Could not load jobs");
           toast({
             title: "Error",
-            description: "Could not load jobs",
+            description: "Could not load jobs: " + (error.message || "Unknown error"),
             variant: "destructive"
           });
         } finally {
@@ -134,6 +138,25 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
             <Loader2 className="h-8 w-8 animate-spin text-wakti-blue" />
             <span className="ml-2">Loading jobs...</span>
           </div>
+        ) : error ? (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error loading jobs</AlertTitle>
+            <AlertDescription>
+              {error}
+              <div className="mt-2">
+                <p className="text-sm">Please make sure you have jobs created in the system.</p>
+              </div>
+            </AlertDescription>
+          </Alert>
+        ) : jobs.length === 0 ? (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>No jobs found</AlertTitle>
+            <AlertDescription>
+              You need to create jobs first before creating a job card.
+            </AlertDescription>
+          </Alert>
         ) : (
           <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

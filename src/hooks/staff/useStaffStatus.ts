@@ -22,6 +22,7 @@ export const useStaffStatus = () => {
         if (staffStatus) {
           // Get staff relation ID
           const relationId = await getStaffRelationId();
+          console.log("Staff relation ID from useStaffStatus:", relationId);
           setStaffRelationId(relationId);
         }
       } catch (error) {
@@ -35,19 +36,27 @@ export const useStaffStatus = () => {
   }, []);
   
   // Get active work session if staff
-  const { data: activeWorkSession, isLoading: isSessionLoading } = useQuery({
+  const { data: activeWorkSession, isLoading: isSessionLoading, refetch: refetchSession } = useQuery({
     queryKey: ['activeWorkSession', staffRelationId],
     queryFn: async () => {
       if (!staffRelationId) return null;
-      return getActiveWorkSession(staffRelationId);
+      console.log("Fetching active work session for staff relation:", staffRelationId);
+      try {
+        return await getActiveWorkSession(staffRelationId);
+      } catch (error) {
+        console.error("Error in activeWorkSession query:", error);
+        return null;
+      }
     },
-    enabled: !!staffRelationId && isStaff
+    enabled: !!staffRelationId && isStaff,
+    refetchInterval: 60000 // Refetch every minute to keep the session updated
   });
   
   return {
     isStaff,
     staffRelationId,
     isLoading: isLoading || isSessionLoading,
-    activeWorkSession
+    activeWorkSession,
+    refetchSession
   };
 };
