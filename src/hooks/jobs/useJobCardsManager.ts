@@ -20,58 +20,48 @@ export const useJobCardsManager = (staffRelationId: string) => {
   const [completedJobCards, setCompletedJobCards] = useState<JobCard[]>([]);
   
   // Function to separate job cards into active and completed
-  const separateJobCards = useCallback((cards: JobCard[] | undefined) => {
-    if (!cards || cards.length === 0) {
+  const updateJobCardsState = useCallback((cards: JobCard[] | null) => {
+    if (!cards) {
       setActiveJobCards([]);
       setCompletedJobCards([]);
       return;
     }
     
-    // Active jobs are those without an end_time
-    const active = cards.filter(card => !card.end_time);
-    // Completed jobs are those with an end_time
-    const completed = cards.filter(card => card.end_time !== null);
-    
-    console.log("[useJobCardsManager] Separated job cards - Active:", active.length, "Completed:", completed.length);
-    
-    setActiveJobCards(active);
-    setCompletedJobCards(completed);
+    setActiveJobCards(cards.filter(card => !card.end_time));
+    setCompletedJobCards(cards.filter(card => card.end_time !== null));
   }, []);
   
-  // Reset error state and separate job cards when data changes
+  // Update job cards when data changes
   useEffect(() => {
     setCompletionError(null);
-    separateJobCards(jobCards);
-  }, [jobCards, separateJobCards]);
+    updateJobCardsState(jobCards);
+  }, [jobCards, updateJobCardsState]);
   
   const handleCompleteJob = async (jobCardId: string) => {
     console.log("[useJobCardsManager] Completing job:", jobCardId);
     setCompletionError(null);
     
     try {
-      // Use the mutation to complete the job
+      // Simple mutation call without any complex state manipulation here
       await completeJobCard.mutateAsync(jobCardId);
-      console.log("[useJobCardsManager] Job completed successfully:", jobCardId);
       
-      // Force refetch to ensure we have the latest data
+      // After successful completion, refetch data to ensure we have the latest state
       await refetch();
     } catch (error) {
       console.error("[useJobCardsManager] Error completing job:", error);
       setCompletionError(error instanceof Error ? error : new Error("Failed to complete job"));
       
-      // Force refetch to ensure we're in sync
+      // Refetch to ensure our state matches server
       await refetch();
     }
   };
   
   const handleRetry = async () => {
-    console.log("[useJobCardsManager] Retrying data fetch");
     setIsRetrying(true);
     setCompletionError(null);
     
     try {
       await refetch();
-      console.log("[useJobCardsManager] Data refetched successfully");
       
       toast({
         title: "Refresh successful",

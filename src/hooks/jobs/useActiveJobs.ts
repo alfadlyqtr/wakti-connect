@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { JobCard } from "@/types/jobs.types";
 import { useToast } from "@/hooks/use-toast";
@@ -11,33 +12,27 @@ export const useActiveJobs = (
   const [error, setError] = useState<string | Error | null>(null);
   const [localJobs, setLocalJobs] = useState<JobCard[]>([]);
 
-  // Filter function to ensure only truly active jobs are shown
-  const filterActiveJobs = useCallback((jobs: JobCard[]) => {
-    return jobs.filter(job => !job.end_time);
-  }, []);
-
-  // Reset error and update local jobs when active jobs change
+  // Update local jobs when activeJobs changes
   useEffect(() => {
+    // Only consider jobs without an end_time as active
+    const filteredJobs = activeJobs.filter(job => !job.end_time);
+    setLocalJobs(filteredJobs);
     setError(null);
-    setLocalJobs(filterActiveJobs(activeJobs));
-  }, [activeJobs, filterActiveJobs]);
+  }, [activeJobs]);
 
   const handleCompleteJob = async (jobCardId: string) => {
-    console.log("[useActiveJobs] Completing job:", jobCardId);
-    
-    // Clear any previous errors
+    // Clear previous errors
     setError(null);
     
-    // Mark as completing
+    // Set the completing job ID
     setCompletingJobId(jobCardId);
     
     try {
-      // Immediately remove job from local state to prevent UI flicker
+      // Optimistically remove the job from local state
       setLocalJobs(prevJobs => prevJobs.filter(job => job.id !== jobCardId));
       
-      // Attempt to complete the job
+      // Call the provided completion handler
       await onCompleteJob(jobCardId);
-      console.log("[useActiveJobs] Job completed successfully:", jobCardId);
       
       toast({
         title: "Job completed",
@@ -47,13 +42,13 @@ export const useActiveJobs = (
     } catch (error) {
       console.error("[useActiveJobs] Error completing job:", error);
       
-      // Set the error message or object
-      setError(error);
+      // Set error state
+      setError(error instanceof Error ? error : new Error("Failed to complete job"));
       
-      // Re-add the job to local state if completion failed
-      const failedJob = activeJobs.find(job => job.id === jobCardId);
-      if (failedJob && !failedJob.end_time) {
-        setLocalJobs(prevJobs => [...prevJobs, failedJob]);
+      // Restore the job in local state if it still exists in activeJobs
+      const jobToRestore = activeJobs.find(job => job.id === jobCardId);
+      if (jobToRestore && !jobToRestore.end_time) {
+        setLocalJobs(prevJobs => [...prevJobs, jobToRestore]);
       }
       
       toast({
@@ -62,6 +57,7 @@ export const useActiveJobs = (
         variant: "destructive"
       });
     } finally {
+      // Reset the completing job ID
       setCompletingJobId(null);
     }
   };
