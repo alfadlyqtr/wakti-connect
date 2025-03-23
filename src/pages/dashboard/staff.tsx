@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { StaffMember } from "@/types/staff";
 
 export default function StaffPage() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [staffDialogOpen, setStaffDialogOpen] = useState(false);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   
@@ -37,20 +38,33 @@ export default function StaffPage() {
         throw new Error("Not authenticated");
       }
       
+      const businessId = sessionData.session.user.id;
+      console.log("Staff page fetching staff for business:", businessId);
+      
       const { data, error } = await supabase
         .from('business_staff')
         .select('*')
-        .eq('business_id', sessionData.session.user.id)
+        .eq('business_id', businessId)
         .order('created_at', { ascending: false });
       
       if (error) {
+        console.error("Error fetching staff:", error);
         throw new Error(error.message || "Failed to fetch staff members");
       }
       
+      console.log(`Staff page found ${data?.length || 0} staff members:`, data);
+      
       return data || [];
     },
-    enabled: !!sessionData?.session?.user?.id
+    enabled: !!sessionData?.session?.user?.id,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
   });
+
+  // Force refetch when component mounts
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   // Convert to StaffMember type
   const staffMembers: StaffMember[] = (staffMembersData || []).map(staff => ({
@@ -92,7 +106,11 @@ export default function StaffPage() {
         ? "Staff member updated successfully"
         : "Staff member added successfully",
     });
+    
+    // Force refetch from the server
+    queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
     refetch();
+    
     setStaffDialogOpen(false);
   };
 

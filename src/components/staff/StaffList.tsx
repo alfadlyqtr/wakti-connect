@@ -104,6 +104,8 @@ export const StaffList: React.FC<StaffListProps> = ({
     return <EmptyStaffState onAddStaffClick={() => onEdit("")} />;
   }
 
+  console.log("Rendering staff list with members:", displayStaff);
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -163,7 +165,7 @@ export const StaffList: React.FC<StaffListProps> = ({
             >
               Confirm
             </AlertDialogAction>
-          </AlertDialogFooter>
+          </DialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>

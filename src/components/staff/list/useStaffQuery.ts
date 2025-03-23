@@ -32,16 +32,23 @@ export const useStaffQuery = () => {
       const businessId = session.session.user.id;
       console.log("Fetching staff for business ID:", businessId);
       
+      // Make sure we fetch ALL staff members with no additional filters
       const { data: staffData, error: staffError } = await supabase
         .from('business_staff')
         .select('*')
-        .eq('business_id', businessId);
+        .eq('business_id', businessId)
+        .order('created_at', { ascending: false });
         
-      if (staffError) throw staffError;
+      if (staffError) {
+        console.error("Error fetching staff:", staffError);
+        throw staffError;
+      }
       
-      console.log(`Found ${staffData?.length || 0} staff members`);
+      console.log(`Found ${staffData?.length || 0} staff members:`, staffData);
       
       return staffData as StaffQueryResult[];
-    }
+    },
+    refetchOnMount: true,
+    refetchOnWindowFocus: true
   });
 };
