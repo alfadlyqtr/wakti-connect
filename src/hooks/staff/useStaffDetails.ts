@@ -35,26 +35,37 @@ export const useStaffDetails = (staffRelationId: string | null) => {
           
         if (error) throw error;
         
-        // Check if business property exists and has expected structure
-        if (!data || !data.business || typeof data.business !== 'object' || !('business_name' in data.business)) {
-          console.error("Business data is missing or malformed:", data?.business);
-          throw new Error("Business data is missing or malformed");
+        // Check if data exists
+        if (!data) {
+          console.error("No staff data returned");
+          throw new Error("No staff data found");
+        }
+        
+        // Check if business property exists and has the expected structure
+        const businessData = data.business;
+        if (!businessData || typeof businessData !== 'object' || !('business_name' in businessData)) {
+          console.error("Business data is missing or malformed:", businessData);
+          
+          // Create a default business object to satisfy the type requirement
+          data.business = {
+            business_name: 'Unknown Business',
+            avatar_url: null
+          };
         }
         
         // Parse permissions JSON to an object if it's a string
-        if (data) {
-          try {
-            if (typeof data.permissions === 'string') {
-              data.permissions = JSON.parse(data.permissions);
-            } else if (typeof data.permissions !== 'object') {
-              data.permissions = {}; // Default empty object if not valid
-            }
-          } catch (e) {
-            console.error("Error parsing permissions:", e);
-            data.permissions = {}; // Default to empty object on parse error
+        try {
+          if (typeof data.permissions === 'string') {
+            data.permissions = JSON.parse(data.permissions);
+          } else if (typeof data.permissions !== 'object') {
+            data.permissions = {}; // Default empty object if not valid
           }
+        } catch (e) {
+          console.error("Error parsing permissions:", e);
+          data.permissions = {}; // Default to empty object on parse error
         }
         
+        // Use type assertion to ensure the return type matches StaffDetails
         return data as StaffDetails;
       } catch (e) {
         console.error("Error fetching staff details:", e);
