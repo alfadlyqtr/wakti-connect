@@ -2,18 +2,13 @@
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StaffFormPanel from "./StaffFormPanel";
-import StaffMembersList from "./StaffMembersList";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-
-// Update the StaffMembersList props
-interface StaffMembersListProps {
-  onEdit?: (staffId: string) => void;
-  onEditStaff?: (staffId: string) => void; // Alternative prop name
-}
+import { StaffMembersList } from "./StaffMembersList";
+import { StaffMember } from "@/types/staff";
 
 const StaffManagementPanel = () => {
   const [activeTab, setActiveTab] = React.useState("list");
@@ -34,6 +29,28 @@ const StaffManagementPanel = () => {
         
       if (error) throw error;
       return count || 0;
+    }
+  });
+  
+  // Fetch staff members
+  const { data: staffData, isLoading, error } = useQuery({
+    queryKey: ['staffMembersData'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+      
+      const { data, error } = await supabase
+        .from('business_staff')
+        .select('*')
+        .eq('business_id', session.user.id)
+        .neq('status', 'deleted');
+        
+      if (error) throw error;
+      
+      return data.map(staff => ({
+        ...staff,
+        role: staff.role || 'staff'
+      })) as StaffMember[];
     }
   });
   
@@ -86,7 +103,12 @@ const StaffManagementPanel = () => {
         </TabsList>
         
         <TabsContent value="list" className="pt-4">
-          <StaffMembersList onEdit={handleEditStaff} />
+          <StaffMembersList 
+            staffMembers={staffData || []}
+            isLoading={isLoading}
+            error={error as Error | null}
+            onEdit={handleEditStaff}
+          />
         </TabsContent>
         
         <TabsContent value="create" className="pt-4">

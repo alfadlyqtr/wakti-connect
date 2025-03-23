@@ -2,54 +2,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { StaffMember } from "@/pages/dashboard/staff-management/types";
+import { StaffMember } from "@/types/staff";
 
 export const useStaffListOperations = () => {
   const queryClient = useQueryClient();
-  
-  // Fetch staff members
-  const { 
-    data: staffMembers, 
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: ['staffMembers'],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not authenticated");
-      
-      const { data, error } = await supabase
-        .from('business_staff')
-        .select(`
-          *,
-          profiles:staff_id (
-            avatar_url,
-            full_name
-          )
-        `)
-        .eq('business_id', session.user.id)
-        .neq('status', 'deleted')
-        .order('created_at', { ascending: false });
-        
-      if (error) throw error;
-
-      // Map the data to match our StaffMember interface
-      return (data as any[]).map(staff => {
-        const profileData = staff.profiles ? {
-          avatar_url: staff.profiles.avatar_url,
-          full_name: staff.profiles.full_name
-        } : null;
-
-        return {
-          ...staff,
-          permissions: typeof staff.permissions === 'string' 
-            ? JSON.parse(staff.permissions) 
-            : staff.permissions,
-          profile: profileData
-        } as StaffMember;
-      });
-    }
-  });
   
   // Delete staff mutation
   const deleteStaff = useMutation({
@@ -68,6 +24,7 @@ export const useStaffListOperations = () => {
         description: "Staff member has been deleted successfully."
       });
       queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
+      queryClient.invalidateQueries({ queryKey: ['businessStaff'] });
     },
     onError: (error: any) => {
       toast({
@@ -95,6 +52,7 @@ export const useStaffListOperations = () => {
         description: `Staff member has been ${data.newStatus === 'active' ? 'activated' : 'suspended'} successfully.`
       });
       queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
+      queryClient.invalidateQueries({ queryKey: ['businessStaff'] });
     },
     onError: (error: any) => {
       toast({
@@ -106,9 +64,6 @@ export const useStaffListOperations = () => {
   });
   
   return {
-    staffMembers,
-    isLoading,
-    error,
     deleteStaff,
     toggleStaffStatus
   };

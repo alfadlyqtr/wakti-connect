@@ -5,25 +5,28 @@ import { UserPlus } from "lucide-react";
 import CreateStaffDialog from "./CreateStaffDialog";
 import { StaffList } from "./list";
 import { StaffMember } from "@/types/staff";
-import { useStaffQuery } from "./list/useStaffQuery";
+import { useStaffQuery, StaffQueryResult } from "./list/useStaffQuery";
 
 const StaffManagementTab: React.FC = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const { data: queryStaffMembers, isLoading, error } = useStaffQuery();
+  const { data: queryStaffMembers, isLoading, error, refetch } = useStaffQuery();
 
-  // Convert the StaffMember[] from useStaffQuery to match the type expected by StaffList
+  // Convert the StaffQueryResult[] to StaffMember[]
   const staffMembers: StaffMember[] = (queryStaffMembers || []).map(staff => ({
     id: staff.id,
     staff_id: staff.staff_id,
-    business_id: '', // Add required field that's missing from useStaffQuery type
+    business_id: staff.business_id,
     name: staff.name,
     email: staff.email || '',
     position: staff.position || '',
     role: staff.role || 'staff',
-    status: 'active', // Default value
-    is_service_provider: false, // Default value
-    permissions: {},
-    staff_number: '',
+    status: staff.status || 'active',
+    is_service_provider: staff.is_service_provider || false,
+    permissions: typeof staff.permissions === 'string' 
+      ? JSON.parse(staff.permissions as string)
+      : staff.permissions || {},
+    staff_number: staff.staff_number || '',
+    profile_image_url: staff.profile_image_url,
     created_at: staff.created_at
   }));
 
@@ -47,7 +50,7 @@ const StaffManagementTab: React.FC = () => {
         isLoading={isLoading}
         error={error}
         onEdit={handleViewDetails}
-        onRefresh={() => console.log("Refreshing staff list")}
+        onRefresh={() => refetch()}
       />
       
       <CreateStaffDialog

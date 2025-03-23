@@ -22,13 +22,34 @@ export const StaffList: React.FC<StaffListProps> = ({
   onEdit,
   onRefresh
 }) => {
+  // Initialize state for confirm dialogs
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
+  const [confirmToggleOpen, setConfirmToggleOpen] = React.useState(false);
+  const [selectedStaff, setSelectedStaff] = React.useState<StaffMember | null>(null);
+  
+  // Get staff operations
   const { 
-    handleToggleStatus, 
-    handleDelete, 
-    confirmDeleteOpen, 
-    setConfirmDeleteOpen, 
-    selectedStaffId 
-  } = useStaffListOperations(onRefresh);
+    deleteStaff, 
+    toggleStaffStatus 
+  } = useStaffListOperations();
+
+  // Handle toggle status
+  const handleToggleStatus = (staffId: string) => {
+    const staff = staffMembers.find(s => s.id === staffId);
+    if (staff) {
+      setSelectedStaff(staff);
+      setConfirmToggleOpen(true);
+    }
+  };
+
+  // Handle delete
+  const handleDelete = (staffId: string) => {
+    const staff = staffMembers.find(s => s.id === staffId);
+    if (staff) {
+      setSelectedStaff(staff);
+      setConfirmDeleteOpen(true);
+    }
+  };
 
   // Show loading state
   if (isLoading) {
@@ -53,7 +74,12 @@ export const StaffList: React.FC<StaffListProps> = ({
         isLoading={isLoading}
         error={error}
         onEdit={onEdit}
-        onUpdateStatus={handleToggleStatus}
+        onUpdateStatus={(staffId, status) => {
+          const staff = staffMembers.find(s => s.id === staffId);
+          if (staff) {
+            toggleStaffStatus.mutate({ staffId, newStatus: status });
+          }
+        }}
       />
     </>
   );

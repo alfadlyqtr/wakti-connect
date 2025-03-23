@@ -8,6 +8,7 @@ import { UserPlus, Users, RefreshCcw } from "lucide-react";
 import { StaffList } from "@/components/staff/StaffList";
 import { StaffDialog } from "@/components/staff/StaffDialog";
 import { useToast } from "@/components/ui/use-toast";
+import { StaffMember } from "@/types/staff";
 
 export default function StaffPage() {
   const { toast } = useToast();
@@ -25,7 +26,7 @@ export default function StaffPage() {
   
   // Fetch staff members
   const { 
-    data: staffMembers, 
+    data: staffMembersData, 
     isLoading, 
     error,
     refetch
@@ -50,6 +51,25 @@ export default function StaffPage() {
     },
     enabled: !!sessionData?.session?.user?.id
   });
+
+  // Convert to StaffMember type
+  const staffMembers: StaffMember[] = (staffMembersData || []).map(staff => ({
+    id: staff.id,
+    staff_id: staff.staff_id,
+    business_id: staff.business_id,
+    name: staff.name,
+    email: staff.email,
+    position: staff.position || '',
+    role: staff.role,
+    status: staff.status,
+    is_service_provider: !!staff.is_service_provider,
+    permissions: typeof staff.permissions === 'string' 
+      ? JSON.parse(staff.permissions as string) 
+      : staff.permissions || {},
+    staff_number: staff.staff_number || '',
+    profile_image_url: staff.profile_image_url,
+    created_at: staff.created_at
+  }));
 
   // Staff count for checking limits
   const staffCount = staffMembers?.length || 0;
@@ -118,7 +138,7 @@ export default function StaffPage() {
       )}
       
       <StaffList 
-        staffMembers={staffMembers || []}
+        staffMembers={staffMembers}
         isLoading={isLoading}
         error={error as Error | null}
         onEdit={handleEditStaff}
@@ -133,4 +153,4 @@ export default function StaffPage() {
       />
     </div>
   );
-}
+};

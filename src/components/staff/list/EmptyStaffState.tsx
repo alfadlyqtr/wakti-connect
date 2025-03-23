@@ -4,19 +4,23 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 
-interface EmptyStaffStateProps {
+export interface EmptyStaffStateProps {
   onAddStaffClick: () => void;
 }
 
 const EmptyStaffState: React.FC<EmptyStaffStateProps> = ({ onAddStaffClick }) => {
   return (
-    <Card className="col-span-full p-8">
-      <div className="text-center">
-        <UserPlus className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No Staff Members Yet</h3>
-        <p className="text-muted-foreground mb-4">Add staff members to your business.</p>
+    <Card className="text-center p-6">
+      <div className="flex flex-col items-center justify-center">
+        <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mb-6">
+          <UserPlus className="h-10 w-10 text-muted-foreground" />
+        </div>
+        <h3 className="text-xl font-medium mb-2">No staff members yet</h3>
+        <p className="text-muted-foreground max-w-sm mb-6">
+          Add staff members to your business to help manage tasks, appointments, and services.
+        </p>
         <Button onClick={onAddStaffClick}>
-          <UserPlus className="mr-2 h-4 w-4" />
+          <UserPlus className="h-4 w-4 mr-2" />
           Add Staff Member
         </Button>
       </div>

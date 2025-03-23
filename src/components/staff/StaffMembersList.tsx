@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { StaffMember } from "@/types/staff";
@@ -8,12 +8,12 @@ import { StaffMemberCard } from "@/components/staff/StaffMemberCard";
 import { AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-interface StaffMembersListProps {
+export interface StaffMembersListProps {
   staffMembers: StaffMember[];
   isLoading: boolean;
   error: Error | null;
   onEdit: (staffId: string) => void;
-  onUpdateStatus?: (staffId: string, status: 'active' | 'inactive') => void;
+  onUpdateStatus?: (staffId: string, status: string) => void;
 }
 
 export const StaffMembersList: React.FC<StaffMembersListProps> = ({
@@ -23,11 +23,6 @@ export const StaffMembersList: React.FC<StaffMembersListProps> = ({
   onEdit,
   onUpdateStatus
 }) => {
-  const { toast } = useToast();
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
-  const [deactivateConfirmOpen, setDeactivateConfirmOpen] = useState(false);
-
   // Loading state
   if (isLoading) {
     return (
@@ -79,12 +74,15 @@ export const StaffMembersList: React.FC<StaffMembersListProps> = ({
       {staffMembers.map((staff) => (
         <StaffMemberCard
           key={staff.id}
-          staff={staff}
+          member={staff}
           onEdit={() => onEdit(staff.id)}
-          onUpdateStatus={onUpdateStatus ? 
-            (status) => onUpdateStatus(staff.id, status as 'active' | 'inactive') : 
-            undefined
-          }
+          onDelete={() => console.log("Delete", staff.id)}
+          onToggleStatus={() => {
+            if (onUpdateStatus) {
+              const newStatus = staff.status === 'active' ? 'inactive' : 'active';
+              onUpdateStatus(staff.id, newStatus);
+            }
+          }}
         />
       ))}
     </div>

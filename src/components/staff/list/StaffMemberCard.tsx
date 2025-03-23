@@ -15,22 +15,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export interface StaffMemberCardProps {
-  member: StaffMember;
+  member?: StaffMember;
+  staff?: StaffMember; // Alternative prop name
+  data?: StaffMember; // For backward compatibility
   onEdit: () => void;
   onDelete: () => void;
   onToggleStatus: () => void;
-  data?: StaffMember; // For backward compatibility
 }
 
 const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
   member,
-  data, // Support legacy data prop
+  staff,
+  data,
   onEdit,
   onDelete,
   onToggleStatus,
 }) => {
-  // Use either member or data prop for backward compatibility
-  const staffData = member || data;
+  // Use whichever prop is provided (member, staff, or data)
+  const staffData = member || staff || data || {} as StaffMember;
   const isActive = staffData.status === "active";
   const roleLabel = staffData.role === "co-admin" ? "Co-Admin" : "Staff";
   
@@ -43,11 +45,11 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
               <Avatar className="h-10 w-10">
                 <AvatarImage src="" alt={staffData.name} />
                 <AvatarFallback>
-                  {staffData.name.charAt(0).toUpperCase()}
+                  {staffData.name?.charAt(0).toUpperCase() || "S"}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="font-medium">{staffData.name}</h3>
+                <h3 className="font-medium">{staffData.name || "Staff Member"}</h3>
                 <p className="text-sm text-muted-foreground">{staffData.position || "Staff Member"}</p>
               </div>
             </div>

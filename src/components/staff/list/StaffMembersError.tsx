@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 
-interface StaffMembersErrorProps {
+export interface StaffMembersErrorProps {
   errorMessage: string;
   onRetry: () => void;
 }
