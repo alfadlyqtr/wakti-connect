@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle } from "lucide-react";
-import { formatDateTime } from "@/utils/dateUtils";
 import { formatCurrency } from "@/utils/formatUtils";
 import { JobCard } from "@/types/jobs.types";
 import { format, intervalToDuration } from "date-fns";
@@ -24,20 +23,25 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef<boolean>(true);
   
-  // Reset timer and cleanup function
-  const setupTimer = () => {
-    // Clear any existing timer
+  // Safe cleanup and timer management
+  const cleanupTimer = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+  };
+  
+  // Reset timer and set up new one
+  const setupTimer = () => {
+    // First clean up any existing timer
+    cleanupTimer();
     
     // Only start a new timer if the job is not completed and component is mounted
     if ((jobCard.end_time || isCompleted) || !mountedRef.current) {
       return;
     }
     
-    // Update duration calculation function
+    // Safe duration calculation and formatting
     const updateDuration = () => {
       if (!mountedRef.current) return;
       
@@ -49,19 +53,19 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
         // Format the duration
         let formattedDuration = "";
         
-        if (duration.hours) {
+        if (duration.hours && duration.hours > 0) {
           formattedDuration += `${duration.hours}h `;
         }
         
-        if (duration.minutes) {
+        if (duration.minutes && duration.minutes > 0) {
           formattedDuration += `${duration.minutes}m `;
         }
         
-        formattedDuration += `${duration.seconds}s`;
+        formattedDuration += `${duration.seconds || 0}s`;
         
         setDuration(formattedDuration);
       } catch (error) {
-        console.error("Error updating duration:", error);
+        console.error("[ActiveJobCard] Error updating duration:", error);
         // Set a fallback duration to avoid UI issues
         setDuration("--:--");
       }
@@ -70,43 +74,46 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
     // Update immediately and then every second
     updateDuration();
     timerRef.current = setInterval(updateDuration, 1000);
+    console.log("[ActiveJobCard] Timer started for job:", jobCard.id);
   };
   
   // Setup timer on initial render and when job card or completion state changes
   useEffect(() => {
     mountedRef.current = true;
+    console.log("[ActiveJobCard] Setting up timer for job:", jobCard.id);
     setupTimer();
     
     // Cleanup function
     return () => {
+      console.log("[ActiveJobCard] Cleaning up timer for job:", jobCard.id);
       mountedRef.current = false;
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
+      cleanupTimer();
     };
   }, [jobCard.start_time, jobCard.end_time, isCompleted]);
   
   const handleComplete = async () => {
+    console.log("[ActiveJobCard] Completing job:", jobCard.id);
+    
     try {
       // Immediately clean up the timer to stop counting
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
+      cleanupTimer();
       
       // Set local completion state immediately for UI
       setIsCompleted(true);
       
       // Call the parent handler
       await onCompleteJob(jobCard.id);
+      console.log("[ActiveJobCard] Job completed successfully:", jobCard.id);
     } catch (error) {
-      console.error("Error in handleComplete:", error);
+      console.error("[ActiveJobCard] Error in handleComplete:", error);
       // If there's an error, reset the completion state
       setIsCompleted(false);
       
       // Restart the timer
       setupTimer();
+      
+      // Throw error to be caught by parent component
+      throw error;
     }
   };
   
@@ -132,7 +139,7 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
           </div>
           <div className="ml-auto text-right">
             <span className="text-xl font-bold text-yellow-700 dark:text-yellow-400">
-              {duration}
+              {duration || "calculating..."}
             </span>
           </div>
         </div>

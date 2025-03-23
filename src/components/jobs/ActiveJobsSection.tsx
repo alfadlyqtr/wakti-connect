@@ -36,7 +36,7 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
   }
 
   const handleCompleteJob = async (jobCardId: string) => {
-    console.log("Completing job in ActiveJobsSection:", jobCardId);
+    console.log("[ActiveJobsSection] Completing job:", jobCardId);
     
     // Clear any previous errors
     setError(null);
@@ -47,7 +47,7 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
     try {
       // Attempt to complete the job
       await onCompleteJob(jobCardId);
-      console.log("Job completed successfully in ActiveJobsSection:", jobCardId);
+      console.log("[ActiveJobsSection] Job completed successfully:", jobCardId);
       
       // Add to local completed IDs after successful completion
       setLocalCompletedIds(prev => [...prev, jobCardId]);
@@ -59,7 +59,7 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
       });
     } catch (error) {
       // If there's an error, don't add to local completed list
-      console.error("Error completing job in ActiveJobsSection:", error);
+      console.error("[ActiveJobsSection] Error completing job:", error);
       
       // Set the error message
       setError(error instanceof Error ? error.message : "Failed to complete job. Please try again.");

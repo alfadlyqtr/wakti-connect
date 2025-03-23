@@ -35,14 +35,15 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
   }, [staffRelationId, jobCards]);
   
   const handleCompleteJob = async (jobCardId: string) => {
-    console.log("Completing job in JobCardsList:", jobCardId);
+    console.log("[JobCardsList] Completing job:", jobCardId);
     setCompletionError(null);
     
     try {
       // The mutation will handle toast notifications internally
       await completeJobCard.mutateAsync(jobCardId);
+      console.log("[JobCardsList] Job completed successfully:", jobCardId);
     } catch (error) {
-      console.error("Error completing job in JobCardsList:", error);
+      console.error("[JobCardsList] Error completing job:", error);
       
       // Set a more user-friendly error message
       const errorMessage = error instanceof Error 
@@ -54,17 +55,20 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
   };
   
   const handleRetry = async () => {
+    console.log("[JobCardsList] Retrying data fetch");
     setIsRetrying(true);
     setCompletionError(null);
     
     try {
       await refetch();
+      console.log("[JobCardsList] Data refetched successfully");
       toast({
         title: "Refresh successful",
         description: "Job cards have been refreshed",
         variant: "success"
       });
     } catch (err) {
+      console.error("[JobCardsList] Error refreshing data:", err);
       toast({
         title: "Error refreshing data",
         description: "Failed to refresh job cards. Please try again.",

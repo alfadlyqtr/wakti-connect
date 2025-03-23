@@ -41,7 +41,7 @@ const CompletedJobsTable: React.FC<CompletedJobsTableProps> = ({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {completedJobs.map(jobCard => {
+        {completedJobs.map((jobCard, index) => {
           // Calculate duration
           let duration = "N/A";
           if (jobCard.end_time) {
@@ -57,7 +57,7 @@ const CompletedJobsTable: React.FC<CompletedJobsTableProps> = ({
           ) === completedJobs.indexOf(jobCard);
           
           return (
-            <React.Fragment key={jobCard.id}>
+            <React.Fragment key={`${jobCard.id}-${index}`}>
               {isFirstInGroup && (
                 <TableRow className="bg-muted/30">
                   <TableCell colSpan={4}>
