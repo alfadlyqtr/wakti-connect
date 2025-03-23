@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -41,32 +40,58 @@ export const useStaffDetails = (staffRelationId: string | null) => {
           throw new Error("No staff data found");
         }
         
-        // Check if business property exists and has the expected structure
-        const businessData = data.business;
-        if (!businessData || typeof businessData !== 'object' || !('business_name' in businessData)) {
-          console.error("Business data is missing or malformed:", businessData);
-          
-          // Create a default business object to satisfy the type requirement
-          data.business = {
+        // Create a properly formatted staff details object
+        const staffDetails: StaffDetails = {
+          id: data.id,
+          name: data.name || '',
+          role: data.role || '',
+          staff_id: data.staff_id,
+          business_id: data.business_id,
+          position: data.position,
+          // Make sure business is properly formatted
+          business: {
             business_name: 'Unknown Business',
             avatar_url: null
+          },
+          // Parse permissions properly
+          permissions: {}
+        };
+        
+        // Check if business data exists and has the expected structure
+        if (data.business && 
+            typeof data.business === 'object' && 
+            !('error' in data.business) && 
+            'business_name' in data.business) {
+          // Valid business data, use it
+          staffDetails.business = {
+            business_name: data.business.business_name,
+            avatar_url: data.business.avatar_url
           };
+        } else {
+          console.error("Business data is missing or malformed:", data.business);
+          // Keep the default business object we already set
         }
         
         // Parse permissions JSON to an object if it's a string
         try {
           if (typeof data.permissions === 'string') {
-            data.permissions = JSON.parse(data.permissions);
-          } else if (typeof data.permissions !== 'object') {
-            data.permissions = {}; // Default empty object if not valid
+            staffDetails.permissions = JSON.parse(data.permissions);
+          } else if (data.permissions && typeof data.permissions === 'object') {
+            staffDetails.permissions = data.permissions as Record<string, boolean>;
           }
         } catch (e) {
           console.error("Error parsing permissions:", e);
-          data.permissions = {}; // Default to empty object on parse error
+          // Default permissions already set to empty object
         }
         
-        // Use type assertion to ensure the return type matches StaffDetails
-        return data as StaffDetails;
+        // Copy any other properties we want to keep
+        Object.keys(data).forEach(key => {
+          if (!['business', 'permissions'].includes(key)) {
+            staffDetails[key] = data[key];
+          }
+        });
+        
+        return staffDetails;
       } catch (e) {
         console.error("Error fetching staff details:", e);
         throw e;
