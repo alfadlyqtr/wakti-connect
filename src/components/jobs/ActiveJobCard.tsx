@@ -23,37 +23,55 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
   const [duration, setDuration] = useState<string>("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
-  useEffect(() => {
-    // Don't start the timer if the card is already completed
+  // Reset timer and cleanup function
+  const setupTimer = () => {
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    // Only start a new timer if the job is not completed
     if (jobCard.end_time || isCompleted) {
       return;
     }
     
-    // Start the timer
+    // Update duration calculation function
     const updateDuration = () => {
-      const startTime = new Date(jobCard.start_time);
-      const now = new Date();
-      const duration = intervalToDuration({ start: startTime, end: now });
-      
-      // Format the duration
-      let formattedDuration = "";
-      
-      if (duration.hours) {
-        formattedDuration += `${duration.hours}h `;
+      try {
+        const startTime = new Date(jobCard.start_time);
+        const now = new Date();
+        const duration = intervalToDuration({ start: startTime, end: now });
+        
+        // Format the duration
+        let formattedDuration = "";
+        
+        if (duration.hours) {
+          formattedDuration += `${duration.hours}h `;
+        }
+        
+        if (duration.minutes) {
+          formattedDuration += `${duration.minutes}m `;
+        }
+        
+        formattedDuration += `${duration.seconds}s`;
+        
+        setDuration(formattedDuration);
+      } catch (error) {
+        console.error("Error updating duration:", error);
+        // Set a fallback duration to avoid UI issues
+        setDuration("--:--");
       }
-      
-      if (duration.minutes) {
-        formattedDuration += `${duration.minutes}m `;
-      }
-      
-      formattedDuration += `${duration.seconds}s`;
-      
-      setDuration(formattedDuration);
     };
 
     // Update immediately and then every second
     updateDuration();
     timerRef.current = setInterval(updateDuration, 1000);
+  };
+  
+  // Setup timer on initial render and when job card or completion state changes
+  useEffect(() => {
+    setupTimer();
     
     // Cleanup function
     return () => {
@@ -83,25 +101,11 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
       setIsCompleted(false);
       
       // Restart the timer
-      const updateDuration = () => {
-        const startTime = new Date(jobCard.start_time);
-        const now = new Date();
-        const duration = intervalToDuration({ start: startTime, end: now });
-        
-        let formattedDuration = "";
-        if (duration.hours) formattedDuration += `${duration.hours}h `;
-        if (duration.minutes) formattedDuration += `${duration.minutes}m `;
-        formattedDuration += `${duration.seconds}s`;
-        
-        setDuration(formattedDuration);
-      };
-      
-      updateDuration();
-      timerRef.current = setInterval(updateDuration, 1000);
+      setupTimer();
     }
   };
   
-  // If job already has an end_time when the component mounts, don't render
+  // If job already has an end_time or is locally marked as completed, don't render
   if (jobCard.end_time || isCompleted) {
     return null;
   }

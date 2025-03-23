@@ -1,8 +1,10 @@
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { JobCard } from "@/types/jobs.types";
 import ActiveJobCard from "./ActiveJobCard";
 import { useToast } from "@/hooks/use-toast";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface ActiveJobsSectionProps {
   activeJobs: JobCard[];
@@ -16,6 +18,12 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
   const { toast } = useToast();
   const [completingJobId, setCompletingJobId] = useState<string | null>(null);
   const [localCompletedIds, setLocalCompletedIds] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  // Reset error if active jobs change
+  useEffect(() => {
+    setError(null);
+  }, [activeJobs]);
 
   // No active jobs, don't render anything
   if (activeJobs.length === 0) {
@@ -35,6 +43,9 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
   const handleCompleteJob = async (jobCardId: string) => {
     console.log("Completing job in ActiveJobsSection:", jobCardId);
     
+    // Clear any previous errors
+    setError(null);
+    
     // Mark as completing and locally completed immediately for UI responsiveness
     setCompletingJobId(jobCardId);
     setLocalCompletedIds(prev => [...prev, jobCardId]);
@@ -43,10 +54,19 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
       // Attempt to complete the job
       await onCompleteJob(jobCardId);
       console.log("Job completed successfully in ActiveJobsSection:", jobCardId);
+      
+      toast({
+        title: "Job completed",
+        description: "Job has been marked as completed successfully",
+        variant: "success"
+      });
     } catch (error) {
       // If there's an error, remove from local completed list
       console.error("Error completing job in ActiveJobsSection:", error);
       setLocalCompletedIds(prev => prev.filter(id => id !== jobCardId));
+      
+      // Set the error message
+      setError(error instanceof Error ? error.message : "Failed to complete job. Please try again.");
       
       toast({
         title: "Error completing job",
@@ -61,6 +81,15 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
   return (
     <div>
       <h3 className="text-lg font-medium mb-3">Active Jobs</h3>
+      
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error completing job</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
       {visibleActiveJobs.map(jobCard => (
         <ActiveJobCard
           key={jobCard.id}

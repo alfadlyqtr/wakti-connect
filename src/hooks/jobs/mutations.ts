@@ -99,10 +99,10 @@ export const useCompleteJobCardMutation = () => {
     mutationFn: async (id: string) => {
       console.log("Completing job card with ID:", id);
       
-      // First verify the job card exists
+      // First verify the job card exists and is not already completed
       const { data: existingCard, error: checkError } = await supabase
         .from('job_cards')
-        .select('id')
+        .select('id, end_time')
         .eq('id', id)
         .maybeSingle();
         
@@ -127,7 +127,19 @@ export const useCompleteJobCardMutation = () => {
         throw notFoundError;
       }
       
-      // Now update the job card
+      // Check if the job card is already completed
+      if (existingCard.end_time) {
+        const alreadyCompletedError = new Error(`Job card with ID ${id} is already completed`);
+        console.error(alreadyCompletedError);
+        toast({
+          title: "Error completing job card",
+          description: "This job card is already completed",
+          variant: "destructive"
+        });
+        throw alreadyCompletedError;
+      }
+      
+      // Now update the job card with end_time
       const { data: updatedCard, error: updateError } = await supabase
         .from('job_cards')
         .update({ end_time: new Date().toISOString() })
@@ -154,12 +166,13 @@ export const useCompleteJobCardMutation = () => {
         throw updateError;
       }
       
+      // We're using maybeSingle() so we need to verify that data was actually returned
       if (!updatedCard) {
-        const updateFailedError = new Error("Job card update did not return data");
+        const updateFailedError = new Error("Job completion failed: No data returned from update operation");
         console.error(updateFailedError);
         toast({
           title: "Error completing job card",
-          description: "Job completion failed",
+          description: "Job completion failed: No data returned",
           variant: "destructive"
         });
         throw updateFailedError;
@@ -169,6 +182,7 @@ export const useCompleteJobCardMutation = () => {
       toast({
         title: "Job card completed",
         description: "Job card has been marked as completed successfully",
+        variant: "success"
       });
       
       return updatedCard as JobCard;
