@@ -165,7 +165,7 @@ export const StaffList: React.FC<StaffListProps> = ({
             >
               Confirm
             </AlertDialogAction>
-          </DialogFooter>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
