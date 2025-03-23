@@ -18,7 +18,7 @@ const StaffSignupForm = () => {
       <CardContent>
         <Alert variant="destructive" className="mb-4">
           <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Staff invitation system updated</AlertTitle>
+          <AlertTitle>Staff management system updated</AlertTitle>
           <AlertDescription>
             The staff invitation system has been replaced. Business owners now create 
             staff accounts directly from their dashboard.

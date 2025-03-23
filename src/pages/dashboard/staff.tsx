@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, Users, RefreshCcw } from "lucide-react";
 import { StaffList } from "@/components/staff/StaffList";
 import { StaffDialog } from "@/components/staff/StaffDialog";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function StaffPage() {
   const { toast } = useToast();
@@ -23,37 +23,36 @@ export default function StaffPage() {
     }
   });
   
-  // Fetch staff members using the edge function
+  // Fetch staff members
   const { 
-    data: staffResponse, 
+    data: staffMembers, 
     isLoading, 
     error,
     refetch
   } = useQuery({
-    queryKey: ['staffMembersEdge'],
+    queryKey: ['staffMembers'],
     queryFn: async () => {
       if (!sessionData?.session?.user?.id) {
         throw new Error("Not authenticated");
       }
       
-      const response = await supabase.functions.invoke("fetch-staff-members", {
-        body: { businessId: sessionData.session.user.id },
-        headers: {
-          Authorization: `Bearer ${sessionData.session.access_token}`
-        }
-      });
+      const { data, error } = await supabase
+        .from('business_staff')
+        .select('*')
+        .eq('business_id', sessionData.session.user.id)
+        .order('created_at', { ascending: false });
       
-      if (response.error) {
-        throw new Error(response.error.message || "Failed to fetch staff members");
+      if (error) {
+        throw new Error(error.message || "Failed to fetch staff members");
       }
       
-      return response.data;
+      return data || [];
     },
     enabled: !!sessionData?.session?.user?.id
   });
 
   // Staff count for checking limits
-  const staffCount = staffResponse?.staffMembers?.length || 0;
+  const staffCount = staffMembers?.length || 0;
   const canAddMoreStaff = staffCount < 6;
 
   const handleAddStaff = () => {
@@ -67,6 +66,12 @@ export default function StaffPage() {
   };
 
   const handleStaffCreated = () => {
+    toast({
+      title: "Success",
+      description: selectedStaffId 
+        ? "Staff member updated successfully"
+        : "Staff member added successfully",
+    });
     refetch();
     setStaffDialogOpen(false);
   };
@@ -113,7 +118,7 @@ export default function StaffPage() {
       )}
       
       <StaffList 
-        staffMembers={staffResponse?.staffMembers || []}
+        staffMembers={staffMembers || []}
         isLoading={isLoading}
         error={error as Error | null}
         onEdit={handleEditStaff}

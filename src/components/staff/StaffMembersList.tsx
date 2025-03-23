@@ -1,11 +1,11 @@
 
 import React, { useState } from "react";
-import { StaffMember } from "@/pages/dashboard/staff-management/types";
 import { useStaffListOperations } from "./list/useStaffListOperations";
 import StaffMemberCard from "./list/StaffMemberCard";
 import DeleteStaffDialog from "./list/DeleteStaffDialog";
 import ToggleStatusDialog from "./list/ToggleStatusDialog";
 import EmptyStaffState from "./list/EmptyStaffState";
+import { StaffMember } from "@/types/staff";
 
 interface StaffMembersListProps {
   onEditStaff: (staffId: string) => void;
@@ -56,7 +56,9 @@ const StaffMembersList: React.FC<StaffMembersListProps> = ({ onEditStaff }) => {
           <StaffMemberCard
             key={staff.id}
             member={staff}
-            onViewDetails={() => onEditStaff(staff.id)}
+            onEdit={() => onEditStaff(staff.id)}
+            onDelete={() => setStaffToDelete(staff)}
+            onToggleStatus={() => setStaffToToggleStatus(staff)}
           />
         ))}
       </div>

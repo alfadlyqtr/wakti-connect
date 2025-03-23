@@ -25,30 +25,29 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         throw new Error('Not authenticated');
       }
       
-      // Use a simpler query that doesn't rely on foreign key relationships
-      // that may not be set up correctly
-      const { data, error } = await supabase
+      // First get all the staff assignments
+      const { data: assignments, error: assignmentsError } = await supabase
         .from('staff_service_assignments')
         .select('staff_id')
         .eq('service_id', serviceId);
         
-      if (error) throw error;
+      if (assignmentsError) throw assignmentsError;
       
-      // If we have staff IDs, fetch their details
-      if (data && data.length > 0) {
-        const staffIds = data.map(item => item.staff_id);
-        
-        const { data: staffData, error: staffError } = await supabase
-          .from('business_staff')
-          .select('id, name, role')
-          .in('id', staffIds);
-          
-        if (staffError) throw staffError;
-        
-        return staffData || [];
+      if (!assignments || assignments.length === 0) {
+        return [];
       }
       
-      return [];
+      // Get the staff details for each assignment
+      const staffIds = assignments.map(item => item.staff_id);
+      
+      const { data: staffData, error: staffError } = await supabase
+        .from('business_staff')
+        .select('id, name, role')
+        .in('id', staffIds);
+        
+      if (staffError) throw staffError;
+      
+      return staffData || [];
     },
     enabled: !!serviceId
   });

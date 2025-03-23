@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 
 const WorkLogsTab = () => {
-  const { data: staffData, isLoading, error } = useStaffWorkLogs();
+  const { data: staffWithLogs, isLoading, error } = useStaffWorkLogs();
 
   if (isLoading) {
     return <div className="text-center p-8">Loading work logs...</div>;
@@ -25,7 +25,7 @@ const WorkLogsTab = () => {
     );
   }
 
-  if (!staffData || staffData.length === 0) {
+  if (!staffWithLogs || staffWithLogs.length === 0) {
     return (
       <Card className="text-center p-8">
         <p className="text-muted-foreground">No work logs found</p>
@@ -35,7 +35,7 @@ const WorkLogsTab = () => {
 
   return (
     <div className="space-y-6">
-      {staffData.map(staff => (
+      {staffWithLogs.map(staff => (
         <Card key={staff.id} className="p-4">
           <h3 className="font-medium text-lg mb-2">{staff.name}</h3>
           {staff.sessions && staff.sessions.length > 0 ? (

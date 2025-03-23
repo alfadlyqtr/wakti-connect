@@ -870,83 +870,6 @@ export type Database = {
           },
         ]
       }
-      staff_email_logs: {
-        Row: {
-          created_at: string | null
-          error: string | null
-          id: string
-          invitation_id: string | null
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          error?: string | null
-          id?: string
-          invitation_id?: string | null
-          status: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          error?: string | null
-          id?: string
-          invitation_id?: string | null
-          status?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "staff_email_logs_invitation_id_fkey"
-            columns: ["invitation_id"]
-            isOneToOne: false
-            referencedRelation: "staff_invitations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      staff_invitations: {
-        Row: {
-          business_id: string
-          created_at: string
-          email: string
-          expires_at: string
-          id: string
-          name: string
-          position: string | null
-          role: string
-          status: string
-          token: string
-          updated_at: string
-        }
-        Insert: {
-          business_id: string
-          created_at?: string
-          email: string
-          expires_at?: string
-          id?: string
-          name: string
-          position?: string | null
-          role?: string
-          status?: string
-          token: string
-          updated_at?: string
-        }
-        Update: {
-          business_id?: string
-          created_at?: string
-          email?: string
-          expires_at?: string
-          id?: string
-          name?: string
-          position?: string | null
-          role?: string
-          status?: string
-          token?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       staff_service_assignments: {
         Row: {
           created_at: string
@@ -1265,34 +1188,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      get_invitation_by_token: {
-        Args: {
-          token_param: string
-        }
-        Returns: {
-          id: string
-          name: string
-          email: string
-          business_id: string
-          role: string
-          staff_position: string
-          token: string
-          business_name: string
-          business_logo: string
-        }[]
-      }
-      get_invitation_details: {
-        Args: {
-          invitation_id: string
-        }
-        Returns: {
-          id: string
-          name: string
-          email: string
-          token: string
-          business_name: string
-        }[]
-      }
       get_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1352,12 +1247,6 @@ export type Database = {
       user_owns_staff: {
         Args: {
           staff_id: string
-        }
-        Returns: boolean
-      }
-      verify_invitation_token_secure: {
-        Args: {
-          token_param: string
         }
         Returns: boolean
       }

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Clock, FileText } from "lucide-react";
 
 const DashboardWorkLogs = () => {
-  const { data: staffData, isLoading, error } = useStaffWorkLogs();
+  const { data: staffWithLogs, isLoading, error } = useStaffWorkLogs();
 
   return (
     <div className="space-y-6">
@@ -25,7 +25,7 @@ const DashboardWorkLogs = () => {
           <p className="text-destructive">Error loading work logs: {error.message}</p>
           <Button className="mt-2" variant="secondary">Retry</Button>
         </Card>
-      ) : !staffData || staffData.length === 0 ? (
+      ) : !staffWithLogs || staffWithLogs.length === 0 ? (
         <Card className="p-6 text-center">
           <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-xl font-medium mb-2">No Work Logs Available</h3>
@@ -33,7 +33,7 @@ const DashboardWorkLogs = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {staffData.map(staff => (
+          {staffWithLogs.map(staff => (
             <Card key={staff.id} className="p-4">
               <h3 className="font-medium text-lg mb-2">{staff.name}</h3>
               <div className="border-t pt-3 mt-3">
