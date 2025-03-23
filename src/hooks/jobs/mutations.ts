@@ -23,7 +23,7 @@ export const useCreateJobCardMutation = () => {
             default_price
           )
         `)
-        .single();
+        .maybeSingle();
         
       if (error) {
         toast({
@@ -67,7 +67,7 @@ export const useUpdateJobCardMutation = () => {
             default_price
           )
         `)
-        .single();
+        .maybeSingle();
         
       if (error) {
         toast({
@@ -97,7 +97,38 @@ export const useCompleteJobCardMutation = () => {
   
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data: updatedCard, error } = await supabase
+      console.log("Completing job card with ID:", id);
+      
+      // First verify the job card exists
+      const { data: existingCard, error: checkError } = await supabase
+        .from('job_cards')
+        .select('id')
+        .eq('id', id)
+        .maybeSingle();
+        
+      if (checkError) {
+        console.error("Error checking job card:", checkError);
+        toast({
+          title: "Error completing job card",
+          description: checkError.message,
+          variant: "destructive"
+        });
+        throw checkError;
+      }
+      
+      if (!existingCard) {
+        const notFoundError = new Error(`Job card with ID ${id} not found`);
+        console.error(notFoundError);
+        toast({
+          title: "Error completing job card",
+          description: "Job card not found",
+          variant: "destructive"
+        });
+        throw notFoundError;
+      }
+      
+      // Now update the job card
+      const { data: updatedCard, error: updateError } = await supabase
         .from('job_cards')
         .update({ end_time: new Date().toISOString() })
         .eq('id', id)
@@ -111,17 +142,30 @@ export const useCompleteJobCardMutation = () => {
             default_price
           )
         `)
-        .single();
+        .maybeSingle();
         
-      if (error) {
+      if (updateError) {
+        console.error("Error updating job card:", updateError);
         toast({
           title: "Error completing job card",
-          description: error.message,
+          description: updateError.message,
           variant: "destructive"
         });
-        throw error;
+        throw updateError;
       }
       
+      if (!updatedCard) {
+        const updateFailedError = new Error("Job card update did not return data");
+        console.error(updateFailedError);
+        toast({
+          title: "Error completing job card",
+          description: "Job completion failed",
+          variant: "destructive"
+        });
+        throw updateFailedError;
+      }
+      
+      console.log("Job card completed successfully:", updatedCard.id);
       toast({
         title: "Job card completed",
         description: "Job card has been marked as completed successfully",

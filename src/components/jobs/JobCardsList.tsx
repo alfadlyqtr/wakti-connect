@@ -7,6 +7,7 @@ import { FilterPeriod } from "./jobCardUtils";
 import EmptyJobCards from "./EmptyJobCards";
 import ActiveJobsSection from "./ActiveJobsSection";
 import CompletedJobsSection from "./CompletedJobsSection";
+import ErrorDisplay from "./ErrorDisplay";
 
 interface JobCardsListProps {
   staffRelationId: string;
@@ -17,13 +18,18 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
   const { 
     jobCards, 
     isLoading, 
+    error: fetchError,
     refetch, 
     completeJobCard 
   } = useJobCards(staffRelationId);
   
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>("all");
+  const [completionError, setCompletionError] = useState<string | null>(null);
   
   const handleCompleteJob = async (jobCardId: string) => {
+    console.log("Completing job in JobCardsList:", jobCardId);
+    setCompletionError(null);
+    
     try {
       await completeJobCard.mutateAsync(jobCardId);
       
@@ -32,7 +38,15 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
         description: "Job has been marked as completed successfully",
       });
     } catch (error) {
-      console.error("Error completing job:", error);
+      console.error("Error completing job in JobCardsList:", error);
+      
+      // Set a more user-friendly error message
+      setCompletionError(
+        error instanceof Error 
+          ? error.message 
+          : "Failed to complete job. Please try again."
+      );
+      
       toast({
         title: "Error completing job card",
         description: error instanceof Error ? error.message : "Failed to complete job",
@@ -53,8 +67,31 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
     );
   }
   
+  if (fetchError) {
+    return <ErrorDisplay error={fetchError instanceof Error ? fetchError.message : "Failed to load job cards"} />;
+  }
+  
   if (!jobCards || jobCards.length === 0) {
     return <EmptyJobCards />;
+  }
+  
+  if (completionError) {
+    return (
+      <>
+        <ErrorDisplay error={completionError} />
+        <div className="mt-4">
+          <button 
+            className="text-primary hover:underline"
+            onClick={() => {
+              setCompletionError(null);
+              refetch();
+            }}
+          >
+            Retry loading job cards
+          </button>
+        </div>
+      </>
+    );
   }
   
   // Separate active and completed job cards

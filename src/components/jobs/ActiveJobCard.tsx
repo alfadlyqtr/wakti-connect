@@ -10,7 +10,7 @@ import { format, intervalToDuration } from "date-fns";
 
 interface ActiveJobCardProps {
   jobCard: JobCard;
-  onCompleteJob: (jobCardId: string) => void;
+  onCompleteJob: (jobCardId: string) => Promise<void>;
   isCompleting: boolean;
 }
 
@@ -23,12 +23,12 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
   const [duration, setDuration] = useState<string>("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
-  // If job already has an end_time when the component mounts, don't render
-  if (jobCard.end_time || isCompleted) {
-    return null;
-  }
-  
   useEffect(() => {
+    // Don't start the timer if the card is already completed
+    if (jobCard.end_time || isCompleted) {
+      return;
+    }
+    
     // Start the timer
     const updateDuration = () => {
       const startTime = new Date(jobCard.start_time);
@@ -62,21 +62,49 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
         timerRef.current = null;
       }
     };
-  }, [jobCard.start_time]);
+  }, [jobCard.start_time, jobCard.end_time, isCompleted]);
   
   const handleComplete = async () => {
-    // Immediately clean up the timer
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
+    try {
+      // Immediately clean up the timer to stop counting
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      
+      // Set local completion state immediately for UI
+      setIsCompleted(true);
+      
+      // Call the parent handler
+      await onCompleteJob(jobCard.id);
+    } catch (error) {
+      // If there's an error, reset the completion state
+      console.error("Error in handleComplete:", error);
+      setIsCompleted(false);
+      
+      // Restart the timer
+      const updateDuration = () => {
+        const startTime = new Date(jobCard.start_time);
+        const now = new Date();
+        const duration = intervalToDuration({ start: startTime, end: now });
+        
+        let formattedDuration = "";
+        if (duration.hours) formattedDuration += `${duration.hours}h `;
+        if (duration.minutes) formattedDuration += `${duration.minutes}m `;
+        formattedDuration += `${duration.seconds}s`;
+        
+        setDuration(formattedDuration);
+      };
+      
+      updateDuration();
+      timerRef.current = setInterval(updateDuration, 1000);
     }
-    
-    // Set local completion state
-    setIsCompleted(true);
-    
-    // Call the parent handler
-    onCompleteJob(jobCard.id);
   };
+  
+  // If job already has an end_time when the component mounts, don't render
+  if (jobCard.end_time || isCompleted) {
+    return null;
+  }
   
   return (
     <Card className="mb-4 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
