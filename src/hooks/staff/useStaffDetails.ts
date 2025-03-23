@@ -59,16 +59,27 @@ export const useStaffDetails = (staffRelationId: string | null) => {
         };
         
         // Check if business data exists and has the expected structure
-        // Using a separate variable to help TypeScript with null checks
         const businessData = data.business;
+        
+        // First ensure businessData exists and is an object before trying to access its properties
         if (businessData && typeof businessData === 'object') {
-          // Now we've checked businessData is not null and is an object
-          if (!('error' in businessData) && 'business_name' in businessData) {
-            // Valid business data, use it with non-null assertion since we've checked
-            staffDetails.business = {
-              business_name: businessData.business_name as string,
-              avatar_url: businessData.avatar_url
+          // Use a type guard to check for error property
+          if (!('error' in businessData)) {
+            // Create a typed reference with more explicit typing to help TypeScript
+            const typedBusinessData = businessData as { 
+              business_name?: string; 
+              avatar_url?: string | null 
             };
+            
+            // Now access properties with optional chaining
+            if (typedBusinessData.business_name) {
+              staffDetails.business = {
+                business_name: typedBusinessData.business_name,
+                avatar_url: typedBusinessData.avatar_url || null
+              };
+            }
+          } else {
+            console.error("Business data contains an error:", businessData);
           }
         } else {
           console.error("Business data is missing or malformed:", businessData);
