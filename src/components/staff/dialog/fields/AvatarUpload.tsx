@@ -1,84 +1,109 @@
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { StaffFormValues } from "../StaffFormSchema";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormControl, 
+  FormDescription
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Upload, X } from "lucide-react";
+import { Camera, Upload, X } from "lucide-react";
 
 interface AvatarUploadProps {
   form: UseFormReturn<StaffFormValues>;
 }
 
 const AvatarUpload: React.FC<AvatarUploadProps> = ({ form }) => {
-  const [preview, setPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
     
-    // Update form value
-    form.setValue('avatar', file);
+    // Set the file in the form
+    form.setValue("avatar", file);
     
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    // Create a preview URL
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
   };
   
-  const clearAvatar = () => {
-    form.setValue('avatar', undefined);
-    setPreview(null);
+  const handleRemoveImage = () => {
+    form.setValue("avatar", undefined);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
-  
-  const initials = form.watch('fullName')
-    ? form.watch('fullName')
-        .split(' ')
-        .map(name => name[0])
-        .join('')
-        .toUpperCase()
-        .substring(0, 2)
-    : 'ST';
   
   return (
-    <div className="flex flex-col items-center space-y-2">
-      <div className="relative">
-        <Avatar className="h-24 w-24 border-2 border-muted">
-          <AvatarImage src={preview || undefined} />
-          <AvatarFallback className="text-lg bg-primary/10 text-primary">{initials}</AvatarFallback>
-        </Avatar>
-        
-        {preview && (
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-            onClick={clearAvatar}
-          >
-            <X className="h-3 w-3" />
-          </Button>
-        )}
-      </div>
-      
-      <div className="flex justify-center">
-        <label htmlFor="avatar-upload" className="cursor-pointer">
-          <div className="flex items-center text-sm text-primary gap-1 hover:underline">
-            <Upload className="h-3 w-3" />
-            {preview ? 'Change photo' : 'Upload photo'}
-          </div>
+    <FormField
+      control={form.control}
+      name="avatar"
+      render={({ field }) => (
+        <FormItem className="flex flex-col items-center justify-center">
+          <FormLabel className="cursor-pointer">
+            <div className="flex items-center justify-center">
+              {previewUrl ? (
+                <div className="relative">
+                  <img 
+                    src={previewUrl} 
+                    alt="Staff avatar preview" 
+                    className="w-24 h-24 rounded-full object-cover border-2 border-primary/20"
+                  />
+                  <Button 
+                    type="button" 
+                    variant="secondary" 
+                    size="icon" 
+                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleRemoveImage();
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Camera className="h-8 w-8 text-muted-foreground" />
+                </div>
+              )}
+            </div>
+          </FormLabel>
           <input
-            id="avatar-upload"
+            ref={fileInputRef}
             type="file"
             accept="image/*"
             className="hidden"
             onChange={handleFileChange}
           />
-        </label>
-      </div>
-    </div>
+          <div className="mt-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              className="text-xs"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="h-3 w-3 mr-1" />
+              Upload Photo
+            </Button>
+          </div>
+          <FormDescription className="text-center text-xs mt-1">
+            Click to upload a staff photo (optional)
+          </FormDescription>
+          <FormControl>
+            <input type="hidden" {...field} value={field.value?.name || ''} />
+          </FormControl>
+        </FormItem>
+      )}
+    />
   );
 };
 

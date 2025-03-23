@@ -1,6 +1,7 @@
 
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
+import { StaffFormValues } from "../StaffFormSchema";
 import { 
   FormField, 
   FormItem, 
@@ -9,9 +10,6 @@ import {
   FormMessage 
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { User } from "lucide-react";
-import { StaffFormValues } from "../StaffFormSchema";
-import { Separator } from "@/components/ui/separator";
 import AvatarUpload from "./AvatarUpload";
 import StaffNumberInput from "./StaffNumberInput";
 
@@ -21,55 +19,35 @@ interface StaffInfoFieldsProps {
 
 const StaffInfoFields: React.FC<StaffInfoFieldsProps> = ({ form }) => {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center space-x-2">
-        <User className="h-5 w-5 text-muted-foreground" />
-        <h4 className="text-lg font-medium">Staff Information</h4>
-      </div>
-      
-      <div className="flex flex-col items-center mb-6">
-        <AvatarUpload form={form} />
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-4">
+      <h3 className="font-medium text-base">Personal Information</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="md:col-span-2">
+          <AvatarUpload form={form} />
+        </div>
+        
         <FormField
           control={form.control}
           name="fullName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full Name <span className="text-destructive">*</span></FormLabel>
+              <FormLabel>Full Name</FormLabel>
               <FormControl>
-                <Input placeholder="Enter staff name" {...field} />
+                <Input {...field} placeholder="Enter full name" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
-        <FormField
-          control={form.control}
-          name="position"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Position</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Manager, Receptionist" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <StaffNumberInput form={form} />
         
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email <span className="text-destructive">*</span></FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="staff@example.com" {...field} />
+                <Input {...field} type="email" placeholder="staff@example.com" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -81,9 +59,9 @@ const StaffInfoFields: React.FC<StaffInfoFieldsProps> = ({ form }) => {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password <span className="text-destructive">*</span></FormLabel>
+              <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Minimum 8 characters" {...field} />
+                <Input {...field} type="password" placeholder="••••••••" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -95,17 +73,31 @@ const StaffInfoFields: React.FC<StaffInfoFieldsProps> = ({ form }) => {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm Password <span className="text-destructive">*</span></FormLabel>
+              <FormLabel>Confirm Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Confirm password" {...field} />
+                <Input {...field} type="password" placeholder="••••••••" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="position"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Position <span className="text-muted-foreground">(Optional)</span></FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="E.g. Sales Manager" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <StaffNumberInput form={form} />
       </div>
-      
-      <Separator />
     </div>
   );
 };

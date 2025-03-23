@@ -3,22 +3,14 @@ import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { StaffFormValues } from "../StaffFormSchema";
 import { 
-  List, 
-  MessageSquare, 
-  CalendarCheck, 
-  Clock, 
-  CreditCard, 
-  BarChart4, 
-  DollarSign,
-  ShieldCheck,
-  UserCog,
-  Users,
-  CheckSquare,
-  RefreshCw,
-  Edit
-} from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import PermissionToggle from "./PermissionToggle";
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormControl, 
+  FormDescription
+} from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface PermissionGroupsProps {
   form: UseFormReturn<StaffFormValues>;
@@ -26,153 +18,308 @@ interface PermissionGroupsProps {
 
 const PermissionGroups: React.FC<PermissionGroupsProps> = ({ form }) => {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center space-x-2">
-        <ShieldCheck className="h-5 w-5 text-muted-foreground" />
-        <h4 className="text-lg font-medium">Staff Permissions</h4>
-      </div>
+    <div className="space-y-4">
+      <h3 className="font-medium text-base">Permissions</h3>
       
-      <div className="bg-muted/30 p-4 rounded-lg border border-muted">
-        <p className="text-sm text-muted-foreground mb-4">
-          Configure what this staff member can access and do within your business account. 
-          Enabled permissions will appear with a green highlight.
-        </p>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="grid gap-4">
+            <h4 className="text-sm font-medium">Tasks</h4>
+            <div className="grid gap-3">
+              <FormField
+                control={form.control}
+                name="permissions.can_view_tasks"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between space-y-0">
+                    <div className="space-y-0.5">
+                      <FormLabel>View Tasks</FormLabel>
+                      <FormDescription className="text-xs">
+                        Can view assigned tasks
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="permissions.can_manage_tasks"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between space-y-0">
+                    <div className="space-y-0.5">
+                      <FormLabel>Manage Tasks</FormLabel>
+                      <FormDescription className="text-xs">
+                        Can create and assign tasks
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="permissions.can_update_task_status"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between space-y-0">
+                    <div className="space-y-0.5">
+                      <FormLabel>Update Task Status</FormLabel>
+                      <FormDescription className="text-xs">
+                        Can update status of tasks
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       
-      {/* Tasks Permissions */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <List className="h-4 w-4 text-primary" />
-          <h5 className="text-sm font-medium">Tasks & Work Management</h5>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-2">
-          <PermissionToggle
-            form={form}
-            name="permissions.can_view_tasks"
-            label="View Tasks"
-            description="Can view assigned tasks"
-            icon={List}
-          />
-          
-          <PermissionToggle
-            form={form}
-            name="permissions.can_manage_tasks"
-            label="Manage Tasks"
-            description="Can create, edit, and delete tasks"
-            icon={List}
-          />
-          
-          <PermissionToggle
-            form={form}
-            name="permissions.can_update_task_status"
-            label="Update Task Status"
-            description="Can change task status"
-            icon={CheckSquare}
-          />
-          
-          <PermissionToggle
-            form={form}
-            name="permissions.can_track_hours"
-            label="Track Hours"
-            description="Can track working hours"
-            icon={Clock}
-          />
-          
-          <PermissionToggle
-            form={form}
-            name="permissions.can_log_earnings"
-            label="Log Earnings"
-            description="Can log daily earnings"
-            icon={DollarSign}
-          />
-        </div>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="grid gap-4">
+            <h4 className="text-sm font-medium">Bookings & Services</h4>
+            <div className="grid gap-3">
+              <FormField
+                control={form.control}
+                name="permissions.can_manage_bookings"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between space-y-0">
+                    <div className="space-y-0.5">
+                      <FormLabel>Manage Bookings</FormLabel>
+                      <FormDescription className="text-xs">
+                        Can create and manage bookings
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="permissions.can_update_booking_status"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between space-y-0">
+                    <div className="space-y-0.5">
+                      <FormLabel>Update Booking Status</FormLabel>
+                      <FormDescription className="text-xs">
+                        Can update status of bookings
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="permissions.can_create_job_cards"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between space-y-0">
+                    <div className="space-y-0.5">
+                      <FormLabel>Create Job Cards</FormLabel>
+                      <FormDescription className="text-xs">
+                        Can create and manage job cards
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="permissions.can_view_customer_bookings"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between space-y-0">
+                    <div className="space-y-0.5">
+                      <FormLabel>View Customer Bookings</FormLabel>
+                      <FormDescription className="text-xs">
+                        Can see all customer bookings
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       
-      <Separator />
+      <Card>
+        <CardContent className="pt-6">
+          <div className="grid gap-4">
+            <h4 className="text-sm font-medium">Communication & Profile</h4>
+            <div className="grid gap-3">
+              <FormField
+                control={form.control}
+                name="permissions.can_message_staff"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between space-y-0">
+                    <div className="space-y-0.5">
+                      <FormLabel>Message Staff</FormLabel>
+                      <FormDescription className="text-xs">
+                        Can message other staff members
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="permissions.can_edit_profile"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between space-y-0">
+                    <div className="space-y-0.5">
+                      <FormLabel>Edit Profile</FormLabel>
+                      <FormDescription className="text-xs">
+                        Can edit their own profile info
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="permissions.can_update_profile"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between space-y-0">
+                    <div className="space-y-0.5">
+                      <FormLabel>Update Profile</FormLabel>
+                      <FormDescription className="text-xs">
+                        Can update their profile photo and details
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       
-      {/* Communication & Bookings */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="h-4 w-4 text-primary" />
-          <h5 className="text-sm font-medium">Communication & Bookings</h5>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-2">
-          <PermissionToggle
-            form={form}
-            name="permissions.can_message_staff"
-            label="Message Staff"
-            description="Can message other staff members"
-            icon={MessageSquare}
-          />
-          
-          <PermissionToggle
-            form={form}
-            name="permissions.can_manage_bookings"
-            label="Manage Bookings"
-            description="Can manage customer bookings"
-            icon={CalendarCheck}
-          />
-          
-          <PermissionToggle
-            form={form}
-            name="permissions.can_update_booking_status"
-            label="Update Booking Status"
-            description="Can change booking status"
-            icon={RefreshCw}
-          />
-          
-          <PermissionToggle
-            form={form}
-            name="permissions.can_view_customer_bookings"
-            label="View Customer Bookings"
-            description="Can view booking details"
-            icon={Users}
-          />
-        </div>
-      </div>
-      
-      <Separator />
-      
-      {/* Business Data & Analytics */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <BarChart4 className="h-4 w-4 text-primary" />
-          <h5 className="text-sm font-medium">Business Data & Analytics</h5>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-2">
-          <PermissionToggle
-            form={form}
-            name="permissions.can_create_job_cards"
-            label="Create Job Cards"
-            description="Can create and close job cards"
-            icon={CreditCard}
-          />
-          
-          <PermissionToggle
-            form={form}
-            name="permissions.can_view_analytics"
-            label="View Analytics"
-            description="Can view business analytics"
-            icon={BarChart4}
-          />
-          
-          <PermissionToggle
-            form={form}
-            name="permissions.can_edit_profile"
-            label="Edit Profile"
-            description="Can edit their own profile"
-            icon={UserCog}
-          />
-          
-          <PermissionToggle
-            form={form}
-            name="permissions.can_update_profile"
-            label="Update Profile"
-            description="Can update their profile details"
-            icon={Edit}
-          />
-        </div>
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="grid gap-4">
+            <h4 className="text-sm font-medium">Reports & Hours</h4>
+            <div className="grid gap-3">
+              <FormField
+                control={form.control}
+                name="permissions.can_track_hours"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between space-y-0">
+                    <div className="space-y-0.5">
+                      <FormLabel>Track Hours</FormLabel>
+                      <FormDescription className="text-xs">
+                        Can log working hours
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="permissions.can_log_earnings"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between space-y-0">
+                    <div className="space-y-0.5">
+                      <FormLabel>Log Earnings</FormLabel>
+                      <FormDescription className="text-xs">
+                        Can log daily earnings
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="permissions.can_view_analytics"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between space-y-0">
+                    <div className="space-y-0.5">
+                      <FormLabel>View Analytics</FormLabel>
+                      <FormDescription className="text-xs">
+                        Can view business analytics
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
