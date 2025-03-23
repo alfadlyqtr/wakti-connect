@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { JobCard } from "@/types/jobs.types";
 import ActiveJobCard from "./ActiveJobCard";
 import { useToast } from "@/hooks/use-toast";
@@ -20,17 +20,18 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [localJobs, setLocalJobs] = useState<JobCard[]>([]);
 
-  // Reset error if active jobs change
+  // Filter function to ensure only truly active jobs are shown
+  const filterActiveJobs = useCallback((jobs: JobCard[]) => {
+    return jobs.filter(job => !job.end_time);
+  }, []);
+
+  // Reset error and update local jobs when active jobs change
   useEffect(() => {
     setError(null);
-    
-    // Filter out jobs that already have an end_time to prevent any potential duplicates
-    // This ensures we only show truly active jobs
-    const filteredJobs = activeJobs.filter(job => !job.end_time);
-    setLocalJobs(filteredJobs);
-  }, [activeJobs]);
+    setLocalJobs(filterActiveJobs(activeJobs));
+  }, [activeJobs, filterActiveJobs]);
 
-  // If all active jobs are now completed, don't render the section
+  // Don't render if no active jobs
   if (localJobs.length === 0) {
     return null;
   }
@@ -45,12 +46,12 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
     setCompletingJobId(jobCardId);
     
     try {
+      // Immediately remove job from local state to prevent UI flicker
+      setLocalJobs(prevJobs => prevJobs.filter(job => job.id !== jobCardId));
+      
       // Attempt to complete the job
       await onCompleteJob(jobCardId);
       console.log("[ActiveJobsSection] Job completed successfully:", jobCardId);
-      
-      // Immediately remove this job from the local state to prevent flicker or reappearance
-      setLocalJobs(prevJobs => prevJobs.filter(job => job.id !== jobCardId));
       
       toast({
         title: "Job completed",
@@ -62,6 +63,12 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
       
       // Set the error message
       setError(error instanceof Error ? error.message : "Failed to complete job. Please try again.");
+      
+      // Re-add the job to local state if completion failed
+      const failedJob = activeJobs.find(job => job.id === jobCardId);
+      if (failedJob && !failedJob.end_time) {
+        setLocalJobs(prevJobs => [...prevJobs, failedJob]);
+      }
       
       toast({
         title: "Error completing job",

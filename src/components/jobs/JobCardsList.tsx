@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useJobCards } from "@/hooks/jobs";
 import { Loader2, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +10,7 @@ import CompletedJobsSection from "./CompletedJobsSection";
 import ErrorDisplay from "./ErrorDisplay";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { JobCard } from "@/types/jobs.types";
 
 interface JobCardsListProps {
   staffRelationId: string;
@@ -28,17 +29,41 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
   const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>("all");
   const [completionError, setCompletionError] = useState<string | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [activeJobCards, setActiveJobCards] = useState<JobCard[]>([]);
+  const [completedJobCards, setCompletedJobCards] = useState<JobCard[]>([]);
   
-  // Reset error state when staff relation changes or refetch happens
+  // Function to separate job cards into active and completed
+  const separateJobCards = useCallback((cards: JobCard[] | undefined) => {
+    if (!cards || cards.length === 0) {
+      setActiveJobCards([]);
+      setCompletedJobCards([]);
+      return;
+    }
+    
+    // Strict separation - a job card is either active or completed based on end_time
+    const active = cards.filter(card => card.end_time === null);
+    const completed = cards.filter(card => card.end_time !== null);
+    
+    console.log("[JobCardsList] Separated job cards - Active:", active.length, "Completed:", completed.length);
+    
+    setActiveJobCards(active);
+    setCompletedJobCards(completed);
+  }, []);
+  
+  // Reset error state and separate job cards when data changes
   useEffect(() => {
     setCompletionError(null);
-  }, [staffRelationId, jobCards]);
+    separateJobCards(jobCards);
+  }, [jobCards, separateJobCards, staffRelationId]);
   
   const handleCompleteJob = async (jobCardId: string) => {
     console.log("[JobCardsList] Completing job:", jobCardId);
     setCompletionError(null);
     
     try {
+      // Optimistically update UI - remove from active and don't wait for mutation
+      setActiveJobCards(prev => prev.filter(job => job.id !== jobCardId));
+      
       // The mutation will handle toast notifications internally
       await completeJobCard.mutateAsync(jobCardId);
       console.log("[JobCardsList] Job completed successfully:", jobCardId);
@@ -112,10 +137,6 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
     );
   }
   
-  if (!jobCards || jobCards.length === 0) {
-    return <EmptyJobCards />;
-  }
-  
   if (completionError) {
     return (
       <div className="space-y-4">
@@ -137,13 +158,11 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
     );
   }
   
-  // Strictly separate active and completed job cards
-  // Use end_time as the discriminator for completed vs active
-  // This explicit filtering should prevent any overlap
-  const activeJobCards = jobCards.filter(card => card.end_time === null);
-  const completedJobCards = jobCards.filter(card => card.end_time !== null);
-  
-  console.log("[JobCardsList] Active jobs:", activeJobCards.length, "Completed jobs:", completedJobCards.length);
+  // Show empty state if there are no job cards at all
+  if ((!activeJobCards || activeJobCards.length === 0) && 
+      (!completedJobCards || completedJobCards.length === 0)) {
+    return <EmptyJobCards />;
+  }
   
   return (
     <div className="space-y-6">
@@ -162,10 +181,18 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
         />
       )}
       
-      {/* Show empty state if there are no job cards */}
-      {activeJobCards.length === 0 && completedJobCards.length === 0 && (
-        <EmptyJobCards />
-      )}
+      {/* Manual refresh button for easier recovery */}
+      <div className="flex justify-center mt-8">
+        <Button
+          variant="outline"
+          onClick={handleRetry}
+          disabled={isRetrying}
+          className="flex items-center gap-2"
+        >
+          {isRetrying ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          {isRetrying ? "Refreshing..." : "Reload Job Cards"}
+        </Button>
+      </div>
     </div>
   );
 };

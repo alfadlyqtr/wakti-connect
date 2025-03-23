@@ -58,7 +58,7 @@ const CompletedJobsTable: React.FC<CompletedJobsTableProps> = ({
             format(new Date(completedJobs[index-1].start_time), "yyyy-MM-dd") !== dateStr;
           
           return (
-            <React.Fragment key={`${jobCard.id}-${index}`}>
+            <React.Fragment key={jobCard.id}>
               {isFirstInGroup && (
                 <TableRow className="bg-muted/30">
                   <TableCell colSpan={5}>
