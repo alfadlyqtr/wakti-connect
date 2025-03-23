@@ -1,104 +1,94 @@
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.32.0";
+// Follow this setup guide to integrate the Deno runtime into your application:
+// https://deno.land/manual/examples/deploy_deno_apps
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
 
-// CORS headers for browser requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
+interface FetchStaffMembersRequest {
+  businessId: string;
+}
+
 serve(async (req) => {
+  console.log("Processing fetch-staff-members request");
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Get auth token from request headers
+    const url = Deno.env.get('SUPABASE_URL') as string;
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') as string;
+    const supabase = createClient(url, serviceRoleKey);
+    
+    // Get auth header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('Missing Authorization header');
+      throw new Error("Missing Authorization header");
     }
     
+    // Verify user is authenticated
     const token = authHeader.replace('Bearer ', '');
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Missing Supabase environment variables');
-    }
-    
-    // Create Supabase client with service role
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
-    // Get the user making the request to verify they're authenticated
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !user) {
       console.error("Auth error:", userError);
-      throw new Error('Unauthorized: Invalid token');
+      throw new Error("Unauthorized");
     }
     
-    // Parse request body
-    const { businessId } = await req.json();
+    console.log("Authenticated user:", user.id);
+    
+    // Get business ID from request
+    const { businessId } = await req.json() as FetchStaffMembersRequest;
     
     if (!businessId) {
-      throw new Error('Missing business ID');
+      throw new Error("Business ID is required");
     }
     
-    // Verify that the requesting user is the business owner
-    if (businessId !== user.id) {
-      throw new Error('Not authorized: Only business owners can access their staff');
-    }
+    console.log("Fetching staff for business:", businessId);
     
-    // Fetch staff members
+    // Fetch all staff members for this business
     const { data: staffMembers, error: staffError } = await supabase
       .from('business_staff')
-      .select(`
-        *,
-        profiles:staff_id (
-          avatar_url,
-          full_name
-        )
-      `)
+      .select('*')
       .eq('business_id', businessId)
-      .neq('status', 'deleted')
       .order('created_at', { ascending: false });
       
     if (staffError) {
-      throw new Error(`Failed to fetch staff members: ${staffError.message}`);
+      console.error("DB error:", staffError);
+      throw new Error(staffError.message);
     }
     
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        staffMembers 
-      }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json' 
-        },
-        status: 200 
-      }
-    );
-  } catch (error) {
-    console.error("Error in fetch-staff-members function:", error.message);
+    // Use service role to fetch additional profile data
+    console.log(`Found ${staffMembers?.length || 0} staff members`);
     
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message || "An unknown error occurred"
-      }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json' 
-        },
-        status: 400 
-      }
-    );
+    return new Response(JSON.stringify({
+      success: true,
+      staffMembers: staffMembers || [],
+    }), {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+  } catch (error) {
+    console.error("Error in fetch-staff-members:", error.message);
+    
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message,
+    }), {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+      },
+      status: 400,
+    });
   }
 });

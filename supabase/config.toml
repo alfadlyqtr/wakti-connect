@@ -1,1 +1,11 @@
+
 project_id = "sqdjqehcxpzsudhzjwbu"
+
+[functions.fetch-staff-members]
+verify_jwt = false
+
+[functions.create-staff]
+verify_jwt = false
+
+[functions.ai-assistant]
+verify_jwt = false

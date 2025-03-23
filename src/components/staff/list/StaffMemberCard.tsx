@@ -1,70 +1,99 @@
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "lucide-react";
+import { MoreHorizontal, UserCog, UserX } from "lucide-react";
+import { StaffMember } from "@/types/staff";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-interface StaffMember {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  position: string;
-  created_at: string;
-  staff_id: string;
-}
-
-interface StaffMemberCardProps {
+export interface StaffMemberCardProps {
   member: StaffMember;
-  onViewDetails: (memberId: string) => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onToggleStatus: () => void;
 }
 
-const StaffMemberCard: React.FC<StaffMemberCardProps> = ({ member, onViewDetails }) => {
+const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
+  member,
+  onEdit,
+  onDelete,
+  onToggleStatus,
+}) => {
+  const isActive = member.status === "active";
+  const roleLabel = member.role === "co-admin" ? "Co-Admin" : "Staff";
+  
   return (
-    <Card key={member.id} className="overflow-hidden">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <Avatar className="h-12 w-12">
-            <AvatarFallback>
-              {member.name ? member.name.substring(0, 2).toUpperCase() : "ST"}
-            </AvatarFallback>
-          </Avatar>
-          <Badge variant={member.role === "admin" ? "secondary" : "outline"}>
-            {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-          </Badge>
-        </div>
-        <CardTitle className="mt-2">{member.name || "Unnamed Staff"}</CardTitle>
-        <CardDescription>{member.position || "Staff Member"}</CardDescription>
-        {member.email && (
-          <CardDescription className="text-xs">{member.email}</CardDescription>
-        )}
-        {member.staff_id !== member.id && (
-          <div className="mt-1">
-            <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-              Active Account
+    <Card className="overflow-hidden">
+      <CardContent className="p-0">
+        <div className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src="" alt={member.name} />
+                <AvatarFallback>
+                  {member.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="font-medium">{member.name}</h3>
+                <p className="text-sm text-muted-foreground">{member.position || "Staff Member"}</p>
+              </div>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onEdit}>
+                  <UserCog className="h-4 w-4 mr-2" />
+                  Edit Staff
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onToggleStatus}>
+                  <UserX className="h-4 w-4 mr-2" />
+                  {isActive ? "Deactivate" : "Activate"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={onDelete}
+                  className="text-destructive focus:text-destructive"
+                >
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          
+          <div className="mt-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Badge variant={member.role === "co-admin" ? "default" : "outline"}>
+                {roleLabel}
+              </Badge>
+              {member.is_service_provider && (
+                <Badge variant="secondary">Service Provider</Badge>
+              )}
+            </div>
+            <Badge variant={isActive ? "success" : "secondary"}>
+              {isActive ? "Active" : "Inactive"}
             </Badge>
           </div>
-        )}
-      </CardHeader>
-      <CardContent className="pb-2">
-        <div className="space-y-1 text-sm">
-          <div className="flex items-center">
-            <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-            <span>Joined {new Date(member.created_at).toLocaleDateString()}</span>
-          </div>
+          
+          {member.staff_number && (
+            <p className="text-xs text-muted-foreground mt-2">
+              ID: {member.staff_number}
+            </p>
+          )}
         </div>
       </CardContent>
-      <CardFooter className="pt-2 flex gap-2">
-        <Button 
-          variant="outline" 
-          className="flex-1"
-          onClick={() => onViewDetails(member.id)}
-        >
-          View Details
-        </Button>
-      </CardFooter>
     </Card>
   );
 };

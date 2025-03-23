@@ -18,7 +18,7 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
   onSelectStaff, 
   onOpenCreateDialog 
 }) => {
-  // Use a different approach that doesn't trigger RLS recursion
+  // Directly query the business_staff table with proper auth
   const { data: staffMembers, isLoading: staffLoading, error: staffError, refetch } = useQuery({
     queryKey: ['businessStaff'],
     queryFn: async () => {
@@ -29,28 +29,19 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
           throw new Error('Not authenticated');
         }
         
-        console.log("Fetching staff with auth user:", session.session.user.id);
-        
-        // Call the edge function to bypass RLS issues
-        const { data, error } = await supabase.functions.invoke("fetch-staff-members", {
-          body: { businessId: session.session.user.id },
-          headers: {
-            Authorization: `Bearer ${session.session.access_token}`
-          }
-        });
+        // Direct database query instead of edge function
+        const { data, error } = await supabase
+          .from('business_staff')
+          .select('*')
+          .eq('business_id', session.session.user.id)
+          .order('created_at', { ascending: false });
         
         if (error) {
-          console.error("Error calling fetch-staff-members:", error);
+          console.error("Error fetching staff members:", error);
           throw new Error(error.message || "Failed to fetch staff members");
         }
         
-        if (!data?.success) {
-          throw new Error(data?.error || "Failed to fetch staff members");
-        }
-        
-        console.log("Staff members retrieved:", data.staffMembers?.length);
-        
-        return data.staffMembers || [];
+        return data || [];
       } catch (error: any) {
         console.error("Error in staff query:", error);
         throw error;
