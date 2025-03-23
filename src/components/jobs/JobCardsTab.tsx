@@ -17,18 +17,24 @@ const JobCardsTab = () => {
   const [staffRelationId, setStaffRelationId] = useState<string | null>(null);
   const [activeWorkSession, setActiveWorkSession] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // Fetch staff relation ID for the current user
   useEffect(() => {
     const getStaffRelation = async () => {
       try {
         setIsLoading(true);
+        setError(null);
+        
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
           setIsLoading(false);
+          setError("No authenticated user found");
           return;
         }
+        
+        console.log("Fetching staff relation for user:", user.id);
         
         const { data, error } = await supabase
           .from('business_staff')
@@ -39,27 +45,24 @@ const JobCardsTab = () => {
           
         if (error) {
           console.error("Error fetching staff relation:", error);
-          toast({
-            title: "Error",
-            description: "Could not fetch your staff relationship",
-            variant: "destructive"
-          });
+          if (error.code === 'PGRST116') {
+            setError("No staff relationship found. You might not be registered as staff.");
+          } else {
+            setError(`Could not fetch your staff relationship: ${error.message}`);
+          }
           setIsLoading(false);
           return;
         }
         
+        console.log("Found staff relation:", data.id);
         setStaffRelationId(data.id);
         
         // Also check for active work session
         await fetchActiveWorkSession(data.id);
         
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching staff relation:", error);
-        toast({
-          title: "Error",
-          description: "Could not fetch your staff relationship",
-          variant: "destructive"
-        });
+        setError(`Could not fetch your staff relationship: ${error.message}`);
       } finally {
         setIsLoading(false);
       }
@@ -70,6 +73,8 @@ const JobCardsTab = () => {
   
   const fetchActiveWorkSession = async (relationId: string) => {
     try {
+      console.log("Fetching active work session for staff relation:", relationId);
+      
       const { data: activeSessions, error: sessionsError } = await supabase
         .from('staff_work_logs')
         .select('*')
@@ -80,12 +85,15 @@ const JobCardsTab = () => {
         
       if (sessionsError) {
         console.error("Error fetching active work session:", sessionsError);
+        setError(`Could not fetch active work session: ${sessionsError.message}`);
         return;
       }
       
+      console.log("Active work session:", activeSessions);
       setActiveWorkSession(activeSessions);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching active work session:", error);
+      setError(`Could not fetch active work session: ${error.message}`);
     }
   };
   
@@ -101,6 +109,8 @@ const JobCardsTab = () => {
     }
     
     try {
+      console.log("Starting work day for staff relation:", staffRelationId);
+      
       const { data, error } = await supabase
         .from('staff_work_logs')
         .insert({
@@ -113,20 +123,26 @@ const JobCardsTab = () => {
         
       if (error) {
         console.error("Error starting work day:", error);
-        throw error;
+        toast({
+          title: "Error",
+          description: `Could not start your work day: ${error.message}`,
+          variant: "destructive"
+        });
+        return;
       }
       
+      console.log("Work day started:", data);
       setActiveWorkSession(data);
       
       toast({
         title: "Work day started",
         description: "Your work day has been started successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error starting work day:", error);
       toast({
         title: "Error",
-        description: "Could not start your work day",
+        description: `Could not start your work day: ${error.message}`,
         variant: "destructive"
       });
     }
@@ -136,6 +152,8 @@ const JobCardsTab = () => {
     if (!activeWorkSession) return;
     
     try {
+      console.log("Ending work day for session:", activeWorkSession.id);
+      
       const { data, error } = await supabase
         .from('staff_work_logs')
         .update({
@@ -148,20 +166,26 @@ const JobCardsTab = () => {
         
       if (error) {
         console.error("Error ending work day:", error);
-        throw error;
+        toast({
+          title: "Error",
+          description: `Could not end your work day: ${error.message}`,
+          variant: "destructive"
+        });
+        return;
       }
       
+      console.log("Work day ended:", data);
       setActiveWorkSession(null);
       
       toast({
         title: "Work day ended",
         description: "Your work day has been ended successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error ending work day:", error);
       toast({
         title: "Error",
-        description: "Could not end your work day",
+        description: `Could not end your work day: ${error.message}`,
         variant: "destructive"
       });
     }
@@ -173,6 +197,19 @@ const JobCardsTab = () => {
         <Loader2 className="h-8 w-8 animate-spin text-wakti-blue" />
         <span className="ml-2">Loading job cards...</span>
       </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center space-y-2">
+            <h3 className="text-lg font-medium text-destructive">Error</h3>
+            <p className="text-muted-foreground">{error}</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
   

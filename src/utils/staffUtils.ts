@@ -26,8 +26,9 @@ export const isUserStaff = async (): Promise<boolean> => {
     // Check if user has an entry in the business_staff table
     const { data, error } = await supabase
       .from('business_staff')
-      .select('id')
+      .select('id, permissions')
       .eq('staff_id', user.id)
+      .eq('status', 'active')
       .maybeSingle();
       
     if (error) {
@@ -40,8 +41,14 @@ export const isUserStaff = async (): Promise<boolean> => {
     // Cache the result for future quick access
     if (isStaff) {
       localStorage.setItem('isStaff', 'true');
+      
+      // Also cache staff permissions
+      if (data.permissions) {
+        localStorage.setItem('staffPermissions', JSON.stringify(data.permissions));
+      }
     } else {
       localStorage.removeItem('isStaff');
+      localStorage.removeItem('staffPermissions');
     }
     
     return isStaff;
@@ -71,6 +78,7 @@ export const getStaffRelationId = async (): Promise<string | null> => {
       .from('business_staff')
       .select('id')
       .eq('staff_id', user.id)
+      .eq('status', 'active')
       .maybeSingle();
       
     if (error) {
@@ -112,6 +120,7 @@ export const getStaffBusinessId = async (): Promise<string | null> => {
       .from('business_staff')
       .select('business_id')
       .eq('staff_id', user.id)
+      .eq('status', 'active')
       .maybeSingle();
       
     if (error) {
@@ -130,5 +139,39 @@ export const getStaffBusinessId = async (): Promise<string | null> => {
   } catch (error) {
     console.error("Error getting staff business ID:", error);
     return null;
+  }
+};
+
+/**
+ * Check if staff has a specific permission
+ * @param permission The permission key to check
+ * @returns boolean indicating if staff has the permission
+ */
+export const hasStaffPermission = (permission: string): boolean => {
+  try {
+    const permissionsStr = localStorage.getItem('staffPermissions');
+    if (!permissionsStr) return false;
+    
+    const permissions = JSON.parse(permissionsStr);
+    return permissions[permission] === true;
+  } catch (error) {
+    console.error("Error checking staff permission:", error);
+    return false;
+  }
+};
+
+/**
+ * Get all staff permissions
+ * @returns Object with all staff permissions
+ */
+export const getStaffPermissions = (): Record<string, boolean> => {
+  try {
+    const permissionsStr = localStorage.getItem('staffPermissions');
+    if (!permissionsStr) return {};
+    
+    return JSON.parse(permissionsStr);
+  } catch (error) {
+    console.error("Error getting staff permissions:", error);
+    return {};
   }
 };
