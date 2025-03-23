@@ -191,19 +191,6 @@ export default function StaffPage() {
           </Button>
           
           <Button 
-            variant="outline"
-            onClick={handleSyncStaff}
-            disabled={isSyncing}
-            title="Sync staff records"
-          >
-            {isSyncing ? (
-              <RefreshCcw className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCcw className="h-4 w-4" />
-            )}
-          </Button>
-          
-          <Button 
             onClick={handleAddStaff} 
             disabled={!canAddMoreStaff}
           >
