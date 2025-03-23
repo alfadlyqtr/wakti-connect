@@ -81,10 +81,26 @@ export const createJobCard = async (
 export const completeJobCard = async (jobCardId: string): Promise<JobCard> => {
   const now = new Date().toISOString();
   
+  // Use the database function for completing the job card
+  const { data: success, error: rpcError } = await supabase.rpc(
+    'complete_job_card',
+    {
+      job_card_id: jobCardId,
+      end_timestamp: now
+    }
+  );
+  
+  if (rpcError) {
+    throw new Error(`Error completing job card: ${rpcError.message}`);
+  }
+  
+  if (!success) {
+    throw new Error('Job card not found or already completed');
+  }
+  
+  // Fetch the updated job card
   const { data, error } = await supabase
     .from('job_cards')
-    .update({ end_time: now })
-    .eq('id', jobCardId)
     .select(`
       *,
       jobs:job_id (
@@ -95,9 +111,11 @@ export const completeJobCard = async (jobCardId: string): Promise<JobCard> => {
         default_price
       )
     `)
-    .single();
+    .eq('id', jobCardId)
+    .maybeSingle();
     
-  if (error) throw new Error(`Error completing job card: ${error.message}`);
+  if (error) throw new Error(`Error fetching completed job card: ${error.message}`);
+  if (!data) throw new Error(`Job card with ID ${jobCardId} not found after completion`);
   
   // Type cast the payment_method to ensure it's the correct type
   return {
