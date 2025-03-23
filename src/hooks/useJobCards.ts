@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { fetchJobCards, createJobCard, completeJobCard } from '@/services/jobService';
+import { fetchJobCards, createJobCard, completeJobCard } from '@/services/jobs';
 import { JobCardFormData } from '@/types/job.types';
 
 export const useJobCards = (staffRelationId?: string) => {

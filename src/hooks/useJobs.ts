@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { fetchJobs, createJob, updateJob, deleteJob } from '@/services/jobService';
+import { fetchJobs, createJob, updateJob, deleteJob } from '@/services/jobs';
 import { JobFormData } from '@/types/job.types';
 
 export const useJobs = () => {
