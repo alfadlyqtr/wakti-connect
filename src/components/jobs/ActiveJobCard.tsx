@@ -7,7 +7,6 @@ import { formatDateTime } from "@/utils/dateUtils";
 import { formatCurrency } from "@/utils/formatUtils";
 import { JobCard } from "@/types/jobs.types";
 import { format, intervalToDuration } from "date-fns";
-import { useCompleteJobCardMutation } from "@/hooks/jobs/mutations";
 
 interface ActiveJobCardProps {
   jobCard: JobCard;
@@ -20,32 +19,41 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
   onCompleteJob,
   isCompleting
 }) => {
+  const [isCompleted, setIsCompleted] = useState(false);
   const [duration, setDuration] = useState<string>("");
-  const [now, setNow] = useState(new Date());
-  const [isCompleted, setIsCompleted] = useState(!!jobCard.end_time);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const completeJobMutation = useCompleteJobCardMutation();
   
   // If job already has an end_time when the component mounts, don't render
-  if (jobCard.end_time) {
+  if (jobCard.end_time || isCompleted) {
     return null;
   }
   
-  // Set up timer effect - this will only run for active jobs
   useEffect(() => {
-    if (isCompleted) {
-      // Clean up timer if job was completed
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
+    // Start the timer
+    const updateDuration = () => {
+      const startTime = new Date(jobCard.start_time);
+      const now = new Date();
+      const duration = intervalToDuration({ start: startTime, end: now });
+      
+      // Format the duration
+      let formattedDuration = "";
+      
+      if (duration.hours) {
+        formattedDuration += `${duration.hours}h `;
       }
-      return;
-    }
-    
-    // Update the current time every second for the timer
-    timerRef.current = setInterval(() => {
-      setNow(new Date());
-    }, 1000);
+      
+      if (duration.minutes) {
+        formattedDuration += `${duration.minutes}m `;
+      }
+      
+      formattedDuration += `${duration.seconds}s`;
+      
+      setDuration(formattedDuration);
+    };
+
+    // Update immediately and then every second
+    updateDuration();
+    timerRef.current = setInterval(updateDuration, 1000);
     
     // Cleanup function
     return () => {
@@ -54,58 +62,21 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
         timerRef.current = null;
       }
     };
-  }, [isCompleted]);
-  
-  // Calculate duration effect
-  useEffect(() => {
-    if (isCompleted) return;
-    
-    const startTime = new Date(jobCard.start_time);
-    const duration = intervalToDuration({ start: startTime, end: now });
-    
-    // Format the duration
-    let formattedDuration = "";
-    
-    if (duration.hours) {
-      formattedDuration += `${duration.hours}h `;
-    }
-    
-    if (duration.minutes) {
-      formattedDuration += `${duration.minutes}m `;
-    }
-    
-    formattedDuration += `${duration.seconds}s`;
-    
-    setDuration(formattedDuration);
-  }, [jobCard, now, isCompleted]);
+  }, [jobCard.start_time]);
   
   const handleComplete = async () => {
-    // Immediately mark as completed locally to stop the timer
-    setIsCompleted(true);
-    
-    // Clean up timer
+    // Immediately clean up the timer
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
     
-    try {
-      // Use the mutation to complete the job
-      await completeJobMutation.mutateAsync(jobCard.id);
-      
-      // Call the parent's onCompleteJob callback
-      onCompleteJob(jobCard.id);
-    } catch (error) {
-      // If there's an error, revert to incomplete state
-      console.error("Error completing job:", error);
-      setIsCompleted(false);
-    }
+    // Set local completion state
+    setIsCompleted(true);
+    
+    // Call the parent handler
+    onCompleteJob(jobCard.id);
   };
-  
-  // Don't render the card if it's completed
-  if (isCompleted) {
-    return null;
-  }
   
   return (
     <Card className="mb-4 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
@@ -151,10 +122,10 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
           <Button 
             onClick={handleComplete} 
             className="w-full" 
-            disabled={isCompleting || completeJobMutation.isPending || isCompleted}
+            disabled={isCompleting || isCompleted}
             variant="default"
           >
-            {isCompleting || completeJobMutation.isPending ? (
+            {isCompleting ? (
               <>
                 <Clock className="mr-2 h-4 w-4 animate-spin" />
                 Completing...

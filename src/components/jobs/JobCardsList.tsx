@@ -34,10 +34,13 @@ const JobCardsList: React.FC<JobCardsListProps> = ({ staffRelationId }) => {
     } catch (error) {
       console.error("Error completing job:", error);
       toast({
-        title: "Error",
-        description: "Failed to complete job",
+        title: "Error completing job card",
+        description: error instanceof Error ? error.message : "Failed to complete job",
         variant: "destructive"
       });
+      
+      // Rethrow so the ActiveJobsSection can handle the error state
+      throw error;
     }
   };
   
