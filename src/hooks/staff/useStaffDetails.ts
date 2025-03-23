@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -62,16 +63,18 @@ export const useStaffDetails = (staffRelationId: string | null) => {
           // Use a type guard to check for error property
           if (!('error' in data.business)) {
             // Create a typed reference with more explicit typing to help TypeScript
-            const typedBusinessData = data.business as { 
+            const businessData = data.business as { 
               business_name?: string; 
               avatar_url?: string | null 
-            };
+            } | null;
             
             // Now access properties with proper null checking
-            staffDetails.business = {
-              business_name: typedBusinessData.business_name || 'Unknown Business',
-              avatar_url: typedBusinessData.avatar_url || null
-            };
+            if (businessData) {
+              staffDetails.business = {
+                business_name: businessData.business_name || 'Unknown Business',
+                avatar_url: businessData.avatar_url || null
+              };
+            }
           } else {
             console.error("Business data contains an error:", data.business);
           }
