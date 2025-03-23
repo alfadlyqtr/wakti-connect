@@ -13,7 +13,7 @@ import { useBookings } from "@/hooks/useBookings";
 import { BookingTab } from "@/services/booking";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { isUserStaff } from "@/utils/staffUtils";
+import { isUserStaff, getStaffBusinessId } from "@/utils/staffUtils";
 
 const DashboardBookings = () => {
   const { toast } = useToast();
@@ -22,6 +22,7 @@ const DashboardBookings = () => {
   const [isStaff, setIsStaff] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [staffBookings, setStaffBookings] = useState<any[]>([]);
+  const [businessId, setBusinessId] = useState<string | null>(null);
   
   // Check if user is staff
   useEffect(() => {
@@ -32,6 +33,10 @@ const DashboardBookings = () => {
         setIsStaff(staffStatus);
         
         if (staffStatus) {
+          // Get business ID for this staff member
+          const busId = await getStaffBusinessId();
+          setBusinessId(busId);
+          
           // Fetch staff-specific bookings
           await fetchStaffBookings();
         }
@@ -51,6 +56,9 @@ const DashboardBookings = () => {
       
       if (!user) return;
       
+      console.log("Fetching bookings for staff member:", user.id);
+      
+      // Get bookings where this staff member is assigned
       const { data, error } = await supabase
         .from('bookings')
         .select('*')

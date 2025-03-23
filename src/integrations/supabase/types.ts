@@ -1238,6 +1238,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      update_existing_staff_contacts: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       user_owns_service: {
         Args: {
           service_id: string

@@ -10,6 +10,7 @@ import JobCardsList from "@/components/jobs/JobCardsList";
 import WorkStatusCard from "@/components/staff/WorkStatusCard";
 import WorkHistory from "@/components/staff/WorkHistory";
 import ActiveWorkSession from "@/components/staff/ActiveWorkSession";
+import { getStaffRelationId } from "@/utils/staffUtils";
 
 const JobCardsTab = () => {
   const { toast } = useToast();
@@ -21,24 +22,40 @@ const JobCardsTab = () => {
   
   // Fetch staff relation ID for the current user
   useEffect(() => {
-    const getStaffRelation = async () => {
+    const fetchStaffData = async () => {
       try {
         setIsLoading(true);
         setError(null);
         
+        // First get authenticated user
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
+          console.log("No authenticated user found");
           setIsLoading(false);
           setError("No authenticated user found");
           return;
         }
         
-        console.log("Fetching staff relation for user:", user.id);
+        console.log("Authenticated user ID:", user.id);
+        
+        // First try to get staff relation ID from utility function with caching
+        const relationId = await getStaffRelationId();
+        
+        if (relationId) {
+          console.log("Found staff relation ID from cache:", relationId);
+          setStaffRelationId(relationId);
+          await fetchActiveWorkSession(relationId);
+          setIsLoading(false);
+          return;
+        }
+        
+        // If that fails, try direct database query
+        console.log("No cached relation ID, fetching from database for user:", user.id);
         
         const { data, error } = await supabase
           .from('business_staff')
-          .select('id')
+          .select('id, permissions')
           .eq('staff_id', user.id)
           .eq('status', 'active')
           .single();
@@ -54,8 +71,14 @@ const JobCardsTab = () => {
           return;
         }
         
-        console.log("Found staff relation:", data.id);
+        console.log("Found staff relation:", data);
         setStaffRelationId(data.id);
+        
+        // Also cache this for future use
+        localStorage.setItem('staffRelationId', data.id);
+        if (data.permissions) {
+          localStorage.setItem('staffPermissions', JSON.stringify(data.permissions));
+        }
         
         // Also check for active work session
         await fetchActiveWorkSession(data.id);
@@ -68,7 +91,7 @@ const JobCardsTab = () => {
       }
     };
     
-    getStaffRelation();
+    fetchStaffData();
   }, [toast]);
   
   const fetchActiveWorkSession = async (relationId: string) => {

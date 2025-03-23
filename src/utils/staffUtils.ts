@@ -33,6 +33,7 @@ export const isUserStaff = async (): Promise<boolean> => {
       
     if (error) {
       console.error("Error checking business_staff table:", error);
+      throw error;
     }
     
     const isStaff = !!data;
@@ -46,9 +47,25 @@ export const isUserStaff = async (): Promise<boolean> => {
       if (data.permissions) {
         localStorage.setItem('staffPermissions', JSON.stringify(data.permissions));
       }
+      
+      // Cache staff relation ID for future quick access
+      localStorage.setItem('staffRelationId', data.id);
+      
+      // Get and cache business ID too
+      const { data: staffData, error: staffError } = await supabase
+        .from('business_staff')
+        .select('business_id')
+        .eq('id', data.id)
+        .single();
+        
+      if (!staffError && staffData) {
+        localStorage.setItem('staffBusinessId', staffData.business_id);
+      }
     } else {
       localStorage.removeItem('isStaff');
       localStorage.removeItem('staffPermissions');
+      localStorage.removeItem('staffRelationId');
+      localStorage.removeItem('staffBusinessId');
     }
     
     return isStaff;
@@ -174,4 +191,14 @@ export const getStaffPermissions = (): Record<string, boolean> => {
     console.error("Error getting staff permissions:", error);
     return {};
   }
+};
+
+/**
+ * Clear staff-related cached data
+ */
+export const clearStaffCache = (): void => {
+  localStorage.removeItem('isStaff');
+  localStorage.removeItem('staffPermissions');
+  localStorage.removeItem('staffRelationId');
+  localStorage.removeItem('staffBusinessId');
 };
