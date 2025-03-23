@@ -4,17 +4,21 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
 interface JobCompletionErrorProps {
-  error: string;
+  error: string | Error | null;
 }
 
 const JobCompletionError: React.FC<JobCompletionErrorProps> = ({ error }) => {
   if (!error) return null;
   
+  const errorMessage = error instanceof Error ? error.message : error;
+  
   return (
-    <Alert variant="destructive" className="mb-4">
-      <AlertCircle className="h-4 w-4" />
-      <AlertTitle>Error completing job</AlertTitle>
-      <AlertDescription>{error}</AlertDescription>
+    <Alert variant="destructive" className="mb-4 flex items-start">
+      <AlertCircle className="h-5 w-5 mt-0.5" />
+      <div className="ml-2">
+        <AlertTitle>Error completing job</AlertTitle>
+        <AlertDescription>{errorMessage}</AlertDescription>
+      </div>
     </Alert>
   );
 };

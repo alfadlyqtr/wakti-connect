@@ -4,6 +4,7 @@ import { JobCard } from "@/types/jobs.types";
 import ActiveJobCard from "./ActiveJobCard";
 import { useActiveJobs } from "@/hooks/jobs/useActiveJobs";
 import JobCompletionError from "./JobCompletionError";
+import JobsErrorBoundary from "./JobsErrorBoundary";
 
 interface ActiveJobsSectionProps {
   activeJobs: JobCard[];
@@ -18,7 +19,8 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
     localJobs,
     completingJobId,
     error,
-    handleCompleteJob
+    handleCompleteJob,
+    clearError
   } = useActiveJobs(activeJobs, onCompleteJob);
 
   // Don't render if no active jobs
@@ -27,20 +29,22 @@ const ActiveJobsSection: React.FC<ActiveJobsSectionProps> = ({
   }
 
   return (
-    <div>
-      <h3 className="text-lg font-medium mb-3">Active Jobs</h3>
-      
-      <JobCompletionError error={error} />
-      
-      {localJobs.map(jobCard => (
-        <ActiveJobCard
-          key={jobCard.id}
-          jobCard={jobCard}
-          onCompleteJob={handleCompleteJob}
-          isCompleting={completingJobId === jobCard.id}
-        />
-      ))}
-    </div>
+    <JobsErrorBoundary onReset={clearError}>
+      <div>
+        <h3 className="text-lg font-medium mb-3">Active Jobs</h3>
+        
+        <JobCompletionError error={error} />
+        
+        {localJobs.map(jobCard => (
+          <ActiveJobCard
+            key={jobCard.id}
+            jobCard={jobCard}
+            onCompleteJob={handleCompleteJob}
+            isCompleting={completingJobId === jobCard.id}
+          />
+        ))}
+      </div>
+    </JobsErrorBoundary>
   );
 };
 

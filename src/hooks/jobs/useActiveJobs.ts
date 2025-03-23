@@ -9,7 +9,7 @@ export const useActiveJobs = (
 ) => {
   const { toast } = useToast();
   const [completingJobId, setCompletingJobId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | Error | null>(null);
   const [localJobs, setLocalJobs] = useState<JobCard[]>([]);
 
   // Filter function to ensure only truly active jobs are shown
@@ -48,8 +48,8 @@ export const useActiveJobs = (
     } catch (error) {
       console.error("[useActiveJobs] Error completing job:", error);
       
-      // Set the error message
-      setError(error instanceof Error ? error.message : "Failed to complete job. Please try again.");
+      // Set the error message or object
+      setError(error);
       
       // Re-add the job to local state if completion failed
       const failedJob = activeJobs.find(job => job.id === jobCardId);
@@ -71,6 +71,7 @@ export const useActiveJobs = (
     localJobs,
     completingJobId,
     error,
-    handleCompleteJob
+    handleCompleteJob,
+    clearError: () => setError(null)
   };
 };

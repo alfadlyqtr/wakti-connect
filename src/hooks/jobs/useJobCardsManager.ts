@@ -15,7 +15,7 @@ export const useJobCardsManager = (staffRelationId: string) => {
   } = useJobCards(staffRelationId);
   
   const [isRetrying, setIsRetrying] = useState(false);
-  const [completionError, setCompletionError] = useState<string | null>(null);
+  const [completionError, setCompletionError] = useState<string | Error | null>(null);
   const [activeJobCards, setActiveJobCards] = useState<JobCard[]>([]);
   const [completedJobCards, setCompletedJobCards] = useState<JobCard[]>([]);
   
@@ -49,9 +49,6 @@ export const useJobCardsManager = (staffRelationId: string) => {
     setCompletionError(null);
     
     try {
-      // Optimistically update UI - remove from active and don't wait for mutation
-      setActiveJobCards(prev => prev.filter(job => job.id !== jobCardId));
-      
       // The mutation will handle toast notifications internally
       await completeJobCard.mutateAsync(jobCardId);
       console.log("[useJobCardsManager] Job completed successfully:", jobCardId);
@@ -61,12 +58,7 @@ export const useJobCardsManager = (staffRelationId: string) => {
     } catch (error) {
       console.error("[useJobCardsManager] Error completing job:", error);
       
-      // Set a more user-friendly error message
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : "Failed to complete job. Please try again.";
-      
-      setCompletionError(errorMessage);
+      setCompletionError(error instanceof Error ? error : new Error("Failed to complete job. Please try again."));
       
       // Force refetch to ensure we're in sync
       await refetch();
