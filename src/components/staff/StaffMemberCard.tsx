@@ -18,12 +18,16 @@ interface StaffMemberCardProps {
   staff: StaffMember;
   onEdit: () => void;
   onUpdateStatus?: (status: string) => void;
+  onDelete?: () => void; // Added this prop to maintain compatibility
+  onToggleStatus?: () => void; // Added this prop to maintain compatibility
 }
 
 export const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
   staff,
   onEdit,
-  onUpdateStatus
+  onUpdateStatus,
+  onDelete, // Handle the new prop
+  onToggleStatus // Handle the new prop
 }) => {
   const getInitials = (name: string) => {
     return name
@@ -87,7 +91,7 @@ export const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
                 <Edit className="h-4 w-4" />
               </Button>
               
-              {onUpdateStatus && (
+              {(onUpdateStatus || onToggleStatus) && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
@@ -95,19 +99,43 @@ export const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {staff.status !== 'active' && (
+                    {staff.status !== 'active' && onUpdateStatus && (
                       <DropdownMenuItem onClick={() => onUpdateStatus('active')}>
                         <UserCheck className="mr-2 h-4 w-4" />
                         Activate
                       </DropdownMenuItem>
                     )}
-                    {staff.status !== 'inactive' && (
+                    {staff.status !== 'inactive' && onUpdateStatus && (
                       <DropdownMenuItem onClick={() => onUpdateStatus('inactive')}>
                         <UserX className="mr-2 h-4 w-4" />
                         Deactivate
                       </DropdownMenuItem>
                     )}
+                    {onToggleStatus && (
+                      <DropdownMenuItem onClick={onToggleStatus}>
+                        {staff.status === 'active' ? (
+                          <>
+                            <UserX className="mr-2 h-4 w-4" />
+                            Suspend
+                          </>
+                        ) : (
+                          <>
+                            <UserCheck className="mr-2 h-4 w-4" />
+                            Activate
+                          </>
+                        )}
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
+                    {onDelete && (
+                      <DropdownMenuItem 
+                        onClick={onDelete}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <UserX className="mr-2 h-4 w-4" />
+                        Delete
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={onEdit}>
                       <Edit className="mr-2 h-4 w-4" />
                       Edit
