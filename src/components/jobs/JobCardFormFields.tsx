@@ -17,21 +17,26 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/components/ui/date-picker";
+import { format } from "date-fns";
 import { JobCardFormValues } from "./JobCardFormSchema";
 import { formatCurrency } from "@/utils/formatUtils";
 import { Job } from "@/types/jobs.types";
+import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface JobCardFormFieldsProps {
   jobs?: Job[] | null;
   selectedDate: Date;
-  setSelectedDate: (date: Date) => void;
+  setSelectedDate?: (date: Date) => void;
+  readOnlyDate?: boolean;
 }
 
 const JobCardFormFields: React.FC<JobCardFormFieldsProps> = ({
   jobs,
   selectedDate,
-  setSelectedDate
+  setSelectedDate,
+  readOnlyDate = false
 }) => {
   const form = useFormContext<JobCardFormValues>();
   const selectedJobId = form.watch("job_id");
@@ -79,10 +84,22 @@ const JobCardFormFields: React.FC<JobCardFormFieldsProps> = ({
       
       <FormItem>
         <FormLabel>Date</FormLabel>
-        <DatePicker 
-          date={selectedDate} 
-          setDate={setSelectedDate}
-        />
+        <Button
+          variant={"outline"}
+          className={cn(
+            "w-full justify-start text-left font-normal",
+            "bg-muted/50"
+          )}
+          disabled={true}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {format(selectedDate, "PPP")} (Today)
+        </Button>
+        {readOnlyDate && (
+          <div className="text-xs text-muted-foreground mt-1">
+            Job cards can only be created for the current day
+          </div>
+        )}
       </FormItem>
       
       <FormField

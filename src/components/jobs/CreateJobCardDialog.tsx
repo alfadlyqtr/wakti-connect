@@ -33,10 +33,12 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const { createJobCard } = useJobCards(staffRelationId);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [jobs, setJobs] = useState<any[]>([]);
+  
+  // Current date is fixed and cannot be changed
+  const currentDate = new Date();
   
   const form = useForm<JobCardFormValues>({
     resolver: zodResolver(jobCardFormSchema),
@@ -123,7 +125,7 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Create Job Card</DialogTitle>
           <DialogDescription>
-            Record a job and payment details
+            Record a job and payment details for today
           </DialogDescription>
         </DialogHeader>
         
@@ -156,8 +158,8 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <JobCardFormFields
                 jobs={jobs}
-                selectedDate={selectedDate}
-                setSelectedDate={setSelectedDate}
+                selectedDate={currentDate}
+                readOnlyDate={true}
               />
               
               <JobCardDialogControls 
