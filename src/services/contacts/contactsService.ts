@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { UserContact } from "@/types/invitation.types";
 import { fromTable } from "@/integrations/supabase/helper";
@@ -23,7 +24,7 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
         created_at,
         updated_at,
         staff_relation_id,
-        profiles:contact_id(
+        contact_profiles:profiles!contact_id(
           full_name,
           display_name,
           avatar_url
@@ -37,13 +38,15 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
       throw error;
     }
     
+    console.log("Fetched contacts data:", data);
+    
     // For contacts where the current user is the contact_id, we need to flip the relationship
     // to show the other person's profile
     return data.map(contact => {
       const isInverted = contact.contact_id === session.user.id;
       
-      // If the relationship is inverted, we need to fetch the other user's profile separately
       if (isInverted) {
+        // For inverted relationships, we need to fetch the user's profile
         return {
           id: contact.id,
           userId: contact.user_id,
@@ -52,7 +55,7 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
           createdAt: contact.created_at,
           updatedAt: contact.updated_at,
           staffRelationId: contact.staff_relation_id,
-          // Will be filled in the second step
+          // Will fetch the profile separately in the component
           contactProfile: {
             fullName: "",
             displayName: "",
@@ -61,6 +64,7 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
         };
       }
       
+      // For regular relationship, use the joined profile data
       return {
         id: contact.id,
         userId: contact.user_id,
@@ -70,9 +74,9 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
         updatedAt: contact.updated_at,
         staffRelationId: contact.staff_relation_id,
         contactProfile: {
-          fullName: contact.profiles?.full_name,
-          displayName: contact.profiles?.display_name,
-          avatarUrl: contact.profiles?.avatar_url
+          fullName: contact.contact_profiles?.full_name,
+          displayName: contact.contact_profiles?.display_name,
+          avatarUrl: contact.contact_profiles?.avatar_url
         }
       };
     });
@@ -232,52 +236,79 @@ export const syncStaffBusinessContacts = async (): Promise<boolean> => {
     // First check if the user is a staff member
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) {
-      throw new Error("No active session");
+      console.log("No active session, can't sync contacts");
+      return false;
     }
     
     const userId = session.user.id;
+    console.log("Attempting to sync contacts for user:", userId);
     
     // Check for a staff relation
-    const { data: staffData } = await supabase
+    const { data: staffData, error: staffError } = await supabase
       .from('business_staff')
       .select('id, business_id, staff_id')
       .or(`staff_id.eq.${userId},business_id.eq.${userId}`)
       .eq('status', 'active');
       
+    if (staffError) {
+      console.error("Error fetching staff relations:", staffError);
+      return false;
+    }
+      
     if (!staffData || staffData.length === 0) {
+      console.log("User is not a staff member or business owner with staff");
       return false; // Not a staff member or business with staff
     }
     
+    console.log("Found staff relations:", staffData);
+    
     // Create missing contacts
     const promises = staffData.map(async (relation) => {
-      if (relation.staff_id === userId) {
-        // This user is staff, ensure they have contact with their business
-        await fromTable('user_contacts')
-          .upsert({
-            user_id: relation.staff_id,
-            contact_id: relation.business_id,
-            status: 'accepted',
-            staff_relation_id: relation.id
-          })
-          .on_conflict('user_id, contact_id');
-      } else if (relation.business_id === userId) {
-        // This user is a business, ensure they have contact with their staff
-        await fromTable('user_contacts')
-          .upsert({
-            user_id: relation.business_id,
-            contact_id: relation.staff_id,
-            status: 'accepted',
-            staff_relation_id: relation.id
-          })
-          .on_conflict('user_id, contact_id');
+      try {
+        if (relation.staff_id === userId) {
+          console.log("User is staff, ensuring contact with business:", relation.business_id);
+          // This user is staff, ensure they have contact with their business
+          const { data, error } = await supabase
+            .from('user_contacts')
+            .upsert({
+              user_id: relation.staff_id,
+              contact_id: relation.business_id,
+              status: 'accepted',
+              staff_relation_id: relation.id
+            }, {
+              onConflict: 'user_id,contact_id'
+            });
+            
+          if (error) console.error("Error creating staff->business contact:", error);
+          else console.log("Created/updated staff->business contact");
+          
+        } else if (relation.business_id === userId) {
+          console.log("User is business, ensuring contact with staff:", relation.staff_id);
+          // This user is a business, ensure they have contact with their staff
+          const { data, error } = await supabase
+            .from('user_contacts')
+            .upsert({
+              user_id: relation.business_id,
+              contact_id: relation.staff_id,
+              status: 'accepted',
+              staff_relation_id: relation.id
+            }, {
+              onConflict: 'user_id,contact_id'
+            });
+            
+          if (error) console.error("Error creating business->staff contact:", error);
+          else console.log("Created/updated business->staff contact");
+        }
+      } catch (innerError) {
+        console.error("Error in contact creation for relation:", relation, innerError);
       }
     });
     
     await Promise.all(promises);
+    console.log("Contact sync completed");
     return true;
   } catch (error) {
     console.error("Error syncing staff-business contacts:", error);
     return false;
   }
 };
-

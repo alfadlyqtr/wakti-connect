@@ -2,7 +2,8 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { RefreshCw, Users } from "lucide-react";
 import { UserContact } from "@/types/invitation.types";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -10,6 +11,8 @@ import { useQuery } from "@tanstack/react-query";
 interface ContactsListProps {
   contacts: UserContact[];
   isLoading: boolean;
+  isSyncing?: boolean;
+  onRefresh?: () => void;
 }
 
 // Helper hook to get the profile for a user ID
@@ -25,11 +28,17 @@ const useUserProfile = (userId: string | undefined) => {
         .eq('id', userId)
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching profile for user:", userId, error);
+        throw error;
+      }
+      
+      console.log("Retrieved profile for user:", userId, data);
       return data;
     },
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000 // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2
   });
 };
 
@@ -53,6 +62,14 @@ const ContactItem = ({ contact }: { contact: UserContact }) => {
     : contact.contactProfile?.avatarUrl;
     
   const displayInitial = displayName.charAt(0) || 'U';
+  
+  console.log("Contact item:", {
+    contact, 
+    isInverted,
+    profileId,
+    profile: profile || null,
+    displayName
+  });
   
   if (isLoading && isInverted) {
     return (
@@ -89,7 +106,12 @@ const ContactItem = ({ contact }: { contact: UserContact }) => {
   );
 };
 
-const ContactsList: React.FC<ContactsListProps> = ({ contacts, isLoading }) => {
+const ContactsList: React.FC<ContactsListProps> = ({ 
+  contacts, 
+  isLoading,
+  isSyncing,
+  onRefresh 
+}) => {
   if (isLoading) {
     return (
       <div className="py-10 text-center">
@@ -98,20 +120,46 @@ const ContactsList: React.FC<ContactsListProps> = ({ contacts, isLoading }) => {
     );
   }
 
-  if (contacts.length === 0) {
-    return (
-      <div className="py-10 text-center">
-        <Users className="mx-auto h-10 w-10 text-muted-foreground" />
-        <p className="mt-2 text-sm text-muted-foreground">No contacts found</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-4">
-      {contacts.map((contact) => (
-        <ContactItem key={contact.id} contact={contact} />
-      ))}
+    <div>
+      {onRefresh && (
+        <div className="flex justify-end mb-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onRefresh}
+            disabled={isSyncing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+            {isSyncing ? 'Refreshing...' : 'Refresh Contacts'}
+          </Button>
+        </div>
+      )}
+      
+      {contacts && contacts.length > 0 ? (
+        <div className="space-y-4">
+          {contacts.map((contact) => (
+            <ContactItem key={contact.id} contact={contact} />
+          ))}
+        </div>
+      ) : (
+        <div className="py-10 text-center">
+          <Users className="mx-auto h-10 w-10 text-muted-foreground" />
+          <p className="mt-2 text-sm text-muted-foreground">No contacts found</p>
+          {onRefresh && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onRefresh} 
+              className="mt-4"
+              disabled={isSyncing}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

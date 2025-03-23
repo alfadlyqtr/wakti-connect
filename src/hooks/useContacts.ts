@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { UserContact } from "@/types/invitation.types";
@@ -19,16 +18,28 @@ export const useContacts = () => {
   const queryClient = useQueryClient();
   const [autoApprove, setAutoApprove] = useState<boolean>(false);
   const [isUpdatingAutoApprove, setIsUpdatingAutoApprove] = useState<boolean>(false);
+  const [isSyncingContacts, setIsSyncingContacts] = useState<boolean>(false);
 
   // Sync staff-business contacts
   useEffect(() => {
     const syncContacts = async () => {
+      setIsSyncingContacts(true);
       try {
-        await syncStaffBusinessContacts();
+        console.log("Starting contact sync operation");
+        const result = await syncStaffBusinessContacts();
+        console.log("Contact sync result:", result);
+        
         // After syncing, refresh contacts
         queryClient.invalidateQueries({ queryKey: ['contacts'] });
       } catch (error) {
         console.error("Error syncing staff-business contacts:", error);
+        toast({
+          title: "Sync Failed",
+          description: "Could not sync staff-business contacts. Please try refreshing the page.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsSyncingContacts(false);
       }
     };
     
@@ -39,30 +50,70 @@ export const useContacts = () => {
   const { 
     data: contacts, 
     isLoading, 
-    error 
+    error,
+    refetch: refetchContacts 
   } = useQuery({
     queryKey: ['contacts'],
-    queryFn: fetchContacts
+    queryFn: fetchContacts,
+    onError: (error) => {
+      console.error("Error fetching contacts:", error);
+      toast({
+        title: "Error loading contacts",
+        description: "Could not load your contacts. Please try again later.",
+        variant: "destructive"
+      });
+    }
   });
 
   // Get pending contact requests
   const { 
     data: pendingRequests, 
-    isLoading: isLoadingRequests 
+    isLoading: isLoadingRequests,
+    refetch: refetchPendingRequests
   } = useQuery({
     queryKey: ['contactRequests'],
-    queryFn: fetchPendingRequests
+    queryFn: fetchPendingRequests,
+    onError: (error) => {
+      console.error("Error fetching pending requests:", error);
+    }
   });
 
   // Fetch auto-approve setting
   useEffect(() => {
     const getAutoApproveSetting = async () => {
-      const setting = await fetchAutoApproveSetting();
-      setAutoApprove(setting);
+      try {
+        const setting = await fetchAutoApproveSetting();
+        setAutoApprove(setting);
+      } catch (error) {
+        console.error("Error fetching auto approve setting:", error);
+      }
     };
     
     getAutoApproveSetting();
   }, []);
+
+  // Handle manual refresh of contacts
+  const handleRefreshContacts = async () => {
+    setIsSyncingContacts(true);
+    try {
+      await syncStaffBusinessContacts();
+      await refetchContacts();
+      await refetchPendingRequests();
+      toast({
+        title: "Refreshed",
+        description: "Your contacts have been refreshed."
+      });
+    } catch (error) {
+      console.error("Error refreshing contacts:", error);
+      toast({
+        title: "Refresh Failed",
+        description: "Failed to refresh contacts. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSyncingContacts(false);
+    }
+  };
 
   // Send contact request
   const sendContactRequest = useMutation({
@@ -145,8 +196,10 @@ export const useContacts = () => {
     isLoadingRequests,
     autoApprove,
     isUpdatingAutoApprove,
+    isSyncingContacts,
     sendContactRequest,
     respondToContactRequest,
-    handleToggleAutoApprove
+    handleToggleAutoApprove,
+    refreshContacts: handleRefreshContacts
   };
 };

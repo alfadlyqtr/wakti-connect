@@ -22,9 +22,11 @@ const DashboardContacts = () => {
     isLoadingRequests,
     autoApprove,
     isUpdatingAutoApprove,
+    isSyncingContacts,
     sendContactRequest,
     respondToContactRequest,
-    handleToggleAutoApprove
+    handleToggleAutoApprove,
+    refreshContacts
   } = useContacts();
   
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,6 +52,16 @@ const DashboardContacts = () => {
       console.error("Error responding to request:", error);
     }
   };
+
+  // Filter contacts by search query if provided
+  const filteredContacts = searchQuery && contacts 
+    ? contacts.filter(contact => {
+        const displayName = contact.contactProfile?.displayName || contact.contactProfile?.fullName || '';
+        return displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               contact.contactId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               contact.userId.toLowerCase().includes(searchQuery.toLowerCase());
+      })
+    : contacts;
 
   return (
     <div className="space-y-6">
@@ -99,8 +111,10 @@ const DashboardContacts = () => {
             </CardHeader>
             <CardContent>
               <ContactsList 
-                contacts={contacts || []} 
-                isLoading={isLoading} 
+                contacts={filteredContacts || []} 
+                isLoading={isLoading}
+                isSyncing={isSyncingContacts}
+                onRefresh={refreshContacts}
               />
             </CardContent>
           </Card>
