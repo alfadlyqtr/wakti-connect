@@ -110,7 +110,7 @@ export const StaffList: React.FC<StaffListProps> = ({
         {displayStaff.map((staff) => (
           <StaffMemberCard
             key={staff.id}
-            member={staff}
+            staff={staff}
             onEdit={() => onEdit(staff.id)}
             onDelete={() => handleDeleteClick(staff)} 
             onToggleStatus={() => handleToggleStatusClick(staff)}

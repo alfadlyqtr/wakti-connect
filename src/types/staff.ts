@@ -6,8 +6,8 @@ export interface StaffMember {
   name: string;
   email?: string;
   position?: string;
-  role?: string; // Changed from 'staff' | 'co-admin' to string to match database
-  status?: string; // Changed from enum to string
+  role?: string; // String type to accommodate any role value from database
+  status?: string; // String type to accommodate any status value from database
   is_service_provider?: boolean;
   permissions?: Record<string, boolean>;
   staff_number?: string;
