@@ -1,0 +1,133 @@
+
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { UserPlus, Users, RefreshCcw } from "lucide-react";
+import { StaffList } from "@/components/staff/StaffList";
+import { StaffDialog } from "@/components/staff/StaffDialog";
+import { useToast } from "@/hooks/use-toast";
+
+export default function StaffPage() {
+  const { toast } = useToast();
+  const [staffDialogOpen, setStaffDialogOpen] = useState(false);
+  const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
+  
+  // Fetch staff members
+  const { 
+    data: staffMembers, 
+    isLoading, 
+    error,
+    refetch
+  } = useQuery({
+    queryKey: ['staffMembers'],
+    queryFn: async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) throw new Error('Not authenticated');
+        
+        const { data, error } = await supabase
+          .from('business_staff')
+          .select(`
+            *,
+            profiles:staff_id (
+              avatar_url,
+              full_name
+            )
+          `)
+          .eq('business_id', session.user.id)
+          .neq('status', 'deleted')
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
+        return data;
+      } catch (error: any) {
+        console.error("Error fetching staff:", error.message);
+        toast({
+          title: "Error loading staff",
+          description: error.message,
+          variant: "destructive"
+        });
+        return [];
+      }
+    }
+  });
+
+  // Staff count for checking limits
+  const staffCount = staffMembers?.length || 0;
+  const canAddMoreStaff = staffCount < 6;
+
+  const handleAddStaff = () => {
+    setSelectedStaffId(null);
+    setStaffDialogOpen(true);
+  };
+
+  const handleEditStaff = (staffId: string) => {
+    setSelectedStaffId(staffId);
+    setStaffDialogOpen(true);
+  };
+
+  const handleStaffCreated = () => {
+    refetch();
+    setStaffDialogOpen(false);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-1">Staff Management</h1>
+          <p className="text-muted-foreground">
+            Manage your team members and their permissions
+          </p>
+        </div>
+        
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={() => refetch()}
+            title="Refresh"
+          >
+            <RefreshCcw className="h-4 w-4" />
+          </Button>
+          
+          <Button 
+            onClick={handleAddStaff} 
+            disabled={!canAddMoreStaff}
+          >
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add Staff Member
+          </Button>
+        </div>
+      </div>
+      
+      {!canAddMoreStaff && (
+        <Card className="p-4 bg-amber-50 border-amber-200">
+          <div className="flex items-center gap-2 text-amber-700">
+            <Users className="h-5 w-5" />
+            <p className="text-sm font-medium">
+              Staff limit reached (6/6). Business plan allows up to 6 staff members.
+            </p>
+          </div>
+        </Card>
+      )}
+      
+      <StaffList 
+        staffMembers={staffMembers || []}
+        isLoading={isLoading}
+        error={error as Error | null}
+        onEdit={handleEditStaff}
+        onRefresh={refetch}
+      />
+      
+      <StaffDialog
+        staffId={selectedStaffId}
+        open={staffDialogOpen}
+        onOpenChange={setStaffDialogOpen}
+        onSuccess={handleStaffCreated}
+      />
+    </div>
+  );
+}

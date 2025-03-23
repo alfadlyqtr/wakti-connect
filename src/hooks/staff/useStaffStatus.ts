@@ -1,81 +1,72 @@
 
-import { useState, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-interface StaffStatus {
-  isStaff: boolean;
-  isLoading: boolean;
-  staffRelationId: string | null;
-  businessId: string | null;
+interface ToggleStatusParams {
+  staffId: string;
+  newStatus: 'active' | 'suspended';
 }
 
-export const useStaffStatus = (): StaffStatus => {
-  const [isStaff, setIsStaff] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [staffRelationId, setStaffRelationId] = useState<string | null>(null);
-  const [businessId, setBusinessId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const checkStaffStatus = async () => {
-      try {
-        setIsLoading(true);
-        const { data: { user } } = await supabase.auth.getUser();
+export function useStaffStatus() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  const toggleStatus = useMutation({
+    mutationFn: async ({ staffId, newStatus }: ToggleStatusParams) => {
+      const { error } = await supabase
+        .from('business_staff')
+        .update({ status: newStatus })
+        .eq('id', staffId);
         
-        if (!user) {
-          setIsStaff(false);
-          setIsLoading(false);
-          return;
-        }
+      if (error) throw error;
+      return { staffId, newStatus };
+    },
+    onSuccess: (data) => {
+      const statusText = data.newStatus === 'active' ? 'activated' : 'suspended';
+      toast({
+        title: `Staff ${statusText}`,
+        description: `Staff member has been ${statusText} successfully.`
+      });
+      queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update staff status",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  const deleteStaff = useMutation({
+    mutationFn: async (staffId: string) => {
+      const { error } = await supabase
+        .from('business_staff')
+        .update({ status: 'deleted' })
+        .eq('id', staffId);
         
-        // Check if the user is a staff member
-        const { data, error } = await supabase
-          .from('business_staff')
-          .select('id, business_id')
-          .eq('staff_id', user.id)
-          .single();
-          
-        if (error) {
-          if (error.code === 'PGRST116') {
-            // No data found error, just means they're not staff
-            setIsStaff(false);
-          } else {
-            console.error("Error checking staff status:", error);
-            setIsStaff(false);
-          }
-        } else {
-          setIsStaff(!!data);
-          if (data) {
-            setStaffRelationId(data.id);
-            setBusinessId(data.business_id);
-            
-            // Store staff status in localStorage for quick access
-            localStorage.setItem('isStaff', 'true');
-            localStorage.setItem('staffRelationId', data.id);
-            localStorage.setItem('staffBusinessId', data.business_id);
-          } else {
-            localStorage.removeItem('isStaff');
-            localStorage.removeItem('staffRelationId');
-            localStorage.removeItem('staffBusinessId');
-          }
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkStaffStatus();
-
-    // Listen for auth state changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-        checkStaffStatus();
-      }
-    });
-
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
-  }, []);
-
-  return { isStaff, isLoading, staffRelationId, businessId };
-};
+      if (error) throw error;
+      return staffId;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Staff Deleted",
+        description: "Staff member has been deleted successfully."
+      });
+      queryClient.invalidateQueries({ queryKey: ['staffMembers'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete staff member",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  return {
+    toggleStatus,
+    deleteStaff
+  };
+}

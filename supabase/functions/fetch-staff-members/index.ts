@@ -22,6 +22,7 @@ serve(async (req) => {
       throw new Error('Missing Authorization header');
     }
     
+    const token = authHeader.replace('Bearer ', '');
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
@@ -33,7 +34,6 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     // Get the user making the request to verify they're authenticated
-    const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !user) {
@@ -41,67 +41,57 @@ serve(async (req) => {
       throw new Error('Unauthorized: Invalid token');
     }
     
-    // Parse request body to get businessId
+    // Parse request body for businessId
     const { businessId } = await req.json();
     
     if (!businessId) {
-      throw new Error('Missing business ID');
+      throw new Error('Missing businessId parameter');
     }
     
-    // Verify the user is the business owner
-    if (user.id !== businessId) {
-      // Check if user is a co-admin
-      const { data: staffData, error: staffError } = await supabase
+    // Only allow if the requesting user is the business owner or a co-admin
+    const isBusinessOwner = user.id === businessId;
+    
+    if (!isBusinessOwner) {
+      const { data: isCoAdmin, error: coAdminError } = await supabase
         .from('business_staff')
-        .select('role')
+        .select('id')
         .eq('staff_id', user.id)
         .eq('business_id', businessId)
+        .eq('role', 'co-admin')
         .eq('status', 'active')
-        .single();
+        .maybeSingle();
         
-      if (staffError || !staffData || staffData.role !== 'co-admin') {
-        throw new Error('Unauthorized: Only business owners or co-admins can view staff');
+      if (coAdminError) throw coAdminError;
+      
+      if (!isCoAdmin) {
+        throw new Error('Unauthorized: Only business owners or co-admins can manage staff');
       }
     }
     
-    // Fetch staff members for the business
-    const { data: staffData, error: staffError } = await supabase
+    // Fetch staff members for this business with profile data
+    const { data: staffMembers, error: staffError } = await supabase
       .from('business_staff')
-      .select('*')
+      .select(`
+        *,
+        profiles:staff_id (
+          avatar_url,
+          full_name,
+          email
+        )
+      `)
       .eq('business_id', businessId)
-      .neq('status', 'deleted');
+      .neq('status', 'deleted')
+      .order('created_at', { ascending: false });
       
     if (staffError) {
       console.error("Error fetching staff:", staffError);
       throw new Error(`Failed to fetch staff: ${staffError.message}`);
     }
     
-    // Fetch profiles for each staff member
-    const staffWithProfiles = await Promise.all(
-      staffData.map(async (staff) => {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('full_name, avatar_url')
-          .eq('id', staff.staff_id)
-          .single();
-          
-        return {
-          ...staff,
-          profile: profileError ? { 
-            full_name: staff.name, 
-            avatar_url: staff.profile_image_url || null 
-          } : {
-            ...profileData,
-            avatar_url: profileData?.avatar_url || staff.profile_image_url || null
-          }
-        };
-      })
-    );
-    
     return new Response(
       JSON.stringify({ 
         success: true, 
-        staffMembers: staffWithProfiles 
+        staffMembers: staffMembers 
       }),
       { 
         headers: { 
@@ -111,7 +101,7 @@ serve(async (req) => {
         status: 200 
       }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error in fetch-staff-members function:", error.message);
     
     return new Response(

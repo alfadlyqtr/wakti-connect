@@ -16,14 +16,13 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Starting create-staff function");
-    
     // Get auth token from request headers
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('Missing Authorization header');
     }
     
+    const token = authHeader.replace('Bearer ', '');
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
@@ -35,7 +34,6 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     // Get the user making the request to verify they're authenticated
-    const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !user) {
@@ -43,30 +41,25 @@ serve(async (req) => {
       throw new Error('Unauthorized: Invalid token');
     }
     
-    console.log(`Authenticated user: ${user.id}`);
-    
     // Parse request body
-    const requestData = await req.json();
     const {
       fullName,
       email,
       password,
       position,
-      isServiceProvider,
-      isCoAdmin,
+      role = 'staff',
+      isServiceProvider = false,
       permissions,
       avatar
-    } = requestData;
+    } = await req.json();
     
     // Validate required fields
     if (!fullName || !email || !password) {
       throw new Error('Missing required fields');
     }
     
-    console.log(`Creating staff account for ${email}`);
-    
     // Check if a co-admin already exists (if we're creating a co-admin)
-    if (isCoAdmin) {
+    if (role === 'co-admin') {
       const { data: coAdmins, error: coAdminError } = await supabase
         .from('business_staff')
         .select('id')
@@ -75,7 +68,6 @@ serve(async (req) => {
         .eq('status', 'active');
         
       if (coAdminError) {
-        console.error("Error checking co-admins:", coAdminError);
         throw new Error(`Failed to check existing co-admins: ${coAdminError.message}`);
       }
       
@@ -84,7 +76,7 @@ serve(async (req) => {
       }
     }
     
-    // 1. Create the auth user account
+    // Create the auth user account
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: email,
       password: password,
@@ -98,7 +90,6 @@ serve(async (req) => {
     });
     
     if (authError) {
-      console.error("Auth creation error:", authError);
       throw new Error(`Failed to create auth user: ${authError.message}`);
     }
     
@@ -106,51 +97,34 @@ serve(async (req) => {
       throw new Error("Failed to create user account");
     }
     
-    console.log(`Created auth user with ID: ${authData.user.id}`);
-    
-    // Get business information for generating staff number
-    const { data: businessData, error: businessError } = await supabase
+    // Generate staff number
+    const { data: businessData } = await supabase
       .from('profiles')
       .select('business_name')
       .eq('id', user.id)
       .single();
       
-    if (businessError) {
-      console.error("Business fetch error:", businessError);
-      throw new Error(`Failed to fetch business data: ${businessError.message}`);
-    }
-    
-    // Generate staff number
-    const businessName = businessData.business_name || 'BUS';
-    const prefix = businessName
+    const businessPrefix = (businessData?.business_name || 'BUS')
       .substring(0, 3)
       .toUpperCase()
       .replace(/[^A-Z0-9]/g, '');
       
-    // Get current staff count for numbering
-    const { count, error: countError } = await supabase
+    const { count } = await supabase
       .from('business_staff')
       .select('*', { count: 'exact', head: true })
       .eq('business_id', user.id);
       
-    if (countError) {
-      console.error("Staff count error:", countError);
-      throw new Error(`Failed to get staff count: ${countError.message}`);
-    }
-    
-    const staffNumber = `${prefix}_Staff${String(count || 0).padStart(3, '0')}`;
+    const staffNumber = `${businessPrefix}${String((count || 0) + 1).padStart(3, '0')}`;
     
     // Handle avatar upload if provided
     let avatarUrl = null;
     if (avatar) {
       try {
-        // Extract base64 data (remove data:image/xyz;base64, prefix)
+        // Extract base64 data
         const base64Data = avatar.split(',')[1];
         const fileExt = avatar.split(';')[0].split('/')[1];
         
-        if (!base64Data) {
-          console.warn("Invalid avatar format");
-        } else {
+        if (base64Data) {
           const avatarBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
           const filePath = `${authData.user.id}/profile.${fileExt}`;
           
@@ -162,12 +136,7 @@ serve(async (req) => {
               upsert: true
             });
             
-          if (uploadError) {
-            console.error("Avatar upload error:", uploadError);
-          } else {
-            console.log("Avatar uploaded successfully");
-            
-            // Get public URL
+          if (!uploadError) {
             const { data: urlData } = await supabase
               .storage
               .from('avatars')
@@ -182,7 +151,7 @@ serve(async (req) => {
       }
     }
     
-    // 2. Add staff record to business_staff table
+    // Add staff record to business_staff table
     const { data: staffRecord, error: staffError } = await supabase
       .from('business_staff')
       .insert({
@@ -191,19 +160,14 @@ serve(async (req) => {
         name: fullName,
         email: email,
         position: position || 'Staff Member',
-        role: isCoAdmin ? 'co-admin' : 'staff',
-        is_service_provider: isServiceProvider || false,
+        role: role,
+        is_service_provider: isServiceProvider,
         staff_number: staffNumber,
         permissions: permissions || {
-          can_view_tasks: true,
           can_manage_tasks: false,
-          can_message_staff: true,
           can_manage_bookings: false,
-          can_create_job_cards: false,
           can_track_hours: true,
           can_log_earnings: false,
-          can_edit_profile: true,
-          can_view_customer_bookings: false,
           can_view_analytics: false
         },
         profile_image_url: avatarUrl,
@@ -213,11 +177,8 @@ serve(async (req) => {
       .single();
       
     if (staffError) {
-      console.error("Staff record creation error:", staffError);
       throw new Error(`Failed to create staff record: ${staffError.message}`);
     }
-    
-    console.log(`Staff record created with ID: ${staffRecord.id}`);
     
     // Update profile table to mark as staff account
     await supabase
@@ -230,50 +191,23 @@ serve(async (req) => {
         updated_at: new Date().toISOString()
       });
     
-    // Create automatic contact relationship for messaging
+    // Create automatic contact relationships
     await supabase
       .from('user_contacts')
-      .insert({
-        user_id: user.id,
-        contact_id: authData.user.id,
-        status: 'accepted',
-        staff_relation_id: staffRecord.id
-      });
-      
-    // Also add contacts between existing staff and the new staff member
-    const { data: existingStaff, error: existingStaffError } = await supabase
-      .from('business_staff')
-      .select('staff_id, id')
-      .eq('business_id', user.id)
-      .neq('staff_id', authData.user.id)
-      .eq('status', 'active');
-      
-    if (existingStaffError) {
-      console.error("Error fetching existing staff:", existingStaffError);
-    } else if (existingStaff && existingStaff.length > 0) {
-      // Create contact relationships between all staff members
-      const staffContacts = existingStaff.map(staff => ({
-        user_id: staff.staff_id,
-        contact_id: authData.user.id,
-        status: 'accepted',
-        staff_relation_id: staffRecord.id
-      }));
-      
-      const reverseStaffContacts = existingStaff.map(staff => ({
-        user_id: authData.user.id,
-        contact_id: staff.staff_id,
-        status: 'accepted',
-        staff_relation_id: staff.id
-      }));
-      
-      const { error: contactsError } = await supabase
-        .from('user_contacts')
-        .insert([...staffContacts, ...reverseStaffContacts]);
-        
-      if (contactsError) {
-        console.error("Error creating staff contacts:", contactsError);
-      }
-    }
+      .insert([
+        {
+          user_id: user.id,
+          contact_id: authData.user.id,
+          status: 'accepted',
+          staff_relation_id: staffRecord.id
+        },
+        {
+          user_id: authData.user.id,
+          contact_id: user.id,
+          status: 'accepted',
+          staff_relation_id: staffRecord.id
+        }
+      ]);
     
     return new Response(
       JSON.stringify({ 
