@@ -36,49 +36,71 @@ export const syncStaffBusinessContacts = async (): Promise<boolean> => {
     
     console.log("Found staff relations:", staffData);
     
-    // Create missing contacts
-    const promises = staffData.map(async (relation) => {
+    // Create missing contacts - process sequentially to avoid RLS conflicts
+    for (const relation of staffData) {
       try {
+        // First check if the contact already exists to avoid RLS violation
         if (relation.staff_id === userId) {
           console.log("User is staff, ensuring contact with business:", relation.business_id);
-          // This user is staff, ensure they have contact with their business
-          const { data, error } = await supabase
+          
+          // Check if contact already exists
+          const { data: existingContact } = await supabase
             .from('user_contacts')
-            .upsert({
-              user_id: relation.staff_id,
-              contact_id: relation.business_id,
-              status: 'accepted',
-              staff_relation_id: relation.id
-            }, {
-              onConflict: 'user_id,contact_id'
-            });
+            .select('id')
+            .eq('user_id', relation.staff_id)
+            .eq('contact_id', relation.business_id)
+            .maybeSingle();
             
-          if (error) console.error("Error creating staff->business contact:", error);
-          else console.log("Created/updated staff->business contact");
+          if (!existingContact) {
+            // Create staff->business contact
+            const { error } = await supabase
+              .from('user_contacts')
+              .insert({
+                user_id: relation.staff_id,
+                contact_id: relation.business_id,
+                status: 'accepted',
+                staff_relation_id: relation.id
+              });
+              
+            if (error) console.error("Error creating staff->business contact:", error);
+            else console.log("Created staff->business contact");
+          } else {
+            console.log("Staff->Business contact already exists");
+          }
           
         } else if (relation.business_id === userId) {
           console.log("User is business, ensuring contact with staff:", relation.staff_id);
-          // This user is a business, ensure they have contact with their staff
-          const { data, error } = await supabase
+          
+          // Check if contact already exists
+          const { data: existingContact } = await supabase
             .from('user_contacts')
-            .upsert({
-              user_id: relation.business_id,
-              contact_id: relation.staff_id,
-              status: 'accepted',
-              staff_relation_id: relation.id
-            }, {
-              onConflict: 'user_id,contact_id'
-            });
+            .select('id')
+            .eq('user_id', relation.business_id)
+            .eq('contact_id', relation.staff_id)
+            .maybeSingle();
             
-          if (error) console.error("Error creating business->staff contact:", error);
-          else console.log("Created/updated business->staff contact");
+          if (!existingContact) {
+            // Create business->staff contact
+            const { error } = await supabase
+              .from('user_contacts')
+              .insert({
+                user_id: relation.business_id,
+                contact_id: relation.staff_id,
+                status: 'accepted',
+                staff_relation_id: relation.id
+              });
+              
+            if (error) console.error("Error creating business->staff contact:", error);
+            else console.log("Created business->staff contact");
+          } else {
+            console.log("Business->Staff contact already exists");
+          }
         }
       } catch (innerError) {
         console.error("Error in contact creation for relation:", relation, innerError);
       }
-    });
+    }
     
-    await Promise.all(promises);
     console.log("Contact sync completed");
     return true;
   } catch (error) {

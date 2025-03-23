@@ -1,42 +1,14 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { fromTable } from "@/integrations/supabase/helper";
 
 /**
- * Updates auto-approve contacts setting
- */
-export const updateAutoApproveContacts = async (autoApprove: boolean): Promise<boolean> => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.user) {
-      throw new Error("No active session");
-    }
-    
-    const { error } = await fromTable('profiles')
-      .update({ 
-        auto_approve_contacts: autoApprove,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', session.user.id);
-    
-    if (error) throw error;
-    
-    return true;
-  } catch (error) {
-    console.error("Error updating auto approve setting:", error);
-    return false;
-  }
-};
-
-/**
- * Fetches the user's current auto-approve setting
+ * Fetch the auto-approve contact setting for current user
  */
 export const fetchAutoApproveSetting = async (): Promise<boolean> => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
-    if (!session?.user?.id) {
+    if (!session?.user) {
       return false;
     }
     
@@ -46,11 +18,42 @@ export const fetchAutoApproveSetting = async (): Promise<boolean> => {
       .eq('id', session.user.id)
       .single();
       
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching auto-approve setting:", error);
+      return false;
+    }
     
-    return !!data.auto_approve_contacts;
+    return data?.auto_approve_contacts || false;
   } catch (error) {
-    console.error("Error fetching auto-approve setting:", error);
+    console.error("Error in fetchAutoApproveSetting:", error);
+    return false;
+  }
+};
+
+/**
+ * Update the auto-approve contact setting for current user
+ */
+export const updateAutoApproveContacts = async (value: boolean): Promise<boolean> => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
+      return false;
+    }
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update({ auto_approve_contacts: value })
+      .eq('id', session.user.id);
+      
+    if (error) {
+      console.error("Error updating auto-approve setting:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in updateAutoApproveContacts:", error);
     return false;
   }
 };

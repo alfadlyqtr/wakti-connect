@@ -29,9 +29,11 @@ const ContactItem = ({ contact }: { contact: UserContact }) => {
   const hasStaffRelation = !!contact.staffRelationId;
   
   const handleMessageClick = () => {
-    const contactUserId = contact.userId === contact.contactId ? 
-                          contact.contactId : 
-                          (contact.userId || contact.contactId);
+    // Determine the correct contact ID for messaging
+    const contactUserId = contact.contactId === contact.userId ? 
+                        contact.contactId : 
+                        (contact.userId === contact.contactId ? contact.contactId : 
+                         (contact.userId || contact.contactId));
     navigate(`/dashboard/messages/${contactUserId}`);
   };
   
@@ -45,7 +47,7 @@ const ContactItem = ({ contact }: { contact: UserContact }) => {
         <div>
           <p className="font-medium">{displayName}</p>
           <p className="text-sm text-muted-foreground truncate max-w-[200px]">
-            {contact.contactProfile?.email || 'No email available'}
+            {contact.contactProfile?.accountType || 'Free User'}
           </p>
         </div>
       </div>
@@ -74,7 +76,7 @@ const ContactsList: React.FC<ContactsListProps> = ({
   isSyncing,
   onRefresh 
 }) => {
-  console.log("Rendering ContactsList with contacts:", contacts);
+  console.log("Rendering ContactsList with contacts:", contacts?.length || 0);
 
   if (isLoading) {
     return (

@@ -57,7 +57,7 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
     }
     
     const { data: profilesData, error: profilesError } = await fromTable('profiles')
-      .select('id, full_name, display_name, avatar_url, email, account_type')
+      .select('id, full_name, display_name, avatar_url, account_type')
       .in('id', contactIds);
       
     if (profilesError) {
@@ -89,7 +89,9 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
           fullName: profile.full_name,
           displayName: profile.display_name,
           avatarUrl: profile.avatar_url,
-          email: profile.email,
+          // Get email from auth.users if needed, but for now we exclude it
+          // as it's not in the profiles table
+          email: "",
           accountType: profile.account_type
         } : {
           fullName: "",
@@ -130,7 +132,6 @@ export const fetchPendingRequests = async (): Promise<UserContact[]> => {
           full_name,
           display_name,
           avatar_url,
-          email,
           account_type
         )
       `)
@@ -151,7 +152,8 @@ export const fetchPendingRequests = async (): Promise<UserContact[]> => {
         fullName: request.profiles?.full_name,
         displayName: request.profiles?.display_name,
         avatarUrl: request.profiles?.avatar_url,
-        email: request.profiles?.email,
+        // Don't try to access email from profiles
+        email: "",
         accountType: request.profiles?.account_type
       }
     }));
