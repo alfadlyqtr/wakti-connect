@@ -63,14 +63,14 @@ const WorkLogFilters: React.FC<WorkLogFiltersProps> = ({
     <div className="flex flex-col md:flex-row gap-4 justify-between">
       <div className="flex flex-col sm:flex-row gap-2">
         <Select 
-          value={selectedStaff || ""} 
+          value={selectedStaff || undefined} 
           onValueChange={onStaffChange}
         >
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Select staff member" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="" disabled>Select staff member</SelectItem>
+            {/* Fixed the issue by removing the empty value SelectItem and using a placeholder instead */}
             {staffMembers?.map(staff => (
               <SelectItem key={staff.id} value={staff.id}>
                 {staff.name}

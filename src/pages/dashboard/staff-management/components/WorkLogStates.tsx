@@ -1,26 +1,45 @@
 
 import React from "react";
-import { Clock } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Users, AlertCircle, Loader2 } from "lucide-react";
 
-interface EmptyStateProps {
-  message: string;
-  subMessage?: string;
-}
+export const LoadingState = () => (
+  <Card>
+    <CardContent className="flex items-center justify-center p-8">
+      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p>Loading work logs...</p>
+      </div>
+    </CardContent>
+  </Card>
+);
 
-export const EmptyState: React.FC<EmptyStateProps> = ({ message, subMessage }) => {
-  return (
-    <div className="text-center py-8">
-      <Clock className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-      <h3 className="text-lg font-semibold mb-2">{message}</h3>
-      {subMessage && <p className="text-muted-foreground">{subMessage}</p>}
-    </div>
-  );
-};
+export const EmptyState = ({ 
+  message = "No Work Logs", 
+  subMessage = "No work logs found for the selected period" 
+}: { 
+  message?: string; 
+  subMessage?: string; 
+}) => (
+  <Card>
+    <CardContent className="flex items-center justify-center p-8">
+      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+        <Users className="h-8 w-8" />
+        <p className="font-medium text-lg">{message}</p>
+        <p className="text-sm">{subMessage}</p>
+      </div>
+    </CardContent>
+  </Card>
+);
 
-export const LoadingState: React.FC = () => {
-  return (
-    <div className="flex justify-center p-8">
-      <div className="h-8 w-8 border-4 border-t-transparent border-primary rounded-full animate-spin"></div>
-    </div>
-  );
-};
+export const ErrorState = ({ error }: { error: Error | null }) => (
+  <Card>
+    <CardContent className="flex items-center justify-center p-8">
+      <div className="flex flex-col items-center gap-2 text-destructive">
+        <AlertCircle className="h-8 w-8" />
+        <p className="font-medium text-lg">Error Loading Work Logs</p>
+        <p className="text-sm">{error?.message || "An unknown error occurred"}</p>
+      </div>
+    </CardContent>
+  </Card>
+);
