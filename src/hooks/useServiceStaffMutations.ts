@@ -81,7 +81,7 @@ export const useServiceStaffMutations = () => {
         }
         
         // Verify all staff members exist and belong to this business
-        // Using explicit reference to business_staff.id to avoid ambiguity
+        // Using business_staff table alias to be explicit and avoid column ambiguity
         const { data: validStaff, error: validationError } = await supabase
           .from('business_staff')
           .select('id')
@@ -100,15 +100,15 @@ export const useServiceStaffMutations = () => {
         }
         
         // Prepare batch assignments with only validated staff IDs
-        // Explicitly use 'staff_id' field name when inserting into staff_service_assignments
-        const assignments = validStaffIds.map(staffId => ({
+        // Explicitly specify the column names to avoid ambiguity
+        const assignments = validStaffIds.map(staffRelationId => ({
           service_id: serviceId,
-          staff_id: staffId
+          staff_id: staffRelationId // This is the business_staff.id, not auth.users.id
         }));
         
         console.log("Creating new assignments:", assignments);
         
-        // Bulk insert assignments
+        // Bulk insert assignments with explicit column names
         const { data, error } = await supabase
           .from('staff_service_assignments')
           .insert(assignments)
@@ -147,17 +147,18 @@ export const useServiceStaffMutations = () => {
         
         // Get all staff data in a single query with explicit column references
         if (validStaffIds.length > 0) {
-          const { data: staffData, error: staffError } = await supabase
+          // Use clear variable naming to distinguish between staff relation ID and actual user ID
+          const { data: staffDataWithUserIds, error: staffError } = await supabase
             .from('business_staff')
-            .select('id, staff_id')
+            .select('id, staff_id') // id is relation ID, staff_id is the auth user ID
             .in('id', validStaffIds);
             
           if (staffError) {
             console.error("Error fetching staff data:", staffError);
-          } else if (staffData) {
-            // Create notification objects for bulk insert
-            const notifications = staffData.map(staff => ({
-              user_id: staff.staff_id,
+          } else if (staffDataWithUserIds) {
+            // Create notification objects for bulk insert - notify the actual users (auth.users)
+            const notifications = staffDataWithUserIds.map(staff => ({
+              user_id: staff.staff_id, // This is the auth.users.id for notifications
               title: "Service Assignment",
               content: `You have been assigned to the service "${serviceData.name}" by ${businessName}`,
               type: "service_assignment",

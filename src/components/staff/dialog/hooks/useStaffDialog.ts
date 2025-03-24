@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +17,6 @@ export const useStaffDialog = (
   
   const isEditing = !!staffId;
 
-  // Initialize form with default values
   const form = useForm<StaffFormValues>({
     resolver: zodResolver(staffFormSchema),
     defaultValues: {
@@ -47,7 +45,6 @@ export const useStaffDialog = (
     }
   });
 
-  // Fetch staff data if in edit mode
   const { isLoading: isLoadingStaff } = useQuery({
     queryKey: ['staffMember', staffId],
     queryFn: async () => {
@@ -62,16 +59,14 @@ export const useStaffDialog = (
           
         if (error) throw error;
         
-        // Parse permissions if needed
         const permissions = typeof data.permissions === 'string' 
           ? JSON.parse(data.permissions) 
           : data.permissions;
           
-        // Update form with staff data
         form.reset({
           fullName: data.name || "",
           email: data.email || "",
-          password: "",  // Don't populate password fields for security
+          password: "",
           confirmPassword: "",
           position: data.position || "",
           isServiceProvider: data.is_service_provider || false,
@@ -88,8 +83,7 @@ export const useStaffDialog = (
         setError(error instanceof Error ? error.message : "Failed to load staff details");
         return null;
       }
-    },
-    enabled: isEditing,
+    }
   });
 
   const handleSubmit = async (values: StaffFormValues) => {
@@ -97,17 +91,14 @@ export const useStaffDialog = (
     setError(null);
     
     try {
-      // Get current user/business ID
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
       
       const businessId = session.user.id;
       
-      // Prepare permissions object
       const permissions = values.permissions;
       
       if (isEditing) {
-        // Update existing staff
         const { error } = await supabase
           .from('business_staff')
           .update({

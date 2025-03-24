@@ -25,11 +25,11 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         
         console.log("Fetching staff assignments for service:", serviceId);
         
-        // First, get the staff_ids assigned to this service
-        // Use explicit table names to avoid ambiguity
+        // First, get the staff relation IDs assigned to this service
+        // Use explicit table and column names to avoid ambiguity
         const { data: assignmentsData, error: assignmentsError } = await supabase
           .from('staff_service_assignments')
-          .select('staff_id')
+          .select('staff_id') // This is business_staff.id, not auth.users.id
           .eq('service_id', serviceId);
           
         if (assignmentsError) {
@@ -42,14 +42,14 @@ export const useServiceStaffQueries = (serviceId?: string) => {
           return [];
         }
         
-        // Extract staff IDs
-        const staffIds = assignmentsData.map(item => item.staff_id);
+        // Extract staff relation IDs (these are business_staff.id values)
+        const staffRelationIds = assignmentsData.map(item => item.staff_id);
         
-        // Then get the staff details in a separate query with explicit column references
+        // Then get the staff details based on their relation IDs with explicit column references
         const { data: staffData, error: staffError } = await supabase
           .from('business_staff')
           .select('id, name, role')
-          .in('id', staffIds);
+          .in('id', staffRelationIds);
         
         if (staffError) {
           console.error("Error fetching staff details:", staffError);
@@ -60,7 +60,7 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         
         // Transform the data to match the StaffMember type
         const staffMembers: StaffMember[] = staffData.map(staff => ({
-          id: staff.id,
+          id: staff.id, // This is the business_staff.id
           name: staff.name || 'Unknown',
           role: staff.role || 'staff'
         }));
