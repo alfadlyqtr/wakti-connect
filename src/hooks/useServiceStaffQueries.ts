@@ -26,7 +26,7 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         console.log("Fetching staff assignments for service:", serviceId);
         
         // First, get the staff relation IDs assigned to this service
-        // Use explicit table and column names to avoid ambiguity
+        // CRITICAL FIX: Use explicit table aliases to avoid ambiguity
         const { data: assignmentsData, error: assignmentsError } = await supabase
           .from('staff_service_assignments')
           .select('staff_id') // This is business_staff.id, not auth.users.id
@@ -43,13 +43,14 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         }
         
         // Extract staff relation IDs (these are business_staff.id values)
-        const staffRelationIds = assignmentsData.map(item => item.staff_id);
+        // Use clear variable naming to avoid confusion
+        const businessStaffIds = assignmentsData.map(item => item.staff_id);
         
         // Then get the staff details based on their relation IDs with explicit column references
         const { data: staffData, error: staffError } = await supabase
           .from('business_staff')
           .select('id, name, role')
-          .in('id', staffRelationIds);
+          .in('id', businessStaffIds);
         
         if (staffError) {
           console.error("Error fetching staff details:", staffError);

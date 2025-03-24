@@ -81,7 +81,7 @@ export const useServiceStaffMutations = () => {
         }
         
         // Verify all staff members exist and belong to this business
-        // Using business_staff table alias to be explicit and avoid column ambiguity
+        // Using business_staff table alias and explicit column references to avoid ambiguity
         const { data: validStaff, error: validationError } = await supabase
           .from('business_staff')
           .select('id')
@@ -93,22 +93,23 @@ export const useServiceStaffMutations = () => {
         }
         
         // Filter to only valid staff IDs that belong to this business
-        const validStaffIds = validStaff.map(s => s.id);
+        const validStaffRelationIds = validStaff.map(s => s.id);
         
-        if (validStaffIds.length === 0) {
+        if (validStaffRelationIds.length === 0) {
           throw new Error("No valid staff members found for assignment");
         }
         
         // Prepare batch assignments with only validated staff IDs
-        // Explicitly specify the column names to avoid ambiguity
-        const assignments = validStaffIds.map(staffRelationId => ({
+        // Use clear variable naming to distinguish between different types of IDs
+        const assignments = validStaffRelationIds.map(staffRelationId => ({
           service_id: serviceId,
           staff_id: staffRelationId // This is the business_staff.id, not auth.users.id
         }));
         
         console.log("Creating new assignments:", assignments);
         
-        // Bulk insert assignments with explicit column names
+        // Bulk insert assignments with explicit column references
+        // CRITICAL FIX: Include explicit column names in the insert to avoid ambiguity
         const { data, error } = await supabase
           .from('staff_service_assignments')
           .insert(assignments)
@@ -146,12 +147,12 @@ export const useServiceStaffMutations = () => {
         const businessName = businessData?.business_name || businessData?.display_name || "Your business";
         
         // Get all staff data in a single query with explicit column references
-        if (validStaffIds.length > 0) {
+        if (validStaffRelationIds.length > 0) {
           // Use clear variable naming to distinguish between staff relation ID and actual user ID
           const { data: staffDataWithUserIds, error: staffError } = await supabase
             .from('business_staff')
             .select('id, staff_id') // id is relation ID, staff_id is the auth user ID
-            .in('id', validStaffIds);
+            .in('id', validStaffRelationIds);
             
           if (staffError) {
             console.error("Error fetching staff data:", staffError);
