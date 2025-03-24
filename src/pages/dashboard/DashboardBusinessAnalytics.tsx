@@ -37,6 +37,7 @@ const DashboardBusinessAnalytics = () => {
             variant: "destructive"
           });
           navigate("/dashboard");
+          return;
         }
       } catch (error) {
         console.error("Error verifying account type:", error);
@@ -45,6 +46,7 @@ const DashboardBusinessAnalytics = () => {
           description: "Could not verify your account type. Please try again.",
           variant: "destructive"
         });
+        navigate("/dashboard");
       } finally {
         setIsVerifying(false);
       }
@@ -58,6 +60,22 @@ const DashboardBusinessAnalytics = () => {
       <div className="flex items-center justify-center h-[50vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
         <p>Verifying account access...</p>
+      </div>
+    );
+  }
+
+  // If there's no data but we've verified the account is business type,
+  // show a loading state rather than an error
+  if (!data && !error && !isLoading) {
+    return (
+      <div className="container py-6 space-y-8">
+        <h1 className="text-3xl font-bold tracking-tight">
+          {t("dashboard.analytics")}
+        </h1>
+        <div className="flex items-center justify-center h-[50vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
+          <p>Loading analytics data...</p>
+        </div>
       </div>
     );
   }

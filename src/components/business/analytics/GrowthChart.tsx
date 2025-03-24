@@ -1,3 +1,4 @@
+
 import React from "react";
 import { LineChart } from "@/components/ui/chart";
 import { getGrowthTrendsData } from "@/utils/businessAnalyticsUtils";
@@ -9,32 +10,40 @@ interface GrowthChartProps {
 }
 
 export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => {
-  const growthData = getGrowthTrendsData();
+  const defaultGrowthData = getGrowthTrendsData();
   const isMobile = useIsMobile();
   
   // Validate and prepare chart data
   const chartData = React.useMemo(() => {
-    if (data && Array.isArray(data) && data.length > 0) {
-      // Use provided data if available and valid
-      return {
-        ...growthData,
-        datasets: [
-          {
-            ...growthData.datasets[0],
-            data: data
-          }
-        ]
-      };
+    // If no data provided or invalid format, use default data
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      console.log("Using default growth data");
+      return defaultGrowthData;
     }
     
-    // Otherwise return the default data
-    return growthData;
-  }, [data, growthData]);
+    // Use provided data with the structure from default data
+    console.log("Using provided growth data:", data);
+    return {
+      ...defaultGrowthData,
+      datasets: [
+        {
+          ...defaultGrowthData.datasets[0],
+          data: data
+        }
+      ]
+    };
+  }, [data, defaultGrowthData]);
 
   // Adjust chart options for mobile
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top' as const,
+      },
+    },
     scales: {
       x: {
         grid: {
@@ -59,15 +68,6 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
     return (
       <div className="h-[300px] w-full flex items-center justify-center">
         <p>Loading growth data...</p>
-      </div>
-    );
-  }
-
-  // Fallback for invalid data
-  if (!chartData || !chartData.datasets || !chartData.labels) {
-    return (
-      <div className="h-[300px] w-full flex items-center justify-center text-red-500">
-        <p>Error loading chart data</p>
       </div>
     );
   }

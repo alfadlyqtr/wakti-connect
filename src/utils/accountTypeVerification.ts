@@ -39,6 +39,11 @@ export const accountTypeVerification = {
       const storedType = data?.account_type;
       console.log(`Account type verification: Expected ${expectedType}, Got ${storedType}`);
       
+      // Update role in localStorage to ensure it's current
+      if (storedType) {
+        localStorage.setItem('userRole', storedType);
+      }
+      
       return storedType === expectedType;
     } catch (error) {
       console.error("Error verifying account type:", error);

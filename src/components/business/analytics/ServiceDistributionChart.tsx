@@ -1,3 +1,4 @@
+
 import React from "react";
 import { PieChart } from "@/components/ui/chart";
 import { getServiceDistributionData } from "@/utils/businessAnalyticsUtils";
@@ -9,27 +10,29 @@ interface ServiceDistributionChartProps {
 }
 
 export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> = ({ isLoading, data }) => {
-  const serviceData = getServiceDistributionData();
+  const defaultServiceData = getServiceDistributionData();
   const isMobile = useIsMobile();
   
   // Validate and prepare chart data
   const chartData = React.useMemo(() => {
-    if (data && Array.isArray(data) && data.length > 0) {
-      // Use provided data if available and valid
-      return {
-        ...serviceData,
-        datasets: [
-          {
-            ...serviceData.datasets[0],
-            data: data
-          }
-        ]
-      };
+    // If no data provided or invalid format, use default data
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      console.log("Using default service distribution data");
+      return defaultServiceData;
     }
     
-    // Otherwise return the default data
-    return serviceData;
-  }, [data, serviceData]);
+    // Use provided data with the structure from default data
+    console.log("Using provided service distribution data:", data);
+    return {
+      ...defaultServiceData,
+      datasets: [
+        {
+          ...defaultServiceData.datasets[0],
+          data: data
+        }
+      ]
+    };
+  }, [data, defaultServiceData]);
 
   // Configure options based on device size
   const chartOptions = {
@@ -55,15 +58,6 @@ export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> =
     return (
       <div className="h-[300px] w-full flex items-center justify-center">
         <p>Loading service data...</p>
-      </div>
-    );
-  }
-
-  // Fallback for invalid data
-  if (!chartData || !chartData.datasets || !chartData.labels) {
-    return (
-      <div className="h-[300px] w-full flex items-center justify-center text-red-500">
-        <p>Error loading chart data</p>
       </div>
     );
   }

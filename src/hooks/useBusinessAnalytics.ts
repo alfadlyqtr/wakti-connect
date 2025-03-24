@@ -38,9 +38,10 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
           throw new Error('Could not verify account type');
         }
         
+        // If not business account, return null to avoid errors
         if (profileData?.account_type !== 'business') {
           console.warn("Non-business account attempting to access business analytics");
-          throw new Error('Business account required');
+          return null;
         }
         
         // In a real application, this would fetch data from the backend
@@ -73,5 +74,6 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
       }
     },
     retry: 1, // Limit retries to avoid excessive API calls on failure
+    refetchOnWindowFocus: false, // Prevent refetching when window regains focus
   });
 };
