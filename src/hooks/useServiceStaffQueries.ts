@@ -22,22 +22,33 @@ export const useServiceStaffQueries = (serviceId?: string) => {
           throw new Error('Not authenticated');
         }
         
-        // Get staff assigned to the service with a direct join to business_staff
-        const { data, error } = await supabase
+        // First get staff assignments for this service
+        const { data: assignments, error: assignmentError } = await supabase
           .from('staff_service_assignments')
-          .select(`
-            staff_id,
-            business_staff(id, name, role)
-          `)
+          .select('staff_id')
           .eq('service_id', serviceId);
           
-        if (error) throw error;
+        if (assignmentError) throw assignmentError;
+        
+        if (!assignments || assignments.length === 0) {
+          return [];
+        }
+        
+        // Then fetch the actual staff data in a separate query
+        const staffIds = assignments.map(assignment => assignment.staff_id);
+        
+        const { data: staffData, error: staffError } = await supabase
+          .from('business_staff')
+          .select('id, name, role')
+          .in('id', staffIds);
+          
+        if (staffError) throw staffError;
         
         // Transform the data to match the StaffMember type
-        const staffMembers: StaffMember[] = data.map(item => ({
-          id: item.staff_id,
-          name: item.business_staff?.name || 'Unknown',
-          role: item.business_staff?.role || 'staff'
+        const staffMembers: StaffMember[] = (staffData || []).map(staff => ({
+          id: staff.id,
+          name: staff.name || 'Unknown',
+          role: staff.role || 'staff'
         }));
         
         return staffMembers;

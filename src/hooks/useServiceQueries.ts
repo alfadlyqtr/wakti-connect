@@ -28,22 +28,28 @@ export const useServiceQueries = () => {
           
         if (servicesError) throw servicesError;
 
-        // Fetch service staff assignments with proper staff data
+        // Fetch service staff assignments using a separate query
+        // This avoids the join issue with staff_service_assignments and business_staff
         const { data: assignmentsData, error: assignmentsError } = await supabase
           .from('staff_service_assignments')
-          .select(`
-            service_id,
-            staff_id,
-            business_staff(
-              id,
-              name,
-              role
-            )
-          `)
-          .eq('service_id', servicesData.map(service => service.id))
-          .throwOnError();
+          .select('service_id, staff_id');
 
         if (assignmentsError) throw assignmentsError;
+
+        // Fetch staff members for all assignments in one query
+        const staffIds = [...new Set(assignmentsData.map(a => a.staff_id))];
+        
+        // Only fetch staff data if there are staff assignments
+        let staffData = [];
+        if (staffIds.length > 0) {
+          const { data: staffMembers, error: staffError } = await supabase
+            .from('business_staff')
+            .select('id, name, role')
+            .in('id', staffIds);
+            
+          if (staffError) throw staffError;
+          staffData = staffMembers || [];
+        }
 
         // Map staff assignments to services
         const servicesWithStaff = servicesData.map((service: Service) => {
@@ -52,11 +58,14 @@ export const useServiceQueries = () => {
           );
 
           // Map staff assignments to staff members
-          const assignedStaff = serviceAssignments.map((assignment: any) => ({
-            id: assignment.staff_id,
-            name: assignment.business_staff?.name || 'Unknown',
-            role: assignment.business_staff?.role || 'staff'
-          }));
+          const assignedStaff = serviceAssignments.map((assignment: any) => {
+            const staffMember = staffData.find(staff => staff.id === assignment.staff_id);
+            return {
+              id: assignment.staff_id,
+              name: staffMember?.name || 'Unknown',
+              role: staffMember?.role || 'staff'
+            };
+          });
 
           return {
             ...service,
