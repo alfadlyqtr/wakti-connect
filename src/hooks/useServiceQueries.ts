@@ -42,13 +42,13 @@ export const useServiceQueries = () => {
         // Get the service IDs for the IN clause
         const serviceIds = servicesData.map(service => service.id);
         
-        // Get all staff assignments for these services in a single query
+        // Get all staff assignments for these services in a single query with a clearer join syntax
         const { data: allAssignments, error: assignmentsError } = await supabase
           .from('staff_service_assignments')
           .select(`
             service_id,
             staff_id,
-            business_staff!inner(id, name, role)
+            staff:business_staff(id, name, role)
           `)
           .in('service_id', serviceIds);
           
@@ -67,9 +67,9 @@ export const useServiceQueries = () => {
             }
             
             assignmentsByService[assignment.service_id].push({
-              id: assignment.business_staff.id,
-              name: assignment.business_staff.name || 'Unknown',
-              role: assignment.business_staff.role || 'staff'
+              id: assignment.staff.id,
+              name: assignment.staff.name || 'Unknown',
+              role: assignment.staff.role || 'staff'
             });
           });
         }

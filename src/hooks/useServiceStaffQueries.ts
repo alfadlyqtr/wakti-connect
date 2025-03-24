@@ -25,12 +25,12 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         
         console.log("Fetching staff assignments for service:", serviceId);
         
-        // Fetch staff assignments and staff details in a single query with explicit joins
+        // Use a simpler query structure to avoid TypeScript issues
         const { data, error } = await supabase
           .from('staff_service_assignments')
           .select(`
             staff_id,
-            business_staff!inner(id, name, role, is_service_provider)
+            staff:business_staff(id, name, role, is_service_provider)
           `)
           .eq('service_id', serviceId);
           
@@ -48,9 +48,9 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         
         // Transform the joined data to match the StaffMember type
         const staffMembers: StaffMember[] = data.map(item => ({
-          id: item.business_staff.id,
-          name: item.business_staff.name || 'Unknown',
-          role: item.business_staff.role || 'staff'
+          id: item.staff.id,
+          name: item.staff.name || 'Unknown',
+          role: item.staff.role || 'staff'
         }));
         
         return staffMembers;
