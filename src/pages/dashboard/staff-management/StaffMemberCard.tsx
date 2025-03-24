@@ -27,7 +27,7 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({ member, onSelectStaff
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <Avatar className="h-12 w-12">
-            <AvatarImage src={member.profile?.avatar_url || ""} alt={fullName} />
+            <AvatarImage src={member.profile_image_url || ""} alt={fullName} />
             <AvatarFallback className="bg-primary/10 text-primary">
               {initials}
             </AvatarFallback>
@@ -85,7 +85,7 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({ member, onSelectStaff
           variant="outline" 
           size="sm" 
           className="w-full"
-          onClick={() => onSelectStaff(member.staff_id)}
+          onClick={() => onSelectStaff(member.id)}
         >
           <Eye className="h-3.5 w-3.5 mr-1" />
           View Details
