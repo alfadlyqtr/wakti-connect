@@ -5,7 +5,6 @@ import ProfileTab from "@/components/settings/ProfileTab";
 import AccountTab from "@/components/settings/AccountTab";
 import BillingTab from "@/components/settings/BillingTab";
 import NotificationsTab from "@/components/settings/NotificationsTab";
-import CurrencyTab from "@/components/settings/CurrencyTab";
 import { AIAssistantSettings } from "@/components/settings/ai";
 import { useAuth } from "@/hooks/auth";
 
@@ -21,18 +20,12 @@ const DashboardSettings = () => {
     setIsLoading(false);
   }, [user]);
   
-  // Only show Billing, Currency, and AI Assistant tabs for non-staff users
+  // Only show Billing and AI Assistant tabs for non-staff users
   const isStaff = userRole === 'staff';
-  
-  // Only show Currency tab for business accounts
-  const isBusinessAccount = userRole === 'business';
   
   if (isLoading) {
     return <div className="mx-auto max-w-7xl py-6">Loading settings...</div>;
   }
-  
-  // Calculate the number of tabs to determine grid columns
-  const tabCount = isStaff ? 3 : (isBusinessAccount ? 6 : 5);
   
   return (
     <div className="mx-auto max-w-7xl py-6">
@@ -44,16 +37,13 @@ const DashboardSettings = () => {
       </div>
       
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className={`grid w-full grid-cols-${tabCount} gap-4 h-auto`}>
+        <TabsList className={`grid w-full ${isStaff ? 'grid-cols-3' : 'grid-cols-5'} gap-4 h-auto`}>
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           {!isStaff && (
             <>
               <TabsTrigger value="billing">Billing</TabsTrigger>
-              {isBusinessAccount && (
-                <TabsTrigger value="currency">Currency</TabsTrigger>
-              )}
               <TabsTrigger value="ai-assistant">AI Assistant</TabsTrigger>
             </>
           )}
@@ -76,12 +66,6 @@ const DashboardSettings = () => {
             <TabsContent value="billing" className="space-y-4">
               <BillingTab />
             </TabsContent>
-            
-            {isBusinessAccount && (
-              <TabsContent value="currency" className="space-y-4">
-                <CurrencyTab />
-              </TabsContent>
-            )}
             
             <TabsContent value="ai-assistant" className="space-y-4">
               <AIAssistantSettings />
