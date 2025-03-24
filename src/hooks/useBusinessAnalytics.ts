@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getGrowthTrendsData, getServiceDistributionData } from "@/utils/businessAnalyticsUtils";
+import { toast } from "@/components/ui/use-toast";
 
 type AnalyticsTimeRange = "week" | "month" | "year";
 
@@ -19,6 +20,7 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
     queryKey: ['businessAnalytics', timeRange],
     queryFn: async () => {
       try {
+        console.log("Business analytics: Fetching data for timeRange:", timeRange);
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) {
@@ -29,7 +31,7 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
         // Verify the user has a business account
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('account_type')
+          .select('account_type, business_name')
           .eq('id', session.user.id)
           .maybeSingle();
           
@@ -38,9 +40,18 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
           throw new Error('Could not verify account type');
         }
         
+        // Log the profile data for debugging
+        console.log("Business analytics: User profile data:", profileData);
+        
         // If not business account, return default values to avoid errors
         if (profileData?.account_type !== 'business') {
           console.warn("Non-business account attempting to access business analytics");
+          toast({
+            title: "Access Denied",
+            description: "You need a business account to access analytics.",
+            variant: "destructive"
+          });
+          
           const growthData = getGrowthTrendsData();
           const serviceData = getServiceDistributionData();
           
@@ -59,6 +70,10 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
         const growthData = getGrowthTrendsData();
         const serviceData = getServiceDistributionData();
         
+        // Log the chart data for debugging
+        console.log("Business analytics: Growth data:", growthData);
+        console.log("Business analytics: Service data:", serviceData);
+        
         // Ensure the data structure is correct
         if (!growthData || !growthData.datasets || !growthData.datasets[0] || !growthData.datasets[0].data) {
           console.error("Invalid growth data format:", growthData);
@@ -70,6 +85,8 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
           throw new Error('Invalid service data format');
         }
         
+        // Return the analytics data
+        console.log("Business analytics: Returning data successfully");
         return {
           subscriberCount: 157,
           staffCount: 5,

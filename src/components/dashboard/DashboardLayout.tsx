@@ -36,7 +36,12 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
 
   // Redirect to appropriate dashboard based on role if on main dashboard
   useEffect(() => {
-    if (!profileLoading && location.pathname === "/dashboard") {
+    // Fix: Check for both "/dashboard" and "/dashboard/" paths
+    const isMainDashboardPath = location.pathname === "/dashboard" || location.pathname === "/dashboard/";
+    
+    if (!profileLoading && isMainDashboardPath) {
+      console.log("Dashboard redirect check - User role:", userRoleValue, "Is staff:", isStaff);
+      
       if (isStaff) {
         // Staff users go to staff dashboard
         navigate('/dashboard/staff-dashboard');

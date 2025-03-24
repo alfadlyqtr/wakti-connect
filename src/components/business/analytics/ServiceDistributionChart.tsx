@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { PieChart } from "@/components/ui/chart";
 import { getServiceDistributionData } from "@/utils/businessAnalyticsUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -10,21 +10,23 @@ interface ServiceDistributionChartProps {
 }
 
 export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> = ({ isLoading, data }) => {
+  const [chartData, setChartData] = useState<any>(null);
   const defaultServiceData = getServiceDistributionData();
   const isMobile = useIsMobile();
   
   // Validate and prepare chart data
-  const chartData = React.useMemo(() => {
+  useEffect(() => {
     // If no data provided or invalid format, use default data
     if (!data || !Array.isArray(data) || data.length === 0) {
       console.log("Using default service distribution data");
-      return defaultServiceData;
+      setChartData(defaultServiceData);
+      return;
     }
     
     try {
       // Use provided data with the structure from default data
       console.log("Using provided service distribution data:", data);
-      return {
+      setChartData({
         ...defaultServiceData,
         datasets: [
           {
@@ -32,10 +34,10 @@ export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> =
             data: data
           }
         ]
-      };
+      });
     } catch (error) {
       console.error("Error processing service distribution data:", error);
-      return defaultServiceData;
+      setChartData(defaultServiceData);
     }
   }, [data, defaultServiceData]);
 
@@ -59,7 +61,7 @@ export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> =
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !chartData) {
     return (
       <div className="h-[300px] w-full flex items-center justify-center">
         <p>Loading service data...</p>

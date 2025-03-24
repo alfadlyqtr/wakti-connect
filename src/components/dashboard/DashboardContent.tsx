@@ -27,7 +27,12 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   
   // Redirect users to their appropriate dashboards on login
   useEffect(() => {
-    if (!isLoading && currentPath === '/dashboard' && userId) {
+    // Fix: Check for both "/dashboard" and "/dashboard/" paths
+    const isMainDashboardPath = currentPath === '/dashboard' || currentPath === '/dashboard/';
+    
+    if (!isLoading && isMainDashboardPath && userId) {
+      console.log("DashboardContent redirect - User role:", userRole, "Is staff:", isStaff);
+      
       if (isStaff) {
         navigate('/dashboard/staff-dashboard');
       } else if (userRole === 'business') {

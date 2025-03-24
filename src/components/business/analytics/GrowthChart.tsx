@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { LineChart } from "@/components/ui/chart";
 import { getGrowthTrendsData } from "@/utils/businessAnalyticsUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -10,21 +10,23 @@ interface GrowthChartProps {
 }
 
 export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => {
+  const [chartData, setChartData] = useState<any>(null);
   const defaultGrowthData = getGrowthTrendsData();
   const isMobile = useIsMobile();
   
   // Validate and prepare chart data
-  const chartData = React.useMemo(() => {
+  useEffect(() => {
     // If no data provided or invalid format, use default data
     if (!data || !Array.isArray(data) || data.length === 0) {
       console.log("Using default growth data");
-      return defaultGrowthData;
+      setChartData(defaultGrowthData);
+      return;
     }
     
     try {
       // Use provided data with the structure from default data
       console.log("Using provided growth data:", data);
-      return {
+      setChartData({
         ...defaultGrowthData,
         datasets: [
           {
@@ -32,10 +34,10 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
             data: data
           }
         ]
-      };
+      });
     } catch (error) {
       console.error("Error processing growth data:", error);
-      return defaultGrowthData;
+      setChartData(defaultGrowthData);
     }
   }, [data, defaultGrowthData]);
 
@@ -69,7 +71,7 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
     }
   };
 
-  if (isLoading) {
+  if (isLoading || !chartData) {
     return (
       <div className="h-[300px] w-full flex items-center justify-center">
         <p>Loading growth data...</p>

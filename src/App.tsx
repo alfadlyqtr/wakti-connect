@@ -18,14 +18,20 @@ import PublicLayout from "./components/layout/PublicLayout";
 
 import "./i18n/i18n";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1
+    }
+  }
+});
 
 function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="system">
-          {/* Removed duplicate AuthProvider here, as it's already included in main.tsx */}
           <TaskProvider>
             <TooltipProvider>
               <BrowserRouter>
@@ -54,13 +60,15 @@ function App() {
                     />
                   ))}
                   
-                  {/* Dashboard routes */}
+                  {/* Dashboard routes - Add index redirect for /dashboard/ */}
                   <Route
                     path="/dashboard/*"
                     element={
                       <ProtectedRoute>
                         <DashboardLayout>
                           <Routes>
+                            {/* Add an index route for both /dashboard and /dashboard/ */}
+                            <Route index element={<Navigate to="/dashboard/analytics" replace />} />
                             {dashboardRoutes.map((route) => (
                               <Route
                                 key={route.path}
