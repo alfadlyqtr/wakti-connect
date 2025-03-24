@@ -47,7 +47,9 @@ const DashboardSettings = () => {
       
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className={`grid w-full grid-cols-${getTabsCount()} gap-4 h-auto`}>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="profile">
+            {isBusinessAccount ? "Business Profile" : "Profile"}
+          </TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           {!isStaff && (
             <>
