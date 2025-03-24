@@ -31,6 +31,8 @@ export const useStaffData = () => {
     queryKey: ['businessStaff'],
     queryFn: async () => {
       try {
+        console.log("Fetching staff data");
+        
         const { data: session } = await supabase.auth.getSession();
         
         if (!session?.session?.user) {
@@ -44,8 +46,12 @@ export const useStaffData = () => {
           .eq('status', 'active')
           .order('name');
           
-        if (staffError) throw staffError;
+        if (staffError) {
+          console.error("Error fetching staff data:", staffError);
+          throw staffError;
+        }
         
+        console.log("Fetched staff data:", staffData?.length);
         return staffData as Staff[];
       } catch (error) {
         console.error("Error fetching staff data:", error);

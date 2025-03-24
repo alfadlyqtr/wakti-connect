@@ -22,17 +22,25 @@ export const useServiceStaffQueries = (serviceId?: string) => {
           throw new Error('Not authenticated');
         }
         
+        console.log("Fetching staff assignments for service:", serviceId);
+        
         // Modified approach: Get staff assignments first
         const { data: assignments, error: assignmentError } = await supabase
           .from('staff_service_assignments')
           .select('staff_id')
           .eq('service_id', serviceId);
           
-        if (assignmentError) throw assignmentError;
+        if (assignmentError) {
+          console.error("Error fetching assignments:", assignmentError);
+          throw assignmentError;
+        }
         
         if (!assignments || assignments.length === 0) {
+          console.log("No staff assignments found for service", serviceId);
           return [];
         }
+        
+        console.log("Found assignments:", assignments);
         
         // Extract staff IDs from assignments
         const staffIds = assignments.map(assignment => assignment.staff_id);
@@ -43,11 +51,17 @@ export const useServiceStaffQueries = (serviceId?: string) => {
           .select('id, name, role')
           .in('id', staffIds);
           
-        if (staffError) throw staffError;
+        if (staffError) {
+          console.error("Error fetching staff data:", staffError);
+          throw staffError;
+        }
         
         if (!staffData || staffData.length === 0) {
+          console.log("No staff data found for the assigned staff IDs");
           return [];
         }
+        
+        console.log("Found staff data:", staffData);
         
         // Transform the data to match the StaffMember type
         const staffMembers: StaffMember[] = staffData.map(staff => ({

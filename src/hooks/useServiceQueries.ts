@@ -15,6 +15,8 @@ export const useServiceQueries = () => {
     queryKey: ['businessServices'],
     queryFn: async () => {
       try {
+        console.log("Fetching business services");
+        
         const { data: session } = await supabase.auth.getSession();
         
         if (!session?.session?.user) {
@@ -27,7 +29,12 @@ export const useServiceQueries = () => {
           .select('*')
           .order('name');
           
-        if (servicesError) throw servicesError;
+        if (servicesError) {
+          console.error("Error fetching services:", servicesError);
+          throw servicesError;
+        }
+
+        console.log("Fetched services:", servicesData?.length);
 
         // Get all service IDs to use in the assignments query
         const serviceIds = servicesData.map(service => service.id);
@@ -49,11 +56,15 @@ export const useServiceQueries = () => {
           // Continue even if assignments fetch fails
         }
 
+        console.log("Fetched assignments:", assignmentsData?.length);
+
         // If we have assignments, fetch staff data in a separate query
         let staffMap = new Map();
         
         if (assignmentsData && assignmentsData.length > 0) {
           const staffIds = [...new Set(assignmentsData.map(a => a.staff_id))];
+          
+          console.log("Fetching staff data for IDs:", staffIds);
           
           const { data: staffData, error: staffError } = await supabase
             .from('business_staff')
@@ -63,6 +74,7 @@ export const useServiceQueries = () => {
           if (staffError) {
             console.error("Error fetching staff data:", staffError);
           } else if (staffData) {
+            console.log("Fetched staff data:", staffData.length);
             // Create a map of staff data by ID for easy lookup
             staffMap = new Map(staffData.map(staff => [staff.id, staff]));
           }

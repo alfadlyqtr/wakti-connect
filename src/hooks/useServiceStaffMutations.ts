@@ -16,6 +16,8 @@ export const useServiceStaffMutations = () => {
       staffIds: string[] 
     }) => {
       try {
+        console.log("Starting staff assignment mutation:", { serviceId, staffIds });
+        
         // Get service details for notification
         const { data: serviceData, error: serviceError } = await supabase
           .from('business_services')
@@ -23,7 +25,10 @@ export const useServiceStaffMutations = () => {
           .eq('id', serviceId)
           .single();
           
-        if (serviceError) throw serviceError;
+        if (serviceError) {
+          console.error("Error fetching service data:", serviceError);
+          throw serviceError;
+        }
         
         // First, remove existing assignments for this service
         const { error: deleteError } = await supabase
@@ -31,9 +36,15 @@ export const useServiceStaffMutations = () => {
           .delete()
           .eq('service_id', serviceId);
           
-        if (deleteError) throw deleteError;
+        if (deleteError) {
+          console.error("Error deleting existing assignments:", deleteError);
+          throw deleteError;
+        }
         
-        if (staffIds.length === 0) return { message: "Staff assignments cleared" };
+        if (staffIds.length === 0) {
+          console.log("No staff members to assign, skipping insert");
+          return { message: "Staff assignments cleared" };
+        }
         
         // Create new assignments
         const assignments = staffIds.map(staffId => ({
@@ -41,12 +52,17 @@ export const useServiceStaffMutations = () => {
           staff_id: staffId
         }));
         
+        console.log("Creating new assignments:", assignments);
+        
         const { data, error } = await supabase
           .from('staff_service_assignments')
           .insert(assignments)
           .select();
           
-        if (error) throw error;
+        if (error) {
+          console.error("Error inserting assignments:", error);
+          throw error;
+        }
         
         // Create notifications for assigned staff members
         const businessId = serviceData.business_id;
@@ -58,34 +74,45 @@ export const useServiceStaffMutations = () => {
           .eq('id', businessId)
           .single();
           
-        if (businessError) throw businessError;
+        if (businessError) {
+          console.error("Error fetching business data:", businessError);
+          throw businessError;
+        }
         
         const businessName = businessData.business_name || businessData.display_name;
         
         // Create notifications for each staff member
         for (const staffId of staffIds) {
-          // Get staff relation
-          const { data: staffData, error: staffError } = await supabase
-            .from('business_staff')
-            .select('staff_id')
-            .eq('id', staffId)
-            .single();
-              
-          if (staffError) continue; // Skip this staff member if error
-          
-          // Create notification
-          await supabase
-            .from('notifications')
-            .insert({
-              user_id: staffData.staff_id,
-              title: "Service Assignment",
-              content: `You have been assigned to the service "${serviceData.name}" by ${businessName}`,
-              type: "service_assignment",
-              related_entity_id: serviceId,
-              related_entity_type: "service"
-            });
+          try {
+            // Get staff relation
+            const { data: staffData, error: staffError } = await supabase
+              .from('business_staff')
+              .select('staff_id')
+              .eq('id', staffId)
+              .single();
+                
+            if (staffError) {
+              console.error("Error fetching staff relation:", staffError);
+              continue; // Skip this staff member if error
+            }
+            
+            // Create notification
+            await supabase
+              .from('notifications')
+              .insert({
+                user_id: staffData.staff_id,
+                title: "Service Assignment",
+                content: `You have been assigned to the service "${serviceData.name}" by ${businessName}`,
+                type: "service_assignment",
+                related_entity_id: serviceId,
+                related_entity_type: "service"
+              });
+          } catch (err) {
+            console.error("Error processing notification for staff:", staffId, err);
+          }
         }
         
+        console.log("Staff assignment completed successfully");
         return data;
       } catch (error) {
         console.error("Error updating staff assignments:", error);
@@ -105,10 +132,10 @@ export const useServiceStaffMutations = () => {
       toast({
         title: "Staff assignments updated",
         description: "The staff members have been notified of their assignment to this service.",
-        variant: "success"
       });
     },
     onError: (error) => {
+      console.error("Staff assignment mutation error:", error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to update staff assignments",
@@ -118,6 +145,7 @@ export const useServiceStaffMutations = () => {
   });
 
   const assignStaffToService = (serviceId: string, staffIds: string[]) => {
+    console.log("Assigning staff to service:", { serviceId, staffIds });
     staffAssignmentMutation.mutate({ serviceId, staffIds });
   };
 

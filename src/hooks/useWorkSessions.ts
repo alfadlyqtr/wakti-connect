@@ -11,6 +11,8 @@ export const useWorkSessions = () => {
   // Add a new mutation to start a work session
   const startWorkSession = useMutation({
     mutationFn: async (staffRelationId: string) => {
+      console.log("Starting work session for staff:", staffRelationId);
+      
       const { data, error } = await supabase
         .from('staff_work_logs')
         .insert({
@@ -23,6 +25,7 @@ export const useWorkSessions = () => {
         .single();
         
       if (error) {
+        console.error("Error starting work session:", error);
         toast({
           title: "Error starting work session",
           description: error.message,
@@ -53,6 +56,8 @@ export const useWorkSessions = () => {
   // Add a mutation to end a work session
   const endWorkSession = useMutation({
     mutationFn: async ({ sessionId, earnings, notes }: { sessionId: string, earnings?: number, notes?: string }) => {
+      console.log("Ending work session:", { sessionId, earnings, notes });
+      
       const { data, error } = await supabase
         .from('staff_work_logs')
         .update({
@@ -66,6 +71,7 @@ export const useWorkSessions = () => {
         .single();
         
       if (error) {
+        console.error("Error ending work session:", error);
         toast({
           title: "Error ending work session",
           description: error.message,
