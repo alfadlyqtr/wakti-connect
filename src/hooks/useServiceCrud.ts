@@ -2,11 +2,13 @@
 import { useServiceQueries } from './useServiceQueries';
 import { useServiceMutations } from './useServiceMutations';
 
+// This is a simplified hook that combines data fetching and mutations
 export const useServiceCrud = () => {
   const { 
     services, 
     isLoading, 
-    error 
+    error, 
+    refetch 
   } = useServiceQueries();
 
   const {
@@ -23,6 +25,7 @@ export const useServiceCrud = () => {
     services,
     isLoading,
     error,
+    refetch,
     openAddService,
     setOpenAddService,
     editingService,

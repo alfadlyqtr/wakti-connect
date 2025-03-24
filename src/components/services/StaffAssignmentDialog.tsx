@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import StaffAssignmentSection from "./StaffAssignmentSection";
 import { useServiceStaffAssignments } from "@/hooks/useServiceStaffAssignments";
@@ -16,42 +16,21 @@ const StaffAssignmentDialog: React.FC<StaffAssignmentDialogProps> = ({
   serviceId, 
   serviceName 
 }) => {
-  const { data: staffData, isLoading: isStaffLoading } = useStaffData();
+  const { data: allStaffData, isLoading: isStaffLoading } = useStaffData();
   const { 
-    staffAssignments, 
-    assignStaffToService,
+    selectedStaffIds,
+    handleStaffChange,
+    handleSave,
+    handleCancel,
     isPending,
     isLoading: isAssignmentsLoading,
     initialAssignmentsDone
   } = useServiceStaffAssignments(serviceId);
 
-  const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
-
-  // Update local state when staffAssignments data loads
-  useEffect(() => {
-    if (staffAssignments && initialAssignmentsDone) {
-      setSelectedStaffIds(staffAssignments.map(staff => staff.id));
-    }
-  }, [staffAssignments, initialAssignmentsDone]);
-
-  const handleStaffChange = (staffIds: string[]) => {
-    setSelectedStaffIds(staffIds);
-  };
-
-  const handleSave = async () => {
-    await assignStaffToService(selectedStaffIds);
-  };
-
-  const handleCancel = () => {
-    if (staffAssignments) {
-      setSelectedStaffIds(staffAssignments.map(staff => staff.id));
-    }
-  };
-
-  // Filter staff to only show service providers
-  const serviceProviderStaff = staffData?.filter(staff => staff.is_service_provider) || [];
+  // Only show staff members who are service providers
+  const serviceProviderStaff = allStaffData?.filter(staff => staff.is_service_provider) || [];
   
-  const isLoading = isStaffLoading || isAssignmentsLoading;
+  const isLoading = isStaffLoading || isAssignmentsLoading || !initialAssignmentsDone;
 
   return (
     <DialogContent className="sm:max-w-[500px]">

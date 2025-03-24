@@ -3,11 +3,17 @@ import { useState } from 'react';
 import { Service, ServiceFormValues } from "@/types/service.types";
 import { useServiceCrud } from './useServiceCrud';
 
+// A simplified hook with business logic
 export const useServices = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  
   const {
     services,
     isLoading,
     error,
+    refetch,
     openAddService,
     setOpenAddService,
     editingService,
@@ -17,7 +23,7 @@ export const useServices = () => {
     deleteServiceMutation
   } = useServiceCrud();
 
-  // Get staff assignments count by service
+  // Create a map of staff assignments by service
   const staffAssignments = services?.reduce((acc, service) => {
     acc[service.id] = service.assigned_staff?.length || 0;
     return acc;
@@ -37,15 +43,24 @@ export const useServices = () => {
   };
 
   const handleDeleteService = (id: string) => {
-    if (confirm("Are you sure you want to delete this service?")) {
-      deleteServiceMutation.mutate(id);
-    }
+    deleteServiceMutation.mutate(id);
+    setDeleteDialogOpen(false);
+    setServiceToDelete(null);
   };
 
+  // Filter services based on search query
+  const filteredServices = searchQuery && services 
+    ? services.filter(service => 
+        service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (service.description && service.description.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : services;
+
   return {
-    services,
+    services: filteredServices,
     isLoading,
     error,
+    refetch,
     openAddService,
     setOpenAddService,
     editingService,
@@ -56,6 +71,12 @@ export const useServices = () => {
     isPendingAdd: addServiceMutation.isPending,
     isPendingUpdate: updateServiceMutation.isPending,
     isPendingDelete: deleteServiceMutation.isPending,
-    staffAssignments
+    staffAssignments,
+    searchQuery,
+    setSearchQuery,
+    serviceToDelete,
+    setServiceToDelete,
+    deleteDialogOpen,
+    setDeleteDialogOpen
   };
 };

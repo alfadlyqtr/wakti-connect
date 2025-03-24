@@ -51,9 +51,9 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
 
   if (!hasStaffMembers && !isStaffLoading) {
     return (
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Staff Assignment</AlertTitle>
+      <Alert className="border-amber-200 bg-amber-50 text-amber-800">
+        <AlertCircle className="h-4 w-4 text-amber-600" />
+        <AlertTitle>No Service Providers Found</AlertTitle>
         <AlertDescription>
           You need to add staff members marked as service providers in the Staff Management section before you can assign them to services.
         </AlertDescription>

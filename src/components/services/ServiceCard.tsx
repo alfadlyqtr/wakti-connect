@@ -23,12 +23,12 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   staffCount = 0
 }) => {
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col transition-all hover:shadow-md">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl">{service.name}</CardTitle>
           {service.price && (
-            <Badge variant="secondary" className="ml-2">
+            <Badge variant="secondary" className="ml-2 font-semibold">
               QAR {service.price.toFixed(2)}
             </Badge>
           )}
@@ -39,8 +39,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       </CardHeader>
       
       <CardContent className="pb-2 flex-grow space-y-4">
-        <div className="flex items-center">
-          <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+        <div className="flex items-center text-muted-foreground">
+          <Clock className="h-4 w-4 mr-2" />
           <span>{service.duration} minutes</span>
         </div>
         

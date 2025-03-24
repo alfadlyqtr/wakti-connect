@@ -1,12 +1,10 @@
 
-import { useState } from 'react';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 export const useServiceStaffMutations = () => {
   const queryClient = useQueryClient();
-  const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
   
   // Mutation to assign staff members to a service
   const staffAssignmentMutation = useMutation({
@@ -66,33 +64,26 @@ export const useServiceStaffMutations = () => {
         
         // Create notifications for each staff member
         for (const staffId of staffIds) {
-          // Check if this is a new assignment
-          const isNewAssignment = !data?.some(assignment => 
-            assignment.staff_id === staffId && assignment.service_id === serviceId
-          );
-          
-          if (isNewAssignment) {
-            // Get staff relation ID
-            const { data: staffData, error: staffError } = await supabase
-              .from('business_staff')
-              .select('staff_id')
-              .eq('id', staffId)
-              .single();
+          // Get staff relation
+          const { data: staffData, error: staffError } = await supabase
+            .from('business_staff')
+            .select('staff_id')
+            .eq('id', staffId)
+            .single();
               
-            if (staffError) continue; // Skip this staff member if error
-            
-            // Create notification
-            await supabase
-              .from('notifications')
-              .insert({
-                user_id: staffData.staff_id,
-                title: "Service Assignment",
-                content: `You have been assigned to the service "${serviceData.name}" by ${businessName}`,
-                type: "service_assignment",
-                related_entity_id: serviceId,
-                related_entity_type: "service"
-              });
-          }
+          if (staffError) continue; // Skip this staff member if error
+          
+          // Create notification
+          await supabase
+            .from('notifications')
+            .insert({
+              user_id: staffData.staff_id,
+              title: "Service Assignment",
+              content: `You have been assigned to the service "${serviceData.name}" by ${businessName}`,
+              type: "service_assignment",
+              related_entity_id: serviceId,
+              related_entity_type: "service"
+            });
         }
         
         return data;
@@ -131,8 +122,6 @@ export const useServiceStaffMutations = () => {
   };
 
   return {
-    selectedStaff,
-    setSelectedStaff,
     assignStaffToService,
     staffAssignmentMutation
   };

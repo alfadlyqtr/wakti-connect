@@ -1,9 +1,9 @@
+
 import { useState } from 'react';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Service, ServiceFormValues } from "@/types/service.types";
-import { toast } from "@/components/ui/use-toast";
-import { useServiceStaffMutations } from './useServiceStaffMutations';
+import { toast } from "@/hooks/use-toast";
 
 export const useServiceMutations = () => {
   const queryClient = useQueryClient();
@@ -40,13 +40,14 @@ export const useServiceMutations = () => {
       toast({
         title: "Service added",
         description: "The service has been added successfully.",
+        variant: "success"
       });
       setOpenAddService(false);
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to add service",
+        description: error instanceof Error ? error.message : "Failed to add service",
         variant: "destructive"
       });
     }
@@ -77,6 +78,7 @@ export const useServiceMutations = () => {
       toast({
         title: "Service updated",
         description: "The service has been updated successfully.",
+        variant: "success"
       });
       setOpenAddService(false);
       setEditingService(null);
@@ -84,7 +86,7 @@ export const useServiceMutations = () => {
     onError: (error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to update service",
+        description: error instanceof Error ? error.message : "Failed to update service",
         variant: "destructive"
       });
     }
@@ -93,6 +95,15 @@ export const useServiceMutations = () => {
   // Delete service mutation
   const deleteServiceMutation = useMutation({
     mutationFn: async (id: string) => {
+      // First delete all staff assignments for this service
+      const { error: assignmentError } = await supabase
+        .from('staff_service_assignments')
+        .delete()
+        .eq('service_id', id);
+        
+      if (assignmentError) throw assignmentError;
+        
+      // Then delete the service
       const { error } = await supabase
         .from('business_services')
         .delete()
@@ -106,12 +117,13 @@ export const useServiceMutations = () => {
       toast({
         title: "Service deleted",
         description: "The service has been deleted successfully.",
+        variant: "success"
       });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to delete service",
+        description: error instanceof Error ? error.message : "Failed to delete service",
         variant: "destructive"
       });
     }

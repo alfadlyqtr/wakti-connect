@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -8,12 +8,8 @@ import ServiceForm from "@/components/services/ServiceForm";
 import ServiceList from "@/components/services/ServiceList";
 import { useServices } from "@/hooks/useServices";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
-import { Service } from "@/types/service.types";
 
 const DashboardServiceManagement = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { 
     services,
     isLoading,
@@ -28,7 +24,14 @@ const DashboardServiceManagement = () => {
     isPendingAdd,
     isPendingUpdate,
     isPendingDelete,
-    staffAssignments
+    staffAssignments,
+    searchQuery,
+    setSearchQuery,
+    serviceToDelete,
+    setServiceToDelete,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    refetch
   } = useServices();
 
   const handleCancelDialog = () => {
@@ -36,7 +39,7 @@ const DashboardServiceManagement = () => {
     setEditingService(null);
   };
 
-  const handleDeleteClick = (service: Service) => {
+  const handleDeleteClick = (service: any) => {
     setServiceToDelete(service);
     setDeleteDialogOpen(true);
   };
@@ -71,6 +74,9 @@ const DashboardServiceManagement = () => {
               />
             </DialogContent>
           </Dialog>
+          <Button variant="outline" onClick={() => refetch()}>
+            Refresh
+          </Button>
         </div>
       </div>
 
@@ -88,7 +94,6 @@ const DashboardServiceManagement = () => {
 
       <ServiceList 
         services={services}
-        searchQuery={searchQuery}
         isLoading={isLoading}
         error={error}
         onAddService={() => setOpenAddService(true)}

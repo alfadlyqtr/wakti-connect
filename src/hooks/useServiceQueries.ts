@@ -1,15 +1,16 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Service } from "@/types/service.types";
-import { toast } from "@/components/ui/use-toast";
+import { Service, StaffMember } from "@/types/service.types";
+import { toast } from "@/hooks/use-toast";
 
 export const useServiceQueries = () => {
-  // Fetch services with staff assignments
+  // Optimized to fetch services with staff assignments in a more efficient way
   const { 
     data: services, 
     isLoading, 
-    error 
+    error,
+    refetch 
   } = useQuery({
     queryKey: ['businessServices'],
     queryFn: async () => {
@@ -28,44 +29,42 @@ export const useServiceQueries = () => {
           
         if (servicesError) throw servicesError;
 
-        // Fetch service staff assignments using a separate query
-        // This avoids the join issue with staff_service_assignments and business_staff
-        const { data: assignmentsData, error: assignmentsError } = await supabase
-          .from('staff_service_assignments')
-          .select('service_id, staff_id');
-
-        if (assignmentsError) throw assignmentsError;
-
-        // Fetch staff members for all assignments in one query
-        const staffIds = [...new Set(assignmentsData.map(a => a.staff_id))];
+        // Get all service IDs to use in the assignments query
+        const serviceIds = servicesData.map(service => service.id);
         
-        // Only fetch staff data if there are staff assignments
-        let staffData = [];
-        if (staffIds.length > 0) {
-          const { data: staffMembers, error: staffError } = await supabase
-            .from('business_staff')
-            .select('id, name, role')
-            .in('id', staffIds);
-            
-          if (staffError) throw staffError;
-          staffData = staffMembers || [];
+        // No services, return empty array
+        if (serviceIds.length === 0) {
+          return [];
         }
 
-        // Map staff assignments to services
-        const servicesWithStaff = servicesData.map((service: Service) => {
-          const serviceAssignments = assignmentsData.filter(
-            (assignment: any) => assignment.service_id === service.id
-          );
+        // Fetch all assignments for these services in a single query
+        const { data: assignmentsData, error: assignmentsError } = await supabase
+          .from('staff_service_assignments')
+          .select('service_id, staff:staff_id(id, name, role)')
+          .in('service_id', serviceIds);
 
-          // Map staff assignments to staff members
-          const assignedStaff = serviceAssignments.map((assignment: any) => {
-            const staffMember = staffData.find(staff => staff.id === assignment.staff_id);
+        if (assignmentsError) {
+          console.error("Error fetching staff assignments:", assignmentsError);
+          // Continue even if assignments fetch fails
+        }
+
+        // Map services with their assignments
+        const servicesWithStaff = servicesData.map((service: Service) => {
+          // Find all assignments for this service
+          const serviceAssignments = assignmentsData?.filter(
+            assignment => assignment.service_id === service.id
+          ) || [];
+          
+          // Map staff data
+          const assignedStaff = serviceAssignments.map(assignment => {
+            if (!assignment.staff) return null;
+            
             return {
-              id: assignment.staff_id,
-              name: staffMember?.name || 'Unknown',
-              role: staffMember?.role || 'staff'
+              id: assignment.staff.id,
+              name: assignment.staff.name || 'Unknown',
+              role: assignment.staff.role || 'staff'
             };
-          });
+          }).filter(Boolean) as StaffMember[];
 
           return {
             ...service,
@@ -89,6 +88,7 @@ export const useServiceQueries = () => {
   return {
     services: services || [],
     isLoading,
-    error: error as Error | null
+    error: error as Error | null,
+    refetch
   };
 };
