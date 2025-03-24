@@ -9,11 +9,6 @@ export interface ProfileFormData {
   business_name?: string;
   occupation: string;
   
-  // Common fields
-  telephone?: string;
-  gender?: string;
-  date_of_birth?: string;
-  
   // Address fields
   country?: string;
   state_province?: string;
@@ -25,6 +20,9 @@ export interface ProfileFormData {
   // Business specific fields
   business_type?: string;
   business_address?: string;
+  business_email?: string;
+  business_phone?: string;
+  business_website?: string;
 }
 
 export const useProfileForm = (profile?: Tables<"profiles"> & { email?: string }) => {
@@ -35,9 +33,6 @@ export const useProfileForm = (profile?: Tables<"profiles"> & { email?: string }
       display_name: profile?.display_name || '',
       business_name: profile?.business_name || '',
       occupation: profile?.occupation || '',
-      telephone: profile?.telephone || '',
-      gender: profile?.gender || 'prefer_not_to_say',
-      date_of_birth: profile?.date_of_birth || '',
       country: profile?.country || '',
       state_province: profile?.state_province || '',
       city: profile?.city || '',
@@ -45,7 +40,10 @@ export const useProfileForm = (profile?: Tables<"profiles"> & { email?: string }
       street_address: profile?.street_address || '',
       po_box: profile?.po_box || '',
       business_type: profile?.business_type || '',
-      business_address: profile?.business_address || ''
+      business_address: profile?.business_address || '',
+      business_email: profile?.business_email || '',
+      business_phone: profile?.business_phone || '',
+      business_website: profile?.business_website || ''
     }
   });
   
@@ -59,9 +57,6 @@ export const useProfileForm = (profile?: Tables<"profiles"> & { email?: string }
         display_name: data.display_name,
         business_name: data.business_name,
         occupation: data.occupation,
-        telephone: data.telephone,
-        gender: data.gender,
-        date_of_birth: data.date_of_birth,
         country: data.country,
         state_province: data.state_province,
         city: data.city,
@@ -69,7 +64,10 @@ export const useProfileForm = (profile?: Tables<"profiles"> & { email?: string }
         street_address: data.street_address,
         po_box: data.po_box,
         business_type: data.business_type,
-        business_address: data.business_address
+        business_address: data.business_address,
+        business_email: data.business_email,
+        business_phone: data.business_phone,
+        business_website: data.business_website
       });
       
       toast({

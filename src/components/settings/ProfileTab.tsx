@@ -8,6 +8,7 @@ import ProfileForm from "./profile/ProfileForm";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
 import ThemeToggle from "./profile/ThemeToggle";
 import FeedbackForm from "./profile/FeedbackForm";
+import { User, Palette, MessageSquare } from "lucide-react";
 
 interface ProfileTabProps {
   profile?: (Tables<"profiles"> & {
@@ -24,8 +25,8 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
   
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
+      <Card className="border-gray-200 shadow-sm">
+        <CardHeader className="px-4 sm:px-6">
           <CardTitle>Profile Information</CardTitle>
           <CardDescription>Loading profile information...</CardDescription>
         </CardHeader>
@@ -38,8 +39,8 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
   
   if (!profile) {
     return (
-      <Card>
-        <CardHeader>
+      <Card className="border-gray-200 shadow-sm">
+        <CardHeader className="px-4 sm:px-6">
           <CardTitle>Profile Information</CardTitle>
           <CardDescription>Could not load profile. Please refresh the page.</CardDescription>
         </CardHeader>
@@ -51,25 +52,28 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
   
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader className="px-4 sm:px-6">
+      <Card className="border-gray-200 shadow-sm overflow-hidden">
+        <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>{isBusinessAccount ? "Business Profile" : "Profile Information"}</CardTitle>
-              <CardDescription>
-                {isBusinessAccount
-                  ? "Manage your business profile information"
-                  : "Update your public profile information"}
-              </CardDescription>
+            <div className="flex items-center gap-2">
+              <User className="h-5 w-5 text-wakti-blue" />
+              <div>
+                <CardTitle>{isBusinessAccount ? "Business Profile" : "Profile Information"}</CardTitle>
+                <CardDescription>
+                  {isBusinessAccount
+                    ? "Manage your business profile information"
+                    : "Update your public profile information"}
+                </CardDescription>
+              </div>
             </div>
             {isBusinessAccount && (
-              <span className="text-xs bg-wakti-blue/10 text-wakti-blue px-2 py-1 rounded-full">
+              <span className="text-xs bg-wakti-blue/10 text-wakti-blue px-3 py-1 rounded-full font-medium">
                 Business Account
               </span>
             )}
           </div>
         </CardHeader>
-        <CardContent className="space-y-5 px-4 sm:px-6">
+        <CardContent className="space-y-5 px-4 sm:px-6 pt-4">
           <div className={`${isMobile ? 'flex flex-col' : 'flex items-center'} gap-4 mb-5`}>
             <ProfileAvatar profile={profile} />
           </div>
@@ -78,22 +82,32 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader className="px-4 sm:px-6">
-          <CardTitle>Appearance Settings</CardTitle>
-          <CardDescription>Choose your preferred theme</CardDescription>
+      <Card className="border-gray-200 shadow-sm overflow-hidden">
+        <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
+          <div className="flex items-center gap-2">
+            <Palette className="h-5 w-5 text-wakti-blue" />
+            <div>
+              <CardTitle>Appearance Settings</CardTitle>
+              <CardDescription>Choose your preferred theme</CardDescription>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent className="px-4 sm:px-6">
+        <CardContent className="px-4 sm:px-6 pt-4">
           <ThemeToggle initialTheme={profile.theme_preference || 'light'} />
         </CardContent>
       </Card>
       
-      <Card>
-        <CardHeader className="px-4 sm:px-6">
-          <CardTitle>Feedback</CardTitle>
-          <CardDescription>Share your thoughts with us</CardDescription>
+      <Card className="border-gray-200 shadow-sm overflow-hidden">
+        <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-wakti-blue" />
+            <div>
+              <CardTitle>Feedback</CardTitle>
+              <CardDescription>Share your thoughts with us</CardDescription>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent className="px-4 sm:px-6">
+        <CardContent className="px-4 sm:px-6 pt-4">
           <FeedbackForm />
         </CardContent>
       </Card>
