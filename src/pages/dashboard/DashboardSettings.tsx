@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProfileTab from "@/components/settings/ProfileTab";
-import AccountTab from "@/components/settings/AccountTab";
-import BillingTab from "@/components/settings/BillingTab";
 import NotificationsTab from "@/components/settings/NotificationsTab";
 import { AIAssistantSettings } from "@/components/settings/ai";
 import { useAuth } from "@/hooks/auth";
+import CurrencyTab from "@/components/settings/CurrencyTab";
+import BillingTab from "@/components/settings/BillingTab";
 
 const DashboardSettings = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -20,8 +20,16 @@ const DashboardSettings = () => {
     setIsLoading(false);
   }, [user]);
   
-  // Only show Billing and AI Assistant tabs for non-staff users
+  // Only show Billing, Currency and AI Assistant tabs for non-staff users
   const isStaff = userRole === 'staff';
+  const isBusinessAccount = userRole === 'business';
+  
+  // Calculate the number of tabs to show
+  const getTabsCount = () => {
+    if (isStaff) return 2; // Profile & Account (combined) and Notifications
+    if (isBusinessAccount) return 4; // Add Currency tab for business accounts
+    return 3; // No Currency tab for non-business accounts
+  };
   
   if (isLoading) {
     return <div className="mx-auto max-w-7xl py-6">Loading settings...</div>;
@@ -37,13 +45,15 @@ const DashboardSettings = () => {
       </div>
       
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className={`grid w-full ${isStaff ? 'grid-cols-3' : 'grid-cols-5'} gap-4 h-auto`}>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="account">Account</TabsTrigger>
+        <TabsList className={`grid w-full grid-cols-${getTabsCount()} gap-4 h-auto`}>
+          <TabsTrigger value="profile">Profile & Account</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           {!isStaff && (
             <>
               <TabsTrigger value="billing">Billing</TabsTrigger>
+              {isBusinessAccount && (
+                <TabsTrigger value="currency">Currency</TabsTrigger>
+              )}
               <TabsTrigger value="ai-assistant">AI Assistant</TabsTrigger>
             </>
           )}
@@ -51,10 +61,6 @@ const DashboardSettings = () => {
         
         <TabsContent value="profile" className="space-y-4">
           <ProfileTab />
-        </TabsContent>
-        
-        <TabsContent value="account" className="space-y-4">
-          <AccountTab />
         </TabsContent>
         
         <TabsContent value="notifications" className="space-y-4">
@@ -66,6 +72,12 @@ const DashboardSettings = () => {
             <TabsContent value="billing" className="space-y-4">
               <BillingTab />
             </TabsContent>
+            
+            {isBusinessAccount && (
+              <TabsContent value="currency" className="space-y-4">
+                <CurrencyTab />
+              </TabsContent>
+            )}
             
             <TabsContent value="ai-assistant" className="space-y-4">
               <AIAssistantSettings />

@@ -1,16 +1,27 @@
 
 import { format, formatDistanceStrict } from 'date-fns';
 
-// Format currency with locale
-export const formatCurrency = (amount: number | null | undefined): string => {
+// Format currency with locale and currency code
+export const formatCurrency = (amount: number | null | undefined, currencyCode: string = 'USD'): string => {
   if (amount === null || amount === undefined) {
     return '-';
   }
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2
-  }).format(amount);
+  
+  // Currency formatting options for each supported currency
+  const currencyFormatOptions: Record<string, Intl.NumberFormatOptions> = {
+    USD: { style: 'currency', currency: 'USD', minimumFractionDigits: 2 },
+    QAR: { style: 'currency', currency: 'QAR', minimumFractionDigits: 2 },
+    AED: { style: 'currency', currency: 'AED', minimumFractionDigits: 2 },
+    SAR: { style: 'currency', currency: 'SAR', minimumFractionDigits: 2 },
+    KWD: { style: 'currency', currency: 'KWD', minimumFractionDigits: 3 }, // KWD uses 3 decimal places
+    BHD: { style: 'currency', currency: 'BHD', minimumFractionDigits: 3 }, // BHD uses 3 decimal places
+    OMR: { style: 'currency', currency: 'OMR', minimumFractionDigits: 3 }, // OMR uses 3 decimal places
+  };
+  
+  // Use the options for the specified currency, or fall back to USD
+  const options = currencyFormatOptions[currencyCode] || currencyFormatOptions.USD;
+  
+  return new Intl.NumberFormat('en-US', options).format(amount);
 };
 
 // Format duration between two dates
