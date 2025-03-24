@@ -17,29 +17,34 @@ export const useServiceStaffMutations = () => {
       serviceId: string, 
       staffIds: string[] 
     }) => {
-      // First, remove existing assignments for this service
-      const { error: deleteError } = await supabase
-        .from('staff_service_assignments')
-        .delete()
-        .eq('service_id', serviceId);
+      try {
+        // First, remove existing assignments for this service
+        const { error: deleteError } = await supabase
+          .from('staff_service_assignments')
+          .delete()
+          .eq('service_id', serviceId);
+          
+        if (deleteError) throw deleteError;
         
-      if (deleteError) throw deleteError;
-      
-      if (staffIds.length === 0) return { message: "Staff assignments cleared" };
-      
-      // Create new assignments
-      const assignments = staffIds.map(staffId => ({
-        service_id: serviceId,
-        staff_id: staffId
-      }));
-      
-      const { data, error } = await supabase
-        .from('staff_service_assignments')
-        .insert(assignments)
-        .select();
+        if (staffIds.length === 0) return { message: "Staff assignments cleared" };
         
-      if (error) throw error;
-      return data;
+        // Create new assignments
+        const assignments = staffIds.map(staffId => ({
+          service_id: serviceId,
+          staff_id: staffId
+        }));
+        
+        const { data, error } = await supabase
+          .from('staff_service_assignments')
+          .insert(assignments)
+          .select();
+          
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error("Error updating staff assignments:", error);
+        throw error;
+      }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ 
@@ -50,13 +55,13 @@ export const useServiceStaffMutations = () => {
       });
       toast({
         title: "Staff assignments updated",
-        description: "The staff assignments for this service have been updated."
+        description: "The staff assignments for this service have been updated successfully."
       });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to update staff assignments",
+        description: error instanceof Error ? error.message : "Failed to update staff assignments",
         variant: "destructive"
       });
     }

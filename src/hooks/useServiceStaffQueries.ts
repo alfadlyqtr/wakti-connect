@@ -1,12 +1,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-interface StaffMember {
-  id: string;
-  name?: string;
-  role?: string;
-}
+import { StaffMember } from "@/types/service.types";
+import { toast } from "@/components/ui/use-toast";
 
 export const useServiceStaffQueries = (serviceId?: string) => {
   // Query to fetch staff members assigned to a specific service
@@ -17,37 +13,43 @@ export const useServiceStaffQueries = (serviceId?: string) => {
   } = useQuery({
     queryKey: ['staffServiceAssignments', serviceId],
     queryFn: async () => {
-      if (!serviceId) return [];
-      
-      const { data: session } = await supabase.auth.getSession();
-      
-      if (!session?.session?.user) {
-        throw new Error('Not authenticated');
-      }
-      
-      // First get all the staff assignments
-      const { data: assignments, error: assignmentsError } = await supabase
-        .from('staff_service_assignments')
-        .select('staff_id')
-        .eq('service_id', serviceId);
+      try {
+        if (!serviceId) return [];
         
-      if (assignmentsError) throw assignmentsError;
-      
-      if (!assignments || assignments.length === 0) {
+        const { data: session } = await supabase.auth.getSession();
+        
+        if (!session?.session?.user) {
+          throw new Error('Not authenticated');
+        }
+        
+        // Get staff assigned to the service with a direct join to business_staff
+        const { data, error } = await supabase
+          .from('staff_service_assignments')
+          .select(`
+            staff_id,
+            business_staff(id, name, role)
+          `)
+          .eq('service_id', serviceId);
+          
+        if (error) throw error;
+        
+        // Transform the data to match the StaffMember type
+        const staffMembers: StaffMember[] = data.map(item => ({
+          id: item.staff_id,
+          name: item.business_staff?.name || 'Unknown',
+          role: item.business_staff?.role || 'staff'
+        }));
+        
+        return staffMembers;
+      } catch (error) {
+        console.error("Error fetching staff assignments:", error);
+        toast({
+          title: "Error fetching staff assignments",
+          description: error instanceof Error ? error.message : "Unknown error occurred",
+          variant: "destructive"
+        });
         return [];
       }
-      
-      // Get the staff details for each assignment
-      const staffIds = assignments.map(item => item.staff_id);
-      
-      const { data: staffData, error: staffError } = await supabase
-        .from('business_staff')
-        .select('id, name, role')
-        .in('id', staffIds);
-        
-      if (staffError) throw staffError;
-      
-      return staffData || [];
     },
     enabled: !!serviceId
   });

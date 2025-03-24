@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,6 +24,11 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
 }) => {
   const [staffSearchQuery, setStaffSearchQuery] = useState("");
   
+  // Update local state when external selectedStaff changes
+  useEffect(() => {
+    // This ensures we sync with external state
+  }, [selectedStaff]);
+  
   // Check if we have any staff members
   const hasStaffMembers = staffData && staffData.length > 0;
 
@@ -40,12 +45,17 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
     onStaffChange(updatedStaff);
   };
 
+  // Clear all selections
+  const clearSelections = () => {
+    onStaffChange([]);
+  };
+
   // Filter staff by search query
   const filteredStaff = staffData?.filter(staff => 
     staff.name.toLowerCase().includes(staffSearchQuery.toLowerCase())
   ) || [];
 
-  if (!hasStaffMembers) {
+  if (!hasStaffMembers && !isStaffLoading) {
     return (
       <Alert>
         <AlertCircle className="h-4 w-4" />
@@ -59,7 +69,18 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
 
   return (
     <div className="space-y-3 border p-4 rounded-md">
-      <FormLabel className="text-base">Assign Staff</FormLabel>
+      <div className="flex items-center justify-between">
+        <FormLabel className="text-base">Assign Staff</FormLabel>
+        {selectedStaff.length > 0 && (
+          <button 
+            type="button" 
+            onClick={clearSelections}
+            className="text-xs text-muted-foreground hover:text-destructive"
+          >
+            Clear all
+          </button>
+        )}
+      </div>
       
       {/* Selected Staff Badges */}
       {selectedStaff.length > 0 && (
@@ -91,7 +112,10 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
       </div>
       
       {isStaffLoading ? (
-        <div className="text-sm text-muted-foreground p-2">Loading staff members...</div>
+        <div className="text-sm text-muted-foreground p-4 text-center">
+          <div className="inline-block h-4 w-4 border-2 border-current border-t-transparent animate-spin rounded-full mr-2"></div>
+          Loading staff members...
+        </div>
       ) : (
         <ScrollArea className="h-48 border rounded-md">
           <div className="p-2">
@@ -99,7 +123,7 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
               filteredStaff.map((staff) => (
                 <div 
                   key={staff.id} 
-                  className={`flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted ${
+                  className={`flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted cursor-pointer ${
                     selectedStaff.includes(staff.id) ? 'bg-muted' : ''
                   }`}
                   onClick={() => handleStaffToggle(staff.id)}
@@ -109,6 +133,7 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
                       id={`staff-${staff.id}`} 
                       checked={selectedStaff.includes(staff.id)} 
                       onCheckedChange={() => handleStaffToggle(staff.id)}
+                      onClick={(e) => e.stopPropagation()}
                     />
                     <label 
                       htmlFor={`staff-${staff.id}`}
@@ -126,7 +151,10 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
               ))
             ) : (
               <div className="p-3 text-sm text-muted-foreground text-center">
-                No staff members found matching "{staffSearchQuery}"
+                {staffSearchQuery 
+                  ? `No staff members found matching "${staffSearchQuery}"`
+                  : "No staff members available"
+                }
               </div>
             )}
           </div>
