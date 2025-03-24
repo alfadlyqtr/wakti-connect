@@ -42,11 +42,11 @@ export const useServiceQueries = () => {
         // For each service, get staff assignments
         const servicesWithStaff = await Promise.all(servicesData.map(async (service) => {
           try {
-            // Get staff assignments for this service
+            // Get staff assignments for this service without using dot notation
             const { data: assignments, error: assignmentsError } = await supabase
               .from('staff_service_assignments')
-              .select('staff_service_assignments.staff_id')
-              .eq('staff_service_assignments.service_id', service.id);
+              .select('staff_id')
+              .eq('service_id', service.id);
               
             if (assignmentsError) {
               console.error(`Error fetching assignments for service ${service.id}:`, assignmentsError);
@@ -60,11 +60,11 @@ export const useServiceQueries = () => {
             // Get the staff IDs
             const staffIds = assignments.map(a => a.staff_id);
             
-            // Fetch actual staff information
+            // Fetch actual staff information without using dot notation
             const { data: staffData, error: staffError } = await supabase
               .from('business_staff')
-              .select('business_staff.id, business_staff.name, business_staff.role')
-              .in('business_staff.id', staffIds);
+              .select('id, name, role')
+              .in('id', staffIds);
               
             if (staffError) {
               console.error(`Error fetching staff details for service ${service.id}:`, staffError);

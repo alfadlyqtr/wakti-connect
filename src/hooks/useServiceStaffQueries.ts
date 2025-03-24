@@ -25,12 +25,11 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         
         console.log("Fetching staff assignments for service:", serviceId);
         
-        // First, get the staff_id values from assignments
-        // Using explicit table naming to avoid ambiguity
+        // First, get the staff_id values from assignments without using dot notation
         const { data: assignments, error: assignmentsError } = await supabase
           .from('staff_service_assignments')
-          .select('staff_service_assignments.staff_id')
-          .eq('staff_service_assignments.service_id', serviceId);
+          .select('staff_id')
+          .eq('service_id', serviceId);
           
         if (assignmentsError) {
           console.error("Error fetching staff assignments:", assignmentsError);
@@ -45,11 +44,11 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         // Get staff_ids from the assignments
         const staffIds = assignments.map(item => item.staff_id);
         
-        // Then, fetch the actual staff details
+        // Then, fetch the actual staff details without using dot notation
         const { data: staffData, error: staffError } = await supabase
           .from('business_staff')
-          .select('business_staff.id, business_staff.name, business_staff.role')
-          .in('business_staff.id', staffIds);
+          .select('id, name, role')
+          .in('id', staffIds);
           
         if (staffError) {
           console.error("Error fetching staff details:", staffError);
