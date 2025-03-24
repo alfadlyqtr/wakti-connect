@@ -44,11 +44,15 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         // Transform the data to match the StaffMember type
         const staffMembers: StaffMember[] = assignments
           .filter(assignment => assignment.staff) // Filter out any nulls
-          .map(assignment => ({
-            id: assignment.staff_id,
-            name: assignment.staff.name || 'Unknown',
-            role: assignment.staff.role || 'staff'
-          }));
+          .map(assignment => {
+            const staffData = assignment.staff;
+            // Safely access properties with null checks
+            return {
+              id: assignment.staff_id,
+              name: staffData?.name || 'Unknown',
+              role: staffData?.role || 'staff'
+            };
+          });
         
         return staffMembers;
       } catch (error) {

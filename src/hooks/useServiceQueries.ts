@@ -59,10 +59,12 @@ export const useServiceQueries = () => {
           const assignedStaff = serviceAssignments.map(assignment => {
             if (!assignment.staff) return null;
             
+            // Safely access staff properties with null checks
+            const staffData = assignment.staff;
             return {
-              id: assignment.staff.id,
-              name: assignment.staff.name || 'Unknown',
-              role: assignment.staff.role || 'staff'
+              id: staffData?.id || '',
+              name: staffData?.name || 'Unknown',
+              role: staffData?.role || 'staff'
             };
           }).filter(Boolean) as StaffMember[];
 

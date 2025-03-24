@@ -10,6 +10,22 @@ export interface Staff {
   is_service_provider?: boolean;
 }
 
+export interface WorkSession {
+  id: string;
+  staff_relation_id: string;
+  start_time: string;
+  end_time?: string;
+  status: 'active' | 'completed' | 'cancelled';
+  earnings: number;
+  notes?: string;
+  date?: string;
+}
+
+export interface StaffWithSessions extends Staff {
+  sessions: WorkSession[];
+  email?: string;
+}
+
 export const useStaffData = () => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['businessStaff'],
