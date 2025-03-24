@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, Mail, Phone } from "lucide-react";
 import { StaffMember } from "./types";
 import { format } from "date-fns";
+import { useStaffWorkingStatus } from "@/hooks/staff/useStaffWorkSession";
 
 interface StaffMemberCardProps {
   member: StaffMember;
@@ -22,10 +23,15 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({ member, onSelectStaff
     
   const isActive = member.status === 'active';
   
-  // Avatar border color class based on status
-  const avatarBorderClass = isActive 
-    ? "ring-2 ring-green-500" 
-    : "ring-2 ring-red-500";
+  // Get work session status
+  const { isLoading, workSession } = useStaffWorkingStatus(member.id);
+  const isClockedIn = !!workSession;
+  
+  // Avatar border color class - green for clocked in OR red for not clocked in
+  // If still loading, default to account status
+  const avatarBorderClass = isLoading
+    ? (isActive ? "ring-2 ring-green-500" : "ring-2 ring-red-500")
+    : (isClockedIn ? "ring-2 ring-green-500" : "ring-2 ring-red-500");
     
   return (
     <Card className={isActive ? "" : "opacity-75 border-muted bg-muted/20"}>
@@ -46,6 +52,11 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({ member, onSelectStaff
             )}
             {!isActive && (
               <Badge variant="destructive">Suspended</Badge>
+            )}
+            {!isLoading && (
+              <Badge variant={isClockedIn ? "success" : "outline"}>
+                {isClockedIn ? 'Clocked In' : 'Clocked Out'}
+              </Badge>
             )}
           </div>
         </div>

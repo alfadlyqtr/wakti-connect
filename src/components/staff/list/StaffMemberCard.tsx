@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { StaffMember } from "@/types/staff";
+import { useStaffWorkingStatus } from "@/hooks/staff/useStaffWorkSession";
 
 export interface StaffMemberCardProps {
   staff?: StaffMember;
@@ -47,10 +48,15 @@ export const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
     .toUpperCase()
     .substring(0, 2);
 
-  // Avatar border color class based on status
-  const avatarBorderClass = isActive 
-    ? "ring-2 ring-green-500" 
-    : "ring-2 ring-red-500";
+  // Get work session status
+  const { isLoading, isClockingIn, workSession } = useStaffWorkingStatus(staffMember.id);
+  const isClockedIn = !!workSession;
+
+  // Avatar border color class - green for clocked in OR red for not clocked in
+  // If we're still loading, default to account status
+  const avatarBorderClass = isLoading 
+    ? (isActive ? "ring-2 ring-green-500" : "ring-2 ring-red-500")
+    : (isClockedIn ? "ring-2 ring-green-500" : "ring-2 ring-red-500");
 
   return (
     <Card className="overflow-hidden">

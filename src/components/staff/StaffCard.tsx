@@ -33,7 +33,8 @@ const StaffCard: React.FC<StaffCardProps> = ({
   // Count of unique work days
   const workDaysCount = Object.keys(sessionsByDate).length;
   
-  // Avatar border class based on active work session
+  // Avatar border class based on active work session - this color indicates
+  // whether the staff member is actively clocked in (green) or not (red)
   const avatarBorderClass = hasActiveSessions 
     ? "ring-2 ring-green-500" 
     : "ring-2 ring-red-500";

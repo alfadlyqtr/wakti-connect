@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, MoreVertical, UserCheck, UserX } from "lucide-react";
 import { StaffMember } from "@/types/staff";
+import { useStaffWorkingStatus } from "@/hooks/staff/useStaffWorkSession";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -58,10 +59,16 @@ export const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
     return null;
   };
 
-  // Determine the avatar border color based on staff status
-  const avatarBorderClass = staff.status === 'active' 
-    ? "ring-2 ring-green-500" 
-    : "ring-2 ring-red-500";
+  // Get work session status
+  const { isLoading, workSession } = useStaffWorkingStatus(staff.id);
+  const isClockedIn = !!workSession;
+
+  // Determine the avatar border color based on work session status
+  // Green = clocked in, Red = not clocked in
+  // If still loading, fall back to account status
+  const avatarBorderClass = isLoading
+    ? (staff.status === 'active' ? "ring-2 ring-green-500" : "ring-2 ring-red-500")
+    : (isClockedIn ? "ring-2 ring-green-500" : "ring-2 ring-red-500");
 
   return (
     <Card className="overflow-hidden">
@@ -160,6 +167,12 @@ export const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
             {staff.staff_number && (
               <div className="bg-gray-100 rounded-md px-2 py-1">
                 ID: {staff.staff_number}
+              </div>
+            )}
+            {/* Add work session badge */}
+            {!isLoading && (
+              <div className={`rounded-md px-2 py-1 ${isClockedIn ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                {isClockedIn ? 'Clocked In' : 'Clocked Out'}
               </div>
             )}
           </div>
