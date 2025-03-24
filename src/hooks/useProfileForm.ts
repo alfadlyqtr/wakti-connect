@@ -41,9 +41,10 @@ export const useProfileForm = (profile?: Tables<"profiles"> & { email?: string }
       po_box: profile?.po_box || '',
       business_type: profile?.business_type || '',
       business_address: profile?.business_address || '',
-      business_email: profile?.business_email || '',
-      business_phone: profile?.business_phone || '',
-      business_website: profile?.business_website || ''
+      // Cast as any to avoid TypeScript errors since these fields might not be in the profile type yet
+      business_email: (profile as any)?.business_email || '',
+      business_phone: (profile as any)?.business_phone || '',
+      business_website: (profile as any)?.business_website || ''
     }
   });
   
@@ -65,9 +66,10 @@ export const useProfileForm = (profile?: Tables<"profiles"> & { email?: string }
         po_box: data.po_box,
         business_type: data.business_type,
         business_address: data.business_address,
-        business_email: data.business_email,
-        business_phone: data.business_phone,
-        business_website: data.business_website
+        // Cast as any to avoid TypeScript errors since these fields might not be in the profile type yet
+        business_email: data.business_email as any,
+        business_phone: data.business_phone as any,
+        business_website: data.business_website as any
       });
       
       toast({

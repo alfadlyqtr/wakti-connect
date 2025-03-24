@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -5,6 +6,9 @@ import { toast } from "@/components/ui/use-toast";
 
 export type ProfileWithEmail = Tables<"profiles"> & {
   email?: string;
+  business_email?: string;
+  business_phone?: string;
+  business_website?: string;
 };
 
 export const useProfileSettings = () => {
