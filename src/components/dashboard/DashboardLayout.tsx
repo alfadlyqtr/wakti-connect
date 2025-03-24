@@ -38,6 +38,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   useEffect(() => {
     // Fix: Check for both "/dashboard" and "/dashboard/" paths
     const isMainDashboardPath = location.pathname === "/dashboard" || location.pathname === "/dashboard/";
+    const isAnalyticsPath = location.pathname === "/dashboard/analytics";
     
     if (!profileLoading && isMainDashboardPath) {
       console.log("Dashboard redirect check - User role:", userRoleValue, "Is staff:", isStaff);
@@ -45,21 +46,18 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       if (isStaff) {
         // Staff users go to staff dashboard
         navigate('/dashboard/staff-dashboard');
-      } else if (userRoleValue === 'business') {
-        // Business users go to analytics dashboard
-        navigate('/dashboard/analytics');
-        console.log("Business account detected, redirecting to analytics dashboard");
-      } else if (userRoleValue === 'individual') {
-        // Individual users go to tasks dashboard
-        navigate('/dashboard/tasks');
-        console.log("Individual account detected, redirecting to tasks dashboard");
-      } else if (userRoleValue === 'free') {
-        // Free users go to tasks with limited functionality
-        navigate('/dashboard/tasks');
-        console.log("Free account detected, redirecting to tasks dashboard");
+      } else {
+        // All users (including business) go to the main dashboard
+        // We're already on the main dashboard path, so no redirect needed
+        console.log(`${userRoleValue} account detected, already on main dashboard`);
       }
     }
-  }, [profileLoading, location.pathname, userRoleValue, isStaff, navigate]);
+    
+    // If business user is on analytics page but should be redirected to main dashboard
+    if (!profileLoading && isAnalyticsPath && userRoleValue === 'business' && location.state?.fromInitialRedirect) {
+      navigate('/dashboard');
+    }
+  }, [profileLoading, location.pathname, userRoleValue, isStaff, navigate, location.state]);
 
   return (
     <div className="min-h-screen flex flex-col">

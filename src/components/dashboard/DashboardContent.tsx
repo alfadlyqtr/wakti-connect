@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import StaffDashboardHeader from './StaffDashboardHeader';
 import DashboardLoading from './DashboardLoading';
@@ -35,11 +34,9 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       
       if (isStaff) {
         navigate('/dashboard/staff-dashboard');
-      } else if (userRole === 'business') {
-        navigate('/dashboard/analytics');
-      } else if (userRole === 'individual' || userRole === 'free') {
-        navigate('/dashboard/tasks');
       }
+      // For business users we don't redirect them away from the main dashboard
+      // For individual/free users, we keep them on the main dashboard too
     }
   }, [isStaff, isLoading, currentPath, userId, navigate, userRole]);
   

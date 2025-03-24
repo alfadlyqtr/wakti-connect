@@ -60,15 +60,15 @@ function App() {
                     />
                   ))}
                   
-                  {/* Dashboard routes - Add index redirect for /dashboard/ */}
+                  {/* Dashboard routes - Update index redirect for /dashboard/ */}
                   <Route
                     path="/dashboard/*"
                     element={
                       <ProtectedRoute>
                         <DashboardLayout>
                           <Routes>
-                            {/* Add an index route for both /dashboard and /dashboard/ */}
-                            <Route index element={<Navigate to="/dashboard/analytics" replace />} />
+                            {/* Change the default route to just point to the main dashboard */}
+                            <Route index element={<Navigate to="/dashboard" replace />} />
                             {dashboardRoutes.map((route) => (
                               <Route
                                 key={route.path}
