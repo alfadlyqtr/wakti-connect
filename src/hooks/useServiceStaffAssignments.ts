@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useServiceStaffQueries } from './useServiceStaffQueries';
 import { useServiceStaffMutations } from './useServiceStaffMutations';
+import { toast } from "@/hooks/use-toast";
 
 export const useServiceStaffAssignments = (serviceId: string) => {
   const { staffAssignments, isLoading, error } = useServiceStaffQueries(serviceId);

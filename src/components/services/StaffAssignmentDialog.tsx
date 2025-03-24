@@ -48,6 +48,9 @@ const StaffAssignmentDialog: React.FC<StaffAssignmentDialogProps> = ({
     }
   };
 
+  // Filter staff to only show service providers
+  const serviceProviderStaff = staffData?.filter(staff => staff.is_service_provider) || [];
+  
   const isLoading = isStaffLoading || isAssignmentsLoading;
 
   return (
@@ -59,7 +62,7 @@ const StaffAssignmentDialog: React.FC<StaffAssignmentDialogProps> = ({
       <StaffAssignmentSection
         selectedStaff={selectedStaffIds}
         onStaffChange={handleStaffChange}
-        staffData={staffData}
+        staffData={serviceProviderStaff}
         isStaffLoading={isLoading}
       />
       

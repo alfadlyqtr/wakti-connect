@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -23,11 +23,6 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
 }) => {
   const [staffSearchQuery, setStaffSearchQuery] = useState("");
   
-  // Update local state when external selectedStaff changes
-  useEffect(() => {
-    // This ensures we sync with external state
-  }, [selectedStaff]);
-  
   // Check if we have any staff members
   const hasStaffMembers = staffData && staffData.length > 0;
 
@@ -49,10 +44,9 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
     onStaffChange([]);
   };
 
-  // Filter staff by search query and only include service providers
+  // Filter staff by search query
   const filteredStaff = staffData?.filter(staff => 
-    staff.name.toLowerCase().includes(staffSearchQuery.toLowerCase()) &&
-    (staff.is_service_provider === true) // Only show service providers
+    staff.name.toLowerCase().includes(staffSearchQuery.toLowerCase())
   ) || [];
 
   if (!hasStaffMembers && !isStaffLoading) {
@@ -61,7 +55,7 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Staff Assignment</AlertTitle>
         <AlertDescription>
-          You can assign staff to this service after adding staff members in the Staff Management section.
+          You need to add staff members marked as service providers in the Staff Management section before you can assign them to services.
         </AlertDescription>
       </Alert>
     );
@@ -116,7 +110,7 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
           <div className="inline-block h-4 w-4 border-2 border-current border-t-transparent animate-spin rounded-full mr-2"></div>
           Loading staff members...
         </div>
-      ) : filteredStaff.length === 0 && staffData && staffData.length > 0 ? (
+      ) : filteredStaff.length === 0 ? (
         <div className="text-sm text-amber-600 p-4 text-center border rounded-md bg-amber-50">
           <AlertCircle className="h-4 w-4 inline-block mr-2" />
           {staffSearchQuery 
@@ -126,41 +120,37 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
       ) : (
         <ScrollArea className="h-48 border rounded-md">
           <div className="p-2">
-            {filteredStaff.length > 0 ? (
-              filteredStaff.map((staff) => (
-                <div 
-                  key={staff.id} 
-                  className={`flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted cursor-pointer ${
-                    selectedStaff.includes(staff.id) ? 'bg-muted' : ''
-                  }`}
-                  onClick={() => handleStaffToggle(staff.id)}
-                >
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`staff-${staff.id}`} 
-                      checked={selectedStaff.includes(staff.id)} 
-                      onCheckedChange={() => handleStaffToggle(staff.id)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
+            {filteredStaff.map((staff) => (
+              <div 
+                key={staff.id} 
+                className={`flex items-center justify-between px-3 py-2 rounded-md hover:bg-muted cursor-pointer ${
+                  selectedStaff.includes(staff.id) ? 'bg-muted' : ''
+                }`}
+                onClick={() => handleStaffToggle(staff.id)}
+              >
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={`staff-${staff.id}`} 
+                    checked={selectedStaff.includes(staff.id)} 
+                    onCheckedChange={() => handleStaffToggle(staff.id)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <div className="flex flex-col">
                     <label 
                       htmlFor={`staff-${staff.id}`}
                       className="text-sm font-medium leading-none cursor-pointer"
                     >
                       {staff.name}
                     </label>
-                    <span className="text-xs text-muted-foreground">({staff.role})</span>
+                    <span className="text-xs text-muted-foreground">{staff.role}</span>
                   </div>
-                  
-                  {selectedStaff.includes(staff.id) && (
-                    <CheckCircle className="h-4 w-4 text-primary" />
-                  )}
                 </div>
-              ))
-            ) : (
-              <div className="p-3 text-sm text-muted-foreground text-center">
-                No service providers available
+                
+                {selectedStaff.includes(staff.id) && (
+                  <CheckCircle className="h-4 w-4 text-primary" />
+                )}
               </div>
-            )}
+            ))}
           </div>
         </ScrollArea>
       )}

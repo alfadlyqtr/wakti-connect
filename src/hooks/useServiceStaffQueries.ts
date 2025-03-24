@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { StaffMember } from "@/types/service.types";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 export const useServiceStaffQueries = (serviceId?: string) => {
   // Query to fetch staff members assigned to a specific service

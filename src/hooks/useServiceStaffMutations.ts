@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 export const useServiceStaffMutations = () => {
   const queryClient = useQueryClient();
@@ -18,6 +18,15 @@ export const useServiceStaffMutations = () => {
       staffIds: string[] 
     }) => {
       try {
+        // Get service details for notification
+        const { data: serviceData, error: serviceError } = await supabase
+          .from('business_services')
+          .select('name, business_id')
+          .eq('id', serviceId)
+          .single();
+          
+        if (serviceError) throw serviceError;
+        
         // First, remove existing assignments for this service
         const { error: deleteError } = await supabase
           .from('staff_service_assignments')
@@ -40,6 +49,52 @@ export const useServiceStaffMutations = () => {
           .select();
           
         if (error) throw error;
+        
+        // Create notifications for assigned staff members
+        const businessId = serviceData.business_id;
+        
+        // Get business information for the notification
+        const { data: businessData, error: businessError } = await supabase
+          .from('profiles')
+          .select('business_name, display_name')
+          .eq('id', businessId)
+          .single();
+          
+        if (businessError) throw businessError;
+        
+        const businessName = businessData.business_name || businessData.display_name;
+        
+        // Create notifications for each staff member
+        for (const staffId of staffIds) {
+          // Check if this is a new assignment
+          const isNewAssignment = !data?.some(assignment => 
+            assignment.staff_id === staffId && assignment.service_id === serviceId
+          );
+          
+          if (isNewAssignment) {
+            // Get staff relation ID
+            const { data: staffData, error: staffError } = await supabase
+              .from('business_staff')
+              .select('staff_id')
+              .eq('id', staffId)
+              .single();
+              
+            if (staffError) continue; // Skip this staff member if error
+            
+            // Create notification
+            await supabase
+              .from('notifications')
+              .insert({
+                user_id: staffData.staff_id,
+                title: "Service Assignment",
+                content: `You have been assigned to the service "${serviceData.name}" by ${businessName}`,
+                type: "service_assignment",
+                related_entity_id: serviceId,
+                related_entity_type: "service"
+              });
+          }
+        }
+        
         return data;
       } catch (error) {
         console.error("Error updating staff assignments:", error);
@@ -53,9 +108,13 @@ export const useServiceStaffMutations = () => {
       queryClient.invalidateQueries({ 
         queryKey: ['businessServices'] 
       });
+      queryClient.invalidateQueries({
+        queryKey: ['notifications']
+      });
       toast({
         title: "Staff assignments updated",
-        description: "The staff assignments for this service have been updated successfully."
+        description: "The staff members have been notified of their assignment to this service.",
+        variant: "success"
       });
     },
     onError: (error) => {
