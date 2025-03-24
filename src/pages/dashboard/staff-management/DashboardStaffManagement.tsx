@@ -3,13 +3,18 @@ import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import CreateStaffDialog from "@/components/staff/CreateStaffDialog";
+import { StaffDialog } from "@/components/staff/StaffDialog";
 import StaffMembersTab from "./StaffMembersTab";
 import WorkLogsTab from "./WorkLogsTab";
 
 const DashboardStaffManagement = () => {
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [staffDialogOpen, setStaffDialogOpen] = useState(false);
+
+  const handleAddStaff = () => {
+    setSelectedStaffId(null);
+    setStaffDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -18,7 +23,7 @@ const DashboardStaffManagement = () => {
           <h1 className="text-3xl font-bold mb-2">Staff Management</h1>
           <p className="text-muted-foreground">Manage your staff members, track work hours, and assign services.</p>
         </div>
-        <Button className="md:self-start" onClick={() => setCreateDialogOpen(true)}>
+        <Button className="md:self-start" onClick={handleAddStaff}>
           <UserPlus className="mr-2 h-4 w-4" />
           Create Staff Account
         </Button>
@@ -32,8 +37,11 @@ const DashboardStaffManagement = () => {
         
         <TabsContent value="staff" className="mt-6">
           <StaffMembersTab 
-            onSelectStaff={setSelectedStaffId} 
-            onOpenCreateDialog={() => setCreateDialogOpen(true)} 
+            onSelectStaff={(staffId) => {
+              setSelectedStaffId(staffId);
+              setStaffDialogOpen(true);
+            }} 
+            onOpenCreateDialog={handleAddStaff} 
           />
         </TabsContent>
         
@@ -42,9 +50,14 @@ const DashboardStaffManagement = () => {
         </TabsContent>
       </Tabs>
       
-      <CreateStaffDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
+      <StaffDialog
+        staffId={selectedStaffId}
+        open={staffDialogOpen}
+        onOpenChange={setStaffDialogOpen}
+        onSuccess={() => {
+          setStaffDialogOpen(false);
+          setSelectedStaffId(null);
+        }}
       />
     </div>
   );

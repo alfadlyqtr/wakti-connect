@@ -2,12 +2,13 @@
 import React, { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { RefreshCcw, UserPlus, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { StaffMember } from "@/types/staff";
 import { StaffMembersList } from "@/components/staff/StaffMembersList";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import StaffMemberCard from "./StaffMemberCard";
 
 interface StaffMembersTabProps {
   onSelectStaff: (staffId: string | null) => void;
@@ -66,11 +67,6 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
   // Staff count for checking limits
   const staffCount = staffMembers?.length || 0;
   const canAddMoreStaff = staffCount < 6;
-  
-  const handleEditStaff = (staffId: string) => {
-    onSelectStaff(staffId);
-    onOpenCreateDialog();
-  };
   
   // Show loading state while fetching session
   if (isSessionLoading) {
@@ -140,12 +136,28 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
         </Card>
       )}
       
-      <StaffMembersList
-        staffMembers={staffMembers || []}
-        isLoading={isLoading}
-        error={error as Error | null}
-        onEdit={handleEditStaff}
-      />
+      {isLoading ? (
+        <p className="text-center text-muted-foreground py-8">Loading staff members...</p>
+      ) : error ? (
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {error instanceof Error ? error.message : "Failed to load staff members"}
+          </AlertDescription>
+        </Alert>
+      ) : staffMembers?.length === 0 ? (
+        <p className="text-center text-muted-foreground py-8">No staff members found. Add your first staff member to get started.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {staffMembers?.map((member) => (
+            <StaffMemberCard
+              key={member.id}
+              member={member}
+              onSelectStaff={() => onSelectStaff(member.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

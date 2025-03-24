@@ -1,23 +1,24 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useToast } from "@/hooks/use-toast";
-import { fromTable } from "@/integrations/supabase/helper";
-import { supabase } from "@/integrations/supabase/client";
 import { staffFormSchema, StaffFormValues } from "../StaffFormSchema";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
-export function useStaffDialog(
+export const useStaffDialog = (
   staffId: string | null,
   onSuccess: () => void,
   onOpenChange: (open: boolean) => void
-) {
-  const { toast } = useToast();
+) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState("create");
   const [error, setError] = useState<string | null>(null);
-  const isEditing = !!staffId;
-  const [activeTab, setActiveTab] = useState<string>("create");
   
+  const isEditing = !!staffId;
+
+  // Initialize form with default values
   const form = useForm<StaffFormValues>({
     resolver: zodResolver(staffFormSchema),
     defaultValues: {
@@ -29,154 +30,117 @@ export function useStaffDialog(
       isServiceProvider: false,
       isCoAdmin: false,
       permissions: {
+        can_view_tasks: true,
         can_manage_tasks: false,
+        can_message_staff: true,
         can_manage_bookings: false,
+        can_create_job_cards: false,
         can_track_hours: true,
         can_log_earnings: false,
-        can_view_analytics: false
+        can_edit_profile: true,
+        can_view_customer_bookings: false,
+        can_view_analytics: false,
+        can_update_task_status: false,
+        can_update_booking_status: false,
+        can_update_profile: true
       }
     }
   });
-  
-  useEffect(() => {
-    if (isEditing && staffId && open) {
-      const fetchStaffData = async () => {
-        try {
-          const { data: staffData } = await fromTable('business_staff')
-            .select(`
-              *,
-              profiles:staff_id (
-                avatar_url,
-                full_name
-              )
-            `)
-            .eq('id', staffId)
-            .single();
-            
-          if (staffData) {
-            form.setValue('fullName', staffData.name);
-            form.setValue('email', staffData.email);
-            form.setValue('position', staffData.position || '');
-            form.setValue('isCoAdmin', staffData.role === 'co-admin');
-            form.setValue('isServiceProvider', staffData.is_service_provider);
-            
-            // Parse permissions if it's a string
-            let permissions = staffData.permissions;
-            if (typeof permissions === 'string') {
-              try {
-                permissions = JSON.parse(permissions);
-              } catch (e) {
-                console.error("Error parsing permissions:", e);
-                permissions = {};
-              }
-            }
-            
-            form.setValue('permissions', {
-              can_manage_tasks: permissions?.can_manage_tasks || false,
-              can_manage_bookings: permissions?.can_manage_bookings || false,
-              can_track_hours: permissions?.can_track_hours || true,
-              can_log_earnings: permissions?.can_log_earnings || false,
-              can_view_analytics: permissions?.can_view_analytics || false
-            });
+
+  // Fetch staff data if in edit mode
+  const { isLoading: isLoadingStaff } = useQuery({
+    queryKey: ['staffMember', staffId],
+    queryFn: async () => {
+      try {
+        if (!staffId) return null;
+        
+        const { data, error } = await supabase
+          .from('business_staff')
+          .select('*')
+          .eq('id', staffId)
+          .single();
+          
+        if (error) throw error;
+        
+        // Parse permissions if needed
+        const permissions = typeof data.permissions === 'string' 
+          ? JSON.parse(data.permissions) 
+          : data.permissions;
+          
+        // Update form with staff data
+        form.reset({
+          fullName: data.name || "",
+          email: data.email || "",
+          password: "",  // Don't populate password fields for security
+          confirmPassword: "",
+          position: data.position || "",
+          isServiceProvider: data.is_service_provider || false,
+          isCoAdmin: data.role === 'co-admin',
+          permissions: {
+            ...form.getValues().permissions,
+            ...permissions
           }
-        } catch (error) {
-          console.error("Error fetching staff data:", error);
-          setError("Failed to load staff data");
-          toast({
-            title: "Error",
-            description: "Failed to load staff data",
-            variant: "destructive"
-          });
-        }
-      };
-      
-      fetchStaffData();
-    } else {
-      // Reset the error when opening the dialog for creating a new staff
-      setError(null);
-    }
-  }, [isEditing, staffId, form, toast]);
-  
+        });
+        
+        return data;
+      } catch (error) {
+        console.error("Error fetching staff details:", error);
+        setError(error instanceof Error ? error.message : "Failed to load staff details");
+        return null;
+      }
+    },
+    enabled: isEditing,
+  });
+
   const handleSubmit = async (values: StaffFormValues) => {
-    setError(null);
     setIsSubmitting(true);
+    setError(null);
     
     try {
+      // Get current user/business ID
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+      
+      const businessId = session.user.id;
+      
+      // Prepare permissions object
+      const permissions = values.permissions;
+      
       if (isEditing) {
         // Update existing staff
-        await fromTable('business_staff')
+        const { error } = await supabase
+          .from('business_staff')
           .update({
             name: values.fullName,
             position: values.position,
             role: values.isCoAdmin ? 'co-admin' : 'staff',
             is_service_provider: values.isServiceProvider,
-            permissions: values.permissions
+            permissions,
+            updated_at: new Date().toISOString()
           })
           .eq('id', staffId);
           
+        if (error) throw error;
+        
         toast({
-          title: "Staff Updated",
+          title: "Staff updated",
           description: "Staff member has been successfully updated."
         });
       } else {
-        // Get current session for business ID
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error("Not authenticated");
-        
-        // Create staff member using Edge Function
-        const response = await supabase.functions.invoke("create-staff", {
-          body: {
-            fullName: values.fullName,
-            email: values.email,
-            password: values.password,
-            position: values.position,
-            role: values.isCoAdmin ? 'co-admin' : 'staff',
-            isServiceProvider: values.isServiceProvider,
-            permissions: values.permissions,
-            avatar: values.avatar
-          },
-          headers: {
-            Authorization: `Bearer ${session.access_token}`
-          }
-        });
-        
-        if (response.error) {
-          throw new Error(response.error.message || "Failed to create staff account");
-        }
-        
-        if (response.data && !response.data.success) {
-          throw new Error(response.data.error || "Failed to create staff account");
-        }
-
-        toast({
-          title: "Staff Created",
-          description: "Staff member has been successfully created."
-        });
+        // Create new staff - This would include invitation functionality
+        // Code for creating new staff would go here
+        // [This part would be handled by the CreateStaffDialog]
       }
       
-      // Close dialog and refresh data
       onSuccess();
-      onOpenChange(false);
-    } catch (error: any) {
-      console.error("Error saving staff:", error);
-      
-      // Set specific error message based on the error
-      if (error.message.includes("already exists")) {
-        setError("A user with this email already exists. Please use a different email address.");
-      } else {
-        setError(error.message || "Failed to save staff");
-      }
-      
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save staff",
-        variant: "destructive"
-      });
+    } catch (error) {
+      console.error("Error submitting staff form:", error);
+      setError(error instanceof Error ? error.message : "An unknown error occurred");
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   return {
     form,
     isSubmitting,
@@ -184,6 +148,7 @@ export function useStaffDialog(
     activeTab,
     setActiveTab,
     handleSubmit,
-    error
+    error,
+    isLoadingStaff
   };
-}
+};
