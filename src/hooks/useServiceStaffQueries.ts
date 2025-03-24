@@ -25,37 +25,44 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         
         console.log("Fetching staff assignments for service:", serviceId);
         
-        // Use a more efficient JOIN query instead of multiple queries
-        const { data, error } = await supabase
+        // First, get the staff_id values from assignments
+        const { data: assignments, error: assignmentsError } = await supabase
           .from('staff_service_assignments')
-          .select(`
-            staff_id,
-            business_staff:staff_id (
-              id, 
-              name, 
-              role
-            )
-          `)
+          .select('staff_id')
           .eq('service_id', serviceId);
           
-        if (error) {
-          console.error("Error fetching staff assignments:", error);
-          throw error;
+        if (assignmentsError) {
+          console.error("Error fetching staff assignments:", assignmentsError);
+          throw assignmentsError;
         }
         
-        if (!data || data.length === 0) {
+        if (!assignments || assignments.length === 0) {
           console.log("No staff assignments found for service", serviceId);
           return [];
         }
         
-        console.log("Found assignments:", data.length);
+        // Get staff_ids from the assignments
+        const staffIds = assignments.map(item => item.staff_id);
+        
+        // Then, fetch the actual staff details
+        const { data: staffData, error: staffError } = await supabase
+          .from('business_staff')
+          .select('id, name, role')
+          .in('id', staffIds);
+          
+        if (staffError) {
+          console.error("Error fetching staff details:", staffError);
+          throw staffError;
+        }
+        
+        console.log("Found staff details:", staffData?.length);
         
         // Transform the data to match the StaffMember type
-        const staffMembers: StaffMember[] = data.map(item => ({
-          id: item.staff_id, // This is business_staff.id
-          name: item.business_staff?.name || 'Unknown',
-          role: item.business_staff?.role || 'staff'
-        })).filter(staff => staff.name !== 'Unknown'); // Filter out any invalid staff
+        const staffMembers: StaffMember[] = staffData.map(staff => ({
+          id: staff.id,
+          name: staff.name || 'Unknown',
+          role: staff.role || 'staff'
+        }));
         
         return staffMembers;
       } catch (error) {

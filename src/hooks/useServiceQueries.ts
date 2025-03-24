@@ -23,53 +23,63 @@ export const useServiceQueries = () => {
           throw new Error('Not authenticated');
         }
         
-        // Use a more efficient query with joins
-        const { data, error } = await supabase
+        // First, get basic service data
+        const { data: servicesData, error: servicesError } = await supabase
           .from('business_services')
-          .select(`
-            *,
-            assigned_staff:staff_service_assignments(
-              staff_id,
-              business_staff:staff_id(id, name, role)
-            )
-          `)
+          .select('*')
           .eq('business_id', session.session.user.id)
           .order('name');
           
-        if (error) {
-          console.error("Error fetching services:", error);
-          throw error;
+        if (servicesError) {
+          console.error("Error fetching services:", servicesError);
+          throw servicesError;
         }
 
-        console.log("Fetched services:", data?.length);
-        
-        // No services, return empty array
-        if (!data || data.length === 0) {
+        if (!servicesData || servicesData.length === 0) {
           return [];
         }
-
-        // Transform the data to match the Service type with assigned staff
-        const servicesWithStaff = data.map((service) => {
-          // Map the assigned staff from the joined data
-          const assignedStaff = service.assigned_staff
-            .map(assignment => {
-              if (!assignment.business_staff) return null;
-              
-              return {
-                id: assignment.staff_id, // This is business_staff.id
-                name: assignment.business_staff.name || 'Unknown',
-                role: assignment.business_staff.role || 'staff'
-              };
-            })
-            .filter(Boolean) as StaffMember[];
-
-          // Return the service with assigned staff
-          return {
-            ...service,
-            assigned_staff: assignedStaff
-          };
-        });
-
+        
+        // For each service, get staff assignments
+        const servicesWithStaff = await Promise.all(servicesData.map(async (service) => {
+          // Get staff assignments for this service
+          const { data: assignments, error: assignmentsError } = await supabase
+            .from('staff_service_assignments')
+            .select('staff_id')
+            .eq('service_id', service.id);
+            
+          if (assignmentsError) {
+            console.error(`Error fetching assignments for service ${service.id}:`, assignmentsError);
+            return { ...service, assigned_staff: [] };
+          }
+          
+          if (!assignments || assignments.length === 0) {
+            return { ...service, assigned_staff: [] };
+          }
+          
+          // Get the staff IDs
+          const staffIds = assignments.map(a => a.staff_id);
+          
+          // Fetch actual staff information
+          const { data: staffData, error: staffError } = await supabase
+            .from('business_staff')
+            .select('id, name, role')
+            .in('id', staffIds);
+            
+          if (staffError) {
+            console.error(`Error fetching staff details for service ${service.id}:`, staffError);
+            return { ...service, assigned_staff: [] };
+          }
+          
+          const assignedStaff: StaffMember[] = staffData ? staffData.map(staff => ({
+            id: staff.id,
+            name: staff.name || 'Unknown',
+            role: staff.role || 'staff'
+          })) : [];
+          
+          return { ...service, assigned_staff: assignedStaff };
+        }));
+        
+        console.log("Fetched services with staff:", servicesWithStaff.length);
         return servicesWithStaff as Service[];
       } catch (error) {
         console.error("Error fetching services:", error);

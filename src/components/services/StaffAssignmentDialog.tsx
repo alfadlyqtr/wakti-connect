@@ -80,7 +80,7 @@ const StaffAssignmentDialog: React.FC<StaffAssignmentDialogProps> = ({
       )}
       
       {!hasServiceProviders && !isLoading && (
-        <Alert variant="warning" className="mb-4">
+        <Alert variant="default" className="mb-4 border-amber-200 bg-amber-50 text-amber-800">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             You need to mark staff members as service providers in the Staff Management section
