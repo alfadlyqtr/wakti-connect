@@ -37,10 +37,20 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   useEffect(() => {
     if (!profileLoading && location.pathname === "/dashboard") {
       if (isStaff) {
+        // Staff users go to staff dashboard
         navigate('/dashboard/staff-dashboard');
       } else if (userRoleValue === 'business') {
-        // For business users, show them business-specific features
-        console.log("Business account detected, showing business dashboard");
+        // Business users go to analytics dashboard
+        navigate('/dashboard/analytics');
+        console.log("Business account detected, redirecting to analytics dashboard");
+      } else if (userRoleValue === 'individual') {
+        // Individual users go to tasks dashboard
+        navigate('/dashboard/tasks');
+        console.log("Individual account detected, redirecting to tasks dashboard");
+      } else if (userRoleValue === 'free') {
+        // Free users go to tasks with limited functionality
+        navigate('/dashboard/tasks');
+        console.log("Free account detected, redirecting to tasks dashboard");
       }
     }
   }, [profileLoading, location.pathname, userRoleValue, isStaff, navigate]);
@@ -61,6 +71,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           userId={userId}
           isMobile={isMobile}
           currentPath={location.pathname}
+          userRole={userRoleValue}
         >
           {children}
         </DashboardContent>

@@ -21,17 +21,22 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
       return defaultGrowthData;
     }
     
-    // Use provided data with the structure from default data
-    console.log("Using provided growth data:", data);
-    return {
-      ...defaultGrowthData,
-      datasets: [
-        {
-          ...defaultGrowthData.datasets[0],
-          data: data
-        }
-      ]
-    };
+    try {
+      // Use provided data with the structure from default data
+      console.log("Using provided growth data:", data);
+      return {
+        ...defaultGrowthData,
+        datasets: [
+          {
+            ...defaultGrowthData.datasets[0],
+            data: data
+          }
+        ]
+      };
+    } catch (error) {
+      console.error("Error processing growth data:", error);
+      return defaultGrowthData;
+    }
   }, [data, defaultGrowthData]);
 
   // Adjust chart options for mobile

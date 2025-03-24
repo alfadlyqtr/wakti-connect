@@ -38,10 +38,20 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
           throw new Error('Could not verify account type');
         }
         
-        // If not business account, return null to avoid errors
+        // If not business account, return default values to avoid errors
         if (profileData?.account_type !== 'business') {
           console.warn("Non-business account attempting to access business analytics");
-          return null;
+          const growthData = getGrowthTrendsData();
+          const serviceData = getServiceDistributionData();
+          
+          return {
+            subscriberCount: 0,
+            staffCount: 0,
+            taskCompletionRate: 0,
+            timeRange,
+            growth: growthData.datasets[0].data,
+            serviceDistribution: serviceData.datasets[0].data
+          } as BusinessAnalyticsData;
         }
         
         // In a real application, this would fetch data from the backend

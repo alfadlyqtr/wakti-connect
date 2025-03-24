@@ -21,17 +21,22 @@ export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> =
       return defaultServiceData;
     }
     
-    // Use provided data with the structure from default data
-    console.log("Using provided service distribution data:", data);
-    return {
-      ...defaultServiceData,
-      datasets: [
-        {
-          ...defaultServiceData.datasets[0],
-          data: data
-        }
-      ]
-    };
+    try {
+      // Use provided data with the structure from default data
+      console.log("Using provided service distribution data:", data);
+      return {
+        ...defaultServiceData,
+        datasets: [
+          {
+            ...defaultServiceData.datasets[0],
+            data: data
+          }
+        ]
+      };
+    } catch (error) {
+      console.error("Error processing service distribution data:", error);
+      return defaultServiceData;
+    }
   }, [data, defaultServiceData]);
 
   // Configure options based on device size

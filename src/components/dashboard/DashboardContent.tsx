@@ -11,6 +11,7 @@ interface DashboardContentProps {
   userId: string | null;
   isMobile: boolean;
   currentPath?: string;
+  userRole?: "free" | "individual" | "business" | "staff";
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
@@ -19,16 +20,23 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   isStaff,
   userId,
   isMobile,
-  currentPath = ''
+  currentPath = '',
+  userRole = 'free'
 }) => {
   const navigate = useNavigate();
   
-  // Redirect staff to staff dashboard on login, but only if they're on the main dashboard
+  // Redirect users to their appropriate dashboards on login
   useEffect(() => {
-    if (isStaff && !isLoading && currentPath === '/dashboard' && userId) {
-      navigate('/dashboard/staff-dashboard');
+    if (!isLoading && currentPath === '/dashboard' && userId) {
+      if (isStaff) {
+        navigate('/dashboard/staff-dashboard');
+      } else if (userRole === 'business') {
+        navigate('/dashboard/analytics');
+      } else if (userRole === 'individual' || userRole === 'free') {
+        navigate('/dashboard/tasks');
+      }
     }
-  }, [isStaff, isLoading, currentPath, userId, navigate]);
+  }, [isStaff, isLoading, currentPath, userId, navigate, userRole]);
   
   // Calculate main content padding based on sidebar state
   const mainContentClass = isMobile 
