@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -49,7 +48,18 @@ export const useProfileSettings = () => {
               occupation: '',
               theme_preference: 'light',
               updated_at: new Date().toISOString(),
-              currency_preference: 'USD', // Add the missing currency_preference field
+              currency_preference: 'USD',
+              telephone: '',
+              gender: 'prefer_not_to_say',
+              date_of_birth: '',
+              country: '',
+              state_province: '',
+              city: '',
+              postal_code: '',
+              street_address: '',
+              po_box: '',
+              business_type: '',
+              business_address: '',
               email: session.user.email
             };
             return defaultProfile;

@@ -756,14 +756,25 @@ export type Database = {
           account_type: Database["public"]["Enums"]["account_type"]
           auto_approve_contacts: boolean | null
           avatar_url: string | null
+          business_address: string | null
           business_name: string | null
+          business_type: string | null
+          city: string | null
+          country: string | null
           created_at: string
           currency_preference: string | null
+          date_of_birth: string | null
           display_name: string | null
           full_name: string | null
+          gender: string | null
           id: string
           is_searchable: boolean | null
           occupation: string | null
+          po_box: string | null
+          postal_code: string | null
+          state_province: string | null
+          street_address: string | null
+          telephone: string | null
           theme_preference: string | null
           updated_at: string
         }
@@ -771,14 +782,25 @@ export type Database = {
           account_type?: Database["public"]["Enums"]["account_type"]
           auto_approve_contacts?: boolean | null
           avatar_url?: string | null
+          business_address?: string | null
           business_name?: string | null
+          business_type?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           currency_preference?: string | null
+          date_of_birth?: string | null
           display_name?: string | null
           full_name?: string | null
+          gender?: string | null
           id: string
           is_searchable?: boolean | null
           occupation?: string | null
+          po_box?: string | null
+          postal_code?: string | null
+          state_province?: string | null
+          street_address?: string | null
+          telephone?: string | null
           theme_preference?: string | null
           updated_at?: string
         }
@@ -786,14 +808,25 @@ export type Database = {
           account_type?: Database["public"]["Enums"]["account_type"]
           auto_approve_contacts?: boolean | null
           avatar_url?: string | null
+          business_address?: string | null
           business_name?: string | null
+          business_type?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           currency_preference?: string | null
+          date_of_birth?: string | null
           display_name?: string | null
           full_name?: string | null
+          gender?: string | null
           id?: string
           is_searchable?: boolean | null
           occupation?: string | null
+          po_box?: string | null
+          postal_code?: string | null
+          state_province?: string | null
+          street_address?: string | null
+          telephone?: string | null
           theme_preference?: string | null
           updated_at?: string
         }
@@ -1104,6 +1137,27 @@ export type Database = {
           staff_relation_id?: string | null
           status?: string
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_feedback: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
           user_id?: string
         }
         Relationships: []
