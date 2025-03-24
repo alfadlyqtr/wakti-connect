@@ -7,10 +7,11 @@ import { useDashboardUserProfile } from "@/hooks/useDashboardUserProfile";
 import { useSidebarToggle } from "@/hooks/useSidebarToggle";
 import DashboardContent from "./DashboardContent";
 import { useLocation, useNavigate } from "react-router-dom";
+import { UserRole, getEffectiveRole } from "@/types/user";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  userRole?: "free" | "individual" | "business";
+  userRole?: UserRole;
 }
 
 const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutProps) => {
@@ -28,13 +29,14 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     userRole: detectedUserRole 
   } = useDashboardUserProfile();
 
-  // FIXED: Use provided role or detected role, prioritizing business account
+  // Use provided role or detected role
   const accountType = profileData?.account_type || propUserRole || detectedUserRole || "free";
   
-  // If user is both business and staff, prioritize business role for dashboard access
-  const userRoleValue: "free" | "individual" | "business" | "staff" = accountType === 'business' 
-    ? 'business'
-    : ((isStaff && accountType !== 'business' as string) ? 'staff' : accountType as "free" | "individual" | "business" | "staff");
+  // Get effective user role with proper prioritization
+  const userRoleValue: UserRole = getEffectiveRole(
+    accountType as any, 
+    isStaff
+  );
 
   // Redirect to appropriate dashboard based on role if on main dashboard
   useEffect(() => {
@@ -50,9 +52,8 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     });
     
     if (!profileLoading && isMainDashboardPath) {      
-      // Fix: Fix the type comparison by correctly checking the userRoleValue
-      if (userRoleValue === 'staff' && accountType !== 'business') {
-        // Only staff users (who are not also business owners) go to staff dashboard
+      // Only staff users (who are not also business owners) go to staff dashboard
+      if (userRoleValue === 'staff') {
         navigate('/dashboard/staff-dashboard');
       } else {
         // All users (including business) go to the main dashboard

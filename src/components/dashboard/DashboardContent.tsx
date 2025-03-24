@@ -1,8 +1,8 @@
-
 import React, { useEffect } from 'react';
 import StaffDashboardHeader from './StaffDashboardHeader';
 import DashboardLoading from './DashboardLoading';
 import { useNavigate } from 'react-router-dom';
+import { UserRole } from '@/types/user';
 
 interface DashboardContentProps {
   children: React.ReactNode;
@@ -11,7 +11,7 @@ interface DashboardContentProps {
   userId: string | null;
   isMobile: boolean;
   currentPath?: string;
-  userRole?: "free" | "individual" | "business" | "staff";
+  userRole?: UserRole;
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
@@ -33,8 +33,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     if (!isLoading && isMainDashboardPath && userId) {
       console.log("DashboardContent redirect - User role:", userRole, "Is staff:", isStaff);
       
-      // FIXED: Only redirect staff who are NOT also business owners
-      if (isStaff && userRole === 'staff') {
+      // Only redirect staff who are NOT also business owners
+      if (userRole === 'staff') {
         navigate('/dashboard/staff-dashboard');
       }
       // For business users we don't redirect them away from the main dashboard
@@ -54,7 +54,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           <DashboardLoading />
         ) : (
           <>
-            {/* FIXED: Only show staff header if user is staff AND not a business owner */}
+            {/* Only show staff header if user is staff AND not a business owner */}
             {isStaff && userId && userRole === 'staff' && (
               <div className="mb-4">
                 <StaffDashboardHeader staffId={userId} />

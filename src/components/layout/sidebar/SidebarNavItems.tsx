@@ -5,6 +5,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { navItems, NavItem } from "./sidebarNavConfig";
 import SidebarNavItem from "./SidebarNavItem";
 import { isUserStaff } from "@/utils/staffUtils";
+import { UserRole, hasRoleAccess } from "@/types/user";
 
 interface SidebarNavItemsProps {
   onNavClick: (path: string) => void;
@@ -20,7 +21,7 @@ const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
   const [isStaff, setIsStaff] = useState(false);
   
   // Get user role from localStorage
-  const userRole = localStorage.getItem('userRole') as 'free' | 'individual' | 'business' | 'staff' || 'free';
+  const userRole = localStorage.getItem('userRole') as UserRole || 'free';
   
   // Check if user is staff on component mount
   useEffect(() => {
@@ -42,21 +43,8 @@ const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
     }
   }, []);
   
-  // FIXED: Filter navigation items based on user role, prioritizing business role if applicable
-  const filteredNavItems = navItems.filter(item => {
-    // Business users see business nav items, even if they're also staff
-    if (userRole === 'business') {
-      return item.showFor.includes('business');
-    }
-    
-    // Staff users see staff nav items (only if they're not also business owners)
-    if (isStaff && userRole === 'staff') {
-      return item.showFor.includes('staff');
-    }
-    
-    // All other users see nav items according to their role
-    return item.showFor.includes(userRole);
-  });
+  // Filter navigation items based on user role, with correct prioritization
+  const filteredNavItems = navItems.filter(item => hasRoleAccess(userRole, item.showFor as UserRole[]));
   
   // Helper to check if a nav item is active
   const isActive = (item: NavItem) => {

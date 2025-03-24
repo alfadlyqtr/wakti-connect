@@ -5,9 +5,10 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 import { slugifyBusinessName } from "@/utils/authUtils";
+import { AccountType, UserRole, getEffectiveRole } from "@/types/user";
 
 export interface DashboardUserProfile {
-  account_type: "free" | "individual" | "business";
+  account_type: AccountType;
   display_name: string | null;
   business_name: string | null;
   full_name: string | null;
@@ -28,6 +29,7 @@ export function useDashboardUserProfile() {
       if (event === 'SIGNED_OUT') {
         // Clear stored user role on sign out
         localStorage.removeItem('userRole');
+        localStorage.removeItem('isStaff');
         navigate("/auth");
       }
     });
@@ -78,11 +80,6 @@ export function useDashboardUserProfile() {
           console.log("User identified as staff member");
           setIsStaff(true);
           localStorage.setItem('isStaff', 'true');
-          
-          // IMPORTANT FIX: Only set userRole to 'staff' if user is NOT a business account
-          if (!profileData || profileData.account_type !== 'business') {
-            localStorage.setItem('userRole', 'staff');
-          }
         } else {
           console.log("User is not a staff member");
           setIsStaff(false);
@@ -121,10 +118,14 @@ export function useDashboardUserProfile() {
           return null;
         }
         
-        // IMPORTANT FIX: Set userRole based on account_type, prioritizing business account
-        if (profileData?.account_type) {
-          localStorage.setItem('userRole', profileData.account_type);
-        }
+        // Set userRole based on account_type and staff status
+        const effectiveRole = getEffectiveRole(
+          profileData?.account_type as AccountType, 
+          !!staffData
+        );
+        
+        // Store role in localStorage for components that need it
+        localStorage.setItem('userRole', effectiveRole);
         
         if (profileData?.account_type === 'business' && !profileData.business_name) {
           // If business account but no business name is set, inform the user
@@ -160,10 +161,11 @@ export function useDashboardUserProfile() {
     }
   }, [profileData?.theme_preference]);
 
-  // IMPORTANT FIX: Prioritize business account type over staff status
-  const userRole = profileData?.account_type === 'business' 
-    ? 'business' as const 
-    : (isStaff ? 'staff' as const : (profileData?.account_type || "free") as "free" | "individual" | "business");
+  // Determine effective user role using our helper
+  const userRole = getEffectiveRole(
+    profileData?.account_type as AccountType, 
+    isStaff
+  );
 
   return {
     profileData,

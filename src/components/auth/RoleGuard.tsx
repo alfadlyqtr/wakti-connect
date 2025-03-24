@@ -1,11 +1,11 @@
-
 import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { isUserStaff } from "@/utils/staffUtils";
+import { UserRole, hasRoleAccess } from "@/types/user";
 
 interface RoleGuardProps {
-  allowedRoles: Array<'free' | 'individual' | 'business' | 'staff'>;
+  allowedRoles: UserRole[];
   children: React.ReactNode;
   redirectTo?: string;
 }
@@ -24,18 +24,15 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
       try {
         setIsLoading(true);
         
-        // Check if staff role is allowed and if user is staff
-        if (allowedRoles.includes('staff')) {
-          const staffStatus = await isUserStaff();
-          if (staffStatus) {
-            console.log("User is confirmed as staff");
-            setHasAccess(true);
-            setIsLoading(false);
-            return;
-          }
+        // Check if user role is stored in localStorage
+        const storedRole = localStorage.getItem('userRole') as UserRole;
+        if (storedRole && hasRoleAccess(storedRole, allowedRoles)) {
+          setHasAccess(true);
+          setIsLoading(false);
+          return;
         }
         
-        // Otherwise check regular role
+        // Otherwise check with server
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
@@ -45,6 +42,17 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
           return;
         }
         
+        // Check if staff role is allowed and if user is staff
+        const staffStatus = await isUserStaff();
+        
+        if (staffStatus && allowedRoles.includes('staff')) {
+          console.log("User is confirmed as staff");
+          setHasAccess(true);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Check account type from profile
         const { data } = await supabase
           .from('profiles')
           .select('account_type')
@@ -53,7 +61,7 @@ const RoleGuard: React.FC<RoleGuardProps> = ({
           
         console.log("User role from profile:", data?.account_type);
         
-        if (data && allowedRoles.includes(data.account_type as any)) {
+        if (data && allowedRoles.includes(data.account_type as UserRole)) {
           setHasAccess(true);
         } else {
           setHasAccess(false);

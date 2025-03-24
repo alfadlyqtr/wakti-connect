@@ -2,6 +2,7 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
+import { UserRole } from "@/types/user";
 
 interface StaffRoleGuardProps {
   children: React.ReactNode;
@@ -22,11 +23,10 @@ const StaffRoleGuard: React.FC<StaffRoleGuardProps> = ({
   redirectTo = "/dashboard"
 }) => {
   const location = useLocation();
-  const userRole = localStorage.getItem('userRole');
-  const isStaff = userRole === 'staff' || localStorage.getItem('isStaff') === 'true';
+  const userRole = localStorage.getItem('userRole') as UserRole;
   
-  // FIXED: Only restrict access if user is a staff member AND not a business owner
-  if (isStaff && userRole === 'staff' && disallowStaff) {
+  // Only restrict access if user is a staff member (and not also a business owner)
+  if (userRole === 'staff' && disallowStaff) {
     // Show toast message explaining why they can't access this route
     toast({
       title: messageTitle,
