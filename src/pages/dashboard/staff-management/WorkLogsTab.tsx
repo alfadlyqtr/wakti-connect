@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, DollarSign, Filter } from "lucide-react";
 import { WorkLog } from "./types";
@@ -19,7 +19,8 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
+  TableFooter
 } from "@/components/ui/table";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -140,6 +141,41 @@ const WorkLogsTab: React.FC<WorkLogsTabProps> = ({ selectedStaffId }) => {
     const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     
     return `${diffHrs}h ${diffMins}m`;
+  };
+
+  // Calculate total duration in milliseconds
+  const calculateTotalDuration = (logs: WorkLog[]): number => {
+    return logs.reduce((total, log) => {
+      if (!log.end_time) return total; // Skip active sessions
+      
+      const start = new Date(log.start_time);
+      const end = new Date(log.end_time);
+      return total + (end.getTime() - start.getTime());
+    }, 0);
+  };
+
+  // Format milliseconds to human-readable duration
+  const formatTotalDuration = (ms: number): string => {
+    const totalHours = Math.floor(ms / (1000 * 60 * 60));
+    const totalMinutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    return `${totalHours}h ${totalMinutes}m`;
+  };
+
+  // Calculate total earnings
+  const calculateTotalEarnings = (logs: WorkLog[]): number => {
+    return logs.reduce((total, log) => {
+      return total + (log.earnings || 0);
+    }, 0);
+  };
+
+  // Count completed sessions
+  const countCompletedSessions = (logs: WorkLog[]): number => {
+    return logs.filter(log => log.end_time).length;
+  };
+
+  // Count active sessions
+  const countActiveSessions = (logs: WorkLog[]): number => {
+    return logs.filter(log => !log.end_time).length;
   };
 
   if (staffLoading) {
@@ -307,8 +343,41 @@ const WorkLogsTab: React.FC<WorkLogsTabProps> = ({ selectedStaffId }) => {
                   </TableRow>
                 ))}
               </TableBody>
+              <TableFooter className="bg-muted/20">
+                <TableRow>
+                  <TableCell colSpan={3} className="text-right font-medium">Summary Totals:</TableCell>
+                  <TableCell className="font-medium">{formatTotalDuration(calculateTotalDuration(workLogs))}</TableCell>
+                  <TableCell>
+                    <span className="text-sm">
+                      {countCompletedSessions(workLogs)} completed, 
+                      {countActiveSessions(workLogs) > 0 ? ` ${countActiveSessions(workLogs)} active` : ' 0 active'}
+                    </span>
+                  </TableCell>
+                  <TableCell className="font-medium">${calculateTotalEarnings(workLogs).toFixed(2)}</TableCell>
+                </TableRow>
+              </TableFooter>
             </Table>
           </CardContent>
+          <CardFooter className="flex flex-col sm:flex-row gap-2 justify-between border-t pt-4">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">
+                Total Time: <span className="font-medium">{formatTotalDuration(calculateTotalDuration(workLogs))}</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm">
+                Sessions: <span className="font-medium">{workLogs.length} total</span> 
+                <span className="text-muted-foreground"> ({countCompletedSessions(workLogs)} completed)</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">
+                Total Earnings: <span className="font-medium">${calculateTotalEarnings(workLogs).toFixed(2)}</span>
+              </span>
+            </div>
+          </CardFooter>
         </Card>
       )}
     </div>
