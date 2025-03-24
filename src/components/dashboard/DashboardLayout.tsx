@@ -50,6 +50,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     });
     
     if (!profileLoading && isMainDashboardPath) {      
+      // Fix: Fix the type comparison by correctly checking the userRoleValue
       if (userRoleValue === 'staff' && accountType !== 'business') {
         // Only staff users (who are not also business owners) go to staff dashboard
         navigate('/dashboard/staff-dashboard');
@@ -64,7 +65,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     if (!profileLoading && isAnalyticsPath && userRoleValue === 'business' && location.state?.fromInitialRedirect) {
       navigate('/dashboard');
     }
-  }, [profileLoading, location.pathname, userRoleValue, isStaff, navigate, location.state, profileData?.account_type]);
+  }, [profileLoading, location.pathname, userRoleValue, isStaff, navigate, location.state, profileData?.account_type, accountType]);
 
   return (
     <div className="min-h-screen flex flex-col">
