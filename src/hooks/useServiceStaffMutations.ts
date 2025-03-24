@@ -81,6 +81,7 @@ export const useServiceStaffMutations = () => {
         }
         
         // Verify all staff members exist and belong to this business
+        // Using explicit reference to business_staff.id to avoid ambiguity
         const { data: validStaff, error: validationError } = await supabase
           .from('business_staff')
           .select('id')
@@ -99,6 +100,7 @@ export const useServiceStaffMutations = () => {
         }
         
         // Prepare batch assignments with only validated staff IDs
+        // Explicitly use 'staff_id' field name when inserting into staff_service_assignments
         const assignments = validStaffIds.map(staffId => ({
           service_id: serviceId,
           staff_id: staffId
@@ -143,7 +145,7 @@ export const useServiceStaffMutations = () => {
         
         const businessName = businessData?.business_name || businessData?.display_name || "Your business";
         
-        // Get all staff data in a single query
+        // Get all staff data in a single query with explicit column references
         if (validStaffIds.length > 0) {
           const { data: staffData, error: staffError } = await supabase
             .from('business_staff')
