@@ -58,7 +58,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
               <CardTitle>{isBusinessAccount ? "Business Profile" : "Profile Information"}</CardTitle>
               <CardDescription>
                 {isBusinessAccount
-                  ? "Update your business profile appearance"
+                  ? "Manage your business profile information"
                   : "Update your public profile information"}
               </CardDescription>
             </div>
