@@ -25,32 +25,43 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         
         console.log("Fetching staff assignments for service:", serviceId);
         
-        // Use a simpler query structure to avoid TypeScript issues
-        const { data, error } = await supabase
+        // First, get the staff_ids assigned to this service
+        const { data: assignmentsData, error: assignmentsError } = await supabase
           .from('staff_service_assignments')
-          .select(`
-            staff_id,
-            staff:business_staff(id, name, role, is_service_provider)
-          `)
+          .select('staff_id')
           .eq('service_id', serviceId);
           
-        if (error) {
-          console.error("Error fetching staff with assignments:", error);
-          throw error;
+        if (assignmentsError) {
+          console.error("Error fetching staff assignments:", assignmentsError);
+          throw assignmentsError;
         }
         
-        if (!data || data.length === 0) {
+        if (!assignmentsData || assignmentsData.length === 0) {
           console.log("No staff assignments found for service", serviceId);
           return [];
         }
         
-        console.log("Found staff details:", data?.length);
+        // Extract staff IDs
+        const staffIds = assignmentsData.map(item => item.staff_id);
         
-        // Transform the joined data to match the StaffMember type
-        const staffMembers: StaffMember[] = data.map(item => ({
-          id: item.staff.id,
-          name: item.staff.name || 'Unknown',
-          role: item.staff.role || 'staff'
+        // Then get the staff details in a separate query
+        const { data: staffData, error: staffError } = await supabase
+          .from('business_staff')
+          .select('id, name, role')
+          .in('id', staffIds);
+        
+        if (staffError) {
+          console.error("Error fetching staff details:", staffError);
+          throw staffError;
+        }
+        
+        console.log("Found staff details:", staffData?.length);
+        
+        // Transform the data to match the StaffMember type
+        const staffMembers: StaffMember[] = staffData.map(staff => ({
+          id: staff.id,
+          name: staff.name || 'Unknown',
+          role: staff.role || 'staff'
         }));
         
         return staffMembers;

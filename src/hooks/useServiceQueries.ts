@@ -42,35 +42,62 @@ export const useServiceQueries = () => {
         // Get the service IDs for the IN clause
         const serviceIds = servicesData.map(service => service.id);
         
-        // Get all staff assignments for these services in a single query with a clearer join syntax
-        const { data: allAssignments, error: assignmentsError } = await supabase
+        // Fetch staff assignments
+        const { data: assignmentsData, error: assignmentsError } = await supabase
           .from('staff_service_assignments')
-          .select(`
-            service_id,
-            staff_id,
-            staff:business_staff(id, name, role)
-          `)
+          .select('service_id, staff_id')
           .in('service_id', serviceIds);
           
         if (assignmentsError) {
           console.error("Error fetching staff assignments:", assignmentsError);
           // Continue without assignments rather than failing
+          return servicesData.map(service => ({
+            ...service,
+            assigned_staff: []
+          })) as Service[];
+        }
+        
+        // Get unique staff IDs from all assignments
+        const staffIds = [...new Set(assignmentsData.map(a => a.staff_id))];
+        
+        // Only fetch staff details if there are staff assignments
+        let staffDetails: Record<string, StaffMember> = {};
+        
+        if (staffIds.length > 0) {
+          // Get staff details in a separate query
+          const { data: staffData, error: staffError } = await supabase
+            .from('business_staff')
+            .select('id, name, role')
+            .in('id', staffIds);
+            
+          if (staffError) {
+            console.error("Error fetching staff details:", staffError);
+          } else if (staffData) {
+            // Create a map of staff details by ID for easy lookup
+            staffDetails = staffData.reduce((acc, staff) => {
+              acc[staff.id] = {
+                id: staff.id,
+                name: staff.name || 'Unknown',
+                role: staff.role || 'staff'
+              };
+              return acc;
+            }, {} as Record<string, StaffMember>);
+          }
         }
         
         // Group assignments by service_id
         const assignmentsByService: Record<string, StaffMember[]> = {};
         
-        if (allAssignments) {
-          allAssignments.forEach(assignment => {
+        if (assignmentsData) {
+          assignmentsData.forEach(assignment => {
             if (!assignmentsByService[assignment.service_id]) {
               assignmentsByService[assignment.service_id] = [];
             }
             
-            assignmentsByService[assignment.service_id].push({
-              id: assignment.staff.id,
-              name: assignment.staff.name || 'Unknown',
-              role: assignment.staff.role || 'staff'
-            });
+            const staffMember = staffDetails[assignment.staff_id];
+            if (staffMember) {
+              assignmentsByService[assignment.service_id].push(staffMember);
+            }
           });
         }
         
