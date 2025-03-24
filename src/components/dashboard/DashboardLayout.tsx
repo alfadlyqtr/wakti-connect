@@ -32,9 +32,9 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const accountType = profileData?.account_type || propUserRole || detectedUserRole || "free";
   
   // If user is both business and staff, prioritize business role for dashboard access
-  const userRoleValue = accountType === 'business' 
-    ? 'business' as const
-    : ((isStaff && accountType !== 'business') ? 'staff' as const : accountType as "free" | "individual" | "business" | "staff");
+  const userRoleValue: "free" | "individual" | "business" | "staff" = accountType === 'business' 
+    ? 'business'
+    : ((isStaff && accountType !== 'business') ? 'staff' : accountType as "free" | "individual" | "business" | "staff");
 
   // Redirect to appropriate dashboard based on role if on main dashboard
   useEffect(() => {
