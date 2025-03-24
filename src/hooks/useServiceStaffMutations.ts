@@ -18,7 +18,16 @@ export const useServiceStaffMutations = () => {
       try {
         console.log("Starting staff assignment mutation:", { serviceId, staffIds });
         
-        // Get service details for notification - caching this would improve performance
+        // Validate inputs to prevent issues
+        if (!serviceId) {
+          throw new Error("Service ID is required");
+        }
+        
+        if (!Array.isArray(staffIds)) {
+          throw new Error("Staff IDs must be an array");
+        }
+        
+        // Get service details for notification
         const { data: serviceData, error: serviceError } = await supabase
           .from('business_services')
           .select('name, business_id')
@@ -34,7 +43,27 @@ export const useServiceStaffMutations = () => {
           throw new Error("Service not found");
         }
         
-        // Delete existing assignments and insert new ones in a transaction-like approach
+        // First, verify that the current user owns this service
+        const { data: session } = await supabase.auth.getSession();
+        if (!session?.session?.user) {
+          throw new Error("Authentication required");
+        }
+        
+        if (serviceData.business_id !== session.session.user.id) {
+          // Check if user is co-admin
+          const { data: staffData } = await supabase
+            .from('business_staff')
+            .select('role, business_id')
+            .eq('staff_id', session.session.user.id)
+            .eq('status', 'active')
+            .single();
+            
+          if (!staffData || staffData.role !== 'co-admin' || staffData.business_id !== serviceData.business_id) {
+            throw new Error("You don't have permission to modify this service");
+          }
+        }
+        
+        // Delete existing assignments in a transaction
         const { error: deleteError } = await supabase
           .from('staff_service_assignments')
           .delete()
@@ -51,10 +80,28 @@ export const useServiceStaffMutations = () => {
           return { message: "Staff assignments cleared", service: serviceData };
         }
         
-        // Prepare batch assignments
-        const assignments = staffIds.map(staffId => ({
+        // Verify all staff members exist and belong to this business
+        const { data: validStaff, error: validationError } = await supabase
+          .from('business_staff')
+          .select('id')
+          .in('id', staffIds)
+          .eq('business_id', serviceData.business_id);
+          
+        if (validationError) {
+          throw new Error(`Failed to validate staff members: ${validationError.message}`);
+        }
+        
+        // Filter to only valid staff IDs that belong to this business
+        const validStaffIds = validStaff.map(s => s.id);
+        
+        if (validStaffIds.length === 0) {
+          throw new Error("No valid staff members found for assignment");
+        }
+        
+        // Prepare batch assignments with only validated staff IDs
+        const assignments = validStaffIds.map(staffId => ({
           service_id: serviceId,
-          staff_id: staffId // This is the business_staff.id
+          staff_id: staffId
         }));
         
         console.log("Creating new assignments:", assignments);
@@ -96,40 +143,37 @@ export const useServiceStaffMutations = () => {
         
         const businessName = businessData?.business_name || businessData?.display_name || "Your business";
         
-        // Prepare batch notifications
-        const notifications = [];
-        
-        // Get all staff data in a single query instead of multiple queries
-        if (staffIds.length > 0) {
+        // Get all staff data in a single query
+        if (validStaffIds.length > 0) {
           const { data: staffData, error: staffError } = await supabase
             .from('business_staff')
             .select('id, staff_id')
-            .in('id', staffIds);
+            .in('id', validStaffIds);
             
           if (staffError) {
             console.error("Error fetching staff data:", staffError);
           } else if (staffData) {
             // Create notification objects for bulk insert
-            notifications.push(...staffData.map(staff => ({
+            const notifications = staffData.map(staff => ({
               user_id: staff.staff_id,
               title: "Service Assignment",
               content: `You have been assigned to the service "${serviceData.name}" by ${businessName}`,
               type: "service_assignment",
               related_entity_id: serviceId,
               related_entity_type: "service"
-            })));
-          }
-        }
-        
-        // Bulk insert notifications if we have any
-        if (notifications.length > 0) {
-          const { error: notificationError } = await supabase
-            .from('notifications')
-            .insert(notifications);
+            }));
             
-          if (notificationError) {
-            console.error("Error creating notifications:", notificationError);
-            // Continue since notification failure shouldn't fail the whole operation
+            // Bulk insert notifications
+            if (notifications.length > 0) {
+              const { error: notificationError } = await supabase
+                .from('notifications')
+                .insert(notifications);
+                
+              if (notificationError) {
+                console.error("Error creating notifications:", notificationError);
+                // Continue since notification failure shouldn't fail the whole operation
+              }
+            }
           }
         }
         
@@ -155,7 +199,7 @@ export const useServiceStaffMutations = () => {
       // More informative success message
       toast({
         title: "Staff assignments updated",
-        description: "The staff members have been notified of their assignment to this service.",
+        description: "The staff members have been successfully assigned to the service.",
         variant: "success"
       });
     },

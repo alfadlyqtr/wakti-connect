@@ -39,49 +39,45 @@ export const useServiceQueries = () => {
           return [];
         }
         
-        // For each service, get staff assignments
-        const servicesWithStaff = await Promise.all(servicesData.map(async (service) => {
-          try {
-            // Get staff assignments for this service without using dot notation
-            const { data: assignments, error: assignmentsError } = await supabase
-              .from('staff_service_assignments')
-              .select('staff_id')
-              .eq('service_id', service.id);
-              
-            if (assignmentsError) {
-              console.error(`Error fetching assignments for service ${service.id}:`, assignmentsError);
-              return { ...service, assigned_staff: [] };
+        // Get the service IDs for the IN clause
+        const serviceIds = servicesData.map(service => service.id);
+        
+        // Get all staff assignments for these services in a single query
+        const { data: allAssignments, error: assignmentsError } = await supabase
+          .from('staff_service_assignments')
+          .select(`
+            service_id,
+            staff_id,
+            business_staff!inner(id, name, role)
+          `)
+          .in('service_id', serviceIds);
+          
+        if (assignmentsError) {
+          console.error("Error fetching staff assignments:", assignmentsError);
+          // Continue without assignments rather than failing
+        }
+        
+        // Group assignments by service_id
+        const assignmentsByService: Record<string, StaffMember[]> = {};
+        
+        if (allAssignments) {
+          allAssignments.forEach(assignment => {
+            if (!assignmentsByService[assignment.service_id]) {
+              assignmentsByService[assignment.service_id] = [];
             }
             
-            if (!assignments || assignments.length === 0) {
-              return { ...service, assigned_staff: [] };
-            }
-            
-            // Get the staff IDs
-            const staffIds = assignments.map(a => a.staff_id);
-            
-            // Fetch actual staff information without using dot notation
-            const { data: staffData, error: staffError } = await supabase
-              .from('business_staff')
-              .select('id, name, role')
-              .in('id', staffIds);
-              
-            if (staffError) {
-              console.error(`Error fetching staff details for service ${service.id}:`, staffError);
-              return { ...service, assigned_staff: [] };
-            }
-            
-            const assignedStaff: StaffMember[] = staffData ? staffData.map(staff => ({
-              id: staff.id,
-              name: staff.name || 'Unknown',
-              role: staff.role || 'staff'
-            })) : [];
-            
-            return { ...service, assigned_staff: assignedStaff };
-          } catch (error) {
-            console.error(`Error processing service ${service.id}:`, error);
-            return { ...service, assigned_staff: [] };
-          }
+            assignmentsByService[assignment.service_id].push({
+              id: assignment.business_staff.id,
+              name: assignment.business_staff.name || 'Unknown',
+              role: assignment.business_staff.role || 'staff'
+            });
+          });
+        }
+        
+        // Map services with their assignments
+        const servicesWithStaff = servicesData.map(service => ({
+          ...service,
+          assigned_staff: assignmentsByService[service.id] || []
         }));
         
         console.log("Fetched services with staff:", servicesWithStaff.length);
