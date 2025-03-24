@@ -162,7 +162,7 @@ const WorkLogsTab: React.FC<WorkLogsTabProps> = ({ selectedStaffId }) => {
               <SelectValue placeholder="Select staff member" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Staff Members</SelectItem>
+              <SelectItem value="placeholder" disabled>Select staff member</SelectItem>
               {staffMembers?.map(staff => (
                 <SelectItem key={staff.id} value={staff.id}>
                   {staff.name}
@@ -295,8 +295,8 @@ const WorkLogsTab: React.FC<WorkLogsTabProps> = ({ selectedStaffId }) => {
                       {formatDuration(log.start_time, log.end_time)}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={log.status === "active" ? "outline" : "secondary"}>
-                        {log.status === "active" ? "Active" : "Completed"}
+                      <Badge variant={!log.end_time ? "outline" : "secondary"}>
+                        {!log.end_time ? "Active" : "Completed"}
                       </Badge>
                     </TableCell>
                     <TableCell>
