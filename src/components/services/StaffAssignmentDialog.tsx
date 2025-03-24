@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import StaffAssignmentSection from "./StaffAssignmentSection";
 import { useServiceStaffAssignments } from "@/hooks/useServiceStaffAssignments";
@@ -29,6 +29,15 @@ const StaffAssignmentDialog: React.FC<StaffAssignmentDialogProps> = ({
 
   // Only show staff members who are service providers
   const serviceProviderStaff = allStaffData?.filter(staff => staff.is_service_provider) || [];
+  
+  useEffect(() => {
+    if (serviceProviderStaff.length > 0) {
+      console.log("Available staff for service assignment:", 
+        serviceProviderStaff.map(s => ({ id: s.id, name: s.name }))
+      );
+    }
+    console.log("Selected staff IDs:", selectedStaffIds);
+  }, [serviceProviderStaff, selectedStaffIds]);
   
   const isLoading = isStaffLoading || isAssignmentsLoading || !initialAssignmentsDone;
 

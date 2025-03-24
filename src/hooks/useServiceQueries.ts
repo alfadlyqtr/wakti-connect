@@ -27,6 +27,7 @@ export const useServiceQueries = () => {
         const { data: servicesData, error: servicesError } = await supabase
           .from('business_services')
           .select('*')
+          .eq('business_id', session.session.user.id)
           .order('name');
           
         if (servicesError) {
@@ -45,7 +46,6 @@ export const useServiceQueries = () => {
         }
 
         // Fetch all assignments for these services in a single query
-        // Using a simpler query approach that doesn't rely on direct relation
         const { data: assignmentsData, error: assignmentsError } = await supabase
           .from('staff_service_assignments')
           .select('service_id, staff_id')
@@ -62,6 +62,7 @@ export const useServiceQueries = () => {
         let staffMap = new Map();
         
         if (assignmentsData && assignmentsData.length > 0) {
+          // Get unique staff IDs from assignments (these are business_staff.id values)
           const staffIds = [...new Set(assignmentsData.map(a => a.staff_id))];
           
           console.log("Fetching staff data for IDs:", staffIds);
@@ -94,7 +95,7 @@ export const useServiceQueries = () => {
             if (!staffData) return null;
             
             return {
-              id: assignment.staff_id,
+              id: assignment.staff_id, // This is business_staff.id
               name: staffData.name || 'Unknown',
               role: staffData.role || 'staff'
             };

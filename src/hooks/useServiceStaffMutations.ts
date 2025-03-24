@@ -46,10 +46,10 @@ export const useServiceStaffMutations = () => {
           return { message: "Staff assignments cleared" };
         }
         
-        // Create new assignments
+        // Create new assignments - using the business_staff.id (staffRelationId) not the user's auth ID
         const assignments = staffIds.map(staffId => ({
           service_id: serviceId,
-          staff_id: staffId
+          staff_id: staffId // This is the business_staff.id, not the auth.users id
         }));
         
         console.log("Creating new assignments:", assignments);
@@ -84,10 +84,10 @@ export const useServiceStaffMutations = () => {
         // Create notifications for each staff member
         for (const staffId of staffIds) {
           try {
-            // Get staff relation
+            // Get staff relation - this is using the business_staff ID (staffRelationId)
             const { data: staffData, error: staffError } = await supabase
               .from('business_staff')
-              .select('staff_id')
+              .select('staff_id') // This gets the auth.users ID for the staff member
               .eq('id', staffId)
               .single();
                 
@@ -96,11 +96,11 @@ export const useServiceStaffMutations = () => {
               continue; // Skip this staff member if error
             }
             
-            // Create notification
+            // Create notification - using the auth.users ID
             await supabase
               .from('notifications')
               .insert({
-                user_id: staffData.staff_id,
+                user_id: staffData.staff_id, // Using the auth.users ID for the notification
                 title: "Service Assignment",
                 content: `You have been assigned to the service "${serviceData.name}" by ${businessName}`,
                 type: "service_assignment",

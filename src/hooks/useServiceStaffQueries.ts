@@ -24,10 +24,10 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         
         console.log("Fetching staff assignments for service:", serviceId);
         
-        // Modified approach: Get staff assignments first
+        // Get staff assignments first - this gets the business_staff.id values
         const { data: assignments, error: assignmentError } = await supabase
           .from('staff_service_assignments')
-          .select('staff_id')
+          .select('staff_id') // This is business_staff.id
           .eq('service_id', serviceId);
           
         if (assignmentError) {
@@ -42,10 +42,10 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         
         console.log("Found assignments:", assignments);
         
-        // Extract staff IDs from assignments
+        // Extract staff IDs from assignments (these are business_staff.id values)
         const staffIds = assignments.map(assignment => assignment.staff_id);
         
-        // Fetch staff data in a separate query
+        // Fetch staff data using these business_staff.id values
         const { data: staffData, error: staffError } = await supabase
           .from('business_staff')
           .select('id, name, role')
@@ -65,7 +65,7 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         
         // Transform the data to match the StaffMember type
         const staffMembers: StaffMember[] = staffData.map(staff => ({
-          id: staff.id,
+          id: staff.id, // This is business_staff.id
           name: staff.name || 'Unknown',
           role: staff.role || 'staff'
         }));
