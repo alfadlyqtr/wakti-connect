@@ -43,14 +43,10 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
         // Log the profile data for debugging
         console.log("Business analytics: User profile data:", profileData);
         
-        // If not business account, return default values to avoid errors
+        // If not business account, return default values but don't show error toast
+        // This allows business components to render safely for all users
         if (profileData?.account_type !== 'business') {
-          console.warn("Non-business account attempting to access business analytics");
-          toast({
-            title: "Access Denied",
-            description: "You need a business account to access analytics.",
-            variant: "destructive"
-          });
+          console.warn("Non-business account accessing business analytics");
           
           const growthData = getGrowthTrendsData();
           const serviceData = getServiceDistributionData();
@@ -75,12 +71,12 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
         console.log("Business analytics: Service data:", serviceData);
         
         // Ensure the data structure is correct
-        if (!growthData || !growthData.datasets || !growthData.datasets[0] || !growthData.datasets[0].data) {
+        if (!growthData?.datasets?.[0]?.data) {
           console.error("Invalid growth data format:", growthData);
           throw new Error('Invalid growth data format');
         }
         
-        if (!serviceData || !serviceData.datasets || !serviceData.datasets[0] || !serviceData.datasets[0].data) {
+        if (!serviceData?.datasets?.[0]?.data) {
           console.error("Invalid service data format:", serviceData);
           throw new Error('Invalid service data format');
         }

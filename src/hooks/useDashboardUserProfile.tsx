@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -60,11 +61,16 @@ export function useDashboardUserProfile() {
           .maybeSingle();
           
         if (staffData) {
+          console.log("User identified as staff member");
           setIsStaff(true);
           localStorage.setItem('isStaff', 'true');
           localStorage.setItem('userRole', 'staff');
+        } else {
+          console.log("User is not a staff member");
+          localStorage.setItem('isStaff', 'false');
         }
         
+        // Get user profile data
         const { data, error } = await supabase
           .from('profiles')
           .select('account_type, display_name, business_name, full_name, theme_preference')
@@ -102,6 +108,8 @@ export function useDashboardUserProfile() {
           }
           return null;
         }
+        
+        console.log("Profile fetched successfully:", data);
         
         // Store user role in localStorage for use in other components,
         // but use 'staff' role if user is a staff member
