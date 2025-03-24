@@ -5,6 +5,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { useProfileForm } from "@/hooks/useProfileForm";
 import BusinessProfileFields from "./BusinessProfileFields";
 import IndividualProfileFields from "./IndividualProfileFields";
+import CommonProfileFields from "./CommonProfileFields";
 
 interface ProfileFormProps {
   profile?: (Tables<"profiles"> & {
@@ -18,12 +19,17 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
     handleSubmit,
     onSubmit,
     isSubmitting,
-    isBusinessAccount
+    isBusinessAccount,
+    watch
   } = useProfileForm(profile);
   
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="space-y-4">
+      <div className="space-y-6">
+        {/* Common fields for all account types */}
+        <CommonProfileFields register={register} watch={watch} />
+        
+        {/* Account type specific fields */}
         {isBusinessAccount ? (
           <BusinessProfileFields register={register} />
         ) : (

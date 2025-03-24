@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { UseFormRegister } from "react-hook-form";
 import { ProfileFormData } from "@/hooks/useProfileForm";
+import { Separator } from "@/components/ui/separator";
 
 interface IndividualProfileFieldsProps {
   register: UseFormRegister<ProfileFormData>;
@@ -12,7 +13,16 @@ interface IndividualProfileFieldsProps {
 
 const IndividualProfileFields: React.FC<IndividualProfileFieldsProps> = ({ register }) => {
   return (
-    <>
+    <div className="space-y-6">
+      <div className="space-y-1">
+        <h3 className="text-lg font-medium">Profile Details</h3>
+        <p className="text-sm text-muted-foreground">
+          Customize how others see you
+        </p>
+      </div>
+      
+      <Separator />
+      
       <div className="space-y-2">
         <Label htmlFor="displayName">Username</Label>
         <Input 
@@ -31,7 +41,7 @@ const IndividualProfileFields: React.FC<IndividualProfileFieldsProps> = ({ regis
           {...register("occupation")}
         />
       </div>
-    </>
+    </div>
   );
 };
 
