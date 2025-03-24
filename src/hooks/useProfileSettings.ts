@@ -49,6 +49,7 @@ export const useProfileSettings = () => {
               occupation: '',
               theme_preference: 'light',
               updated_at: new Date().toISOString(),
+              currency_preference: 'USD', // Add the missing currency_preference field
               email: session.user.email
             };
             return defaultProfile;
