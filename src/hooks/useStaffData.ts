@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -8,6 +7,7 @@ export interface Staff {
   name: string;
   role: string;
   email: string;
+  is_service_provider?: boolean;
 }
 
 export interface WorkSession {
@@ -50,7 +50,8 @@ export const useStaffData = () => {
             id: staff.id,
             name: staff.name || 'Unnamed Staff',
             role: staff.role || 'staff',
-            email: staff.email || ''
+            email: staff.email || '',
+            is_service_provider: staff.is_service_provider || false
           };
         });
         

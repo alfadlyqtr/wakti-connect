@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from "react";
-import { FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -50,9 +49,10 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
     onStaffChange([]);
   };
 
-  // Filter staff by search query
+  // Filter staff by search query and only include service providers
   const filteredStaff = staffData?.filter(staff => 
-    staff.name.toLowerCase().includes(staffSearchQuery.toLowerCase())
+    staff.name.toLowerCase().includes(staffSearchQuery.toLowerCase()) &&
+    (staff.is_service_provider === true) // Only show service providers
   ) || [];
 
   if (!hasStaffMembers && !isStaffLoading) {
@@ -70,7 +70,7 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
   return (
     <div className="space-y-3 border p-4 rounded-md">
       <div className="flex items-center justify-between">
-        <FormLabel className="text-base">Assign Staff</FormLabel>
+        <div className="text-base font-medium">Assign Service Providers</div>
         {selectedStaff.length > 0 && (
           <button 
             type="button" 
@@ -104,7 +104,7 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
       <div className="relative mb-2">
         <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search staff members..."
+          placeholder="Search service providers..."
           className="pl-9"
           value={staffSearchQuery}
           onChange={(e) => setStaffSearchQuery(e.target.value)}
@@ -115,6 +115,13 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
         <div className="text-sm text-muted-foreground p-4 text-center">
           <div className="inline-block h-4 w-4 border-2 border-current border-t-transparent animate-spin rounded-full mr-2"></div>
           Loading staff members...
+        </div>
+      ) : filteredStaff.length === 0 && staffData && staffData.length > 0 ? (
+        <div className="text-sm text-amber-600 p-4 text-center border rounded-md bg-amber-50">
+          <AlertCircle className="h-4 w-4 inline-block mr-2" />
+          {staffSearchQuery 
+            ? `No service providers found matching "${staffSearchQuery}"`
+            : "No service providers found. Make sure to mark staff members as service providers in Staff Management."}
         </div>
       ) : (
         <ScrollArea className="h-48 border rounded-md">
@@ -151,10 +158,7 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
               ))
             ) : (
               <div className="p-3 text-sm text-muted-foreground text-center">
-                {staffSearchQuery 
-                  ? `No staff members found matching "${staffSearchQuery}"`
-                  : "No staff members available"
-                }
+                No service providers available
               </div>
             )}
           </div>

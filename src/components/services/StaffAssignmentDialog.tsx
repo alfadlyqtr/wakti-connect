@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import StaffAssignmentSection from "./StaffAssignmentSection";
 import { useServiceStaffAssignments } from "@/hooks/useServiceStaffAssignments";
@@ -21,19 +21,18 @@ const StaffAssignmentDialog: React.FC<StaffAssignmentDialogProps> = ({
     staffAssignments, 
     assignStaffToService,
     isPending,
-    isLoading: isAssignmentsLoading
+    isLoading: isAssignmentsLoading,
+    initialAssignmentsDone
   } = useServiceStaffAssignments(serviceId);
 
-  const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>(
-    staffAssignments?.map(staff => staff.id) || []
-  );
+  const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([]);
 
   // Update local state when staffAssignments data loads
-  React.useEffect(() => {
-    if (staffAssignments) {
+  useEffect(() => {
+    if (staffAssignments && initialAssignmentsDone) {
       setSelectedStaffIds(staffAssignments.map(staff => staff.id));
     }
-  }, [staffAssignments]);
+  }, [staffAssignments, initialAssignmentsDone]);
 
   const handleStaffChange = (staffIds: string[]) => {
     setSelectedStaffIds(staffIds);
@@ -41,6 +40,12 @@ const StaffAssignmentDialog: React.FC<StaffAssignmentDialogProps> = ({
 
   const handleSave = async () => {
     await assignStaffToService(selectedStaffIds);
+  };
+
+  const handleCancel = () => {
+    if (staffAssignments) {
+      setSelectedStaffIds(staffAssignments.map(staff => staff.id));
+    }
   };
 
   const isLoading = isStaffLoading || isAssignmentsLoading;
@@ -61,7 +66,7 @@ const StaffAssignmentDialog: React.FC<StaffAssignmentDialogProps> = ({
       <div className="flex justify-end gap-2 mt-4 pt-2 border-t">
         <Button 
           variant="outline" 
-          onClick={() => setSelectedStaffIds(staffAssignments?.map(staff => staff.id) || [])}
+          onClick={handleCancel}
           disabled={isPending || isLoading}
         >
           Cancel

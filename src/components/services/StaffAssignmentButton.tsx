@@ -23,7 +23,7 @@ const StaffAssignmentButton: React.FC<StaffAssignmentButtonProps> = ({
           <Users className="h-4 w-4 mr-2" />
           {staffCount > 0 
             ? `${staffCount} staff ${staffCount === 1 ? 'member' : 'members'} assigned` 
-            : "Assign Staff"}
+            : "Assign Service Providers"}
         </Button>
       </DialogTrigger>
       <StaffAssignmentDialog 
