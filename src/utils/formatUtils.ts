@@ -1,16 +1,28 @@
 
 import { format, formatDistanceStrict } from 'date-fns';
+import { CURRENCY_SYMBOLS, SupportedCurrency } from '@/hooks/useCurrencySettings';
 
-// Format currency with locale
-export const formatCurrency = (amount: number | null | undefined): string => {
+// Format currency with locale and currency code
+export const formatCurrency = (
+  amount: number | null | undefined,
+  currencyCode: SupportedCurrency = 'USD'
+): string => {
   if (amount === null || amount === undefined) {
     return '-';
   }
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2
-  }).format(amount);
+  
+  try {
+    const formatter = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyCode,
+      minimumFractionDigits: 2
+    });
+    
+    return formatter.format(amount);
+  } catch (error) {
+    // Fallback if formatting fails
+    return `${CURRENCY_SYMBOLS[currencyCode]}${amount.toFixed(2)}`;
+  }
 };
 
 // Format duration between two dates
