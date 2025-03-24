@@ -1,11 +1,11 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Search, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Search, CheckCircle, XCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Staff } from "@/hooks/useStaffData";
 
 interface StaffAssignmentSectionProps {
@@ -22,9 +22,24 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
   isStaffLoading
 }) => {
   const [staffSearchQuery, setStaffSearchQuery] = useState("");
+  const [filteredStaff, setFilteredStaff] = useState<Staff[]>([]);
   
-  // Check if we have any staff members
+  // Derive state
   const hasStaffMembers = staffData && staffData.length > 0;
+  
+  // Filter staff by search query
+  useEffect(() => {
+    if (!staffData) {
+      setFilteredStaff([]);
+      return;
+    }
+    
+    const filtered = staffData.filter(staff => 
+      staff.name.toLowerCase().includes(staffSearchQuery.toLowerCase())
+    );
+    
+    setFilteredStaff(filtered);
+  }, [staffData, staffSearchQuery]);
 
   // Get staff member by ID
   const getStaffMemberById = (id: string) => {
@@ -44,12 +59,16 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
     onStaffChange([]);
   };
 
-  // Filter staff by search query
-  const filteredStaff = staffData?.filter(staff => 
-    staff.name.toLowerCase().includes(staffSearchQuery.toLowerCase())
-  ) || [];
+  if (isStaffLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 space-y-4 border rounded-md bg-muted/20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Loading staff members...</p>
+      </div>
+    );
+  }
 
-  if (!hasStaffMembers && !isStaffLoading) {
+  if (!hasStaffMembers) {
     return (
       <Alert className="border-amber-200 bg-amber-50 text-amber-800">
         <AlertCircle className="h-4 w-4 text-amber-600" />
@@ -105,12 +124,7 @@ const StaffAssignmentSection: React.FC<StaffAssignmentSectionProps> = ({
         />
       </div>
       
-      {isStaffLoading ? (
-        <div className="text-sm text-muted-foreground p-4 text-center">
-          <div className="inline-block h-4 w-4 border-2 border-current border-t-transparent animate-spin rounded-full mr-2"></div>
-          Loading staff members...
-        </div>
-      ) : filteredStaff.length === 0 ? (
+      {filteredStaff.length === 0 ? (
         <div className="text-sm text-amber-600 p-4 text-center border rounded-md bg-amber-50">
           <AlertCircle className="h-4 w-4 inline-block mr-2" />
           {staffSearchQuery 

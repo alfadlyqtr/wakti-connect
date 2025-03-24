@@ -5,11 +5,12 @@ import { StaffMember } from "@/types/service.types";
 import { toast } from "@/hooks/use-toast";
 
 export const useServiceStaffQueries = (serviceId?: string) => {
-  // Query to fetch staff members assigned to a specific service
+  // Optimized query to fetch staff members assigned to a specific service
   const { 
     data: staffAssignments, 
     isLoading, 
-    error 
+    error,
+    refetch
   } = useQuery({
     queryKey: ['staffServiceAssignments', serviceId],
     queryFn: async () => {
@@ -24,51 +25,37 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         
         console.log("Fetching staff assignments for service:", serviceId);
         
-        // Get staff assignments first - this gets the business_staff.id values
-        const { data: assignments, error: assignmentError } = await supabase
+        // Use a more efficient JOIN query instead of multiple queries
+        const { data, error } = await supabase
           .from('staff_service_assignments')
-          .select('staff_id') // This is business_staff.id
+          .select(`
+            staff_id,
+            business_staff:staff_id (
+              id, 
+              name, 
+              role
+            )
+          `)
           .eq('service_id', serviceId);
           
-        if (assignmentError) {
-          console.error("Error fetching assignments:", assignmentError);
-          throw assignmentError;
+        if (error) {
+          console.error("Error fetching staff assignments:", error);
+          throw error;
         }
         
-        if (!assignments || assignments.length === 0) {
+        if (!data || data.length === 0) {
           console.log("No staff assignments found for service", serviceId);
           return [];
         }
         
-        console.log("Found assignments:", assignments);
-        
-        // Extract staff IDs from assignments (these are business_staff.id values)
-        const staffIds = assignments.map(assignment => assignment.staff_id);
-        
-        // Fetch staff data using these business_staff.id values
-        const { data: staffData, error: staffError } = await supabase
-          .from('business_staff')
-          .select('id, name, role')
-          .in('id', staffIds);
-          
-        if (staffError) {
-          console.error("Error fetching staff data:", staffError);
-          throw staffError;
-        }
-        
-        if (!staffData || staffData.length === 0) {
-          console.log("No staff data found for the assigned staff IDs");
-          return [];
-        }
-        
-        console.log("Found staff data:", staffData);
+        console.log("Found assignments:", data.length);
         
         // Transform the data to match the StaffMember type
-        const staffMembers: StaffMember[] = staffData.map(staff => ({
-          id: staff.id, // This is business_staff.id
-          name: staff.name || 'Unknown',
-          role: staff.role || 'staff'
-        }));
+        const staffMembers: StaffMember[] = data.map(item => ({
+          id: item.staff_id, // This is business_staff.id
+          name: item.business_staff?.name || 'Unknown',
+          role: item.business_staff?.role || 'staff'
+        })).filter(staff => staff.name !== 'Unknown'); // Filter out any invalid staff
         
         return staffMembers;
       } catch (error) {
@@ -81,12 +68,15 @@ export const useServiceStaffQueries = (serviceId?: string) => {
         return [];
       }
     },
-    enabled: !!serviceId
+    enabled: !!serviceId,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes for better performance
+    gcTime: 1000 * 60 * 10 // Keep in cache for 10 minutes
   });
 
   return {
     staffAssignments: staffAssignments || [],
     isLoading,
-    error: error as Error | null
+    error: error as Error | null,
+    refetch
   };
 };
