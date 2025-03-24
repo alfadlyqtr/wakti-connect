@@ -33,6 +33,11 @@ const StaffCard: React.FC<StaffCardProps> = ({
   // Count of unique work days
   const workDaysCount = Object.keys(sessionsByDate).length;
   
+  // Avatar border class based on active work session
+  const avatarBorderClass = hasActiveSessions 
+    ? "ring-2 ring-green-500" 
+    : "ring-2 ring-red-500";
+  
   return (
     <Card 
       className={`
@@ -44,7 +49,7 @@ const StaffCard: React.FC<StaffCardProps> = ({
     >
       <CardHeader className="pb-2 pt-4">
         <div className="flex justify-between items-center">
-          <Avatar className="h-10 w-10">
+          <Avatar className={`h-10 w-10 ${avatarBorderClass}`}>
             <AvatarFallback>
               {staff.name.substring(0, 2).toUpperCase()}
             </AvatarFallback>

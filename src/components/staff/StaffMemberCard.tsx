@@ -58,13 +58,18 @@ export const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
     return null;
   };
 
+  // Determine the avatar border color based on staff status
+  const avatarBorderClass = staff.status === 'active' 
+    ? "ring-2 ring-green-500" 
+    : "ring-2 ring-red-500";
+
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-0">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
+              <Avatar className={`h-10 w-10 ${avatarBorderClass}`}>
                 <AvatarImage src={staff.profile_image_url} />
                 <AvatarFallback>{getInitials(staff.name)}</AvatarFallback>
               </Avatar>

@@ -21,12 +21,17 @@ const StaffMemberCard: React.FC<StaffMemberCardProps> = ({ member, onSelectStaff
     : "ST";
     
   const isActive = member.status === 'active';
+  
+  // Avatar border color class based on status
+  const avatarBorderClass = isActive 
+    ? "ring-2 ring-green-500" 
+    : "ring-2 ring-red-500";
     
   return (
     <Card className={isActive ? "" : "opacity-75 border-muted bg-muted/20"}>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <Avatar className="h-12 w-12">
+          <Avatar className={`h-12 w-12 ${avatarBorderClass}`}>
             <AvatarImage src={member.profile_image_url || ""} alt={fullName} />
             <AvatarFallback className="bg-primary/10 text-primary">
               {initials}

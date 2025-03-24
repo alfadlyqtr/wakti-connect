@@ -47,12 +47,17 @@ export const StaffMemberCard: React.FC<StaffMemberCardProps> = ({
     .toUpperCase()
     .substring(0, 2);
 
+  // Avatar border color class based on status
+  const avatarBorderClass = isActive 
+    ? "ring-2 ring-green-500" 
+    : "ring-2 ring-red-500";
+
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-0">
         <div className="flex p-4 items-center justify-between">
           <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 border">
+            <Avatar className={`h-10 w-10 border ${avatarBorderClass}`}>
               {staffMember.profile_image_url ? (
                 <AvatarImage src={staffMember.profile_image_url} alt={staffMember.name} />
               ) : (
