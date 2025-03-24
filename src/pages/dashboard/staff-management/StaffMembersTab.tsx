@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RefreshCcw, UserPlus, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { StaffMember } from "@/types/staff";
-import { StaffMembersList } from "@/components/staff/StaffMembersList";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import StaffMemberCard from "./StaffMemberCard";
+import { StaffMember } from "./types"; // Import the local types
 
 interface StaffMembersTabProps {
   onSelectStaff: (staffId: string | null) => void;
@@ -53,12 +52,14 @@ const StaffMembersTab: React.FC<StaffMembersTabProps> = ({
         
       if (error) throw new Error(error.message);
       
-      // Convert permissions from JSON if needed
+      // Convert permissions from JSON if needed and ensure we have proper types
       return data.map(staff => ({
         ...staff,
         permissions: typeof staff.permissions === 'string' 
           ? JSON.parse(staff.permissions) 
-          : staff.permissions
+          : staff.permissions,
+        // Ensure email is always populated (required by the local StaffMember type)
+        email: staff.email || '',
       })) as StaffMember[];
     },
     enabled: !!businessId,
