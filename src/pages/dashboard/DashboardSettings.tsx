@@ -27,9 +27,9 @@ const DashboardSettings = () => {
   
   // Calculate the number of tabs to show
   const getTabsCount = () => {
-    if (isStaff) return 3; // Profile, Account, and Notifications
-    if (isBusinessAccount) return 6; // Add Currency tab for business accounts
-    return 5; // No Currency tab for non-business accounts
+    if (isStaff) return 2; // Profile & Account (combined) and Notifications
+    if (isBusinessAccount) return 5; // Add Currency tab for business accounts
+    return 4; // No Currency tab for non-business accounts
   };
   
   if (isLoading) {
@@ -48,7 +48,6 @@ const DashboardSettings = () => {
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className={`grid w-full grid-cols-${getTabsCount()} gap-4 h-auto`}>
           <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           {!isStaff && (
             <>
@@ -63,9 +62,6 @@ const DashboardSettings = () => {
         
         <TabsContent value="profile" className="space-y-4">
           <ProfileTab />
-        </TabsContent>
-        
-        <TabsContent value="account" className="space-y-4">
           <AccountTab />
         </TabsContent>
         
