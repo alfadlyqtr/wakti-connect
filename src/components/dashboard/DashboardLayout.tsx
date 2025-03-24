@@ -29,9 +29,10 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   } = useDashboardUserProfile();
 
   // Use provided role or detected role
+  // Fix: Make sure userRoleValue is strictly typed as one of the allowed types
   const userRoleValue = isStaff 
-    ? 'staff' 
-    : (propUserRole || detectedUserRole || "free");
+    ? 'staff' as const
+    : ((propUserRole || detectedUserRole || "free") as "free" | "individual" | "business" | "staff");
 
   // Redirect to appropriate dashboard based on role if on main dashboard
   useEffect(() => {
@@ -62,7 +63,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       <div className="flex flex-1 overflow-hidden">
         <Sidebar 
           isOpen={isSidebarOpen} 
-          userRole={userRoleValue as "free" | "individual" | "business" | "staff"} 
+          userRole={userRoleValue} 
         />
         
         <DashboardContent
