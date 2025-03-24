@@ -25,8 +25,8 @@ const StaffRoleGuard: React.FC<StaffRoleGuardProps> = ({
   const userRole = localStorage.getItem('userRole');
   const isStaff = userRole === 'staff' || localStorage.getItem('isStaff') === 'true';
   
-  // If user is staff and this route is restricted from staff, redirect
-  if (isStaff && disallowStaff) {
+  // FIXED: Only restrict access if user is a staff member AND not a business owner
+  if (isStaff && userRole === 'staff' && disallowStaff) {
     // Show toast message explaining why they can't access this route
     toast({
       title: messageTitle,

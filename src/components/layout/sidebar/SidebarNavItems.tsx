@@ -42,11 +42,19 @@ const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
     }
   }, []);
   
-  // Filter navigation items based on user role
+  // FIXED: Filter navigation items based on user role, prioritizing business role if applicable
   const filteredNavItems = navItems.filter(item => {
-    if (isStaff) {
+    // Business users see business nav items, even if they're also staff
+    if (userRole === 'business') {
+      return item.showFor.includes('business');
+    }
+    
+    // Staff users see staff nav items (only if they're not also business owners)
+    if (isStaff && userRole === 'staff') {
       return item.showFor.includes('staff');
     }
+    
+    // All other users see nav items according to their role
     return item.showFor.includes(userRole);
   });
   

@@ -53,6 +53,20 @@ export function useDashboardUserProfile() {
         // Store userId for StaffDashboardHeader
         setUserId(session.user.id);
         
+        // Get user profile data first to determine primary account type
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('account_type, display_name, business_name, full_name, theme_preference')
+          .eq('id', session.user.id)
+          .maybeSingle();
+          
+        if (profileError) {
+          console.error("Error fetching user profile:", profileError);
+          // Handle profile error later in code
+        } else {
+          console.log("Profile fetched successfully:", profileData);
+        }
+        
         // Check if user is staff
         const { data: staffData } = await supabase
           .from('business_staff')
@@ -64,22 +78,20 @@ export function useDashboardUserProfile() {
           console.log("User identified as staff member");
           setIsStaff(true);
           localStorage.setItem('isStaff', 'true');
-          localStorage.setItem('userRole', 'staff');
+          
+          // IMPORTANT FIX: Only set userRole to 'staff' if user is NOT a business account
+          if (!profileData || profileData.account_type !== 'business') {
+            localStorage.setItem('userRole', 'staff');
+          }
         } else {
           console.log("User is not a staff member");
+          setIsStaff(false);
           localStorage.setItem('isStaff', 'false');
         }
         
-        // Get user profile data
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('account_type, display_name, business_name, full_name, theme_preference')
-          .eq('id', session.user.id)
-          .maybeSingle();
-        
-        if (error) {
-          console.error("Error fetching user profile:", error);
-          if (error.code === 'PGRST116' && !errorLogged) {
+        // Handle profile error from earlier
+        if (profileError) {
+          if (profileError.code === 'PGRST116' && !errorLogged) {
             console.log("Profile not found, user may need to sign up");
             setErrorLogged(true);
             
@@ -109,17 +121,12 @@ export function useDashboardUserProfile() {
           return null;
         }
         
-        console.log("Profile fetched successfully:", data);
-        
-        // Store user role in localStorage for use in other components,
-        // but use 'staff' role if user is a staff member
-        if (staffData) {
-          localStorage.setItem('userRole', 'staff');
-        } else if (data?.account_type) {
-          localStorage.setItem('userRole', data.account_type);
+        // IMPORTANT FIX: Set userRole based on account_type, prioritizing business account
+        if (profileData?.account_type) {
+          localStorage.setItem('userRole', profileData.account_type);
         }
         
-        if (data?.account_type === 'business' && !data.business_name) {
+        if (profileData?.account_type === 'business' && !profileData.business_name) {
           // If business account but no business name is set, inform the user
           toast({
             title: "Complete your business profile",
@@ -135,7 +142,7 @@ export function useDashboardUserProfile() {
           });
         }
         
-        return data as DashboardUserProfile;
+        return profileData as DashboardUserProfile;
       } catch (error) {
         console.error("Error fetching user profile:", error);
         return null;
@@ -153,12 +160,17 @@ export function useDashboardUserProfile() {
     }
   }, [profileData?.theme_preference]);
 
+  // IMPORTANT FIX: Prioritize business account type over staff status
+  const userRole = profileData?.account_type === 'business' 
+    ? 'business' as const 
+    : (isStaff ? 'staff' as const : (profileData?.account_type || "free") as "free" | "individual" | "business");
+
   return {
     profileData,
     profileLoading,
     userId,
     isStaff,
-    userRole: isStaff ? 'staff' : (profileData?.account_type || "free"),
+    userRole,
     businessSlug: profileData?.business_name ? slugifyBusinessName(profileData.business_name) : undefined
   };
 }

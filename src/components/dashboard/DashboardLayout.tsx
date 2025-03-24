@@ -28,11 +28,13 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     userRole: detectedUserRole 
   } = useDashboardUserProfile();
 
-  // Use provided role or detected role
-  // Fix: Make sure userRoleValue is strictly typed as one of the allowed types
-  const userRoleValue = isStaff 
-    ? 'staff' as const
-    : ((propUserRole || detectedUserRole || "free") as "free" | "individual" | "business" | "staff");
+  // FIXED: Use provided role or detected role, prioritizing business account
+  const accountType = profileData?.account_type || propUserRole || detectedUserRole || "free";
+  
+  // If user is both business and staff, prioritize business role for dashboard access
+  const userRoleValue = accountType === 'business' 
+    ? 'business' as const
+    : ((isStaff && accountType !== 'business') ? 'staff' as const : accountType as "free" | "individual" | "business" | "staff");
 
   // Redirect to appropriate dashboard based on role if on main dashboard
   useEffect(() => {
@@ -40,11 +42,16 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     const isMainDashboardPath = location.pathname === "/dashboard" || location.pathname === "/dashboard/";
     const isAnalyticsPath = location.pathname === "/dashboard/analytics";
     
-    if (!profileLoading && isMainDashboardPath) {
-      console.log("Dashboard redirect check - User role:", userRoleValue, "Is staff:", isStaff);
-      
-      if (isStaff) {
-        // Staff users go to staff dashboard
+    console.log("DashboardLayout user role check:", {
+      userRoleValue,
+      accountType: profileData?.account_type,
+      isStaff,
+      isMainDashboardPath
+    });
+    
+    if (!profileLoading && isMainDashboardPath) {      
+      if (userRoleValue === 'staff' && accountType !== 'business') {
+        // Only staff users (who are not also business owners) go to staff dashboard
         navigate('/dashboard/staff-dashboard');
       } else {
         // All users (including business) go to the main dashboard
@@ -57,7 +64,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     if (!profileLoading && isAnalyticsPath && userRoleValue === 'business' && location.state?.fromInitialRedirect) {
       navigate('/dashboard');
     }
-  }, [profileLoading, location.pathname, userRoleValue, isStaff, navigate, location.state]);
+  }, [profileLoading, location.pathname, userRoleValue, isStaff, navigate, location.state, profileData?.account_type]);
 
   return (
     <div className="min-h-screen flex flex-col">
