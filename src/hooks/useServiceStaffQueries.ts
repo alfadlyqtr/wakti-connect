@@ -22,17 +22,10 @@ export const useServiceStaffQueries = (serviceId?: string) => {
           throw new Error('Not authenticated');
         }
         
-        // Directly join to get staff data with assignments in a single query
+        // Modified approach: Get staff assignments first
         const { data: assignments, error: assignmentError } = await supabase
           .from('staff_service_assignments')
-          .select(`
-            staff_id,
-            staff:staff_id (
-              id,
-              name,
-              role
-            )
-          `)
+          .select('staff_id')
           .eq('service_id', serviceId);
           
         if (assignmentError) throw assignmentError;
@@ -41,18 +34,27 @@ export const useServiceStaffQueries = (serviceId?: string) => {
           return [];
         }
         
+        // Extract staff IDs from assignments
+        const staffIds = assignments.map(assignment => assignment.staff_id);
+        
+        // Fetch staff data in a separate query
+        const { data: staffData, error: staffError } = await supabase
+          .from('business_staff')
+          .select('id, name, role')
+          .in('id', staffIds);
+          
+        if (staffError) throw staffError;
+        
+        if (!staffData || staffData.length === 0) {
+          return [];
+        }
+        
         // Transform the data to match the StaffMember type
-        const staffMembers: StaffMember[] = assignments
-          .filter(assignment => assignment.staff) // Filter out any nulls
-          .map(assignment => {
-            const staffData = assignment.staff;
-            // Safely access properties with null checks
-            return {
-              id: assignment.staff_id,
-              name: staffData?.name || 'Unknown',
-              role: staffData?.role || 'staff'
-            };
-          });
+        const staffMembers: StaffMember[] = staffData.map(staff => ({
+          id: staff.id,
+          name: staff.name || 'Unknown',
+          role: staff.role || 'staff'
+        }));
         
         return staffMembers;
       } catch (error) {

@@ -38,14 +38,34 @@ export const useServiceQueries = () => {
         }
 
         // Fetch all assignments for these services in a single query
+        // Using a simpler query approach that doesn't rely on direct relation
         const { data: assignmentsData, error: assignmentsError } = await supabase
           .from('staff_service_assignments')
-          .select('service_id, staff:staff_id(id, name, role)')
+          .select('service_id, staff_id')
           .in('service_id', serviceIds);
 
         if (assignmentsError) {
           console.error("Error fetching staff assignments:", assignmentsError);
           // Continue even if assignments fetch fails
+        }
+
+        // If we have assignments, fetch staff data in a separate query
+        let staffMap = new Map();
+        
+        if (assignmentsData && assignmentsData.length > 0) {
+          const staffIds = [...new Set(assignmentsData.map(a => a.staff_id))];
+          
+          const { data: staffData, error: staffError } = await supabase
+            .from('business_staff')
+            .select('id, name, role')
+            .in('id', staffIds);
+            
+          if (staffError) {
+            console.error("Error fetching staff data:", staffError);
+          } else if (staffData) {
+            // Create a map of staff data by ID for easy lookup
+            staffMap = new Map(staffData.map(staff => [staff.id, staff]));
+          }
         }
 
         // Map services with their assignments
@@ -55,16 +75,16 @@ export const useServiceQueries = () => {
             assignment => assignment.service_id === service.id
           ) || [];
           
-          // Map staff data
+          // Map staff data using our staffMap
           const assignedStaff = serviceAssignments.map(assignment => {
-            if (!assignment.staff) return null;
+            const staffData = staffMap.get(assignment.staff_id);
             
-            // Safely access staff properties with null checks
-            const staffData = assignment.staff;
+            if (!staffData) return null;
+            
             return {
-              id: staffData?.id || '',
-              name: staffData?.name || 'Unknown',
-              role: staffData?.role || 'staff'
+              id: assignment.staff_id,
+              name: staffData.name || 'Unknown',
+              role: staffData.role || 'staff'
             };
           }).filter(Boolean) as StaffMember[];
 
