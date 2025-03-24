@@ -31,47 +31,53 @@ const DialogContent: React.FC<DialogContentProps> = ({
   error
 }) => {
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-1">
-        <TabsTrigger value="create">Staff Information</TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="create" className="space-y-4 py-4">
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertTriangle className="h-4 w-4 mr-2" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+    <div className="flex flex-col flex-1 overflow-hidden">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 overflow-hidden">
+        <TabsList className="px-6 pt-4 bg-background sticky top-0 z-10">
+          <TabsTrigger value="create" className="flex-1">Staff Information</TabsTrigger>
+        </TabsList>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <StaffFormFields form={form} isEditing={isEditing} />
-            
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isEditing ? "Updating..." : "Creating..."}
-                  </>
-                ) : (
-                  isEditing ? "Update Staff" : "Create Staff"
-                )}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </TabsContent>
-    </Tabs>
+        <TabsContent value="create" className="flex-1 overflow-auto px-6 py-4">
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+              <StaffFormFields form={form} isEditing={isEditing} />
+            </form>
+          </Form>
+        </TabsContent>
+      </Tabs>
+      
+      <div className="border-t px-6 py-4 bg-background sticky bottom-0 flex justify-end space-x-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
+          Cancel
+        </Button>
+        <Button 
+          type="button" 
+          onClick={form.handleSubmit(handleSubmit)}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {isEditing ? "Updating..." : "Creating..."}
+            </>
+          ) : (
+            isEditing ? "Update Staff" : "Create Staff"
+          )}
+        </Button>
+      </div>
+    </div>
   );
 };
 

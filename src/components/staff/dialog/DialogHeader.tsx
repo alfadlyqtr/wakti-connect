@@ -1,7 +1,6 @@
 
 import React from "react";
 import {
-  DialogHeader as UIDialogHeader,
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
@@ -12,14 +11,14 @@ interface DialogHeaderProps {
 
 const DialogHeader: React.FC<DialogHeaderProps> = ({ isEditing }) => {
   return (
-    <UIDialogHeader>
-      <DialogTitle>{isEditing ? "Edit Staff Member" : "Add Staff Member"}</DialogTitle>
-      <DialogDescription>
+    <div className="px-6 pt-6 pb-4 border-b sticky top-0 z-20 bg-background">
+      <DialogTitle className="text-xl font-semibold">{isEditing ? "Edit Staff Member" : "Add Staff Member"}</DialogTitle>
+      <DialogDescription className="mt-1">
         {isEditing 
           ? "Update the staff member's information and permissions." 
           : "Add a new staff member to your business. They'll receive login credentials via email."}
       </DialogDescription>
-    </UIDialogHeader>
+    </div>
   );
 };
 

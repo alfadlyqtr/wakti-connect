@@ -33,7 +33,7 @@ export function StaffDialog({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] lg:max-w-[700px]">
+      <DialogContent className="sm:max-w-[500px] lg:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col p-0">
         <DialogHeader isEditing={isEditing} />
         <DialogContentComponent 
           form={form}
