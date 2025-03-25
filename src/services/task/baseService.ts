@@ -48,9 +48,10 @@ export async function getTaskWithSubtasks(taskId: string): Promise<Task> {
     
   if (subtasksError) throw subtasksError;
   
-  // Combine the data
+  // Combine the data with proper typing
   return {
     ...taskData,
+    due_time: taskData.due_time || null,
     subtasks: subtasksData || []
   } as Task;
 }

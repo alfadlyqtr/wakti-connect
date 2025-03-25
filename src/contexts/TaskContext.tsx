@@ -78,7 +78,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const typedTasks: Task[] = (data || []).map(task => ({
           ...task,
           status: validateTaskStatus(task.status),
-          priority: validateTaskPriority(task.priority)
+          priority: validateTaskPriority(task.priority),
+          due_time: task.due_time || null
         }));
         
         setTasks(typedTasks);
@@ -124,6 +125,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         status: "pending" as TaskStatus,
         priority: "high" as TaskPriority,
         due_date: new Date().toISOString(),
+        due_time: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         user_id: "user-1",
@@ -136,6 +138,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         status: "in-progress" as TaskStatus,
         priority: "medium" as TaskPriority,
         due_date: new Date(Date.now() + 86400000).toISOString(),
+        due_time: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         user_id: "user-1",
@@ -148,6 +151,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         status: "completed" as TaskStatus,
         priority: "high" as TaskPriority,
         due_date: new Date(Date.now() - 86400000).toISOString(),
+        due_time: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         user_id: "user-1",

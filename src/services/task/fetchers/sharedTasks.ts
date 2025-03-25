@@ -27,6 +27,7 @@ export async function fetchSharedTasks(userId: string): Promise<Task[]> {
           status: (task.status || "pending") as TaskStatus,
           priority: (task.priority || "normal") as TaskPriority,
           due_date: task.due_date,
+          due_time: task.due_time || null,
           user_id: task.user_id,
           assignee_id: task.assignee_id || null,
           created_at: task.created_at,

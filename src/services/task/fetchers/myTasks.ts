@@ -22,6 +22,7 @@ export async function fetchMyTasks(userId: string): Promise<Task[]> {
     status: (item.status || "pending") as TaskStatus,
     priority: (item.priority || "normal") as TaskPriority,
     due_date: item.due_date,
+    due_time: item.due_time || null,
     user_id: item.user_id,
     assignee_id: item.assignee_id || null,
     created_at: item.created_at,
