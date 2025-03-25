@@ -19,7 +19,11 @@ export const router = createBrowserRouter([
   {
     path: "/",
     element: <PublicLayout />,
-    errorElement: <ErrorBoundary />,
+    errorElement: (
+      <ErrorBoundary>
+        <div>Something went wrong with public routes</div>
+      </ErrorBoundary>
+    ),
     children: publicRoutes,
   },
   
@@ -31,7 +35,11 @@ export const router = createBrowserRouter([
         <Suspense fallback={<LoadingSpinner />} />
       </AuthShell>
     ),
-    errorElement: <ErrorBoundary />,
+    errorElement: (
+      <ErrorBoundary>
+        <div>Something went wrong with authentication</div>
+      </ErrorBoundary>
+    ),
     children: authRoutes,
   },
 
@@ -40,14 +48,16 @@ export const router = createBrowserRouter([
     path: "/dashboard",
     element: (
       <ProtectedRoute>
-        <ErrorBoundary>
-          <DashboardShell>
-            <Suspense fallback={<LoadingSpinner />} />
-          </DashboardShell>
-        </ErrorBoundary>
+        <DashboardShell>
+          <Suspense fallback={<LoadingSpinner />} />
+        </DashboardShell>
       </ProtectedRoute>
     ),
-    errorElement: <ErrorBoundary />,
+    errorElement: (
+      <ErrorBoundary>
+        <div>Something went wrong with dashboard</div>
+      </ErrorBoundary>
+    ),
     children: dashboardRoutes,
   },
 
@@ -55,13 +65,15 @@ export const router = createBrowserRouter([
   {
     path: "/business/:businessId",
     element: (
+      <BusinessShell>
+        <Suspense fallback={<LoadingSpinner />} />
+      </BusinessShell>
+    ),
+    errorElement: (
       <ErrorBoundary>
-        <BusinessShell>
-          <Suspense fallback={<LoadingSpinner />} />
-        </BusinessShell>
+        <div>Something went wrong with business pages</div>
       </ErrorBoundary>
     ),
-    errorElement: <ErrorBoundary />,
     children: businessRoutes,
   },
 
