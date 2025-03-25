@@ -26,7 +26,15 @@ export async function createNewTask(userId: string, taskData: Partial<TaskFormDa
     throw error;
   }
   
-  return data[0] as Task;
+  return {
+    ...data[0],
+    due_time: data[0].due_time || null,
+    completed_at: data[0].completed_at || null,
+    is_recurring_instance: data[0].is_recurring_instance || false,
+    parent_recurring_id: data[0].parent_recurring_id || null,
+    snooze_count: data[0].snooze_count || 0,
+    snoozed_until: data[0].snoozed_until || null
+  } as Task;
 }
 
 // Get task with subtasks
@@ -52,6 +60,11 @@ export async function getTaskWithSubtasks(taskId: string): Promise<Task> {
   const result: Task = {
     ...taskData,
     due_time: taskData.due_time || null,
+    completed_at: taskData.completed_at || null,
+    is_recurring_instance: taskData.is_recurring_instance || false,
+    parent_recurring_id: taskData.parent_recurring_id || null,
+    snooze_count: taskData.snooze_count || 0,
+    snoozed_until: taskData.snoozed_until || null,
     subtasks: subtasksData || []
   } as Task;
   
