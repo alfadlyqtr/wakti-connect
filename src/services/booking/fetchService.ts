@@ -101,15 +101,12 @@ export const fetchBookings = async (
       }
       
       // Process the data to handle potential relation errors
+      // Explicitly cast the result to BookingWithRelations[]
       bookings = rawBookings.map(booking => ({
         ...booking,
-        service: booking?.service && typeof booking.service === 'object' && !('error' in booking.service) 
-          ? booking.service 
-          : null,
-        staff: booking?.staff && typeof booking.staff === 'object' && !('error' in booking.staff) 
-          ? booking.staff 
-          : null
-      }));
+        service: booking.service && typeof booking.service === 'object' ? booking.service : null,
+        staff: booking.staff && typeof booking.staff === 'object' ? booking.staff : null
+      })) as BookingWithRelations[];
       
     } catch (fetchError: any) {
       console.error(`Error fetching bookings for tab "${tab}":`, fetchError);

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -33,12 +32,8 @@ const BookingConfirmationPage = () => {
       // Handle potential errors with relations by providing default values
       const bookingWithSafeRelations: BookingWithRelations = {
         ...data,
-        service: data?.service && typeof data.service === 'object' && !('error' in data.service) 
-          ? data.service 
-          : null,
-        staff: data?.staff && typeof data.staff === 'object' && !('error' in data.staff) 
-          ? data.staff 
-          : null
+        service: data.service && typeof data.service === 'object' ? data.service : null,
+        staff: data.staff && typeof data.staff === 'object' ? data.staff : null
       };
       
       return bookingWithSafeRelations;

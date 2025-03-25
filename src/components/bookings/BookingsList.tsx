@@ -62,12 +62,14 @@ const BookingsList: React.FC<BookingsListProps> = ({
                 </div>
                 <div className="flex items-center mb-2">
                   <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span className="text-sm">{booking.customer_name}</span>
+                  <span className="text-sm">{booking.customer_name || 'No name provided'}</span>
                 </div>
-                <div className="flex items-center">
-                  <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                  <span className="text-sm">{booking.customer_email}</span>
-                </div>
+                {booking.customer_email && (
+                  <div className="flex items-center">
+                    <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <span className="text-sm">{booking.customer_email}</span>
+                  </div>
+                )}
               </div>
               
               <div>
