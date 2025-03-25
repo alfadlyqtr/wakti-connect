@@ -13,13 +13,6 @@ export const AIPersonalityTab: React.FC = () => {
   
   if (!settings) return null;
 
-  const handleAssistantNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateSettings({
-      ...settings,
-      assistant_name: e.target.value,
-    });
-  };
-
   const handleToneChange = (value: "formal" | "casual" | "concise" | "detailed" | "balanced") => {
     updateSettings({
       ...settings,
@@ -50,10 +43,14 @@ export const AIPersonalityTab: React.FC = () => {
           <Label htmlFor="assistant_name">Assistant Name</Label>
           <Input 
             id="assistant_name" 
-            value={settings.assistant_name}
-            onChange={handleAssistantNameChange}
-            placeholder="WAKTI"
+            value="WAKTI AI"
+            disabled={true}
+            className="bg-gray-100"
+            placeholder="WAKTI AI"
           />
+          <p className="text-xs text-muted-foreground">
+            The assistant name is set to WAKTI AI and cannot be changed.
+          </p>
         </div>
         
         <div className="space-y-2">

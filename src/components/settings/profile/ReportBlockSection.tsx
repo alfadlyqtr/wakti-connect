@@ -1,14 +1,16 @@
 
 import React, { useState } from "react";
-import { Flag, Ban } from "lucide-react";
+import { Flag, Ban, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ReportBlockSectionProps {
   targetUserId?: string;
@@ -19,6 +21,8 @@ const ReportBlockSection: React.FC<ReportBlockSectionProps> = ({ targetUserId })
   const [blockOpen, setBlockOpen] = useState(false);
   const [reportReason, setReportReason] = useState("inappropriate");
   const [reportDetails, setReportDetails] = useState("");
+  const [blockUserIdentifier, setBlockUserIdentifier] = useState("");
+  const [blockTab, setBlockTab] = useState("block");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   
@@ -76,6 +80,15 @@ const ReportBlockSection: React.FC<ReportBlockSectionProps> = ({ targetUserId })
       return;
     }
     
+    if (!blockUserIdentifier.trim()) {
+      toast({
+        title: "User identifier required",
+        description: "Please provide an email or username to block.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
@@ -84,15 +97,60 @@ const ReportBlockSection: React.FC<ReportBlockSectionProps> = ({ targetUserId })
       
       toast({
         title: "User blocked",
-        description: "You will no longer see content from this user."
+        description: "The user has been blocked successfully."
       });
       
       setBlockOpen(false);
+      setBlockUserIdentifier("");
     } catch (error) {
       console.error("Error blocking user:", error);
       toast({
         title: "Action failed",
         description: "There was a problem blocking this user. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleUnblock = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "You must be logged in to unblock a user.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!blockUserIdentifier.trim()) {
+      toast({
+        title: "User identifier required",
+        description: "Please provide an email or username to unblock.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // In a real implementation, you would send this to your backend
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      
+      toast({
+        title: "User unblocked",
+        description: "The user has been unblocked successfully."
+      });
+      
+      setBlockOpen(false);
+      setBlockUserIdentifier("");
+    } catch (error) {
+      console.error("Error unblocking user:", error);
+      toast({
+        title: "Action failed",
+        description: "There was a problem unblocking this user. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -120,7 +178,7 @@ const ReportBlockSection: React.FC<ReportBlockSectionProps> = ({ targetUserId })
           onClick={() => setBlockOpen(true)}
         >
           <Ban className="h-3.5 w-3.5" />
-          Block user
+          Block/Unblock user
         </Button>
       </div>
       
@@ -193,32 +251,87 @@ const ReportBlockSection: React.FC<ReportBlockSectionProps> = ({ targetUserId })
         </DialogContent>
       </Dialog>
       
-      {/* Block Dialog */}
+      {/* Block/Unblock Dialog */}
       <Dialog open={blockOpen} onOpenChange={setBlockOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Block this user?</DialogTitle>
+            <DialogTitle>Block or Unblock a User</DialogTitle>
             <DialogDescription>
-              You will no longer see content from this user. This action can be reversed later from your settings.
+              Enter an email address or username to block or unblock a user.
             </DialogDescription>
           </DialogHeader>
           
-          <DialogFooter className="mt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => setBlockOpen(false)}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleBlock}
-              disabled={isSubmitting}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              {isSubmitting ? "Blocking..." : "Block user"}
-            </Button>
-          </DialogFooter>
+          <Tabs value={blockTab} onValueChange={setBlockTab} className="mt-4">
+            <TabsList className="grid grid-cols-2 w-full">
+              <TabsTrigger value="block">Block User</TabsTrigger>
+              <TabsTrigger value="unblock">Unblock User</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="block" className="pt-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="block-user-identifier">Email or Username</Label>
+                  <Input
+                    id="block-user-identifier"
+                    placeholder="Enter the user's email or username"
+                    value={blockUserIdentifier}
+                    onChange={(e) => setBlockUserIdentifier(e.target.value)}
+                  />
+                </div>
+                
+                <DialogFooter className="mt-4 gap-2 flex flex-col sm:flex-row sm:justify-end">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setBlockOpen(false)}
+                    disabled={isSubmitting}
+                    className="sm:w-auto w-full"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleBlock}
+                    disabled={isSubmitting || !blockUserIdentifier.trim()}
+                    className="bg-destructive hover:bg-destructive/90 sm:w-auto w-full"
+                  >
+                    {isSubmitting ? "Blocking..." : "Block User"}
+                  </Button>
+                </DialogFooter>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="unblock" className="pt-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="unblock-user-identifier">Email or Username</Label>
+                  <Input
+                    id="unblock-user-identifier"
+                    placeholder="Enter the user's email or username to unblock"
+                    value={blockUserIdentifier}
+                    onChange={(e) => setBlockUserIdentifier(e.target.value)}
+                  />
+                </div>
+                
+                <DialogFooter className="mt-4 gap-2 flex flex-col sm:flex-row sm:justify-end">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setBlockOpen(false)}
+                    disabled={isSubmitting}
+                    className="sm:w-auto w-full"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleUnblock}
+                    disabled={isSubmitting || !blockUserIdentifier.trim()}
+                    className="sm:w-auto w-full flex items-center gap-1"
+                  >
+                    <Check className="h-4 w-4" />
+                    {isSubmitting ? "Unblocking..." : "Unblock User"}
+                  </Button>
+                </DialogFooter>
+              </div>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
     </div>
