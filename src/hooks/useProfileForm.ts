@@ -78,11 +78,23 @@ export const useProfileForm = (profile?: Tables<"profiles"> & { email?: string }
           ? "Your business information has been updated successfully."
           : "Your profile information has been updated successfully."
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating profile:", error);
+      
+      // Handle specific uniqueness constraint errors
+      let errorMessage = "There was a problem updating your information.";
+      
+      if (error.message && error.message.includes("profile with this display name already exists")) {
+        errorMessage = "This display name is already in use. Please choose a different one.";
+      } else if (error.message && error.message.includes("business with this name already exists")) {
+        errorMessage = "This business name is already registered. Please choose a different name.";
+      } else if (error.message && error.message.includes("business with this email already exists")) {
+        errorMessage = "This business email is already registered. Please use a different email.";
+      }
+      
       toast({
         title: "Update failed",
-        description: "There was a problem updating your information.",
+        description: errorMessage,
         variant: "destructive"
       });
     }

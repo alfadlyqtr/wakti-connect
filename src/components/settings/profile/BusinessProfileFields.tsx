@@ -60,6 +60,18 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({ register,
               <SelectItem value="healthcare">Healthcare</SelectItem>
               <SelectItem value="education">Education</SelectItem>
               <SelectItem value="consulting">Consulting</SelectItem>
+              <SelectItem value="finance">Finance & Banking</SelectItem>
+              <SelectItem value="ecommerce">E-commerce</SelectItem>
+              <SelectItem value="manufacturing">Manufacturing</SelectItem>
+              <SelectItem value="construction">Construction</SelectItem>
+              <SelectItem value="hospitality">Hospitality & Tourism</SelectItem>
+              <SelectItem value="real_estate">Real Estate</SelectItem>
+              <SelectItem value="media">Media & Entertainment</SelectItem>
+              <SelectItem value="transportation">Transportation & Logistics</SelectItem>
+              <SelectItem value="agriculture">Agriculture</SelectItem>
+              <SelectItem value="energy">Energy & Utilities</SelectItem>
+              <SelectItem value="legal">Legal Services</SelectItem>
+              <SelectItem value="nonprofit">Non-profit & NGO</SelectItem>
               <SelectItem value="other">Other</SelectItem>
             </SelectContent>
           </Select>
