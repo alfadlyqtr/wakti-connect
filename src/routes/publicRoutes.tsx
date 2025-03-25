@@ -9,6 +9,8 @@ import FaqPage from "@/pages/public/FaqPage";
 import PrivacyPage from "@/pages/public/PrivacyPage";
 import TermsPage from "@/pages/public/TermsPage";
 import Index from "@/pages/Index";
+import BookServicePage from "@/pages/booking/BookServicePage";
+import BookingConfirmationPage from "@/pages/booking/BookingConfirmationPage";
 
 export const publicRoutes: RouteObject[] = [
   {
@@ -46,6 +48,14 @@ export const publicRoutes: RouteObject[] = [
   {
     path: "/terms",
     element: <TermsPage />,
+  },
+  {
+    path: "/book/:serviceId",
+    element: <BookServicePage />,
+  },
+  {
+    path: "/booking/confirmation/:bookingId",
+    element: <BookingConfirmationPage />,
   },
 ];
 

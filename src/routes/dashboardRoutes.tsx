@@ -1,105 +1,81 @@
 
-import React from "react";
-import DashboardHome from "@/pages/dashboard/DashboardHome";
-import DashboardTasks from "@/pages/dashboard/DashboardTasks";
-import DashboardEvents from "@/pages/dashboard/DashboardEvents";
-import DashboardSettings from "@/pages/dashboard/DashboardSettings";
-import DashboardBusinessAnalytics from "@/pages/dashboard/DashboardBusinessAnalytics";
-import DashboardBusinessReports from "@/pages/dashboard/DashboardBusinessReports";
-import DashboardStaffManagement from "@/pages/dashboard/DashboardStaffManagement";
-import DashboardWorkLogs from "@/pages/dashboard/DashboardWorkLogs";
-import DashboardAIAssistant from "@/pages/dashboard/DashboardAIAssistant";
-import DashboardMessages from "@/pages/dashboard/DashboardMessages";
-import DashboardContacts from "@/pages/dashboard/DashboardContacts";
-import DashboardSubscribers from "@/pages/dashboard/DashboardSubscribers";
-import DashboardNotifications from "@/pages/dashboard/DashboardNotifications";
-import DashboardWorkManagement from "@/pages/dashboard/DashboardWorkManagement";
-import DashboardJobCards from "@/pages/dashboard/DashboardJobCards";
-import StaffDashboard from "@/pages/dashboard/StaffDashboard";
-import DashboardBookings from "@/pages/dashboard/DashboardBookings";
-import DashboardJobs from "@/pages/dashboard/DashboardJobs";
-import DashboardServiceManagement from "@/pages/dashboard/DashboardServiceManagement";
-import DashboardBusinessPage from "@/pages/dashboard/DashboardBusinessPage";
+import { RouteObject } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
-export const dashboardRoutes = [
+// Use dynamic imports for better code splitting
+const DashboardPage = lazy(() => import("@/pages/dashboard/DashboardPage"));
+const DashboardTasks = lazy(() => import("@/pages/dashboard/DashboardTasks"));
+const DashboardEvents = lazy(() => import("@/pages/dashboard/DashboardEvents"));
+const DashboardServiceManagement = lazy(() => import("@/pages/dashboard/DashboardServiceManagement"));
+const DashboardStaffManagement = lazy(() => import("@/pages/dashboard/DashboardStaffManagement"));
+const DashboardBookings = lazy(() => import("@/pages/dashboard/DashboardBookings"));
+const DashboardTeamManagement = lazy(() => import("@/pages/dashboard/DashboardTeamManagement"));
+const DashboardWorkManagement = lazy(() => import("@/pages/dashboard/DashboardWorkManagement"));
+const DashboardSettings = lazy(() => import("@/pages/dashboard/DashboardSettings"));
+const DashboardAnalytics = lazy(() => import("@/pages/dashboard/DashboardAnalytics"));
+const DashboardMessaging = lazy(() => import("@/pages/dashboard/DashboardMessaging"));
+const DashboardAI = lazy(() => import("@/pages/dashboard/DashboardAI"));
+const DashboardLandingPage = lazy(() => import("@/pages/dashboard/DashboardLandingPage"));
+
+// Wrap dynamic imports with suspense
+const withSuspense = (Component: React.ComponentType) => (
+  <Suspense fallback={<LoadingSpinner />}>
+    <Component />
+  </Suspense>
+);
+
+export const dashboardRoutes: RouteObject[] = [
   {
-    path: "",
-    element: <DashboardHome />,
+    index: true,
+    element: withSuspense(DashboardPage),
   },
   {
-    path: "staff-dashboard",
-    element: <StaffDashboard />,
-  },
-  {
-    path: "tasks",
-    element: <DashboardTasks />,
+    path: "tasks/*",
+    element: withSuspense(DashboardTasks),
   },
   {
     path: "events",
-    element: <DashboardEvents />,
-  },
-  {
-    path: "ai-assistant",
-    element: <DashboardAIAssistant />,
-  },
-  {
-    path: "settings",
-    element: <DashboardSettings />,
-  },
-  {
-    path: "analytics",
-    element: <DashboardBusinessAnalytics />,
-  },
-  {
-    path: "reports",
-    element: <DashboardBusinessReports />,
-  },
-  {
-    path: "staff",
-    element: <DashboardStaffManagement />,
-  },
-  {
-    path: "work-logs",
-    element: <DashboardWorkLogs />,
-  },
-  {
-    path: "work-management",
-    element: <DashboardWorkManagement />,
-  },
-  {
-    path: "job-cards",
-    element: <DashboardJobCards />,
-  },
-  {
-    path: "messages/*",
-    element: <DashboardMessages />,
-  },
-  {
-    path: "contacts",
-    element: <DashboardContacts />,
-  },
-  {
-    path: "subscribers",
-    element: <DashboardSubscribers />,
-  },
-  {
-    path: "notifications",
-    element: <DashboardNotifications />,
-  },
-  {
-    path: "bookings",
-    element: <DashboardBookings />,
-  },
-  {
-    path: "jobs",
-    element: <DashboardJobs />,
-  },
-  {
-    path: "business-page",
-    element: <DashboardBusinessPage />,
+    element: withSuspense(DashboardEvents),
   },
   {
     path: "services",
-    element: <DashboardServiceManagement />,
+    element: withSuspense(DashboardServiceManagement),
+  },
+  {
+    path: "staff",
+    element: withSuspense(DashboardStaffManagement),
+  },
+  {
+    path: "bookings",
+    element: withSuspense(DashboardBookings),
+  },
+  {
+    path: "team",
+    element: withSuspense(DashboardTeamManagement),
+  },
+  {
+    path: "work",
+    element: withSuspense(DashboardWorkManagement),
+  },
+  {
+    path: "settings",
+    element: withSuspense(DashboardSettings),
+  },
+  {
+    path: "analytics",
+    element: withSuspense(DashboardAnalytics),
+  },
+  {
+    path: "messaging",
+    element: withSuspense(DashboardMessaging),
+  },
+  {
+    path: "ai",
+    element: withSuspense(DashboardAI),
+  },
+  {
+    path: "landing-page",
+    element: withSuspense(DashboardLandingPage),
   },
 ];

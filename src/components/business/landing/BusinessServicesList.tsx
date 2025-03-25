@@ -5,7 +5,7 @@ import { BusinessPageSection } from "@/types/business.types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, Clock } from "lucide-react";
 import { fromTable } from "@/integrations/supabase/helper";
 
 interface BusinessServicesListProps {
@@ -94,7 +94,7 @@ const BusinessServicesList = ({ section, businessId }: BusinessServicesListProps
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {services && services.map((service) => (
-          <Card key={service.id} className="overflow-hidden">
+          <Card key={service.id} className="overflow-hidden hover:shadow-md transition-all">
             <CardHeader>
               <CardTitle>{service.name}</CardTitle>
               {service.description && (
@@ -104,8 +104,9 @@ const BusinessServicesList = ({ section, businessId }: BusinessServicesListProps
             <CardContent>
               <div className="space-y-2">
                 {showDuration && service.duration && (
-                  <p className="text-sm">
-                    <span className="font-medium">Duration:</span> {service.duration} minutes
+                  <p className="text-sm flex items-center">
+                    <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <span className="font-medium">{service.duration} minutes</span>
                   </p>
                 )}
                 {showPrices && service.price !== null && (

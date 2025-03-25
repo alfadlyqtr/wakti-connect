@@ -1,302 +1,365 @@
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Calendar as CalendarIcon, Plus, Search, Filter, Loader2 } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { useBookings } from "@/hooks/useBookings";
-import { BookingTab } from "@/services/booking";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { isUserStaff, getStaffBusinessId } from "@/utils/staffUtils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Loader2, Calendar, Clock, UserCheck, CheckCircle, XCircle } from "lucide-react";
+import { Booking, BookingStatus, BookingTab } from "@/types/booking.types";
+import { format, parseISO } from "date-fns";
 
 const DashboardBookings = () => {
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<BookingTab>("all-bookings");
-  const [isCreateBookingOpen, setIsCreateBookingOpen] = useState(false);
-  const [isStaff, setIsStaff] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [staffBookings, setStaffBookings] = useState<any[]>([]);
-  const [businessId, setBusinessId] = useState<string | null>(null);
   
-  // Check if user is staff
-  useEffect(() => {
-    const checkStaffStatus = async () => {
-      try {
-        setIsLoading(true);
-        const staffStatus = await isUserStaff();
-        setIsStaff(staffStatus);
-        
-        if (staffStatus) {
-          // Get business ID for this staff member
-          const busId = await getStaffBusinessId();
-          setBusinessId(busId);
-          
-          // Fetch staff-specific bookings
-          await fetchStaffBookings();
-        }
-      } catch (error) {
-        console.error("Error checking staff status:", error);
-      } finally {
-        setIsLoading(false);
+  const { data: bookingsData, isLoading, refetch } = useQuery({
+    queryKey: ['bookings', activeTab],
+    queryFn: async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user) {
+        throw new Error("Not authenticated");
       }
-    };
-    
-    checkStaffStatus();
-  }, []);
-  
-  const fetchStaffBookings = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) return;
-      
-      console.log("Fetching bookings for staff member:", user.id);
-      
-      // Get bookings where this staff member is assigned
-      const { data, error } = await supabase
+      // Start with getting all bookings for this business
+      let query = supabase
         .from('bookings')
-        .select('*')
-        .eq('staff_assigned_id', user.id)
-        .order('start_time', { ascending: true });
-        
-      if (error) {
-        console.error("Error fetching staff bookings:", error);
-        toast({
-          title: "Error",
-          description: `Could not fetch your bookings: ${error.message}`,
-          variant: "destructive"
-        });
-        return;
+        .select(`
+          *,
+          services:service_id (name, description, price),
+          staff:staff_assigned_id (name)
+        `)
+        .eq('business_id', session.session.user.id);
+      
+      // Filter by status for pending tab
+      if (activeTab === "pending-bookings") {
+        query = query.eq('status', 'pending');
       }
       
-      console.log("Staff bookings:", data);
-      setStaffBookings(data || []);
+      const { data, error } = await query.order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      return { 
+        bookings: data as Booking[],
+        userRole: "business"
+      };
+    }
+  });
+  
+  const updateBookingStatus = async (bookingId: string, status: BookingStatus) => {
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ 
+          status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', bookingId);
+      
+      if (error) throw error;
+      
+      // Get booking details for notification
+      const { data: booking } = await supabase
+        .from('bookings')
+        .select('customer_id, title, service_id')
+        .eq('id', bookingId)
+        .single();
+      
+      // Add notification for customer if they have an account
+      if (booking?.customer_id) {
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: booking.customer_id,
+            title: `Booking ${status === 'confirmed' ? 'Confirmed' : 'Cancelled'}`,
+            content: `Your booking for "${booking.title}" has been ${status === 'confirmed' ? 'confirmed' : 'cancelled'}.`,
+            type: "booking_update",
+            related_entity_id: bookingId,
+            related_entity_type: "booking"
+          });
+      }
+      
+      toast({
+        title: `Booking ${status === 'confirmed' ? 'Confirmed' : 'Cancelled'}`,
+        description: `The booking has been ${status === 'confirmed' ? 'confirmed' : 'cancelled'} successfully.`,
+        variant: status === 'confirmed' ? 'success' : 'default'
+      });
+      
+      refetch();
     } catch (error: any) {
-      console.error("Error fetching staff bookings:", error);
+      toast({
+        title: "Error updating booking",
+        description: error.message || "An error occurred while updating the booking status",
+        variant: "destructive"
+      });
     }
   };
   
-  const {
-    filteredBookings,
-    isLoading: isBookingsLoading,
-    searchQuery,
-    setSearchQuery,
-    filterStatus,
-    setFilterStatus,
-    filterDate,
-    setFilterDate,
-    createBooking
-  } = useBookings(activeTab);
-
-  const handleTabChange = (tab: BookingTab) => {
-    setActiveTab(tab);
-  };
-
-  const handleCreateBooking = async (bookingData: any) => {
-    await createBooking(bookingData);
-    setIsCreateBookingOpen(false);
+  const getStatusBadge = (status: BookingStatus) => {
+    switch (status) {
+      case 'confirmed':
+        return <Badge variant="success">Confirmed</Badge>;
+      case 'cancelled':
+        return <Badge variant="destructive">Cancelled</Badge>;
+      case 'completed':
+        return <Badge variant="outline" className="bg-green-50 text-green-700">Completed</Badge>;
+      default:
+        return <Badge variant="outline" className="bg-amber-50 text-amber-700">Pending</Badge>;
+    }
   };
   
-  // For staff, use the staff bookings, otherwise use the filtered bookings from hook
-  const displayedBookings = isStaff ? staffBookings : filteredBookings;
-  const loadingBookings = isLoading || isBookingsLoading;
-
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-1">Bookings</h1>
-            <p className="text-muted-foreground">
-              View your assigned bookings and appointments
-            </p>
-          </div>
-        </div>
-        
-        <div className="flex items-center justify-center p-8">
-          <Loader2 className="h-8 w-8 animate-spin text-wakti-blue" />
-          <span className="ml-2">Loading bookings...</span>
-        </div>
+      <div className="flex flex-col items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Loading bookings...</p>
       </div>
     );
   }
-
+  
+  const bookings = bookingsData?.bookings || [];
+  const pendingBookings = bookings.filter(b => b.status === 'pending');
+  
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold mb-1">Bookings</h1>
-          <p className="text-muted-foreground">
-            {isStaff 
-              ? "View your assigned bookings and appointments" 
-              : "Manage your customer bookings and appointments"}
-          </p>
-        </div>
-        {!isStaff && (
-          <Button onClick={() => setIsCreateBookingOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> New Booking
-          </Button>
-        )}
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Booking Management</h1>
+        <p className="text-muted-foreground">View and manage customer bookings for your services</p>
       </div>
-
-      {!isStaff && (
-        <div className="flex flex-col sm:flex-row justify-between space-y-2 sm:space-y-0 sm:space-x-2">
-          <div className="flex flex-1 items-center space-x-2">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search bookings..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2 whitespace-nowrap">
-                  <Filter className="h-4 w-4" />
-                  <span className="hidden sm:inline">Filter</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Status</h4>
-                    <select
-                      className="w-full p-2 border rounded-md"
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                    >
-                      <option value="all">All Statuses</option>
-                      <option value="pending">Pending</option>
-                      <option value="confirmed">Confirmed</option>
-                      <option value="completed">Completed</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Date</h4>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !filterDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {filterDate ? format(filterDate, "PPP") : "Pick a date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={filterDate}
-                          onSelect={setFilterDate}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => {
-                      setFilterStatus("all");
-                      setFilterDate(null);
-                    }}
-                  >
-                    Reset Filters
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {isStaff ? "Your Assigned Bookings" : "Bookings"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loadingBookings ? (
-            <div className="flex justify-center items-center h-32">
-              <Loader2 className="h-8 w-8 animate-spin text-wakti-blue" />
-              <span className="ml-2">Loading bookings...</span>
-            </div>
-          ) : displayedBookings && displayedBookings.length > 0 ? (
-            <div className="grid gap-4">
-              {displayedBookings.map((booking) => (
-                <div 
-                  key={booking.id} 
-                  className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 border rounded-lg"
-                >
-                  <div>
-                    <h3 className="font-medium">{booking.title}</h3>
-                    <div className="text-sm text-muted-foreground">
-                      {new Date(booking.start_time).toLocaleString()} - {new Date(booking.end_time).toLocaleTimeString()}
+      
+      <Tabs 
+        defaultValue="all-bookings" 
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as BookingTab)}
+      >
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="all-bookings" className="flex items-center gap-2">
+            All Bookings
+            {bookings.length > 0 && (
+              <Badge variant="secondary">{bookings.length}</Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="pending-bookings" className="flex items-center gap-2">
+            Pending Bookings
+            {pendingBookings.length > 0 && (
+              <Badge variant="secondary">{pendingBookings.length}</Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="all-bookings" className="mt-0">
+          {bookings.length === 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>No Bookings</CardTitle>
+                <CardDescription>
+                  No bookings have been made for your services yet.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Once customers book your services, they will appear here.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-6">
+              {bookings.map((booking) => (
+                <Card key={booking.id}>
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle>{booking.title}</CardTitle>
+                        <CardDescription>
+                          {booking.services?.name || 'Unknown Service'}
+                        </CardDescription>
+                      </div>
+                      {getStatusBadge(booking.status)}
                     </div>
-                    <div className="mt-1">
-                      <span className={cn(
-                        "inline-block px-2 py-1 text-xs rounded-full",
-                        booking.status === "pending" && "bg-yellow-100 text-yellow-800",
-                        booking.status === "confirmed" && "bg-green-100 text-green-800",
-                        booking.status === "cancelled" && "bg-red-100 text-red-800",
-                        booking.status === "completed" && "bg-blue-100 text-blue-800"
-                      )}>
-                        {booking.status}
-                      </span>
+                  </CardHeader>
+                  <CardContent className="pb-2">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm font-medium">Date</p>
+                          <p className="text-sm text-muted-foreground">
+                            {format(parseISO(booking.start_time), 'PPP')}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Clock className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm font-medium">Time</p>
+                          <p className="text-sm text-muted-foreground">
+                            {format(parseISO(booking.start_time), 'p')} - {format(parseISO(booking.end_time), 'p')}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <UserCheck className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm font-medium">Service Provider</p>
+                          <p className="text-sm text-muted-foreground">
+                            {booking.staff?.name || 'Not assigned'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-2 mt-2 md:mt-0">
-                    <Button variant="outline" size="sm">Details</Button>
-                    {booking.status === "pending" && !isStaff && (
-                      <Button size="sm">Confirm</Button>
-                    )}
-                  </div>
-                </div>
+                    
+                    <Separator className="my-4" />
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium">Customer</p>
+                        <p className="text-sm text-muted-foreground">
+                          {booking.customer_name} ({booking.customer_email})
+                        </p>
+                      </div>
+                      
+                      {booking.services?.price && (
+                        <div className="text-right">
+                          <p className="text-sm font-medium">Price</p>
+                          <p className="text-sm font-bold">
+                            QAR {booking.services.price.toFixed(2)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                  {booking.status === 'pending' && (
+                    <CardFooter className="flex justify-end space-x-2 pt-4 border-t">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                      >
+                        <XCircle className="h-4 w-4 mr-2" />
+                        Decline
+                      </Button>
+                      <Button 
+                        onClick={() => updateBookingStatus(booking.id, 'confirmed')}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Confirm
+                      </Button>
+                    </CardFooter>
+                  )}
+                </Card>
               ))}
             </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="pending-bookings" className="mt-0">
+          {pendingBookings.length === 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>No Pending Bookings</CardTitle>
+                <CardDescription>
+                  There are no pending bookings that require your attention.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  When customers make booking requests, they will appear here for your approval.
+                </p>
+              </CardContent>
+            </Card>
           ) : (
-            <div className="flex flex-col items-center justify-center py-8">
-              <p className="text-muted-foreground mb-4">No bookings found</p>
-              {!isStaff && (
-                <Button variant="outline" onClick={() => setIsCreateBookingOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" /> Create a booking
-                </Button>
-              )}
+            <div className="grid gap-6">
+              {pendingBookings.map((booking) => (
+                <Card key={booking.id}>
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle>{booking.title}</CardTitle>
+                        <CardDescription>
+                          {booking.services?.name || 'Unknown Service'}
+                        </CardDescription>
+                      </div>
+                      {getStatusBadge(booking.status)}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pb-2">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm font-medium">Date</p>
+                          <p className="text-sm text-muted-foreground">
+                            {format(parseISO(booking.start_time), 'PPP')}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Clock className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm font-medium">Time</p>
+                          <p className="text-sm text-muted-foreground">
+                            {format(parseISO(booking.start_time), 'p')} - {format(parseISO(booking.end_time), 'p')}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <UserCheck className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm font-medium">Service Provider</p>
+                          <p className="text-sm text-muted-foreground">
+                            {booking.staff?.name || 'Not assigned'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <Separator className="my-4" />
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium">Customer</p>
+                        <p className="text-sm text-muted-foreground">
+                          {booking.customer_name} ({booking.customer_email})
+                        </p>
+                      </div>
+                      
+                      {booking.services?.price && (
+                        <div className="text-right">
+                          <p className="text-sm font-medium">Price</p>
+                          <p className="text-sm font-bold">
+                            QAR {booking.services.price.toFixed(2)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-end space-x-2 pt-4 border-t">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                    >
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Decline
+                    </Button>
+                    <Button 
+                      onClick={() => updateBookingStatus(booking.id, 'confirmed')}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Confirm
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Placeholder for actual booking creation dialog */}
-      {isCreateBookingOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-background p-6 rounded-lg w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Create Booking</h2>
-            <p className="mb-4">This is a placeholder. In a real implementation, this would be a fully featured booking form.</p>
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setIsCreateBookingOpen(false)}>Cancel</Button>
-              <Button onClick={() => setIsCreateBookingOpen(false)}>Create</Button>
-            </div>
-          </div>
-        </div>
-      )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
