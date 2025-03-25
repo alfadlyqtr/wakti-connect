@@ -14,7 +14,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Clock, Calendar as CalendarIcon, ArrowLeft, User, Mail } from "lucide-react";
 import { Service } from "@/types/service.types";
-import { BookingFormData } from "@/types/booking.types";
+import { BookingFormData, BookingStatus } from "@/types/booking.types";
 import { format } from "date-fns";
 
 const BookServicePage = () => {
@@ -142,7 +142,7 @@ const BookServicePage = () => {
       const [endHours, endMinutes] = endTime.split(':').map(Number);
       endDate.setHours(endHours, endMinutes, 0, 0);
       
-      // Create booking data with properly named fields
+      // Create booking data with properly named fields and typed status
       const bookingData = {
         business_id: service?.business_id || '',
         title: `Booking for ${service?.name}`,
@@ -153,7 +153,7 @@ const BookServicePage = () => {
         staff_assigned_id: selectedStaffId,
         start_time: startDate.toISOString(),
         end_time: endDate.toISOString(),
-        status: 'pending'
+        status: 'pending' as BookingStatus
       };
       
       // Insert booking

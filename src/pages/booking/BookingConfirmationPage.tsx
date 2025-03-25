@@ -7,25 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, CheckCircle, Calendar, Clock, UserCheck } from "lucide-react";
 import { format, parseISO } from "date-fns";
-
-interface BookingWithRelations {
-  id: string;
-  title: string;
-  description: string | null;
-  start_time: string;
-  end_time: string;
-  status: string;
-  customer_name: string | null;
-  customer_email: string | null;
-  service: {
-    name: string;
-    description: string | null;
-    price: number | null;
-  } | null;
-  staff: {
-    name: string;
-  } | null;
-}
+import { BookingWithRelations } from "@/types/booking.types";
 
 const BookingConfirmationPage = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
@@ -47,7 +29,15 @@ const BookingConfirmationPage = () => {
         .single();
         
       if (error) throw error;
-      return data as BookingWithRelations;
+      
+      // Handle potential errors with relations by providing default values
+      const bookingWithSafeRelations: BookingWithRelations = {
+        ...data,
+        service: data.service && !data.service.error ? data.service : null,
+        staff: data.staff && !data.staff.error ? data.staff : null
+      };
+      
+      return bookingWithSafeRelations;
     },
     enabled: !!bookingId
   });
@@ -79,6 +69,13 @@ const BookingConfirmationPage = () => {
     );
   }
 
+  // Get service name safely
+  const serviceName = booking.service?.name || 'Service';
+  // Get staff name safely
+  const staffName = booking.staff?.name || 'To be assigned';
+  // Get price safely
+  const servicePrice = booking.service?.price || null;
+
   return (
     <div className="container max-w-2xl mx-auto py-12">
       <Card className="border-green-100">
@@ -93,7 +90,7 @@ const BookingConfirmationPage = () => {
           </p>
           
           <div className="bg-muted p-6 rounded-lg space-y-4">
-            <h3 className="font-medium text-lg">{booking.service?.name || 'Service'}</h3>
+            <h3 className="font-medium text-lg">{serviceName}</h3>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-start space-x-2">
@@ -121,17 +118,17 @@ const BookingConfirmationPage = () => {
                 <div>
                   <p className="font-medium">Service Provider</p>
                   <p className="text-sm text-muted-foreground">
-                    {booking.staff?.name || 'To be assigned'}
+                    {staffName}
                   </p>
                 </div>
               </div>
             </div>
             
-            {booking.service?.price && (
+            {servicePrice && (
               <div className="mt-4 pt-4 border-t">
                 <p className="flex justify-between">
                   <span className="font-medium">Price:</span>
-                  <span>QAR {booking.service.price.toFixed(2)}</span>
+                  <span>QAR {servicePrice.toFixed(2)}</span>
                 </p>
               </div>
             )}
