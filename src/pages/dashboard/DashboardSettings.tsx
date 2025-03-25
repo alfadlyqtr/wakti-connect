@@ -48,7 +48,7 @@ const DashboardSettings = () => {
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className={`grid w-full grid-cols-${getTabsCount()} gap-4 h-auto`}>
           <TabsTrigger value="profile">
-            {isBusinessAccount ? "Business Profile" : "Profile"}
+            {isBusinessAccount ? "Business & Account" : "Profile"}
           </TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           {!isStaff && (
@@ -64,7 +64,7 @@ const DashboardSettings = () => {
         
         <TabsContent value="profile" className="space-y-4">
           <ProfileTab />
-          <AccountTab />
+          {/* AccountTab is no longer needed here since we moved account information into ProfileTab */}
         </TabsContent>
         
         <TabsContent value="notifications" className="space-y-4">
