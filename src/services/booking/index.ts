@@ -2,7 +2,7 @@
 import { fetchBookings } from "./fetchService";
 import { createBooking as createBookingService } from "./createService";
 import { 
-  fetchBookingTemplates, 
+  fetchBookingTemplates,
   fetchBookingTemplate,
   createBookingTemplate,
   updateBookingTemplate,
@@ -16,8 +16,20 @@ import {
   deleteTemplateException,
   fetchAvailableTimeSlots,
   publishTemplate
-} from "./templateService";
-import { BookingWithRelations, BookingFormData, BookingTab, BookingStatus, BookingTemplate, BookingTemplateWithRelations, BookingTemplateAvailability, BookingTemplateException, BookingTemplateFormData, BookingTemplatesResult } from "@/types/booking.types";
+} from "./templates";
+
+import { 
+  BookingWithRelations, 
+  BookingFormData, 
+  BookingTab, 
+  BookingStatus, 
+  BookingTemplate, 
+  BookingTemplateWithRelations, 
+  BookingTemplateAvailability, 
+  BookingTemplateException, 
+  BookingTemplateFormData, 
+  BookingTemplatesResult 
+} from "@/types/booking.types";
 
 export {
   // Booking operations
