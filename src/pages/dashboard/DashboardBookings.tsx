@@ -13,6 +13,7 @@ import { useBookingsTabState } from "@/hooks/useBookingsTabState";
 import BookingsHeader from "@/components/bookings/BookingsHeader";
 import BookingsTabContent from "@/components/bookings/BookingsTabContent";
 import BookingsError from "@/components/bookings/BookingsError";
+import BookingTemplatesTab from "@/components/bookings/templates/BookingTemplatesTab";
 
 const DashboardBookings = () => {
   const { activeTab, setActiveTab } = useBookingsTabState();
@@ -88,7 +89,7 @@ const DashboardBookings = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && activeTab !== "templates") {
     return (
       <div className="container py-8 flex justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -96,7 +97,7 @@ const DashboardBookings = () => {
     );
   }
 
-  if (error) {
+  if (error && activeTab !== "templates") {
     return <BookingsError error={error} queryClient={queryClient} />;
   }
 
@@ -109,6 +110,7 @@ const DashboardBookings = () => {
           <TabsTrigger value="all-bookings">All Bookings</TabsTrigger>
           <TabsTrigger value="pending-bookings">Pending</TabsTrigger>
           <TabsTrigger value="staff-bookings">Staff Assigned</TabsTrigger>
+          <TabsTrigger value="templates">Templates</TabsTrigger>
         </TabsList>
         
         <TabsContent value="all-bookings">
@@ -143,6 +145,10 @@ const DashboardBookings = () => {
             isUpdating={updateBookingMutation.isPending}
             emptyMessage="No staff assigned bookings found."
           />
+        </TabsContent>
+        
+        <TabsContent value="templates">
+          <BookingTemplatesTab />
         </TabsContent>
       </Tabs>
     </div>

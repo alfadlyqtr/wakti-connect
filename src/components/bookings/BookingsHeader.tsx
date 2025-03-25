@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Filter } from "lucide-react";
+import { Filter, Calendar } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { BookingTab } from "@/types/booking.types";
 import CreateBookingButton from "./CreateBookingButton";
@@ -17,6 +17,15 @@ const BookingsHeader: React.FC<BookingsHeaderProps> = ({ setActiveTab }) => {
       
       <div className="flex space-x-2">
         <CreateBookingButton />
+        
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => setActiveTab("templates")}
+        >
+          <Calendar className="h-4 w-4 mr-2" />
+          Templates
+        </Button>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

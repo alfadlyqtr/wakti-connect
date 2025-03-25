@@ -171,6 +171,148 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_template_availability: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_available: boolean
+          start_time: string
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_available?: boolean
+          start_time: string
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_available?: boolean
+          start_time?: string
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_template_availability_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "booking_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_template_exceptions: {
+        Row: {
+          created_at: string
+          exception_date: string
+          id: string
+          is_available: boolean
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          exception_date: string
+          id?: string
+          is_available?: boolean
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          exception_date?: string
+          id?: string
+          is_available?: boolean
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_template_exceptions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "booking_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_templates: {
+        Row: {
+          business_id: string
+          created_at: string
+          default_ending_hour: number
+          default_starting_hour: number
+          description: string | null
+          duration: number
+          id: string
+          is_published: boolean
+          max_daily_bookings: number | null
+          name: string
+          price: number | null
+          service_id: string | null
+          staff_assigned_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          default_ending_hour?: number
+          default_starting_hour?: number
+          description?: string | null
+          duration: number
+          id?: string
+          is_published?: boolean
+          max_daily_bookings?: number | null
+          name: string
+          price?: number | null
+          service_id?: string | null
+          staff_assigned_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          default_ending_hour?: number
+          default_starting_hour?: number
+          description?: string | null
+          duration?: number
+          id?: string
+          is_published?: boolean
+          max_daily_bookings?: number | null
+          name?: string
+          price?: number | null
+          service_id?: string | null
+          staff_assigned_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_templates_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "business_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_templates_staff_assigned_id_fkey"
+            columns: ["staff_assigned_id"]
+            isOneToOne: false
+            referencedRelation: "business_staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           business_id: string
@@ -185,6 +327,7 @@ export type Database = {
           staff_assigned_id: string | null
           start_time: string
           status: Database["public"]["Enums"]["booking_status"] | null
+          template_id: string | null
           title: string
           updated_at: string | null
         }
@@ -201,6 +344,7 @@ export type Database = {
           staff_assigned_id?: string | null
           start_time: string
           status?: Database["public"]["Enums"]["booking_status"] | null
+          template_id?: string | null
           title: string
           updated_at?: string | null
         }
@@ -217,10 +361,19 @@ export type Database = {
           staff_assigned_id?: string | null
           start_time?: string
           status?: Database["public"]["Enums"]["booking_status"] | null
+          template_id?: string | null
           title?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bookings_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "booking_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       business_analytics: {
         Row: {
@@ -1395,6 +1548,16 @@ export type Database = {
       get_auth_user_account_type: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_template_available_slots: {
+        Args: {
+          template_id_param: string
+          date_param: string
+        }
+        Returns: {
+          start_time: string
+          end_time: string
+        }[]
       }
       get_user_role: {
         Args: Record<PropertyKey, never>
