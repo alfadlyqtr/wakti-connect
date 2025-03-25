@@ -76,11 +76,18 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Transform the data to ensure it conforms to the Task type
         const typedTasks: Task[] = (data || []).map(task => ({
-          ...task,
+          id: task.id,
+          title: task.title,
+          description: task.description,
           status: validateTaskStatus(task.status),
           priority: validateTaskPriority(task.priority),
+          due_date: task.due_date,
           due_time: task.due_time || null,
           completed_at: task.completed_at || null,
+          user_id: task.user_id,
+          assignee_id: task.assignee_id || null,
+          created_at: task.created_at,
+          updated_at: task.updated_at,
           is_recurring_instance: task.is_recurring_instance || false,
           parent_recurring_id: task.parent_recurring_id || null,
           snooze_count: task.snooze_count || 0,
@@ -215,11 +222,18 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Ensure the returned task matches our Task type
         const typedTask: Task = {
-          ...data,
+          id: data.id,
+          title: data.title,
+          description: data.description,
           status: validateTaskStatus(data.status),
           priority: validateTaskPriority(data.priority),
+          due_date: data.due_date,
           due_time: data.due_time || null,
           completed_at: data.completed_at || null,
+          user_id: data.user_id,
+          assignee_id: data.assignee_id || null,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
           is_recurring_instance: data.is_recurring_instance || false,
           parent_recurring_id: data.parent_recurring_id || null,
           snooze_count: data.snooze_count || 0,

@@ -115,15 +115,27 @@ export async function createRecurringTaskInstances(
     if (error) {
       console.error("Failed to create recurring task instance:", error);
     } else if (data) {
-      createdTasks.push({
-        ...data,
+      // Explicitly create a properly typed Task object
+      const task: Task = {
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        priority: data.priority,
+        due_date: data.due_date,
         due_time: data.due_time || null,
         completed_at: data.completed_at || null,
+        user_id: data.user_id,
+        assignee_id: data.assignee_id || null,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
         is_recurring_instance: data.is_recurring_instance || false,
         parent_recurring_id: data.parent_recurring_id || null,
         snooze_count: data.snooze_count || 0,
         snoozed_until: data.snoozed_until || null
-      } as Task);
+      };
+      
+      createdTasks.push(task);
     }
   }
   
