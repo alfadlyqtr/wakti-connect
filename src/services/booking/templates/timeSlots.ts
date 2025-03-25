@@ -18,5 +18,10 @@ export const fetchAvailableTimeSlots = async (
     throw error;
   }
 
-  return data as AvailableTimeSlot[] || [];
+  // Transform the data to match the AvailableTimeSlot type by adding is_available property
+  return (data || []).map(slot => ({
+    start_time: slot.start_time,
+    end_time: slot.end_time,
+    is_available: true // Since these are available slots, we set is_available to true
+  }));
 };
