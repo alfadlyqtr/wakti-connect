@@ -18,5 +18,5 @@ export const fetchAvailableTimeSlots = async (
     throw error;
   }
 
-  return data || [];
+  return data as AvailableTimeSlot[] || [];
 };
