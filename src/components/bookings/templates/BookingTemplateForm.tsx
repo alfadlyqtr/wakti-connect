@@ -71,7 +71,7 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
   });
 
   // Service selection logic
-  const { handleServiceChange } = useServiceSelection(
+  const { selectedServiceId, handleServiceSelection } = useServiceSelection(
     services, 
     initialData?.service_id, 
     form.setValue
@@ -123,7 +123,7 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
             <ServiceSelector 
               control={form.control} 
               services={services} 
-              onServiceChange={handleServiceChange} 
+              onServiceChange={handleServiceSelection} 
             />
             
             <DurationAndPriceFields control={form.control} />
