@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskFormData, SubTask, TaskStatus, TaskPriority } from "./types";
+import { Task, TaskFormData, SubTask, TaskStatus, TaskPriority } from "@/types/task.types";
 import { createNewTask } from "./baseService";
 import { RecurringFormData, EntityType } from "@/types/recurring.types";
 import { createRecurringSetting, generateRecurringDates } from "@/services/recurring/recurringService";

@@ -1,34 +1,22 @@
 
-import { TaskStatus, TaskPriority } from "../types";
+import { TaskStatus, TaskPriority } from "@/types/task.types";
 
-/**
- * Validates and normalizes task status values
- * @param status Any potential status value
- * @returns Valid TaskStatus or "pending" as default
- */
-export function validateTaskStatus(status: any): TaskStatus {
-  const validStatuses: TaskStatus[] = ["pending", "in-progress", "completed", "late"];
+export function validateTaskStatus(status: string | null | undefined): TaskStatus {
+  const validStatuses: TaskStatus[] = ["pending", "in-progress", "completed", "late", "snoozed"];
   
-  if (status && validStatuses.includes(status as TaskStatus)) {
-    return status as TaskStatus;
+  if (!status || !validStatuses.includes(status as TaskStatus)) {
+    return "pending";
   }
   
-  // Default to "pending" if status is invalid
-  return "pending";
+  return status as TaskStatus;
 }
 
-/**
- * Validates and normalizes task priority values
- * @param priority Any potential priority value
- * @returns Valid TaskPriority or "normal" as default
- */
-export function validateTaskPriority(priority: any): TaskPriority {
+export function validateTaskPriority(priority: string | null | undefined): TaskPriority {
   const validPriorities: TaskPriority[] = ["urgent", "high", "medium", "normal"];
   
-  if (priority && validPriorities.includes(priority as TaskPriority)) {
-    return priority as TaskPriority;
+  if (!priority || !validPriorities.includes(priority as TaskPriority)) {
+    return "normal";
   }
   
-  // Default to "normal" if priority is invalid
-  return "normal";
+  return priority as TaskPriority;
 }

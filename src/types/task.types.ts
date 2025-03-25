@@ -6,12 +6,12 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   due_date: string | null;
-  due_time?: string | null; // Make due_time optional
+  due_time: string | null;
   user_id: string;
   assignee_id: string | null;
   created_at: string;
   updated_at: string;
-  completed_at?: string | null; // Make completed_at optional
+  completed_at: string | null;
   is_recurring_instance?: boolean;
   parent_recurring_id?: string | null;
   subtasks?: SubTask[];

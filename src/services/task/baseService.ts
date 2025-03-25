@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskFormData, TaskStatus, TaskPriority } from "./types";
+import { Task, TaskFormData, TaskStatus, TaskPriority } from "@/types/task.types";
 import { validateTaskStatus, validateTaskPriority } from "./utils/statusValidator";
 
 // Create a new task base service function
