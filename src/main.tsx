@@ -5,6 +5,7 @@ import App from './App.tsx'
 import './index.css'
 import './App.css'
 import { AuthProvider } from './hooks/auth'
+import './i18n/i18n' // Import i18n configuration before rendering the app
 
 // Create a client
 const queryClient = new QueryClient({

@@ -9,13 +9,16 @@ interface CurrencyProviderProps {
 
 export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) => {
   const [currency, setCurrency] = useState<string>('USD');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchUserCurrency = async () => {
       try {
+        setIsLoading(true);
         const { data: session } = await supabase.auth.getSession();
         
         if (!session?.session?.user) {
+          setIsLoading(false);
           return;
         }
         
@@ -27,6 +30,7 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
           
         if (error) {
           console.error('Error fetching currency preference:', error);
+          setIsLoading(false);
           return;
         }
         
@@ -36,14 +40,19 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({ children }) 
         }
       } catch (error) {
         console.error('Error in fetchUserCurrency:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchUserCurrency();
   }, []);
 
+  // Fallback value if there's an issue
+  const contextValue = currency || 'USD';
+
   return (
-    <CurrencyContext.Provider value={currency}>
+    <CurrencyContext.Provider value={contextValue}>
       {children}
     </CurrencyContext.Provider>
   );
