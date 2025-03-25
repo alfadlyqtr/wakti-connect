@@ -1,11 +1,9 @@
 
 import React from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { RouterProvider } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
-import routes from './routes';
+import { router } from './router';
 import { CurrencyProvider } from './utils/formatUtils';
-
-const router = createBrowserRouter(routes);
 
 function App() {
   return (
