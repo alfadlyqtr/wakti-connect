@@ -38,7 +38,7 @@ export const syncServiceDistribution = async () => {
     }
     
     // Create new records for each actual service
-    const serviceRecords = services.map((service, index) => ({
+    const serviceRecords = services.map(service => ({
       business_id: session.session.user.id,
       service_name: service.name,
       usage_count: 5 + Math.floor(Math.random() * 20), // Random placeholder data

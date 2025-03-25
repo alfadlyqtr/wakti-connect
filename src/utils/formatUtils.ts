@@ -1,11 +1,24 @@
 
 import { format, formatDistanceStrict } from 'date-fns';
+import { useProfileSettings } from '@/hooks/useProfileSettings';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
+// Create a context to store and provide the user's currency preference
+export const CurrencyContext = createContext<string>('USD');
+
+// Custom hook to use the currency context
+export const useCurrency = () => useContext(CurrencyContext);
 
 // Format currency with locale and currency code
-export const formatCurrency = (amount: number | null | undefined, currencyCode: string = 'USD'): string => {
+export const formatCurrency = (amount: number | null | undefined, currencyCode?: string): string => {
   if (amount === null || amount === undefined) {
     return '-';
   }
+  
+  // If no currencyCode is provided, use the one from context
+  const contextCurrency = useCurrency();
+  const currency = currencyCode || contextCurrency || 'USD';
   
   // Currency formatting options for each supported currency
   const currencyFormatOptions: Record<string, Intl.NumberFormatOptions> = {
@@ -19,7 +32,7 @@ export const formatCurrency = (amount: number | null | undefined, currencyCode: 
   };
   
   // Use the options for the specified currency, or fall back to USD
-  const options = currencyFormatOptions[currencyCode] || currencyFormatOptions.USD;
+  const options = currencyFormatOptions[currency] || currencyFormatOptions.USD;
   
   return new Intl.NumberFormat('en-US', options).format(amount);
 };
@@ -62,4 +75,47 @@ export const formatDateTime = (date: string | Date): string => {
     console.error('Error formatting datetime:', error);
     return 'Invalid date/time';
   }
+};
+
+// Provider component for currency context
+export const CurrencyProvider = ({ children }: { children: React.ReactNode }) => {
+  const [currency, setCurrency] = useState<string>('USD');
+
+  useEffect(() => {
+    const fetchUserCurrency = async () => {
+      try {
+        const { data: session } = await supabase.auth.getSession();
+        
+        if (!session?.session?.user) {
+          return;
+        }
+        
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('currency_preference')
+          .eq('id', session.session.user.id)
+          .single();
+          
+        if (error) {
+          console.error('Error fetching currency preference:', error);
+          return;
+        }
+        
+        if (profile?.currency_preference) {
+          console.log('Setting currency to:', profile.currency_preference);
+          setCurrency(profile.currency_preference);
+        }
+      } catch (error) {
+        console.error('Error in fetchUserCurrency:', error);
+      }
+    };
+
+    fetchUserCurrency();
+  }, []);
+
+  return (
+    <CurrencyContext.Provider value={currency}>
+      {children}
+    </CurrencyContext.Provider>
+  );
 };

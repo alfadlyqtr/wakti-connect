@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useJobs } from '@/hooks/useJobs';
+import { useJobCards } from '@/hooks/useJobCards';
 import { Job } from '@/types/job.types';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Loader2 } from 'lucide-react';
+import { PlusCircle, Loader2, AlertTriangle } from 'lucide-react';
 import JobCard from './JobCard';
 import { 
   AlertDialog,
@@ -16,20 +17,45 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import JobFormDialog from './JobFormDialog';
+import { toast } from '@/hooks/use-toast';
 
 const JobsPage: React.FC = () => {
   const { jobs, isLoading, error, deleteJob } = useJobs();
+  const { jobCards } = useJobCards();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
+  // Check if a job has active job cards
+  const jobHasActiveCards = (jobId: string) => {
+    return jobCards.some(card => card.job_id === jobId && !card.end_time);
+  };
+  
   const handleEdit = (job: Job) => {
+    if (jobHasActiveCards(job.id)) {
+      toast({
+        title: "Cannot edit job",
+        description: "This job has active job cards. Complete them before editing.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setSelectedJob(job);
     setEditDialogOpen(true);
   };
   
   const handleDelete = (jobId: string) => {
+    if (jobHasActiveCards(jobId)) {
+      toast({
+        title: "Cannot delete job",
+        description: "This job has active job cards. Complete them before deleting.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const job = jobs?.find(j => j.id === jobId);
     if (job) {
       setSelectedJob(job);
@@ -98,6 +124,7 @@ const JobsPage: React.FC = () => {
               job={job} 
               onEdit={() => handleEdit(job)}
               onDelete={() => handleDelete(job.id)}
+              hasActiveCards={jobHasActiveCards(job.id)}
             />
           ))}
         </div>
