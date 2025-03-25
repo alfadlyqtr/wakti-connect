@@ -12,12 +12,14 @@ import { dashboardRoutes } from "@/routes/dashboardRoutes";
 import { businessRoutes } from "@/routes/businessRoutes";
 import PublicLayout from "@/components/layout/PublicLayout";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
 export const router = createBrowserRouter([
   // Public routes with layout
   {
     path: "/",
     element: <PublicLayout />,
+    errorElement: <ErrorBoundary />,
     children: publicRoutes,
   },
   
@@ -29,6 +31,7 @@ export const router = createBrowserRouter([
         <Suspense fallback={<LoadingSpinner />} />
       </AuthShell>
     ),
+    errorElement: <ErrorBoundary />,
     children: authRoutes,
   },
 
@@ -37,11 +40,14 @@ export const router = createBrowserRouter([
     path: "/dashboard",
     element: (
       <ProtectedRoute>
-        <DashboardShell>
-          <Suspense fallback={<LoadingSpinner />} />
-        </DashboardShell>
+        <ErrorBoundary>
+          <DashboardShell>
+            <Suspense fallback={<LoadingSpinner />} />
+          </DashboardShell>
+        </ErrorBoundary>
       </ProtectedRoute>
     ),
+    errorElement: <ErrorBoundary />,
     children: dashboardRoutes,
   },
 
@@ -49,10 +55,13 @@ export const router = createBrowserRouter([
   {
     path: "/business/:businessId",
     element: (
-      <BusinessShell>
-        <Suspense fallback={<LoadingSpinner />} />
-      </BusinessShell>
+      <ErrorBoundary>
+        <BusinessShell>
+          <Suspense fallback={<LoadingSpinner />} />
+        </BusinessShell>
+      </ErrorBoundary>
     ),
+    errorElement: <ErrorBoundary />,
     children: businessRoutes,
   },
 
