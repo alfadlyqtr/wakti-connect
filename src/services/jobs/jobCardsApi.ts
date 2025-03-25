@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { JobCard, JobCardFormData, PaymentMethod } from "@/types/jobs.types";
+import { JobCard, JobCardFormData, PaymentMethod, Job } from "@/types/jobs.types";
 
 /**
  * Ensure payment method is properly typed
@@ -53,14 +53,24 @@ export const fetchJobCards = async (staffRelationId?: string): Promise<JobCard[]
   
   // Map 'jobs' field to 'job' and handle type conversion properly
   return data.map(card => {
-    // Create a properly typed object by type assertion
+    // Create a properly typed job object with defaults for missing fields
+    const jobData = card.jobs ? {
+      ...card.jobs,
+      business_id: '', // Add missing required field
+      created_at: '', // Add missing required field
+      updated_at: ''  // Add missing required field
+    } as Job : undefined;
+    
+    // Create a properly typed job card object
     const jobCard: JobCard = {
       ...card,
-      job: card.jobs,
+      job: jobData,
       payment_method: ensurePaymentMethodType(card.payment_method)
     };
+    
     // Remove the 'jobs' property to avoid duplication
     delete (jobCard as any).jobs;
+    
     return jobCard;
   });
 };
@@ -111,10 +121,18 @@ export const createJobCard = async (
     has_job_data: !!data.jobs
   });
   
+  // Create a properly typed Job object with defaults for missing fields
+  const jobData = data.jobs ? {
+    ...data.jobs,
+    business_id: '', // Add missing required field
+    created_at: '', // Add missing required field
+    updated_at: ''  // Add missing required field
+  } as Job : undefined;
+  
   // Create a properly typed JobCard object
   const jobCard: JobCard = {
     ...data,
-    job: data.jobs,
+    job: jobData,
     payment_method: ensurePaymentMethodType(data.payment_method)
   };
   
@@ -177,10 +195,18 @@ export const completeJobCard = async (jobCardId: string): Promise<JobCard> => {
     has_job_data: !!data.jobs
   });
   
+  // Create a properly typed Job object with defaults for missing fields
+  const jobData = data.jobs ? {
+    ...data.jobs,
+    business_id: '', // Add missing required field
+    created_at: '', // Add missing required field
+    updated_at: ''  // Add missing required field
+  } as Job : undefined;
+  
   // Create a properly typed JobCard object
   const jobCard: JobCard = {
     ...data,
-    job: data.jobs,
+    job: jobData,
     payment_method: ensurePaymentMethodType(data.payment_method)
   };
   
