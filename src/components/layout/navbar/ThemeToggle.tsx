@@ -3,15 +3,42 @@ import React from "react";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/auth";
 
 const ThemeToggle = () => {
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
+  
+  const toggleTheme = async () => {
+    const newTheme = theme === "dark" ? "light" : "dark";
+    
+    // Apply theme
+    setTheme(newTheme);
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(newTheme);
+    
+    // If user is logged in, save preference to database
+    if (user?.id) {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ 
+            theme_preference: newTheme,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+      } catch (error) {
+        console.error("Failed to save theme preference:", error);
+      }
+    }
+  };
   
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+      onClick={toggleTheme}
       aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
       className="text-foreground hover:text-foreground"
     >

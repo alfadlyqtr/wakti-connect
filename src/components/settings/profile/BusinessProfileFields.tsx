@@ -4,17 +4,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UseFormRegister, UseFormWatch } from "react-hook-form";
+import { UseFormRegister, UseFormWatch, FieldErrors } from "react-hook-form";
 import { ProfileFormData } from "@/hooks/useProfileForm";
 import { Separator } from "@/components/ui/separator";
 import { Building2, AtSign, Phone, Globe } from "lucide-react";
+import { FormMessage } from "@/components/ui/form";
 
 interface BusinessProfileFieldsProps {
   register: UseFormRegister<ProfileFormData>;
   watch?: UseFormWatch<ProfileFormData>;
+  errors?: FieldErrors<ProfileFormData>;
 }
 
-const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({ register, watch }) => {
+const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({ 
+  register, 
+  watch,
+  errors 
+}) => {
   // Use watch to get the current value of business_type
   const businessType = watch ? watch("business_type") : "";
   
@@ -41,6 +47,9 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({ register,
             className="border-gray-300 focus-visible:ring-wakti-blue"
             {...register("business_name")} 
           />
+          {errors?.business_name && (
+            <p className="text-sm font-medium text-destructive">{errors.business_name.message}</p>
+          )}
         </div>
         
         <div className="space-y-2">
@@ -72,6 +81,15 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({ register,
               <SelectItem value="energy">Energy & Utilities</SelectItem>
               <SelectItem value="legal">Legal Services</SelectItem>
               <SelectItem value="nonprofit">Non-profit & NGO</SelectItem>
+              <SelectItem value="gym">Gym & Fitness</SelectItem>
+              <SelectItem value="salon">Beauty Salon</SelectItem>
+              <SelectItem value="spa">Spa & Wellness</SelectItem>
+              <SelectItem value="barber">Barber Shop</SelectItem>
+              <SelectItem value="small_business">Small Business</SelectItem>
+              <SelectItem value="personal_trainer">Personal Trainer</SelectItem>
+              <SelectItem value="personal_tutor">Personal Tutor</SelectItem>
+              <SelectItem value="music_teacher">Music Teacher</SelectItem>
+              <SelectItem value="womens_salon">Women's Salon</SelectItem>
               <SelectItem value="other">Other</SelectItem>
             </SelectContent>
           </Select>
@@ -113,6 +131,9 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({ register,
             className="border-gray-300 focus-visible:ring-wakti-blue"
             {...register("business_email")} 
           />
+          {errors?.business_email && (
+            <p className="text-sm font-medium text-destructive">{errors.business_email.message}</p>
+          )}
         </div>
         
         <div className="space-y-2">

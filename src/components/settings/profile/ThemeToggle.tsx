@@ -16,10 +16,12 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ initialTheme = "light" }) => 
   const [isUpdating, setIsUpdating] = useState(false);
   const { user } = useAuth();
   
-  // Initialize with profile preference
+  // Initialize with profile preference when component mounts
   useEffect(() => {
     if (initialTheme) {
       setTheme(initialTheme as "light" | "dark" | "system");
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(initialTheme);
     }
   }, [initialTheme, setTheme]);
   
@@ -39,6 +41,10 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ initialTheme = "light" }) => 
         .eq('id', user.id);
         
       if (error) throw error;
+      
+      // Apply theme to document
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(newTheme);
       
       toast({
         title: "Theme updated",

@@ -28,7 +28,7 @@ export interface ProfileFormData {
 export const useProfileForm = (profile?: Tables<"profiles"> & { email?: string }) => {
   const isBusinessAccount = profile?.account_type === 'business';
 
-  const { register, handleSubmit, formState: { isSubmitting }, watch } = useForm<ProfileFormData>({
+  const { register, handleSubmit, formState: { isSubmitting, errors }, watch, setError } = useForm<ProfileFormData>({
     defaultValues: {
       display_name: profile?.display_name || '',
       business_name: profile?.business_name || '',
@@ -41,7 +41,7 @@ export const useProfileForm = (profile?: Tables<"profiles"> & { email?: string }
       po_box: profile?.po_box || '',
       business_type: profile?.business_type || '',
       business_address: profile?.business_address || '',
-      // Cast as any to avoid TypeScript errors since these fields might not be in the profile type yet
+      // Business contact fields - might be from extensions
       business_email: (profile as any)?.business_email || '',
       business_phone: (profile as any)?.business_phone || '',
       business_website: (profile as any)?.business_website || ''
@@ -85,10 +85,22 @@ export const useProfileForm = (profile?: Tables<"profiles"> & { email?: string }
       let errorMessage = "There was a problem updating your information.";
       
       if (error.message && error.message.includes("profile with this display name already exists")) {
+        setError('display_name', { 
+          type: 'manual',
+          message: 'This display name is already in use. Please choose a different one.' 
+        });
         errorMessage = "This display name is already in use. Please choose a different one.";
       } else if (error.message && error.message.includes("business with this name already exists")) {
+        setError('business_name', { 
+          type: 'manual',
+          message: 'This business name is already registered. Please choose a different name.' 
+        });
         errorMessage = "This business name is already registered. Please choose a different name.";
       } else if (error.message && error.message.includes("business with this email already exists")) {
+        setError('business_email', { 
+          type: 'manual',
+          message: 'This business email is already registered. Please use a different email.' 
+        });
         errorMessage = "This business email is already registered. Please use a different email.";
       }
       
@@ -106,6 +118,7 @@ export const useProfileForm = (profile?: Tables<"profiles"> & { email?: string }
     onSubmit,
     isSubmitting,
     isBusinessAccount,
-    watch
+    watch,
+    errors
   };
 };

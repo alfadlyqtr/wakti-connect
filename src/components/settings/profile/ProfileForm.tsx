@@ -20,20 +20,21 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
     onSubmit,
     isSubmitting,
     isBusinessAccount,
-    watch
+    watch,
+    errors
   } = useProfileForm(profile);
   
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="space-y-6">
         {/* Common fields for all account types */}
-        <CommonProfileFields register={register} watch={watch} />
+        <CommonProfileFields register={register} watch={watch} errors={errors} />
         
         {/* Account type specific fields */}
         {isBusinessAccount ? (
-          <BusinessProfileFields register={register} watch={watch} />
+          <BusinessProfileFields register={register} watch={watch} errors={errors} />
         ) : (
-          <IndividualProfileFields register={register} />
+          <IndividualProfileFields register={register} errors={errors} />
         )}
         
         <Button 
