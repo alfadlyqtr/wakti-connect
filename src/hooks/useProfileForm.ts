@@ -19,7 +19,7 @@ export interface ProfileFormData {
   
   // Business specific fields
   business_type?: string;
-  business_address?: string;
+  business_address?: string; // Used as business description
   business_email?: string;
   business_phone?: string;
   business_website?: string;
@@ -40,7 +40,7 @@ export const useProfileForm = (profile?: Tables<"profiles"> & { email?: string }
       street_address: profile?.street_address || '',
       po_box: profile?.po_box || '',
       business_type: profile?.business_type || '',
-      business_address: profile?.business_address || '',
+      business_address: profile?.business_address || '', // Business description
       // Business contact fields - might be from extensions
       business_email: (profile as any)?.business_email || '',
       business_phone: (profile as any)?.business_phone || '',
@@ -65,7 +65,7 @@ export const useProfileForm = (profile?: Tables<"profiles"> & { email?: string }
         street_address: data.street_address,
         po_box: data.po_box,
         business_type: data.business_type,
-        business_address: data.business_address,
+        business_address: data.business_address, // Business description
         // Cast as any to avoid TypeScript errors since these fields might not be in the profile type yet
         business_email: data.business_email as any,
         business_phone: data.business_phone as any,

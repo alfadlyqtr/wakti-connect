@@ -97,11 +97,11 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="business_address" className="font-medium">Business Address</Label>
+        <Label htmlFor="business_address" className="font-medium">Business Description</Label>
         <Textarea 
           id="business_address" 
-          placeholder="Full business address"
-          className="min-h-[80px] border-gray-300 focus-visible:ring-wakti-blue" 
+          placeholder="Tell us about your business (services, specialties, etc.)"
+          className="min-h-[100px] border-gray-300 focus-visible:ring-wakti-blue" 
           {...register("business_address")} 
         />
       </div>

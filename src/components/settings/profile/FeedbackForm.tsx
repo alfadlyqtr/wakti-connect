@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/auth";
+import { Separator } from "@/components/ui/separator";
+import ReportBlockSection from "./ReportBlockSection";
 
 const FeedbackForm: React.FC = () => {
   const [feedback, setFeedback] = useState("");
@@ -74,13 +76,18 @@ const FeedbackForm: React.FC = () => {
           onChange={(e) => setFeedback(e.target.value)}
         />
         
-        <Button 
-          type="submit" 
-          className="w-full sm:w-auto bg-wakti-blue hover:bg-wakti-blue/90"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Submitting..." : "Submit Feedback"}
-        </Button>
+        <div className="flex justify-between items-center">
+          <Button 
+            type="submit" 
+            className="w-full sm:w-auto bg-wakti-blue hover:bg-wakti-blue/90"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Submitting..." : "Submit Feedback"}
+          </Button>
+        </div>
+        
+        <Separator className="my-2" />
+        <ReportBlockSection />
       </div>
     </form>
   );
