@@ -98,21 +98,27 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
     try {
       const snoozedUntil = addDays(new Date(), days).toISOString();
       
-      // First increment the snooze count using a separate query
-      const { data: incrementResult, error: incrementError } = await supabase
-        .rpc('increment_snooze_count', { task_id_param: taskId });
+      // First get the current snooze count
+      const { data: taskData, error: fetchError } = await supabase
+        .from('tasks')
+        .select('snooze_count')
+        .eq('id', taskId)
+        .single();
         
-      if (incrementError) {
-        console.error("Error incrementing snooze count:", incrementError);
-        // Continue with the update anyway
+      if (fetchError) {
+        console.error("Error fetching task for snooze count:", fetchError);
       }
       
-      // Now update the task with the snoozed status and date
+      // Calculate new snooze count (current + 1 or default to 1)
+      const currentSnoozeCount = taskData?.snooze_count || 0;
+      const newSnoozeCount = currentSnoozeCount + 1;
+      
+      // Now update the task with the snoozed status and incremented count
       const { error } = await supabase
         .from('tasks')
         .update({ 
           status: 'snoozed',
-          snooze_count: incrementResult || 1, // Use result or default to 1 if function failed
+          snooze_count: newSnoozeCount,
           snoozed_until: snoozedUntil,
           updated_at: new Date().toISOString()
         })
