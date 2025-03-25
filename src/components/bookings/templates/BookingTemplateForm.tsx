@@ -115,27 +115,33 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <BasicInfoFields control={form.control} />
-        
-        <ServiceSelector 
-          control={form.control} 
-          services={services} 
-          onServiceChange={handleServiceChange} 
-        />
-        
-        <DurationAndPriceFields control={form.control} />
-        
-        <StaffAssignment 
-          control={form.control} 
-          staff={staff} 
-          selectedStaffIds={selectedStaffIds} 
-          onStaffChange={handleStaffChange} 
-        />
-        
-        <TimeSettings control={form.control} />
-        
-        <PublishToggle control={form.control} />
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 px-2 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            <BasicInfoFields control={form.control} />
+            
+            <ServiceSelector 
+              control={form.control} 
+              services={services} 
+              onServiceChange={handleServiceChange} 
+            />
+            
+            <DurationAndPriceFields control={form.control} />
+          </div>
+          
+          <div className="space-y-6">
+            <StaffAssignment 
+              control={form.control} 
+              staff={staff} 
+              selectedStaffIds={selectedStaffIds} 
+              onStaffChange={handleStaffChange} 
+            />
+            
+            <TimeSettings control={form.control} />
+            
+            <PublishToggle control={form.control} />
+          </div>
+        </div>
         
         <FormActions 
           onCancel={onCancel} 

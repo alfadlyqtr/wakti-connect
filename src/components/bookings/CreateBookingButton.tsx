@@ -21,16 +21,16 @@ const CreateBookingButton = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       toast({
-        title: "Booking Created",
-        description: "The booking has been created successfully.",
+        title: "Pre-Booking Created",
+        description: "The pre-booking has been created successfully.",
         variant: "success"
       });
       setOpen(false);
     },
     onError: (error: any) => {
       toast({
-        title: "Error Creating Booking",
-        description: error.message || "An error occurred while creating the booking.",
+        title: "Error Creating Pre-Booking",
+        description: error.message || "An error occurred while creating the pre-booking.",
         variant: "destructive"
       });
     }
@@ -45,12 +45,12 @@ const CreateBookingButton = () => {
       <DialogTrigger asChild>
         <Button id="create-booking-button">
           <PlusCircle className="h-4 w-4 mr-2" />
-          Create Booking
+          Create Pre-Booking
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Create New Booking</DialogTitle>
+          <DialogTitle>Create New Pre-Booking</DialogTitle>
         </DialogHeader>
         <BookingForm 
           onSubmit={handleSubmit}

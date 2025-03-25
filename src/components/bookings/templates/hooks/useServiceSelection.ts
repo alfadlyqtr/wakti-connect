@@ -15,6 +15,8 @@ export function useServiceSelection(
     if (selectedServiceId) {
       const selectedService = services.find(service => service.id === selectedServiceId);
       if (selectedService) {
+        // Auto-fill name with service name
+        setValue('name', selectedService.name);
         setValue('duration', selectedService.duration);
         setValue('price', selectedService.price || undefined);
         if (selectedService.description) {

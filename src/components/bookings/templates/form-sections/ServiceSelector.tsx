@@ -22,7 +22,7 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
       name="service_id"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Linked Service (Optional)</FormLabel>
+          <FormLabel>Linked Service (Auto-fills Pre-Booking Name)</FormLabel>
           <Select 
             onValueChange={(value) => {
               field.onChange(value === "none" ? undefined : value);
