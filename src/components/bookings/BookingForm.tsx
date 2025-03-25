@@ -3,22 +3,20 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { TimePicker } from "@/components/ui/time-picker";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader2, CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
-import { BookingFormData, BookingStatus } from "@/types/booking.types";
-import { Service } from "@/types/service.types";
-import { StaffMember } from "@/types/staff";
+import { Form } from "@/components/ui/form";
+import { Loader2 } from "lucide-react";
+import { BookingFormData } from "@/types/booking.types";
+import { useTemplateFormData } from "@/components/bookings/templates/hooks/useTemplateFormData";
+import { useServiceSelection } from "@/components/bookings/templates/hooks/useServiceSelection";
 
-// Form schema for booking (removed status field)
+// Import form sections
+import CustomerInfoFields from "./form-sections/CustomerInfoFields";
+import BookingDetailsFields from "./form-sections/BookingDetailsFields";
+import BookingDateTimeFields from "./form-sections/BookingDateTimeFields";
+import StaffServiceFields from "./form-sections/StaffServiceFields";
+import FormActions from "@/components/bookings/templates/form-sections/FormActions";
+
+// Form schema for booking
 const bookingFormSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
   description: z.string().optional(),
@@ -42,11 +40,8 @@ interface BookingFormProps {
 }
 
 const BookingForm: React.FC<BookingFormProps> = ({ onSubmit, onCancel, isPending }) => {
-  const [services, setServices] = useState<Service[]>([]);
-  const [staff, setStaff] = useState<StaffMember[]>([]);
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const [isLoadingData, setIsLoadingData] = useState(true);
-
+  const { services, staff, isLoadingData } = useTemplateFormData();
+  
   // Initialize form
   const form = useForm<BookingFormSchema>({
     resolver: zodResolver(bookingFormSchema),
@@ -63,66 +58,12 @@ const BookingForm: React.FC<BookingFormProps> = ({ onSubmit, onCancel, isPending
     }
   });
 
-  // Fetch services and staff on component mount
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoadingData(true);
-      try {
-        // Fetch services
-        const { data: servicesData, error: servicesError } = await supabase
-          .from('business_services')
-          .select('*')
-          .order('name');
-          
-        if (servicesError) throw servicesError;
-        
-        // Fetch staff
-        const { data: staffData, error: staffError } = await supabase
-          .from('business_staff')
-          .select('id, staff_id, business_id, name, role, is_service_provider')
-          .eq('is_service_provider', true)
-          .eq('status', 'active')
-          .order('name');
-          
-        if (staffError) throw staffError;
-        
-        setServices(servicesData || []);
-        setStaff(staffData as StaffMember[] || []);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setIsLoadingData(false);
-      }
-    };
-    
-    fetchData();
-  }, []);
-
-  // Update end time when service or start time changes
-  useEffect(() => {
-    const startTime = form.watch('start_time');
-    if (selectedService && startTime) {
-      const [hours, minutes] = startTime.split(':').map(Number);
-      const startDate = new Date();
-      startDate.setHours(hours, minutes, 0, 0);
-      
-      const endDate = new Date(startDate.getTime() + selectedService.duration * 60000);
-      const endTimeStr = `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
-      
-      form.setValue('end_time', endTimeStr);
-    }
-  }, [form.watch('start_time'), selectedService]);
-
-  // Handle service selection
-  const handleServiceChange = (serviceId: string) => {
-    const service = services.find(s => s.id === serviceId);
-    setSelectedService(service || null);
-    
-    // Update form title based on service
-    if (service) {
-      form.setValue('title', `Booking for ${service.name}`);
-    }
-  };
+  // Use service selection hook to handle service-related logic
+  const { selectedServiceId, handleServiceSelection } = useServiceSelection(
+    services,
+    form.watch('service_id'),
+    (name, value) => form.setValue(name as any, value)
+  );
 
   // Handle form submission
   const handleSubmit = async (values: BookingFormSchema) => {
@@ -168,219 +109,39 @@ const BookingForm: React.FC<BookingFormProps> = ({ onSubmit, onCancel, isPending
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-2">
           <div className="space-y-6">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Booking Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Booking title" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+            <BookingDetailsFields 
+              control={form.control} 
             />
             
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Additional details about this booking" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+            <CustomerInfoFields 
+              control={form.control} 
             />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="customer_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Customer Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Customer name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="customer_email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Customer Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="customer@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
           </div>
           
           <div className="space-y-6">
-            <FormField
-              control={form.control}
-              name="service_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Service</FormLabel>
-                  <Select 
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      handleServiceChange(value);
-                    }}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a service" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {services.map((service) => (
-                        <SelectItem key={service.id} value={service.id}>
-                          {service.name} ({service.duration} min)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+            <StaffServiceFields 
+              control={form.control} 
+              services={services}
+              staff={staff}
+              onServiceChange={handleServiceSelection}
             />
             
-            <FormField
+            <BookingDateTimeFields 
               control={form.control}
-              name="staff_assigned_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Assign Staff (Optional)</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Assign to staff" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {staff.map((staffMember) => (
-                        <SelectItem key={staffMember.id} value={staffMember.id}>
-                          {staffMember.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+              selectedService={services.find(s => s.id === selectedServiceId)}
+              watch={form.watch}
+              setValue={form.setValue}
             />
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className="w-full pl-3 text-left font-normal"
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="start_time"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Time</FormLabel>
-                    <FormControl>
-                      <TimePicker
-                        value={field.value}
-                        onChange={field.onChange}
-                        interval={15}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="end_time"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>End Time</FormLabel>
-                    <FormControl>
-                      <TimePicker
-                        value={field.value}
-                        onChange={field.onChange}
-                        interval={15}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
           </div>
         </div>
         
-        <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            {isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              'Create Booking'
-            )}
-          </Button>
-        </div>
+        <FormActions 
+          onCancel={onCancel} 
+          isPending={isPending}
+          isEditing={false}
+        />
       </form>
     </Form>
   );

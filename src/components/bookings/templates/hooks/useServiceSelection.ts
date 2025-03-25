@@ -1,12 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { UseFormSetValue } from "react-hook-form";
 import { Service } from "@/types/service.types";
 
 export function useServiceSelection(
   services: Service[],
   initialServiceId: string | null | undefined,
-  setValue: UseFormSetValue<any>
+  setValue: (name: string, value: any) => void
 ) {
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(initialServiceId || null);
 
@@ -15,24 +14,19 @@ export function useServiceSelection(
     if (selectedServiceId) {
       const selectedService = services.find(service => service.id === selectedServiceId);
       if (selectedService) {
-        // Auto-fill name with service name
-        setValue('name', selectedService.name);
-        setValue('duration', selectedService.duration);
-        setValue('price', selectedService.price || undefined);
-        if (selectedService.description) {
-          setValue('description', selectedService.description);
-        }
+        // Auto-fill title with service name
+        setValue('title', `Booking for ${selectedService.name}`);
       }
     }
   }, [selectedServiceId, services, setValue]);
 
   // Handle service selection
-  const handleServiceChange = (value: string) => {
+  const handleServiceSelection = (value: string) => {
     setSelectedServiceId(value === "none" ? null : value);
   };
 
   return {
     selectedServiceId,
-    handleServiceChange
+    handleServiceSelection
   };
 }
