@@ -55,11 +55,15 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
   
   const handleSubmit = async (values: JobCardFormValues) => {
     try {
+      // Adding start_time to fix the type error
+      const now = new Date().toISOString();
+      
       await createJobCard.mutateAsync({
         job_id: values.job_id,
         payment_method: values.payment_method,
         payment_amount: values.payment_amount,
-        notes: values.notes || null
+        notes: values.notes || null,
+        start_time: now // Add this line to fix the type error
       });
       
       onOpenChange(false);
