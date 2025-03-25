@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { BookingTemplateWithRelations } from "@/types/booking.types";
 import { formatCurrency } from "@/utils/formatUtils";
-import { useBreakpoint } from "@/hooks/useBreakpoint";
+import { useMobileBreakpoint } from "@/hooks/useBreakpoint";
 
 interface BookingTemplatesListProps {
   templates: BookingTemplateWithRelations[];
@@ -31,7 +30,7 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
   const [deleteTemplateId, setDeleteTemplateId] = React.useState<string | null>(null);
   const [publishTemplateId, setPublishTemplateId] = React.useState<string | null>(null);
   const [publishAction, setPublishAction] = React.useState<boolean>(false);
-  const { isMobile } = useBreakpoint("sm");
+  const { isMobile } = useMobileBreakpoint();
 
   const templateToDelete = templates.find(t => t.id === deleteTemplateId);
   const templateToPublish = templates.find(t => t.id === publishTemplateId);

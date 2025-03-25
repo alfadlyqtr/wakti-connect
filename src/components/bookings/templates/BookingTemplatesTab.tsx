@@ -60,13 +60,18 @@ const BookingTemplatesTab: React.FC = () => {
 
   const handleUpdate = async (data: BookingTemplateFormData) => {
     if (editTemplate) {
-      await updateTemplate({ templateId: editTemplate.id, data });
+      await Promise.resolve(updateTemplate({ templateId: editTemplate.id, data }));
       setEditTemplate(null);
     }
   };
 
   const handleManageAvailability = (template: BookingTemplateWithRelations) => {
     setAvailabilityTemplate(template);
+  };
+
+  // Wrapper to convert mutation to Promise for CreateTemplateButton
+  const handleCreateTemplate = (data: BookingTemplateFormData) => {
+    return Promise.resolve(createTemplate(data));
   };
 
   if (isLoading) {
@@ -113,7 +118,7 @@ const BookingTemplatesTab: React.FC = () => {
           </ToggleGroup>
 
           <CreateTemplateButton
-            onCreate={createTemplate}
+            onCreate={handleCreateTemplate}
             isCreating={isCreating}
           />
         </div>

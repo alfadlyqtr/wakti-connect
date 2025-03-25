@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { BookingTemplate, BookingTemplateFormData, BookingTemplateAvailability, BookingTemplateException } from "@/types/booking.types";
 
@@ -58,9 +57,20 @@ export const fetchBookingTemplate = async (templateId: string) => {
 
 // Create a new booking template
 export const createBookingTemplate = async (templateData: BookingTemplateFormData) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error("User must be authenticated to create templates");
+  }
+
+  const fullTemplateData = {
+    ...templateData,
+    business_id: user.id
+  };
+
   const { data, error } = await supabase
     .from('booking_templates')
-    .insert(templateData)
+    .insert(fullTemplateData)
     .select()
     .single();
 
@@ -232,7 +242,7 @@ export const fetchAvailableTimeSlots = async (templateId: string, date: string) 
   return data || [];
 };
 
-// Add template endpoint to service index file
+// Publish template endpoint
 export const publishTemplate = async (templateId: string, isPublished: boolean) => {
   const { data, error } = await supabase
     .from('booking_templates')

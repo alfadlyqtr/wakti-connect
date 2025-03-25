@@ -1,3 +1,4 @@
+
 export interface Booking {
   id: string;
   business_id: string;
@@ -32,7 +33,7 @@ export interface BookingWithRelations extends Booking {
 
 export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
 
-export type BookingTab = "all-bookings" | "pending-bookings" | "staff-bookings";
+export type BookingTab = "all-bookings" | "pending-bookings" | "staff-bookings" | "templates";
 
 export interface BookingFormData {
   title: string;
@@ -111,6 +112,7 @@ export interface BookingTemplateFormData {
   max_daily_bookings?: number;
   default_starting_hour?: number; 
   default_ending_hour?: number;
+  business_id?: string; // Add this field to match the required property in the database
 }
 
 export interface AvailableTimeSlot {

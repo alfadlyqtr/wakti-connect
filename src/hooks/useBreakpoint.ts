@@ -60,4 +60,14 @@ export function useBreakpointValue(minBreakpoint: Breakpoint): boolean {
   return currentBreakpoints.includes(minBreakpoint);
 }
 
+/**
+ * Hook that returns whether the current viewport is 'mobile' (below sm breakpoint)
+ * For direct boolean usage in components
+ */
+export function useMobileBreakpoint(): { isMobile: boolean } {
+  const breakpoints = useBreakpoint();
+  const isMobile = !breakpoints.includes('sm');
+  return { isMobile };
+}
+
 export default useBreakpoint;
