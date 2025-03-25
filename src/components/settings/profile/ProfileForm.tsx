@@ -31,7 +31,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
         
         {/* Account type specific fields */}
         {isBusinessAccount ? (
-          <BusinessProfileFields register={register} />
+          <BusinessProfileFields register={register} watch={watch} />
         ) : (
           <IndividualProfileFields register={register} />
         )}

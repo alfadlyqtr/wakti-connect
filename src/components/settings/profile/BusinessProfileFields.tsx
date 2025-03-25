@@ -4,16 +4,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UseFormRegister } from "react-hook-form";
+import { UseFormRegister, UseFormWatch } from "react-hook-form";
 import { ProfileFormData } from "@/hooks/useProfileForm";
 import { Separator } from "@/components/ui/separator";
 import { Building2, AtSign, Phone, Globe } from "lucide-react";
 
 interface BusinessProfileFieldsProps {
   register: UseFormRegister<ProfileFormData>;
+  watch?: UseFormWatch<ProfileFormData>;
 }
 
-const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({ register }) => {
+const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({ register, watch }) => {
+  // Use watch to get the current value of business_type
+  const businessType = watch ? watch("business_type") : "";
+  
   return (
     <div className="space-y-6">
       <div className="space-y-1">
@@ -43,7 +47,7 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({ register 
           <Label htmlFor="business_type" className="font-medium">Business Type</Label>
           <Select 
             onValueChange={(value) => register("business_type").onChange({ target: { value } })}
-            defaultValue={register("business_type").value}
+            defaultValue={businessType || ""}
           >
             <SelectTrigger className="border-gray-300 focus-visible:ring-wakti-blue">
               <SelectValue placeholder="Select business type" />
