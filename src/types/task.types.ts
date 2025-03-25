@@ -15,7 +15,6 @@ export interface Task {
   parent_recurring_id?: string | null;
   subtasks?: SubTask[];
   snooze_count?: number;
-  snoozedUntil?: string | null;
   snoozed_until?: string | null;
 }
 

@@ -96,48 +96,20 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
 
   const handleSnoozeTask = async (taskId: string, days: number) => {
     try {
-      // First get the current snooze_count
-      const { data: taskData, error: fetchError } = await supabase
+      const snoozedUntil = addDays(new Date(), days).toISOString();
+      
+      // We now know these columns exist, so we can update them directly
+      const { error } = await supabase
         .from('tasks')
-        .select('snooze_count')
-        .eq('id', taskId)
-        .single();
-        
-      if (fetchError) {
-        // If the column doesn't exist yet, we'll assume it's 0
-        console.log("Fetch error for snooze_count, using default value:", fetchError);
-        
-        // Update the task with snooze data even if snooze_count column doesn't exist yet
-        const snoozedUntil = addDays(new Date(), days).toISOString();
-        
-        const { error: updateError } = await supabase
-          .from('tasks')
-          .update({ 
-            status: 'snoozed',
-            snoozed_until: snoozedUntil,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', taskId);
+        .update({ 
+          status: 'snoozed',
+          snooze_count: supabase.rpc('increment_snooze_count', { task_id_param: taskId }),
+          snoozed_until: snoozedUntil,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', taskId);
           
-        if (updateError) throw updateError;
-      } else {
-        // Column exists, proceed normally
-        const currentSnoozeCount = taskData?.snooze_count || 0;
-        const snoozedUntil = addDays(new Date(), days).toISOString();
-        
-        // Update the task with incremented snooze_count and snooze date
-        const { error: updateError } = await supabase
-          .from('tasks')
-          .update({ 
-            status: 'snoozed',
-            snooze_count: currentSnoozeCount + 1,
-            snoozed_until: snoozedUntil,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', taskId);
-          
-        if (updateError) throw updateError;
-      }
+      if (error) throw error;
       
       toast({
         title: "Task Snoozed",

@@ -1338,6 +1338,8 @@ export type Database = {
           is_recurring_instance: boolean | null
           parent_recurring_id: string | null
           priority: string
+          snooze_count: number | null
+          snoozed_until: string | null
           status: string
           title: string
           updated_at: string
@@ -1352,6 +1354,8 @@ export type Database = {
           is_recurring_instance?: boolean | null
           parent_recurring_id?: string | null
           priority?: string
+          snooze_count?: number | null
+          snoozed_until?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -1366,6 +1370,8 @@ export type Database = {
           is_recurring_instance?: boolean | null
           parent_recurring_id?: string | null
           priority?: string
+          snooze_count?: number | null
+          snoozed_until?: string | null
           status?: string
           title?: string
           updated_at?: string
