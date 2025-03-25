@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { BookingTemplateWithRelations, BookingTemplateFormData } from "@/types/booking.types";
 import { Service } from "@/types/service.types";
@@ -22,7 +23,7 @@ const bookingTemplateFormSchema = z.object({
   duration: z.number().min(5, "Duration must be at least 5 minutes"),
   price: z.number().optional(),
   service_id: z.string().optional(),
-  staff_assigned_id: z.string().optional(),
+  staff_assigned_ids: z.array(z.string()).optional(),
   is_published: z.boolean().optional(),
   max_daily_bookings: z.number().optional(),
   default_starting_hour: z.number().min(0).max(23).default(9),
@@ -47,6 +48,10 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
   const [services, setServices] = useState<Service[]>([]);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(initialData?.service_id || null);
+  const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>(
+    initialData?.staff_assigned_id ? [initialData.staff_assigned_id] : []
+  );
 
   // Initialize form
   const form = useForm<BookingTemplateFormValues>({
@@ -57,7 +62,7 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
       duration: initialData?.duration || 30,
       price: initialData?.price || undefined,
       service_id: initialData?.service_id || undefined,
-      staff_assigned_id: initialData?.staff_assigned_id || undefined,
+      staff_assigned_ids: initialData?.staff_assigned_id ? [initialData.staff_assigned_id] : [],
       is_published: initialData?.is_published || false,
       max_daily_bookings: initialData?.max_daily_bookings || undefined,
       default_starting_hour: initialData?.default_starting_hour || 9,
@@ -100,6 +105,34 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
     fetchData();
   }, []);
 
+  // Auto-fill form when a service is selected
+  useEffect(() => {
+    if (selectedServiceId) {
+      const selectedService = services.find(service => service.id === selectedServiceId);
+      if (selectedService) {
+        form.setValue('duration', selectedService.duration);
+        form.setValue('price', selectedService.price || undefined);
+        if (selectedService.description) {
+          form.setValue('description', selectedService.description);
+        }
+      }
+    }
+  }, [selectedServiceId, services, form]);
+
+  // Handle service selection
+  const handleServiceChange = (value: string) => {
+    setSelectedServiceId(value === "none" ? null : value);
+  };
+
+  // Handle staff selection
+  const handleStaffChange = (staffId: string, isChecked: boolean) => {
+    if (isChecked) {
+      setSelectedStaffIds(prev => [...prev, staffId]);
+    } else {
+      setSelectedStaffIds(prev => prev.filter(id => id !== staffId));
+    }
+  };
+
   // Handle form submission
   const handleSubmit = async (values: BookingTemplateFormValues) => {
     try {
@@ -109,8 +142,8 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
         description: values.description || null,
         duration: values.duration,
         price: values.price || null,
-        service_id: values.service_id || null,
-        staff_assigned_id: values.staff_assigned_id || null,
+        service_id: values.service_id === "none" ? null : values.service_id || null,
+        staff_assigned_ids: selectedStaffIds.length > 0 ? selectedStaffIds : undefined,
         is_published: values.is_published || false,
         max_daily_bookings: values.max_daily_bookings || null,
         default_starting_hour: values.default_starting_hour,
@@ -139,10 +172,42 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Template Name</FormLabel>
+              <FormLabel>Pre-Booking Name</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., One-hour Consultation" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="service_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Linked Service (Optional)</FormLabel>
+              <Select 
+                onValueChange={(value) => {
+                  field.onChange(value === "none" ? undefined : value);
+                  handleServiceChange(value);
+                }}
+                value={field.value || "none"}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a service" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {services.map((service) => (
+                    <SelectItem key={service.id} value={service.id}>
+                      {service.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -156,7 +221,7 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
               <FormLabel>Description (Optional)</FormLabel>
               <FormControl>
                 <Textarea 
-                  placeholder="Describe this booking template" 
+                  placeholder="Describe this pre-booking" 
                   {...field} 
                   value={field.value || ""} 
                 />
@@ -208,65 +273,39 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
           />
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="service_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Linked Service (Optional)</FormLabel>
-                <Select 
-                  onValueChange={field.onChange}
-                  value={field.value || ""}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a service" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {services.map((service) => (
-                      <SelectItem key={service.id} value={service.id}>
-                        {service.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="staff_assigned_id"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Assign Staff (Optional)</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value || ""}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Assign to staff" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="none">Any available staff</SelectItem>
-                    {staff.map((staffMember) => (
-                      <SelectItem key={staffMember.id} value={staffMember.id}>
+        <FormField
+          control={form.control}
+          name="staff_assigned_ids"
+          render={() => (
+            <FormItem>
+              <FormLabel>Assign Staff (Optional)</FormLabel>
+              <div className="border rounded-md p-4 space-y-2">
+                {staff.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No service providers available</p>
+                ) : (
+                  staff.map((staffMember) => (
+                    <div key={staffMember.id} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`staff-${staffMember.id}`} 
+                        checked={selectedStaffIds.includes(staffMember.id)}
+                        onCheckedChange={(checked) => 
+                          handleStaffChange(staffMember.id, checked as boolean)
+                        }
+                      />
+                      <label 
+                        htmlFor={`staff-${staffMember.id}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
                         {staffMember.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+                      </label>
+                    </div>
+                  ))
+                )}
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
@@ -338,10 +377,10 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
                 <FormLabel className="text-base">
-                  Publish Template
+                  Publish Pre-Booking
                 </FormLabel>
                 <p className="text-sm text-muted-foreground">
-                  Make this template visible to customers on your booking page
+                  Make this pre-booking visible to customers on your booking page
                 </p>
               </div>
               <FormControl>
@@ -365,7 +404,7 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
                 Saving...
               </>
             ) : (
-              initialData ? 'Update Template' : 'Create Template'
+              initialData ? 'Update Pre-Booking' : 'Create Pre-Booking'
             )}
           </Button>
         </div>

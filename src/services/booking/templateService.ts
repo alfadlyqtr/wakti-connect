@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { BookingTemplate, BookingTemplateFormData, BookingTemplateAvailability, BookingTemplateException } from "@/types/booking.types";
 
@@ -64,20 +63,36 @@ export const createBookingTemplate = async (templateData: BookingTemplateFormDat
     throw new Error("User must be authenticated to create templates");
   }
 
-  const fullTemplateData = {
+  // Create template with single staff if provided
+  const templateToCreate = {
     ...templateData,
-    business_id: user.id
+    business_id: user.id,
+    // If we have staff_assigned_ids, use the first one for the main staff_assigned_id
+    staff_assigned_id: templateData.staff_assigned_ids && templateData.staff_assigned_ids.length > 0 
+      ? templateData.staff_assigned_ids[0] 
+      : null
   };
+  
+  // Remove the staff_assigned_ids property as it's not in the table schema
+  delete templateToCreate.staff_assigned_ids;
 
+  // Insert the template
   const { data, error } = await supabase
     .from('booking_templates')
-    .insert(fullTemplateData)
+    .insert(templateToCreate)
     .select()
     .single();
 
   if (error) {
     console.error("Error creating booking template:", error);
     throw error;
+  }
+
+  // If we have additional staff to assign beyond the first one
+  if (templateData.staff_assigned_ids && templateData.staff_assigned_ids.length > 1) {
+    // Handle additional staff assignments via a future staff-template relationship table
+    console.log("Multiple staff assignments not yet implemented in database schema");
+    // This is where you would add code to store additional staff in a relationship table
   }
 
   return data;

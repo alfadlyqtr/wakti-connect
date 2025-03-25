@@ -107,7 +107,7 @@ export interface BookingTemplateFormData {
   duration: number;
   price?: number | null;
   service_id?: string | null;
-  staff_assigned_id?: string | null;
+  staff_assigned_ids?: string[]; // Changed from staff_assigned_id to support multiple staff
   is_published?: boolean;
   max_daily_bookings?: number | null;
   default_starting_hour?: number; 

@@ -61,7 +61,7 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
     return (
       <Card>
         <CardContent className="pt-6 text-center">
-          <p className="text-muted-foreground">No booking templates found.</p>
+          <p className="text-muted-foreground">No pre-booking templates found.</p>
         </CardContent>
       </Card>
     );
@@ -169,7 +169,7 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
 
       {/* Delete Confirmation Dialog */}
       <ConfirmationDialog
-        title="Delete Booking Template"
+        title="Delete Pre-Booking Template"
         description={`Are you sure you want to delete "${templateToDelete?.name}"? This action cannot be undone.`}
         open={!!deleteTemplateId}
         onOpenChange={() => setDeleteTemplateId(null)}
@@ -181,7 +181,7 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
 
       {/* Publish/Unpublish Confirmation Dialog */}
       <ConfirmationDialog
-        title={publishAction ? "Publish Booking Template" : "Unpublish Booking Template"}
+        title={publishAction ? "Publish Pre-Booking Template" : "Unpublish Pre-Booking Template"}
         description={
           publishAction 
             ? `Are you sure you want to publish "${templateToPublish?.name}"? This will make it visible to customers.` 

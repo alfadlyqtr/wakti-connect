@@ -32,7 +32,7 @@ const CreateTemplateButton: React.FC<CreateTemplateButtonProps> = ({
         id="create-template-button"
       >
         <CalendarPlus className="h-4 w-4 mr-2" />
-        Create Template
+        Create Pre-Booking
       </Button>
 
       <BookingTemplateDialog
