@@ -21,7 +21,8 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Loader2 } from "lucide-react";
+import { Check, Loader2, Plus, Trash2 } from "lucide-react";
+import { useFieldArray } from "react-hook-form";
 
 interface TaskFormTabsProps {
   form: UseFormReturn<any>;
@@ -44,6 +45,12 @@ export function TaskFormTabs({
 }: TaskFormTabsProps) {
   // Check if the user has a paid account
   const isPaidAccount = userRole === "individual" || userRole === "business" || userRole === "staff";
+  
+  // Setup field array for subtasks
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "subtasks"
+  });
   
   return (
     <Form {...form}>
@@ -90,61 +97,32 @@ export function TaskFormTabs({
               )}
             />
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="priority"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Priority</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="urgent">Urgent</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="normal">Normal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="daily">Daily</SelectItem>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="monthly">Monthly</SelectItem>
-                        <SelectItem value="quarterly">Quarterly</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="priority"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Priority</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select priority" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="normal">Normal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
             <FormField
               control={form.control}
@@ -159,6 +137,52 @@ export function TaskFormTabs({
                 </FormItem>
               )}
             />
+            
+            {/* Subtasks Section */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <FormLabel>Subtasks</FormLabel>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => append({ content: "", is_completed: false })}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Add Subtask
+                </Button>
+              </div>
+              
+              {fields.length === 0 && (
+                <div className="text-xs text-muted-foreground p-2 border border-dashed rounded-md text-center">
+                  No subtasks added yet. Add a subtask to break down this task.
+                </div>
+              )}
+              
+              {fields.map((field, index) => (
+                <div key={field.id} className="flex items-center gap-2">
+                  <FormField
+                    control={form.control}
+                    name={`subtasks.${index}.content`}
+                    render={({ field }) => (
+                      <FormItem className="flex-1 mb-0">
+                        <FormControl>
+                          <Input placeholder="Enter subtask..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => remove(index)}
+                  >
+                    <Trash2 className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </div>
+              ))}
+            </div>
             
             {isPaidAccount && (
               <div className="flex items-center space-x-2">

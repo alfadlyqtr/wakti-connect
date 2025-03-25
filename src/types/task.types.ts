@@ -10,10 +10,12 @@ export interface Task {
   assignee_id: string | null;
   created_at: string;
   updated_at: string;
-  completed_at?: string | null; // Add completed date field
+  completed_at?: string | null;
   is_recurring_instance?: boolean;
   parent_recurring_id?: string | null;
   subtasks?: SubTask[];
+  snooze_count?: number;
+  snoozed_until?: string | null;
 }
 
 export interface SubTask {
@@ -23,7 +25,7 @@ export interface SubTask {
   task_id?: string;
 }
 
-export type TaskStatus = "pending" | "in-progress" | "completed" | "late";
+export type TaskStatus = "pending" | "in-progress" | "completed" | "late" | "snoozed";
 export type TaskPriority = "urgent" | "high" | "medium" | "normal";
 
 export type TaskTab = "my-tasks" | "shared-tasks" | "assigned-tasks";
@@ -36,6 +38,8 @@ export interface TaskFormData {
   due_date?: string;
   assignee_id?: string | null;
   subtasks?: SubTask[];
+  snooze_count?: number;
+  snoozed_until?: string | null;
 }
 
 export interface TasksResult {

@@ -1,8 +1,10 @@
+
 import React from "react";
 import TaskCard from "@/components/ui/TaskCard";
 import { TaskTab, TaskWithSharedInfo } from "@/hooks/useTasks";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { addDays } from "date-fns";
 
 interface TaskGridProps {
   tasks: TaskWithSharedInfo[];
@@ -91,6 +93,88 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
       description: "Assignment functionality will be implemented soon."
     });
   };
+
+  const handleSnoozeTask = async (taskId: string, days: number) => {
+    try {
+      // First get the current snooze_count
+      const { data: taskData, error: fetchError } = await supabase
+        .from('tasks')
+        .select('snooze_count')
+        .eq('id', taskId)
+        .single();
+        
+      if (fetchError) throw fetchError;
+      
+      const currentSnoozeCount = taskData.snooze_count || 0;
+      const snoozedUntil = addDays(new Date(), days).toISOString();
+      
+      // Update the task with incremented snooze_count and snooze date
+      const { error: updateError } = await supabase
+        .from('tasks')
+        .update({ 
+          status: 'snoozed',
+          snooze_count: currentSnoozeCount + 1,
+          snoozed_until: snoozedUntil,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', taskId);
+        
+      if (updateError) throw updateError;
+      
+      toast({
+        title: "Task Snoozed",
+        description: `This task has been snoozed for ${days} day${days > 1 ? 's' : ''}.`
+      });
+      
+      if (refetch) refetch();
+    } catch (error) {
+      console.error("Error snoozing task:", error);
+      toast({
+        title: "Error",
+        description: "Failed to snooze task. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSubtaskToggle = async (taskId: string, subtaskIndex: number, isCompleted: boolean) => {
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task || !task.subtasks || !task.subtasks[subtaskIndex]) {
+        throw new Error("Subtask not found");
+      }
+      
+      const subtask = task.subtasks[subtaskIndex];
+      
+      if (!subtask.id) {
+        throw new Error("Subtask ID is missing");
+      }
+      
+      const { error } = await supabase
+        .from('todo_items')
+        .update({ 
+          is_completed: isCompleted,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', subtask.id);
+        
+      if (error) throw error;
+      
+      toast({
+        title: isCompleted ? "Subtask Completed" : "Subtask Reopened",
+        description: "Subtask status updated successfully."
+      });
+      
+      if (refetch) refetch();
+    } catch (error) {
+      console.error("Error updating subtask:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update subtask. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -108,11 +192,17 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
           isShared={!!task.shared_with || tab === "shared-tasks"}
           subtasks={task.subtasks || []}
           completedDate={task.completed_at ? new Date(task.completed_at) : null}
+          isRecurring={!!task.parent_recurring_id}
+          isRecurringInstance={!!task.is_recurring_instance}
+          snoozeCount={task.snooze_count || 0}
+          snoozedUntil={task.snoozed_until ? new Date(task.snoozed_until) : null}
           onEdit={handleEditTask}
           onDelete={handleDeleteTask}
           onStatusChange={handleStatusChange}
           onShare={handleShareTask}
           onAssign={handleAssignTask}
+          onSnooze={handleSnoozeTask}
+          onSubtaskToggle={handleSubtaskToggle}
         />
       ))}
     </div>

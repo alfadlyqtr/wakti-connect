@@ -9,9 +9,9 @@ import {
 } from "@/components/ui/dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { taskFormSchema } from "@/lib/validations/task";
 import { TaskFormTabs } from "./TaskFormTabs";
-import { format } from "date-fns";
+import { taskFormSchema } from "./TaskFormSchema";
+import { SubTask } from "@/types/task.types";
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -35,14 +35,11 @@ export function CreateTaskDialog({
       title: "",
       description: "",
       priority: "normal",
-      due_date: format(new Date(), "yyyy-MM-dd"),
-      status: "pending",
-      category: "daily",
+      due_date: new Date().toISOString().split('T')[0],
+      subtasks: [] as SubTask[],
       recurring: {
         frequency: "daily",
         interval: 1,
-        days_of_week: "1",
-        day_of_month: 1,
         max_occurrences: 5
       }
     },

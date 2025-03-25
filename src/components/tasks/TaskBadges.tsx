@@ -2,9 +2,9 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Share2, UserCheck, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { Share2, UserCheck, CheckCircle, Clock, AlertTriangle, Bell } from "lucide-react";
 import { TaskStatus, TaskPriority } from "@/types/task.types";
-import { isBefore, isAfter, isToday } from "date-fns";
+import { isBefore, isAfter, isToday, format } from "date-fns";
 
 interface TaskBadgesProps {
   dueDate: Date;
@@ -14,6 +14,7 @@ interface TaskBadgesProps {
   status?: TaskStatus;
   category?: string;
   completedDate?: Date | null;
+  snoozedUntil?: Date | null;
 }
 
 export const getStatusColor = (status: TaskStatus) => {
@@ -24,6 +25,8 @@ export const getStatusColor = (status: TaskStatus) => {
       return "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20";
     case "late":
       return "bg-red-500/10 text-red-500 hover:bg-red-500/20";
+    case "snoozed":
+      return "bg-amber-500/10 text-amber-500 hover:bg-amber-500/20";
     default:
       return "bg-amber-500/10 text-amber-500 hover:bg-amber-500/20";
   }
@@ -74,12 +77,28 @@ export const TaskSharingBadges = ({ isShared, isAssigned }: { isShared?: boolean
   );
 };
 
-// New function to determine task completion status badge
-export const TaskCompletionBadge = ({ status, dueDate, completedDate }: { 
+// Task completion status badge
+export const TaskCompletionBadge = ({ 
+  status, 
+  dueDate, 
+  completedDate,
+  snoozedUntil
+}: { 
   status: TaskStatus, 
   dueDate: Date, 
-  completedDate?: Date | null 
+  completedDate?: Date | null,
+  snoozedUntil?: Date | null
 }) => {
+  // Check if task is snoozed
+  if (status === "snoozed" && snoozedUntil) {
+    return (
+      <Badge variant="outline" className="bg-amber-500/10 text-amber-500 text-xs">
+        <Bell className="h-3 w-3 mr-1" />
+        Snoozed until {format(snoozedUntil, 'MMM d')}
+      </Badge>
+    );
+  }
+  
   // If task is not completed, check if it's overdue
   if (status !== "completed") {
     if (status === "in-progress" && isToday(dueDate)) {
@@ -135,7 +154,8 @@ const TaskBadges = ({
   isAssigned,
   status = "pending",
   category = "personal",
-  completedDate = null
+  completedDate = null,
+  snoozedUntil = null
 }: TaskBadgesProps) => {
   const formattedDate = dueDate.toLocaleDateString('en-US', {
     month: 'short',
@@ -152,16 +172,10 @@ const TaskBadges = ({
         {priority}
       </Badge>
       
-      {category && (
-        <Badge variant="outline" className={cn("text-xs", getCategoryColor(category))}>
-          {category}
-        </Badge>
-      )}
-      
       <TaskSharingBadges isShared={isShared} isAssigned={isAssigned} />
       
       {/* Display the completion status badge */}
-      {TaskCompletionBadge({ status, dueDate, completedDate })}
+      {TaskCompletionBadge({ status, dueDate, completedDate, snoozedUntil })}
     </div>
   );
 };

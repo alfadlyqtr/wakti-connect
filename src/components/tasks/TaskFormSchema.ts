@@ -1,11 +1,11 @@
+
 import * as z from "zod";
 
 export const taskFormSchema = z.object({
   title: z.string().min(1, "Task title is required"),
   description: z.string().optional(),
   priority: z.enum(["urgent", "high", "medium", "normal"]).default("normal"),
-  due_date: z.date(),
-  due_time: z.string().optional(),
+  due_date: z.string(),
   subtasks: z.array(
     z.object({
       content: z.string().min(1, "Subtask content is required"),

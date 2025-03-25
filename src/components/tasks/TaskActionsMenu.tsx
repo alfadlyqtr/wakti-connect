@@ -6,7 +6,10 @@ import {
   DropdownMenuItem, 
   DropdownMenuLabel, 
   DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger
 } from "@/components/ui/dropdown-menu";
 import { 
   MoreVertical, 
@@ -16,7 +19,9 @@ import {
   CheckSquare, 
   SquarePen, 
   Share, 
-  UserPlus 
+  UserPlus,
+  Calendar,
+  Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskStatus } from "@/types/task.types";
@@ -31,7 +36,9 @@ interface TaskActionsMenuProps {
   onStatusChange?: (taskId: string, newStatus: string) => void;
   onShare?: (taskId: string) => void;
   onAssign?: (taskId: string) => void;
-  taskId: string; // Changed from optional to required
+  onSnooze?: (taskId: string, days: number) => void;
+  taskId: string;
+  snoozeCount?: number;
 }
 
 export function TaskActionsMenu({
@@ -44,7 +51,9 @@ export function TaskActionsMenu({
   onStatusChange,
   onShare,
   onAssign,
-  taskId
+  onSnooze,
+  taskId,
+  snoozeCount = 0
 }: TaskActionsMenuProps) {
   // Update isPaidAccount to include only individual and business accounts (not staff)
   const isPaidAccount = userRole === "individual" || userRole === "business";
@@ -105,6 +114,41 @@ export function TaskActionsMenu({
             <Clock className="h-4 w-4 mr-2" />
             Mark Pending
           </DropdownMenuItem>
+        )}
+        
+        {isPaidAccount && status !== "completed" && onSnooze && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Bell className="h-4 w-4 mr-2" />
+                Snooze Task
+                {snoozeCount > 0 && (
+                  <span className="ml-1 text-xs bg-muted px-1 rounded">
+                    x{snoozeCount}
+                  </span>
+                )}
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={() => handleAction(onSnooze, 1)}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  1 Day
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleAction(onSnooze, 3)}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  3 Days
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleAction(onSnooze, 7)}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  1 Week
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleAction(onSnooze, 14)}>
+                  <Calendar className="h-4 w-4 mr-2" />
+                  2 Weeks
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          </>
         )}
         
         {isPaidAccount && !isShared && (
