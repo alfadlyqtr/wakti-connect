@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard } from "lucide-react";
@@ -33,6 +33,34 @@ const BillingTab: React.FC<BillingTabProps> = ({ profile }) => {
     });
   };
   
+  // Map account_type to display name and description
+  const getPlanInfo = () => {
+    const planType = profile?.account_type || 'free';
+    
+    switch(planType) {
+      case 'business':
+        return {
+          name: 'Business Plan',
+          description: 'Full access to all business features including staff management, job tracking, analytics, and AI assistant.',
+          price: 'QAR 45/month'
+        };
+      case 'individual':
+        return {
+          name: 'Individual Plan',
+          description: 'Enhanced personal productivity tools, unlimited task storage, and AI assistant features.',
+          price: 'QAR 20/month'
+        };
+      default:
+        return {
+          name: 'Free Plan',
+          description: 'Basic features with limited storage.',
+          price: 'Free'
+        };
+    }
+  };
+  
+  const planInfo = getPlanInfo();
+  
   return (
     <Card>
       <CardHeader className="px-4 sm:px-6">
@@ -44,21 +72,20 @@ const BillingTab: React.FC<BillingTabProps> = ({ profile }) => {
       <CardContent className="space-y-5 px-4 sm:px-6">
         <div className="p-3 sm:p-4 border rounded-md">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-2">
-            <h3 className="font-medium text-lg capitalize">{profile?.account_type || 'Free'} Plan</h3>
-            <Badge variant="outline" className="capitalize w-fit">{profile?.account_type || 'Free'}</Badge>
+            <h3 className="font-medium text-lg">{planInfo.name}</h3>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="capitalize w-fit">{profile?.account_type || 'Free'}</Badge>
+              <span className="font-bold">{planInfo.price}</span>
+            </div>
           </div>
           <p className="text-muted-foreground mb-4">
-            {profile?.account_type === 'business' 
-              ? 'Full access to all business features including staff management, job tracking, and analytics.' 
-              : profile?.account_type === 'individual'
-              ? 'Enhanced personal productivity tools and unlimited task storage.'
-              : 'Basic features with limited storage.'}
+            {planInfo.description}
           </p>
           <Button 
             className="w-full sm:w-auto"
             onClick={handleUpgradePlan}
           >
-            Upgrade Plan
+            {profile?.account_type === 'free' ? 'Upgrade Plan' : 'Change Plan'}
           </Button>
         </div>
         
@@ -88,16 +115,18 @@ const BillingTab: React.FC<BillingTabProps> = ({ profile }) => {
             <div className="p-3 flex flex-col sm:flex-row sm:justify-between gap-1">
               <div>
                 <p className="font-medium">April 2023</p>
-                <p className="text-sm text-muted-foreground">Plan: Business</p>
+                <p className="text-sm text-muted-foreground">Plan: {planInfo.name}</p>
               </div>
-              <p className="font-medium">$45.00</p>
+              <p className="font-medium">{profile?.account_type === 'business' ? 'QAR 45.00' : 
+                                          profile?.account_type === 'individual' ? 'QAR 20.00' : 'QAR 0.00'}</p>
             </div>
             <div className="p-3 flex flex-col sm:flex-row sm:justify-between gap-1">
               <div>
                 <p className="font-medium">March 2023</p>
-                <p className="text-sm text-muted-foreground">Plan: Business</p>
+                <p className="text-sm text-muted-foreground">Plan: {planInfo.name}</p>
               </div>
-              <p className="font-medium">$45.00</p>
+              <p className="font-medium">{profile?.account_type === 'business' ? 'QAR 45.00' : 
+                                          profile?.account_type === 'individual' ? 'QAR 20.00' : 'QAR 0.00'}</p>
             </div>
           </div>
         </div>
