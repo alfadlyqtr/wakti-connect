@@ -124,6 +124,7 @@ export async function createRecurringTaskInstances(
         status: validateTaskStatus(data.status || "pending") as TaskStatus,
         priority: validateTaskPriority(data.priority || "normal") as TaskPriority,
         due_date: data.due_date,
+        // Handle potentially missing properties
         due_time: data.due_time || null,
         completed_at: data.completed_at || null,
         user_id: data.user_id,

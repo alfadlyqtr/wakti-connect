@@ -21,7 +21,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // Fetch tasks from Supabase
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -35,7 +34,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
         
-        // First check if the tasks table exists
         let tableExists = true;
         try {
           const { error: tableCheckError } = await supabase
@@ -54,14 +52,12 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
         if (!tableExists) {
           console.log("Using mock task data until table is created");
-          // Fall back to mock tasks if table doesn't exist
           const mockTasks = getMockTasks();
           setTasks(mockTasks);
           setIsLoading(false);
           return;
         }
         
-        // Fetch real tasks
         const { data, error } = await supabase
           .from('tasks')
           .select('*')
@@ -73,9 +69,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
           throw error;
         }
         
-        // Transform the data to ensure it conforms to the Task type
         const typedTasks: Task[] = (data || []).map(task => {
-          // Handle fields that might not exist in the database response
           const taskStatus = validateTaskStatus(task.status || "pending") as TaskStatus;
           const taskPriority = validateTaskPriority(task.priority || "normal") as TaskPriority;
           
@@ -104,7 +98,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error("Failed to fetch tasks:", err);
         setError(err instanceof Error ? err : new Error('An unknown error occurred'));
         
-        // Fall back to mock tasks
         const mockTasks = getMockTasks();
         setTasks(mockTasks);
       } finally {
@@ -114,7 +107,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     fetchTasks();
     
-    // Set up real-time subscription for tasks
     const subscription = supabase
       .channel('tasks-changes')
       .on('postgres_changes', { 
@@ -132,7 +124,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Utility to get mock tasks for development
   const getMockTasks = (): Task[] => {
     return [
       {
@@ -215,7 +206,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         snoozed_until: task.snoozed_until || null
       };
 
-      // Try to add to Supabase first
       try {
         const { data, error } = await supabase
           .from('tasks')
@@ -225,7 +215,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
         if (error) throw error;
         
-        // Ensure the returned task matches our Task type
         const typedTask: Task = {
           id: data.id,
           title: data.title,
@@ -255,7 +244,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error("Error adding task to Supabase:", error);
         
-        // Fall back to client-side-only for development
         const mockTask: Task = {
           ...newTask,
           id: `task-${Date.now()}`,
@@ -283,7 +271,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
     try {
-      // Ensure the status and priority values are validated
       const validatedUpdates = {
         ...updates,
         status: updates.status ? validateTaskStatus(updates.status) : undefined,
@@ -291,7 +278,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updated_at: new Date().toISOString()
       };
 
-      // Try to update in Supabase first
       try {
         const { error } = await supabase
           .from('tasks')
@@ -314,7 +300,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error("Error updating task in Supabase:", error);
         
-        // Fall back to client-side-only for development
         setTasks(prev => 
           prev.map(task => 
             task.id === id ? { ...task, ...validatedUpdates } : task
@@ -340,7 +325,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const deleteTask = async (id: string) => {
     try {
-      // Try to delete from Supabase first
       try {
         const { error } = await supabase
           .from('tasks')
@@ -359,7 +343,6 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error("Error deleting task from Supabase:", error);
         
-        // Fall back to client-side-only for development
         setTasks(prev => prev.filter(task => task.id !== id));
         
         toast({

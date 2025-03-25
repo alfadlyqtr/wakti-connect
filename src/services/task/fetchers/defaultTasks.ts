@@ -23,6 +23,7 @@ export async function fetchDefaultTasks(userId: string): Promise<Task[]> {
     status: validateTaskStatus(item.status || "pending") as TaskStatus,
     priority: validateTaskPriority(item.priority || "normal") as TaskPriority,
     due_date: item.due_date,
+    // Handle potentially missing properties
     due_time: item.due_time || null,
     user_id: item.user_id,
     assignee_id: item.assignee_id || null,

@@ -24,27 +24,34 @@ export async function createNewTask(userId: string, taskData: Partial<TaskFormDa
     .select();
 
   if (error) {
+    console.error("Error creating task:", error);
     throw error;
   }
   
+  if (!data || data.length === 0) {
+    throw new Error("No data returned from task creation");
+  }
+  
   // Explicitly extract properties and add defaults for any missing ones
+  const taskItem = data[0];
   const task: Task = {
-    id: data[0].id,
-    title: data[0].title,
-    description: data[0].description,
-    status: validateTaskStatus(data[0].status || "pending") as TaskStatus,
-    priority: validateTaskPriority(data[0].priority || "normal") as TaskPriority,
-    due_date: data[0].due_date,
-    due_time: data[0].due_time || null,
-    completed_at: data[0].completed_at || null,
-    user_id: data[0].user_id,
-    assignee_id: data[0].assignee_id || null,
-    created_at: data[0].created_at,
-    updated_at: data[0].updated_at,
-    is_recurring_instance: data[0].is_recurring_instance || false,
-    parent_recurring_id: data[0].parent_recurring_id || null,
-    snooze_count: data[0].snooze_count || 0,
-    snoozed_until: data[0].snoozed_until || null
+    id: taskItem.id,
+    title: taskItem.title,
+    description: taskItem.description,
+    status: validateTaskStatus(taskItem.status || "pending") as TaskStatus,
+    priority: validateTaskPriority(taskItem.priority || "normal") as TaskPriority,
+    due_date: taskItem.due_date,
+    // Handle potentially missing properties
+    due_time: taskItem.due_time || null,
+    user_id: taskItem.user_id,
+    assignee_id: taskItem.assignee_id || null,
+    created_at: taskItem.created_at,
+    updated_at: taskItem.updated_at,
+    completed_at: taskItem.completed_at || null,
+    is_recurring_instance: taskItem.is_recurring_instance || false,
+    parent_recurring_id: taskItem.parent_recurring_id || null,
+    snooze_count: taskItem.snooze_count || 0,
+    snoozed_until: taskItem.snoozed_until || null
   };
   
   return task;
@@ -77,6 +84,7 @@ export async function getTaskWithSubtasks(taskId: string): Promise<Task> {
     status: validateTaskStatus(taskData.status || "pending") as TaskStatus,
     priority: validateTaskPriority(taskData.priority || "normal") as TaskPriority,
     due_date: taskData.due_date,
+    // Handle potentially missing properties
     due_time: taskData.due_time || null,
     completed_at: taskData.completed_at || null,
     user_id: taskData.user_id,
