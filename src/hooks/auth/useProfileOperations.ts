@@ -12,40 +12,6 @@ export function useProfileOperations() {
     
     while (retries > 0) {
       try {
-        // First check if the profiles table exists using our custom function
-        try {
-          const { data: tableExists, error: checkError } = await supabase.rpc('check_profiles_table');
-          
-          if (checkError) {
-            console.warn("Could not verify profiles table via RPC:", checkError);
-            
-            // Fallback to manual check
-            const { error: tableCheckError } = await supabase
-              .from("profiles")
-              .select("count(*)", { count: "exact", head: true });
-              
-            if (tableCheckError) {
-              if (tableCheckError.message.includes("does not exist")) {
-                console.error("Profiles table does not exist:", tableCheckError);
-                throw new Error("Database schema error: profiles table not found");
-              }
-              throw tableCheckError;
-            }
-          } else if (!tableExists) {
-            console.error("RPC check confirms profiles table does not exist");
-            throw new Error("Database schema error: profiles table not found via RPC check");
-          }
-        } catch (tableError: any) {
-          // If the RPC function itself failed but didn't say the table doesn't exist,
-          // we can try to continue
-          if (!tableError.message?.includes("does not exist")) {
-            console.warn("Error checking profiles table, continuing anyway:", tableError);
-          } else {
-            console.error("Error checking profiles table:", tableError);
-            throw tableError;
-          }
-        }
-        
         // Try to get profile
         const { data: profile, error } = await supabase
           .from("profiles")
