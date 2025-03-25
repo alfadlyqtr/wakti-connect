@@ -12,6 +12,7 @@ export async function createNewTask(userId: string, taskData: Partial<TaskFormDa
     status: taskData.status || "pending",
     priority: taskData.priority || "normal",
     due_date: taskData.due_date || null,
+    due_time: taskData.due_time || null,
     assignee_id: taskData.assignee_id || null
   };
 
