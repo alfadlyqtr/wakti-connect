@@ -1,7 +1,5 @@
 
 import React from 'react';
-import { CalendarIcon, ChevronRightIcon } from 'lucide-react';
-import { format } from 'date-fns';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -26,6 +24,12 @@ interface TaskCardProps {
   recurringFrequency?: string;
   isRecurringInstance?: boolean;
   subtasks?: { content: string; is_completed: boolean }[];
+  completedDate?: Date | null;
+  onEdit?: (taskId: string) => void;
+  onDelete?: (taskId: string) => void;
+  onStatusChange?: (taskId: string, newStatus: string) => void;
+  onShare?: (taskId: string) => void;
+  onAssign?: (taskId: string) => void;
 }
 
 const TaskCard = ({
@@ -42,7 +46,13 @@ const TaskCard = ({
   isRecurring = false,
   recurringFrequency,
   isRecurringInstance = false,
-  subtasks = []
+  subtasks = [],
+  completedDate = null,
+  onEdit,
+  onDelete,
+  onStatusChange,
+  onShare,
+  onAssign
 }: TaskCardProps) => {
   const completedSubtasks = subtasks.filter(task => task.is_completed).length;
   const totalSubtasks = subtasks.length;
@@ -73,6 +83,11 @@ const TaskCard = ({
           isAssigned={isAssigned}
           status={status}
           taskId={id}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onStatusChange={onStatusChange}
+          onShare={onShare}
+          onAssign={onAssign}
         />
       </CardHeader>
       
@@ -102,6 +117,8 @@ const TaskCard = ({
           priority={priority} 
           isAssigned={isAssigned} 
           isShared={isShared}
+          status={status}
+          completedDate={completedDate}
         />
       </CardFooter>
     </Card>

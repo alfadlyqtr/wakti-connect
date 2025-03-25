@@ -10,6 +10,7 @@ export interface Task {
   assignee_id: string | null;
   created_at: string;
   updated_at: string;
+  completed_at?: string | null; // Add completed date field
   is_recurring_instance?: boolean;
   parent_recurring_id?: string | null;
   subtasks?: SubTask[];

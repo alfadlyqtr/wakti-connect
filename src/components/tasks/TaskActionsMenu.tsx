@@ -31,7 +31,7 @@ interface TaskActionsMenuProps {
   onStatusChange?: (taskId: string, newStatus: string) => void;
   onShare?: (taskId: string) => void;
   onAssign?: (taskId: string) => void;
-  taskId?: string;
+  taskId: string; // Changed from optional to required
 }
 
 export function TaskActionsMenu({
@@ -44,7 +44,7 @@ export function TaskActionsMenu({
   onStatusChange,
   onShare,
   onAssign,
-  taskId = ""
+  taskId
 }: TaskActionsMenuProps) {
   // Update isPaidAccount to include only individual and business accounts (not staff)
   const isPaidAccount = userRole === "individual" || userRole === "business";
@@ -52,12 +52,12 @@ export function TaskActionsMenu({
   // Only business and staff should see assign option
   const canAssignTasks = userRole === "business" || userRole === "staff";
   
-  // Handle dummy click events when no handlers provided
+  // Handle action click with proper taskId
   const handleAction = (action: (id: string, ...args: any[]) => void, ...args: any[]) => {
-    if (action && taskId) {
+    if (action) {
       action(taskId, ...args);
     } else {
-      console.log("No handler provided for this action or taskId is missing");
+      console.log("No handler provided for this action", { action, taskId });
     }
   };
   
@@ -74,12 +74,12 @@ export function TaskActionsMenu({
         
         <DropdownMenuSeparator />
         
-        <DropdownMenuItem onClick={() => onEdit && handleAction(onEdit)}>
+        <DropdownMenuItem onClick={() => handleAction(onEdit)}>
           <Edit className="h-4 w-4 mr-2" />
           Edit
         </DropdownMenuItem>
         
-        <DropdownMenuItem onClick={() => onDelete && handleAction(onDelete)}>
+        <DropdownMenuItem onClick={() => handleAction(onDelete)}>
           <Trash className="h-4 w-4 mr-2" />
           Delete
         </DropdownMenuItem>
@@ -87,21 +87,21 @@ export function TaskActionsMenu({
         <DropdownMenuSeparator />
         
         {status !== "completed" && (
-          <DropdownMenuItem onClick={() => onStatusChange && handleAction(onStatusChange, "completed")}>
+          <DropdownMenuItem onClick={() => handleAction(onStatusChange, "completed")}>
             <CheckSquare className="h-4 w-4 mr-2" />
             Mark Complete
           </DropdownMenuItem>
         )}
         
         {status !== "in-progress" && (
-          <DropdownMenuItem onClick={() => onStatusChange && handleAction(onStatusChange, "in-progress")}>
+          <DropdownMenuItem onClick={() => handleAction(onStatusChange, "in-progress")}>
             <SquarePen className="h-4 w-4 mr-2" />
             Mark In Progress
           </DropdownMenuItem>
         )}
         
         {status !== "pending" && (
-          <DropdownMenuItem onClick={() => onStatusChange && handleAction(onStatusChange, "pending")}>
+          <DropdownMenuItem onClick={() => handleAction(onStatusChange, "pending")}>
             <Clock className="h-4 w-4 mr-2" />
             Mark Pending
           </DropdownMenuItem>
@@ -110,7 +110,7 @@ export function TaskActionsMenu({
         {isPaidAccount && !isShared && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onShare && handleAction(onShare)}>
+            <DropdownMenuItem onClick={() => handleAction(onShare)}>
               <Share className="h-4 w-4 mr-2" />
               Share Task
             </DropdownMenuItem>
@@ -120,7 +120,7 @@ export function TaskActionsMenu({
         {canAssignTasks && !isAssigned && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onAssign && handleAction(onAssign)}>
+            <DropdownMenuItem onClick={() => handleAction(onAssign)}>
               <UserPlus className="h-4 w-4 mr-2" />
               Assign Task
             </DropdownMenuItem>

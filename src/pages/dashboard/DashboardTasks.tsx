@@ -28,7 +28,8 @@ const DashboardTasks = () => {
     setFilterPriority,
     createTask,
     userRole: fetchedUserRole,
-    isStaff: isStaffFromHook
+    isStaff: isStaffFromHook,
+    refetch
   } = useTasks(activeTab);
 
   useEffect(() => {
@@ -135,6 +136,7 @@ const DashboardTasks = () => {
             tasks={filteredTasks} 
             userRole={userRole} 
             tab={activeTab}
+            refetch={refetch}
           />
         ) : (
           <EmptyTasksState 

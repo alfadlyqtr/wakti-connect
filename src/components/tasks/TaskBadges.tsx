@@ -2,8 +2,9 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Share2, UserCheck } from "lucide-react";
+import { Share2, UserCheck, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { TaskStatus, TaskPriority } from "@/types/task.types";
+import { isBefore, isAfter, isToday } from "date-fns";
 
 interface TaskBadgesProps {
   dueDate: Date;
@@ -12,6 +13,7 @@ interface TaskBadgesProps {
   isAssigned?: boolean;
   status?: TaskStatus;
   category?: string;
+  completedDate?: Date | null;
 }
 
 export const getStatusColor = (status: TaskStatus) => {
@@ -72,13 +74,68 @@ export const TaskSharingBadges = ({ isShared, isAssigned }: { isShared?: boolean
   );
 };
 
+// New function to determine task completion status badge
+export const TaskCompletionBadge = ({ status, dueDate, completedDate }: { 
+  status: TaskStatus, 
+  dueDate: Date, 
+  completedDate?: Date | null 
+}) => {
+  // If task is not completed, check if it's overdue
+  if (status !== "completed") {
+    if (status === "in-progress" && isToday(dueDate)) {
+      return (
+        <Badge variant="outline" className="bg-blue-500/10 text-blue-500 text-xs">
+          <Clock className="h-3 w-3 mr-1" />
+          In Progress (Today)
+        </Badge>
+      );
+    } else if (isAfter(new Date(), dueDate)) {
+      return (
+        <Badge variant="outline" className="bg-red-500/10 text-red-500 text-xs">
+          <AlertTriangle className="h-3 w-3 mr-1" />
+          Overdue
+        </Badge>
+      );
+    }
+    return null;
+  }
+  
+  // For completed tasks
+  if (completedDate) {
+    if (isBefore(completedDate, dueDate)) {
+      return (
+        <Badge variant="outline" className="bg-green-500/10 text-green-500 text-xs">
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Completed Early
+        </Badge>
+      );
+    } else if (isAfter(completedDate, dueDate)) {
+      return (
+        <Badge variant="outline" className="bg-amber-500/10 text-amber-500 text-xs">
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Completed Late
+        </Badge>
+      );
+    }
+  }
+  
+  // Default completed badge
+  return (
+    <Badge variant="outline" className="bg-green-500/10 text-green-500 text-xs">
+      <CheckCircle className="h-3 w-3 mr-1" />
+      Completed
+    </Badge>
+  );
+};
+
 const TaskBadges = ({ 
   dueDate, 
   priority, 
   isShared, 
   isAssigned,
   status = "pending",
-  category = "personal"
+  category = "personal",
+  completedDate = null
 }: TaskBadgesProps) => {
   const formattedDate = dueDate.toLocaleDateString('en-US', {
     month: 'short',
@@ -102,6 +159,9 @@ const TaskBadges = ({
       )}
       
       <TaskSharingBadges isShared={isShared} isAssigned={isAssigned} />
+      
+      {/* Display the completion status badge */}
+      {TaskCompletionBadge({ status, dueDate, completedDate })}
     </div>
   );
 };
