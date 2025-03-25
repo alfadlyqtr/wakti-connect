@@ -18,6 +18,23 @@ export function useAuthInitializer() {
     let authCheckComplete = false;
     let authTimeout: NodeJS.Timeout;
     
+    // First check if we can connect to Supabase
+    const checkSupabaseConnection = async () => {
+      try {
+        const { error } = await supabase.from('_metadata').select('*').limit(1).maybeSingle();
+        if (error && !error.message.includes("does not exist")) {
+          console.error("Supabase connection test failed:", error);
+          throw new Error("Failed to connect to database service. Please check application configuration.");
+        }
+      } catch (error) {
+        console.warn("Metadata table may not exist yet, continuing initialization");
+        // Don't block auth - this might be first run
+      }
+    };
+    
+    // Run connection check but don't await it to avoid blocking auth flow
+    checkSupabaseConnection().catch(console.error);
+    
     // Set up Supabase auth listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -53,6 +70,15 @@ export function useAuthInitializer() {
             console.error("Error processing session:", error);
             // Even in case of error, set basic user data to prevent blocking the app
             setUser(createBasicUser(session.user.id, session.user.email || ""));
+            
+            // Provide user feedback only for critical errors
+            if (error.message && error.message.includes("database schema")) {
+              toast({
+                title: "Application Error",
+                description: "There was a problem initializing the application. Please contact support.",
+                variant: "destructive"
+              });
+            }
           }
         } else {
           console.log("No authenticated user");

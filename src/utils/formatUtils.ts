@@ -1,22 +1,11 @@
 
 import { format, formatDistanceStrict } from 'date-fns';
-import { createContext, useContext } from 'react';
-
-// Create a context to store and provide the user's currency preference
-export const CurrencyContext = createContext<string>('USD');
-
-// Custom hook to use the currency context
-export const useCurrency = () => useContext(CurrencyContext);
 
 // Format currency with locale and currency code
-export const formatCurrency = (amount: number | null | undefined, currencyCode?: string): string => {
+export const formatCurrency = (amount: number | null | undefined, currencyCode: string = 'USD'): string => {
   if (amount === null || amount === undefined) {
     return '-';
   }
-  
-  // If no currencyCode is provided, use the one from context
-  const contextCurrency = useCurrency();
-  const currency = currencyCode || contextCurrency || 'USD';
   
   // Currency formatting options for each supported currency
   const currencyFormatOptions: Record<string, Intl.NumberFormatOptions> = {
@@ -30,7 +19,7 @@ export const formatCurrency = (amount: number | null | undefined, currencyCode?:
   };
   
   // Use the options for the specified currency, or fall back to USD
-  const options = currencyFormatOptions[currency] || currencyFormatOptions.USD;
+  const options = currencyFormatOptions[currencyCode] || currencyFormatOptions.USD;
   
   return new Intl.NumberFormat('en-US', options).format(amount);
 };
@@ -74,6 +63,3 @@ export const formatDateTime = (date: string | Date): string => {
     return 'Invalid date/time';
   }
 };
-
-// Export CurrencyProvider from a separate file
-export { CurrencyProvider } from './CurrencyProvider';

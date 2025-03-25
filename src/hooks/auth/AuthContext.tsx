@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { User, AuthContextType } from "./types";
 import { useAuthOperations } from "./useAuthOperations";
 import { useAuthInitializer } from "./useAuthInitializer";
@@ -48,6 +48,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // If we have an auth error but initialization is complete, show a recovery UI
   if (authError && authInitialized) {
     return <AuthErrorState authError={authError} />;
+  }
+
+  // If auth is initialized but still loading, show a simpler loading state
+  if (isLoading) {
+    return <AuthLoadingState authError={null} />;
   }
 
   return (

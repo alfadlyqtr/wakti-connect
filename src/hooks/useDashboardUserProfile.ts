@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { isUserStaff } from "@/utils/staffUtils";
-import { UserRole, getEffectiveRole } from "@/types/user";
+import { UserRole } from "@/types/user";
 
 export const useDashboardUserProfile = () => {
   const [userId, setUserId] = useState<string | null>(null);
@@ -25,7 +25,6 @@ export const useDashboardUserProfile = () => {
       setUserId(session.user.id);
       
       // Check if user is a staff member
-      // The error was here - isUserStaff() doesn't take parameters but we were passing one
       const staffStatus = await isUserStaff();
       setIsStaff(staffStatus);
       
@@ -41,13 +40,16 @@ export const useDashboardUserProfile = () => {
         return null;
       }
       
-      // Determine user role with proper prioritization based on our enhanced function
-      const effectiveRole = getEffectiveRole(data?.account_type || 'free', staffStatus);
-      setUserRole(effectiveRole);
+      // Determine user role and store in localStorage for quick access
+      const accountType = data?.account_type || 'free';
       
-      // Store in localStorage for quick access
+      // Set the user role with proper prioritization
+      // If user is both business owner and staff, business takes priority
+      const effectiveRole = accountType === 'business' ? 'business' : 
+                          (staffStatus ? 'staff' : accountType);
+      
+      setUserRole(effectiveRole as UserRole);
       localStorage.setItem('userRole', effectiveRole);
-      localStorage.setItem('isStaff', staffStatus ? 'true' : 'false');
       
       return data;
     },

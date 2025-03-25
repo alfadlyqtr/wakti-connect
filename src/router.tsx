@@ -12,18 +12,12 @@ import { dashboardRoutes } from "@/routes/dashboardRoutes";
 import { businessRoutes } from "@/routes/businessRoutes";
 import PublicLayout from "@/components/layout/PublicLayout";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import ErrorBoundary from "@/components/ui/ErrorBoundary";
 
 export const router = createBrowserRouter([
   // Public routes with layout
   {
     path: "/",
     element: <PublicLayout />,
-    errorElement: (
-      <ErrorBoundary>
-        <div>Something went wrong with public routes</div>
-      </ErrorBoundary>
-    ),
     children: publicRoutes,
   },
   
@@ -34,11 +28,6 @@ export const router = createBrowserRouter([
       <AuthShell>
         <Suspense fallback={<LoadingSpinner />} />
       </AuthShell>
-    ),
-    errorElement: (
-      <ErrorBoundary>
-        <div>Something went wrong with authentication</div>
-      </ErrorBoundary>
     ),
     children: authRoutes,
   },
@@ -53,11 +42,6 @@ export const router = createBrowserRouter([
         </DashboardShell>
       </ProtectedRoute>
     ),
-    errorElement: (
-      <ErrorBoundary>
-        <div>Something went wrong with dashboard</div>
-      </ErrorBoundary>
-    ),
     children: dashboardRoutes,
   },
 
@@ -68,11 +52,6 @@ export const router = createBrowserRouter([
       <BusinessShell>
         <Suspense fallback={<LoadingSpinner />} />
       </BusinessShell>
-    ),
-    errorElement: (
-      <ErrorBoundary>
-        <div>Something went wrong with business pages</div>
-      </ErrorBoundary>
     ),
     children: businessRoutes,
   },

@@ -1,16 +1,14 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchJobs, createJob, updateJob, deleteJob } from '@/services/jobs';
 import { JobFormData } from '@/types/job.types';
-import { useJobCards } from './useJobCards';
 
 export const useJobs = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [error, setError] = useState<Error | null>(null);
-  const { jobCards, isLoading: jobCardsLoading } = useJobCards();
 
   // Query to fetch all jobs
   const { data: jobs = [], isLoading, refetch } = useQuery({
@@ -31,12 +29,6 @@ export const useJobs = () => {
       }
     }
   });
-
-  // Check if a job can be edited or deleted (no active job cards)
-  const canModifyJob = (jobId: string) => {
-    if (jobCardsLoading || !jobCards) return true; // Default to allow if still loading
-    return !jobCards.some(card => card.job_id === jobId && !card.end_time);
-  };
 
   // Mutation to create a job
   const createJobMutation = useMutation({
@@ -60,12 +52,8 @@ export const useJobs = () => {
 
   // Mutation to update a job
   const updateJobMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string, data: Partial<JobFormData> }) => {
-      if (!canModifyJob(id)) {
-        throw new Error("Cannot update job with active job cards");
-      }
-      return updateJob(id, data);
-    },
+    mutationFn: ({ id, data }: { id: string, data: Partial<JobFormData> }) => 
+      updateJob(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       toast({
@@ -85,12 +73,7 @@ export const useJobs = () => {
 
   // Mutation to delete a job
   const deleteJobMutation = useMutation({
-    mutationFn: async (id: string) => {
-      if (!canModifyJob(id)) {
-        throw new Error("Cannot delete job with active job cards");
-      }
-      return deleteJob(id);
-    },
+    mutationFn: deleteJob,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       toast({
@@ -110,7 +93,7 @@ export const useJobs = () => {
 
   return {
     jobs,
-    isLoading: isLoading || jobCardsLoading,
+    isLoading,
     error,
     refetch,
     createJob: createJobMutation,

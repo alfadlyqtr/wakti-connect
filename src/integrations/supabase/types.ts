@@ -222,93 +222,6 @@ export type Database = {
         }
         Relationships: []
       }
-      business_analytics: {
-        Row: {
-          business_id: string
-          created_at: string
-          id: string
-          staff_count: number
-          subscriber_count: number
-          task_completion_rate: number
-          time_range: string
-          updated_at: string
-        }
-        Insert: {
-          business_id: string
-          created_at?: string
-          id?: string
-          staff_count?: number
-          subscriber_count?: number
-          task_completion_rate?: number
-          time_range?: string
-          updated_at?: string
-        }
-        Update: {
-          business_id?: string
-          created_at?: string
-          id?: string
-          staff_count?: number
-          subscriber_count?: number
-          task_completion_rate?: number
-          time_range?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      business_booking_activity: {
-        Row: {
-          bookings: number
-          business_id: string
-          created_at: string
-          id: string
-          month: string
-          time_range: string
-        }
-        Insert: {
-          bookings?: number
-          business_id: string
-          created_at?: string
-          id?: string
-          month: string
-          time_range?: string
-        }
-        Update: {
-          bookings?: number
-          business_id?: string
-          created_at?: string
-          id?: string
-          month?: string
-          time_range?: string
-        }
-        Relationships: []
-      }
-      business_growth_data: {
-        Row: {
-          business_id: string
-          created_at: string
-          id: string
-          month: string
-          subscribers: number
-          time_range: string
-        }
-        Insert: {
-          business_id: string
-          created_at?: string
-          id?: string
-          month: string
-          subscribers?: number
-          time_range?: string
-        }
-        Update: {
-          business_id?: string
-          created_at?: string
-          id?: string
-          month?: string
-          subscribers?: number
-          time_range?: string
-        }
-        Relationships: []
-      }
       business_page_sections: {
         Row: {
           created_at: string
@@ -434,33 +347,6 @@ export type Database = {
         }
         Relationships: []
       }
-      business_service_distribution: {
-        Row: {
-          business_id: string
-          created_at: string
-          id: string
-          service_name: string
-          time_range: string
-          usage_count: number
-        }
-        Insert: {
-          business_id: string
-          created_at?: string
-          id?: string
-          service_name: string
-          time_range?: string
-          usage_count?: number
-        }
-        Update: {
-          business_id?: string
-          created_at?: string
-          id?: string
-          service_name?: string
-          time_range?: string
-          usage_count?: number
-        }
-        Relationships: []
-      }
       business_services: {
         Row: {
           business_id: string
@@ -569,36 +455,6 @@ export type Database = {
           staff_number?: string | null
           status?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      business_staff_activity: {
-        Row: {
-          business_id: string
-          created_at: string
-          hours_worked: number
-          id: string
-          staff_id: string
-          staff_name: string
-          time_range: string
-        }
-        Insert: {
-          business_id: string
-          created_at?: string
-          hours_worked?: number
-          id?: string
-          staff_id: string
-          staff_name: string
-          time_range?: string
-        }
-        Update: {
-          business_id?: string
-          created_at?: string
-          hours_worked?: number
-          id?: string
-          staff_id?: string
-          staff_name?: string
-          time_range?: string
         }
         Relationships: []
       }
@@ -1443,16 +1299,6 @@ export type Database = {
         Returns: boolean
       }
       populate_access_control: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      populate_initial_business_analytics: {
-        Args: {
-          business_id_param: string
-        }
-        Returns: undefined
-      }
-      refresh_business_analytics: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }

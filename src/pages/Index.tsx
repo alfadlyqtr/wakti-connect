@@ -1,17 +1,11 @@
 
-import React, { Suspense } from "react";
+import React from "react";
 import LandingPage from "@/pages/public/LandingPage";
-import ErrorBoundary from "@/components/ui/ErrorBoundary";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 const Index = () => {
-  return (
-    <ErrorBoundary>
-      <Suspense fallback={<LoadingSpinner />}>
-        <LandingPage />
-      </Suspense>
-    </ErrorBoundary>
-  );
+  // Simply render the LandingPage component
+  // The header will be rendered by PublicLayout that wraps this component
+  return <LandingPage />;
 };
 
 export default Index;
