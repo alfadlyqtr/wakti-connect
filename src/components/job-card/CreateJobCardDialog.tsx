@@ -17,12 +17,14 @@ interface CreateJobCardDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   staffRelationId: string;
+  isBusinessOwner?: boolean;
 }
 
 const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({ 
   open, 
   onOpenChange,
-  staffRelationId 
+  staffRelationId,
+  isBusinessOwner = false
 }) => {
   const [jobs, setJobs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -110,7 +112,9 @@ const CreateJobCardDialog: React.FC<CreateJobCardDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Create Job Card</DialogTitle>
           <DialogDescription>
-            Record a job and payment details
+            {isBusinessOwner 
+              ? "Create a job card to record job completion" 
+              : "Record a job and payment details"}
           </DialogDescription>
         </DialogHeader>
         
