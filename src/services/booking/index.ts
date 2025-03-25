@@ -1,5 +1,13 @@
 
-// Re-export all booking service functions
-export { fetchBookings } from "./fetchService";
-export { createBooking } from "./createService";
-export type { Booking, BookingTab, BookingFormData, BookingsResult, BookingStatus } from "@/types/booking.types";
+import { fetchBookings } from "./fetchService";
+import { createBooking as createBookingService } from "./createService";
+import { BookingWithRelations, BookingFormData, BookingTab } from "@/types/booking.types";
+
+export {
+  fetchBookings,
+  createBookingService as createBooking,
+  // Re-export types
+  type BookingWithRelations,
+  type BookingFormData,
+  type BookingTab
+};
