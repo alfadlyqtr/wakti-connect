@@ -45,7 +45,7 @@ const CreateBookingButton = () => {
       <DialogTrigger asChild>
         <Button id="create-booking-button">
           <PlusCircle className="h-4 w-4 mr-2" />
-          Create Pre-Booking
+          Enter Manual Booking
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl">
