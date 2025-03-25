@@ -3,7 +3,7 @@ import React from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { router } from './router';
-import { CurrencyProvider } from './utils/formatUtils';
+import { CurrencyProvider } from './utils/CurrencyProvider';
 
 function App() {
   return (
