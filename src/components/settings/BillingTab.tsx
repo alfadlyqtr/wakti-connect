@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, PaypalIcon, CreditCardIcon, DollarSign } from "lucide-react";
+import { CreditCard, DollarSign } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
