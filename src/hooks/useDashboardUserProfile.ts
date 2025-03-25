@@ -25,7 +25,8 @@ export const useDashboardUserProfile = () => {
       setUserId(session.user.id);
       
       // Check if user is a staff member
-      const staffStatus = await isUserStaff(session.user.id);
+      // The error was here - isUserStaff() doesn't take parameters but we were passing one
+      const staffStatus = await isUserStaff();
       setIsStaff(staffStatus);
       
       // Fetch profile data
