@@ -7,11 +7,13 @@ import { AIAssistantSettings } from "@/components/settings/ai";
 import { useAuth } from "@/hooks/auth";
 import CurrencyTab from "@/components/settings/CurrencyTab";
 import BillingTab from "@/components/settings/BillingTab";
+import { useProfileSettings } from "@/hooks/useProfileSettings";
 
 const DashboardSettings = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const { data: profileData } = useProfileSettings();
   
   // Get the user role from localStorage
   useEffect(() => {
@@ -72,7 +74,7 @@ const DashboardSettings = () => {
         {!isStaff && (
           <>
             <TabsContent value="billing" className="space-y-4">
-              <BillingTab />
+              <BillingTab profile={profileData} />
             </TabsContent>
             
             {isBusinessAccount && (
