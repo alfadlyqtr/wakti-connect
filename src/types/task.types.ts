@@ -6,6 +6,7 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   due_date: string | null;
+  due_time?: string | null;
   user_id: string;
   assignee_id: string | null;
   created_at: string;
@@ -23,6 +24,8 @@ export interface SubTask {
   content: string;
   is_completed: boolean;
   task_id?: string;
+  due_date?: string | null;
+  due_time?: string | null;
 }
 
 export type TaskStatus = "pending" | "in-progress" | "completed" | "late" | "snoozed";
@@ -36,6 +39,7 @@ export interface TaskFormData {
   status?: TaskStatus;
   priority?: TaskPriority;
   due_date?: string;
+  due_time?: string;
   assignee_id?: string | null;
   subtasks?: SubTask[];
   snooze_count?: number;

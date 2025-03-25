@@ -21,8 +21,10 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Check, Loader2, Plus, Trash2 } from "lucide-react";
+import { Check, Loader2, Plus, Trash2, Clock, Calendar } from "lucide-react";
 import { useFieldArray } from "react-hook-form";
+import { TaskFormFields } from "@/components/tasks";
+import { TimePicker } from "@/components/ui/time-picker";
 
 interface TaskFormTabsProps {
   form: UseFormReturn<any>;
@@ -51,13 +53,20 @@ export function TaskFormTabs({
     control: form.control,
     name: "subtasks"
   });
+
+  // Watch enableSubtasks value to know if we should show subtasks tab
+  const enableSubtasks = form.watch("enableSubtasks");
   
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="details">Task Details</TabsTrigger>
+            <TabsTrigger value="subtasks" disabled={!enableSubtasks}>
+              Subtasks
+              {!enableSubtasks && <span className="ml-1 text-xs">(Disabled)</span>}
+            </TabsTrigger>
             <TabsTrigger value="recurring" disabled={!isPaidAccount}>
               Recurring Options
               {!isPaidAccount && <span className="ml-1 text-xs">(Pro)</span>}
@@ -90,6 +99,7 @@ export function TaskFormTabs({
                       placeholder="Add task description..."
                       className="resize-none"
                       {...field}
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -124,79 +134,184 @@ export function TaskFormTabs({
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="due_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Due Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {/* Subtasks Section */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <FormLabel>Subtasks</FormLabel>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => append({ content: "", is_completed: false })}
-                >
-                  <Plus className="h-4 w-4 mr-1" /> Add Subtask
-                </Button>
-              </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="due_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      Due Date
+                    </FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
-              {fields.length === 0 && (
-                <div className="text-xs text-muted-foreground p-2 border border-dashed rounded-md text-center">
-                  No subtasks added yet. Add a subtask to break down this task.
-                </div>
-              )}
-              
-              {fields.map((field, index) => (
-                <div key={field.id} className="flex items-center gap-2">
-                  <FormField
-                    control={form.control}
-                    name={`subtasks.${index}.content`}
-                    render={({ field }) => (
-                      <FormItem className="flex-1 mb-0">
-                        <FormControl>
-                          <Input placeholder="Enter subtask..." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => remove(index)}
-                  >
-                    <Trash2 className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                </div>
-              ))}
+              <FormField
+                control={form.control}
+                name="due_time"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      Due Time
+                    </FormLabel>
+                    <FormControl>
+                      <TimePicker 
+                        value={field.value || ""} 
+                        onChange={field.onChange}
+                        interval={15}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             
-            {isPaidAccount && (
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="recurring-switch"
-                  checked={isRecurring}
-                  onCheckedChange={setIsRecurring}
-                />
-                <label
-                  htmlFor="recurring-switch"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Make this a recurring task
-                </label>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 pt-2">
+              {isPaidAccount && (
+                <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                  <FormControl>
+                    <Switch
+                      id="recurring-switch"
+                      checked={isRecurring}
+                      onCheckedChange={setIsRecurring}
+                    />
+                  </FormControl>
+                  <FormLabel
+                    htmlFor="recurring-switch"
+                    className="cursor-pointer font-medium"
+                  >
+                    Make this a recurring task
+                  </FormLabel>
+                </FormItem>
+              )}
+              
+              <FormField
+                control={form.control}
+                name="enableSubtasks"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="cursor-pointer font-medium">
+                      Enable Subtasks
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="subtasks" className="space-y-4 pt-4">
+            {enableSubtasks ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium">Manage Subtasks</h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => append({ content: "", is_completed: false, due_date: null, due_time: null })}
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> Add Subtask
+                  </Button>
+                </div>
+                
+                {fields.length === 0 && (
+                  <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-md text-center">
+                    No subtasks added yet. Click the button above to add one.
+                  </div>
+                )}
+                
+                {fields.map((field, index) => (
+                  <div key={field.id} className="border rounded-md p-4 space-y-3">
+                    <FormField
+                      control={form.control}
+                      name={`subtasks.${index}.content`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Subtask {index + 1}</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter subtask..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name={`subtasks.${index}.due_date`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              Due Date
+                            </FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="date" 
+                                {...field} 
+                                value={field.value || ""}
+                                max={form.watch("due_date")} // Can't exceed main task due date
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name={`subtasks.${index}.due_time`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              Due Time
+                            </FormLabel>
+                            <FormControl>
+                              <TimePicker 
+                                value={field.value || ""} 
+                                onChange={field.onChange}
+                                interval={15}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => remove(index)}
+                      className="w-full"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" /> Remove Subtask
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <p className="text-muted-foreground mb-2">
+                  Enable subtasks on the Details tab first.
+                </p>
               </div>
             )}
           </TabsContent>

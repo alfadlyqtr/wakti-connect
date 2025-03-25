@@ -64,6 +64,8 @@ async function createSubtasks(taskId: string, subtasks: SubTask[]): Promise<void
     task_id: taskId,
     content: subtask.content,
     is_completed: subtask.is_completed || false,
+    due_date: subtask.due_date || null,
+    due_time: subtask.due_time || null
   }));
   
   const { error } = await supabase
@@ -98,6 +100,7 @@ export async function createRecurringTaskInstances(
       priority: originalTask.priority,
       status: 'pending',
       due_date: date.toISOString(),
+      due_time: originalTask.due_time,
       user_id: originalTask.user_id,
       is_recurring_instance: true,
       parent_recurring_id: originalTaskId

@@ -12,6 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { TaskFormTabs } from "./TaskFormTabs";
 import { taskFormSchema } from "./TaskFormSchema";
 import { SubTask } from "@/types/task.types";
+import { toast } from "@/components/ui/use-toast";
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -36,7 +37,9 @@ export function CreateTaskDialog({
       description: "",
       priority: "normal",
       due_date: new Date().toISOString().split('T')[0],
+      due_time: "",
       subtasks: [] as SubTask[],
+      enableSubtasks: false,
       recurring: {
         frequency: "daily",
         interval: 1,
@@ -53,10 +56,19 @@ export function CreateTaskDialog({
       const taskData = {
         ...data,
         is_recurring: isRecurring,
-        recurring: isRecurring ? data.recurring : null
+        recurring: isRecurring ? data.recurring : null,
+        // Only include subtasks if enabled
+        subtasks: data.enableSubtasks ? data.subtasks : []
       };
       
+      console.log("Submitting task data:", taskData);
+      
       await onCreateTask(taskData);
+      
+      toast({
+        title: "Task created",
+        description: "Your task has been created successfully."
+      });
       
       // Reset the form
       form.reset();
@@ -64,6 +76,11 @@ export function CreateTaskDialog({
       
     } catch (error) {
       console.error("Error creating task:", error);
+      toast({
+        title: "Failed to create task",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }
