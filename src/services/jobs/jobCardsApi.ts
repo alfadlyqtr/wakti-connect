@@ -51,9 +51,10 @@ export const fetchJobCards = async (staffRelationId?: string): Promise<JobCard[]
     has_job_data: !!card.jobs
   })));
   
-  // Ensure payment_method is properly typed
+  // Map 'jobs' field to 'job' for our frontend components
   return data.map(card => ({
     ...card,
+    job: card.jobs, // Map the joined 'jobs' field to 'job' for component compatibility
     payment_method: ensurePaymentMethodType(card.payment_method)
   })) as JobCard[];
 };
@@ -104,9 +105,10 @@ export const createJobCard = async (
     has_job_data: !!data.jobs
   });
   
-  // Type cast the payment_method to ensure it's the correct type
+  // Map 'jobs' field to 'job' and ensure payment_method is properly typed
   return {
     ...data,
+    job: data.jobs, // Map the joined 'jobs' field to 'job'
     payment_method: ensurePaymentMethodType(data.payment_method)
   } as JobCard;
 };
@@ -164,9 +166,10 @@ export const completeJobCard = async (jobCardId: string): Promise<JobCard> => {
     has_job_data: !!data.jobs
   });
   
-  // Type cast the payment_method to ensure it's the correct type
+  // Map 'jobs' field to 'job' and ensure payment_method is properly typed
   return {
     ...data,
+    job: data.jobs, // Map the joined 'jobs' field to 'job'
     payment_method: ensurePaymentMethodType(data.payment_method)
   } as JobCard;
 };
