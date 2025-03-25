@@ -7,7 +7,7 @@ import {
   fetchActiveWorkSession, 
   startWorkSession, 
   endWorkSession 
-} from '@/services/jobService';
+} from '@/services/jobs';
 
 export const useStaffStatus = () => {
   const { toast } = useToast();

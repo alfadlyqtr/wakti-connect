@@ -10,7 +10,7 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { useQuery } from '@tanstack/react-query';
-import { fetchWorkHistory } from '@/services/jobService';
+import { fetchWorkHistory } from '@/services/jobs';
 import { format } from 'date-fns';
 import { formatDuration, formatDateTime } from '@/utils/formatUtils';
 import { Badge } from '@/components/ui/badge';

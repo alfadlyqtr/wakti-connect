@@ -11,6 +11,8 @@ const JobsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("jobs");
   const { isBusinessAccount, isCheckingBusinessStatus } = useBusinessOwnerStatus();
   const [isCreateJobCardOpen, setIsCreateJobCardOpen] = useState(false);
+  // Add missing state for job creation dialog
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   
   return (
     <CurrencyProvider>
