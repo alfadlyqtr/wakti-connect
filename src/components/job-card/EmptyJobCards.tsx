@@ -26,7 +26,7 @@ const EmptyJobCards: React.FC<EmptyJobCardsProps> = ({ onCreateJobCard, canCreat
           </Button>
         </>
       ) : (
-        <Alert variant="warning" className="mt-2">
+        <Alert variant="destructive" className="mt-2">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             You need to start your work day before creating job cards
