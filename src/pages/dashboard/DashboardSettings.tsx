@@ -7,7 +7,6 @@ import { AIAssistantSettings } from "@/components/settings/ai";
 import { useAuth } from "@/hooks/auth";
 import CurrencyTab from "@/components/settings/CurrencyTab";
 import BillingTab from "@/components/settings/BillingTab";
-import AccountTab from "@/components/settings/AccountTab";
 
 const DashboardSettings = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -64,7 +63,6 @@ const DashboardSettings = () => {
         
         <TabsContent value="profile" className="space-y-4">
           <ProfileTab />
-          {/* AccountTab is no longer needed here since we moved account information into ProfileTab */}
         </TabsContent>
         
         <TabsContent value="notifications" className="space-y-4">

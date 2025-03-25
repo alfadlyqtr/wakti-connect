@@ -9,6 +9,7 @@ import { useProfileSettings } from "@/hooks/useProfileSettings";
 import ThemeToggle from "./profile/ThemeToggle";
 import FeedbackForm from "./profile/FeedbackForm";
 import { User, Palette, MessageSquare, UserCog } from "lucide-react";
+import AccountInfoForm from "./account/AccountInfoForm";
 
 interface ProfileTabProps {
   profile?: (Tables<"profiles"> & {
@@ -52,7 +53,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
   
   return (
     <div className="space-y-6">
-      {/* Account Information Section - Moved to the top */}
+      {/* Account Information Section - First card */}
       <Card className="border-gray-200 shadow-sm overflow-hidden">
         <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
           <div className="flex items-center gap-2">
@@ -69,10 +70,11 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
           <div className={`${isMobile ? 'flex flex-col' : 'flex items-center'} gap-4 mb-5`}>
             <ProfileAvatar profile={profile} />
           </div>
+          <AccountInfoForm profile={profile} />
         </CardContent>
       </Card>
       
-      {/* Business Profile Information Section */}
+      {/* Business Profile Information Section - Second card */}
       <Card className="border-gray-200 shadow-sm overflow-hidden">
         <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
           <div className="flex items-center justify-between">
@@ -99,7 +101,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
         </CardContent>
       </Card>
       
-      {/* Theme Toggle Section */}
+      {/* Theme Toggle Section - Third card */}
       <Card className="border-gray-200 shadow-sm overflow-hidden">
         <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
           <div className="flex items-center gap-2">
@@ -115,7 +117,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
         </CardContent>
       </Card>
       
-      {/* Feedback Section - Moved to the bottom */}
+      {/* Feedback Section - Last card */}
       <Card className="border-gray-200 shadow-sm overflow-hidden">
         <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
           <div className="flex items-center gap-2">
