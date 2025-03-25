@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskFormData, TaskStatus, TaskPriority } from "@/types/task.types";
 import { validateTaskStatus, validateTaskPriority } from "./utils/statusValidator";
@@ -41,7 +40,6 @@ export async function createNewTask(userId: string, taskData: Partial<TaskFormDa
     status: validateTaskStatus(taskItem.status || "pending") as TaskStatus,
     priority: validateTaskPriority(taskItem.priority || "normal") as TaskPriority,
     due_date: taskItem.due_date,
-    // Handle potentially missing properties
     due_time: taskItem.due_time || null,
     user_id: taskItem.user_id,
     assignee_id: taskItem.assignee_id || null,
@@ -84,7 +82,6 @@ export async function getTaskWithSubtasks(taskId: string): Promise<Task> {
     status: validateTaskStatus(taskData.status || "pending") as TaskStatus,
     priority: validateTaskPriority(taskData.priority || "normal") as TaskPriority,
     due_date: taskData.due_date,
-    // Handle potentially missing properties
     due_time: taskData.due_time || null,
     completed_at: taskData.completed_at || null,
     user_id: taskData.user_id,

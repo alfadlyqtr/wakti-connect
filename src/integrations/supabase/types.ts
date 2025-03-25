@@ -1331,9 +1331,11 @@ export type Database = {
       tasks: {
         Row: {
           assignee_id: string | null
+          completed_at: string | null
           created_at: string
           description: string | null
           due_date: string | null
+          due_time: string | null
           id: string
           is_recurring_instance: boolean | null
           parent_recurring_id: string | null
@@ -1347,9 +1349,11 @@ export type Database = {
         }
         Insert: {
           assignee_id?: string | null
+          completed_at?: string | null
           created_at?: string
           description?: string | null
           due_date?: string | null
+          due_time?: string | null
           id?: string
           is_recurring_instance?: boolean | null
           parent_recurring_id?: string | null
@@ -1363,9 +1367,11 @@ export type Database = {
         }
         Update: {
           assignee_id?: string | null
+          completed_at?: string | null
           created_at?: string
           description?: string | null
           due_date?: string | null
+          due_time?: string | null
           id?: string
           is_recurring_instance?: boolean | null
           parent_recurring_id?: string | null

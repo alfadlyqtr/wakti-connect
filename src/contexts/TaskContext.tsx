@@ -69,29 +69,24 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
           throw error;
         }
         
-        const typedTasks: Task[] = (data || []).map(task => {
-          const taskStatus = validateTaskStatus(task.status || "pending") as TaskStatus;
-          const taskPriority = validateTaskPriority(task.priority || "normal") as TaskPriority;
-          
-          return {
-            id: task.id,
-            title: task.title,
-            description: task.description,
-            status: taskStatus,
-            priority: taskPriority,
-            due_date: task.due_date,
-            due_time: task.due_time || null,
-            completed_at: task.completed_at || null,
-            user_id: task.user_id,
-            assignee_id: task.assignee_id || null,
-            created_at: task.created_at,
-            updated_at: task.updated_at,
-            is_recurring_instance: task.is_recurring_instance || false,
-            parent_recurring_id: task.parent_recurring_id || null,
-            snooze_count: task.snooze_count || 0,
-            snoozed_until: task.snoozed_until || null
-          };
-        });
+        const typedTasks: Task[] = (data || []).map(task => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          status: validateTaskStatus(task.status || "pending") as TaskStatus,
+          priority: validateTaskPriority(task.priority || "normal") as TaskPriority,
+          due_date: task.due_date,
+          due_time: task.due_time || null,
+          completed_at: task.completed_at || null,
+          user_id: task.user_id,
+          assignee_id: task.assignee_id || null,
+          created_at: task.created_at,
+          updated_at: task.updated_at,
+          is_recurring_instance: task.is_recurring_instance || false,
+          parent_recurring_id: task.parent_recurring_id || null,
+          snooze_count: task.snooze_count || 0,
+          snoozed_until: task.snoozed_until || null
+        }));
         
         setTasks(typedTasks);
       } catch (err) {
