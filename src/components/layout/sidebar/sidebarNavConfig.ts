@@ -7,7 +7,7 @@ import {
   KanbanSquare,
   HelpCircle,
   Building2,
-  Scissors,
+  Store,
   UserPlus,
   PartyPopper,
   BarChart2,
@@ -77,7 +77,7 @@ export const navItems: NavItem[] = [
   {
     label: "Services",
     path: "services",
-    icon: Scissors,
+    icon: Store,
     showFor: ['business'],
   },
   {

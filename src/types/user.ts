@@ -1,43 +1,29 @@
-/**
- * User role types for the application
- */
 export type UserRole = 'free' | 'individual' | 'business' | 'staff';
 
 /**
- * Account type from user profile
- * Note: This is different from UserRole as it excludes 'staff'
+ * Checks if a user role has access to a feature based on allowed roles
+ * @param userRole The current user's role
+ * @param allowedRoles Array of roles that have access
+ * @returns boolean indicating if user has access
  */
-export type AccountType = 'free' | 'individual' | 'business';
-
-/**
- * Helper function to determine the effective user role
- * Prioritizes business over staff role when user has both
- */
-export const getEffectiveRole = (
-  accountType: AccountType | null | undefined, 
-  isStaff: boolean
-): UserRole => {
-  // Business accounts always have business role, regardless of staff status
-  if (accountType === 'business') {
-    return 'business';
-  }
-  
-  // Staff who are not business owners get staff role
-  if (isStaff) {
-    return 'staff';
-  }
-  
-  // Otherwise, use account type or default to free
-  return accountType || 'free';
-};
-
-/**
- * Helper to check if a user has access to a specific feature
- * based on their role and the allowed roles for that feature
- */
-export const hasRoleAccess = (
-  userRole: UserRole, 
-  allowedRoles: UserRole[]
-): boolean => {
+export function hasRoleAccess(userRole: UserRole, allowedRoles: UserRole[]): boolean {
   return allowedRoles.includes(userRole);
-};
+}
+
+/**
+ * Determines the effective user role with proper prioritization
+ * Business > Staff > Individual > Free
+ * @param accountType The account type from the profile
+ * @param isStaff Whether the user is a staff member
+ * @returns The effective user role
+ */
+export function getEffectiveRole(accountType: string, isStaff: boolean): UserRole {
+  // If user is a business owner, that takes highest priority
+  if (accountType === 'business') return 'business';
+  
+  // If user is staff (but not a business owner), that's next priority
+  if (isStaff) return 'staff';
+  
+  // Otherwise, use their account type or default to free
+  return (accountType as UserRole) || 'free';
+}

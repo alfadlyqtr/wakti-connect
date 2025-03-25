@@ -14,6 +14,7 @@ import { accountTypeVerification } from "@/utils/accountTypeVerification";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { TeamActivityChart } from "@/components/analytics/TeamActivityChart";
 
 const DashboardBusinessAnalytics = () => {
   const { t } = useTranslation();
@@ -97,9 +98,10 @@ const DashboardBusinessAnalytics = () => {
       )}
 
       <Tabs defaultValue="overview" value={tab} onValueChange={setTab}>
-        <TabsList className={`grid w-full ${isMobile ? "grid-cols-1 gap-2" : "max-w-md grid-cols-2"}`}>
+        <TabsList className={`grid w-full ${isMobile ? "grid-cols-1 gap-2" : "max-w-md grid-cols-3"}`}>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="services">Services</TabsTrigger>
+          <TabsTrigger value="staff">Staff</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6 mt-6">
@@ -138,6 +140,44 @@ const DashboardBusinessAnalytics = () => {
                     isLoading={isLoading} 
                     data={data?.serviceDistribution || []} 
                   />
+                </CardContent>
+              </Card>
+            </div>
+          </SectionContainer>
+        </TabsContent>
+        
+        <TabsContent value="staff" className="space-y-6 mt-6">
+          <SectionContainer>
+            <div className="grid gap-6 md:grid-cols-1">
+              <Card className="w-full">
+                <CardContent className="pt-6">
+                  <h3 className="text-lg font-medium mb-4">Staff Activity</h3>
+                  <div className="h-[400px]">
+                    <TeamActivityChart />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="w-full">
+                <CardContent className="pt-6">
+                  <h3 className="text-lg font-medium mb-4">Staff Performance Metrics</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-muted p-4 rounded-md">
+                      <p className="text-sm text-muted-foreground mb-1">Average Hours</p>
+                      <h4 className="text-2xl font-bold">32.5</h4>
+                      <p className="text-xs text-muted-foreground">hrs/week</p>
+                    </div>
+                    <div className="bg-muted p-4 rounded-md">
+                      <p className="text-sm text-muted-foreground mb-1">Task Completion</p>
+                      <h4 className="text-2xl font-bold">87%</h4>
+                      <p className="text-xs text-muted-foreground">on time</p>
+                    </div>
+                    <div className="bg-muted p-4 rounded-md">
+                      <p className="text-sm text-muted-foreground mb-1">Avg. Services</p>
+                      <h4 className="text-2xl font-bold">5.2</h4>
+                      <p className="text-xs text-muted-foreground">per day</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>

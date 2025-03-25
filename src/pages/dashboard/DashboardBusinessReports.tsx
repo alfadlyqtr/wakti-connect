@@ -13,6 +13,8 @@ import { accountTypeVerification } from "@/utils/accountTypeVerification";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { TeamActivityChart } from "@/components/analytics/TeamActivityChart";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const DashboardBusinessReports = () => {
   const {
@@ -95,10 +97,11 @@ const DashboardBusinessReports = () => {
       </div>
 
       <Tabs defaultValue="growth">
-        <TabsList className={`grid w-full ${isMobile ? "grid-cols-1 gap-2" : "grid-cols-3"}`}>
+        <TabsList className={`grid w-full ${isMobile ? "grid-cols-1 gap-2" : "grid-cols-4"}`}>
           <TabsTrigger value="growth">Growth</TabsTrigger>
           <TabsTrigger value="engagement">Engagement</TabsTrigger>
           <TabsTrigger value="services">Services</TabsTrigger>
+          <TabsTrigger value="staff">Staff</TabsTrigger>
         </TabsList>
         
         <TabsContent value="growth" className="mt-6">
@@ -111,6 +114,103 @@ const DashboardBusinessReports = () => {
         
         <TabsContent value="services" className="mt-6">
           <ServicePopularityChart />
+        </TabsContent>
+        
+        <TabsContent value="staff" className="mt-6">
+          <div className="grid gap-6 grid-cols-1">
+            <Card className="w-full">
+              <CardHeader>
+                <CardTitle>Staff Activity Hours</CardTitle>
+              </CardHeader>
+              <CardContent className="h-[400px]">
+                <TeamActivityChart />
+              </CardContent>
+            </Card>
+            
+            <Card className="w-full">
+              <CardHeader>
+                <CardTitle>Staff Availability & Utilization</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-lg font-medium mb-4">Staff Availability</h3>
+                    <div className="space-y-3">
+                      {[
+                        { name: 'John Doe', availability: '90%', hours: 38 },
+                        { name: 'Jane Smith', availability: '85%', hours: 42 },
+                        { name: 'Bob Johnson', availability: '75%', hours: 32 },
+                        { name: 'Alice Williams', availability: '95%', hours: 40 },
+                      ].map((staff) => (
+                        <div key={staff.name} className="flex justify-between items-center p-3 bg-muted rounded-md">
+                          <div>
+                            <p className="font-medium">{staff.name}</p>
+                            <p className="text-xs text-muted-foreground">{staff.hours} hrs/week</p>
+                          </div>
+                          <div className="bg-background px-2 py-1 rounded text-sm font-medium">
+                            {staff.availability}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-medium mb-4">Staff Utilization</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm font-medium">Service Allocation</span>
+                          <span className="text-sm font-medium">78%</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2.5">
+                          <div className="bg-primary h-2.5 rounded-full" style={{ width: '78%' }}></div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm font-medium">Administrative Tasks</span>
+                          <span className="text-sm font-medium">15%</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2.5">
+                          <div className="bg-primary h-2.5 rounded-full" style={{ width: '15%' }}></div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm font-medium">Training</span>
+                          <span className="text-sm font-medium">7%</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2.5">
+                          <div className="bg-primary h-2.5 rounded-full" style={{ width: '7%' }}></div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-6">
+                      <h4 className="font-medium mb-2">Staff Contribution to Revenue</h4>
+                      <div className="p-3 bg-muted rounded-md">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Top Performer</p>
+                            <p className="font-medium">Jane Smith</p>
+                            <p className="text-xs text-muted-foreground">32% of total revenue</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Most Bookings</p>
+                            <p className="font-medium">John Doe</p>
+                            <p className="text-xs text-muted-foreground">42 this month</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
 
