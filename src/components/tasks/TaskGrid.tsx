@@ -98,12 +98,21 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
     try {
       const snoozedUntil = addDays(new Date(), days).toISOString();
       
-      // We now know these columns exist, so we can update them directly
+      // First increment the snooze count using a separate query
+      const { data: incrementResult, error: incrementError } = await supabase
+        .rpc('increment_snooze_count', { task_id_param: taskId });
+        
+      if (incrementError) {
+        console.error("Error incrementing snooze count:", incrementError);
+        // Continue with the update anyway
+      }
+      
+      // Now update the task with the snoozed status and date
       const { error } = await supabase
         .from('tasks')
         .update({ 
           status: 'snoozed',
-          snooze_count: supabase.rpc('increment_snooze_count', { task_id_param: taskId }),
+          snooze_count: incrementResult || 1, // Use result or default to 1 if function failed
           snoozed_until: snoozedUntil,
           updated_at: new Date().toISOString()
         })
