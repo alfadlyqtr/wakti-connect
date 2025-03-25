@@ -1,159 +1,134 @@
 
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { formatCurrency, formatTime } from '@/utils/formatUtils';
+import { JobCard } from '@/types/jobs.types';
+import { format } from 'date-fns';
+import { Check, Clock } from 'lucide-react';
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { format, isToday, isThisWeek, isThisMonth } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle } from 'lucide-react';
-import { JobCard } from '@/types/job.types';
-import { formatCurrency, formatDuration } from '@/utils/formatUtils';
-
-type FilterPeriod = 'all' | 'today' | 'this-week' | 'this-month';
+} from "@/components/ui/select";
 
 interface CompletedJobsSectionProps {
   completedJobs: JobCard[];
 }
 
-const CompletedJobsSection: React.FC<CompletedJobsSectionProps> = ({ 
-  completedJobs 
-}) => {
-  const [period, setPeriod] = useState<FilterPeriod>('all');
+const CompletedJobsSection: React.FC<CompletedJobsSectionProps> = ({ completedJobs }) => {
+  const [timeFilter, setTimeFilter] = useState<string>("today");
   
-  // Filter jobs based on period
+  // Calculate start date for filtering
+  const getFilterDate = (): Date => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    switch (timeFilter) {
+      case "week":
+        const lastWeek = new Date(today);
+        lastWeek.setDate(today.getDate() - 7);
+        return lastWeek;
+      case "month":
+        const lastMonth = new Date(today);
+        lastMonth.setMonth(today.getMonth() - 1);
+        return lastMonth;
+      case "today":
+      default:
+        return today;
+    }
+  };
+  
+  // Filter jobs based on selected timeframe
   const filteredJobs = completedJobs.filter(job => {
-    const date = new Date(job.end_time!);
-    switch (period) {
-      case 'today': return isToday(date);
-      case 'this-week': return isThisWeek(date);
-      case 'this-month': return isThisMonth(date);
-      default: return true;
-    }
+    const filterDate = getFilterDate();
+    const jobDate = new Date(job.end_time as string);
+    return jobDate >= filterDate;
   });
   
-  // Group jobs by date
-  const jobsByDate: Record<string, JobCard[]> = {};
-  filteredJobs.forEach(job => {
-    const dateStr = format(new Date(job.end_time!), 'yyyy-MM-dd');
-    if (!jobsByDate[dateStr]) {
-      jobsByDate[dateStr] = [];
-    }
-    jobsByDate[dateStr].push(job);
-  });
-  
-  // Calculate total earnings
-  const totalEarnings = filteredJobs.reduce((sum, job) => {
-    return job.payment_method !== 'none' ? sum + job.payment_amount : sum;
-  }, 0);
+  // Log completed jobs data to debug
+  console.log("Completed jobs data:", completedJobs);
   
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle>Completed Jobs</CardTitle>
-        <Select value={period} onValueChange={(value) => setPeriod(value as FilterPeriod)}>
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+        <h3 className="text-lg font-medium">Completed Jobs</h3>
+        <Select
+          value={timeFilter}
+          onValueChange={(value) => setTimeFilter(value)}
+        >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter period" />
+            <SelectValue placeholder="Filter by time" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Time</SelectItem>
             <SelectItem value="today">Today</SelectItem>
-            <SelectItem value="this-week">This Week</SelectItem>
-            <SelectItem value="this-month">This Month</SelectItem>
+            <SelectItem value="week">Last 7 days</SelectItem>
+            <SelectItem value="month">Last 30 days</SelectItem>
           </SelectContent>
         </Select>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-4 mb-4">
-          <Badge variant="outline" className="px-3 py-1">
-            {filteredJobs.length} jobs
-          </Badge>
-          <Badge variant="outline" className="px-3 py-1">
-            Total: {formatCurrency(totalEarnings)}
-          </Badge>
+      </div>
+      
+      {filteredJobs.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center text-muted-foreground">
+              No completed jobs found for the selected period
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {filteredJobs.map(job => (
+            <Card key={job.id} className="overflow-hidden border-l-4 border-l-green-500">
+              <CardContent className="p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center">
+                  <div className="mb-2 sm:mb-0">
+                    <h4 className="font-medium flex items-center">
+                      <Check className="h-4 w-4 text-green-500 mr-1" />
+                      {job.job?.name || "Job"}
+                    </h4>
+                    <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-2">
+                      <span>
+                        {job.end_time ? format(new Date(job.end_time), "MMM d, h:mm a") : ""}
+                      </span>
+                      {job.payment_method !== 'none' && (
+                        <>
+                          <span>•</span>
+                          <Badge variant="outline" className="capitalize">
+                            {job.payment_method}
+                          </Badge>
+                          <span>•</span>
+                          <span>{formatCurrency(job.payment_amount)}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="mt-2 sm:mt-0 ml-0 sm:ml-auto">
+                    <div className="flex items-center text-sm">
+                      <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
+                      <span>
+                        {job.start_time && job.end_time && (
+                          `${formatTime(job.start_time)} - ${formatTime(job.end_time)}`
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {job.notes && (
+                  <div className="mt-2 text-sm text-muted-foreground border-t pt-2">
+                    {job.notes}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        
-        {filteredJobs.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No completed jobs found for this period.
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Job</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Object.entries(jobsByDate).map(([dateStr, jobs]) => (
-                <React.Fragment key={dateStr}>
-                  <TableRow className="bg-muted/30">
-                    <TableCell colSpan={5}>
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">
-                          {format(new Date(dateStr), "EEEE, MMMM d, yyyy")}
-                        </span>
-                        <Badge variant="outline">
-                          {jobs.length} jobs
-                        </Badge>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  {jobs.map(job => {
-                    // Calculate duration
-                    let duration = "N/A";
-                    if (job.end_time && job.start_time) {
-                      const start = new Date(job.start_time);
-                      const end = new Date(job.end_time);
-                      duration = formatDuration(start, end);
-                    }
-                    
-                    return (
-                      <TableRow key={job.id}>
-                        <TableCell className="font-medium">
-                          {job.job?.name || "Unknown Job"}
-                        </TableCell>
-                        <TableCell>{format(new Date(job.start_time), "h:mm a")}</TableCell>
-                        <TableCell>{duration}</TableCell>
-                        <TableCell>
-                          {job.payment_method === 'none' 
-                            ? "No payment" 
-                            : `${formatCurrency(job.payment_amount)} (${job.payment_method.toUpperCase()})`}
-                        </TableCell>
-                        <TableCell>
-                          <div className="inline-flex items-center px-2.5 py-1 rounded-md 
-                                      bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300
-                                      border border-green-300 dark:border-green-800 text-xs">
-                            <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                            COMPLETED
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </React.Fragment>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };
 

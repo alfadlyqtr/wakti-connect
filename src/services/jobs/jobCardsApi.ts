@@ -1,12 +1,23 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { JobCard, JobCardFormData, PaymentMethod } from "@/types/job.types";
-import { ensurePaymentMethodType } from "./apiUtils";
+import { JobCard, JobCardFormData, PaymentMethod } from "@/types/jobs.types";
+
+/**
+ * Ensure payment method is properly typed
+ */
+export const ensurePaymentMethodType = (method: string): PaymentMethod => {
+  if (method === 'cash' || method === 'pos' || method === 'none') {
+    return method as PaymentMethod;
+  }
+  return 'none';
+};
 
 /**
  * Fetch job cards, optionally filtered by staff relation ID
  */
 export const fetchJobCards = async (staffRelationId?: string): Promise<JobCard[]> => {
+  console.log("Fetching job cards with staff relation ID:", staffRelationId);
+  
   let query = supabase
     .from('job_cards')
     .select(`
@@ -25,8 +36,13 @@ export const fetchJobCards = async (staffRelationId?: string): Promise<JobCard[]
   }
   
   const { data, error } = await query.order('created_at', { ascending: false });
-    
-  if (error) throw new Error(`Error fetching job cards: ${error.message}`);
+  
+  if (error) {
+    console.error("Error fetching job cards:", error);
+    throw new Error(`Error fetching job cards: ${error.message}`);
+  }
+  
+  console.log("Received job cards data:", data);
   
   // Ensure payment_method is properly typed
   return data.map(card => ({
@@ -42,6 +58,8 @@ export const createJobCard = async (
   staffRelationId: string, 
   jobCardData: JobCardFormData
 ): Promise<JobCard> => {
+  console.log("Creating job card with data:", jobCardData);
+  
   const now = new Date().toISOString();
   
   const { data, error } = await supabase
@@ -66,7 +84,12 @@ export const createJobCard = async (
     `)
     .single();
     
-  if (error) throw new Error(`Error creating job card: ${error.message}`);
+  if (error) {
+    console.error("Error creating job card:", error);
+    throw new Error(`Error creating job card: ${error.message}`);
+  }
+  
+  console.log("Created job card:", data);
   
   // Type cast the payment_method to ensure it's the correct type
   return {
@@ -79,11 +102,13 @@ export const createJobCard = async (
  * Mark a job card as completed
  */
 export const completeJobCard = async (jobCardId: string): Promise<JobCard> => {
+  console.log("Completing job card:", jobCardId);
+  
   const now = new Date().toISOString();
   
   // Use the database function for completing the job card
   const { data: success, error: rpcError } = await supabase.rpc(
-    'complete_job_card' as any, // Type assertion to bypass TypeScript error
+    'complete_job_card',
     {
       job_card_id: jobCardId,
       end_timestamp: now
@@ -91,6 +116,7 @@ export const completeJobCard = async (jobCardId: string): Promise<JobCard> => {
   );
   
   if (rpcError) {
+    console.error("Error completing job card:", rpcError);
     throw new Error(`Error completing job card: ${rpcError.message}`);
   }
   
@@ -116,6 +142,8 @@ export const completeJobCard = async (jobCardId: string): Promise<JobCard> => {
     
   if (error) throw new Error(`Error fetching completed job card: ${error.message}`);
   if (!data) throw new Error(`Job card with ID ${jobCardId} not found after completion`);
+  
+  console.log("Completed job card data:", data);
   
   // Type cast the payment_method to ensure it's the correct type
   return {

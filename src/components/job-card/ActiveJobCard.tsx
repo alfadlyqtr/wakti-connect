@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle } from 'lucide-react';
 import { formatCurrency, formatTime } from '@/utils/formatUtils';
-import { JobCard } from '@/types/job.types';
+import { JobCard } from '@/types/jobs.types';
 import { intervalToDuration } from 'date-fns';
 
 interface ActiveJobCardProps {
@@ -73,6 +73,10 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
       }
     };
   }, [intervalId]);
+  
+  // Log job data to debug
+  console.log("ActiveJobCard job data:", jobCard);
+  console.log("Job name from job relation:", jobCard.job?.name);
   
   return (
     <Card className="bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">

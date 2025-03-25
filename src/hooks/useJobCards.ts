@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { fetchJobCards, createJobCard, completeJobCard } from '@/services/jobs';
-import { JobCardFormData } from '@/types/job.types';
+import { JobCardFormData } from '@/types/jobs.types';
 
 export const useJobCards = (staffRelationId?: string) => {
   const { toast } = useToast();
@@ -16,7 +16,10 @@ export const useJobCards = (staffRelationId?: string) => {
     queryFn: async () => {
       try {
         setError(null);
-        return staffRelationId ? await fetchJobCards(staffRelationId) : [];
+        console.log("Fetching job cards for staff relation ID:", staffRelationId);
+        const cards = staffRelationId ? await fetchJobCards(staffRelationId) : [];
+        console.log("Fetched job cards:", cards);
+        return cards;
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Failed to fetch job cards');
         setError(error);
