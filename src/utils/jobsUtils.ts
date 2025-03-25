@@ -3,13 +3,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { Job } from '@/types/jobs.types';
 
 /**
- * Checks if a job is being used in any job card
+ * Checks if a job is being used in any active job card
+ * Only active job cards (where end_time is null) should prevent edits
  */
 export const isJobInUse = async (jobId: string): Promise<boolean> => {
   const { data, error } = await supabase
     .from('job_cards')
     .select('id')
     .eq('job_id', jobId)
+    .is('end_time', null) // Only consider active job cards (end_time is null)
     .limit(1);
     
   if (error) {
