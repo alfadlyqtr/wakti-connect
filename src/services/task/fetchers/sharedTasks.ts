@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskStatus, TaskPriority } from "../types";
+import { validateTaskStatus, validateTaskPriority } from "../utils/statusValidator";
 
 /**
  * Fetches tasks shared with the current user
@@ -24,8 +25,8 @@ export async function fetchSharedTasks(userId: string): Promise<Task[]> {
           id: task.id,
           title: task.title,
           description: task.description,
-          status: (task.status || "pending") as TaskStatus,
-          priority: (task.priority || "normal") as TaskPriority,
+          status: validateTaskStatus(task.status || "pending") as TaskStatus,
+          priority: validateTaskPriority(task.priority || "normal") as TaskPriority,
           due_date: task.due_date,
           due_time: task.due_time || null,
           user_id: task.user_id,

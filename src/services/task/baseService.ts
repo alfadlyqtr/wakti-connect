@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskFormData } from "./types";
+import { Task, TaskFormData, TaskStatus, TaskPriority } from "./types";
+import { validateTaskStatus, validateTaskPriority } from "./utils/statusValidator";
 
 // Create a new task base service function
 export async function createNewTask(userId: string, taskData: Partial<TaskFormData>): Promise<Task> {
@@ -31,8 +32,8 @@ export async function createNewTask(userId: string, taskData: Partial<TaskFormDa
     id: data[0].id,
     title: data[0].title,
     description: data[0].description,
-    status: data[0].status,
-    priority: data[0].priority,
+    status: validateTaskStatus(data[0].status || "pending") as TaskStatus,
+    priority: validateTaskPriority(data[0].priority || "normal") as TaskPriority,
     due_date: data[0].due_date,
     due_time: data[0].due_time || null,
     completed_at: data[0].completed_at || null,
@@ -73,8 +74,8 @@ export async function getTaskWithSubtasks(taskId: string): Promise<Task> {
     id: taskData.id,
     title: taskData.title,
     description: taskData.description,
-    status: taskData.status,
-    priority: taskData.priority,
+    status: validateTaskStatus(taskData.status || "pending") as TaskStatus,
+    priority: validateTaskPriority(taskData.priority || "normal") as TaskPriority,
     due_date: taskData.due_date,
     due_time: taskData.due_time || null,
     completed_at: taskData.completed_at || null,

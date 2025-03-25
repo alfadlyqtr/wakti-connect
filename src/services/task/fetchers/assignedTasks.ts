@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskStatus, TaskPriority } from "../types";
+import { validateTaskStatus, validateTaskPriority } from "../utils/statusValidator";
 
 /**
  * Fetches tasks assigned to the current user
@@ -19,8 +20,8 @@ export async function fetchAssignedTasks(userId: string): Promise<Task[]> {
     id: item.id,
     title: item.title,
     description: item.description,
-    status: (item.status || "pending") as TaskStatus,
-    priority: (item.priority || "normal") as TaskPriority,
+    status: validateTaskStatus(item.status || "pending") as TaskStatus,
+    priority: validateTaskPriority(item.priority || "normal") as TaskPriority,
     due_date: item.due_date,
     due_time: item.due_time || null,
     user_id: item.user_id,

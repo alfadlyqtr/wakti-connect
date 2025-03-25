@@ -1,9 +1,10 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskFormData, SubTask } from "./types";
+import { Task, TaskFormData, SubTask, TaskStatus, TaskPriority } from "./types";
 import { createNewTask } from "./baseService";
 import { RecurringFormData, EntityType } from "@/types/recurring.types";
 import { createRecurringSetting, generateRecurringDates } from "@/services/recurring/recurringService";
+import { validateTaskStatus, validateTaskPriority } from "./utils/statusValidator";
 
 // Create a new task
 export async function createTask(taskData: TaskFormData, recurringData?: RecurringFormData): Promise<Task> {
@@ -120,8 +121,8 @@ export async function createRecurringTaskInstances(
         id: data.id,
         title: data.title,
         description: data.description,
-        status: data.status,
-        priority: data.priority,
+        status: validateTaskStatus(data.status || "pending") as TaskStatus,
+        priority: validateTaskPriority(data.priority || "normal") as TaskPriority,
         due_date: data.due_date,
         due_time: data.due_time || null,
         completed_at: data.completed_at || null,

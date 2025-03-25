@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Task, TaskStatus, TaskPriority } from "@/types/task.types";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,24 +74,30 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         
         // Transform the data to ensure it conforms to the Task type
-        const typedTasks: Task[] = (data || []).map(task => ({
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          status: validateTaskStatus(task.status),
-          priority: validateTaskPriority(task.priority),
-          due_date: task.due_date,
-          due_time: task.due_time || null,
-          completed_at: task.completed_at || null,
-          user_id: task.user_id,
-          assignee_id: task.assignee_id || null,
-          created_at: task.created_at,
-          updated_at: task.updated_at,
-          is_recurring_instance: task.is_recurring_instance || false,
-          parent_recurring_id: task.parent_recurring_id || null,
-          snooze_count: task.snooze_count || 0,
-          snoozed_until: task.snoozed_until || null
-        }));
+        const typedTasks: Task[] = (data || []).map(task => {
+          // Handle fields that might not exist in the database response
+          const taskStatus = validateTaskStatus(task.status || "pending") as TaskStatus;
+          const taskPriority = validateTaskPriority(task.priority || "normal") as TaskPriority;
+          
+          return {
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            status: taskStatus,
+            priority: taskPriority,
+            due_date: task.due_date,
+            due_time: task.due_time || null,
+            completed_at: task.completed_at || null,
+            user_id: task.user_id,
+            assignee_id: task.assignee_id || null,
+            created_at: task.created_at,
+            updated_at: task.updated_at,
+            is_recurring_instance: task.is_recurring_instance || false,
+            parent_recurring_id: task.parent_recurring_id || null,
+            snooze_count: task.snooze_count || 0,
+            snoozed_until: task.snoozed_until || null
+          };
+        });
         
         setTasks(typedTasks);
       } catch (err) {
@@ -225,8 +230,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: data.id,
           title: data.title,
           description: data.description,
-          status: validateTaskStatus(data.status),
-          priority: validateTaskPriority(data.priority),
+          status: validateTaskStatus(data.status || "pending") as TaskStatus,
+          priority: validateTaskPriority(data.priority || "normal") as TaskPriority,
           due_date: data.due_date,
           due_time: data.due_time || null,
           completed_at: data.completed_at || null,
