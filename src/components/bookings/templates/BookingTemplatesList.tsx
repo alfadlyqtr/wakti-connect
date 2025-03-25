@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
   const [deleteTemplateId, setDeleteTemplateId] = React.useState<string | null>(null);
   const [publishTemplateId, setPublishTemplateId] = React.useState<string | null>(null);
   const [publishAction, setPublishAction] = React.useState<boolean>(false);
-  const { isMobile } = useMobileBreakpoint();
+  const isMobile = useMobileBreakpoint(); // This hook returns a boolean
 
   const templateToDelete = templates.find(t => t.id === deleteTemplateId);
   const templateToPublish = templates.find(t => t.id === publishTemplateId);
