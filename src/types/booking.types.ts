@@ -13,7 +13,18 @@ export interface Booking {
   status: BookingStatus;
   staff_assigned_id?: string;
   created_at: string;
-  updated_at: string;
+  updated_at: string | null;
+}
+
+export interface BookingWithRelations extends Booking {
+  service?: {
+    name: string;
+    description: string | null;
+    price: number | null;
+  } | null;
+  staff?: {
+    name: string;
+  } | null;
 }
 
 export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
@@ -31,6 +42,7 @@ export interface BookingFormData {
   start_time?: string;
   end_time?: string;
   staff_assigned_id?: string;
+  business_id?: string;
   
   // Form-specific fields (used in form UI but transformed before API calls)
   date?: Date;
@@ -39,6 +51,6 @@ export interface BookingFormData {
 }
 
 export interface BookingsResult {
-  bookings: Booking[];
+  bookings: BookingWithRelations[];
   userRole: "business";
 }

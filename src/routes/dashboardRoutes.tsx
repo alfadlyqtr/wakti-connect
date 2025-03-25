@@ -4,7 +4,7 @@ import { lazy, Suspense } from "react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 // Use dynamic imports for better code splitting
-const DashboardPage = lazy(() => import("@/pages/dashboard/DashboardPage"));
+const DashboardHome = lazy(() => import("@/pages/dashboard/DashboardHome"));
 const DashboardTasks = lazy(() => import("@/pages/dashboard/DashboardTasks"));
 const DashboardEvents = lazy(() => import("@/pages/dashboard/DashboardEvents"));
 const DashboardServiceManagement = lazy(() => import("@/pages/dashboard/DashboardServiceManagement"));
@@ -13,10 +13,10 @@ const DashboardBookings = lazy(() => import("@/pages/dashboard/DashboardBookings
 const DashboardTeamManagement = lazy(() => import("@/pages/dashboard/DashboardTeamManagement"));
 const DashboardWorkManagement = lazy(() => import("@/pages/dashboard/DashboardWorkManagement"));
 const DashboardSettings = lazy(() => import("@/pages/dashboard/DashboardSettings"));
-const DashboardAnalytics = lazy(() => import("@/pages/dashboard/DashboardAnalytics"));
-const DashboardMessaging = lazy(() => import("@/pages/dashboard/DashboardMessaging"));
-const DashboardAI = lazy(() => import("@/pages/dashboard/DashboardAI"));
-const DashboardLandingPage = lazy(() => import("@/pages/dashboard/DashboardLandingPage"));
+const DashboardBusinessAnalytics = lazy(() => import("@/pages/dashboard/DashboardBusinessAnalytics"));
+const DashboardMessages = lazy(() => import("@/pages/dashboard/DashboardMessages"));
+const DashboardAIAssistant = lazy(() => import("@/pages/dashboard/DashboardAIAssistant"));
+const DashboardBusinessPage = lazy(() => import("@/pages/dashboard/DashboardBusinessPage"));
 
 // Wrap dynamic imports with suspense
 const withSuspense = (Component: React.ComponentType) => (
@@ -28,7 +28,7 @@ const withSuspense = (Component: React.ComponentType) => (
 export const dashboardRoutes: RouteObject[] = [
   {
     index: true,
-    element: withSuspense(DashboardPage),
+    element: withSuspense(DashboardHome),
   },
   {
     path: "tasks/*",
@@ -64,18 +64,18 @@ export const dashboardRoutes: RouteObject[] = [
   },
   {
     path: "analytics",
-    element: withSuspense(DashboardAnalytics),
+    element: withSuspense(DashboardBusinessAnalytics),
   },
   {
     path: "messaging",
-    element: withSuspense(DashboardMessaging),
+    element: withSuspense(DashboardMessages),
   },
   {
     path: "ai",
-    element: withSuspense(DashboardAI),
+    element: withSuspense(DashboardAIAssistant),
   },
   {
     path: "landing-page",
-    element: withSuspense(DashboardLandingPage),
+    element: withSuspense(DashboardBusinessPage),
   },
 ];

@@ -9,8 +9,32 @@ import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, Calendar, Clock, UserCheck, CheckCircle, XCircle } from "lucide-react";
-import { Booking, BookingStatus, BookingTab } from "@/types/booking.types";
+import { BookingStatus, BookingTab } from "@/types/booking.types";
 import { format, parseISO } from "date-fns";
+
+interface BookingWithRelations {
+  id: string;
+  title: string;
+  description: string | null;
+  start_time: string;
+  end_time: string;
+  status: BookingStatus;
+  customer_name: string | null;
+  customer_email: string | null;
+  business_id: string;
+  service_id: string | null;
+  staff_assigned_id: string | null;
+  created_at: string;
+  updated_at: string | null;
+  service: {
+    name: string;
+    description: string | null;
+    price: number | null;
+  } | null;
+  staff: {
+    name: string;
+  } | null;
+}
 
 const DashboardBookings = () => {
   const [activeTab, setActiveTab] = useState<BookingTab>("all-bookings");
@@ -28,8 +52,8 @@ const DashboardBookings = () => {
         .from('bookings')
         .select(`
           *,
-          services:service_id (name, description, price),
-          staff:staff_assigned_id (name)
+          service:service_id(name, description, price),
+          staff:staff_assigned_id(name)
         `)
         .eq('business_id', session.session.user.id);
       
@@ -43,7 +67,7 @@ const DashboardBookings = () => {
       if (error) throw error;
       
       return { 
-        bookings: data as Booking[],
+        bookings: data as BookingWithRelations[],
         userRole: "business"
       };
     }
@@ -174,7 +198,7 @@ const DashboardBookings = () => {
                       <div>
                         <CardTitle>{booking.title}</CardTitle>
                         <CardDescription>
-                          {booking.services?.name || 'Unknown Service'}
+                          {booking.service?.name || 'Unknown Service'}
                         </CardDescription>
                       </div>
                       {getStatusBadge(booking.status)}
@@ -223,11 +247,11 @@ const DashboardBookings = () => {
                         </p>
                       </div>
                       
-                      {booking.services?.price && (
+                      {booking.service?.price && (
                         <div className="text-right">
                           <p className="text-sm font-medium">Price</p>
                           <p className="text-sm font-bold">
-                            QAR {booking.services.price.toFixed(2)}
+                            QAR {booking.service.price.toFixed(2)}
                           </p>
                         </div>
                       )}
@@ -280,7 +304,7 @@ const DashboardBookings = () => {
                       <div>
                         <CardTitle>{booking.title}</CardTitle>
                         <CardDescription>
-                          {booking.services?.name || 'Unknown Service'}
+                          {booking.service?.name || 'Unknown Service'}
                         </CardDescription>
                       </div>
                       {getStatusBadge(booking.status)}
@@ -329,11 +353,11 @@ const DashboardBookings = () => {
                         </p>
                       </div>
                       
-                      {booking.services?.price && (
+                      {booking.service?.price && (
                         <div className="text-right">
                           <p className="text-sm font-medium">Price</p>
                           <p className="text-sm font-bold">
-                            QAR {booking.services.price.toFixed(2)}
+                            QAR {booking.service.price.toFixed(2)}
                           </p>
                         </div>
                       )}

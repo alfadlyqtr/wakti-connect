@@ -8,6 +8,25 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Loader2, CheckCircle, Calendar, Clock, UserCheck } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
+interface BookingWithRelations {
+  id: string;
+  title: string;
+  description: string | null;
+  start_time: string;
+  end_time: string;
+  status: string;
+  customer_name: string | null;
+  customer_email: string | null;
+  service: {
+    name: string;
+    description: string | null;
+    price: number | null;
+  } | null;
+  staff: {
+    name: string;
+  } | null;
+}
+
 const BookingConfirmationPage = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
   const navigate = useNavigate();
@@ -21,14 +40,14 @@ const BookingConfirmationPage = () => {
         .from('bookings')
         .select(`
           *,
-          services:service_id (name, description, price),
-          staff:staff_assigned_id (name)
+          service:service_id(name, description, price),
+          staff:staff_assigned_id(name)
         `)
         .eq('id', bookingId)
         .single();
         
       if (error) throw error;
-      return data;
+      return data as BookingWithRelations;
     },
     enabled: !!bookingId
   });
@@ -74,7 +93,7 @@ const BookingConfirmationPage = () => {
           </p>
           
           <div className="bg-muted p-6 rounded-lg space-y-4">
-            <h3 className="font-medium text-lg">{booking.services?.name || 'Service'}</h3>
+            <h3 className="font-medium text-lg">{booking.service?.name || 'Service'}</h3>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-start space-x-2">
@@ -108,11 +127,11 @@ const BookingConfirmationPage = () => {
               </div>
             </div>
             
-            {booking.services?.price && (
+            {booking.service?.price && (
               <div className="mt-4 pt-4 border-t">
                 <p className="flex justify-between">
                   <span className="font-medium">Price:</span>
-                  <span>QAR {booking.services.price.toFixed(2)}</span>
+                  <span>QAR {booking.service.price.toFixed(2)}</span>
                 </p>
               </div>
             )}

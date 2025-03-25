@@ -142,7 +142,9 @@ const BookServicePage = () => {
       const [endHours, endMinutes] = endTime.split(':').map(Number);
       endDate.setHours(endHours, endMinutes, 0, 0);
       
-      const bookingData: BookingFormData = {
+      // Create booking data with properly named fields
+      const bookingData = {
+        business_id: service?.business_id || '',
         title: `Booking for ${service?.name}`,
         service_id: serviceId,
         customer_name: customerName,
@@ -157,10 +159,7 @@ const BookServicePage = () => {
       // Insert booking
       const { data, error } = await supabase
         .from('bookings')
-        .insert({
-          ...bookingData,
-          business_id: service?.business_id
-        })
+        .insert(bookingData)
         .select()
         .single();
         
