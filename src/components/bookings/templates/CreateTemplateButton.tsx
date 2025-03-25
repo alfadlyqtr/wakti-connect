@@ -6,7 +6,7 @@ import BookingTemplateDialog from "./BookingTemplateDialog";
 import { BookingTemplateFormData } from "@/types/booking.types";
 
 interface CreateTemplateButtonProps {
-  onCreate: (data: BookingTemplateFormData) => Promise<any> | void;
+  onCreate: (data: BookingTemplateFormData) => Promise<any>;
   isCreating: boolean;
 }
 
@@ -17,8 +17,12 @@ const CreateTemplateButton: React.FC<CreateTemplateButtonProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleCreate = async (data: BookingTemplateFormData) => {
-    await Promise.resolve(onCreate(data));
-    setIsDialogOpen(false);
+    try {
+      await onCreate(data);
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Error creating template:", error);
+    }
   };
 
   return (

@@ -60,7 +60,7 @@ const BookingTemplatesTab: React.FC = () => {
 
   const handleUpdate = async (data: BookingTemplateFormData) => {
     if (editTemplate) {
-      await Promise.resolve(updateTemplate({ templateId: editTemplate.id, data }));
+      await updateTemplate({ templateId: editTemplate.id, data });
       setEditTemplate(null);
     }
   };
@@ -69,9 +69,15 @@ const BookingTemplatesTab: React.FC = () => {
     setAvailabilityTemplate(template);
   };
 
-  // Wrapper to convert mutation to Promise for CreateTemplateButton
-  const handleCreateTemplate = (data: BookingTemplateFormData) => {
-    return Promise.resolve(createTemplate(data));
+  // Handle create template action
+  const handleCreateTemplate = async (data: BookingTemplateFormData) => {
+    try {
+      await createTemplate(data);
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Error in create template:", error);
+      return Promise.reject(error);
+    }
   };
 
   if (isLoading) {

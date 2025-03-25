@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { BookingTemplate, BookingTemplateFormData, BookingTemplateAvailability, BookingTemplateException } from "@/types/booking.types";
 

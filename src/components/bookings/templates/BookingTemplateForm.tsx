@@ -217,7 +217,7 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
                 <FormLabel>Linked Service (Optional)</FormLabel>
                 <Select 
                   onValueChange={field.onChange}
-                  value={field.value}
+                  value={field.value || ""}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -225,7 +225,7 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {services.map((service) => (
                       <SelectItem key={service.id} value={service.id}>
                         {service.name}
@@ -246,7 +246,7 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
                 <FormLabel>Assign Staff (Optional)</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  value={field.value}
+                  value={field.value || ""}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -254,7 +254,7 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Any available staff</SelectItem>
+                    <SelectItem value="none">Any available staff</SelectItem>
                     {staff.map((staffMember) => (
                       <SelectItem key={staffMember.id} value={staffMember.id}>
                         {staffMember.name}

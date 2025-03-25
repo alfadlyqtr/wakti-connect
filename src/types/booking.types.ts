@@ -103,16 +103,16 @@ export interface BookingTemplateException {
 
 export interface BookingTemplateFormData {
   name: string;
-  description?: string;
+  description?: string | null;
   duration: number;
-  price?: number;
-  service_id?: string;
-  staff_assigned_id?: string;
+  price?: number | null;
+  service_id?: string | null;
+  staff_assigned_id?: string | null;
   is_published?: boolean;
-  max_daily_bookings?: number;
+  max_daily_bookings?: number | null;
   default_starting_hour?: number; 
   default_ending_hour?: number;
-  business_id?: string; // Add this field to match the required property in the database
+  business_id?: string;
 }
 
 export interface AvailableTimeSlot {
