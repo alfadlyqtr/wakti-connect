@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useJobs } from '@/hooks/useJobs';
 import { Job } from '@/types/jobs.types';
@@ -17,9 +16,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import JobFormDialog from './JobFormDialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { isJobInUse } from '@/utils/jobsUtils';
+import { isJobInUse, isBusinessOwner } from '@/utils/jobsUtils';
 import { useToast } from '@/hooks/use-toast';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import CreateJobCardDialog from '@/components/job-card/CreateJobCardDialog';
+import JobCardsList from '@/components/job-card/JobCardsList';
+import { supabase } from '@/integrations/supabase/client';
 
 const JobsPage: React.FC = () => {
   const { jobs, isLoading, error, deleteJob } = useJobs();
@@ -29,9 +32,25 @@ const JobsPage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [jobsWithStatus, setJobsWithStatus] = useState<Array<Job & { isEditable?: boolean }>>([]);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+  const [activeTab, setActiveTab] = useState("jobs");
+  const [staffRelationId, setStaffRelationId] = useState<string | null>(null);
+  const [isCreateJobCardOpen, setIsCreateJobCardOpen] = useState(false);
+  const [isBusinessAccount, setIsBusinessAccount] = useState(false);
   const { toast } = useToast();
   
-  // When jobs are loaded, check which ones can be edited/deleted
+  useEffect(() => {
+    const checkBusinessStatus = async () => {
+      try {
+        const businessOwner = await isBusinessOwner();
+        setIsBusinessAccount(businessOwner);
+      } catch (error) {
+        console.error("Error checking business status:", error);
+      }
+    };
+    
+    checkBusinessStatus();
+  }, []);
+  
   useEffect(() => {
     const checkEditableStatus = async () => {
       if (!jobs?.length) return;
@@ -54,8 +73,24 @@ const JobsPage: React.FC = () => {
     checkEditableStatus();
   }, [jobs]);
   
+  useEffect(() => {
+    if (isBusinessAccount) {
+      const getStaffId = async () => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            setStaffRelationId(session.user.id);
+          }
+        } catch (error) {
+          console.error("Error getting user ID:", error);
+        }
+      };
+      
+      getStaffId();
+    }
+  }, [isBusinessAccount]);
+
   const handleEdit = (job: Job) => {
-    // Find the job in our jobsWithStatus array to check editability
     const jobWithStatus = jobsWithStatus.find(j => j.id === job.id);
     
     if (jobWithStatus && !jobWithStatus.isEditable) {
@@ -72,7 +107,6 @@ const JobsPage: React.FC = () => {
   };
   
   const handleDelete = async (jobId: string) => {
-    // Find the job in our jobsWithStatus array to check editability
     const jobWithStatus = jobsWithStatus.find(j => j.id === jobId);
     
     if (jobWithStatus && !jobWithStatus.isEditable) {
@@ -94,7 +128,6 @@ const JobsPage: React.FC = () => {
   const confirmDelete = async () => {
     if (selectedJob) {
       try {
-        // Double-check job is not in use before deleting
         const inUse = await isJobInUse(selectedJob.id);
         if (inUse) {
           toast({
@@ -117,16 +150,54 @@ const JobsPage: React.FC = () => {
     }
   };
   
-  if (error) {
+  const renderJobsTab = () => {
+    if (error) {
+      return (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Error loading jobs: {error.message}
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    
+    if (isLoading || isCheckingStatus) {
+      return (
+        <div className="flex justify-center p-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Loading jobs...</span>
+        </div>
+      );
+    }
+    
+    if (jobs?.length === 0) {
+      return (
+        <div className="text-center p-8 border rounded-lg border-dashed">
+          <h3 className="text-lg font-medium mb-2">No jobs created yet</h3>
+          <p className="text-muted-foreground mb-4">Create your first job to get started</p>
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Create New Job
+          </Button>
+        </div>
+      );
+    }
+    
     return (
-      <Alert variant="destructive" className="mb-4">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Error loading jobs: {error.message}
-        </AlertDescription>
-      </Alert>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {jobsWithStatus.map((job) => (
+          <JobCard 
+            key={job.id} 
+            job={job} 
+            onEdit={() => handleEdit(job)}
+            onDelete={() => handleDelete(job.id)}
+            isEditable={job.isEditable}
+          />
+        ))}
+      </div>
     );
-  }
+  };
   
   return (
     <CurrencyProvider>
@@ -139,39 +210,43 @@ const JobsPage: React.FC = () => {
             </p>
           </div>
           
-          <Button onClick={() => setCreateDialogOpen(true)}>
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Create New Job
-          </Button>
-        </div>
-        
-        {isLoading || isCheckingStatus ? (
-          <div className="flex justify-center p-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="ml-2">Loading jobs...</span>
-          </div>
-        ) : jobs?.length === 0 ? (
-          <div className="text-center p-8 border rounded-lg border-dashed">
-            <h3 className="text-lg font-medium mb-2">No jobs created yet</h3>
-            <p className="text-muted-foreground mb-4">Create your first job to get started</p>
+          {activeTab === "jobs" ? (
             <Button onClick={() => setCreateDialogOpen(true)}>
               <PlusCircle className="h-4 w-4 mr-2" />
               Create New Job
             </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {jobsWithStatus.map((job) => (
-              <JobCard 
-                key={job.id} 
-                job={job} 
-                onEdit={() => handleEdit(job)}
-                onDelete={() => handleDelete(job.id)}
-                isEditable={job.isEditable}
-              />
-            ))}
-          </div>
+          ) : (
+            <Button onClick={() => setIsCreateJobCardOpen(true)}>
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Create Job Card
+            </Button>
+          )}
+        </div>
+        
+        {isBusinessAccount && (
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="jobs">Jobs</TabsTrigger>
+              <TabsTrigger value="job-cards">Job Cards</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="jobs" className="mt-0">
+              {renderJobsTab()}
+            </TabsContent>
+            
+            <TabsContent value="job-cards" className="mt-0">
+              {staffRelationId && (
+                <JobCardsList 
+                  staffRelationId={staffRelationId}
+                  onCreateJobCard={() => setIsCreateJobCardOpen(true)}
+                  canCreateCard={true}
+                />
+              )}
+            </TabsContent>
+          </Tabs>
         )}
+        
+        {!isBusinessAccount && renderJobsTab()}
         
         <JobFormDialog 
           open={createDialogOpen} 
@@ -210,6 +285,15 @@ const JobsPage: React.FC = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        
+        {staffRelationId && (
+          <CreateJobCardDialog
+            open={isCreateJobCardOpen}
+            onOpenChange={setIsCreateJobCardOpen}
+            staffRelationId={staffRelationId}
+            isBusinessOwner={isBusinessAccount}
+          />
+        )}
       </div>
     </CurrencyProvider>
   );
