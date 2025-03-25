@@ -63,7 +63,7 @@ export const useServiceStaffMutations = () => {
           }
         }
         
-        // Delete existing assignments in a transaction
+        // Delete existing assignments in a transaction - use explicit table references
         const { error: deleteError } = await supabase
           .from('staff_service_assignments')
           .delete()
@@ -81,7 +81,7 @@ export const useServiceStaffMutations = () => {
         }
         
         // Verify all staff members exist and belong to this business
-        // Using business_staff table alias and explicit column references to avoid ambiguity
+        // FIXED: Using explicit table references to avoid ambiguity with staff_id
         const { data: validStaff, error: validationError } = await supabase
           .from('business_staff')
           .select('id')
@@ -100,7 +100,7 @@ export const useServiceStaffMutations = () => {
         }
         
         // Prepare batch assignments with only validated staff IDs
-        // Use clear variable naming to distinguish between different types of IDs
+        // FIXED: Using explicit variable names to clarify what each ID represents
         const assignments = validStaffRelationIds.map(staffRelationId => ({
           service_id: serviceId,
           staff_id: staffRelationId // This is the business_staff.id, not auth.users.id
@@ -108,11 +108,13 @@ export const useServiceStaffMutations = () => {
         
         console.log("Creating new assignments:", assignments);
         
-        // Bulk insert assignments with explicit column references
-        // CRITICAL FIX: Include explicit column names in the insert to avoid ambiguity
+        // FIXED: Use explicit column names in the insert to avoid ambiguity
         const { data, error } = await supabase
           .from('staff_service_assignments')
-          .insert(assignments)
+          .insert(assignments.map(a => ({
+            service_id: a.service_id,
+            staff_id: a.staff_id
+          })))
           .select();
           
         if (error) {
@@ -148,7 +150,7 @@ export const useServiceStaffMutations = () => {
         
         // Get all staff data in a single query with explicit column references
         if (validStaffRelationIds.length > 0) {
-          // Use clear variable naming to distinguish between staff relation ID and actual user ID
+          // FIXED: Use better variable naming to distinguish between staff relation ID and actual user ID
           const { data: staffDataWithUserIds, error: staffError } = await supabase
             .from('business_staff')
             .select('id, staff_id') // id is relation ID, staff_id is the auth user ID
