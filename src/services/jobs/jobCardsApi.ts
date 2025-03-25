@@ -51,12 +51,18 @@ export const fetchJobCards = async (staffRelationId?: string): Promise<JobCard[]
     has_job_data: !!card.jobs
   })));
   
-  // Map 'jobs' field to 'job' for our frontend components
-  return data.map(card => ({
-    ...card,
-    job: card.jobs, // Map the joined 'jobs' field to 'job' for component compatibility
-    payment_method: ensurePaymentMethodType(card.payment_method)
-  })) as JobCard[];
+  // Map 'jobs' field to 'job' and handle type conversion properly
+  return data.map(card => {
+    // Create a properly typed object by type assertion
+    const jobCard: JobCard = {
+      ...card,
+      job: card.jobs,
+      payment_method: ensurePaymentMethodType(card.payment_method)
+    };
+    // Remove the 'jobs' property to avoid duplication
+    delete (jobCard as any).jobs;
+    return jobCard;
+  });
 };
 
 /**
@@ -105,12 +111,17 @@ export const createJobCard = async (
     has_job_data: !!data.jobs
   });
   
-  // Map 'jobs' field to 'job' and ensure payment_method is properly typed
-  return {
+  // Create a properly typed JobCard object
+  const jobCard: JobCard = {
     ...data,
-    job: data.jobs, // Map the joined 'jobs' field to 'job'
+    job: data.jobs,
     payment_method: ensurePaymentMethodType(data.payment_method)
-  } as JobCard;
+  };
+  
+  // Remove the 'jobs' property to avoid duplication
+  delete (jobCard as any).jobs;
+  
+  return jobCard;
 };
 
 /**
@@ -166,10 +177,15 @@ export const completeJobCard = async (jobCardId: string): Promise<JobCard> => {
     has_job_data: !!data.jobs
   });
   
-  // Map 'jobs' field to 'job' and ensure payment_method is properly typed
-  return {
+  // Create a properly typed JobCard object
+  const jobCard: JobCard = {
     ...data,
-    job: data.jobs, // Map the joined 'jobs' field to 'job'
+    job: data.jobs,
     payment_method: ensurePaymentMethodType(data.payment_method)
-  } as JobCard;
+  };
+  
+  // Remove the 'jobs' property to avoid duplication
+  delete (jobCard as any).jobs;
+  
+  return jobCard;
 };
