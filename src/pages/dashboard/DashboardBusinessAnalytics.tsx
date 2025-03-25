@@ -15,18 +15,20 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TeamActivityChart } from "@/components/analytics/TeamActivityChart";
+import { syncServiceDistribution, ensureAnalyticsData } from "@/utils/analyticsSync";
 
 const DashboardBusinessAnalytics = () => {
   const { t } = useTranslation();
   const [tab, setTab] = useState<string>("overview");
   const [isVerifying, setIsVerifying] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(true);
   const { isLoading, error, data } = useBusinessAnalytics("month");
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  // Verify that the user has a business account when accessing this page
+  // Verify that the user has a business account and sync analytics data
   useEffect(() => {
-    const verifyBusinessAccount = async () => {
+    const initialize = async () => {
       try {
         setIsVerifying(true);
         const isBusinessAccount = await accountTypeVerification.verifyAccountType('business');
@@ -40,27 +42,37 @@ const DashboardBusinessAnalytics = () => {
           navigate("/dashboard");
           return;
         }
+        
+        // Now sync analytics data with real service names
+        setIsSyncing(true);
+        
+        // Initialize analytics data if needed
+        await ensureAnalyticsData();
+        
+        // Sync service distribution with real service names
+        await syncServiceDistribution();
+        
       } catch (error) {
-        console.error("Error verifying account type:", error);
+        console.error("Error verifying account or syncing data:", error);
         toast({
-          title: "Verification Error",
-          description: "Could not verify your account type. Please try again.",
+          title: "Initialization Error",
+          description: "Could not prepare analytics data. Please try refreshing.",
           variant: "destructive"
         });
-        navigate("/dashboard");
       } finally {
         setIsVerifying(false);
+        setIsSyncing(false);
       }
     };
     
-    verifyBusinessAccount();
+    initialize();
   }, [navigate]);
 
-  if (isVerifying) {
+  if (isVerifying || isSyncing) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
-        <p>Verifying account access...</p>
+        <p>{isVerifying ? "Verifying account access..." : "Syncing analytics data..."}</p>
       </div>
     );
   }

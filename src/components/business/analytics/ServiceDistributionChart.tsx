@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { PieChart } from "@/components/ui/chart";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,109 +13,92 @@ interface ServiceDistributionChartProps {
 export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> = ({ isLoading, data }) => {
   const isMobile = useIsMobile();
   
-  // Fetch real service distribution data from Supabase if the data prop is empty
+  // Fetch real service distribution data from Supabase
   const { data: fetchedData, isLoading: fetchLoading } = useQuery({
     queryKey: ['serviceDistributionChart'],
     queryFn: async () => {
-      // Only fetch if no data was provided
-      if (data && data.length > 0) {
-        return { labels: [], datasets: [] };
-      }
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.user) {
-        return { labels: [], datasets: [] };
-      }
-      
-      const { data: serviceData, error } = await supabase
-        .from('business_service_distribution')
-        .select('service_name, usage_count')
-        .eq('business_id', session.user.id)
-        .eq('time_range', 'month');
+      try {
+        // Get current user's session
+        const { data: { session } } = await supabase.auth.getSession();
         
-      if (error) {
-        console.error("Error fetching service distribution data:", error);
+        if (!session?.user) {
+          console.error("No authenticated user session");
+          return { labels: [], datasets: [] };
+        }
+        
+        // First get the actual business services
+        const { data: services, error: servicesError } = await supabase
+          .from('business_services')
+          .select('id, name')
+          .eq('business_id', session.user.id);
+          
+        if (servicesError) {
+          console.error("Error fetching services:", servicesError);
+          return { labels: [], datasets: [] };
+        }
+        
+        if (!services || services.length === 0) {
+          console.log("No services found for this business");
+          return { labels: [], datasets: [] };
+        }
+        
+        // Get the booking counts for each service
+        const serviceCountsPromises = services.map(async (service) => {
+          const { count, error: countError } = await supabase
+            .from('bookings')
+            .select('*', { count: 'exact', head: true })
+            .eq('business_id', session.user.id)
+            .eq('service_id', service.id);
+            
+          if (countError) {
+            console.error(`Error fetching count for service ${service.name}:`, countError);
+            return { name: service.name, count: 0 };
+          }
+          
+          return { name: service.name, count: count || 0 };
+        });
+        
+        const serviceCounts = await Promise.all(serviceCountsPromises);
+        
+        // Create the chart data
+        return {
+          labels: serviceCounts.map(item => item.name),
+          datasets: [
+            {
+              label: 'Service Distribution',
+              data: serviceCounts.map(item => item.count),
+              backgroundColor: [
+                'rgba(59, 130, 246, 0.7)',
+                'rgba(16, 185, 129, 0.7)',
+                'rgba(245, 158, 11, 0.7)',
+                'rgba(139, 92, 246, 0.7)',
+                'rgba(236, 72, 153, 0.7)',
+                'rgba(6, 182, 212, 0.7)',
+                'rgba(168, 85, 247, 0.7)',
+                'rgba(249, 115, 22, 0.7)'
+              ],
+              borderColor: [
+                'rgba(59, 130, 246, 1)',
+                'rgba(16, 185, 129, 1)',
+                'rgba(245, 158, 11, 1)',
+                'rgba(139, 92, 246, 1)',
+                'rgba(236, 72, 153, 1)',
+                'rgba(6, 182, 212, 1)',
+                'rgba(168, 85, 247, 1)',
+                'rgba(249, 115, 22, 1)'
+              ],
+              borderWidth: 1,
+              hoverOffset: 4,
+            }
+          ]
+        };
+      } catch (error) {
+        console.error("Error in fetchServiceDistribution:", error);
         return { labels: [], datasets: [] };
       }
-      
-      return {
-        labels: serviceData.map(item => item.service_name),
-        datasets: [
-          {
-            label: 'Service Distribution',
-            data: serviceData.map(item => item.usage_count),
-            backgroundColor: [
-              'rgba(59, 130, 246, 0.7)',
-              'rgba(16, 185, 129, 0.7)',
-              'rgba(245, 158, 11, 0.7)',
-              'rgba(139, 92, 246, 0.7)',
-              'rgba(236, 72, 153, 0.7)'
-            ],
-            borderColor: [
-              'rgba(59, 130, 246, 1)',
-              'rgba(16, 185, 129, 1)',
-              'rgba(245, 158, 11, 1)',
-              'rgba(139, 92, 246, 1)',
-              'rgba(236, 72, 153, 1)'
-            ],
-            borderWidth: 1,
-            hoverOffset: 4,
-          }
-        ]
-      };
     },
-    enabled: !data || data.length === 0, // Only run query if no data provided
     refetchOnWindowFocus: false,
   });
-
-  // Prepare chart data
-  const prepareChartData = () => {
-    if (data && data.length > 0) {
-      // Use the provided data
-      return {
-        labels: ['Consulting', 'Design', 'Development', 'Maintenance'],
-        datasets: [
-          {
-            label: 'Service Distribution',
-            data: data,
-            backgroundColor: [
-              'rgba(59, 130, 246, 0.7)',
-              'rgba(16, 185, 129, 0.7)',
-              'rgba(245, 158, 11, 0.7)',
-              'rgba(139, 92, 246, 0.7)'
-            ],
-            borderColor: [
-              'rgba(59, 130, 246, 1)',
-              'rgba(16, 185, 129, 1)',
-              'rgba(245, 158, 11, 1)',
-              'rgba(139, 92, 246, 1)'
-            ],
-            borderWidth: 1,
-            hoverOffset: 4,
-          }
-        ]
-      };
-    } else if (fetchedData && fetchedData.datasets && fetchedData.datasets.length > 0) {
-      // Use the fetched data
-      return fetchedData;
-    } else {
-      // Default empty data
-      return {
-        labels: [],
-        datasets: [
-          {
-            label: 'Service Distribution',
-            data: [],
-            backgroundColor: [],
-            borderColor: [],
-            borderWidth: 1,
-            hoverOffset: 4,
-          }
-        ]
-      };
-    }
-  };
 
   // Configure options based on device size
   const chartOptions = {
@@ -138,7 +121,33 @@ export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> =
   };
 
   const actualLoading = isLoading || fetchLoading;
-  const chartData = prepareChartData();
+  
+  // Use fetched data if available, otherwise use the provided data
+  const chartData = fetchedData && fetchedData.labels && fetchedData.labels.length > 0 
+    ? fetchedData 
+    : {
+        labels: data && data.length > 0 ? ['Service 1', 'Service 2', 'Service 3', 'Service 4'] : [],
+        datasets: [
+          {
+            label: 'Service Distribution',
+            data: data || [],
+            backgroundColor: [
+              'rgba(59, 130, 246, 0.7)',
+              'rgba(16, 185, 129, 0.7)',
+              'rgba(245, 158, 11, 0.7)',
+              'rgba(139, 92, 246, 0.7)'
+            ],
+            borderColor: [
+              'rgba(59, 130, 246, 1)',
+              'rgba(16, 185, 129, 1)',
+              'rgba(245, 158, 11, 1)',
+              'rgba(139, 92, 246, 1)'
+            ],
+            borderWidth: 1,
+            hoverOffset: 4,
+          }
+        ]
+      };
 
   if (actualLoading) {
     return (
@@ -151,7 +160,7 @@ export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> =
   if (chartData.labels.length === 0 || chartData.datasets[0].data.length === 0) {
     return (
       <div className="h-[300px] w-full flex items-center justify-center">
-        <p>No service distribution data available</p>
+        <p>No service distribution data available. Please create services and bookings first.</p>
       </div>
     );
   }
