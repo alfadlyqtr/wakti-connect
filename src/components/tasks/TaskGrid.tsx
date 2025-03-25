@@ -103,23 +103,41 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
         .eq('id', taskId)
         .single();
         
-      if (fetchError) throw fetchError;
-      
-      const currentSnoozeCount = taskData.snooze_count || 0;
-      const snoozedUntil = addDays(new Date(), days).toISOString();
-      
-      // Update the task with incremented snooze_count and snooze date
-      const { error: updateError } = await supabase
-        .from('tasks')
-        .update({ 
-          status: 'snoozed',
-          snooze_count: currentSnoozeCount + 1,
-          snoozed_until: snoozedUntil,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', taskId);
+      if (fetchError) {
+        // If the column doesn't exist yet, we'll assume it's 0
+        console.log("Fetch error for snooze_count, using default value:", fetchError);
         
-      if (updateError) throw updateError;
+        // Update the task with snooze data even if snooze_count column doesn't exist yet
+        const snoozedUntil = addDays(new Date(), days).toISOString();
+        
+        const { error: updateError } = await supabase
+          .from('tasks')
+          .update({ 
+            status: 'snoozed',
+            snoozed_until: snoozedUntil,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', taskId);
+          
+        if (updateError) throw updateError;
+      } else {
+        // Column exists, proceed normally
+        const currentSnoozeCount = taskData?.snooze_count || 0;
+        const snoozedUntil = addDays(new Date(), days).toISOString();
+        
+        // Update the task with incremented snooze_count and snooze date
+        const { error: updateError } = await supabase
+          .from('tasks')
+          .update({ 
+            status: 'snoozed',
+            snooze_count: currentSnoozeCount + 1,
+            snoozed_until: snoozedUntil,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', taskId);
+          
+        if (updateError) throw updateError;
+      }
       
       toast({
         title: "Task Snoozed",

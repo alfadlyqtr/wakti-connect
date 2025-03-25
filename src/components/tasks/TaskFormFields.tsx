@@ -34,6 +34,18 @@ const TaskFormFields: React.FC<TaskFormFieldsProps> = ({ form }) => {
     name: "subtasks"
   });
 
+  // Function to convert string date to Date object for DatePicker
+  const getDateFromString = (dateString: string | undefined): Date | undefined => {
+    if (!dateString) return undefined;
+    return new Date(dateString);
+  };
+
+  // Function to convert Date object to string for form value
+  const getStringFromDate = (date: Date | undefined): string => {
+    if (!date) return new Date().toISOString().split('T')[0];
+    return date.toISOString().split('T')[0];
+  };
+
   return (
     <>
       <FormField
@@ -97,47 +109,23 @@ const TaskFormFields: React.FC<TaskFormFieldsProps> = ({ form }) => {
           )}
         />
         
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="due_date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Due Date</FormLabel>
-                <FormControl>
-                  <DatePicker 
-                    date={field.value} 
-                    setDate={field.onChange}
-                    className="w-full"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="due_time"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Due Time</FormLabel>
-                <FormControl>
-                  <div className="flex items-center space-x-2 rounded-md border border-input bg-background px-3 h-10">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="time"
-                      {...field}
-                      className="border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                      placeholder="Set time"
-                    />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="due_date"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Due Date</FormLabel>
+              <FormControl>
+                <DatePicker 
+                  date={getDateFromString(field.value)} 
+                  setDate={(date) => field.onChange(date ? getStringFromDate(date) : "")}
+                  className="w-full"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
       
       {/* Subtasks/To-Do List Section */}

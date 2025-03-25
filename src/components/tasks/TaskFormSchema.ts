@@ -5,7 +5,7 @@ export const taskFormSchema = z.object({
   title: z.string().min(1, "Task title is required"),
   description: z.string().optional(),
   priority: z.enum(["urgent", "high", "medium", "normal"]).default("normal"),
-  due_date: z.string(),
+  due_date: z.string(), // Keep as string for form handling
   subtasks: z.array(
     z.object({
       content: z.string().min(1, "Subtask content is required"),
