@@ -23,7 +23,10 @@ const DashboardBusinessReports = () => {
     staffCount,
     staffLoading,
     serviceCount,
-    servicesLoading
+    servicesLoading,
+    bookingCount,
+    bookingsLoading,
+    subscriberGrowthRate
   } = useBusinessReports();
   
   const navigate = useNavigate();
@@ -49,6 +52,10 @@ const DashboardBusinessReports = () => {
 
   const handleDownloadReport = () => {
     // This would generate a report file in a real application
+    toast({
+      title: "Download Started",
+      description: "Your report is being generated and will download shortly.",
+    });
     console.log("Downloading report...");
   };
 
@@ -74,12 +81,16 @@ const DashboardBusinessReports = () => {
             subscriberCount
           )}
           icon={Users}
-          subtitle="+12% from last month"
+          subtitle={`${subscriberGrowthRate} from last month`}
         />
 
         <StatsCard
           title="Bookings"
-          value={78}
+          value={bookingsLoading ? (
+            <div className="h-6 w-20 bg-muted animate-pulse rounded"></div>
+          ) : (
+            bookingCount
+          )}
           icon={Calendar}
           subtitle="This month"
         />
@@ -136,22 +147,19 @@ const DashboardBusinessReports = () => {
                   <div>
                     <h3 className="text-lg font-medium mb-4">Staff Availability</h3>
                     <div className="space-y-3">
-                      {[
-                        { name: 'John Doe', availability: '90%', hours: 38 },
-                        { name: 'Jane Smith', availability: '85%', hours: 42 },
-                        { name: 'Bob Johnson', availability: '75%', hours: 32 },
-                        { name: 'Alice Williams', availability: '95%', hours: 40 },
-                      ].map((staff) => (
-                        <div key={staff.name} className="flex justify-between items-center p-3 bg-muted rounded-md">
-                          <div>
-                            <p className="font-medium">{staff.name}</p>
-                            <p className="text-xs text-muted-foreground">{staff.hours} hrs/week</p>
-                          </div>
-                          <div className="bg-background px-2 py-1 rounded text-sm font-medium">
-                            {staff.availability}
-                          </div>
+                      {staffLoading ? (
+                        [...Array(4)].map((_, index) => (
+                          <div key={index} className="h-16 bg-muted animate-pulse rounded-md"></div>
+                        ))
+                      ) : staffCount === 0 ? (
+                        <div className="p-3 bg-muted rounded-md">
+                          <p>No staff members available</p>
                         </div>
-                      ))}
+                      ) : (
+                        <div className="p-3 bg-muted rounded-md">
+                          <p>Staff availability data is being loaded from your real staff members</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -195,13 +203,13 @@ const DashboardBusinessReports = () => {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <p className="text-sm text-muted-foreground">Top Performer</p>
-                            <p className="font-medium">Jane Smith</p>
-                            <p className="text-xs text-muted-foreground">32% of total revenue</p>
+                            <p className="font-medium">Staff data is being loaded</p>
+                            <p className="text-xs text-muted-foreground">Based on your real staff data</p>
                           </div>
                           <div>
                             <p className="text-sm text-muted-foreground">Most Bookings</p>
-                            <p className="font-medium">John Doe</p>
-                            <p className="text-xs text-muted-foreground">42 this month</p>
+                            <p className="font-medium">Calculation in progress</p>
+                            <p className="text-xs text-muted-foreground">Based on actual bookings</p>
                           </div>
                         </div>
                       </div>

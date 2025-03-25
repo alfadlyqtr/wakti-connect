@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { isUserStaff } from "@/utils/staffUtils";
-import { UserRole } from "@/types/user";
+import { UserRole, getEffectiveRole } from "@/types/user";
 
 export const useDashboardUserProfile = () => {
   const [userId, setUserId] = useState<string | null>(null);
@@ -25,7 +25,7 @@ export const useDashboardUserProfile = () => {
       setUserId(session.user.id);
       
       // Check if user is a staff member
-      const staffStatus = await isUserStaff();
+      const staffStatus = await isUserStaff(session.user.id);
       setIsStaff(staffStatus);
       
       // Fetch profile data
@@ -40,16 +40,13 @@ export const useDashboardUserProfile = () => {
         return null;
       }
       
-      // Determine user role and store in localStorage for quick access
-      const accountType = data?.account_type || 'free';
+      // Determine user role with proper prioritization based on our enhanced function
+      const effectiveRole = getEffectiveRole(data?.account_type || 'free', staffStatus);
+      setUserRole(effectiveRole);
       
-      // Set the user role with proper prioritization
-      // If user is both business owner and staff, business takes priority
-      const effectiveRole = accountType === 'business' ? 'business' : 
-                          (staffStatus ? 'staff' : accountType);
-      
-      setUserRole(effectiveRole as UserRole);
+      // Store in localStorage for quick access
       localStorage.setItem('userRole', effectiveRole);
+      localStorage.setItem('isStaff', staffStatus ? 'true' : 'false');
       
       return data;
     },

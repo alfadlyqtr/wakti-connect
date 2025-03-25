@@ -3,9 +3,73 @@ import React from "react";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { BarChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Bar } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { subscriberData } from "@/utils/businessReportsUtils";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { calculateGrowth } from "@/utils/businessReportsUtils";
 
 export const SubscriberGrowthChart = () => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['subscriberGrowth'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        throw new Error('Not authenticated');
+      }
+      
+      const { data, error } = await supabase
+        .from('business_growth_data')
+        .select('month, subscribers')
+        .eq('business_id', session.user.id)
+        .eq('time_range', 'month')
+        .order('created_at', { ascending: true });
+        
+      if (error) throw error;
+      return data || [];
+    }
+  });
+  
+  // Calculate growth rate
+  const calculateGrowthRate = () => {
+    if (!data || data.length < 2) return "0%";
+    
+    const firstMonthSubscribers = data[0].subscribers;
+    const lastMonthSubscribers = data[data.length - 1].subscribers;
+    
+    if (firstMonthSubscribers === 0) return "0%";
+    
+    const growth = calculateGrowth(lastMonthSubscribers, firstMonthSubscribers);
+    return `${growth}%`;
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Subscriber Growth</CardTitle>
+          <CardDescription>Loading data...</CardDescription>
+        </CardHeader>
+        <CardContent className="h-80 flex justify-center items-center">
+          <div className="animate-pulse">Loading subscriber growth data...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error || !data || data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Subscriber Growth</CardTitle>
+          <CardDescription>Subscriber data unavailable</CardDescription>
+        </CardHeader>
+        <CardContent className="h-80 flex justify-center items-center">
+          <div>No subscriber data available. Try refreshing the page.</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -25,7 +89,7 @@ export const SubscriberGrowthChart = () => {
         >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={subscriberData}
+              data={data}
               margin={{
                 top: 20,
                 right: 30,
@@ -48,7 +112,7 @@ export const SubscriberGrowthChart = () => {
       </CardContent>
       <CardFooter>
         <p className="text-sm text-muted-foreground">
-          600% growth in subscribers over the past 6 months
+          {calculateGrowthRate()} growth in subscribers over the past 6 months
         </p>
       </CardFooter>
     </Card>

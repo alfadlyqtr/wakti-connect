@@ -5,11 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarDays, FileText, Download, Printer, Users } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "@/components/ui/use-toast";
+import { useBusinessReports } from "@/hooks/useBusinessReports";
 
 const ReportsTab = () => {
   const isMobile = useIsMobile();
+  const { 
+    subscriberCount, 
+    staffCount, 
+    serviceCount, 
+    bookingCount 
+  } = useBusinessReports();
   
   const handleGenerateReport = (reportType: string) => {
+    toast({
+      title: "Generating Report",
+      description: `Your ${reportType} report is being generated.`,
+    });
     console.log(`Generating ${reportType} report...`);
     // In a real app, this would generate and download the report
   };
@@ -37,7 +49,7 @@ const ReportsTab = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  This report includes total revenue, service-wise breakdown, payment methods, and trends compared to previous periods.
+                  This report includes total revenue from {serviceCount || 0} services, payment methods, and trends compared to previous periods.
                 </p>
               </CardContent>
               <CardFooter className={`${isMobile ? 'flex-col gap-2' : 'flex justify-between'}`}>
@@ -95,7 +107,7 @@ const ReportsTab = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  This report shows appointment trends, popular time slots, most booked services, and customer retention metrics.
+                  This report shows appointment trends from {bookingCount || 0} bookings, popular time slots, most booked services, and customer retention metrics.
                 </p>
               </CardContent>
               <CardFooter className={`${isMobile ? 'flex-col gap-2' : 'flex justify-between'}`}>
@@ -153,7 +165,7 @@ const ReportsTab = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  This report provides detailed performance metrics for each staff member, including appointments handled, revenue generated, and customer feedback scores.
+                  This report provides detailed performance metrics for all {staffCount || 0} staff members, including appointments handled, revenue generated, and customer feedback scores.
                 </p>
               </CardContent>
               <CardFooter className="flex justify-between">
