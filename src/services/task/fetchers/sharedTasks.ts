@@ -31,7 +31,12 @@ export async function fetchSharedTasks(userId: string): Promise<Task[]> {
           user_id: task.user_id,
           assignee_id: task.assignee_id || null,
           created_at: task.created_at,
-          updated_at: task.updated_at
+          updated_at: task.updated_at,
+          completed_at: task.completed_at || null,
+          is_recurring_instance: task.is_recurring_instance || false,
+          parent_recurring_id: task.parent_recurring_id || null,
+          snooze_count: task.snooze_count || 0,
+          snoozed_until: task.snoozed_until || null
         });
       }
     }

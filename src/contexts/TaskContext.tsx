@@ -79,7 +79,12 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ...task,
           status: validateTaskStatus(task.status),
           priority: validateTaskPriority(task.priority),
-          due_time: task.due_time || null
+          due_time: task.due_time || null,
+          completed_at: task.completed_at || null,
+          is_recurring_instance: task.is_recurring_instance || false,
+          parent_recurring_id: task.parent_recurring_id || null,
+          snooze_count: task.snooze_count || 0,
+          snoozed_until: task.snoozed_until || null
         }));
         
         setTasks(typedTasks);
@@ -129,7 +134,12 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         user_id: "user-1",
-        assignee_id: null
+        assignee_id: null,
+        completed_at: null,
+        is_recurring_instance: false,
+        parent_recurring_id: null,
+        snooze_count: 0,
+        snoozed_until: null
       },
       {
         id: "2",
@@ -142,7 +152,12 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         user_id: "user-1",
-        assignee_id: null
+        assignee_id: null,
+        completed_at: null,
+        is_recurring_instance: false,
+        parent_recurring_id: null,
+        snooze_count: 0,
+        snoozed_until: null
       },
       {
         id: "3",
@@ -155,7 +170,12 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         user_id: "user-1",
-        assignee_id: null
+        assignee_id: null,
+        completed_at: new Date().toISOString(),
+        is_recurring_instance: false,
+        parent_recurring_id: null,
+        snooze_count: 0,
+        snoozed_until: null
       }
     ];
   };
@@ -174,7 +194,13 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         status: validateTaskStatus(task.status),
         priority: validateTaskPriority(task.priority),
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        due_time: task.due_time || null,
+        completed_at: task.completed_at || null,
+        is_recurring_instance: task.is_recurring_instance || false,
+        parent_recurring_id: task.parent_recurring_id || null,
+        snooze_count: task.snooze_count || 0,
+        snoozed_until: task.snoozed_until || null
       };
 
       // Try to add to Supabase first
@@ -191,7 +217,13 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const typedTask: Task = {
           ...data,
           status: validateTaskStatus(data.status),
-          priority: validateTaskPriority(data.priority)
+          priority: validateTaskPriority(data.priority),
+          due_time: data.due_time || null,
+          completed_at: data.completed_at || null,
+          is_recurring_instance: data.is_recurring_instance || false,
+          parent_recurring_id: data.parent_recurring_id || null,
+          snooze_count: data.snooze_count || 0,
+          snoozed_until: data.snoozed_until || null
         };
         
         setTasks(prev => [typedTask, ...prev]);

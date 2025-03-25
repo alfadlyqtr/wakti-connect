@@ -100,7 +100,7 @@ export async function createRecurringTaskInstances(
       priority: originalTask.priority,
       status: 'pending',
       due_date: date.toISOString(),
-      due_time: originalTask.due_time,
+      due_time: originalTask.due_time || null,
       user_id: originalTask.user_id,
       is_recurring_instance: true,
       parent_recurring_id: originalTaskId

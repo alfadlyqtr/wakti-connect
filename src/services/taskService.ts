@@ -17,7 +17,12 @@ export const getUpcomingTasks = async (): Promise<Task[]> => {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       user_id: "user-1",
-      assignee_id: null
+      assignee_id: null,
+      completed_at: null,
+      is_recurring_instance: false,
+      parent_recurring_id: null,
+      snooze_count: 0,
+      snoozed_until: null
     },
     {
       id: "task-2",
@@ -30,7 +35,12 @@ export const getUpcomingTasks = async (): Promise<Task[]> => {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       user_id: "user-1",
-      assignee_id: null
+      assignee_id: null,
+      completed_at: null,
+      is_recurring_instance: false,
+      parent_recurring_id: null,
+      snooze_count: 0,
+      snoozed_until: null
     }
   ];
 };
@@ -50,7 +60,12 @@ export const getTaskById = async (id: string): Promise<Task | null> => {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       user_id: "user-1",
-      assignee_id: null
+      assignee_id: null,
+      completed_at: null,
+      is_recurring_instance: false,
+      parent_recurring_id: null,
+      snooze_count: 0,
+      snoozed_until: null
     },
     "task-2": {
       id: "task-2",
@@ -63,7 +78,12 @@ export const getTaskById = async (id: string): Promise<Task | null> => {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       user_id: "user-1",
-      assignee_id: null
+      assignee_id: null,
+      completed_at: null,
+      is_recurring_instance: false,
+      parent_recurring_id: null,
+      snooze_count: 0,
+      snoozed_until: null
     }
   };
   
