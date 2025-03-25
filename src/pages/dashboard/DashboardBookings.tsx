@@ -43,8 +43,12 @@ const DashboardBookings = () => {
       // Process the data to handle potential relation errors
       const safeBookings: BookingWithRelations[] = data.map(booking => ({
         ...booking,
-        service: booking.service && !booking.service.error ? booking.service : null,
-        staff: booking.staff && !booking.staff.error ? booking.staff : null
+        service: booking.service && typeof booking.service === 'object' && !('error' in booking.service) 
+          ? booking.service 
+          : null,
+        staff: booking.staff && typeof booking.staff === 'object' && !('error' in booking.staff) 
+          ? booking.staff 
+          : null
       }));
       
       return {

@@ -16,15 +16,19 @@ export interface Booking {
   updated_at: string | null;
 }
 
+export interface ServiceRelation {
+  name: string;
+  description: string | null;
+  price: number | null;
+}
+
+export interface StaffRelation {
+  name: string;
+}
+
 export interface BookingWithRelations extends Booking {
-  service?: {
-    name: string;
-    description: string | null;
-    price: number | null;
-  } | null;
-  staff?: {
-    name: string;
-  } | null;
+  service: ServiceRelation | null;
+  staff: StaffRelation | null;
 }
 
 export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
