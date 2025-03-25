@@ -371,15 +371,17 @@ export const useBusinessReports = () => {
         return false;
       }
     },
-    onSuccess: (initialized) => {
-      if (initialized) {
-        setTimeout(() => {
-          refetchAll();
-        }, 1000);
-      }
-    },
     refetchOnWindowFocus: false,
     retry: false,
+    meta: {
+      onSettled: (data) => {
+        if (data) {
+          setTimeout(() => {
+            refetchAll();
+          }, 1000);
+        }
+      }
+    }
   });
 
   return {
