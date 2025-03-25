@@ -76,7 +76,13 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
   
   // Log job data to debug
   console.log("ActiveJobCard job data:", jobCard);
-  console.log("Job name from job relation:", jobCard.job?.name);
+  console.log("Job relation data in ActiveJobCard:", {
+    id: jobCard.id,
+    job_id: jobCard.job_id,
+    job_name: jobCard.job?.name,
+    job_data: jobCard.job,
+    has_job_data: !!jobCard.job
+  });
   
   return (
     <Card className="bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
@@ -87,7 +93,7 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
           </div>
           <div>
             <h3 className="font-medium text-yellow-700 dark:text-yellow-400">
-              {jobCard.job?.name || "Active Job"}
+              {jobCard.job?.name || jobCard.job_id || "Active Job"}
             </h3>
             <p className="text-sm text-muted-foreground">
               Started at {formatTime(jobCard.start_time)}

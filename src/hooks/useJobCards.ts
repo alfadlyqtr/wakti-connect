@@ -18,7 +18,12 @@ export const useJobCards = (staffRelationId?: string) => {
         setError(null);
         console.log("Fetching job cards for staff relation ID:", staffRelationId);
         const cards = staffRelationId ? await fetchJobCards(staffRelationId) : [];
-        console.log("Fetched job cards:", cards);
+        console.log("Fetched job cards in hook:", cards);
+        console.log("Job names in cards:", cards.map(card => ({
+          id: card.id,
+          job_name: card.job?.name,
+          has_job: !!card.job
+        })));
         return cards;
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Failed to fetch job cards');

@@ -48,8 +48,14 @@ const CompletedJobsSection: React.FC<CompletedJobsSectionProps> = ({ completedJo
     return jobDate >= filterDate;
   });
   
-  // Log completed jobs data to debug
+  // Enhanced debugging logs to see job data structure
   console.log("Completed jobs data:", completedJobs);
+  console.log("Job names available:", completedJobs.map(job => ({
+    id: job.id,
+    job_id: job.job_id,
+    job_data: job.job,
+    job_name: job.job?.name || "No job name found"
+  })));
   
   return (
     <div className="space-y-4">
@@ -87,7 +93,7 @@ const CompletedJobsSection: React.FC<CompletedJobsSectionProps> = ({ completedJo
                   <div className="mb-2 sm:mb-0">
                     <h4 className="font-medium flex items-center">
                       <Check className="h-4 w-4 text-green-500 mr-1" />
-                      {job.job?.name || "Job"}
+                      {job.job?.name || job.job_id || "Completed Job"}
                     </h4>
                     <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-2">
                       <span>

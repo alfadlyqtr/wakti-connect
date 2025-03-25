@@ -42,7 +42,14 @@ export const fetchJobCards = async (staffRelationId?: string): Promise<JobCard[]
     throw new Error(`Error fetching job cards: ${error.message}`);
   }
   
+  // Add debugging to inspect job data from API
   console.log("Received job cards data:", data);
+  console.log("Job relation data:", data.map(card => ({
+    id: card.id,
+    job_id: card.job_id,
+    joined_job: card.jobs,
+    has_job_data: !!card.jobs
+  })));
   
   // Ensure payment_method is properly typed
   return data.map(card => ({
@@ -90,6 +97,12 @@ export const createJobCard = async (
   }
   
   console.log("Created job card:", data);
+  console.log("Created job with relation data:", {
+    id: data.id,
+    job_id: data.job_id,
+    joined_job: data.jobs,
+    has_job_data: !!data.jobs
+  });
   
   // Type cast the payment_method to ensure it's the correct type
   return {
@@ -124,7 +137,7 @@ export const completeJobCard = async (jobCardId: string): Promise<JobCard> => {
     throw new Error('Job card not found or already completed');
   }
   
-  // Fetch the updated job card
+  // Fetch the updated job card - ensure we get the jobs relation
   const { data, error } = await supabase
     .from('job_cards')
     .select(`
@@ -144,6 +157,12 @@ export const completeJobCard = async (jobCardId: string): Promise<JobCard> => {
   if (!data) throw new Error(`Job card with ID ${jobCardId} not found after completion`);
   
   console.log("Completed job card data:", data);
+  console.log("Completed job relation data:", {
+    id: data.id,
+    job_id: data.job_id,
+    joined_job: data.jobs,
+    has_job_data: !!data.jobs
+  });
   
   // Type cast the payment_method to ensure it's the correct type
   return {
