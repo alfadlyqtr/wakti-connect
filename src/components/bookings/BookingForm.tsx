@@ -81,7 +81,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ onSubmit, onCancel, isPending
         // Fetch staff
         const { data: staffData, error: staffError } = await supabase
           .from('business_staff')
-          .select('id, name, role, is_service_provider')
+          .select('id, staff_id, business_id, name, role, is_service_provider')
           .eq('is_service_provider', true)
           .eq('status', 'active')
           .order('name');
@@ -89,7 +89,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ onSubmit, onCancel, isPending
         if (staffError) throw staffError;
         
         setServices(servicesData || []);
-        setStaff(staffData || []);
+        setStaff(staffData as StaffMember[] || []);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {

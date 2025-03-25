@@ -1,7 +1,7 @@
 
 import { fetchBookings } from "./fetchService";
 import { createBooking as createBookingService } from "./createService";
-import { BookingWithRelations, BookingFormData, BookingTab } from "@/types/booking.types";
+import { BookingWithRelations, BookingFormData, BookingTab, BookingStatus } from "@/types/booking.types";
 
 export {
   fetchBookings,
@@ -9,5 +9,6 @@ export {
   // Re-export types
   type BookingWithRelations,
   type BookingFormData,
-  type BookingTab
+  type BookingTab,
+  type BookingStatus
 };

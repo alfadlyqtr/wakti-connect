@@ -5,9 +5,9 @@ import { toast } from "@/components/ui/use-toast";
 import { 
   fetchBookings, 
   createBooking as createBookingService,
-  Booking,
   BookingTab,
-  BookingFormData
+  BookingFormData,
+  BookingWithRelations
 } from "@/services/booking";
 
 export const useBookings = (tab: BookingTab = "all-bookings") => {
