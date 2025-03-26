@@ -25,7 +25,7 @@ export interface UseTaskQueriesReturn {
   tasks: TaskWithSharedInfo[];
   isLoading: boolean;
   error: Error | null;
-  refetch: () => Promise<TaskWithSharedInfo[]>;
+  refetch: () => Promise<void>;
   userRole: "free" | "individual" | "business" | "staff" | null;
   isStaff: boolean;
 }
@@ -48,4 +48,4 @@ export interface UseTasksReturn {
 }
 
 // Re-export types from task.types.ts to ensure consistency
-export { TaskTab, TaskStatus, TaskPriority, SubTask };
+export type { TaskTab, TaskStatus, TaskPriority, SubTask };

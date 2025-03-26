@@ -107,7 +107,7 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
     }
   };
 
-  const { data = [], isLoading, error, refetch } = useQuery({
+  const { data = [], isLoading, error, refetch: queryRefetch } = useQuery({
     queryKey,
     queryFn: fetchTasksData,
     enabled: !!userRole,
@@ -121,6 +121,11 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
       setTasks(data);
     }
   }, [data]);
+
+  // Create a wrapper for refetch that returns void to match our interface
+  const refetch = async (): Promise<void> => {
+    await queryRefetch();
+  };
 
   return {
     tasks,
