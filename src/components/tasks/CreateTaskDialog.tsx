@@ -59,6 +59,7 @@ export function CreateTaskDialog({
         priority: data.priority,
         due_date: data.due_date,
         due_time: data.due_time || null,
+        is_recurring: isRecurring, // Add is_recurring flag
         // Only include subtasks if enabled
         subtasks: data.enableSubtasks ? data.subtasks : []
       };
