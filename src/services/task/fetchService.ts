@@ -47,31 +47,9 @@ export async function fetchTasks(tab: TaskTab): Promise<TasksResult> {
   const userRole = isStaff ? "staff" : (profileData?.account_type || "free");
   console.log(`User role determined: ${userRole}, Is staff: ${isStaff}`);
   
-  // For staff users, we primarily care about assigned tasks
-  if (isStaff && (tab === "my-tasks" || tab === "assigned-tasks")) {
-    console.log("Fetching assigned tasks for staff member");
-    const tasks = await fetchAssignedTasks(session.user.id);
-    return {
-      tasks,
-      userRole: userRole as "free" | "individual" | "business" | "staff"
-    };
-  }
-  
-  // Handle regular users based on the selected tab
-  let tasks: Task[] = [];
-  
-  if (tab === "my-tasks") {
-    tasks = await fetchMyTasks(session.user.id);
-  }
-  else if (tab === "shared-tasks") {
-    tasks = await fetchSharedTasks(session.user.id);
-  }
-  else if (tab === "assigned-tasks") {
-    tasks = await fetchAssignedTasks(session.user.id);
-  }
-  else {
-    tasks = await fetchDefaultTasks(session.user.id);
-  }
+  // Since we've simplified the task system to only support "my-tasks",
+  // we now only fetch the user's own tasks
+  const tasks = await fetchMyTasks(session.user.id);
   
   return {
     tasks,

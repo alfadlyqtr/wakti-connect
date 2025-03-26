@@ -67,44 +67,13 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
     
     if (staffCheck) {
       console.log("Fetching tasks as staff member, tab:", tab);
-      if (tab === "my-tasks" || tab === "assigned-tasks") {
-        return await fetchAssignedTasks(session.user.id);
-      } else if (tab === "team-tasks") {
-        // Staff can see team tasks from their business
-        const businessId = localStorage.getItem('staffBusinessId');
-        if (businessId) {
-          return await fetchTeamTasks(businessId);
-        }
-      }
-      // For any other tab, return empty array
-      console.log("Staff members cannot see other tabs, returning empty array");
-      return [];
+      // For staff, we only support my-tasks tab now
+      return await fetchMyTasks(session.user.id);
     } 
     
-    // Handle regular users based on the selected tab
-    switch (tab) {
-      case "my-tasks":
-        return await fetchMyTasks(session.user.id);
-      
-      case "shared-tasks":
-        return await fetchSharedTasks(session.user.id);
-      
-      case "assigned-tasks":
-        if (userRole === "business") {
-          return await fetchAssignedTasks(session.user.id, true);
-        } else {
-          return await fetchAssignedTasks(session.user.id);
-        }
-      
-      case "team-tasks":
-        if (userRole === "business") {
-          return await fetchTeamTasks(session.user.id);
-        }
-        return [];
-      
-      default:
-        return await fetchDefaultTasks(session.user.id);
-    }
+    // Since we've limited TaskTab to just "my-tasks", this is the only path
+    // that will be executed
+    return await fetchMyTasks(session.user.id);
   };
 
   const { data = [], isLoading, error, refetch: queryRefetch } = useQuery({

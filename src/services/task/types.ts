@@ -11,6 +11,8 @@ export interface TasksResult {
   userRole: "free" | "individual" | "business" | "staff";
 }
 
+// Now that we've simplified the TaskTab to only support "my-tasks",
+// this ensures consistency in our services
 export type TaskTab = "my-tasks";
 
 export type { Task, TaskFormData, TaskStatus, TaskPriority, SubTask };

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -67,6 +68,7 @@ interface CreateTaskDialogProps {
   userRole: "free" | "individual" | "business" | "staff";
 }
 
+// Define TeamTask interface to avoid deep type instantiation
 interface TeamTask {
   id: string;
   title: string;
