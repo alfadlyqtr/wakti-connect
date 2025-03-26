@@ -50,3 +50,6 @@ export interface UseTaskFiltersReturn {
   filterPriority: string | null;
   setFilterPriority: (priority: string | null) => void;
 }
+
+// Export TaskTab from types.ts to fix import issue
+export { TaskTab };

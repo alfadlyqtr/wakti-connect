@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { TaskWithSharedInfo } from "../types";
+import { TaskStatus, TaskPriority } from "@/types/task.types";
 
 export async function fetchAssignedTasks(
   userId: string, 
@@ -19,5 +20,12 @@ export async function fetchAssignedTasks(
   
   if (error) throw error;
   
-  return data || [];
+  // Convert string status and priority to their proper types
+  const typedTasks = (data || []).map(task => ({
+    ...task,
+    status: task.status as TaskStatus,
+    priority: task.priority as TaskPriority
+  }));
+  
+  return typedTasks;
 }

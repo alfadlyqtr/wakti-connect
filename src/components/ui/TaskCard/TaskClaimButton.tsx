@@ -45,8 +45,10 @@ export const TaskClaimButton: React.FC<TaskClaimButtonProps> = ({
         await supabase.from('notifications').insert({
           user_id: taskData.user_id,
           type: 'task_claimed',
+          title: 'Task Claimed',
           content: `A staff member has claimed the task: ${taskData.title}`,
-          related_id: taskId
+          related_entity_id: taskId,
+          related_entity_type: 'task'
         });
       }
       
