@@ -120,7 +120,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     defaultValues: {
       title: "",
       description: "",
-      status: "pending",
       priority: "normal",
       dueDate: format(new Date(), "yyyy-MM-dd"),
       dueTime: "",
@@ -165,7 +164,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       const taskData: any = {
         title: values.title,
         description: values.description,
-        status: values.status,
         priority: values.priority,
         due_date: values.dueDate,
         due_time: values.dueTime || null,
@@ -208,6 +206,16 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const confirmFreeAccount = () => {
     setFreeAccountAlertOpen(false);
     handleCreateTask(form.getValues());
+  };
+  
+  // Check if form is valid for submit button
+  const isFormValid = () => {
+    if (isClaimTask) {
+      return !!selectedTaskToClaim;
+    }
+    
+    const values = form.getValues();
+    return !!values.title && !!values.dueDate;
   };
 
   return (
@@ -364,33 +372,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Status</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="in-progress">
-                              In Progress
-                            </SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* Status field removed as it's not needed during creation */}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -661,8 +643,18 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? "Creating..." : "Create Task"}
+                  <Button 
+                    type="submit" 
+                    disabled={loading || !isFormValid()}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      "Create Task"
+                    )}
                   </Button>
                 </DialogFooter>
               </form>

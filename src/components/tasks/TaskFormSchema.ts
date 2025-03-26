@@ -26,7 +26,7 @@ const SubtaskSchema = z.object({
 export const taskFormSchema = z.object({
   title: z.string().min(1, "Title is required").max(100, "Title is too long"),
   description: z.string().optional(),
-  status: z.enum(["pending", "in-progress", "completed", "late", "snoozed"] as const).default("pending"),
+  // Status removed from initial creation form
   priority: z.enum(["urgent", "high", "medium", "normal"] as const).default("normal"),
   dueDate: z.string().min(1, "Due date is required"),
   dueTime: z.string().optional(),

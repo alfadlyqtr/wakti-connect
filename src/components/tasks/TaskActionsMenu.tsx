@@ -30,6 +30,7 @@ interface TaskActionsMenuProps {
   userRole: "free" | "individual" | "business" | "staff";
   isShared?: boolean;
   isAssigned?: boolean;
+  isTeamTask?: boolean;
   status?: TaskStatus;
   onEdit?: (taskId: string) => void;
   onDelete?: (taskId: string) => void;
@@ -45,6 +46,7 @@ export function TaskActionsMenu({
   userRole,
   isShared = false,
   isAssigned = false,
+  isTeamTask = false,
   status = "pending",
   onEdit,
   onDelete,
@@ -70,6 +72,10 @@ export function TaskActionsMenu({
     }
   };
   
+  // Business users should be able to edit and delete team tasks they created
+  const canEditTask = userRole === "business" || (userRole !== "staff" && !isTeamTask);
+  const canDeleteTask = userRole === "business" || (userRole !== "staff" && !isTeamTask);
+  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -83,15 +89,19 @@ export function TaskActionsMenu({
         
         <DropdownMenuSeparator />
         
-        <DropdownMenuItem onClick={() => handleAction(onEdit)}>
-          <Edit className="h-4 w-4 mr-2" />
-          Edit
-        </DropdownMenuItem>
+        {canEditTask && (
+          <DropdownMenuItem onClick={() => handleAction(onEdit)}>
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </DropdownMenuItem>
+        )}
         
-        <DropdownMenuItem onClick={() => handleAction(onDelete)}>
-          <Trash className="h-4 w-4 mr-2" />
-          Delete
-        </DropdownMenuItem>
+        {canDeleteTask && (
+          <DropdownMenuItem onClick={() => handleAction(onDelete)}>
+            <Trash className="h-4 w-4 mr-2" />
+            Delete
+          </DropdownMenuItem>
+        )}
         
         <DropdownMenuSeparator />
         
