@@ -69,8 +69,16 @@ export const createCustomizationHandlers = (
         };
       }
       
-      // Update the property
-      draft.utilityButtons[buttonType][property] = value;
+      // Update the property with type safety
+      if (property === 'shape') {
+        // Ensure value is one of the allowed shape types
+        const safeShape = (value === 'rounded' || value === 'pill' || value === 'square') 
+          ? value 
+          : 'rounded';
+        draft.utilityButtons[buttonType][property] = safeShape;
+      } else {
+        draft.utilityButtons[buttonType][property] = value;
+      }
     });
     
     onCustomizationChange(updatedCustomization);

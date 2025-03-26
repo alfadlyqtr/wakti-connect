@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EventFormTab } from "@/types/form.types";
+import { EventFormTab, ShareTab } from "@/types/form.types";
 import { EventCustomization } from "@/types/event.types";
 import { InvitationRecipient } from "@/types/invitation.types";
 import DetailsTab from "./DetailsTab";
@@ -30,8 +30,8 @@ interface FormTabsProps {
   handlePrevTab: () => void;
   customization: EventCustomization;
   setCustomization: (customization: EventCustomization) => void;
-  shareTab: string;
-  setShareTab: (tab: string) => void;
+  shareTab: ShareTab;
+  setShareTab: (tab: ShareTab) => void;
   recipients: InvitationRecipient[];
   addRecipient: (recipient: InvitationRecipient) => void;
   removeRecipient: (index: number) => void;

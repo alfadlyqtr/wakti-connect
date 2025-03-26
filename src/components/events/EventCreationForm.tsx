@@ -7,6 +7,7 @@ import { Event } from "@/types/event.types";
 import FormHeader from "./creation/FormHeader";
 import FormTabs from "./creation/FormTabs";
 import { useEditEventEffect } from "./hooks/useEditEventEffect";
+import { ShareTab } from "@/types/form.types";
 
 interface EventCreationFormProps {
   editEvent?: Event | null;
@@ -101,7 +102,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
           handlePrevTab={handlePrevTab}
           customization={customization}
           setCustomization={setCustomization}
-          shareTab={shareTab}
+          shareTab={shareTab as ShareTab}
           setShareTab={setShareTab}
           recipients={recipients}
           addRecipient={addRecipient}

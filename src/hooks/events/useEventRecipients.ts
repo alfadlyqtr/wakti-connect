@@ -1,10 +1,11 @@
 
 import { useState, useCallback } from "react";
 import { InvitationRecipient } from "@/types/invitation.types";
+import { ShareTab } from "@/types/form.types";
 
 export const useEventRecipients = () => {
   const [recipients, setRecipients] = useState<InvitationRecipient[]>([]);
-  const [shareTab, setShareTab] = useState<string>('email');
+  const [shareTab, setShareTab] = useState<ShareTab>('recipients');
   
   const addRecipient = useCallback((recipient: InvitationRecipient) => {
     setRecipients(prev => [...prev, recipient]);
@@ -26,7 +27,7 @@ export const useEventRecipients = () => {
     addRecipient(newRecipient);
     
     // Switch to the recipients tab to show the new recipient
-    setShareTab('email');
+    setShareTab('recipients');
   }, [addRecipient]);
 
   return {
