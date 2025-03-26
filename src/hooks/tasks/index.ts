@@ -4,4 +4,4 @@ export { useTasks } from './useTasks';
 export { useTaskFilters } from './useTaskFilters';
 export { useTaskOperations } from './useTaskOperations';
 export { useTaskQueries } from './useTaskQueries';
-export type { TaskWithSharedInfo } from './types';
+export type { TaskWithSharedInfo, UseTaskQueriesReturn, TaskTab } from './types';
