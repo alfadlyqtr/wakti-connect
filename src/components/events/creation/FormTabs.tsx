@@ -6,7 +6,7 @@ import { EventCustomization } from "@/types/event.types";
 import { InvitationRecipient } from "@/types/invitation.types";
 import DetailsTab from "./DetailsTab";
 import CustomizeTab from "../customize/CustomizeTab";
-import ShareTabContent from "./ShareTab";
+import ShareTabContent from "../creation/ShareTabContent";
 import FormActions from "./FormActions";
 
 interface FormTabsProps {
