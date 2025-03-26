@@ -9,36 +9,42 @@ import { validateTaskStatus, validateTaskPriority } from "../utils/statusValidat
 export async function fetchAssignedTasks(userId: string): Promise<Task[]> {
   console.log(`Fetching assigned tasks for user ${userId}`);
   
-  const { data, error } = await supabase
-    .from('tasks')
-    .select('*')
-    .eq('assignee_id', userId)
-    .order('due_date', { ascending: true });
+  try {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('assignee_id', userId)
+      .order('due_date', { ascending: true });
+      
+    if (error) {
+      console.error("Error fetching assigned tasks:", error);
+      throw error;
+    }
     
-  if (error) {
-    console.error("Error fetching assigned tasks:", error);
-    throw error;
+    console.log(`Found ${data?.length || 0} assigned tasks for user ${userId}`);
+    
+    // Transform data with proper typing
+    return (data || []).map(item => ({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      status: validateTaskStatus(item.status || "pending") as TaskStatus,
+      priority: validateTaskPriority(item.priority || "normal") as TaskPriority,
+      due_date: item.due_date,
+      due_time: item.due_time || null,
+      user_id: item.user_id,
+      assignee_id: item.assignee_id || null,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      completed_at: item.completed_at || null,
+      is_recurring_instance: item.is_recurring_instance || false,
+      parent_recurring_id: item.parent_recurring_id || null,
+      snooze_count: item.snooze_count || 0,
+      snoozed_until: item.snoozed_until || null
+    }));
+  } catch (error) {
+    console.error("Error in fetchAssignedTasks:", error);
+    // Return empty array instead of throwing to prevent UI errors
+    return [];
   }
-  
-  console.log(`Found ${data?.length || 0} assigned tasks for user ${userId}`);
-  
-  // Transform data with proper typing
-  return (data || []).map(item => ({
-    id: item.id,
-    title: item.title,
-    description: item.description,
-    status: validateTaskStatus(item.status || "pending") as TaskStatus,
-    priority: validateTaskPriority(item.priority || "normal") as TaskPriority,
-    due_date: item.due_date,
-    due_time: item.due_time || null,
-    user_id: item.user_id,
-    assignee_id: item.assignee_id || null,
-    created_at: item.created_at,
-    updated_at: item.updated_at,
-    completed_at: item.completed_at || null,
-    is_recurring_instance: item.is_recurring_instance || false,
-    parent_recurring_id: item.parent_recurring_id || null,
-    snooze_count: item.snooze_count || 0,
-    snoozed_until: item.snoozed_until || null
-  }));
 }

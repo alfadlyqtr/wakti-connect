@@ -11,6 +11,7 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
   const [userRole, setUserRole] = useState<"free" | "individual" | "business" | "staff" | null>(null);
   const [isStaff, setIsStaff] = useState<boolean>(false);
 
+  // Fetch user role and staff status only once on component mount
   useEffect(() => {
     const fetchUserRole = async () => {
       try {
@@ -149,6 +150,7 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
     enabled: !!userRole,
     refetchOnWindowFocus: false,
     staleTime: 30000,
+    refetchInterval: false // Prevent continuous refetching
   });
 
   useEffect(() => {

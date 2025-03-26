@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
@@ -16,23 +17,9 @@ const DashboardTasks = () => {
   const [isUserStaffMember, setIsUserStaffMember] = useState(false);
   const [activeTab, setActiveTab] = useState<TaskTab>("my-tasks");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
   
-  const { 
-    filteredTasks, 
-    isLoading, 
-    error, 
-    searchQuery, 
-    setSearchQuery,
-    filterStatus,
-    setFilterStatus,
-    filterPriority,
-    setFilterPriority,
-    createTask,
-    userRole: fetchedUserRole,
-    isStaff: isStaffFromHook,
-    refetch
-  } = useTasks(activeTab as TaskTab);
-
+  // Get user role and staff status only once at component mount
   useEffect(() => {
     const getUserRole = async () => {
       try {
@@ -59,12 +46,37 @@ const DashboardTasks = () => {
           console.log(`Setting user role from profile: ${profileData?.account_type || "free"}`);
           setUserRole(profileData?.account_type || "free");
         }
+        
+        setInitialCheckDone(true);
       } catch (error) {
         console.error("Error fetching user role:", error);
+        setInitialCheckDone(true);
       }
     };
 
     getUserRole();
+  }, []);
+  
+  // Use the tasks hook AFTER we've determined the user role and active tab
+  const { 
+    filteredTasks, 
+    isLoading, 
+    error, 
+    searchQuery, 
+    setSearchQuery,
+    filterStatus,
+    setFilterStatus,
+    filterPriority,
+    setFilterPriority,
+    createTask,
+    userRole: fetchedUserRole,
+    isStaff: isStaffFromHook,
+    refetch
+  } = useTasks(activeTab as TaskTab);
+  
+  // Set up notification subscription
+  useEffect(() => {
+    if (!initialCheckDone) return;
     
     const unsubscribe = subscribeToNotifications((notification) => {
       console.log("Received new notification:", notification);
@@ -85,7 +97,7 @@ const DashboardTasks = () => {
     return () => {
       unsubscribe();
     };
-  }, [refetch]);
+  }, [initialCheckDone, refetch]);
 
   useEffect(() => {
     if (error) {
@@ -119,20 +131,20 @@ const DashboardTasks = () => {
 
   const handleTabChange = (newTab: TaskTab) => {
     console.log(`Changing tab from ${activeTab} to ${newTab}`);
-    setActiveTab(newTab);
     
     if (isUserStaffMember && newTab !== "assigned-tasks") {
       console.log("Staff member attempted to switch to non-assigned tab, redirecting");
-      setActiveTab("assigned-tasks");
-      return;
+      return; // Don't change the tab for staff members
     }
+    
+    setActiveTab(newTab);
     
     setTimeout(() => {
       refetch();
     }, 100);
   };
 
-  if (isLoading) {
+  if (isLoading || !initialCheckDone) {
     return (
       <div className="space-y-6">
         <div className="flex flex-col gap-2">
