@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useTasks, TaskTab, TaskWithSharedInfo } from "@/hooks/useTasks";
+import { useTasks } from "@/hooks/tasks";
+import { TaskTab } from "@/types/task.types";
 import TaskControls from "@/components/tasks/TaskControls";
 import EmptyTasksState from "@/components/tasks/EmptyTasksState";
 import TaskGrid from "@/components/tasks/TaskGrid";
@@ -31,19 +31,17 @@ const DashboardTasks = () => {
     userRole: fetchedUserRole,
     isStaff: isStaffFromHook,
     refetch
-  } = useTasks(activeTab);
+  } = useTasks(activeTab as TaskTab);
 
   useEffect(() => {
     const getUserRole = async () => {
       try {
-        // Clear staff cache to ensure we have fresh data
         await clearStaffCache();
         
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) return;
         
-        // Check if user is staff
         const staffStatus = await isUserStaff();
         setIsUserStaffMember(staffStatus);
         
@@ -52,7 +50,6 @@ const DashboardTasks = () => {
           setUserRole('staff');
           setActiveTab('assigned-tasks');
         } else {
-          // Get regular user role from profile
           const { data: profileData } = await supabase
             .from('profiles')
             .select('account_type')
@@ -69,17 +66,14 @@ const DashboardTasks = () => {
 
     getUserRole();
     
-    // Subscribe to notifications for real-time updates
     const unsubscribe = subscribeToNotifications((notification) => {
       console.log("Received new notification:", notification);
       
-      // If task-related notification, refetch tasks
       if (notification.type.includes('task')) {
         console.log("Task-related notification received, refetching tasks");
         refetch();
       }
       
-      // For assigned tasks, also clear staff cache to ensure fresh data
       if (notification.type === 'task_assigned') {
         clearStaffCache().then(() => {
           console.log("Staff cache cleared after task assignment notification");
@@ -110,7 +104,6 @@ const DashboardTasks = () => {
       console.log("Creating task with data:", taskData);
       await createTask(taskData);
       setCreateDialogOpen(false);
-      // Refresh the task list
       setTimeout(() => {
         refetch();
       }, 300);
@@ -121,7 +114,6 @@ const DashboardTasks = () => {
         description: error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive",
       });
-      // Keep dialog open so user can try again
     }
   };
 
@@ -129,14 +121,12 @@ const DashboardTasks = () => {
     console.log(`Changing tab from ${activeTab} to ${newTab}`);
     setActiveTab(newTab);
     
-    // Staff members should only see assigned tasks
     if (isUserStaffMember && newTab !== "assigned-tasks") {
       console.log("Staff member attempted to switch to non-assigned tab, redirecting");
       setActiveTab("assigned-tasks");
       return;
     }
     
-    // Force refetch when changing tabs
     setTimeout(() => {
       refetch();
     }, 100);
