@@ -15,11 +15,16 @@ export const useTaskOperations = (
   const createTask = async (taskData: any) => {
     setIsProcessing(true);
     try {
+      console.log("Starting task creation with data:", taskData);
       const { data: { session } } = await supabase.auth.getSession();
       
-      if (!session) throw new Error("You must be logged in to create a task");
+      if (!session) {
+        console.error("No active session found");
+        throw new Error("You must be logged in to create a task");
+      }
       
       if (isStaff) {
+        console.error("Staff member attempted to create a task");
         throw new Error("Staff members cannot create tasks");
       }
       
@@ -34,9 +39,13 @@ export const useTaskOperations = (
           .eq('user_id', session.user.id)
           .gte('created_at', startOfMonth.toISOString());
           
-        if (countError) throw countError;
+        if (countError) {
+          console.error("Error checking task limits:", countError);
+          throw countError;
+        }
         
         if (existingTasks && existingTasks.length >= 1) {
+          console.error("Free account monthly task limit reached");
           throw new Error("Free accounts can only create one task per month. Upgrade to create more tasks.");
         }
       }
@@ -51,41 +60,66 @@ export const useTaskOperations = (
       
       const isRecurring = !!recurring && taskData.isRecurring;
       
-      console.log("Creating task with data:", taskData);
+      console.log("Processing task data:", { 
+        role: userRole, 
+        isTeamTask: taskData.is_team_task,
+        isRecurring
+      });
       
-      // Convert the dueDate to the correct format
-      if (taskDataWithoutRecurring.dueDate) {
-        taskDataWithoutRecurring.due_date = taskDataWithoutRecurring.dueDate;
-        delete taskDataWithoutRecurring.dueDate;
+      // Convert field names to match database schema
+      let formattedTaskData = { ...taskDataWithoutRecurring };
+      
+      // Handle date and time conversions
+      if (formattedTaskData.dueDate) {
+        formattedTaskData.due_date = formattedTaskData.dueDate;
+        delete formattedTaskData.dueDate;
+        console.log("Formatted due_date:", formattedTaskData.due_date);
       }
       
-      // Convert the dueTime to the correct format
-      if (taskDataWithoutRecurring.dueTime) {
-        taskDataWithoutRecurring.due_time = taskDataWithoutRecurring.dueTime;
-        delete taskDataWithoutRecurring.dueTime;
+      if (formattedTaskData.dueTime) {
+        formattedTaskData.due_time = formattedTaskData.dueTime;
+        delete formattedTaskData.dueTime;
+        console.log("Formatted due_time:", formattedTaskData.due_time);
       }
       
-      // Convert subtasks to the correct format
-      if (taskDataWithoutRecurring.subtasks && taskDataWithoutRecurring.enableSubtasks) {
-        taskDataWithoutRecurring.subtasks = taskDataWithoutRecurring.subtasks.map((subtask: any) => ({
+      // Format subtasks if they exist
+      if (formattedTaskData.subtasks && formattedTaskData.enableSubtasks) {
+        formattedTaskData.subtasks = formattedTaskData.subtasks.map((subtask: any) => ({
           content: subtask.content,
           is_completed: subtask.isCompleted || false,
           due_date: subtask.dueDate || null,
           due_time: subtask.dueTime || null,
         }));
+        console.log("Formatted subtasks:", formattedTaskData.subtasks);
       } else {
-        taskDataWithoutRecurring.subtasks = [];
+        formattedTaskData.subtasks = [];
       }
+      
+      console.log("Final task data before creation:", formattedTaskData);
       
       // Create the task
       const createdTask = await createTaskService(
-        taskDataWithoutRecurring, 
+        formattedTaskData, 
         isRecurring ? recurring : undefined
       );
       
+      console.log("Task created successfully:", createdTask);
+      
       // Handle delegation after task creation if needed
       if (userRole === "business" && (taskData.delegated_to || taskData.delegated_email)) {
-        await delegateTask(createdTask.id, taskData.delegated_to, taskData.delegated_email);
+        try {
+          console.log("Delegating task to:", taskData.delegated_to || taskData.delegated_email);
+          await delegateTask(createdTask.id, taskData.delegated_to, taskData.delegated_email);
+          console.log("Task delegation completed");
+        } catch (delegationError) {
+          console.error("Task delegation failed but task was created:", delegationError);
+          toast({
+            title: "Task created but delegation failed",
+            description: "Your task was created but we couldn't assign it to the selected person",
+            variant: "warning"
+          });
+          // Don't rethrow - the main task was still created
+        }
       }
       
       toast({

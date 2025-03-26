@@ -27,7 +27,8 @@ const DashboardTasks = () => {
     isPaidAccount,
     handleCreateTask,
     handleTabChange,
-    refetch
+    refetch,
+    forceRefresh
   } = useTasksPageState();
 
   // Store current tab in localStorage for the claim task dialog
@@ -36,6 +37,16 @@ const DashboardTasks = () => {
       localStorage.setItem('currentTaskTab', activeTab);
     }
   }, [activeTab]);
+
+  React.useEffect(() => {
+    // Log component render for debugging
+    console.log("DashboardTasks rendering", {
+      activeTab,
+      isLoading,
+      taskCount: filteredTasks?.length,
+      initialCheckDone
+    });
+  }, [activeTab, isLoading, filteredTasks, initialCheckDone, forceRefresh]);
 
   if (isLoading || !initialCheckDone) {
     return <TasksLoading />;
@@ -68,6 +79,7 @@ const DashboardTasks = () => {
         isPaidAccount={isPaidAccount}
         isStaff={isUserStaffMember}
         onCreateTask={() => setCreateDialogOpen(true)}
+        key={`task-container-${activeTab}-${forceRefresh}`} // Add a key to force re-render
       />
       
       <CreateTaskDialog

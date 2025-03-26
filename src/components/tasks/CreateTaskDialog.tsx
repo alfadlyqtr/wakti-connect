@@ -148,11 +148,18 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     if (isClaimTask && selectedTaskToClaim) {
       setLoading(true);
       try {
+        console.log("Claiming task:", selectedTaskToClaim);
         await onCreateTask({ id: selectedTaskToClaim });
+        console.log("Task claimed successfully");
         form.reset();
         onOpenChange(false);
       } catch (error) {
         console.error("Error claiming task:", error);
+        toast({
+          title: "Failed to claim task",
+          description: error instanceof Error ? error.message : "An unknown error occurred",
+          variant: "destructive"
+        });
       } finally {
         setLoading(false);
       }
@@ -177,6 +184,9 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         delegated_email: values.delegated_email || null,
         is_team_task: values.is_team_task || false,
       };
+
+      console.log("Form values:", values);
+      console.log("Creating task with data:", taskData);
 
       if (values.enableSubtasks && values.subtasks && values.subtasks.length > 0) {
         taskData.subtasks = values.subtasks.map((subtask) => ({
@@ -205,6 +215,12 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       
       form.reset();
       onOpenChange(false);
+      
+      toast({
+        title: "Task created",
+        description: "Your task has been successfully created",
+        variant: "success"
+      });
     } catch (error) {
       console.error("Error creating task:", error);
       toast({

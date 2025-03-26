@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { isUserStaff, clearStaffCache } from "@/utils/staffUtils";
 import { TaskTab } from '@/types/task.types';
@@ -14,11 +14,13 @@ export const useTasksPageState = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const [businessId, setBusinessId] = useState<string | null>(null);
+  const [forceRefresh, setForceRefresh] = useState(0); // Add a state variable to force refreshes
 
   // Get user role and staff status only once at component mount
   useEffect(() => {
     const getUserRole = async () => {
       try {
+        console.log("Checking user role and staff status");
         // Check localStorage first for faster loading and to prevent unnecessary db calls
         const cachedIsStaff = localStorage.getItem('isStaff') === 'true';
         
@@ -44,6 +46,7 @@ export const useTasksPageState = () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) {
+          console.log("No active session found");
           setInitialCheckDone(true);
           return;
         }
@@ -111,6 +114,14 @@ export const useTasksPageState = () => {
     refetch
   } = useTasks(activeTab);
 
+  // Enhanced refetch function with better logging
+  const enhancedRefetch = useCallback(() => {
+    console.log("Refetching tasks for tab:", activeTab);
+    refetch();
+    // Force state update to trigger a re-render
+    setForceRefresh(prev => prev + 1);
+  }, [activeTab, refetch]);
+
   // Set up notification subscription
   useEffect(() => {
     if (!initialCheckDone) return;
@@ -120,13 +131,13 @@ export const useTasksPageState = () => {
       
       if (notification.type.includes('task')) {
         console.log("Task-related notification received, refetching tasks");
-        refetch();
+        enhancedRefetch();
       }
       
       if (notification.type === 'task_assigned' || notification.type === 'task_claimed') {
         clearStaffCache().then(() => {
           console.log("Staff cache cleared after task assignment/claim notification");
-          refetch();
+          enhancedRefetch();
         });
       }
     });
@@ -134,11 +145,12 @@ export const useTasksPageState = () => {
     return () => {
       unsubscribe();
     };
-  }, [initialCheckDone, refetch]);
+  }, [initialCheckDone, enhancedRefetch]);
 
   // Error handling
   useEffect(() => {
     if (error) {
+      console.error("Task loading error:", error);
       toast({
         title: "Failed to load tasks",
         description: error instanceof Error ? error.message : "Unknown error occurred",
@@ -163,7 +175,10 @@ export const useTasksPageState = () => {
           .eq('id', taskData.id)
           .select();
         
-        if (error) throw error;
+        if (error) {
+          console.error("Task claim error:", error);
+          throw error;
+        }
         
         toast({
           title: "Task claimed",
@@ -189,8 +204,9 @@ export const useTasksPageState = () => {
       setCreateDialogOpen(false);
       
       // Make sure to refetch tasks after creation
+      console.log("Task created/claimed, triggering refetch");
       setTimeout(() => {
-        refetch();
+        enhancedRefetch();
       }, 300);
     } catch (error) {
       console.error("Error in handleCreateTask:", error);
@@ -199,6 +215,7 @@ export const useTasksPageState = () => {
         description: error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive",
       });
+      throw error; // Rethrow to let the form component handle it
     }
   };
 
@@ -217,7 +234,8 @@ export const useTasksPageState = () => {
     setActiveTab(newTab);
     
     setTimeout(() => {
-      refetch();
+      console.log("Tab changed, triggering refetch");
+      enhancedRefetch();
     }, 100);
   };
 
@@ -239,7 +257,8 @@ export const useTasksPageState = () => {
     isPaidAccount,
     handleCreateTask,
     handleTabChange,
-    refetch,
-    businessId
+    refetch: enhancedRefetch,
+    businessId,
+    forceRefresh // Expose this so components can use it for key props
   };
 };
