@@ -57,11 +57,16 @@ export function CreateTaskDialog({
         title: data.title,
         description: data.description,
         priority: data.priority,
-        due_date: data.dueDate,
-        due_time: data.dueTime || null,
+        due_date: data.dueDate,  // Keep snake_case for API
+        due_time: data.dueTime || null,  // Keep snake_case for API
         is_recurring: isRecurring, // Add is_recurring flag
-        // Only include subtasks if enabled
-        subtasks: data.enableSubtasks ? data.subtasks : []
+        // Transform subtasks to match API expectations
+        subtasks: data.enableSubtasks ? data.subtasks.map((subtask: any) => ({
+          content: subtask.content,
+          is_completed: subtask.isCompleted || false,
+          due_date: subtask.dueDate || null,
+          due_time: subtask.dueTime || null
+        })) : []
       };
       
       console.log("Submitting task data:", taskData);

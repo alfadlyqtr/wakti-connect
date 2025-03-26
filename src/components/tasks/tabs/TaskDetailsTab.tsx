@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Calendar, Clock } from "lucide-react";
-import { TimePicker } from "@/components/ui/time-picker";
+import { TimePickerField } from "../form-fields/TimePickerField";
 
 interface TaskDetailsTabProps {
   form: UseFormReturn<any>;
@@ -102,7 +102,7 @@ export function TaskDetailsTab({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FormField
           control={form.control}
-          name="due_date"
+          name="dueDate"
           render={({ field }) => (
             <FormItem>
               <FormLabel className="flex items-center gap-1">
@@ -117,25 +117,10 @@ export function TaskDetailsTab({
           )}
         />
         
-        <FormField
-          control={form.control}
-          name="due_time"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                Due Time
-              </FormLabel>
-              <FormControl>
-                <TimePicker 
-                  value={field.value || ""} 
-                  onChange={field.onChange}
-                  interval={15}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <TimePickerField 
+          form={form} 
+          name="dueTime"
+          label="Due Time"
         />
       </div>
       

@@ -10,13 +10,6 @@ import {
   FormMessage 
 } from "@/components/ui/form";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -52,8 +45,8 @@ export const TimePickerField: React.FC<TimePickerFieldProps> = ({
   // Generate hours options
   const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
   
-  // Generate minutes options (5-minute intervals)
-  const minutes = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0'));
+  // Generate minutes options (15-minute intervals)
+  const minutes = Array.from({ length: 4 }, (_, i) => (i * 15).toString().padStart(2, '0'));
 
   // Handle direct time input
   const handleTimeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

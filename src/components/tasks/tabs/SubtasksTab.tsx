@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { TimePicker } from "@/components/ui/time-picker";
 import { Plus, Trash2, Calendar, Clock } from "lucide-react";
+import { TimePickerField } from "../form-fields/TimePickerField";
 
 interface SubtasksTabProps {
   form: UseFormReturn<any>;
@@ -43,7 +43,7 @@ export function SubtasksTab({ form, enableSubtasks }: SubtasksTabProps) {
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => append({ content: "", is_completed: false, due_date: null, due_time: null })}
+          onClick={() => append({ content: "", isCompleted: false, dueDate: null, dueTime: null })}
         >
           <Plus className="h-4 w-4 mr-1" /> Add Subtask
         </Button>
@@ -74,7 +74,7 @@ export function SubtasksTab({ form, enableSubtasks }: SubtasksTabProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name={`subtasks.${index}.due_date`}
+              name={`subtasks.${index}.dueDate`}
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-1">
@@ -86,7 +86,7 @@ export function SubtasksTab({ form, enableSubtasks }: SubtasksTabProps) {
                       type="date" 
                       {...field} 
                       value={field.value || ""}
-                      max={form.watch("due_date")} // Can't exceed main task due date
+                      max={form.watch("dueDate")} // Can't exceed main task due date
                     />
                   </FormControl>
                   <FormMessage />
@@ -94,25 +94,10 @@ export function SubtasksTab({ form, enableSubtasks }: SubtasksTabProps) {
               )}
             />
             
-            <FormField
-              control={form.control}
-              name={`subtasks.${index}.due_time`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    Due Time
-                  </FormLabel>
-                  <FormControl>
-                    <TimePicker 
-                      value={field.value || ""} 
-                      onChange={field.onChange}
-                      interval={15}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+            <TimePickerField
+              form={form}
+              name={`subtasks.${index}.dueTime`}
+              label="Due Time"
             />
           </div>
           
