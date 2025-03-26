@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -57,111 +58,114 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
 
   const queryKey = ['tasks', tab, isStaff, userRole];
 
-  const { data = [], isLoading, error, refetch } = useQuery({
-    queryKey,
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+  // Define the query function outside of useQuery to improve code readability
+  const fetchTasksData = async (): Promise<TaskWithSharedInfo[]> => {
+    const { data: { session } } = await supabase.auth.getSession();
       
-      if (!session) throw new Error("You must be logged in to view tasks");
+    if (!session) throw new Error("You must be logged in to view tasks");
+    
+    let query;
+    let result: TaskWithSharedInfo[] = [];
+    
+    // Re-check staff status to ensure it's up to date
+    const staffCheck = isStaff || localStorage.getItem('isStaff') === 'true';
+    
+    if (staffCheck) {
+      console.log("Fetching tasks as staff member, tab:", tab);
+      if (tab === "my-tasks" || tab === "assigned-tasks") {
+        console.log("Fetching assigned tasks for staff member:", session.user.id);
+        query = supabase
+          .from('tasks')
+          .select('*')
+          .eq('assignee_id', session.user.id);
+          
+        console.log("Query built for staff assigned tasks");
+      } else {
+        console.log("Staff members cannot see shared tasks, returning empty array");
+        return [];
+      }
+    } else {
+      console.log("Fetching tasks as regular user, tab:", tab);
       
-      let query;
-      let result: any[] = [];
-      
-      // Re-check staff status to ensure it's up to date
-      const staffCheck = isStaff || localStorage.getItem('isStaff') === 'true';
-      
-      if (staffCheck) {
-        console.log("Fetching tasks as staff member, tab:", tab);
-        if (tab === "my-tasks" || tab === "assigned-tasks") {
-          console.log("Fetching assigned tasks for staff member:", session.user.id);
+      if (tab === "my-tasks") {
+        query = supabase
+          .from('tasks')
+          .select('*')
+          .eq('user_id', session.user.id);
+          
+      } else if (tab === "shared-tasks") {
+        try {
+          const { data: sharedTasksData, error: sharedError } = await supabase
+            .from('shared_tasks')
+            .select('id, task_id, shared_with')
+            .eq('shared_with', session.user.id);
+            
+          if (sharedError) throw sharedError;
+          
+          if (sharedTasksData && sharedTasksData.length > 0) {
+            const taskIds = sharedTasksData.map(item => item.task_id);
+            
+            const { data: taskData, error: taskError } = await supabase
+              .from('tasks')
+              .select('*, user_id as shared_by')
+              .in('id', taskIds);
+              
+            if (taskError) throw taskError;
+            
+            result = taskData || [];
+          }
+        } catch (error) {
+          console.error("Error fetching shared tasks:", error);
+        }
+        
+      } else if (tab === "assigned-tasks") {
+        if (userRole === "business") {
+          const businessId = session.user.id;
+          query = supabase
+            .from('tasks')
+            .select('*')
+            .eq('user_id', businessId);
+        } else {
           query = supabase
             .from('tasks')
             .select('*')
             .eq('assignee_id', session.user.id);
-            
-          console.log("Query built for staff assigned tasks");
-        } else {
-          console.log("Staff members cannot see shared tasks, returning empty array");
-          return [] as TaskWithSharedInfo[];
         }
-      } else {
-        console.log("Fetching tasks as regular user, tab:", tab);
-        
-        if (tab === "my-tasks") {
-          query = supabase
-            .from('tasks')
-            .select('*')
-            .eq('user_id', session.user.id);
-            
-        } else if (tab === "shared-tasks") {
-          try {
-            const { data: sharedTasksData, error: sharedError } = await supabase
-              .from('shared_tasks')
-              .select('id, task_id, shared_with')
-              .eq('shared_with', session.user.id);
-              
-            if (sharedError) throw sharedError;
-            
-            if (sharedTasksData && sharedTasksData.length > 0) {
-              const taskIds = sharedTasksData.map(item => item.task_id);
-              
-              const { data: taskData, error: taskError } = await supabase
-                .from('tasks')
-                .select('*, user_id as shared_by')
-                .in('id', taskIds);
-                
-              if (taskError) throw taskError;
-              
-              result = taskData || [];
-            }
-          } catch (error) {
-            console.error("Error fetching shared tasks:", error);
-          }
-          
-        } else if (tab === "assigned-tasks") {
-          if (userRole === "business") {
-            const businessId = session.user.id;
-            query = supabase
-              .from('tasks')
-              .select('*')
-              .eq('user_id', businessId);
-          } else {
-            query = supabase
-              .from('tasks')
-              .select('*')
-              .eq('assignee_id', session.user.id);
-          }
-        } else if (tab === "team-tasks" && userRole === "business") {
-          // Handle team tasks for business accounts
-          query = supabase
-            .from('tasks')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .eq('is_team_task', true);
-        }
+      } else if (tab === "team-tasks" && userRole === "business") {
+        // Handle team tasks for business accounts
+        query = supabase
+          .from('tasks')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .eq('is_team_task', true);
+      }
+    }
+    
+    if (result.length > 0) {
+      const tasksWithSubtasks = await fetchSubtasksForTasks(result);
+      return tasksWithSubtasks;
+    }
+    
+    if (query) {
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error("Error executing task query:", error);
+        throw error;
       }
       
-      if (result.length > 0) {
-        const tasksWithSubtasks = await fetchSubtasksForTasks(result);
-        return tasksWithSubtasks;
-      }
+      console.log(`Query returned ${data?.length || 0} tasks`);
       
-      if (query) {
-        const { data, error } = await query;
-        
-        if (error) {
-          console.error("Error executing task query:", error);
-          throw error;
-        }
-        
-        console.log(`Query returned ${data?.length || 0} tasks`);
-        
-        const tasksWithSubtasks = await fetchSubtasksForTasks(data || []);
-        return tasksWithSubtasks;
-      }
-      
-      return [] as TaskWithSharedInfo[];
-    },
+      const tasksWithSubtasks = await fetchSubtasksForTasks(data || []);
+      return tasksWithSubtasks;
+    }
+    
+    return [];
+  };
+
+  const { data = [], isLoading, error, refetch } = useQuery({
+    queryKey,
+    queryFn: fetchTasksData,
     enabled: !!userRole,
     refetchOnWindowFocus: false,
     staleTime: 30000,
@@ -185,7 +189,7 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
 };
 
 // Helper function to fetch subtasks for tasks
-async function fetchSubtasksForTasks(tasks: any[]): Promise<TaskWithSharedInfo[]> {
+async function fetchSubtasksForTasks(tasks: TaskWithSharedInfo[]): Promise<TaskWithSharedInfo[]> {
   if (!tasks || tasks.length === 0) return tasks;
   
   try {
