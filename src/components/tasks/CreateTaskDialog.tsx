@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -61,7 +60,6 @@ import { Loader2 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { toast } from "@/components/ui/use-toast";
 
-// Simplified TeamTask interface with primitive types only
 type SimpleTeamTask = {
   id: string;
   title: string;
@@ -410,8 +408,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                       </FormItem>
                     )}
                   />
-
-                  {/* Status field removed as it's not needed during creation */}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
