@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
@@ -9,6 +9,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider,
+  TooltipTrigger
+} from "@/components/ui/tooltip";
 
 interface TimePickerProps {
   value: string;
@@ -25,7 +31,9 @@ export const TimePicker: React.FC<TimePickerProps> = ({
   maxTime = "23:59",
   interval = 15
 }) => {
+  const [isOpen, setIsOpen] = useState(false);
   const [timeOptions, setTimeOptions] = useState<string[]>([]);
+  const scrollRef = useRef<HTMLDivElement>(null);
   
   // Generate time options in intervals
   useEffect(() => {
@@ -44,6 +52,22 @@ export const TimePicker: React.FC<TimePickerProps> = ({
     setTimeOptions(options);
   }, [minTime, maxTime, interval]);
   
+  // Scroll to selected time when popup opens
+  useEffect(() => {
+    if (isOpen && value && scrollRef.current) {
+      const selectedIndex = timeOptions.findIndex(time => time === value);
+      if (selectedIndex !== -1) {
+        setTimeout(() => {
+          const buttonHeight = 36; // Approximate height of each time button
+          const scrollPosition = selectedIndex * buttonHeight;
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollPosition;
+          }
+        }, 100);
+      }
+    }
+  }, [isOpen, value, timeOptions]);
+  
   const getMinutesFromTimeString = (time: string): number => {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
@@ -61,44 +85,62 @@ export const TimePicker: React.FC<TimePickerProps> = ({
     return `${hour12}:${minuteStr} ${ampm}`;
   };
   
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(e.target.value);
+  };
+  
+  const handleTimeOptionClick = (time: string) => {
+    onChange(time);
+    setIsOpen(false);
+  };
+  
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className="w-full justify-between text-left font-normal"
-          type="button"
-        >
-          {value ? formatDisplayTime(value) : "Select time"}
-          <Clock className="h-4 w-4 opacity-50 ml-2" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <div className="p-2">
-          <Input
-            type="time"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="mb-2"
-          />
-        </div>
-        <ScrollArea className="h-72 rounded-md border">
-          <div className="p-1">
-            {timeOptions.map((time) => (
-              <Button
-                key={time}
-                variant="ghost"
-                className={`w-full justify-start px-2 py-1.5 text-left rounded-sm ${
-                  time === value ? 'bg-primary text-primary-foreground' : ''
-                }`}
-                onClick={() => onChange(time)}
-              >
-                {formatDisplayTime(time)}
-              </Button>
-            ))}
+    <TooltipProvider>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className="w-full justify-between text-left font-normal"
+            type="button"
+          >
+            {value ? formatDisplayTime(value) : "Select time"}
+            <Clock className="h-4 w-4 opacity-50 ml-2" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[240px] p-0" align="start">
+          <div className="p-3 border-b">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Input
+                  type="time"
+                  value={value}
+                  onChange={handleTimeChange}
+                  className="w-full"
+                />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Type or select a time</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
-        </ScrollArea>
-      </PopoverContent>
-    </Popover>
+          <ScrollArea className="h-64" ref={scrollRef}>
+            <div className="p-1">
+              {timeOptions.map((time) => (
+                <Button
+                  key={time}
+                  variant="ghost"
+                  className={`w-full justify-start px-3 py-1.5 text-left rounded-sm ${
+                    time === value ? 'bg-primary text-primary-foreground' : ''
+                  }`}
+                  onClick={() => handleTimeOptionClick(time)}
+                >
+                  {formatDisplayTime(time)}
+                </Button>
+              ))}
+            </div>
+          </ScrollArea>
+        </PopoverContent>
+      </Popover>
+    </TooltipProvider>
   );
 };
