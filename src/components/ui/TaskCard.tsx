@@ -339,12 +339,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     <div className="flex-1">
                       <div className={`${subtask.is_completed ? 'line-through text-muted-foreground' : ''}`}>
                         {subtask.content}
+                        {(subtask.due_date || subtask.due_time) && (
+                          <span className="text-xs text-muted-foreground ml-2">
+                            {formatSubtaskDueDate(subtask.due_date, subtask.due_time)}
+                          </span>
+                        )}
                       </div>
-                      {(subtask.due_date || subtask.due_time) && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {formatSubtaskDueDate(subtask.due_date, subtask.due_time)}
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -364,12 +364,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     <div className="flex-1">
                       <div className={`${subtask.is_completed ? 'line-through text-muted-foreground' : ''}`}>
                         {subtask.content}
+                        {(subtask.due_date || subtask.due_time) && (
+                          <span className="text-xs text-muted-foreground ml-2">
+                            {formatSubtaskDueDate(subtask.due_date, subtask.due_time)}
+                          </span>
+                        )}
                       </div>
-                      {(subtask.due_date || subtask.due_time) && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {formatSubtaskDueDate(subtask.due_date, subtask.due_time)}
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))}
