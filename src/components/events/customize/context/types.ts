@@ -22,4 +22,5 @@ export interface CustomizationContextType {
   handleMapDisplayChange: (value: 'button' | 'qrcode' | 'both') => void;
   handleCardEffectChange: (cardEffect: any) => void;
   handleElementAnimationsChange: (elementAnimations: any) => void;
+  handleUtilityButtonStyleChange: (buttonType: 'calendar' | 'map' | 'qr', property: 'background' | 'color' | 'shape', value: string) => void;
 }

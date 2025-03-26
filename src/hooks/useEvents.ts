@@ -16,7 +16,7 @@ export const useEvents = (tab?: EventTab) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
-  const { user, userDetails } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [canCreateEvents, setCanCreateEvents] = useState(false);
   const [userRole, setUserRole] = useState<'free' | 'individual' | 'business'>('free');

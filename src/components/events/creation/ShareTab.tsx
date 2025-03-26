@@ -147,7 +147,7 @@ const ShareTab: React.FC<ShareTabProps> = ({
 
   return (
     <div className="px-4 py-2 space-y-5">
-      <Alert variant="outline" className="bg-primary/5 border-primary/20">
+      <Alert className="bg-primary/5 border-primary/20">
         <AlertDescription className="flex justify-between items-center">
           <span>
             Share your event with others and track responses
@@ -272,7 +272,7 @@ const ShareTab: React.FC<ShareTabProps> = ({
             </div>
             
             <div className="pt-2">
-              <Alert variant="outline" className="bg-muted/30 border-muted">
+              <Alert className="bg-muted/30 border-muted">
                 <AlertDescription className="text-xs text-muted-foreground">
                   Anyone with this link can view the event details. They will need to sign up or log in to WAKTI to respond to the invitation.
                 </AlertDescription>
@@ -309,7 +309,7 @@ const ShareTab: React.FC<ShareTabProps> = ({
               </Button>
             </div>
             
-            <Alert variant="outline" className="bg-muted/30 border-muted">
+            <Alert className="bg-muted/30 border-muted">
               <AlertDescription className="text-xs text-muted-foreground">
                 Share this QR code with your contacts. When scanned, it will direct them to the event page where they can view details and respond.
               </AlertDescription>

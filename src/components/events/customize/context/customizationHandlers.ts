@@ -1,5 +1,6 @@
 
 import { EventCustomization } from "@/types/event.types";
+import { produce } from "immer";
 
 export const createCustomizationHandlers = (
   customization: EventCustomization,
@@ -16,7 +17,7 @@ export const createCustomizationHandlers = (
       }
     });
   };
-  
+
   const handleBackgroundAngleChange = (angle: number) => {
     onCustomizationChange({
       ...customization,
@@ -26,18 +27,18 @@ export const createCustomizationHandlers = (
       }
     });
   };
-  
+
   const handleBackgroundDirectionChange = (direction: string) => {
     onCustomizationChange({
       ...customization,
       background: {
         ...customization.background,
-        direction: direction as 'to-right' | 'to-left' | 'to-bottom' | 'to-top' | 'to-bottom-right' | 'to-bottom-left' | 'to-top-right' | 'to-top-left'
+        direction: direction as any
       }
     });
   };
-  
-  // Button handlers
+
+  // Button style handlers
   const handleButtonStyleChange = (type: 'accept' | 'decline', property: 'background' | 'color' | 'shape', value: string) => {
     onCustomizationChange({
       ...customization,
@@ -50,21 +51,31 @@ export const createCustomizationHandlers = (
       }
     });
   };
-  
-  // Utility button handlers (Calendar, Map, QR Code)
+
+  // Utility button style handler
   const handleUtilityButtonStyleChange = (buttonType: 'calendar' | 'map' | 'qr', property: 'background' | 'color' | 'shape', value: string) => {
-    onCustomizationChange({
-      ...customization,
-      utilityButtons: {
-        ...customization.utilityButtons || {},
-        [buttonType]: {
-          ...(customization.utilityButtons?.[buttonType] || {}),
-          [property]: value
-        }
+    const updatedCustomization = produce(customization, draft => {
+      // Initialize utilityButtons if it doesn't exist
+      if (!draft.utilityButtons) {
+        draft.utilityButtons = {};
       }
+      
+      // Initialize the specific button type if it doesn't exist
+      if (!draft.utilityButtons[buttonType]) {
+        draft.utilityButtons[buttonType] = {
+          background: '#ffffff',
+          color: '#000000',
+          shape: 'rounded'
+        };
+      }
+      
+      // Update the property
+      draft.utilityButtons[buttonType][property] = value;
     });
+    
+    onCustomizationChange(updatedCustomization);
   };
-  
+
   // Font handlers
   const handleFontChange = (property: 'family' | 'size' | 'color' | 'weight' | 'alignment', value: string) => {
     onCustomizationChange({
@@ -75,92 +86,97 @@ export const createCustomizationHandlers = (
       }
     });
   };
-  
+
   const handleHeaderFontChange = (property: 'family' | 'size' | 'color' | 'weight', value: string) => {
     onCustomizationChange({
       ...customization,
       headerFont: {
-        ...customization.headerFont || {},
+        ...customization.headerFont,
         [property]: value
       }
     });
   };
-  
+
   const handleDescriptionFontChange = (property: 'family' | 'size' | 'color' | 'weight', value: string) => {
     onCustomizationChange({
       ...customization,
       descriptionFont: {
-        ...customization.descriptionFont || {},
+        ...customization.descriptionFont,
         [property]: value
       }
     });
   };
-  
+
   const handleDateTimeFontChange = (property: 'family' | 'size' | 'color' | 'weight', value: string) => {
     onCustomizationChange({
       ...customization,
       dateTimeFont: {
-        ...customization.dateTimeFont || {},
+        ...customization.dateTimeFont,
         [property]: value
       }
     });
   };
-  
-  // Header handlers
+
+  // Header style handlers
   const handleHeaderStyleChange = (style: 'banner' | 'simple' | 'minimal') => {
     onCustomizationChange({
       ...customization,
       headerStyle: style
     });
   };
-  
+
   const handleHeaderImageChange = (imageUrl: string) => {
     onCustomizationChange({
       ...customization,
       headerImage: imageUrl
     });
   };
-  
-  // Toggle handlers
+
+  // Feature toggle handlers
   const handleToggleChatbot = (checked: boolean) => {
     onCustomizationChange({
       ...customization,
       enableChatbot: checked
     });
   };
-  
+
   const handleToggleCalendar = (checked: boolean) => {
     onCustomizationChange({
       ...customization,
+      enableAddToCalendar: checked,
       showAddToCalendarButton: checked
     });
   };
-  
+
   const handleToggleButtons = (checked: boolean) => {
     onCustomizationChange({
       ...customization,
       showAcceptDeclineButtons: checked
     });
   };
-  
-  // Branding and effect handlers
+
+  // Branding handlers
   const handleBrandingChange = (property: 'logo' | 'slogan', value: string) => {
+    const updatedBranding = {
+      ...customization.branding,
+      [property]: value
+    };
+    
     onCustomizationChange({
       ...customization,
-      branding: {
-        ...customization.branding || {},
-        [property]: value
-      }
+      branding: updatedBranding
     });
   };
-  
+
+  // Animation handlers
   const handleAnimationChange = (value: 'fade' | 'slide' | 'pop') => {
     onCustomizationChange({
       ...customization,
       animation: value
     });
   };
-  
+
+  // Map display handlers
   const handleMapDisplayChange = (value: 'button' | 'qrcode' | 'both') => {
     onCustomizationChange({
       ...customization,
@@ -168,6 +184,7 @@ export const createCustomizationHandlers = (
     });
   };
 
+  // Card effect handlers
   const handleCardEffectChange = (cardEffect: any) => {
     onCustomizationChange({
       ...customization,
@@ -175,6 +192,7 @@ export const createCustomizationHandlers = (
     });
   };
 
+  // Element animations handlers
   const handleElementAnimationsChange = (elementAnimations: any) => {
     onCustomizationChange({
       ...customization,
@@ -187,7 +205,6 @@ export const createCustomizationHandlers = (
     handleBackgroundAngleChange,
     handleBackgroundDirectionChange,
     handleButtonStyleChange,
-    handleUtilityButtonStyleChange,  // Added new handler
     handleFontChange,
     handleHeaderFontChange,
     handleDescriptionFontChange,
@@ -201,6 +218,7 @@ export const createCustomizationHandlers = (
     handleAnimationChange,
     handleMapDisplayChange,
     handleCardEffectChange,
-    handleElementAnimationsChange
+    handleElementAnimationsChange,
+    handleUtilityButtonStyleChange
   };
 };
