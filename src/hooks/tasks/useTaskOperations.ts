@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { UseTaskOperationsReturn } from './types';
 import { createTask as createTaskService } from '@/services/task/createService';
 import { delegateTask } from '@/services/task/delegationService';
+import { toast } from "@/components/ui/use-toast";
 
 export const useTaskOperations = (
   userRole: "free" | "individual" | "business" | "staff" | null,
@@ -45,17 +46,38 @@ export const useTaskOperations = (
         taskData.is_team_task = true;
       }
       
-      // Process task delegation if provided
-      if (userRole === "business" && (taskData.delegated_to || taskData.delegated_email)) {
-        console.log("Task will be delegated after creation");
-      }
-      
+      // Prepare the task data
       const { recurring, ...taskDataWithoutRecurring } = taskData;
       
-      const isRecurring = !!recurring && taskData.is_recurring;
+      const isRecurring = !!recurring && taskData.isRecurring;
       
       console.log("Creating task with data:", taskData);
       
+      // Convert the dueDate to the correct format
+      if (taskDataWithoutRecurring.dueDate) {
+        taskDataWithoutRecurring.due_date = taskDataWithoutRecurring.dueDate;
+        delete taskDataWithoutRecurring.dueDate;
+      }
+      
+      // Convert the dueTime to the correct format
+      if (taskDataWithoutRecurring.dueTime) {
+        taskDataWithoutRecurring.due_time = taskDataWithoutRecurring.dueTime;
+        delete taskDataWithoutRecurring.dueTime;
+      }
+      
+      // Convert subtasks to the correct format
+      if (taskDataWithoutRecurring.subtasks && taskDataWithoutRecurring.enableSubtasks) {
+        taskDataWithoutRecurring.subtasks = taskDataWithoutRecurring.subtasks.map((subtask: any) => ({
+          content: subtask.content,
+          is_completed: subtask.isCompleted || false,
+          due_date: subtask.dueDate || null,
+          due_time: subtask.dueTime || null,
+        }));
+      } else {
+        taskDataWithoutRecurring.subtasks = [];
+      }
+      
+      // Create the task
       const createdTask = await createTaskService(
         taskDataWithoutRecurring, 
         isRecurring ? recurring : undefined
@@ -66,9 +88,20 @@ export const useTaskOperations = (
         await delegateTask(createdTask.id, taskData.delegated_to, taskData.delegated_email);
       }
       
+      toast({
+        title: "Task created",
+        description: "Your task has been created successfully",
+        variant: "success"
+      });
+      
       return createdTask;
     } catch (error) {
       console.error("Error creating task:", error);
+      toast({
+        title: "Task creation failed",
+        description: error instanceof Error ? error.message : "Failed to create task",
+        variant: "destructive"
+      });
       throw error;
     } finally {
       setIsProcessing(false);
@@ -94,6 +127,7 @@ export const useTaskOperations = (
 
   return { 
     createTask,
-    delegateTask: delegateTaskOperation
+    delegateTask: delegateTaskOperation,
+    isProcessing
   };
 };

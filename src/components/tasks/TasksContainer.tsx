@@ -1,11 +1,11 @@
 
 import React from "react";
-import { TaskTab } from "@/types/task.types";
-import EmptyTasksState from "./EmptyTasksState";
+import { Task, TaskTab } from "@/types/task.types";
 import TaskGrid from "./TaskGrid";
+import { EmptyTasks } from "./EmptyTasks";
 
 interface TasksContainerProps {
-  tasks: any[];
+  tasks: Task[];
   userRole: "free" | "individual" | "business" | "staff" | null;
   tab: TaskTab;
   refetch: () => void;
@@ -23,26 +23,24 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   isStaff,
   onCreateTask
 }) => {
-  const isEmpty = tasks.length === 0;
-  
+  if (!tasks.length) {
+    return (
+      <EmptyTasks 
+        tab={tab}
+        isPaidAccount={isPaidAccount}
+        isStaff={isStaff}
+        onCreateTask={onCreateTask}
+      />
+    );
+  }
+
   return (
-    <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-      {isEmpty ? (
-        <EmptyTasksState 
-          isPaidAccount={isPaidAccount} 
-          onCreateTask={onCreateTask} 
-          tab={tab}
-          isStaff={isStaff}
-        />
-      ) : (
-        <TaskGrid 
-          tasks={tasks} 
-          userRole={userRole} 
-          tab={tab}
-          refetch={refetch}
-        />
-      )}
-    </div>
+    <TaskGrid
+      tasks={tasks}
+      userRole={userRole}
+      tab={tab}
+      refetch={refetch}
+    />
   );
 };
 

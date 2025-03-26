@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -150,6 +149,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       try {
         await onCreateTask({ id: selectedTaskToClaim });
         form.reset();
+        onOpenChange(false);
       } catch (error) {
         console.error("Error claiming task:", error);
       } finally {
@@ -158,27 +158,35 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       return;
     }
     
+    if (userRole === "free") {
+      setFreeAccountAlertOpen(true);
+      return;
+    }
+    
     setLoading(true);
 
     try {
       const taskData: any = {
         title: values.title,
-        description: values.description,
+        description: values.description || "",
         priority: values.priority,
         due_date: values.dueDate,
         due_time: values.dueTime || null,
         is_recurring: values.isRecurring,
         delegated_email: values.delegated_email || null,
         is_team_task: values.is_team_task || false,
-        subtasks: values.enableSubtasks
-          ? values.subtasks.map((subtask) => ({
-              content: subtask.content,
-              is_completed: subtask.isCompleted,
-              due_date: subtask.dueDate || null,
-              due_time: subtask.dueTime || null,
-            }))
-          : [],
       };
+
+      if (values.enableSubtasks && values.subtasks && values.subtasks.length > 0) {
+        taskData.subtasks = values.subtasks.map((subtask) => ({
+          content: subtask.content,
+          is_completed: subtask.isCompleted || false,
+          due_date: subtask.dueDate || null,
+          due_time: subtask.dueTime || null,
+        }));
+      } else {
+        taskData.subtasks = [];
+      }
 
       if (values.isRecurring && values.recurring) {
         taskData.recurring = {
@@ -191,13 +199,18 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         };
       }
 
+      console.log("Submitting task data:", taskData);
       await onCreateTask(taskData);
+      
       form.reset();
-      setShowSubtasks(false);
-      setShowRecurring(false);
-      setShowTeamTask(false);
+      onOpenChange(false);
     } catch (error) {
       console.error("Error creating task:", error);
+      toast({
+        title: "Failed to create task",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -208,7 +221,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     handleCreateTask(form.getValues());
   };
   
-  // Check if form is valid for submit button
   const isFormValid = () => {
     if (isClaimTask) {
       return !!selectedTaskToClaim;

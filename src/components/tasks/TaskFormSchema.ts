@@ -1,6 +1,5 @@
 
 import { z } from "zod";
-import { TaskPriority, TaskStatus } from "@/types/task.types";
 
 // Define the recurring settings schema
 const RecurringSettingsSchema = z.object({

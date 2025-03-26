@@ -157,12 +157,18 @@ export const useTasksPageState = () => {
       if (isUserStaffMember && activeTab === "team-tasks" && taskData.id) {
         console.log("Staff member claiming task:", taskData.id);
         
-        const { claimDelegatedTask } = await import('@/services/task/claimDelegatedTask');
-        await claimDelegatedTask(taskData.id);
+        const { data, error } = await supabase
+          .from('tasks')
+          .update({ assignee_id: localStorage.getItem('userId') })
+          .eq('id', taskData.id)
+          .select();
+        
+        if (error) throw error;
         
         toast({
           title: "Task claimed",
           description: "The task has been assigned to you",
+          variant: "success"
         });
       } else {
         // Regular task creation
@@ -172,6 +178,12 @@ export const useTasksPageState = () => {
         }
         
         await createTask(taskData);
+        
+        toast({
+          title: "Task created",
+          description: "Your task has been created successfully",
+          variant: "success"
+        });
       }
       
       setCreateDialogOpen(false);

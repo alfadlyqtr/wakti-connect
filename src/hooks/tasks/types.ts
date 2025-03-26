@@ -1,37 +1,25 @@
 
-import { Task, TaskPriority, TaskStatus, TaskTab } from "@/types/task.types";
+import { Task } from "@/types/task.types";
 
-// Extended Task interface with shared info
-export interface TaskWithSharedInfo extends Task {
-  shared_with?: string[];
-}
-
-// Return type for useTaskQueries hook
-export interface UseTaskQueriesReturn {
-  tasks: TaskWithSharedInfo[];
+export interface UseTasksReturn {
+  tasks: Task[];
+  filteredTasks: Task[];
   isLoading: boolean;
   error: Error | null;
-  refetch: () => void;
-  userRole: "free" | "individual" | "business" | "staff" | null;
-  isStaff: boolean;
-}
-
-// Return type for useTaskOperations hook
-export interface UseTaskOperationsReturn {
-  createTask: (taskData: any) => Promise<any>;
-  delegateTask: (taskId: string, userId?: string, email?: string) => Promise<void>;
-}
-
-// Return type for useTaskFilters hook
-export interface UseTaskFiltersReturn {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  filterStatus: string;
-  setFilterStatus: (status: string) => void;
-  filterPriority: string;
-  setFilterPriority: (priority: string) => void;
-  filteredTasks: TaskWithSharedInfo[];
+  filterStatus: string | null;
+  setFilterStatus: (status: string | null) => void;
+  filterPriority: string | null;
+  setFilterPriority: (priority: string | null) => void;
+  createTask: (taskData: any) => Promise<Task>;
+  userRole: "free" | "individual" | "business" | "staff" | null;
+  isStaff: boolean;
+  refetch: () => void;
 }
 
-// Re-export TaskTab from task.types to prevent circular dependencies
-export type { TaskTab };
+export interface UseTaskOperationsReturn {
+  createTask: (taskData: any) => Promise<Task>;
+  delegateTask: (taskId: string, userId?: string, email?: string) => Promise<void>;
+  isProcessing: boolean;
+}
