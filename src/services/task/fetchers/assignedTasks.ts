@@ -10,12 +10,32 @@ export async function fetchAssignedTasks(userId: string): Promise<Task[]> {
   console.log(`Fetching assigned tasks for user ${userId}`);
   
   try {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('assignee_id', userId)
-      .order('due_date', { ascending: true });
+    // Get user email for delegation checks
+    const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+    const userEmail = authUser?.user?.email;
+    
+    let query;
+    
+    if (userEmail) {
+      console.log(`User email found: ${userEmail}, checking delegated_email`);
       
+      // Check for tasks where the user is assigned directly OR by email
+      query = supabase
+        .from('tasks')
+        .select('*')
+        .or(`assignee_id.eq.${userId},delegated_email.eq.${userEmail}`)
+        .order('due_date', { ascending: true });
+    } else {
+      // Fallback to just checking assignee_id
+      query = supabase
+        .from('tasks')
+        .select('*')
+        .eq('assignee_id', userId)
+        .order('due_date', { ascending: true });
+    }
+    
+    const { data, error } = await query;
+    
     if (error) {
       console.error("Error fetching assigned tasks:", error);
       throw error;
@@ -40,7 +60,10 @@ export async function fetchAssignedTasks(userId: string): Promise<Task[]> {
       is_recurring_instance: item.is_recurring_instance || false,
       parent_recurring_id: item.parent_recurring_id || null,
       snooze_count: item.snooze_count || 0,
-      snoozed_until: item.snoozed_until || null
+      snoozed_until: item.snoozed_until || null,
+      delegated_to: item.delegated_to || null,
+      delegated_email: item.delegated_email || null,
+      is_team_task: item.is_team_task || false
     }));
   } catch (error) {
     console.error("Error in fetchAssignedTasks:", error);

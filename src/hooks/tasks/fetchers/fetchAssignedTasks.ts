@@ -8,6 +8,17 @@ export const fetchAssignedTasks = async (userId: string, isBusinessAccount = fal
   try {
     let query;
     
+    // Get the user's email for checking delegated_email
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('full_name, avatar_url, id')
+      .eq('id', userId)
+      .single();
+    
+    // Also get the user's email from auth.users (if available)
+    const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+    const userEmail = authUser?.user?.email;
+    
     if (isBusinessAccount) {
       // Business account - get tasks created by the business
       query = supabase
@@ -15,11 +26,24 @@ export const fetchAssignedTasks = async (userId: string, isBusinessAccount = fal
         .select('*')
         .eq('user_id', userId);
     } else {
-      // Regular user or staff - get tasks assigned to them
-      query = supabase
-        .from('tasks')
-        .select('*')
-        .eq('assignee_id', userId);
+      // Regular user or staff - get tasks assigned to them directly, or delegated via email
+      // This needs to be a more complex query that handles both assignee_id and delegated_email
+      if (userEmail) {
+        console.log(`Fetching tasks for ${userId} with email ${userEmail}`);
+        
+        // Query for tasks assigned either by ID or by email
+        query = supabase
+          .from('tasks')
+          .select('*')
+          .or(`assignee_id.eq.${userId},delegated_email.eq.${userEmail}`);
+      } else {
+        // Fallback to just checking assignee_id if no email is available
+        console.log(`Fetching tasks for ${userId} without email check`);
+        query = supabase
+          .from('tasks')
+          .select('*')
+          .eq('assignee_id', userId);
+      }
     }
     
     const { data, error } = await query;

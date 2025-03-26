@@ -16,21 +16,9 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
   const [userRole, setUserRole] = useState<"free" | "individual" | "business" | "staff" | null>(null);
   const [isStaff, setIsStaff] = useState<boolean>(false);
 
-  // Fetch user role and staff status only once on component mount
   useEffect(() => {
     const fetchUserRole = async () => {
       try {
-        // Use cached staff status if available to prevent unnecessary database calls
-        const cachedIsStaff = localStorage.getItem('isStaff') === 'true';
-        
-        if (cachedIsStaff) {
-          setIsStaff(true);
-          setUserRole("staff");
-          console.log("Using cached staff status: true");
-          return;
-        }
-        
-        // Otherwise do a fresh check
         await clearStaffCache();
         
         const { data: { session } } = await supabase.auth.getSession();
@@ -76,10 +64,16 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
       console.log("Fetching tasks as staff member, tab:", tab);
       if (tab === "my-tasks" || tab === "assigned-tasks") {
         return await fetchAssignedTasks(session.user.id);
-      } else {
-        console.log("Staff members cannot see shared tasks, returning empty array");
-        return [];
+      } else if (tab === "team-tasks") {
+        // Staff can see team tasks from their business
+        const businessId = localStorage.getItem('staffBusinessId');
+        if (businessId) {
+          return await fetchTeamTasks(businessId);
+        }
       }
+      // For any other tab, return empty array
+      console.log("Staff members cannot see other tabs, returning empty array");
+      return [];
     } 
     
     // Handle regular users based on the selected tab
