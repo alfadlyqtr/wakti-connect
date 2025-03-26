@@ -23,18 +23,16 @@ export const TimePicker: React.FC<TimePickerProps> = ({
   onChange,
   minTime = "00:00",
   maxTime = "23:59",
-  interval = 5 // Changed from 15 to 5 minutes for more granular options
+  interval = 15
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const [timeOptions, setTimeOptions] = useState<string[]>([]);
   
-  // Generate time options in intervals (default 5-minute)
+  // Generate time options in intervals
   useEffect(() => {
     const options: string[] = [];
     const startMinutes = getMinutesFromTimeString(minTime);
     const endMinutes = getMinutesFromTimeString(maxTime);
     
-    // Generate more time options by using smaller intervals
     for (let i = startMinutes; i <= endMinutes; i += interval) {
       const hours = Math.floor(i / 60);
       const minutes = i % 60;
@@ -50,55 +48,52 @@ export const TimePicker: React.FC<TimePickerProps> = ({
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
   };
-  
-  const handleManualTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
-    const newValue = e.target.value;
+
+  // Format display time (24h to 12h with AM/PM)
+  const formatDisplayTime = (time: string): string => {
+    if (!time) return "Select time";
     
-    if (timeRegex.test(newValue) || newValue === '') {
-      onChange(newValue);
-    }
-  };
-  
-  const handleSelectTime = (time: string) => {
-    onChange(time);
-    setIsOpen(false);
+    const [hourStr, minuteStr] = time.split(':');
+    const hour = parseInt(hourStr, 10);
+    const hour12 = hour % 12 || 12;
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    
+    return `${hour12}:${minuteStr} ${ampm}`;
   };
   
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover>
       <PopoverTrigger asChild>
-        <div className="relative">
-          <Input
-            value={value}
-            onChange={handleManualTimeChange}
-            placeholder="HH:MM"
-            className="pr-10"
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            type="button"
-            className="absolute right-0 top-0 h-full pointer-events-auto"
-            onClick={() => setIsOpen(true)}
-          >
-            <Clock className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          className="w-full justify-between text-left font-normal"
+          type="button"
+        >
+          {value ? formatDisplayTime(value) : "Select time"}
+          <Clock className="h-4 w-4 opacity-50 ml-2" />
+        </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-48 p-0" align="start" sideOffset={4}>
-        <ScrollArea className="h-60 overflow-auto bg-background">
-          <div className="py-1">
+      <PopoverContent className="w-auto p-0" align="start">
+        <div className="p-2">
+          <Input
+            type="time"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="mb-2"
+          />
+        </div>
+        <ScrollArea className="h-72 rounded-md border">
+          <div className="p-1">
             {timeOptions.map((time) => (
               <Button
                 key={time}
                 variant="ghost"
-                className={`w-full justify-start px-3 text-left ${
-                  time === value ? 'bg-muted' : ''
+                className={`w-full justify-start px-2 py-1.5 text-left rounded-sm ${
+                  time === value ? 'bg-primary text-primary-foreground' : ''
                 }`}
-                onClick={() => handleSelectTime(time)}
+                onClick={() => onChange(time)}
               >
-                {time}
+                {formatDisplayTime(time)}
               </Button>
             ))}
           </div>
