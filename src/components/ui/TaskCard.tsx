@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -9,6 +9,8 @@ import { TaskStatus, TaskPriority, SubTask } from '@/types/task.types';
 import TaskStatusIcon from '@/components/tasks/TaskStatusIcon';
 import { TaskActionsMenu } from '@/components/tasks/TaskActionsMenu';
 import TaskBadges from '@/components/tasks/TaskBadges';
+import { format } from 'date-fns';
+import { ChevronDown, ChevronRight, Clock } from 'lucide-react';
 
 interface TaskCardProps {
   id: string;
@@ -24,7 +26,7 @@ interface TaskCardProps {
   isRecurring?: boolean;
   recurringFrequency?: string;
   isRecurringInstance?: boolean;
-  subtasks?: { id?: string; content: string; is_completed: boolean }[];
+  subtasks?: { id?: string; content: string; is_completed: boolean; due_date?: string | null; due_time?: string | null }[];
   completedDate?: Date | null;
   snoozeCount?: number;
   snoozedUntil?: Date | null;
@@ -65,6 +67,7 @@ const TaskCard = ({
   onSnooze,
   onSubtaskToggle
 }: TaskCardProps) => {
+  const [expandedSubtasks, setExpandedSubtasks] = useState(false);
   const completedSubtasks = subtasks.filter(task => task.is_completed).length;
   const totalSubtasks = subtasks.length;
   const subtaskProgress = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
@@ -115,34 +118,73 @@ const TaskCard = ({
         {totalSubtasks > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Subtasks: {completedSubtasks}/{totalSubtasks}</span>
+              <button 
+                onClick={() => setExpandedSubtasks(!expandedSubtasks)}
+                className="flex items-center text-xs hover:text-primary transition-colors"
+              >
+                {expandedSubtasks ? <ChevronDown className="h-3 w-3 mr-1" /> : <ChevronRight className="h-3 w-3 mr-1" />}
+                <span>Subtasks: {completedSubtasks}/{totalSubtasks}</span>
+              </button>
               <span>{Math.round(subtaskProgress)}%</span>
             </div>
             <Progress value={subtaskProgress} className="h-1.5" />
             
-            <div className="mt-2 space-y-1">
-              {subtasks.slice(0, 3).map((subtask, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <input 
-                    type="checkbox"
-                    className="rounded text-primary"
-                    checked={subtask.is_completed}
-                    onChange={(e) => onSubtaskToggle?.(id, index, e.target.checked)}
-                  />
-                  <span className={cn(
-                    "text-xs",
-                    subtask.is_completed && "line-through text-muted-foreground"
-                  )}>
-                    {subtask.content}
-                  </span>
-                </div>
-              ))}
-              {totalSubtasks > 3 && (
-                <div className="text-xs text-muted-foreground text-center">
-                  +{totalSubtasks - 3} more subtasks
-                </div>
-              )}
-            </div>
+            {expandedSubtasks ? (
+              <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+                {subtasks.map((subtask, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    <div className="pt-0.5">
+                      <input 
+                        type="checkbox"
+                        className="rounded text-primary"
+                        checked={subtask.is_completed}
+                        onChange={(e) => onSubtaskToggle?.(id, index, e.target.checked)}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <div className={cn(
+                        "text-xs",
+                        subtask.is_completed && "line-through text-muted-foreground"
+                      )}>
+                        {subtask.content}
+                      </div>
+                      {(subtask.due_date || subtask.due_time) && (
+                        <div className="text-xs text-muted-foreground flex items-center mt-0.5">
+                          <Clock className="h-2.5 w-2.5 mr-1" />
+                          {subtask.due_date && format(new Date(subtask.due_date), 'MMM d')}
+                          {subtask.due_time && subtask.due_date && ' at '}
+                          {subtask.due_time && subtask.due_time}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-2">
+                {subtasks.slice(0, 2).map((subtask, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input 
+                      type="checkbox"
+                      className="rounded text-primary"
+                      checked={subtask.is_completed}
+                      onChange={(e) => onSubtaskToggle?.(id, index, e.target.checked)}
+                    />
+                    <span className={cn(
+                      "text-xs line-clamp-1",
+                      subtask.is_completed && "line-through text-muted-foreground"
+                    )}>
+                      {subtask.content}
+                    </span>
+                  </div>
+                ))}
+                {totalSubtasks > 2 && (
+                  <div className="text-xs text-muted-foreground text-center mt-1 cursor-pointer hover:text-primary" onClick={() => setExpandedSubtasks(true)}>
+                    +{totalSubtasks - 2} more subtasks
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </CardContent>

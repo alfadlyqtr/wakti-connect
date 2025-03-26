@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -173,6 +174,7 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
       return [] as TaskWithSharedInfo[];
     },
     enabled: !!userRole, // Only run the query if we have the user role
+    refetchOnWindowFocus: false  // Disable auto-refetch on window focus
   });
 
   // Helper function to fetch subtasks for tasks

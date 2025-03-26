@@ -165,14 +165,14 @@ const TaskBadges = ({
     day: 'numeric'
   });
 
-  // Add time if available
-  const timeDisplay = dueTime ? ` at ${dueTime}` : '';
-
   return (
     <div className="flex flex-wrap gap-2">
       <Badge variant="outline" className="text-xs flex items-center">
         <Clock className="h-3 w-3 mr-1" />
-        {formattedDate}{timeDisplay}
+        {formattedDate}
+        {dueTime && (
+          <span className="ml-1 font-medium">{dueTime}</span>
+        )}
       </Badge>
       
       <Badge variant="outline" className={cn("text-xs", getPriorityColor(priority))}>

@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface TaskGridProps {
   tasks: TaskWithSharedInfo[];
@@ -37,7 +37,7 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
   const [staffList, setStaffList] = useState<any[]>([]);
 
   // Fetch staff members when assign dialog opens
-  React.useEffect(() => {
+  useEffect(() => {
     if (assignDialogOpen && userRole === 'business') {
       fetchStaffMembers();
     }
@@ -180,7 +180,11 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
       
       setAssignDialogOpen(false);
       setStaffIdInput("");
-      if (refetch) refetch();
+      
+      // Add a small delay before refetching to prevent UI freezing
+      setTimeout(() => {
+        if (refetch) refetch();
+      }, 300);
     } catch (error) {
       console.error("Error assigning task:", error);
       toast({
@@ -269,7 +273,10 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
         description: "Subtask status updated successfully."
       });
       
-      if (refetch) refetch();
+      // Add a small delay before refetching to prevent UI freezing
+      setTimeout(() => {
+        if (refetch) refetch();
+      }, 300);
     } catch (error) {
       console.error("Error updating subtask:", error);
       toast({
