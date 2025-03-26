@@ -52,4 +52,3 @@ export interface TasksResult {
   tasks: Task[];
   userRole: "free" | "individual" | "business" | "staff";
 }
-
