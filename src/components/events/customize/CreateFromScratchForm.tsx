@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EventCustomization } from "@/types/event.types";
@@ -181,25 +180,24 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
   return (
     <div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 mb-4 sm:grid-cols-4 md:grid-cols-7">
-          <TabsTrigger value="background">Background</TabsTrigger>
-          <TabsTrigger value="text">Text</TabsTrigger>
-          <TabsTrigger value="buttons">Buttons</TabsTrigger>
-          <TabsTrigger value="header">Header</TabsTrigger>
-          <TabsTrigger value="features" className="hidden sm:block">Features</TabsTrigger>
-          <TabsTrigger value="effects" className="hidden md:block">Card Effect</TabsTrigger>
-          <TabsTrigger value="animations" className="hidden md:block">Animations</TabsTrigger>
-          <TabsTrigger value="more" className="sm:hidden">More</TabsTrigger>
+        <TabsList className="flex flex-wrap w-full mb-4 overflow-x-auto">
+          <TabsTrigger value="background" className="px-2.5 py-1.5 text-xs sm:text-sm">Background</TabsTrigger>
+          <TabsTrigger value="text" className="px-2.5 py-1.5 text-xs sm:text-sm">Text</TabsTrigger>
+          <TabsTrigger value="buttons" className="px-2.5 py-1.5 text-xs sm:text-sm">Buttons</TabsTrigger>
+          <TabsTrigger value="header" className="px-2.5 py-1.5 text-xs sm:text-sm">Header</TabsTrigger>
+          <TabsTrigger value="features" className="px-2.5 py-1.5 text-xs sm:text-sm">Features</TabsTrigger>
+          <TabsTrigger value="effects" className="px-2.5 py-1.5 text-xs sm:text-sm">Card Effect</TabsTrigger>
+          <TabsTrigger value="animations" className="px-2.5 py-1.5 text-xs sm:text-sm">Animations</TabsTrigger>
         </TabsList>
         
         <TabsContent value="background" className="space-y-4">
           <BackgroundTab 
             customization={customization}
             onBackgroundChange={handleBackgroundChange}
-            onAnimationChange={handleAnimationChange}
+            onAnimationChange={customization.animation ? (val) => onCustomizationChange({...customization, animation: val}) : undefined}
             onBackgroundAngleChange={handleBackgroundAngleChange}
             onBackgroundDirectionChange={handleBackgroundDirectionChange}
-            onHeaderImageChange={handleHeaderImageChange}
+            onHeaderImageChange={customization.headerImage ? (val) => onCustomizationChange({...customization, headerImage: val}) : undefined}
           />
         </TabsContent>
         
@@ -264,7 +262,6 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
           />
         </TabsContent>
 
-        {/* Mobile-only tab for additional options */}
         <TabsContent value="more" className="space-y-6 sm:hidden">
           <Tabs defaultValue="features">
             <TabsList className="grid grid-cols-3 mb-4 w-full">

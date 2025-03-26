@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EventCustomization } from "@/types/event.types";
 import CreateFromScratchForm from "./CreateFromScratchForm";
 import TemplateSelector from "@/components/invitations/TemplateSelector";
-import { Button } from "@/components/ui/button";
 import LivePreview from "./LivePreview";
 import { getTemplateById } from "@/data/eventTemplates";
 import { format } from "date-fns";
