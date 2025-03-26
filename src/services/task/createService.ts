@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskFormData, SubTask, TaskStatus, TaskPriority } from "@/types/task.types";
 import { createNewTask } from "./baseService";
@@ -67,16 +66,7 @@ export async function createTask(taskData: TaskFormData, recurringData?: Recurri
     }
   }
   
-  // Handle task delegation after creating the task
-  if ((taskData.delegated_to || taskData.delegated_email) && task) {
-    try {
-      // This will be handled by the delegateTask function which we'll implement
-      console.log("Task delegation will be handled separately");
-    } catch (delegationError) {
-      console.error("Error during delegation step:", delegationError);
-      // We don't want the whole task creation to fail if just the delegation part fails
-    }
-  }
+  // Removed task delegation functionality completely
   
   return task;
 }

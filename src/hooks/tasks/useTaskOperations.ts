@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UseTaskOperationsReturn } from './types';
 import { createTask as createTaskService } from '@/services/task/createService';
-import { delegateTask } from '@/services/task/delegationService';
 import { toast } from "@/components/ui/use-toast";
 
 export const useTaskOperations = (
@@ -105,22 +104,7 @@ export const useTaskOperations = (
       
       console.log("Task created successfully:", createdTask);
       
-      // Handle delegation after task creation if needed
-      if (userRole === "business" && (taskData.delegated_to || taskData.delegated_email)) {
-        try {
-          console.log("Delegating task to:", taskData.delegated_to || taskData.delegated_email);
-          await delegateTask(createdTask.id, taskData.delegated_to, taskData.delegated_email);
-          console.log("Task delegation completed");
-        } catch (delegationError) {
-          console.error("Task delegation failed but task was created:", delegationError);
-          toast({
-            title: "Task created but delegation failed",
-            description: "Your task was created but we couldn't assign it to the selected person",
-            variant: "default"  // Changed from "warning" to "default" to fix the type error
-          });
-          // Don't rethrow - the main task was still created
-        }
-      }
+      // Remove delegation functionality - this was causing issues
       
       toast({
         title: "Task created",
@@ -142,26 +126,8 @@ export const useTaskOperations = (
     }
   };
 
-  // Add the delegateTask operation for business accounts
-  const delegateTaskOperation = async (taskId: string, userId?: string, email?: string) => {
-    setIsProcessing(true);
-    try {
-      if (userRole !== "business") {
-        throw new Error("Only business accounts can delegate tasks");
-      }
-      
-      await delegateTask(taskId, userId, email);
-    } catch (error) {
-      console.error("Error delegating task:", error);
-      throw error;
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   return { 
     createTask,
-    delegateTask: delegateTaskOperation,
     isProcessing
   };
 };

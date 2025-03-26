@@ -43,13 +43,17 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
   onEdit,
   onStatusChange,
   onShare,
-  onAssign,
   onSnooze,
   userRole,
   isAssigned,
   isBusinessOrStaff,
 }) => {
   const isPaidAccount = userRole === "individual" || userRole === "business" || userRole === "staff";
+  
+  // Placeholder function for assign that does nothing
+  const handleAssign = () => {
+    console.log("Task assignment functionality disabled");
+  };
   
   return (
     <DropdownMenu>
@@ -93,7 +97,7 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
             </DropdownMenuItem>
             
             {isBusinessOrStaff && !isAssigned && (
-              <DropdownMenuItem onClick={() => onAssign(id)}>
+              <DropdownMenuItem onClick={handleAssign}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Assign Task</span>
               </DropdownMenuItem>

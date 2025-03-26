@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   DropdownMenu, 
@@ -57,13 +56,10 @@ export function TaskActionsMenu({
   taskId,
   snoozeCount = 0
 }: TaskActionsMenuProps) {
-  // Update isPaidAccount to include only individual and business accounts (not staff)
   const isPaidAccount = userRole === "individual" || userRole === "business";
   
-  // Only business and staff should see assign option
   const canAssignTasks = userRole === "business" || userRole === "staff";
   
-  // Handle action click with proper taskId
   const handleAction = (action: (id: string, ...args: any[]) => void, ...args: any[]) => {
     if (action) {
       action(taskId, ...args);
@@ -72,9 +68,12 @@ export function TaskActionsMenu({
     }
   };
   
-  // Business users should be able to edit and delete team tasks they created
   const canEditTask = userRole === "business" || (userRole !== "staff" && !isTeamTask);
   const canDeleteTask = userRole === "business" || (userRole !== "staff" && !isTeamTask);
+  
+  const handleAssignClick = () => {
+    console.log("Task assignment functionality disabled");
+  };
   
   return (
     <DropdownMenu>
@@ -174,7 +173,7 @@ export function TaskActionsMenu({
         {canAssignTasks && !isAssigned && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => handleAction(onAssign)}>
+            <DropdownMenuItem onClick={handleAssignClick}>
               <UserPlus className="h-4 w-4 mr-2" />
               Assign Task
             </DropdownMenuItem>
