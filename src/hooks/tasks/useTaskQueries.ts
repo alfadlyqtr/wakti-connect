@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Task } from '@/types/task.types';
 import { isUserStaff, clearStaffCache } from '@/utils/staffUtils';
 import { TaskWithSharedInfo, UseTaskQueriesReturn, TaskTab } from './types';
+import { validateTaskStatus, validateTaskPriority } from '@/services/task/utils/statusValidator';
 
 export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn => {
   const [tasks, setTasks] = useState<TaskWithSharedInfo[]>([]);
@@ -105,8 +106,6 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
           if (sharedTasksData && sharedTasksData.length > 0) {
             const taskIds = sharedTasksData.map(item => item.task_id);
             
-            // Fix: Modifying the query to properly handle the share_by 
-            // without using 'as shared_by' in the select statement
             const { data: taskData, error: taskError } = await supabase
               .from('tasks')
               .select('*')
@@ -114,12 +113,14 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
               
             if (taskError) throw taskError;
             
-            // Add the shared_by property after fetching the data
+            // Add the shared_by property and validate types
             if (taskData) {
               result = taskData.map(task => ({
                 ...task,
-                shared_by: task.user_id // Set shared_by to user_id
-              }));
+                status: validateTaskStatus(task.status),
+                priority: validateTaskPriority(task.priority),
+                shared_by: task.user_id
+              })) as TaskWithSharedInfo[];
             }
           }
         } catch (error) {
@@ -166,7 +167,14 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
       
       if (!data) return [];
       
-      const tasksWithSubtasks = await fetchSubtasksForTasks(data as TaskWithSharedInfo[]);
+      // Validate and transform task data to ensure correct types
+      const typedTasks: TaskWithSharedInfo[] = data.map(task => ({
+        ...task,
+        status: validateTaskStatus(task.status),
+        priority: validateTaskPriority(task.priority)
+      })) as TaskWithSharedInfo[];
+      
+      const tasksWithSubtasks = await fetchSubtasksForTasks(typedTasks);
       return tasksWithSubtasks;
     }
     
