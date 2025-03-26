@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { TaskWithSharedInfo } from '../types';
 import { validateTaskStatus, validateTaskPriority } from '@/services/task/utils/statusValidator';
 import { fetchSubtasksForTasks } from './fetchSubtasks';
+import { Task } from '@/types/task.types';
 
 export const fetchTeamTasks = async (businessId: string): Promise<TaskWithSharedInfo[]> => {
   try {
@@ -17,11 +18,11 @@ export const fetchTeamTasks = async (businessId: string): Promise<TaskWithShared
     if (!data) return [];
     
     // Transform task data to ensure correct types
-    const typedTasks: TaskWithSharedInfo[] = data.map(task => ({
+    const typedTasks: TaskWithSharedInfo[] = data.map((task: any) => ({
       ...task,
       status: validateTaskStatus(task.status),
       priority: validateTaskPriority(task.priority)
-    })) as TaskWithSharedInfo[];
+    }));
     
     return await fetchSubtasksForTasks(typedTasks);
   } catch (error) {
