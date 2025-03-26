@@ -15,7 +15,6 @@ export const mapDbTaskToTyped = (task: any): Task => {
     due_time: task.due_time || null,
     completed_at: task.completed_at || null,
     user_id: task.user_id,
-    assignee_id: task.assignee_id || null,
     created_at: task.created_at,
     updated_at: task.updated_at,
     is_recurring_instance: task.is_recurring_instance || false,

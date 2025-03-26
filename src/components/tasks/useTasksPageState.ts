@@ -1,252 +1,216 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from "@/integrations/supabase/client";
-import { isUserStaff, clearStaffCache } from "@/utils/staffUtils";
-import { TaskTab } from '@/types/task.types';
+import { supabase } from '@/integrations/supabase/client';
+import { Task, TaskStatus, TaskPriority } from '@/types/task.types';
 import { toast } from "@/components/ui/use-toast";
-import { useTasks } from "@/hooks/tasks";
-import { subscribeToNotifications } from "@/services/notifications";
 
-export const useTasksPageState = () => {
+interface UseTasksPageStateReturn {
+  tasks: Task[];
+  isLoading: boolean;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  filterStatus: string | null;
+  setFilterStatus: (status: string | null) => void;
+  filterPriority: string | null;
+  setFilterPriority: (priority: string | null) => void;
+  userRole: "free" | "individual" | "business" | "staff" | null;
+  createTaskDialogOpen: boolean;
+  setCreateTaskDialogOpen: (open: boolean) => void;
+  handleCreateTask: (taskData: any) => Promise<void>;
+  refetchTasks: () => Promise<void>;
+  filteredTasks: Task[];
+  isPaidAccount: boolean;
+}
+
+export const useTasksPageState = (): UseTasksPageStateReturn => {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [filterPriority, setFilterPriority] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<"free" | "individual" | "business" | "staff" | null>(null);
-  const [isUserStaffMember, setIsUserStaffMember] = useState(false);
-  const [activeTab, setActiveTab] = useState<TaskTab>("my-tasks");
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [initialCheckDone, setInitialCheckDone] = useState(false);
-  const [businessId, setBusinessId] = useState<string | null>(null);
-  const [forceRefresh, setForceRefresh] = useState(0); // Add a state variable to force refreshes
+  const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
 
-  // Get user role and staff status only once at component mount
+  // Determine if user has a paid account
+  const isPaidAccount = userRole === "individual" || userRole === "business";
+
+  // Fetch user role
   useEffect(() => {
-    const getUserRole = async () => {
+    const fetchUserRole = async () => {
       try {
-        console.log("Checking user role and staff status");
-        // Check localStorage first for faster loading and to prevent unnecessary db calls
-        const cachedIsStaff = localStorage.getItem('isStaff') === 'true';
-        
-        if (cachedIsStaff) {
-          console.log("Using cached staff status: true");
-          setIsUserStaffMember(true);
-          setUserRole('staff');
-          setActiveTab('assigned-tasks');
-          
-          // Get the business ID for staff member
-          const cachedBusinessId = localStorage.getItem('staffBusinessId');
-          if (cachedBusinessId) {
-            setBusinessId(cachedBusinessId);
-          }
-          
-          setInitialCheckDone(true);
-          return;
-        }
-        
-        // If not in cache, do a fresh check
-        await clearStaffCache();
-        
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (!session?.user) {
-          console.log("No active session found");
-          setInitialCheckDone(true);
+        if (!session) {
+          setUserRole("free");
           return;
         }
         
-        const staffStatus = await isUserStaff();
-        setIsUserStaffMember(staffStatus);
-        
-        if (staffStatus) {
-          console.log("User is staff member, setting appropriate role and tab");
-          setUserRole('staff');
-          setActiveTab('assigned-tasks');
+        const { data } = await supabase
+          .from('profiles')
+          .select('account_type')
+          .eq('id', session.user.id)
+          .single();
           
-          // Get the business ID for staff member
-          const { data: staffData } = await supabase
-            .from('business_staff')
-            .select('business_id')
-            .eq('staff_id', session.user.id)
-            .eq('status', 'active')
-            .maybeSingle();
-            
-          if (staffData?.business_id) {
-            setBusinessId(staffData.business_id);
-            localStorage.setItem('staffBusinessId', staffData.business_id);
-          }
-        } else {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('account_type')
-            .eq('id', session.user.id)
-            .single();
-          
-          console.log(`Setting user role from profile: ${profileData?.account_type || "free"}`);
-          setUserRole(profileData?.account_type || "free");
-          
-          // If this is a business account, store the ID
-          if (profileData?.account_type === 'business') {
-            setBusinessId(session.user.id);
-          }
-        }
-        
-        setInitialCheckDone(true);
+        setUserRole(data?.account_type || "free");
       } catch (error) {
         console.error("Error fetching user role:", error);
-        setInitialCheckDone(true);
+        setUserRole("free");
       }
     };
-
-    getUserRole();
+    
+    fetchUserRole();
   }, []);
 
-  // Use the tasks hook after determining the user role and active tab
-  const { 
-    filteredTasks, 
-    isLoading, 
-    error, 
-    searchQuery, 
-    setSearchQuery,
-    filterStatus,
-    setFilterStatus,
-    filterPriority,
-    setFilterPriority,
-    createTask,
-    userRole: fetchedUserRole,
-    isStaff: isStaffFromHook,
-    refetch
-  } = useTasks(activeTab);
-
-  // Enhanced refetch function with better logging
-  const enhancedRefetch = useCallback(() => {
-    console.log("Refetching tasks for tab:", activeTab);
-    refetch();
-    // Force state update to trigger a re-render
-    setForceRefresh(prev => prev + 1);
-  }, [activeTab, refetch]);
-
-  // Set up notification subscription
-  useEffect(() => {
-    if (!initialCheckDone) return;
+  // Fetch tasks
+  const fetchTasks = useCallback(async () => {
+    setIsLoading(true);
     
-    const unsubscribe = subscribeToNotifications((notification) => {
-      console.log("Received new notification:", notification);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (notification.type.includes('task')) {
-        console.log("Task-related notification received, refetching tasks");
-        enhancedRefetch();
+      if (!session) {
+        setTasks([]);
+        setIsLoading(false);
+        return;
       }
       
-      if (notification.type === 'task_assigned' || notification.type === 'task_claimed') {
-        clearStaffCache().then(() => {
-          console.log("Staff cache cleared after task assignment/claim notification");
-          enhancedRefetch();
-        });
-      }
-    });
-    
-    return () => {
-      unsubscribe();
-    };
-  }, [initialCheckDone, enhancedRefetch]);
-
-  // Error handling
-  useEffect(() => {
-    if (error) {
-      console.error("Task loading error:", error);
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*, subtasks:todo_items(*)')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      // Convert data to properly typed Task objects
+      const typedTasks: Task[] = data.map((task: any) => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        status: task.status as TaskStatus,
+        priority: task.priority as TaskPriority,
+        due_date: task.due_date,
+        due_time: task.due_time,
+        user_id: task.user_id,
+        created_at: task.created_at,
+        updated_at: task.updated_at,
+        completed_at: task.completed_at,
+        is_recurring: task.is_recurring,
+        is_recurring_instance: task.is_recurring_instance,
+        parent_recurring_id: task.parent_recurring_id,
+        snooze_count: task.snooze_count,
+        snoozed_until: task.snoozed_until,
+        subtasks: task.subtasks || []
+      }));
+      
+      setTasks(typedTasks);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
       toast({
         title: "Failed to load tasks",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
-  }, [error]);
+  }, []);
 
-  const isPaidAccount = userRole === "individual" || userRole === "business" || userRole === "staff";
+  // Initial fetch
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
+  // Handle creating a new task
   const handleCreateTask = async (taskData: any) => {
     try {
-      console.log("Creating task with data:", taskData);
-      
-      // For staff on team tasks tab, this means they want to claim a task
-      if (isUserStaffMember && activeTab === "team-tasks" && taskData.id) {
-        console.log("Staff member claiming task:", taskData.id);
-        
-        const { data, error } = await supabase
+      // Check if free user has reached their task limit
+      if (userRole === "free") {
+        const { count, error } = await supabase
           .from('tasks')
-          .update({ assignee_id: localStorage.getItem('userId') })
-          .eq('id', taskData.id)
-          .select();
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', taskData.user_id);
+          
+        if (error) throw error;
         
-        if (error) {
-          console.error("Task claim error:", error);
-          throw error;
+        if (count && count >= 1) {
+          toast({
+            title: "Task limit reached",
+            description: "Free accounts are limited to 1 task. Please upgrade to create more tasks.",
+            variant: "destructive"
+          });
+          return;
         }
-        
-        toast({
-          title: "Task claimed",
-          description: "The task has been assigned to you",
-          variant: "success"
-        });
-      } else {
-        // Regular task creation
-        // For business users on the team tasks tab, mark it as a team task
-        if (userRole === 'business' && activeTab === 'team-tasks') {
-          taskData.is_team_task = true;
-        }
-        
-        await createTask(taskData);
-        
-        toast({
-          title: "Task created",
-          description: "Your task has been created successfully",
-          variant: "success"
-        });
       }
       
-      setCreateDialogOpen(false);
+      // Create the task
+      const { data: { session } } = await supabase.auth.getSession();
       
-      // Make sure to refetch tasks after creation
-      console.log("Task created/claimed, triggering refetch");
-      setTimeout(() => {
-        enhancedRefetch();
-      }, 300);
+      if (!session) {
+        throw new Error("You must be logged in to create tasks");
+      }
+      
+      const taskToCreate = {
+        ...taskData,
+        user_id: session.user.id
+      };
+      
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert(taskToCreate)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      // Create subtasks if any
+      if (taskData.subtasks && taskData.subtasks.length > 0) {
+        const subtasksToInsert = taskData.subtasks.map((subtask: any) => ({
+          task_id: data.id,
+          content: subtask.content,
+          is_completed: false
+        }));
+        
+        const { error: subtaskError } = await supabase
+          .from('todo_items')
+          .insert(subtasksToInsert);
+          
+        if (subtaskError) throw subtaskError;
+      }
+      
+      toast({
+        title: "Task created",
+        description: "Your task has been created successfully",
+        variant: "success"
+      });
+      
+      setCreateTaskDialogOpen(false);
+      fetchTasks(); // Refresh tasks list
     } catch (error) {
-      console.error("Error in handleCreateTask:", error);
+      console.error("Error creating task:", error);
       toast({
         title: "Failed to create task",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
       });
-      throw error; // Rethrow to let the form component handle it
     }
   };
 
-  const handleTabChange = (newTab: TaskTab) => {
-    console.log(`Changing tab from ${activeTab} to ${newTab}`);
+  // Filter tasks based on search and filters
+  const filteredTasks = tasks.filter(task => {
+    const matchesSearch = searchQuery ? 
+      task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase())) : 
+      true;
+      
+    const matchesStatus = filterStatus ? task.status === filterStatus : true;
+    const matchesPriority = filterPriority ? task.priority === filterPriority : true;
     
-    if (isUserStaffMember && newTab !== "assigned-tasks" && newTab !== "team-tasks") {
-      console.log("Staff member attempted to switch to restricted tab");
-      toast({
-        title: "Tab restricted",
-        description: "As a staff member, you can only view your tasks or team tasks",
-      });
-      return; // Don't change the tab for staff members
-    }
-    
-    setActiveTab(newTab);
-    
-    setTimeout(() => {
-      console.log("Tab changed, triggering refetch");
-      enhancedRefetch();
-    }, 100);
-  };
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
 
   return {
-    userRole,
-    isUserStaffMember,
-    activeTab,
-    createDialogOpen,
-    setCreateDialogOpen,
-    initialCheckDone,
-    filteredTasks,
+    tasks,
     isLoading,
     searchQuery,
     setSearchQuery,
@@ -254,11 +218,12 @@ export const useTasksPageState = () => {
     setFilterStatus,
     filterPriority,
     setFilterPriority,
-    isPaidAccount,
+    userRole,
+    createTaskDialogOpen,
+    setCreateTaskDialogOpen,
     handleCreateTask,
-    handleTabChange,
-    refetch: enhancedRefetch,
-    businessId,
-    forceRefresh // Expose this so components can use it for key props
+    refetchTasks: fetchTasks,
+    filteredTasks,
+    isPaidAccount
   };
 };

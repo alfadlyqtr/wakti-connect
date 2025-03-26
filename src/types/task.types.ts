@@ -30,6 +30,7 @@ export interface SubTask {
 
 export type TaskStatus = "pending" | "in-progress" | "completed" | "late" | "snoozed";
 export type TaskPriority = "urgent" | "high" | "medium" | "normal";
+export type TaskTab = "my-tasks" | "shared-tasks" | "assigned-tasks" | "team-tasks";
 
 export interface TaskFormData {
   title: string;

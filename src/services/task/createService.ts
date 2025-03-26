@@ -144,7 +144,6 @@ export async function createRecurringTaskInstances(
         due_time: data.due_time || null,
         completed_at: data.completed_at || null,
         user_id: data.user_id,
-        assignee_id: data.assignee_id || null,
         created_at: data.created_at,
         updated_at: data.updated_at,
         is_recurring_instance: data.is_recurring_instance || false,

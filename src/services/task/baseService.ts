@@ -13,8 +13,7 @@ export async function createNewTask(userId: string, taskData: Partial<TaskFormDa
     status: taskData.status || "pending",
     priority: taskData.priority || "normal",
     due_date: taskData.due_date || null,
-    due_time: taskData.due_time || null,
-    assignee_id: taskData.assignee_id || null
+    due_time: taskData.due_time || null
   };
 
   // Insert the task data
@@ -43,7 +42,6 @@ export async function createNewTask(userId: string, taskData: Partial<TaskFormDa
     due_date: taskItem.due_date,
     due_time: taskItem.due_time || null,
     user_id: taskItem.user_id,
-    assignee_id: taskItem.assignee_id || null,
     created_at: taskItem.created_at,
     updated_at: taskItem.updated_at,
     completed_at: taskItem.completed_at || null,
@@ -86,7 +84,6 @@ export async function getTaskWithSubtasks(taskId: string): Promise<Task> {
     due_time: taskData.due_time || null,
     completed_at: taskData.completed_at || null,
     user_id: taskData.user_id,
-    assignee_id: taskData.assignee_id || null,
     created_at: taskData.created_at,
     updated_at: taskData.updated_at,
     is_recurring_instance: taskData.is_recurring_instance || false,
