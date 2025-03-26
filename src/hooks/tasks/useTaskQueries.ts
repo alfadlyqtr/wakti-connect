@@ -105,14 +105,22 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
           if (sharedTasksData && sharedTasksData.length > 0) {
             const taskIds = sharedTasksData.map(item => item.task_id);
             
+            // Fix: Modifying the query to properly handle the share_by 
+            // without using 'as shared_by' in the select statement
             const { data: taskData, error: taskError } = await supabase
               .from('tasks')
-              .select('*, user_id as shared_by')
+              .select('*')
               .in('id', taskIds);
               
             if (taskError) throw taskError;
             
-            result = taskData || [];
+            // Add the shared_by property after fetching the data
+            if (taskData) {
+              result = taskData.map(task => ({
+                ...task,
+                shared_by: task.user_id // Set shared_by to user_id
+              }));
+            }
           }
         } catch (error) {
           console.error("Error fetching shared tasks:", error);
@@ -156,7 +164,9 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
       
       console.log(`Query returned ${data?.length || 0} tasks`);
       
-      const tasksWithSubtasks = await fetchSubtasksForTasks(data || []);
+      if (!data) return [];
+      
+      const tasksWithSubtasks = await fetchSubtasksForTasks(data as TaskWithSharedInfo[]);
       return tasksWithSubtasks;
     }
     
