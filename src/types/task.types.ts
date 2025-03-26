@@ -44,8 +44,3 @@ export interface TaskFormData {
   snoozed_until?: string | null;
   is_recurring?: boolean;
 }
-
-export interface TasksResult {
-  tasks: Task[];
-  userRole: "free" | "individual" | "business" | "staff";
-}

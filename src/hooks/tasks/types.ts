@@ -1,5 +1,5 @@
 
-import { Task, TaskFormData, TaskStatus, TaskPriority, SubTask } from "@/types/task.types";
+import { Task, TaskFormData, TaskStatus, TaskPriority, SubTask, TaskTab } from "@/types/task.types";
 
 export interface UseTaskOperationsReturn {
   createTask: (taskData: TaskFormData) => Promise<Task>;
@@ -47,4 +47,5 @@ export interface UseTasksReturn {
   refetch: () => Promise<void>;
 }
 
-export type TaskTab = "my-tasks";
+// Export the TaskTab type
+export { TaskTab };

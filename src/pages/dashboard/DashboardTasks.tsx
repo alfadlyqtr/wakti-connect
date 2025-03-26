@@ -29,6 +29,10 @@ const DashboardTasks = () => {
     return <TasksLoading />;
   }
 
+  // Cast the filter values to their appropriate types
+  const statusFilter = filterStatus as TaskStatusFilter || "all";
+  const priorityFilter = filterPriority as TaskPriorityFilter || "all";
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">Tasks</h1>
@@ -36,9 +40,9 @@ const DashboardTasks = () => {
       <TaskControls
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        filterStatus={filterStatus as TaskStatusFilter}
+        filterStatus={statusFilter}
         onStatusChange={(status) => setFilterStatus(status as string | null)}
-        filterPriority={filterPriority as TaskPriorityFilter}
+        filterPriority={priorityFilter}
         onPriorityChange={(priority) => setFilterPriority(priority as string | null)}
         onCreateTask={() => setCreateTaskDialogOpen(true)}
         isPaidAccount={isPaidAccount}

@@ -2,12 +2,12 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TaskPriority, TaskStatus, SubTask } from "@/types/task.types";
-import TaskCardHeader from "./TaskCard/TaskCardHeader";
+import { isPast } from "date-fns";
+import { TaskCardHeader } from "./TaskCard/TaskCardHeader";
 import { TaskCardMenu } from "./TaskCard/TaskCardMenu";
 import { TaskCardFooter } from "./TaskCard/TaskCardFooter";
-import { TaskDueDate } from "./TaskCard/TaskDueDate";
-import { TaskSubtasks } from "./TaskCard/TaskSubtasks";
-import { isPast } from "date-fns";
+import { TaskDueDate } from "./task-card/TaskDueDate";
+import { TaskSubtasks } from "./task-card/TaskSubtasks";
 
 interface TaskCardProps {
   id: string;
