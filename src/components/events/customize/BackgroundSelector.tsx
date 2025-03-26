@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ColorTab from "./background-tabs/ColorTab";
-import GradientTab from "./background-tabs/GradientTab";
+import { GradientTab } from "./background-tabs/gradient";
 import ImageTab from "./background-tabs/ImageTab";
 
 interface BackgroundSelectorProps {
