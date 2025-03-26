@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Task, TaskTab } from "@/types/task.types";
-import TaskCard from "./TaskCard";
+import TaskCard from "@/components/ui/TaskCard";
 
 interface TaskGridProps {
   tasks: Task[];
