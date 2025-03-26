@@ -3,8 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 
 /**
- * Claims a task that was delegated by email by setting the assignee_id
- * This connects the email-delegated task to the staff member's account
+ * Claims a task that was marked as a team task by setting the assignee_id
+ * This connects the team task to the staff member's account
  */
 export async function claimDelegatedTask(taskId: string): Promise<boolean> {
   try {
@@ -14,22 +14,14 @@ export async function claimDelegatedTask(taskId: string): Promise<boolean> {
       throw new Error("You must be logged in to claim a task");
     }
     
-    // Get the current user's email from auth.users directly
-    const { data: authUser } = await supabase.auth.getUser();
-    const userEmail = authUser.user?.email;
+    console.log(`Attempting to claim task ${taskId} for staff member ${session.user.id}`);
     
-    if (!userEmail) {
-      throw new Error("Could not determine your email address");
-    }
-    
-    console.log(`Attempting to claim task ${taskId} for user ${session.user.id} with email ${userEmail}`);
-    
-    // Check if the task is delegated to this email
+    // Check if the task exists and is a team task
     const { data: taskData, error: taskError } = await supabase
       .from('tasks')
       .select('*')
       .eq('id', taskId)
-      .eq('delegated_email', userEmail)
+      .eq('is_team_task', true)
       .maybeSingle();
       
     if (taskError) {
@@ -38,8 +30,13 @@ export async function claimDelegatedTask(taskId: string): Promise<boolean> {
     }
     
     if (!taskData) {
-      console.error("Task not found or not delegated to this email");
-      throw new Error("This task is not delegated to your email address");
+      console.error("Task not found or not a team task");
+      throw new Error("This task is not available for claiming");
+    }
+    
+    // Check if the task is already assigned
+    if (taskData.assignee_id) {
+      throw new Error("This task has already been claimed by someone else");
     }
     
     console.log("Task found, claiming now...");
@@ -67,7 +64,7 @@ export async function claimDelegatedTask(taskId: string): Promise<boolean> {
         .insert({
           user_id: taskData.user_id,
           title: "Task Claimed",
-          content: `A delegated task "${taskData.title}" has been claimed`,
+          content: `A team task "${taskData.title}" has been claimed by a staff member`,
           type: "task_claimed",
           related_entity_id: taskId,
           related_entity_type: "task"

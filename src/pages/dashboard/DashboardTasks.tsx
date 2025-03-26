@@ -30,6 +30,13 @@ const DashboardTasks = () => {
     refetch
   } = useTasksPageState();
 
+  // Store current tab in localStorage for the claim task dialog
+  React.useEffect(() => {
+    if (activeTab) {
+      localStorage.setItem('currentTaskTab', activeTab);
+    }
+  }, [activeTab]);
+
   if (isLoading || !initialCheckDone) {
     return <TasksLoading />;
   }
@@ -63,14 +70,12 @@ const DashboardTasks = () => {
         onCreateTask={() => setCreateDialogOpen(true)}
       />
       
-      {!isUserStaffMember && (
-        <CreateTaskDialog
-          open={createDialogOpen}
-          onOpenChange={setCreateDialogOpen}
-          onCreateTask={handleCreateTask}
-          userRole={userRole || "free"}
-        />
-      )}
+      <CreateTaskDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreateTask={handleCreateTask}
+        userRole={userRole || "free"}
+      />
     </div>
   );
 };

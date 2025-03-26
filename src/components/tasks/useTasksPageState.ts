@@ -13,6 +13,7 @@ export const useTasksPageState = () => {
   const [activeTab, setActiveTab] = useState<TaskTab>("my-tasks");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
+  const [businessId, setBusinessId] = useState<string | null>(null);
 
   // Get user role and staff status only once at component mount
   useEffect(() => {
@@ -26,6 +27,13 @@ export const useTasksPageState = () => {
           setIsUserStaffMember(true);
           setUserRole('staff');
           setActiveTab('assigned-tasks');
+          
+          // Get the business ID for staff member
+          const cachedBusinessId = localStorage.getItem('staffBusinessId');
+          if (cachedBusinessId) {
+            setBusinessId(cachedBusinessId);
+          }
+          
           setInitialCheckDone(true);
           return;
         }
@@ -47,6 +55,19 @@ export const useTasksPageState = () => {
           console.log("User is staff member, setting appropriate role and tab");
           setUserRole('staff');
           setActiveTab('assigned-tasks');
+          
+          // Get the business ID for staff member
+          const { data: staffData } = await supabase
+            .from('business_staff')
+            .select('business_id')
+            .eq('staff_id', session.user.id)
+            .eq('status', 'active')
+            .maybeSingle();
+            
+          if (staffData?.business_id) {
+            setBusinessId(staffData.business_id);
+            localStorage.setItem('staffBusinessId', staffData.business_id);
+          }
         } else {
           const { data: profileData } = await supabase
             .from('profiles')
@@ -56,6 +77,11 @@ export const useTasksPageState = () => {
           
           console.log(`Setting user role from profile: ${profileData?.account_type || "free"}`);
           setUserRole(profileData?.account_type || "free");
+          
+          // If this is a business account, store the ID
+          if (profileData?.account_type === 'business') {
+            setBusinessId(session.user.id);
+          }
         }
         
         setInitialCheckDone(true);
@@ -97,9 +123,9 @@ export const useTasksPageState = () => {
         refetch();
       }
       
-      if (notification.type === 'task_assigned' || notification.type === 'task_delegated') {
+      if (notification.type === 'task_assigned' || notification.type === 'task_claimed') {
         clearStaffCache().then(() => {
-          console.log("Staff cache cleared after task assignment/delegation notification");
+          console.log("Staff cache cleared after task assignment/claim notification");
           refetch();
         });
       }
@@ -126,7 +152,28 @@ export const useTasksPageState = () => {
   const handleCreateTask = async (taskData: any) => {
     try {
       console.log("Creating task with data:", taskData);
-      await createTask(taskData);
+      
+      // For staff on team tasks tab, this means they want to claim a task
+      if (isUserStaffMember && activeTab === "team-tasks" && taskData.id) {
+        console.log("Staff member claiming task:", taskData.id);
+        
+        const { claimDelegatedTask } = await import('@/services/task/claimDelegatedTask');
+        await claimDelegatedTask(taskData.id);
+        
+        toast({
+          title: "Task claimed",
+          description: "The task has been assigned to you",
+        });
+      } else {
+        // Regular task creation
+        // For business users on the team tasks tab, mark it as a team task
+        if (userRole === 'business' && activeTab === 'team-tasks') {
+          taskData.is_team_task = true;
+        }
+        
+        await createTask(taskData);
+      }
+      
       setCreateDialogOpen(false);
       
       // Make sure to refetch tasks after creation
@@ -146,11 +193,11 @@ export const useTasksPageState = () => {
   const handleTabChange = (newTab: TaskTab) => {
     console.log(`Changing tab from ${activeTab} to ${newTab}`);
     
-    if (isUserStaffMember && newTab !== "assigned-tasks") {
-      console.log("Staff member attempted to switch to non-assigned tab, redirecting");
+    if (isUserStaffMember && newTab !== "assigned-tasks" && newTab !== "team-tasks") {
+      console.log("Staff member attempted to switch to restricted tab");
       toast({
         title: "Tab restricted",
-        description: "As a staff member, you can only view tasks assigned or delegated to you",
+        description: "As a staff member, you can only view your tasks or team tasks",
       });
       return; // Don't change the tab for staff members
     }
@@ -161,24 +208,6 @@ export const useTasksPageState = () => {
       refetch();
     }, 100);
   };
-
-  // Add additional logging
-  useEffect(() => {
-    if (initialCheckDone && !isLoading) {
-      console.log(`Tasks loaded: ${filteredTasks.length} tasks found for ${userRole} user on tab ${activeTab}`);
-      console.log("User is staff member:", isUserStaffMember);
-      
-      // Log details about delegated tasks
-      const delegatedTasks = filteredTasks.filter(t => t.delegated_email && !t.assignee_id);
-      const assignedTasks = filteredTasks.filter(t => t.assignee_id);
-      
-      console.log(`Delegated tasks: ${delegatedTasks.length}, Assigned tasks: ${assignedTasks.length}`);
-      
-      if (delegatedTasks.length > 0) {
-        console.log("Delegated task emails:", delegatedTasks.map(t => t.delegated_email));
-      }
-    }
-  }, [filteredTasks, isLoading, initialCheckDone, userRole, activeTab, isUserStaffMember]);
 
   return {
     userRole,
@@ -198,6 +227,7 @@ export const useTasksPageState = () => {
     isPaidAccount,
     handleCreateTask,
     handleTabChange,
-    refetch
+    refetch,
+    businessId
   };
 };

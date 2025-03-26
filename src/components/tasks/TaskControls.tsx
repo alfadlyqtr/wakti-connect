@@ -101,9 +101,10 @@ const TaskControls: React.FC<TaskControlsProps> = ({
             </SelectContent>
           </Select>
           
-          {!isStaff && (
+          {/* Only show Create button if not staff or if on team tasks tab and they are staff */}
+          {(!isStaff || (isStaff && currentTab === "team-tasks")) && (
             <Button onClick={onCreateTask}>
-              Add Task
+              {isStaff ? "Claim Task" : "Add Task"}
             </Button>
           )}
         </div>
@@ -116,7 +117,10 @@ const TaskControls: React.FC<TaskControlsProps> = ({
           )}
           
           {isStaff && (
-            <TabsTrigger value="assigned-tasks">Assigned & Delegated</TabsTrigger>
+            <>
+              <TabsTrigger value="assigned-tasks">My Tasks</TabsTrigger>
+              <TabsTrigger value="team-tasks">Team Tasks</TabsTrigger>
+            </>
           )}
           
           {!isStaff && isPaidAccount && (

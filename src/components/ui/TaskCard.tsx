@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   Card, 
@@ -247,6 +246,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
   };
   
   const isDelegatedViaEmail = !!delegatedEmail && !assigneeId;
+
+  const isTeamTask = status !== 'completed' && !assigneeId && userRole === 'staff';
 
   return (
     <Card className={`border-l-4 ${isOverdue ? 'border-l-red-500' : `border-l-${priorityColors[priority].split(' ')[0]}`}`}>

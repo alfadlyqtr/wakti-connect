@@ -23,21 +23,23 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   isStaff,
   onCreateTask
 }) => {
+  const isEmpty = tasks.length === 0;
+  
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-      {tasks.length > 0 ? (
-        <TaskGrid 
-          tasks={tasks} 
-          userRole={userRole} 
-          tab={tab}
-          refetch={refetch}
-        />
-      ) : (
+      {isEmpty ? (
         <EmptyTasksState 
           isPaidAccount={isPaidAccount} 
           onCreateTask={onCreateTask} 
           tab={tab}
           isStaff={isStaff}
+        />
+      ) : (
+        <TaskGrid 
+          tasks={tasks} 
+          userRole={userRole} 
+          tab={tab}
+          refetch={refetch}
         />
       )}
     </div>
