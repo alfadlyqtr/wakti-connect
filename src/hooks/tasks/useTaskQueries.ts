@@ -3,7 +3,11 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { isUserStaff, clearStaffCache } from '@/utils/staffUtils';
-import { TaskWithSharedInfo, UseTaskQueriesReturn, TaskTab } from './types';
+import { 
+  TaskWithSharedInfo, 
+  UseTaskQueriesReturn, 
+  TaskTab 
+} from './types';
 import { 
   fetchMyTasks, 
   fetchSharedTasks, 
