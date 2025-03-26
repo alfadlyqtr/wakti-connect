@@ -21,6 +21,7 @@ const GradientTab: React.FC<GradientTabProps> = ({
   const [color2, setColor2] = useState("#fda085");
   const [currentAngle, setCurrentAngle] = useState(angle);
   const [currentDirection, setCurrentDirection] = useState(direction);
+  const [gradientPreview, setGradientPreview] = useState(value);
   
   useEffect(() => {
     // Extract colors from the gradient value if it exists
@@ -33,6 +34,9 @@ const GradientTab: React.FC<GradientTabProps> = ({
     // Set the current angle from props
     setCurrentAngle(angle);
     setCurrentDirection(direction);
+    
+    // Update gradient preview
+    setGradientPreview(value);
   }, [value, angle, direction]);
 
   // Handle direction change
@@ -51,7 +55,9 @@ const GradientTab: React.FC<GradientTabProps> = ({
       onAngleChange(newAngle);
     }
     
-    onChange(generateGradient(color1, color2, newAngle));
+    const newGradient = generateGradient(color1, color2, newAngle);
+    setGradientPreview(newGradient);
+    onChange(newGradient);
   };
 
   // Handle angle change
@@ -62,22 +68,29 @@ const GradientTab: React.FC<GradientTabProps> = ({
       onAngleChange(newAngle);
     }
     
-    onChange(generateGradient(color1, color2, newAngle));
+    const newGradient = generateGradient(color1, color2, newAngle);
+    setGradientPreview(newGradient);
+    onChange(newGradient);
   };
 
   // Handle color changes
   const handleColor1Change = (newColor: string) => {
     setColor1(newColor);
-    onChange(generateGradient(newColor, color2, currentAngle));
+    const newGradient = generateGradient(newColor, color2, currentAngle);
+    setGradientPreview(newGradient);
+    onChange(newGradient);
   };
   
   const handleColor2Change = (newColor: string) => {
     setColor2(newColor);
-    onChange(generateGradient(color1, newColor, currentAngle));
+    const newGradient = generateGradient(color1, newColor, currentAngle);
+    setGradientPreview(newGradient);
+    onChange(newGradient);
   };
 
   // Select a preset gradient
   const handlePresetSelect = (preset: string) => {
+    setGradientPreview(preset);
     onChange(preset);
   };
 
@@ -100,11 +113,11 @@ const GradientTab: React.FC<GradientTabProps> = ({
       
       <GradientPresets 
         presets={GRADIENT_PRESETS} 
-        currentValue={value} 
+        currentValue={gradientPreview} 
         onPresetSelect={handlePresetSelect} 
       />
       
-      <GradientPreview gradientValue={value} />
+      <GradientPreview gradientValue={gradientPreview} />
     </div>
   );
 };
