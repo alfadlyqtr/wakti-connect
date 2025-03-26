@@ -1,14 +1,15 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { EventCustomization } from "@/types/event.types";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import { ImagePlus, X } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, MapPin, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/toast";
+import { ColorPicker } from "@/components/ui/color-picker";
 
 interface FeaturesTabProps {
   customization: EventCustomization;
@@ -17,6 +18,7 @@ interface FeaturesTabProps {
   onToggleButtons: (checked: boolean) => void;
   onBrandingChange: (property: 'logo' | 'slogan', value: string) => void;
   onMapDisplayChange: (value: 'button' | 'qrcode' | 'both') => void;
+  onUtilityButtonStyleChange?: (buttonType: 'calendar' | 'map' | 'qr', property: 'background' | 'color' | 'shape', value: string) => void;
 }
 
 const FeaturesTab: React.FC<FeaturesTabProps> = ({
@@ -25,158 +27,253 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({
   onToggleCalendar,
   onToggleButtons,
   onBrandingChange,
-  onMapDisplayChange
+  onMapDisplayChange,
+  onUtilityButtonStyleChange
 }) => {
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    // Check file size (max 500KB for logos)
-    if (file.size > 500 * 1024) {
-      toast({
-        title: "Logo image too large",
-        description: "Please select an image under 500KB",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Check file type
-    if (!['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'].includes(file.type)) {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload a JPG, PNG, SVG or WebP image",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Create a data URL
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        onBrandingChange('logo', event.target.result as string);
-        toast({
-          title: "Logo uploaded",
-          description: "Your business logo has been added to the event",
-          variant: "success"
-        });
-      }
-    };
-    reader.readAsDataURL(file);
+  const [logoUrl, setLogoUrl] = useState(customization.branding?.logo || '');
+  const [slogan, setSlogan] = useState(customization.branding?.slogan || '');
+  
+  const handleLogoUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLogoUrl(e.target.value);
+    onBrandingChange('logo', e.target.value);
+  };
+  
+  const handleSloganChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSlogan(e.target.value);
+    onBrandingChange('slogan', e.target.value);
   };
 
+  // Handler for utility button style changes
+  const handleUtilityButtonStyleChange = (buttonType: 'calendar' | 'map' | 'qr', property: 'background' | 'color' | 'shape', value: string) => {
+    if (onUtilityButtonStyleChange) {
+      onUtilityButtonStyleChange(buttonType, property, value);
+    }
+  };
+  
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        <h3 className="font-medium text-base">Interactive Features</h3>
-        
-        <div className="flex items-center justify-between">
-          <Label htmlFor="enable-chatbot" className="flex-1">Enable AI Chatbot</Label>
-          <Switch 
-            id="enable-chatbot" 
-            checked={customization.enableChatbot || false}
-            onCheckedChange={onToggleChatbot}
-          />
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <Label htmlFor="show-calendar" className="block">Show Add to Calendar</Label>
-            <p className="text-xs text-muted-foreground">Allow guests to add this event to their calendar app</p>
-          </div>
-          <Switch 
-            id="show-calendar" 
-            checked={customization.showAddToCalendarButton !== false}
-            onCheckedChange={onToggleCalendar}
-          />
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <Label htmlFor="show-buttons" className="block">Show Accept/Decline Buttons</Label>
-            <p className="text-xs text-muted-foreground">Allow guests to respond to your invitation</p>
-          </div>
-          <Switch 
-            id="show-buttons" 
-            checked={customization.showAcceptDeclineButtons !== false}
-            onCheckedChange={onToggleButtons}
-          />
-        </div>
-      </div>
-      
-      <Separator />
-      
-      <div className="space-y-4">
-        <h3 className="font-medium text-base">Business Branding</h3>
+      <div>
+        <h3 className="font-medium text-base mb-3">Interactive Features</h3>
         
         <div className="space-y-3">
-          <Label className="block">Business Logo</Label>
-          <div className="border-2 border-dashed rounded-md p-4 text-center bg-muted/50">
-            <input
-              type="file"
-              id="logoImage"
-              accept="image/jpeg,image/png,image/webp,image/svg+xml"
-              onChange={handleLogoUpload}
-              className="hidden"
+          <div className="flex items-center justify-between">
+            <Label htmlFor="show-buttons" className="cursor-pointer">Show Accept/Decline Buttons</Label>
+            <Switch 
+              id="show-buttons" 
+              checked={customization.showAcceptDeclineButtons !== false}
+              onCheckedChange={onToggleButtons}
             />
-            <Label htmlFor="logoImage" className="cursor-pointer flex flex-col items-center justify-center gap-2">
-              <ImagePlus className="h-6 w-6 text-muted-foreground" />
-              <span className="text-sm font-medium">Upload Logo (Max 500KB)</span>
-              <span className="text-xs text-muted-foreground">JPG, PNG, SVG or WebP</span>
-            </Label>
-            {customization.branding?.logo && (
-              <div className="mt-4 relative">
-                <img 
-                  src={customization.branding.logo} 
-                  alt="Business logo preview" 
-                  className="mx-auto h-10 object-contain"
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <Label htmlFor="show-calendar" className="cursor-pointer">Show Add to Calendar Button</Label>
+            <Switch 
+              id="show-calendar" 
+              checked={customization.showAddToCalendarButton !== false}
+              onCheckedChange={onToggleCalendar}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <Label htmlFor="enable-chatbot" className="cursor-pointer">Enable Event Chatbot</Label>
+            <Switch 
+              id="enable-chatbot" 
+              checked={customization.enableChatbot || false}
+              onCheckedChange={onToggleChatbot}
+            />
+          </div>
+        </div>
+      </div>
+
+      <Separator />
+      
+      <div>
+        <h3 className="font-medium text-base mb-3">Utility Buttons Styling</h3>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          {/* Calendar Button Styling */}
+          <div className="border rounded-md p-3">
+            <div className="flex items-center gap-2 mb-3">
+              <Calendar className="h-4 w-4" />
+              <span className="font-medium">Calendar</span>
+            </div>
+            <div className="space-y-2">
+              <div>
+                <Label className="text-xs">Background</Label>
+                <ColorPicker 
+                  value={customization.utilityButtons?.calendar?.background || '#ffffff'}
+                  onChange={(value) => handleUtilityButtonStyleChange('calendar', 'background', value)}
                 />
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  className="absolute top-0 right-0 w-6 h-6 p-0 rounded-full"
-                  onClick={() => onBrandingChange('logo', '')}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
               </div>
-            )}
+              <div>
+                <Label className="text-xs">Text Color</Label>
+                <ColorPicker 
+                  value={customization.utilityButtons?.calendar?.color || '#000000'}
+                  onChange={(value) => handleUtilityButtonStyleChange('calendar', 'color', value)}
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* Map Button Styling */}
+          <div className="border rounded-md p-3">
+            <div className="flex items-center gap-2 mb-3">
+              <MapPin className="h-4 w-4" />
+              <span className="font-medium">Map</span>
+            </div>
+            <div className="space-y-2">
+              <div>
+                <Label className="text-xs">Background</Label>
+                <ColorPicker 
+                  value={customization.utilityButtons?.map?.background || '#ffffff'}
+                  onChange={(value) => handleUtilityButtonStyleChange('map', 'background', value)}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Text Color</Label>
+                <ColorPicker 
+                  value={customization.utilityButtons?.map?.color || '#000000'}
+                  onChange={(value) => handleUtilityButtonStyleChange('map', 'color', value)}
+                />
+              </div>
+            </div>
+          </div>
+          
+          {/* QR Code Button Styling */}
+          <div className="border rounded-md p-3">
+            <div className="flex items-center gap-2 mb-3">
+              <QrCode className="h-4 w-4" />
+              <span className="font-medium">QR Code</span>
+            </div>
+            <div className="space-y-2">
+              <div>
+                <Label className="text-xs">Background</Label>
+                <ColorPicker 
+                  value={customization.utilityButtons?.qr?.background || '#ffffff'}
+                  onChange={(value) => handleUtilityButtonStyleChange('qr', 'background', value)}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Text Color</Label>
+                <ColorPicker 
+                  value={customization.utilityButtons?.qr?.color || '#000000'}
+                  onChange={(value) => handleUtilityButtonStyleChange('qr', 'color', value)}
+                />
+              </div>
+            </div>
           </div>
         </div>
         
-        <div>
-          <Label htmlFor="business-slogan" className="block mb-2">Business Slogan/Tagline</Label>
-          <Input
-            id="business-slogan"
-            placeholder="Your business slogan or tagline"
-            value={customization.branding?.slogan || ''}
-            onChange={(e) => onBrandingChange('slogan', e.target.value)}
-          />
+        <div className="p-3 bg-muted/30 rounded-md">
+          <h4 className="text-sm font-medium mb-2">Buttons Preview</h4>
+          <div className="flex flex-wrap gap-2 justify-center">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-xs flex items-center justify-center gap-1"
+              style={{
+                backgroundColor: customization.utilityButtons?.calendar?.background || undefined,
+                color: customization.utilityButtons?.calendar?.color || undefined,
+                borderRadius: customization.utilityButtons?.calendar?.shape === 'pill' ? '9999px' : 
+                               customization.utilityButtons?.calendar?.shape === 'rounded' ? '0.375rem' : '0'
+              }}
+            >
+              <Calendar className="h-3 w-3" /> Calendar
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-xs flex items-center justify-center gap-1"
+              style={{
+                backgroundColor: customization.utilityButtons?.map?.background || undefined,
+                color: customization.utilityButtons?.map?.color || undefined,
+                borderRadius: customization.utilityButtons?.map?.shape === 'pill' ? '9999px' : 
+                               customization.utilityButtons?.map?.shape === 'rounded' ? '0.375rem' : '0'
+              }}
+            >
+              <MapPin className="h-3 w-3" /> Map
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-xs flex items-center justify-center gap-1"
+              style={{
+                backgroundColor: customization.utilityButtons?.qr?.background || undefined,
+                color: customization.utilityButtons?.qr?.color || undefined,
+                borderRadius: customization.utilityButtons?.qr?.shape === 'pill' ? '9999px' : 
+                               customization.utilityButtons?.qr?.shape === 'rounded' ? '0.375rem' : '0'
+              }}
+            >
+              <QrCode className="h-3 w-3" /> QR Code
+            </Button>
+          </div>
         </div>
+      </div>
+
+      <Separator />
+      
+      <div>
+        <h3 className="font-medium text-base mb-3">Business Branding</h3>
+        
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="logo-url">Logo URL</Label>
+            <Input 
+              id="logo-url" 
+              value={logoUrl} 
+              onChange={handleLogoUrlChange} 
+              placeholder="Enter URL for your logo"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="slogan">Business Slogan</Label>
+            <Input 
+              id="slogan" 
+              value={slogan} 
+              onChange={handleSloganChange} 
+              placeholder="Your business slogan or tagline"
+            />
+          </div>
+        </div>
+        
+        {(logoUrl || slogan) && (
+          <div className="p-3 bg-muted/30 rounded-md mt-3 flex flex-col items-center">
+            <h4 className="text-xs font-medium mb-2">Branding Preview</h4>
+            {logoUrl && (
+              <img src={logoUrl} alt="Business logo" className="h-8 object-contain mb-1" />
+            )}
+            {slogan && (
+              <p className="text-xs text-muted-foreground">{slogan}</p>
+            )}
+          </div>
+        )}
       </div>
       
       <Separator />
       
-      <div className="space-y-4">
-        <h3 className="font-medium text-base">Map Display Options</h3>
-        
+      <div>
+        <h3 className="font-medium text-base mb-3">Map Display</h3>
         <RadioGroup 
           value={customization.mapDisplay || 'button'} 
           onValueChange={(value) => onMapDisplayChange(value as 'button' | 'qrcode' | 'both')}
-          className="space-y-2"
+          className="space-y-3"
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="button" id="map-button" />
-            <Label htmlFor="map-button">Show Map Button</Label>
+            <Label htmlFor="map-button" className="cursor-pointer">Show Map Button</Label>
           </div>
+          
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="qrcode" id="map-qrcode" />
-            <Label htmlFor="map-qrcode">Show QR Code</Label>
+            <Label htmlFor="map-qrcode" className="cursor-pointer">Show QR Code for Map</Label>
           </div>
+          
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="both" id="map-both" />
-            <Label htmlFor="map-both">Show Both</Label>
+            <Label htmlFor="map-both" className="cursor-pointer">Show Both Options</Label>
           </div>
         </RadioGroup>
       </div>

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +43,6 @@ const EventCard: React.FC<EventCardProps> = ({
     }
   };
 
-  // Use customization styles if available
   const getCustomCardStyle = () => {
     if (!event.customization) return {};
 
@@ -65,7 +63,6 @@ const EventCard: React.FC<EventCardProps> = ({
     return {};
   };
 
-  // Get text color based on customization
   const getTextStyle = (type?: 'header' | 'description' | 'datetime') => {
     const { font, headerFont, descriptionFont, dateTimeFont } = event.customization || {};
     
@@ -92,13 +89,11 @@ const EventCard: React.FC<EventCardProps> = ({
     };
   };
 
-  // Check if the background is dark (this is a simple implementation)
   const isDarkBackground = () => {
     const bgType = event.customization?.background?.type;
     const bgValue = event.customization?.background?.value;
     
     if (bgType === 'color' && bgValue) {
-      // Simple check for dark colors
       return bgValue.match(/#[0-9a-f]{6}/i) && 
         (bgValue.toLowerCase() === '#000000' || 
          bgValue.toLowerCase() === '#111111' || 
@@ -111,7 +106,6 @@ const EventCard: React.FC<EventCardProps> = ({
     return false;
   };
 
-  // Custom header style for events with banner header style
   const renderCustomHeader = () => {
     if (!event.customization?.headerStyle || event.customization.headerStyle === 'simple') {
       return (
@@ -131,7 +125,6 @@ const EventCard: React.FC<EventCardProps> = ({
       );
     }
 
-    // For banner style headers
     if (event.customization.headerStyle === 'banner' && event.customization.headerImage) {
       return (
         <div className="relative h-20 w-full overflow-hidden rounded-t-lg">
@@ -163,7 +156,6 @@ const EventCard: React.FC<EventCardProps> = ({
       );
     }
 
-    // For minimal style headers with image
     if (event.customization.headerStyle === 'minimal') {
       return (
         <div className="flex justify-between items-start">
@@ -195,7 +187,6 @@ const EventCard: React.FC<EventCardProps> = ({
       );
     }
 
-    // Default header
     return (
       <div className="flex justify-between items-start">
         <h3 
@@ -215,7 +206,6 @@ const EventCard: React.FC<EventCardProps> = ({
     );
   };
 
-  // Render business branding if available
   const renderBranding = () => {
     const { branding } = event.customization || {};
     
@@ -237,7 +227,6 @@ const EventCard: React.FC<EventCardProps> = ({
     );
   };
 
-  // Get animation class
   const getAnimationClass = () => {
     if (!event.customization?.animation) return '';
     
@@ -253,7 +242,6 @@ const EventCard: React.FC<EventCardProps> = ({
     }
   };
 
-  // Get card effect class
   const getCardEffectClass = () => {
     if (!event.customization?.cardEffect?.type) return 'shadow-md';
     
@@ -269,7 +257,6 @@ const EventCard: React.FC<EventCardProps> = ({
     }
   };
   
-  // Border radius based on card effect settings
   const getBorderRadiusClass = () => {
     if (!event.customization?.cardEffect?.borderRadius) return 'rounded-lg';
     
@@ -287,7 +274,6 @@ const EventCard: React.FC<EventCardProps> = ({
     }
   };
   
-  // Border style if enabled
   const getBorderStyle = () => {
     if (event.customization?.cardEffect?.border) {
       return {
@@ -297,6 +283,19 @@ const EventCard: React.FC<EventCardProps> = ({
       };
     }
     return {};
+  };
+
+  const getUtilityButtonStyle = (type: 'calendar' | 'map' | 'qr') => {
+    const buttonStyle = event.customization?.utilityButtons?.[type];
+    
+    if (!buttonStyle) return {};
+    
+    return {
+      backgroundColor: buttonStyle.background || undefined,
+      color: buttonStyle.color || undefined,
+      borderRadius: buttonStyle.shape === 'pill' ? '9999px' : 
+                   buttonStyle.shape === 'rounded' ? '0.375rem' : '0'
+    };
   };
 
   return (
@@ -424,24 +423,40 @@ const EventCard: React.FC<EventCardProps> = ({
 
         {renderBranding()}
 
-        {/* Quick action buttons for events with locations */}
-        {event.location && event.customization?.showAddToCalendarButton !== false && (
+        {event.location && (
           <div className={`grid grid-cols-3 gap-2 mt-3 ${
             event.customization?.elementAnimations?.buttons === 'fade' ? 'animate-fade-in' : 
             event.customization?.elementAnimations?.buttons === 'slide' ? 'animate-slide-in' : 
             event.customization?.elementAnimations?.buttons === 'pop' ? 'animate-scale-in' : ''
           }`}>
-            <Button variant="outline" size="sm" className="text-xs flex items-center justify-center gap-1">
-              <Calendar className={`h-3 w-3 ${event.customization?.elementAnimations?.icons || ''}`} /> 
-              Calendar
-            </Button>
+            {event.customization?.showAddToCalendarButton !== false && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs flex items-center justify-center gap-1"
+                style={getUtilityButtonStyle('calendar')}
+              >
+                <Calendar className={`h-3 w-3 ${event.customization?.elementAnimations?.icons || ''}`} /> 
+                Calendar
+              </Button>
+            )}
             
-            <Button variant="outline" size="sm" className="text-xs flex items-center justify-center gap-1">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-xs flex items-center justify-center gap-1"
+              style={getUtilityButtonStyle('map')}
+            >
               <MapPin className={`h-3 w-3 ${event.customization?.elementAnimations?.icons || ''}`} /> 
               Map
             </Button>
             
-            <Button variant="outline" size="sm" className="text-xs flex items-center justify-center gap-1">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-xs flex items-center justify-center gap-1"
+              style={getUtilityButtonStyle('qr')}
+            >
               <QrCode className={`h-3 w-3 ${event.customization?.elementAnimations?.icons || ''}`} /> 
               QR Code
             </Button>

@@ -111,6 +111,25 @@ export interface EventCustomization {
       shape: 'rounded' | 'pill' | 'square';
     };
   };
+
+  // Utility button styling (Calendar, Map, QR Code)
+  utilityButtons?: {
+    calendar?: {
+      background: string;
+      color: string;
+      shape?: 'rounded' | 'pill' | 'square';
+    };
+    map?: {
+      background: string;
+      color: string;
+      shape?: 'rounded' | 'pill' | 'square';
+    };
+    qr?: {
+      background: string;
+      color: string;
+      shape?: 'rounded' | 'pill' | 'square';
+    };
+  };
   
   // Show/hide buttons
   showAcceptDeclineButtons?: boolean;

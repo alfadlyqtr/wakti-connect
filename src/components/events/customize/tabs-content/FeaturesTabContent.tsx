@@ -10,7 +10,8 @@ const FeaturesTabContent: React.FC = () => {
     handleToggleCalendar,
     handleToggleButtons,
     handleBrandingChange,
-    handleMapDisplayChange
+    handleMapDisplayChange,
+    handleUtilityButtonStyleChange
   } = useCustomization();
 
   return (
@@ -21,6 +22,7 @@ const FeaturesTabContent: React.FC = () => {
       onToggleButtons={handleToggleButtons}
       onBrandingChange={handleBrandingChange}
       onMapDisplayChange={handleMapDisplayChange}
+      onUtilityButtonStyleChange={handleUtilityButtonStyleChange}
     />
   );
 };

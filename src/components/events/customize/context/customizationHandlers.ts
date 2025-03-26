@@ -51,6 +51,20 @@ export const createCustomizationHandlers = (
     });
   };
   
+  // Utility button handlers (Calendar, Map, QR Code)
+  const handleUtilityButtonStyleChange = (buttonType: 'calendar' | 'map' | 'qr', property: 'background' | 'color' | 'shape', value: string) => {
+    onCustomizationChange({
+      ...customization,
+      utilityButtons: {
+        ...customization.utilityButtons || {},
+        [buttonType]: {
+          ...(customization.utilityButtons?.[buttonType] || {}),
+          [property]: value
+        }
+      }
+    });
+  };
+  
   // Font handlers
   const handleFontChange = (property: 'family' | 'size' | 'color' | 'weight' | 'alignment', value: string) => {
     onCustomizationChange({
@@ -173,6 +187,7 @@ export const createCustomizationHandlers = (
     handleBackgroundAngleChange,
     handleBackgroundDirectionChange,
     handleButtonStyleChange,
+    handleUtilityButtonStyleChange,  // Added new handler
     handleFontChange,
     handleHeaderFontChange,
     handleDescriptionFontChange,

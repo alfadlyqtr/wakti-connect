@@ -53,7 +53,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     description,
     setTitle,
     setDescription
-  } = useEventForm();
+  } = useEventForm(editEvent);
 
   // Use our custom hook for initializing the form with edit data
   useEditEventEffect({

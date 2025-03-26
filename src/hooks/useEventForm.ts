@@ -1,7 +1,7 @@
 
 import { useCallback } from "react";
 import { useEvents } from "@/hooks/useEvents";
-import { EventFormData } from "@/types/event.types";
+import { EventFormData, Event } from "@/types/event.types";
 import { 
   useEventBasics, 
   useEventLocation, 
@@ -10,7 +10,7 @@ import {
   useFormReset
 } from "./events";
 
-export const useEventForm = () => {
+export const useEventForm = (editEvent?: Event | null) => {
   const { canCreateEvents, userRole } = useEvents();
   
   // Use our smaller, focused hooks
@@ -98,7 +98,8 @@ export const useEventForm = () => {
     mapsUrl,
     customization,
     recipients,
-    resetForm
+    resetForm,
+    editEvent
   });
 
   return {
@@ -140,3 +141,6 @@ export const useEventForm = () => {
     setDescription
   };
 };
+
+// Added missing import
+import { useEffect } from "react";

@@ -19,6 +19,7 @@ interface UseEventSubmissionProps {
   customization: EventCustomization;
   recipients: InvitationRecipient[];
   resetForm: () => void;
+  editEvent?: any; // The event being edited (if any)
 }
 
 export const useEventSubmission = ({
@@ -33,9 +34,10 @@ export const useEventSubmission = ({
   mapsUrl,
   customization,
   recipients,
-  resetForm
+  resetForm,
+  editEvent
 }: UseEventSubmissionProps) => {
-  const { createEvent, canCreateEvents } = useEvents();
+  const { createEvent, updateEvent, canCreateEvents } = useEvents();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const {
@@ -124,37 +126,63 @@ export const useEventSubmission = ({
       const status = recipients.length > 0 ? 'sent' : 'draft';
       completeFormData.status = status;
       
-      const result = await createEvent(completeFormData);
+      let result;
+      
+      if (editEvent) {
+        // Update existing event instead of creating a new one
+        console.log("Updating existing event:", editEvent.id);
+        result = await updateEvent(editEvent.id, completeFormData);
+        
+        if (result?.id) {
+          // Show different message for updates
+          if (recipients.length > 0) {
+            toast({
+              title: "Event Updated and Invitations Sent",
+              description: `Your event "${completeFormData.title}" has been updated and invitations have been sent.`,
+            });
+          } else {
+            toast({
+              title: "Event Updated",
+              description: `Your event "${completeFormData.title}" has been updated as a draft.`,
+            });
+          }
+        }
+      } else {
+        // Create new event
+        result = await createEvent(completeFormData);
+        
+        if (result?.id) {
+          // This would actually send invitations to recipients in a real implementation
+          if (recipients.length > 0) {
+            toast({
+              title: "Event Created and Invitations Sent",
+              description: `Your event "${completeFormData.title}" has been created and invitations have been sent.`,
+            });
+          } else {
+            toast({
+              title: "Event Created",
+              description: `Your event "${completeFormData.title}" has been created as a draft.`,
+            });
+          }
+        }
+      }
       
       if (result?.id) {
-        // This would actually send invitations to recipients in a real implementation
-        if (recipients.length > 0) {
-          toast({
-            title: "Event Created and Invitations Sent",
-            description: `Your event "${completeFormData.title}" has been created and invitations have been sent.`,
-          });
-        } else {
-          toast({
-            title: "Event Created",
-            description: `Your event "${completeFormData.title}" has been created as a draft.`,
-          });
-        }
-        
         // Reset form
         resetForm();
         reset();
       }
     } catch (error: any) {
-      console.error("Error creating event:", error);
+      console.error("Error with event:", error);
       toast({
-        title: "Failed to create event",
+        title: editEvent ? "Failed to update event" : "Failed to create event",
         description: error?.message || "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
-  }, [canCreateEvents, createEvent, isAllDay, location, locationType, mapsUrl, customization, recipients, title, description, resetForm, reset, selectedDate, startTime, endTime]);
+  }, [canCreateEvents, createEvent, updateEvent, isAllDay, location, locationType, mapsUrl, customization, recipients, title, description, resetForm, reset, selectedDate, startTime, endTime, editEvent]);
 
   return {
     register,

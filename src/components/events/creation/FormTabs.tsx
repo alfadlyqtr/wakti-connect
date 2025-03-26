@@ -1,18 +1,19 @@
+
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EventFormTab } from "@/types/form.types";
+import { EventCustomization } from "@/types/event.types";
+import { InvitationRecipient } from "@/types/invitation.types";
 import DetailsTab from "./DetailsTab";
 import CustomizeTab from "../customize/CustomizeTab";
 import ShareTab from "./ShareTab";
-import { EventTab } from "@/types/event.types";
-import { UseFormRegister, FieldErrors } from "react-hook-form";
-import { EventFormData, EventCustomization } from "@/types/event.types";
-import { InvitationRecipient } from "@/types/invitation.types";
+import FormActions from "./FormActions";
 
 interface FormTabsProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-  register: UseFormRegister<EventFormData>;
-  errors: FieldErrors<EventFormData>;
+  activeTab: EventFormTab;
+  setActiveTab: (tab: EventFormTab) => void;
+  register: any;
+  errors: any;
   selectedDate: Date;
   setSelectedDate: (date: Date) => void;
   startTime: string;
@@ -29,8 +30,8 @@ interface FormTabsProps {
   handlePrevTab: () => void;
   customization: EventCustomization;
   setCustomization: (customization: EventCustomization) => void;
-  shareTab: 'recipients' | 'links';
-  setShareTab: (tab: 'recipients' | 'links') => void;
+  shareTab: string;
+  setShareTab: (tab: string) => void;
   recipients: InvitationRecipient[];
   addRecipient: (recipient: InvitationRecipient) => void;
   removeRecipient: (index: number) => void;
@@ -40,7 +41,7 @@ interface FormTabsProps {
   description: string;
   setTitle: (title: string) => void;
   setDescription: (description: string) => void;
-  isEdit: boolean;
+  isEdit?: boolean;
 }
 
 const FormTabs: React.FC<FormTabsProps> = ({
@@ -75,101 +76,94 @@ const FormTabs: React.FC<FormTabsProps> = ({
   description,
   setTitle,
   setDescription,
-  isEdit
+  isEdit = false
 }) => {
-  const isTitleEmpty = !title || title.trim() === '';
+  const tabs = [
+    { id: 'details', label: 'Details' },
+    { id: 'customize', label: 'Design' },
+    { id: 'share', label: 'Share' }
+  ];
 
   return (
-    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
-      <TabsList className="grid w-full grid-cols-3 mb-4">
-        <TabsTrigger value="details" className="px-2 sm:px-4 py-2">
-          Details
-        </TabsTrigger>
-        <TabsTrigger 
-          value="customize" 
-          className="px-2 sm:px-4 py-2" 
-          disabled={isTitleEmpty}
-        >
-          Customize
-        </TabsTrigger>
-        <TabsTrigger 
-          value="share" 
-          className="px-2 sm:px-4 py-2"
-          disabled={isTitleEmpty}
-        >
-          Share
-        </TabsTrigger>
+    <div>
+      <TabsList className="w-full grid grid-cols-3 mb-4">
+        {tabs.map((tab) => (
+          <TabsTrigger
+            key={tab.id}
+            value={tab.id}
+            onClick={() => setActiveTab(tab.id as EventFormTab)}
+            disabled={tab.id === 'share' && !title.trim()}
+          >
+            {tab.label}
+          </TabsTrigger>
+        ))}
       </TabsList>
 
-      <TabsContent value="details" className="p-0">
-        <DetailsTab
-          register={register}
-          errors={errors}
-          selectedDate={selectedDate}
-          setSelectedDate={setSelectedDate}
-          startTime={startTime}
-          setStartTime={setStartTime}
-          endTime={endTime}
-          setEndTime={setEndTime}
-          isAllDay={isAllDay}
-          setIsAllDay={setIsAllDay}
-          location={location}
-          locationType={locationType}
-          mapsUrl={mapsUrl}
-          handleLocationChange={handleLocationChange}
-          handleNextTab={handleNextTab}
-          title={title}
-          description={description}
-          setTitle={setTitle}
-          setDescription={setDescription}
-          isEdit={isEdit}
-        />
-      </TabsContent>
-      
-      <TabsContent value="customize">
-        <CustomizeTab
-          customization={customization}
-          onCustomizationChange={setCustomization}
-          title={title}
-          description={description}
-          location={location}
-          selectedDate={selectedDate}
-          startTime={startTime}
-          endTime={endTime}
-        />
-        
-        <div className="px-6 py-4 flex justify-between">
-          <button 
-            type="button" 
-            className="px-4 py-2 border rounded-md hover:bg-muted transition-colors" 
-            onClick={handlePrevTab}
-          >
-            Back
-          </button>
-          <button 
-            type="button" 
-            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors" 
-            onClick={handleNextTab}
-          >
-            Next: Share
-          </button>
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="share">
-        <ShareTab 
-          shareTab={shareTab}
-          setShareTab={setShareTab}
-          recipients={recipients}
-          addRecipient={addRecipient}
-          removeRecipient={removeRecipient}
-          handleSendEmail={handleSendEmail}
-          handlePrevTab={handlePrevTab}
-          isSubmitting={isSubmitting}
-          isEdit={isEdit}
-        />
-      </TabsContent>
-    </Tabs>
+      <Tabs value={activeTab} className="space-y-4">
+        <TabsContent value="details" className="space-y-4">
+          <DetailsTab
+            register={register}
+            errors={errors}
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+            startTime={startTime}
+            setStartTime={setStartTime}
+            endTime={endTime}
+            setEndTime={setEndTime}
+            isAllDay={isAllDay}
+            setIsAllDay={setIsAllDay}
+            location={location}
+            locationType={locationType}
+            mapsUrl={mapsUrl}
+            handleLocationChange={handleLocationChange}
+            handleNextTab={handleNextTab}
+            title={title}
+            description={description}
+            setTitle={setTitle}
+            setDescription={setDescription}
+            isEdit={isEdit}
+          />
+        </TabsContent>
+
+        <TabsContent value="customize" className="space-y-4">
+          <CustomizeTab
+            customization={customization}
+            onCustomizationChange={setCustomization}
+            title={title}
+            description={description}
+            location={location}
+            selectedDate={selectedDate}
+            startTime={startTime}
+            endTime={endTime}
+          />
+          <FormActions
+            onPrev={handlePrevTab}
+            onNext={handleNextTab}
+            showSubmit={false}
+          />
+        </TabsContent>
+
+        <TabsContent value="share" className="space-y-4">
+          <ShareTab
+            activeTab={shareTab}
+            setActiveTab={setShareTab}
+            recipients={recipients}
+            addRecipient={addRecipient}
+            removeRecipient={removeRecipient}
+            handleSendEmail={handleSendEmail}
+            eventTitle={title}
+            customization={customization}
+          />
+          <FormActions
+            onPrev={handlePrevTab}
+            onNext={() => {}}
+            isSubmitting={isSubmitting}
+            showSubmit={true}
+            submitLabel={isEdit ? "Update Event" : "Create Event"}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

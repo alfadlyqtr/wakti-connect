@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { EventCustomization } from "@/types/event.types";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,6 @@ const LivePreview: React.FC<LivePreviewProps> = ({
 }) => {
   const [showQrCode, setShowQrCode] = useState(false);
   
-  // Compute background style based on customization
   const getBackgroundStyle = () => {
     const { background } = customization;
     
@@ -58,7 +56,6 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     return {};
   };
   
-  // Compute text style based on customization for general text
   const getTextStyle = (type?: 'header' | 'description' | 'datetime') => {
     const { font, headerFont, descriptionFont, dateTimeFont } = customization;
     
@@ -96,7 +93,6 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     };
   };
   
-  // Compute button style based on customization
   const getButtonStyle = (type: 'accept' | 'decline') => {
     const button = customization.buttons[type];
     return {
@@ -107,7 +103,6 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     };
   };
   
-  // Animation class based on customization
   const getAnimationClass = () => {
     if (!customization.animation) return '';
     
@@ -123,14 +118,12 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     }
   };
 
-  // Element animation classes with delay support
   const getElementAnimationClass = (type: 'text' | 'buttons' | 'icons', index: number = 0) => {
     if (!customization.elementAnimations) return '';
     
     const animation = customization.elementAnimations[type];
     if (!animation || animation === 'none') return '';
     
-    // Basic animation class
     let animClass = '';
     switch (animation) {
       case 'fade':
@@ -146,7 +139,6 @@ const LivePreview: React.FC<LivePreviewProps> = ({
         return '';
     }
     
-    // Apply delay based on settings
     if (customization.elementAnimations.delay === 'staggered') {
       return `${animClass} [animation-delay:${index * 0.1}s]`;
     } else if (customization.elementAnimations.delay === 'sequence') {
@@ -156,7 +148,6 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     return animClass;
   };
 
-  // Card effect class
   const getCardEffectClass = () => {
     const effectType = customization.cardEffect?.type || 'shadow';
     
@@ -172,7 +163,6 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     }
   };
   
-  // Border radius based on card effect settings
   const getBorderRadiusClass = () => {
     const radius = customization.cardEffect?.borderRadius || 'medium';
     
@@ -190,7 +180,6 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     }
   };
   
-  // Border style if enabled
   const getBorderStyle = () => {
     if (customization.cardEffect?.border) {
       return {
@@ -202,7 +191,19 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     return {};
   };
   
-  // Header based on headerStyle
+  const getUtilityButtonStyle = (type: 'calendar' | 'map' | 'qr') => {
+    const buttonStyle = customization.utilityButtons?.[type];
+    
+    if (!buttonStyle) return {};
+    
+    return {
+      backgroundColor: buttonStyle.background || undefined,
+      color: buttonStyle.color || undefined,
+      borderRadius: buttonStyle.shape === 'pill' ? '9999px' : 
+                   buttonStyle.shape === 'rounded' ? '0.375rem' : '0'
+    };
+  };
+  
   const renderHeader = () => {
     const { headerStyle, headerImage } = customization;
     const headerTextStyle = getTextStyle('header');
@@ -260,7 +261,6 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     }
   };
   
-  // Business branding if available
   const renderBranding = () => {
     const { branding } = customization;
     
@@ -278,7 +278,6 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     );
   };
 
-  // QR Code Flip Card
   const renderQrCodeFlip = () => {
     if (!showQrCode) return null;
 
@@ -384,7 +383,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
             </div>
           )}
           
-          {(location && customization.showAcceptDeclineButtons !== false) && (
+          {(customization.showAcceptDeclineButtons !== false) && (
             <div className={`flex justify-center gap-3 mt-6 mb-3 ${getElementAnimationClass('buttons', 0)}`}>
               <button 
                 className="py-2 px-4 flex items-center gap-1"
@@ -405,12 +404,22 @@ const LivePreview: React.FC<LivePreviewProps> = ({
           {location && (
             <div className={`grid grid-cols-3 gap-2 mt-4 ${getElementAnimationClass('buttons', 1)}`}>
               {customization.showAddToCalendarButton !== false && (
-                <Button variant="outline" size="sm" className="text-xs flex items-center justify-center gap-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs flex items-center justify-center gap-1"
+                  style={getUtilityButtonStyle('calendar')}
+                >
                   <Calendar className={`h-3 w-3 ${getElementAnimationClass('icons', 2)}`} /> Calendar
                 </Button>
               )}
               
-              <Button variant="outline" size="sm" className="text-xs flex items-center justify-center gap-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-xs flex items-center justify-center gap-1"
+                style={getUtilityButtonStyle('map')}
+              >
                 <MapPin className={`h-3 w-3 ${getElementAnimationClass('icons', 3)}`} /> Map
               </Button>
               
@@ -418,6 +427,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
                 variant="outline" 
                 size="sm" 
                 className="text-xs flex items-center justify-center gap-1"
+                style={getUtilityButtonStyle('qr')}
                 onClick={() => setShowQrCode(true)}
               >
                 <QrCode className={`h-3 w-3 ${getElementAnimationClass('icons', 4)}`} /> QR Code

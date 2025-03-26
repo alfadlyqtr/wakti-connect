@@ -1,185 +1,136 @@
 
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "@/components/ui/use-toast";
-import { 
-  fetchEvents, 
-  createEvent as createEventService,
-  respondToInvitation as respondToInvitationService,
-  deleteEvent as deleteEventService,
-  Event,
-  EventTab,
-  EventFormData
-} from "@/services/event";
+import { useState, useEffect, useCallback } from 'react';
+import { Event, EventTab, EventStatus, EventFormData } from '@/types/event.types';
+import { createEvent } from '@/services/event/createService';
+import { updateEvent } from '@/services/event/updateService';
+import { deleteEvent as deleteEventService } from '@/services/event/deleteService';
+import { getEvents } from '@/services/event/getEvents';
+import { respondToInvitation as respondService } from '@/services/event/respondToInvitation';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/components/ui/use-toast';
+import { format } from 'date-fns';
 
-export const useEvents = (tab: EventTab = "my-events") => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [filterDate, setFilterDate] = useState<Date | null>(null);
-  const [localUserRole, setLocalUserRole] = useState<"free" | "individual" | "business">("free");
+export const useEvents = (tab?: EventTab) => {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
+  const { user, userDetails } = useAuth();
+  const { toast } = useToast();
+  const [canCreateEvents, setCanCreateEvents] = useState(false);
+  const [userRole, setUserRole] = useState<'free' | 'individual' | 'business'>('free');
 
-  // Initialize user role from localStorage if available
+  const fetchEvents = useCallback(async () => {
+    if (!user) {
+      setEvents([]);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const result = await getEvents(tab || 'my-events');
+      setEvents(result.events);
+      setUserRole(result.userRole);
+      setCanCreateEvents(result.userRole !== 'free');
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load events. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, tab, toast]);
+
   useEffect(() => {
-    const storedRole = localStorage.getItem('userRole') as "free" | "individual" | "business" | null;
-    if (storedRole) {
-      setLocalUserRole(storedRole);
-    }
-  }, []);
+    fetchEvents();
+  }, [fetchEvents]);
 
-  // Fetch events with React Query
-  const { 
-    data, 
-    isLoading, 
-    error, 
-    refetch,
-    isError
-  } = useQuery({
-    queryKey: ['events', tab],
-    queryFn: () => fetchEvents(tab),
-    refetchOnWindowFocus: true,
-    retry: 2,
-    retryDelay: attemptIndex => Math.min(1000 * Math.pow(2, attemptIndex), 30000),
-    staleTime: 30 * 1000,
-    meta: {
-      onError: (err: any) => {
-        console.error("Event fetch error:", err);
-        toast({
-          title: "Failed to load events",
-          description: err.message || "An unexpected error occurred",
-          variant: "destructive",
-        });
-      }
+  // Filter events based on search query, status, and date
+  const filteredEvents = events.filter(event => {
+    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (event.description && event.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (event.location && event.location.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    const matchesStatus = filterStatus === 'all' || event.status === filterStatus;
+    
+    let matchesDate = true;
+    if (filterDate) {
+      const eventDate = new Date(event.start_time);
+      const filterDateString = format(filterDate, 'yyyy-MM-dd');
+      const eventDateString = format(eventDate, 'yyyy-MM-dd');
+      matchesDate = filterDateString === eventDateString;
     }
+    
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
-  // Update local user role when data changes
-  useEffect(() => {
-    if (data?.userRole) {
-      setLocalUserRole(data.userRole);
-      localStorage.setItem('userRole', data.userRole);
-    }
-  }, [data?.userRole]);
-
-  // Auto-retry in case of an error - but only once
-  useEffect(() => {
-    if (isError) {
-      const timer = setTimeout(() => {
-        console.log("Auto-retrying event fetch after error");
-        refetch();
-      }, 3000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isError, refetch]);
-
-  // Create a new event
-  const createEvent = async (eventData: Partial<EventFormData>) => {
+  // Create event
+  const createEventAction = useCallback(async (eventData: EventFormData): Promise<Event> => {
     try {
-      if (!eventData.title) {
-        throw new Error("Event title is required");
-      }
-      
-      if (!eventData.start_time || !eventData.end_time) {
-        throw new Error("Event must have start and end times");
-      }
-      
-      const result = await createEventService(eventData as EventFormData);
-      
-      toast({
-        title: "Event Created",
-        description: "Your event has been created successfully",
-      });
-
-      // Refetch with a delay to ensure the database has time to update
-      setTimeout(() => {
-        refetch();
-      }, 500);
-      
+      const result = await createEvent(eventData);
+      await fetchEvents();  // Refresh events after creation
       return result;
-    } catch (error: any) {
-      console.error("Error creating event:", error);
-      
-      toast({
-        title: "Failed to create event",
-        description: error?.message || "An unexpected error occurred",
-        variant: "destructive",
-      });
-      
+    } catch (error) {
+      console.error('Error creating event:', error);
       throw error;
     }
-  };
+  }, [fetchEvents]);
 
-  // Respond to an event invitation
-  const respondToInvitation = async (eventId: string, response: 'accepted' | 'declined') => {
+  // Update event
+  const updateEventAction = useCallback(async (eventId: string, eventData: EventFormData): Promise<Event> => {
     try {
-      await respondToInvitationService(eventId, response);
-      refetch();
-      return true;
+      const result = await updateEvent(eventId, eventData);
+      await fetchEvents();  // Refresh events after update
+      return result;
     } catch (error) {
-      console.error("Error responding to invitation:", error);
-      return false;
+      console.error('Error updating event:', error);
+      throw error;
     }
-  };
+  }, [fetchEvents]);
 
-  // Delete an event
-  const deleteEvent = async (eventId: string) => {
+  // Delete event
+  const deleteEventAction = useCallback(async (eventId: string): Promise<void> => {
     try {
       await deleteEventService(eventId);
-      refetch();
-      return true;
-    } catch (error: any) {
-      console.error("Error deleting event:", error);
-      toast({
-        title: "Failed to delete event",
-        description: error?.message || "An unexpected error occurred",
-        variant: "destructive",
-      });
+      await fetchEvents();  // Refresh events after deletion
+    } catch (error) {
+      console.error('Error deleting event:', error);
       throw error;
     }
-  };
+  }, [fetchEvents]);
 
-  // Filter events based on search and filters
-  const getFilteredEvents = () => {
-    const eventsList = data?.events || [];
-    return eventsList.filter((event) => {
-      // Search filter
-      const matchesSearch = searchQuery 
-        ? event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (event.description && event.description.toLowerCase().includes(searchQuery.toLowerCase()))
-        : true;
-      
-      // Status filter
-      const matchesStatus = filterStatus === "all" ? true : event.status === filterStatus;
-      
-      // Date filter
-      const matchesDate = !filterDate ? true : new Date(event.start_time).toDateString() === filterDate.toDateString();
-      
-      return matchesSearch && matchesStatus && matchesDate;
-    });
-  };
-
-  // Get the actual user role from data, with a fallback to the state
-  const userRole = data?.userRole || localUserRole;
-  
-  // Check if the user can create events (only individual and business accounts)
-  const canCreateEvents = userRole === 'individual' || userRole === 'business';
+  // Respond to invitation
+  const respondToInvitation = useCallback(async (eventId: string, response: 'accepted' | 'declined'): Promise<void> => {
+    try {
+      await respondService(eventId, response);
+      await fetchEvents();  // Refresh events after responding
+    } catch (error) {
+      console.error('Error responding to invitation:', error);
+      throw error;
+    }
+  }, [fetchEvents]);
 
   return {
-    events: data?.events || [],
-    userRole,
-    filteredEvents: getFilteredEvents(),
-    canCreateEvents,
+    events,
+    filteredEvents,
     isLoading,
-    error,
     searchQuery,
     setSearchQuery,
     filterStatus,
     setFilterStatus,
     filterDate,
     setFilterDate,
-    createEvent,
+    canCreateEvents,
+    userRole,
+    createEvent: createEventAction,
+    updateEvent: updateEventAction,
+    deleteEvent: deleteEventAction,
     respondToInvitation,
-    deleteEvent,
-    refetch
+    refetch: fetchEvents
   };
 };
