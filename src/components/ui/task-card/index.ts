@@ -1,10 +1,19 @@
 
-import TaskCard from "./TaskCard";
 import { TaskCardHeader } from "./TaskCardHeader";
 import { TaskCardMenu } from "./TaskCardMenu";
 import { TaskCardFooter } from "./TaskCardFooter";
 import { TaskCardContent } from "./TaskCardContent";
-import { TaskClaimButton } from "./TaskClaimButton";
+import { TaskDueDate } from "./TaskDueDate";
+import { TaskSubtasks } from "./TaskSubtasks";
 
-export default TaskCard;
-export { TaskCardHeader, TaskCardMenu, TaskCardFooter, TaskCardContent, TaskClaimButton };
+// Re-export all components
+export { 
+  TaskCardHeader, 
+  TaskCardMenu, 
+  TaskCardFooter, 
+  TaskCardContent,
+  TaskDueDate,
+  TaskSubtasks
+};
+
+// No default export since we're using named exports

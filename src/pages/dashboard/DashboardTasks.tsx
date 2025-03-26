@@ -5,6 +5,7 @@ import TasksLoading from "@/components/tasks/TasksLoading";
 import TasksContainer from "@/components/tasks/TasksContainer";
 import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog";
 import { useTasksPageState } from "@/components/tasks/useTasksPageState";
+import { TaskStatusFilter, TaskPriorityFilter } from "@/components/tasks/types";
 
 const DashboardTasks = () => {
   const {
@@ -35,10 +36,10 @@ const DashboardTasks = () => {
       <TaskControls
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        filterStatus={filterStatus}
-        onStatusChange={setFilterStatus}
-        filterPriority={filterPriority}
-        onPriorityChange={setFilterPriority}
+        filterStatus={filterStatus as TaskStatusFilter}
+        onStatusChange={(status) => setFilterStatus(status as string | null)}
+        filterPriority={filterPriority as TaskPriorityFilter}
+        onPriorityChange={(priority) => setFilterPriority(priority as string | null)}
         onCreateTask={() => setCreateTaskDialogOpen(true)}
         isPaidAccount={isPaidAccount}
         userRole={userRole || "free"}

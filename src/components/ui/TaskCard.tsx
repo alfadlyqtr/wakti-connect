@@ -2,13 +2,11 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TaskPriority, TaskStatus, SubTask } from "@/types/task.types";
-import { 
-  TaskCardHeader, 
-  TaskDueDate, 
-  TaskSubtasks, 
-  TaskClaimButton, 
-  TaskCardFooter 
-} from "@/components/ui/task-card";
+import TaskCardHeader from "./TaskCard/TaskCardHeader";
+import { TaskCardMenu } from "./TaskCard/TaskCardMenu";
+import { TaskCardFooter } from "./TaskCard/TaskCardFooter";
+import { TaskDueDate } from "./TaskCard/TaskDueDate";
+import { TaskSubtasks } from "./TaskCard/TaskSubtasks";
 import { isPast } from "date-fns";
 
 interface TaskCardProps {
@@ -20,22 +18,16 @@ interface TaskCardProps {
   status: TaskStatus;
   priority: TaskPriority;
   userRole: "free" | "individual" | "business" | "staff" | null;
-  isAssigned?: boolean;
-  isShared?: boolean;
   subtasks?: SubTask[];
   completedDate?: Date | null;
   isRecurring?: boolean;
   isRecurringInstance?: boolean;
   snoozeCount?: number;
   snoozedUntil?: Date | null;
-  delegatedEmail?: string | null;
-  assigneeId?: string | null;
   refetch?: () => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: string) => void;
-  onShare?: (id: string) => void;
-  onAssign?: (id: string) => void;
   onSnooze?: (id: string, days: number) => void;
   onSubtaskToggle?: (taskId: string, subtaskIndex: number, isCompleted: boolean) => void;
 }
@@ -49,22 +41,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
   status,
   priority,
   userRole,
-  isAssigned,
-  isShared,
   subtasks = [],
   completedDate,
   isRecurring,
   isRecurringInstance,
   snoozeCount = 0,
   snoozedUntil,
-  delegatedEmail,
-  assigneeId,
   refetch,
   onEdit,
   onDelete,
   onStatusChange,
-  onShare,
-  onAssign,
   onSnooze,
   onSubtaskToggle
 }) => {
@@ -72,29 +58,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     status !== 'snoozed' && 
                     isPast(dueDate) && 
                     dueDate.getTime() < new Date().getTime();
-                    
-  const isDelegatedViaEmail = !!delegatedEmail && !assigneeId;
-  
-  // No longer used but kept to match original API
-  const isTeamTask = status !== 'completed' && !assigneeId && userRole === 'staff';
 
   return (
     <Card className={`border-l-4 ${isOverdue ? 'border-l-red-500' : `border-l-${priority === 'urgent' ? 'red-600' : priority === 'high' ? 'red-500' : priority === 'medium' ? 'amber-500' : 'green-500'}`}`}>
       <TaskCardHeader
-        id={id}
         title={title}
-        status={status}
         priority={priority}
         isRecurring={isRecurring}
-        isRecurringInstance={isRecurringInstance}
-        isAssigned={isAssigned}
-        isShared={isShared}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onStatusChange={onStatusChange}
-        onShare={userRole !== 'free' ? onShare : undefined}
-        onAssign={userRole === 'business' ? onAssign : undefined}
-        onSnooze={onSnooze}
+        isCompleted={status === 'completed'}
       />
       
       <CardContent className="pb-2">
@@ -118,14 +89,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
           onSubtaskToggle={onSubtaskToggle}
           refetch={refetch}
         />
-        
-        {isDelegatedViaEmail && delegatedEmail && (
-          <TaskClaimButton 
-            taskId={id} 
-            delegatedEmail={delegatedEmail} 
-            refetch={refetch} 
-          />
-        )}
       </CardContent>
       
       <TaskCardFooter

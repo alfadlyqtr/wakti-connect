@@ -2,17 +2,33 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Task } from "@/types/task.types";
 
-// This is a stub since sharing has been removed
-export const shareTask = async (taskId: string, userId: string): Promise<void> => {
-  console.log("Task sharing has been removed");
-  throw new Error("Task sharing functionality has been removed");
-};
+// Stub function that logs a message and returns the unmodified task
+export async function shareTask(taskId: string, userEmail: string): Promise<Task> {
+  console.log("Task sharing feature has been removed");
+  
+  // Get the original task to return
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('id', taskId)
+    .single();
+    
+  if (error) throw error;
+  
+  return data as Task;
+}
 
-export const unshareTask = async (taskId: string, userId: string): Promise<void> => {
-  console.log("Task sharing has been removed");
-  throw new Error("Task sharing functionality has been removed");
-};
-
-export const getTaskSharedUsers = async (taskId: string): Promise<string[]> => {
-  return [];
-};
+export async function assignTask(taskId: string, userEmail: string): Promise<Task> {
+  console.log("Task assignment feature has been removed");
+  
+  // Get the original task to return
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*')
+    .eq('id', taskId)
+    .single();
+    
+  if (error) throw error;
+  
+  return data as Task;
+}

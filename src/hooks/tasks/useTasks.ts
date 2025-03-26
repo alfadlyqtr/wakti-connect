@@ -1,12 +1,12 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Task, TaskTab } from '@/types/task.types';
+import { Task } from '@/types/task.types';
 import { useTaskOperations } from './useTaskOperations';
 import { UseTasksReturn } from './types';
 import { toast } from "@/components/ui/use-toast";
 
-export const useTasks = (activeTab: TaskTab): UseTasksReturn => {
+export const useTasks = (): UseTasksReturn => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -14,36 +14,28 @@ export const useTasks = (activeTab: TaskTab): UseTasksReturn => {
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<"free" | "individual" | "business" | "staff" | null>(null);
-  const [isStaff, setIsStaff] = useState(false);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
 
-  // Check if user is staff
+  // Check user role
   useEffect(() => {
-    const checkStaffStatus = async () => {
-      const isStaffMember = localStorage.getItem('isStaff') === 'true';
-      setIsStaff(isStaffMember);
-      
-      if (isStaffMember) {
-        setUserRole('staff');
-      } else {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('account_type')
-            .eq('id', session.user.id)
-            .single();
-            
-          if (profile) {
-            setUserRole(profile.account_type as any);
-          } else {
-            setUserRole('free');
-          }
+    const checkUserRole = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('account_type')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (profile) {
+          setUserRole(profile.account_type as any);
+        } else {
+          setUserRole('free');
         }
       }
     };
     
-    checkStaffStatus();
+    checkUserRole();
   }, []);
 
   const fetchTasks = useCallback(async () => {
@@ -52,7 +44,7 @@ export const useTasks = (activeTab: TaskTab): UseTasksReturn => {
     setLastFetchTime(now);
     
     try {
-      console.log(`Fetching tasks for tab: ${activeTab}, timestamp: ${now}`);
+      console.log(`Fetching tasks, timestamp: ${now}`);
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -62,70 +54,14 @@ export const useTasks = (activeTab: TaskTab): UseTasksReturn => {
         return;
       }
       
-      // Store userId in localStorage for later use (task claiming etc.)
+      // Store userId in localStorage for later use
       localStorage.setItem('userId', session.user.id);
       
-      let query = supabase
+      // Only fetch user's own tasks since we removed sharing and assignment
+      const { data, error: fetchError } = await supabase
         .from('tasks')
-        .select('*, subtasks:todo_items(*)');
-      
-      if (activeTab === 'my-tasks') {
-        console.log(`Fetching my tasks for user ${session.user.id}`);
-        query = query.eq('user_id', session.user.id);
-      } else if (activeTab === 'assigned-tasks') {
-        console.log(`Fetching assigned tasks for user ${session.user.id}`);
-        query = query.eq('assignee_id', session.user.id);
-      } else if (activeTab === 'shared-tasks') {
-        // Fetch tasks shared with the user
-        console.log(`Fetching shared tasks for user ${session.user.id}`);
-        const { data: sharedTaskIds, error: sharedError } = await supabase
-          .from('shared_tasks')
-          .select('task_id')
-          .eq('shared_with', session.user.id);
-          
-        if (sharedError) {
-          console.error("Error fetching shared task IDs:", sharedError);
-          throw sharedError;
-        }
-        
-        if (sharedTaskIds && sharedTaskIds.length > 0) {
-          const taskIds = sharedTaskIds.map(st => st.task_id);
-          console.log(`Found ${taskIds.length} shared tasks`, taskIds);
-          query = query.in('id', taskIds);
-        } else {
-          // If no shared tasks, return empty array
-          console.log("No shared tasks found");
-          setTasks([]);
-          setIsLoading(false);
-          return;
-        }
-      } else if (activeTab === 'team-tasks') {
-        // For staff, get team tasks from their business
-        if (isStaff) {
-          const businessId = localStorage.getItem('staffBusinessId');
-          
-          if (businessId) {
-            console.log(`Fetching team tasks for staff in business ${businessId}`);
-            query = query
-              .eq('user_id', businessId)
-              .eq('is_team_task', true);
-          } else {
-            // No business ID found for staff
-            console.log("No business ID found for staff member");
-            setTasks([]);
-            setIsLoading(false);
-            return;
-          }
-        } else {
-          // For business users, get their team tasks
-          console.log(`Fetching team tasks for business ${session.user.id}`);
-          query = query
-            .eq('user_id', session.user.id)
-            .eq('is_team_task', true);
-        }
-      }
-      
-      const { data, error: fetchError } = await query
+        .select('*, subtasks:todo_items(*)')
+        .eq('user_id', session.user.id)
         .order('created_at', { ascending: false });
         
       if (fetchError) {
@@ -142,11 +78,7 @@ export const useTasks = (activeTab: TaskTab): UseTasksReturn => {
         };
       });
       
-      console.log(`Successfully fetched ${mappedTasks.length} tasks for tab ${activeTab}`);
-      
-      if (activeTab === 'team-tasks' && isStaff) {
-        console.log(`Found ${mappedTasks.length} team tasks for business ${localStorage.getItem('staffBusinessId')}`);
-      }
+      console.log(`Successfully fetched ${mappedTasks.length} tasks`);
       
       setTasks(mappedTasks);
     } catch (err) {
@@ -162,7 +94,7 @@ export const useTasks = (activeTab: TaskTab): UseTasksReturn => {
         setIsLoading(false);
       }
     }
-  }, [activeTab, isStaff, lastFetchTime]);
+  }, [lastFetchTime]);
 
   // Initial fetch
   useEffect(() => {
@@ -182,7 +114,7 @@ export const useTasks = (activeTab: TaskTab): UseTasksReturn => {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  const { createTask } = useTaskOperations(userRole, isStaff);
+  const { createTask } = useTaskOperations(userRole);
 
   return {
     tasks,
@@ -197,7 +129,7 @@ export const useTasks = (activeTab: TaskTab): UseTasksReturn => {
     setFilterPriority,
     createTask,
     userRole,
-    isStaff,
+    isStaff: false, // We removed staff functionality
     refetch: fetchTasks
   };
 };
