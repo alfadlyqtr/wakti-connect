@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ColorTab from "./background-tabs/ColorTab";
@@ -27,6 +27,13 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<string>(backgroundType || 'color');
 
+  // Update active tab when backgroundType changes from parent
+  useEffect(() => {
+    if (backgroundType) {
+      setActiveTab(backgroundType);
+    }
+  }, [backgroundType]);
+
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     // Set a default value when changing tabs
@@ -34,6 +41,8 @@ const BackgroundSelector: React.FC<BackgroundSelectorProps> = ({
       onBackgroundChange('color', '#ffffff');
     } else if (value === 'gradient') {
       onBackgroundChange('gradient', 'linear-gradient(90deg, #f6d365 0%, #fda085 100%)');
+    } else if (value === 'image' && !backgroundValue.startsWith('data:') && !backgroundValue.startsWith('http')) {
+      onBackgroundChange('image', '');
     }
   };
 

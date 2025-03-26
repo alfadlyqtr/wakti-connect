@@ -8,7 +8,7 @@ interface AngleSliderProps {
   onChange: (value: number) => void;
 }
 
-const AngleSlider: React.FC<AngleSliderProps> = ({ value, onChange }) => {
+export const AngleSlider: React.FC<AngleSliderProps> = ({ value, onChange }) => {
   return (
     <div>
       <Label htmlFor="angle" className="block mb-2">Angle: {value}°</Label>
@@ -24,5 +24,3 @@ const AngleSlider: React.FC<AngleSliderProps> = ({ value, onChange }) => {
     </div>
   );
 };
-
-export default AngleSlider;

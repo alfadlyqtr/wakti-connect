@@ -1,20 +1,12 @@
 
 import React, { useState, useEffect } from "react";
 import { DirectionButtons } from "./DirectionButtons";
-import AngleSlider from "./AngleSlider";
+import { AngleSlider } from "./AngleSlider";
 import { ColorInputs } from "./ColorInputs";
 import { GradientPreview } from "./GradientPreview";
 import { GradientPresets } from "./GradientPresets";
 import { DEFAULT_GRADIENT } from "./constants";
-
-interface GradientTabProps {
-  value: string;
-  onChange: (value: string) => void;
-  direction?: string;
-  onDirectionChange?: (direction: string) => void;
-  angle?: number;
-  onAngleChange?: (angle: number) => void;
-}
+import { GradientTabProps } from "./types";
 
 export const GradientTab: React.FC<GradientTabProps> = ({
   value,
@@ -27,6 +19,15 @@ export const GradientTab: React.FC<GradientTabProps> = ({
   const [colors, setColors] = useState<string[]>(DEFAULT_GRADIENT.colors);
   const [currentDirection, setCurrentDirection] = useState(direction);
   const [currentAngle, setCurrentAngle] = useState(angle);
+
+  // Update local state when props change
+  useEffect(() => {
+    setCurrentDirection(direction);
+  }, [direction]);
+
+  useEffect(() => {
+    setCurrentAngle(angle);
+  }, [angle]);
 
   // Generate linear gradient string
   const buildGradient = () => {
