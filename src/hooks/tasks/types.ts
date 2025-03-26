@@ -14,6 +14,8 @@ export interface TaskWithSharedInfo extends Task {
     due_date?: string | null;
     due_time?: string | null;
   }[];
+  delegated_to?: string;
+  delegated_email?: string;
 }
 
 export interface UseTaskFiltersReturn {
@@ -32,6 +34,7 @@ export interface UseTaskOperationsReturn {
   deleteTask?: (taskId: string) => Promise<void>;
   shareTask?: (taskId: string, userId: string) => Promise<void>;
   assignTask?: (taskId: string, assigneeId: string) => Promise<void>;
+  delegateTask?: (taskId: string, userId?: string, email?: string) => Promise<void>;
 }
 
 export interface UseTaskQueriesReturn {

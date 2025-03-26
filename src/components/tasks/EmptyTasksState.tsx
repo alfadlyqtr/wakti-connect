@@ -1,83 +1,73 @@
 
 import React from "react";
-import { ClipboardList, Plus, Share, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { TaskTab } from "@/hooks/useTasks";
+import { TaskTab } from "@/types/task.types";
+import { ClipboardList, UserPlus, Share2, Users } from "lucide-react";
 
 interface EmptyTasksStateProps {
   isPaidAccount: boolean;
   onCreateTask: () => void;
   tab: TaskTab;
-  isStaff?: boolean;
+  isStaff: boolean;
 }
 
-const EmptyTasksState: React.FC<EmptyTasksStateProps> = ({ 
-  isPaidAccount, 
-  onCreateTask, 
+const EmptyTasksState: React.FC<EmptyTasksStateProps> = ({
+  isPaidAccount,
+  onCreateTask,
   tab,
-  isStaff = false 
+  isStaff,
 }) => {
-  if (!isPaidAccount) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium mb-2">Upgrade to Create Tasks</h3>
-        <p className="text-muted-foreground mb-4 max-w-md">
-          Task management is available on our Individual and Business plans.
-        </p>
-        <Button>Upgrade Your Plan</Button>
-      </div>
-    );
-  }
+  // Determine the icon and message based on the active tab
+  let icon = <ClipboardList className="h-12 w-12 mb-4 text-muted-foreground" />;
+  let title = "No Tasks Found";
+  let description = "Get started by creating your first task.";
+  let actionButton = (
+    <Button onClick={onCreateTask}>Create Your First Task</Button>
+  );
 
-  let title = "";
-  let description = "";
-  let icon = <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />;
-  let buttonText = "Create Task";
-  let buttonAction = onCreateTask;
-  let showButton = !isStaff;
+  switch (tab) {
+    case "shared-tasks":
+      icon = <Share2 className="h-12 w-12 mb-4 text-muted-foreground" />;
+      title = "No Shared Tasks";
+      description = "When someone shares a task with you, it will appear here.";
+      actionButton = null;
+      break;
 
-  if (tab === "my-tasks") {
-    if (isStaff) {
-      title = "No Tasks Assigned";
-      description = "You don't have any tasks assigned to you yet.";
-      showButton = false;
-    } else {
-      title = "No Tasks Yet";
-      description = "Create your first task to start tracking your progress.";
-      icon = <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />;
-    }
-  } else if (tab === "shared-tasks") {
-    title = "No Shared Tasks";
-    description = "Tasks shared with you will appear here.";
-    icon = <Share className="h-12 w-12 text-muted-foreground mb-4" />;
-    showButton = false;
-  } else if (tab === "assigned-tasks") {
-    if (isStaff) {
-      title = "No Tasks Assigned";
-      description = "You don't have any tasks assigned to you yet.";
-      showButton = false;
-    } else {
+    case "assigned-tasks":
+      icon = <UserPlus className="h-12 w-12 mb-4 text-muted-foreground" />;
       title = "No Assigned Tasks";
-      description = "Tasks you assign to others will appear here.";
-      icon = <UserPlus className="h-12 w-12 text-muted-foreground mb-4" />;
-      buttonText = "Assign Task";
-    }
+      description = isStaff
+        ? "Tasks assigned to you will appear here."
+        : "Tasks you've assigned to others will appear here.";
+      actionButton = !isStaff ? (
+        <Button onClick={onCreateTask}>Create Task to Assign</Button>
+      ) : null;
+      break;
+      
+    case "team-tasks":
+      icon = <Users className="h-12 w-12 mb-4 text-muted-foreground" />;
+      title = "No Team Tasks";
+      description = "Team tasks allow you to manage work across your organization.";
+      actionButton = (
+        <Button onClick={onCreateTask}>Create Your First Team Task</Button>
+      );
+      break;
+
+    default:
+      // Handle "my-tasks" case
+      if (!isPaidAccount) {
+        description =
+          "Free accounts can create one task per month. Upgrade for unlimited tasks!";
+      }
+      break;
   }
 
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       {icon}
       <h3 className="text-lg font-medium mb-2">{title}</h3>
-      <p className="text-muted-foreground mb-4 max-w-md">
-        {description}
-      </p>
-      {showButton && (
-        <Button onClick={buttonAction}>
-          <Plus className="h-4 w-4 mr-2" />
-          {buttonText}
-        </Button>
-      )}
+      <p className="text-muted-foreground mb-6 max-w-md">{description}</p>
+      {actionButton}
     </div>
   );
 };

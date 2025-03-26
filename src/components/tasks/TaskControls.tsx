@@ -1,34 +1,35 @@
 
 import React from "react";
-import { Plus, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
+import { Button } from "@/components/ui/button";
+import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TaskTab } from "@/hooks/useTasks";
+import { TaskTab } from "@/types/task.types";
+import { Search, Plus } from "lucide-react";
 
 interface TaskControlsProps {
   searchQuery: string;
-  onSearchChange: (value: string) => void;
+  onSearchChange: (query: string) => void;
   filterStatus: string;
-  onStatusChange: (value: string) => void;
+  onStatusChange: (status: string) => void;
   filterPriority: string;
-  onPriorityChange: (value: string) => void;
+  onPriorityChange: (priority: string) => void;
   onCreateTask: () => void;
   currentTab: TaskTab;
   onTabChange: (tab: TaskTab) => void;
   isPaidAccount: boolean;
-  userRole: "free" | "individual" | "business" | "staff"; // Updated to include 'staff'
-  isStaff?: boolean;
+  userRole: "free" | "individual" | "business" | "staff";
+  isStaff: boolean;
 }
 
-const TaskControls = ({
+const TaskControls: React.FC<TaskControlsProps> = ({
   searchQuery,
   onSearchChange,
   filterStatus,
@@ -40,83 +41,85 @@ const TaskControls = ({
   onTabChange,
   isPaidAccount,
   userRole,
-  isStaff
-}: TaskControlsProps) => {
-  if (!isPaidAccount) return null;
+  isStaff,
+}) => {
+  const handleTabChange = (value: string) => {
+    onTabChange(value as TaskTab);
+  };
 
-  // Update to determine which tabs to show
-  const showSharedTab = !isStaff; // Staff don't see shared tasks
-  const showAssignedTab = true; // Everyone can see assigned to them
-  
   return (
     <div className="space-y-4">
-      <Tabs 
-        defaultValue={currentTab} 
-        onValueChange={(value) => onTabChange(value as TaskTab)}
+      <Tabs
+        value={currentTab}
+        onValueChange={handleTabChange}
         className="w-full"
       >
-        <TabsList className={`grid w-full ${isStaff ? 'grid-cols-1' : 'grid-cols-3'}`}>
-          <TabsTrigger value="my-tasks">
-            {isStaff ? "Assigned Tasks" : "My Tasks"}
-          </TabsTrigger>
-          
-          {!isStaff && (
-            <>
-              <TabsTrigger value="shared-tasks">Shared Tasks</TabsTrigger>
-              <TabsTrigger value="assigned-tasks">
-                {userRole === "business" ? "Team Tasks" : "Assigned Tasks"}
-              </TabsTrigger>
-            </>
+        <TabsList className="w-full md:w-auto">
+          <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
+          {isPaidAccount && !isStaff && (
+            <TabsTrigger value="shared-tasks">Shared Tasks</TabsTrigger>
+          )}
+          {(isPaidAccount || userRole === "staff") && (
+            <TabsTrigger value="assigned-tasks">Assigned Tasks</TabsTrigger>
+          )}
+          {userRole === "business" && (
+            <TabsTrigger value="team-tasks">Team Tasks</TabsTrigger>
           )}
         </TabsList>
       </Tabs>
-      
-      <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search tasks..." 
-            className="pl-9"
+
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search tasks..."
+            className="pl-8"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
-        
-        <div className="flex gap-2 w-full sm:w-auto">
-          <Select value={filterStatus} onValueChange={onStatusChange}>
-            <SelectTrigger className="w-full sm:w-32">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="in-progress">In Progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="late">Late</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select value={filterPriority} onValueChange={onPriorityChange}>
-            <SelectTrigger className="w-full sm:w-32">
-              <SelectValue placeholder="Priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Priority</SelectItem>
-              <SelectItem value="urgent">Urgent</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="normal">Normal</SelectItem>
-            </SelectContent>
-          </Select>
-          
+
+        <div className="flex flex-col md:flex-row gap-2">
+          <div className="w-full md:w-40">
+            <Select value={filterStatus} onValueChange={onStatusChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="in-progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="late">Late</SelectItem>
+                  <SelectItem value="snoozed">Snoozed</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="w-full md:w-40">
+            <Select value={filterPriority} onValueChange={onPriorityChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="all">All Priorities</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="normal">Normal</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
           {!isStaff && (
-            <Button onClick={onCreateTask} className="flex items-center gap-2">
-              <Plus size={16} />
-              <span className="hidden sm:inline">
-                {currentTab === "assigned-tasks" && userRole === "business" 
-                  ? "Assign Task" 
-                  : "Create Task"}
-              </span>
+            <Button onClick={onCreateTask}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Task
             </Button>
           )}
         </div>

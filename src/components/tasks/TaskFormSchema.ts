@@ -39,6 +39,13 @@ export const taskFormSchema = z.object({
   // Subtasks
   enableSubtasks: z.boolean().default(false),
   subtasks: z.array(SubtaskSchema).default([]),
+  
+  // Task delegation (for business accounts)
+  delegated_to: z.string().optional(),
+  delegated_email: z.string().email().optional(),
+  
+  // Team task flag (for business accounts)
+  is_team_task: z.boolean().default(false),
 });
 
 // Export the TypeScript type

@@ -27,7 +27,7 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
   } = useTaskFilters(tasks);
   
   // Get task operations
-  const { createTask } = useTaskOperations(userRole, isStaff);
+  const { createTask, delegateTask } = useTaskOperations(userRole, isStaff);
 
   return {
     tasks,
@@ -41,6 +41,7 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
     filterPriority,
     setFilterPriority,
     createTask,
+    delegateTask,
     userRole,
     isStaff,
     refetch

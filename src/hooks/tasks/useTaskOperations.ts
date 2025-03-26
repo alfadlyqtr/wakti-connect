@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UseTaskOperationsReturn } from './types';
 import { createTask as createTaskService } from '@/services/task/createService';
+import { delegateTask } from '@/services/task/delegationService';
 
 export const useTaskOperations = (
   userRole: "free" | "individual" | "business" | "staff" | null,
@@ -39,6 +40,16 @@ export const useTaskOperations = (
         }
       }
       
+      // Handle team task for business accounts
+      if (userRole === "business" && taskData.is_team_task) {
+        taskData.is_team_task = true;
+      }
+      
+      // Process task delegation if provided
+      if (userRole === "business" && (taskData.delegated_to || taskData.delegated_email)) {
+        console.log("Task will be delegated after creation");
+      }
+      
       const { recurring, ...taskDataWithoutRecurring } = taskData;
       
       const isRecurring = !!recurring && taskData.is_recurring;
@@ -50,6 +61,11 @@ export const useTaskOperations = (
         isRecurring ? recurring : undefined
       );
       
+      // Handle delegation after task creation if needed
+      if (userRole === "business" && (taskData.delegated_to || taskData.delegated_email)) {
+        await delegateTask(createdTask.id, taskData.delegated_to, taskData.delegated_email);
+      }
+      
       return createdTask;
     } catch (error) {
       console.error("Error creating task:", error);
@@ -59,5 +75,25 @@ export const useTaskOperations = (
     }
   };
 
-  return { createTask };
+  // Add the delegateTask operation for business accounts
+  const delegateTaskOperation = async (taskId: string, userId?: string, email?: string) => {
+    setIsProcessing(true);
+    try {
+      if (userRole !== "business") {
+        throw new Error("Only business accounts can delegate tasks");
+      }
+      
+      await delegateTask(taskId, userId, email);
+    } catch (error) {
+      console.error("Error delegating task:", error);
+      throw error;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return { 
+    createTask,
+    delegateTask: delegateTaskOperation
+  };
 };

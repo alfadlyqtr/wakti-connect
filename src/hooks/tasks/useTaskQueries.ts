@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -134,6 +135,13 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
               .select('*')
               .eq('assignee_id', session.user.id);
           }
+        } else if (tab === "team-tasks" && userRole === "business") {
+          // Handle team tasks for business accounts
+          query = supabase
+            .from('tasks')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .eq('is_team_task', true);
         }
       }
       
