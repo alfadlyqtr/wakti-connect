@@ -17,15 +17,18 @@ export const fetchTeamTasks = async (businessId: string): Promise<TaskWithShared
     
     if (!data || data.length === 0) return [];
     
-    // Transform task data to ensure correct types - use explicit typing
-    const typedTasks: TaskWithSharedInfo[] = data.map((rawTask: any) => {
-      const task: TaskWithSharedInfo = {
+    // Break the complex type inference chain by using simpler typing
+    // First map to basic objects, then convert to the required type
+    const processedData = data.map((rawTask) => {
+      return {
         ...rawTask,
         status: validateTaskStatus(rawTask.status),
         priority: validateTaskPriority(rawTask.priority)
       };
-      return task;
     });
+    
+    // Now explicitly cast the result to the expected type
+    const typedTasks = processedData as TaskWithSharedInfo[];
     
     return await fetchSubtasksForTasks(typedTasks);
   } catch (error) {
