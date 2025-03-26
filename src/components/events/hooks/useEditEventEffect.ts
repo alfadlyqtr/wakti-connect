@@ -81,7 +81,7 @@ export const useEditEventEffect = ({
       if (editEvent.invitations && editEvent.invitations.length > 0) {
         editEvent.invitations.forEach(invitation => {
           const recipient: InvitationRecipient = {
-            type: invitation.invited_user_id ? 'user' : 'email',
+            type: invitation.invited_user_id ? 'contact' : 'email',
             id: invitation.invited_user_id || invitation.email || '',
             status: invitation.status
           };
