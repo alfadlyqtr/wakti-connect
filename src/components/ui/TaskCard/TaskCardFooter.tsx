@@ -46,7 +46,7 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
             </Button>
           )}
           
-          {status !== "in-progress" && status !== "completed" && (
+          {(status === "pending" || status === "late" || status === "snoozed") && (
             <Button
               variant="outline"
               size="sm"
