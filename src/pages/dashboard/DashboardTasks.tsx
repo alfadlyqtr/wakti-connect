@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
@@ -76,8 +75,21 @@ const DashboardTasks = () => {
   const isPaidAccount = userRole === "individual" || userRole === "business" || userRole === "staff";
 
   const handleCreateTask = async (taskData: any) => {
-    await createTask(taskData);
-    setCreateDialogOpen(false);
+    try {
+      console.log("Creating task with data:", taskData);
+      await createTask(taskData);
+      setCreateDialogOpen(false);
+      // Refresh the task list
+      refetch();
+    } catch (error) {
+      console.error("Error in handleCreateTask:", error);
+      toast({
+        title: "Failed to create task",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
+      });
+      // Keep dialog open so user can try again
+    }
   };
 
   const handleTabChange = (newTab: TaskTab) => {

@@ -66,9 +66,10 @@ export function CreateTaskDialog({
       
       console.log("Submitting task data:", taskData);
       
+      // Pass the recurring data separately
       await onCreateTask({
         ...taskData,
-        recurring: isRecurring ? data.recurring : null
+        recurring: isRecurring ? data.recurring : undefined
       });
       
       toast({

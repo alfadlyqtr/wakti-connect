@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Task } from "@/types/task.types";
 import { isUserStaff, getStaffBusinessId } from "@/utils/staffUtils";
+import { createTask as createTaskService } from "@/services/task/createService";
 
 export type TaskPriority = "normal" | "medium" | "high" | "urgent";
 export type TaskStatus = "pending" | "in-progress" | "completed" | "late";
@@ -178,7 +179,7 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
     );
   });
 
-  // Create task mutation
+  // Create task mutation - UPDATED to use the task service
   const createTask = async (taskData: any) => {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -208,16 +209,25 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
       }
     }
     
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert([{ ...taskData, user_id: session.user.id }])
-      .select();
+    // Extract recurring data from taskData
+    const { recurring, ...taskDataWithoutRecurring } = taskData;
+    
+    // Check if this is a recurring task
+    const isRecurring = !!recurring && taskData.is_recurring;
+    
+    try {
+      // Use the task service which correctly handles recurring settings
+      const createdTask = await createTaskService(
+        taskDataWithoutRecurring, 
+        isRecurring ? recurring : undefined
+      );
       
-    if (error) throw error;
-    
-    queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    
-    return data;
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      return createdTask;
+    } catch (error) {
+      console.error("Error creating task:", error);
+      throw error;
+    }
   };
 
   return {
@@ -234,6 +244,6 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
     createTask,
     userRole,
     isStaff,
-    refetch // Add the refetch function to the return value
+    refetch
   };
 };
