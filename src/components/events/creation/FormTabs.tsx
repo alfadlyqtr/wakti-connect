@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DetailsTab from "./DetailsTab";
@@ -78,16 +77,32 @@ const FormTabs: React.FC<FormTabsProps> = ({
   setDescription,
   isEdit
 }) => {
+  const isTitleEmpty = !title || title.trim() === '';
+
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid grid-cols-3 mb-4 w-full max-w-md mx-auto">
-        <TabsTrigger value="details" className="px-4 py-2 text-center">Details</TabsTrigger>
-        <TabsTrigger value="customize" className="px-4 py-2 text-center">Customize</TabsTrigger>
-        <TabsTrigger value="share" className="px-4 py-2 text-center">Share</TabsTrigger>
+    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
+      <TabsList className="grid w-full grid-cols-3 mb-4">
+        <TabsTrigger value="details" className="px-2 sm:px-4 py-2">
+          Details
+        </TabsTrigger>
+        <TabsTrigger 
+          value="customize" 
+          className="px-2 sm:px-4 py-2" 
+          disabled={isTitleEmpty}
+        >
+          Customize
+        </TabsTrigger>
+        <TabsTrigger 
+          value="share" 
+          className="px-2 sm:px-4 py-2"
+          disabled={isTitleEmpty}
+        >
+          Share
+        </TabsTrigger>
       </TabsList>
-      
-      <TabsContent value="details">
-        <DetailsTab 
+
+      <TabsContent value="details" className="p-0">
+        <DetailsTab
           register={register}
           errors={errors}
           selectedDate={selectedDate}

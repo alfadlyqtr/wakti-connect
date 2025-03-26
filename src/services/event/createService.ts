@@ -37,15 +37,23 @@ export const createEvent = async (
       throw new Error("Authentication required to create events");
     }
 
+    // Ensure title is present and not empty
+    if (!eventData.title || !eventData.title.trim()) {
+      console.error("Event title is missing or empty");
+      throw new Error("Event title is required");
+    }
+
     // Ensure start_time and end_time are present
     if (!eventData.start_time || !eventData.end_time) {
       throw new Error("Event must have start and end times");
     }
     
+    console.log("Creating event with data:", eventData);
+    
     // Add the user_id to the event data
     const completeEventData = {
       user_id: session.user.id,
-      title: eventData.title,
+      title: eventData.title.trim(),
       description: eventData.description || '',
       location: eventData.location || '',
       start_time: eventData.start_time,

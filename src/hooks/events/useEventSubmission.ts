@@ -51,6 +51,12 @@ export const useEventSubmission = ({
     }
   });
   
+  // Make sure form values stay in sync with props
+  useEffect(() => {
+    setValue('title', title);
+    setValue('description', description);
+  }, [title, description, setValue]);
+  
   const processDateAndTime = (formData: EventFormData) => {
     // Create ISO string for start and end times
     const startDateTime = new Date(selectedDate);
@@ -70,6 +76,8 @@ export const useEventSubmission = ({
     
     return {
       ...formData,
+      title: title, // Ensure title is explicitly added from the current state
+      description: description, // Ensure description is also explicitly added
       start_time: startDateTime.toISOString(),
       end_time: endDateTime.toISOString(),
       is_all_day: isAllDay,
@@ -93,7 +101,24 @@ export const useEventSubmission = ({
         return;
       }
       
+      // Added logging to help diagnose issues
+      console.log("Form data before processing:", { formData, title });
+      
+      // Check if title is empty before submission
+      if (!title.trim()) {
+        toast({
+          title: "Event title is required",
+          description: "Please enter a title for your event",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
       const completeFormData = processDateAndTime(formData);
+      
+      // More logging
+      console.log("Processed form data:", completeFormData);
       
       // Determine status based on recipients
       const status = recipients.length > 0 ? 'sent' : 'draft';
@@ -106,12 +131,12 @@ export const useEventSubmission = ({
         if (recipients.length > 0) {
           toast({
             title: "Event Created and Invitations Sent",
-            description: `Your event "${formData.title}" has been created and invitations have been sent.`,
+            description: `Your event "${completeFormData.title}" has been created and invitations have been sent.`,
           });
         } else {
           toast({
             title: "Event Created",
-            description: `Your event "${formData.title}" has been created as a draft.`,
+            description: `Your event "${completeFormData.title}" has been created as a draft.`,
           });
         }
         
@@ -129,7 +154,7 @@ export const useEventSubmission = ({
     } finally {
       setIsSubmitting(false);
     }
-  }, [canCreateEvents, createEvent, isAllDay, location, locationType, mapsUrl, customization, recipients, resetForm, reset, selectedDate, startTime, endTime]);
+  }, [canCreateEvents, createEvent, isAllDay, location, locationType, mapsUrl, customization, recipients, title, description, resetForm, reset, selectedDate, startTime, endTime]);
 
   return {
     register,
@@ -140,3 +165,6 @@ export const useEventSubmission = ({
     onSubmit
   };
 };
+
+// Added missing import
+import { useEffect } from "react";

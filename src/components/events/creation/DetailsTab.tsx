@@ -55,6 +55,16 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
   setDescription,
   isEdit = false
 }) => {
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value);
+  };
+
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDescription(e.target.value);
+  };
+
+  const canProceedToNext = title.trim() !== '';
+
   return (
     <div className="px-4 py-2 space-y-6 max-w-2xl mx-auto">
       <div className="space-y-3">
@@ -65,11 +75,14 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
             placeholder="Enter event title"
             className="w-full mt-1" 
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={handleTitleChange}
             required
           />
           {errors.title && (
             <p className="text-sm text-destructive mt-1">{errors.title.message}</p>
+          )}
+          {title.trim() === '' && (
+            <p className="text-sm text-amber-600 mt-1">Event title is required</p>
           )}
         </div>
         
@@ -80,7 +93,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
             placeholder="Enter event details"
             className="w-full mt-1 min-h-[100px]"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={handleDescriptionChange}
           />
         </div>
       </div>
@@ -141,6 +154,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
           type="button" 
           onClick={handleNextTab}
           className="px-6"
+          disabled={!canProceedToNext}
         >
           Next: Customize
         </Button>
