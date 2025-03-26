@@ -1,12 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Event } from "@/types/event.types";
 import { format, isToday, isTomorrow, isYesterday } from "date-fns";
-import { CalendarClock, MapPin, MoreVertical, Trash, Edit, Users, QrCode, Calendar } from "lucide-react";
+import { CalendarClock, MapPin, MoreVertical, Trash, Edit, Users, QrCode, Calendar, Copy } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { toast } from "@/components/ui/use-toast";
 
 export interface EventCardProps {
   event: Event;
@@ -29,6 +30,10 @@ const EventCard: React.FC<EventCardProps> = ({
   onViewResponses,
   viewType 
 }) => {
+  const [showQrCode, setShowQrCode] = useState(false);
+  const [showMapDialog, setShowMapDialog] = useState(false);
+  const [showCalendarDialog, setShowCalendarDialog] = useState(false);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     
@@ -298,6 +303,148 @@ const EventCard: React.FC<EventCardProps> = ({
     };
   };
 
+  const handleButtonClick = (action: 'map' | 'qr' | 'calendar', e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (action === 'map') {
+      setShowMapDialog(true);
+    } else if (action === 'qr') {
+      setShowQrCode(true);
+    } else if (action === 'calendar') {
+      setShowCalendarDialog(true);
+    }
+  };
+  
+  const handleCopyLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    const shareableLink = `${window.location.origin}/events/view/${event.id}`;
+    navigator.clipboard.writeText(shareableLink)
+      .then(() => {
+        toast({
+          title: "Link Copied",
+          description: "Event link has been copied to clipboard",
+        });
+      })
+      .catch(err => {
+        console.error('Failed to copy link:', err);
+        toast({
+          title: "Failed to Copy",
+          description: "Could not copy the link to clipboard",
+          variant: "destructive"
+        });
+      });
+  };
+  
+  const handleAcceptClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onAccept) {
+      onAccept(event.id);
+      setShowCalendarDialog(true);
+    }
+  };
+
+  const handleDeclineClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDecline) {
+      onDecline(event.id);
+    }
+  };
+  
+  const getPoweredByStyle = () => {
+    return {
+      color: event.customization?.poweredByColor || '#888888',
+      fontSize: '0.7rem',
+      fontWeight: 'normal'
+    };
+  };
+
+  const renderQrCodeDialog = () => {
+    return (
+      <Dialog open={showQrCode} onOpenChange={setShowQrCode}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Event QR Code</DialogTitle>
+            <DialogDescription>
+              Scan this code to view the event details.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center p-4">
+            <div className="w-48 h-48 bg-gray-200 flex items-center justify-center mb-4">
+              <QrCode size={140} className="text-gray-800" />
+            </div>
+            <p className="text-center text-sm font-medium">Scan to view event</p>
+            <div className="flex gap-2 mt-4">
+              <Button 
+                variant="outline" 
+                onClick={handleCopyLink}
+              >
+                <Copy className="mr-2 h-4 w-4" /> Copy Link
+              </Button>
+              <Button onClick={() => setShowQrCode(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+  
+  const renderMapDialog = () => {
+    return (
+      <Dialog open={showMapDialog} onOpenChange={setShowMapDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Event Location</DialogTitle>
+            <DialogDescription>
+              {event.location || "No location specified"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="h-64 bg-gray-200 flex items-center justify-center mb-4">
+            <MapPin size={40} className="text-gray-400" />
+            <p className="text-gray-500 ml-2">Map View</p>
+          </div>
+          <Button 
+            onClick={() => setShowMapDialog(false)}
+            className="w-full"
+          >
+            Close
+          </Button>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+  
+  const renderCalendarDialog = () => {
+    return (
+      <Dialog open={showCalendarDialog} onOpenChange={setShowCalendarDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add to Calendar</DialogTitle>
+            <DialogDescription>
+              Add this event to your WAKTI calendar
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center my-4">
+            <Button 
+              onClick={() => {
+                toast({
+                  title: "Added to Calendar",
+                  description: "Event has been added to your WAKTI calendar",
+                });
+                setShowCalendarDialog(false);
+              }}
+              className="px-8"
+            >
+              <Calendar className="mr-2 h-4 w-4" /> Add to Calendar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   return (
     <Card 
       className={`${onCardClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''} 
@@ -424,28 +571,17 @@ const EventCard: React.FC<EventCardProps> = ({
         {renderBranding()}
 
         {event.location && (
-          <div className={`grid grid-cols-3 gap-2 mt-3 ${
+          <div className={`grid grid-cols-2 gap-2 mt-3 ${
             event.customization?.elementAnimations?.buttons === 'fade' ? 'animate-fade-in' : 
             event.customization?.elementAnimations?.buttons === 'slide' ? 'animate-slide-in' : 
             event.customization?.elementAnimations?.buttons === 'pop' ? 'animate-scale-in' : ''
           }`}>
-            {event.customization?.showAddToCalendarButton !== false && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-xs flex items-center justify-center gap-1"
-                style={getUtilityButtonStyle('calendar')}
-              >
-                <Calendar className={`h-3 w-3 ${event.customization?.elementAnimations?.icons || ''}`} /> 
-                Calendar
-              </Button>
-            )}
-            
             <Button 
               variant="outline" 
               size="sm" 
               className="text-xs flex items-center justify-center gap-1"
               style={getUtilityButtonStyle('map')}
+              onClick={(e) => handleButtonClick('map', e)}
             >
               <MapPin className={`h-3 w-3 ${event.customization?.elementAnimations?.icons || ''}`} /> 
               Map
@@ -456,6 +592,7 @@ const EventCard: React.FC<EventCardProps> = ({
               size="sm" 
               className="text-xs flex items-center justify-center gap-1"
               style={getUtilityButtonStyle('qr')}
+              onClick={(e) => handleButtonClick('qr', e)}
             >
               <QrCode className={`h-3 w-3 ${event.customization?.elementAnimations?.icons || ''}`} /> 
               QR Code
@@ -464,15 +601,12 @@ const EventCard: React.FC<EventCardProps> = ({
         )}
 
         <div className="text-center text-xs text-muted-foreground mt-3">
-          <a 
-            href="https://wakti.qa" 
-            target="_blank" 
-            rel="noopener noreferrer"
+          <span 
             className="hover:underline"
-            onClick={(e) => e.stopPropagation()}
+            style={getPoweredByStyle()}
           >
             Powered by WAKTI
-          </a>
+          </span>
         </div>
       </CardContent>
       
@@ -488,10 +622,7 @@ const EventCard: React.FC<EventCardProps> = ({
             <Button 
               variant="outline" 
               className="flex-1" 
-              onClick={(e) => {
-                e.stopPropagation();
-                onDecline(event.id);
-              }}
+              onClick={handleDeclineClick}
               style={event.customization?.buttons?.decline ? {
                 backgroundColor: event.customization.buttons.decline.background,
                 color: event.customization.buttons.decline.color,
@@ -506,10 +637,7 @@ const EventCard: React.FC<EventCardProps> = ({
           {onAccept && (
             <Button 
               className="flex-1" 
-              onClick={(e) => {
-                e.stopPropagation();
-                onAccept(event.id);
-              }}
+              onClick={handleAcceptClick}
               style={event.customization?.buttons?.accept ? {
                 backgroundColor: event.customization.buttons.accept.background,
                 color: event.customization.buttons.accept.color,
@@ -522,6 +650,10 @@ const EventCard: React.FC<EventCardProps> = ({
           )}
         </CardFooter>
       )}
+      
+      {renderQrCodeDialog()}
+      {renderMapDialog()}
+      {renderCalendarDialog()}
     </Card>
   );
 };

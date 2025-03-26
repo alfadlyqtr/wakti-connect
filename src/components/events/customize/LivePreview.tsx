@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { EventCustomization } from "@/types/event.types";
 import { Button } from "@/components/ui/button";
-import { Check, X, MapPin, QrCode, Calendar, Smartphone, Monitor } from "lucide-react";
+import { Check, X, MapPin, QrCode, Calendar, Smartphone, Monitor, Copy } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { toast } from "@/components/ui/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface LivePreviewProps {
   customization: EventCustomization;
@@ -26,6 +28,65 @@ const LivePreview: React.FC<LivePreviewProps> = ({
   onViewModeChange
 }) => {
   const [showQrCode, setShowQrCode] = useState(false);
+  const [showMapDialog, setShowMapDialog] = useState(false);
+  const [showCalendarDialog, setShowCalendarDialog] = useState(false);
+  
+  const handleButtonClick = (action: 'map' | 'qr' | 'calendar', e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (action === 'map') {
+      setShowMapDialog(true);
+    } else if (action === 'qr') {
+      setShowQrCode(true);
+    } else if (action === 'calendar') {
+      setShowCalendarDialog(true);
+    }
+  };
+  
+  const handleCopyLink = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const shareableLink = `${window.location.origin}/events/view/preview-${Date.now()}`;
+    navigator.clipboard.writeText(shareableLink)
+      .then(() => {
+        toast({
+          title: "Link Copied",
+          description: "Event link has been copied to clipboard",
+        });
+      })
+      .catch(err => {
+        console.error('Failed to copy link:', err);
+        toast({
+          title: "Failed to Copy",
+          description: "Could not copy the link to clipboard",
+          variant: "destructive"
+        });
+      });
+  };
+  
+  const handleAccept = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setShowCalendarDialog(true);
+    
+    toast({
+      title: "Event Accepted",
+      description: "You've accepted this event",
+    });
+  };
+  
+  const handleDecline = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    toast({
+      title: "Event Declined",
+      description: "You've declined this event",
+    });
+  };
   
   const getBackgroundStyle = () => {
     const { background } = customization;
@@ -278,33 +339,115 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     );
   };
 
+  const getPoweredByStyle = () => {
+    return {
+      color: customization.poweredByColor || '#888888',
+      fontSize: '0.7rem',
+      fontWeight: 'normal'
+    };
+  };
+  
   const renderQrCodeFlip = () => {
     if (!showQrCode) return null;
 
     return (
-      <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50" onClick={() => setShowQrCode(false)}>
-        <div 
-          className="relative w-[280px] h-[280px] bg-white rounded-lg shadow-2xl animate-flip"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-            <div className="w-full h-full flex flex-col items-center justify-center">
-              <div className="w-48 h-48 bg-gray-200 flex items-center justify-center mb-4">
-                <QrCode size={140} className="text-gray-800" />
-              </div>
-              <p className="text-center text-sm font-medium">Scan to view event</p>
+      <Dialog open={showQrCode} onOpenChange={setShowQrCode}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Event QR Code</DialogTitle>
+            <DialogDescription>
+              Scan this code to view the event details.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center p-4">
+            <div className="w-48 h-48 bg-gray-200 flex items-center justify-center mb-4">
+              <QrCode size={140} className="text-gray-800" />
+            </div>
+            <p className="text-center text-sm font-medium">Scan to view event</p>
+            <div className="flex gap-2 mt-4">
               <Button 
                 variant="outline" 
-                size="sm" 
-                className="mt-4"
-                onClick={() => setShowQrCode(false)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleCopyLink(e);
+                }}
+              >
+                <Copy className="mr-2 h-4 w-4" /> Copy Link
+              </Button>
+              <Button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowQrCode(false);
+                }}
               >
                 Close
               </Button>
             </div>
           </div>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+  
+  const renderMapDialog = () => {
+    return (
+      <Dialog open={showMapDialog} onOpenChange={setShowMapDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Event Location</DialogTitle>
+            <DialogDescription>
+              {location || "No location specified"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="h-64 bg-gray-200 flex items-center justify-center mb-4">
+            <MapPin size={40} className="text-gray-400" />
+            <p className="text-gray-500 ml-2">Map View</p>
+          </div>
+          <Button 
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowMapDialog(false);
+            }}
+            className="w-full"
+          >
+            Close
+          </Button>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+  
+  const renderCalendarDialog = () => {
+    return (
+      <Dialog open={showCalendarDialog} onOpenChange={setShowCalendarDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add to Calendar</DialogTitle>
+            <DialogDescription>
+              Add this event to your WAKTI calendar
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center my-4">
+            <Button 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toast({
+                  title: "Added to Calendar",
+                  description: "Event has been added to your WAKTI calendar",
+                });
+                setShowCalendarDialog(false);
+              }}
+              className="px-8"
+            >
+              <Calendar className="mr-2 h-4 w-4" /> Add to Calendar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     );
   };
   
@@ -317,7 +460,11 @@ const LivePreview: React.FC<LivePreviewProps> = ({
             variant={viewMode === 'mobile' ? "default" : "outline"}
             size="icon"
             className="h-8 w-8"
-            onClick={() => onViewModeChange('mobile')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onViewModeChange('mobile');
+            }}
             title="Mobile View"
           >
             <Smartphone className="h-4 w-4" />
@@ -326,7 +473,11 @@ const LivePreview: React.FC<LivePreviewProps> = ({
             variant={viewMode === 'desktop' ? "default" : "outline"}
             size="icon"
             className="h-8 w-8"
-            onClick={() => onViewModeChange('desktop')}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onViewModeChange('desktop');
+            }}
             title="Desktop View"
           >
             <Monitor className="h-4 w-4" />
@@ -388,6 +539,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
               <button 
                 className="py-2 px-4 flex items-center gap-1"
                 style={getButtonStyle('accept')}
+                onClick={handleAccept}
               >
                 <Check className="w-4 h-4" /> Accept
               </button>
@@ -395,6 +547,7 @@ const LivePreview: React.FC<LivePreviewProps> = ({
               <button
                 className="py-2 px-4 flex items-center gap-1"
                 style={getButtonStyle('decline')}
+                onClick={handleDecline}
               >
                 <X className="w-4 h-4" /> Decline
               </button>
@@ -402,25 +555,16 @@ const LivePreview: React.FC<LivePreviewProps> = ({
           )}
           
           {location && (
-            <div className={`grid grid-cols-3 gap-2 mt-4 ${getElementAnimationClass('buttons', 1)}`}>
-              {customization.showAddToCalendarButton !== false && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-xs flex items-center justify-center gap-1"
-                  style={getUtilityButtonStyle('calendar')}
-                >
-                  <Calendar className={`h-3 w-3 ${getElementAnimationClass('icons', 2)}`} /> Calendar
-                </Button>
-              )}
-              
+            <div className={`grid grid-cols-2 gap-2 mt-4 ${getElementAnimationClass('buttons', 1)}`}>
               <Button 
                 variant="outline" 
                 size="sm" 
                 className="text-xs flex items-center justify-center gap-1"
                 style={getUtilityButtonStyle('map')}
+                onClick={(e) => handleButtonClick('map', e)}
               >
-                <MapPin className={`h-3 w-3 ${getElementAnimationClass('icons', 3)}`} /> Map
+                <MapPin className={`h-3 w-3 ${getElementAnimationClass('icons', 3)}`} /> 
+                Map
               </Button>
               
               <Button 
@@ -428,9 +572,10 @@ const LivePreview: React.FC<LivePreviewProps> = ({
                 size="sm" 
                 className="text-xs flex items-center justify-center gap-1"
                 style={getUtilityButtonStyle('qr')}
-                onClick={() => setShowQrCode(true)}
+                onClick={(e) => handleButtonClick('qr', e)}
               >
-                <QrCode className={`h-3 w-3 ${getElementAnimationClass('icons', 4)}`} /> QR Code
+                <QrCode className={`h-3 w-3 ${getElementAnimationClass('icons', 4)}`} /> 
+                QR Code
               </Button>
             </div>
           )}
@@ -439,10 +584,10 @@ const LivePreview: React.FC<LivePreviewProps> = ({
           
           <div className="text-center text-xs text-muted-foreground mt-4">
             <a 
-              href="https://wakti.qa" 
-              target="_blank" 
-              rel="noopener noreferrer"
+              href="#"
               className="hover:underline"
+              onClick={(e) => e.preventDefault()}
+              style={getPoweredByStyle()}
             >
               Powered by WAKTI
             </a>
@@ -451,6 +596,8 @@ const LivePreview: React.FC<LivePreviewProps> = ({
       </div>
 
       {renderQrCodeFlip()}
+      {renderMapDialog()}
+      {renderCalendarDialog()}
     </div>
   );
 };

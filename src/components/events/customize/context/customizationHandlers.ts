@@ -1,4 +1,3 @@
-
 import { EventCustomization } from "@/types/event.types";
 import { produce } from "immer";
 
@@ -208,6 +207,14 @@ export const createCustomizationHandlers = (
     });
   };
 
+  // Add handler for "Powered by WAKTI" color
+  const handlePoweredByColorChange = (color: string) => {
+    onCustomizationChange({
+      ...customization,
+      poweredByColor: color
+    });
+  };
+
   return {
     handleBackgroundChange,
     handleBackgroundAngleChange,
@@ -227,6 +234,7 @@ export const createCustomizationHandlers = (
     handleMapDisplayChange,
     handleCardEffectChange,
     handleElementAnimationsChange,
-    handleUtilityButtonStyleChange
+    handleUtilityButtonStyleChange,
+    handlePoweredByColorChange
   };
 };

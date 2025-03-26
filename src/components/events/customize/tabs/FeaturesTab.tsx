@@ -6,7 +6,6 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ColorPicker } from "@/components/ui/color-picker";
@@ -19,6 +18,7 @@ interface FeaturesTabProps {
   onBrandingChange: (property: 'logo' | 'slogan', value: string) => void;
   onMapDisplayChange: (value: 'button' | 'qrcode' | 'both') => void;
   onUtilityButtonStyleChange?: (buttonType: 'calendar' | 'map' | 'qr', property: 'background' | 'color' | 'shape', value: string) => void;
+  onPoweredByColorChange?: (color: string) => void;
 }
 
 const FeaturesTab: React.FC<FeaturesTabProps> = ({
@@ -28,7 +28,8 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({
   onToggleButtons,
   onBrandingChange,
   onMapDisplayChange,
-  onUtilityButtonStyleChange
+  onUtilityButtonStyleChange,
+  onPoweredByColorChange
 }) => {
   const [logoUrl, setLogoUrl] = useState(customization.branding?.logo || '');
   const [slogan, setSlogan] = useState(customization.branding?.slogan || '');
@@ -90,31 +91,7 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({
       <div>
         <h3 className="font-medium text-base mb-3">Utility Buttons Styling</h3>
         
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-          {/* Calendar Button Styling */}
-          <div className="border rounded-md p-3">
-            <div className="flex items-center gap-2 mb-3">
-              <Calendar className="h-4 w-4" />
-              <span className="font-medium">Calendar</span>
-            </div>
-            <div className="space-y-2">
-              <div>
-                <Label className="text-xs">Background</Label>
-                <ColorPicker 
-                  value={customization.utilityButtons?.calendar?.background || '#ffffff'}
-                  onChange={(value) => handleUtilityButtonStyleChange('calendar', 'background', value)}
-                />
-              </div>
-              <div>
-                <Label className="text-xs">Text Color</Label>
-                <ColorPicker 
-                  value={customization.utilityButtons?.calendar?.color || '#000000'}
-                  onChange={(value) => handleUtilityButtonStyleChange('calendar', 'color', value)}
-                />
-              </div>
-            </div>
-          </div>
-          
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           {/* Map Button Styling */}
           <div className="border rounded-md p-3">
             <div className="flex items-center gap-2 mb-3">
@@ -171,26 +148,7 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({
               variant="outline" 
               size="sm" 
               className="text-xs flex items-center justify-center gap-1"
-              style={{
-                backgroundColor: customization.utilityButtons?.calendar?.background || undefined,
-                color: customization.utilityButtons?.calendar?.color || undefined,
-                borderRadius: customization.utilityButtons?.calendar?.shape === 'pill' ? '9999px' : 
-                               customization.utilityButtons?.calendar?.shape === 'rounded' ? '0.375rem' : '0'
-              }}
-            >
-              <Calendar className="h-3 w-3" /> Calendar
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="text-xs flex items-center justify-center gap-1"
-              style={{
-                backgroundColor: customization.utilityButtons?.map?.background || undefined,
-                color: customization.utilityButtons?.map?.color || undefined,
-                borderRadius: customization.utilityButtons?.map?.shape === 'pill' ? '9999px' : 
-                               customization.utilityButtons?.map?.shape === 'rounded' ? '0.375rem' : '0'
-              }}
+              style={getUtilityButtonStyle('map')}
             >
               <MapPin className="h-3 w-3" /> Map
             </Button>
@@ -199,12 +157,7 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({
               variant="outline" 
               size="sm" 
               className="text-xs flex items-center justify-center gap-1"
-              style={{
-                backgroundColor: customization.utilityButtons?.qr?.background || undefined,
-                color: customization.utilityButtons?.qr?.color || undefined,
-                borderRadius: customization.utilityButtons?.qr?.shape === 'pill' ? '9999px' : 
-                               customization.utilityButtons?.qr?.shape === 'rounded' ? '0.375rem' : '0'
-              }}
+              style={getUtilityButtonStyle('qr')}
             >
               <QrCode className="h-3 w-3" /> QR Code
             </Button>
@@ -237,6 +190,14 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({
               placeholder="Your business slogan or tagline"
             />
           </div>
+          
+          <div>
+            <Label htmlFor="powered-by-color">Powered by WAKTI Color</Label>
+            <ColorPicker 
+              value={customization.poweredByColor || '#888888'} 
+              onChange={(value) => onPoweredByColorChange && onPoweredByColorChange(value)} 
+            />
+          </div>
         </div>
         
         {(logoUrl || slogan) && (
@@ -248,6 +209,12 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({
             {slogan && (
               <p className="text-xs text-muted-foreground">{slogan}</p>
             )}
+            <p 
+              className="text-xs mt-2" 
+              style={{ color: customization.poweredByColor || '#888888' }}
+            >
+              Powered by WAKTI
+            </p>
           </div>
         )}
       </div>
@@ -279,6 +246,19 @@ const FeaturesTab: React.FC<FeaturesTabProps> = ({
       </div>
     </div>
   );
+
+  function getUtilityButtonStyle(type: 'calendar' | 'map' | 'qr') {
+    const buttonStyle = customization.utilityButtons?.[type];
+    
+    if (!buttonStyle) return {};
+    
+    return {
+      backgroundColor: buttonStyle.background || undefined,
+      color: buttonStyle.color || undefined,
+      borderRadius: buttonStyle.shape === 'pill' ? '9999px' : 
+                    buttonStyle.shape === 'rounded' ? '0.375rem' : '0'
+    };
+  }
 };
 
 export default FeaturesTab;

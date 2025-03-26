@@ -11,7 +11,8 @@ const FeaturesTabContent: React.FC = () => {
     handleToggleButtons,
     handleBrandingChange,
     handleMapDisplayChange,
-    handleUtilityButtonStyleChange
+    handleUtilityButtonStyleChange,
+    handlePoweredByColorChange
   } = useCustomization();
 
   return (
@@ -23,6 +24,7 @@ const FeaturesTabContent: React.FC = () => {
       onBrandingChange={handleBrandingChange}
       onMapDisplayChange={handleMapDisplayChange}
       onUtilityButtonStyleChange={handleUtilityButtonStyleChange}
+      onPoweredByColorChange={handlePoweredByColorChange}
     />
   );
 };

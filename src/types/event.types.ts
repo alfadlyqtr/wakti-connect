@@ -1,4 +1,3 @@
-
 export interface Event {
   id: string;
   user_id: string;
@@ -134,6 +133,9 @@ export interface EventCustomization {
   // Show/hide buttons
   showAcceptDeclineButtons?: boolean;
   showAddToCalendarButton?: boolean;
+  
+  // New property for "Powered by WAKTI" footer color
+  poweredByColor?: string;
   
   // Business branding
   branding?: {
