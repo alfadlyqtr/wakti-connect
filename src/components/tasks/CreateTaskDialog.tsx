@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,7 +43,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TaskPriority, TaskStatus } from "@/types/task.types";
-import { PlusCircle, Trash2, CalendarIcon, HelpCircle, UsersIcon, InfoCircle } from "lucide-react";
+import { PlusCircle, Trash2, CalendarIcon, HelpCircle, UsersIcon, Info } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
@@ -54,8 +55,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { supabase } from "@/lib/supabase";
-import { Loader2 } from "@/components/ui/loader";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
+import { Loader2 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 interface CreateTaskDialogProps {
@@ -195,7 +197,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       form.reset();
       setShowSubtasks(false);
       setShowRecurring(false);
-      setShowDelegation(false);
       setShowTeamTask(false);
     } catch (error) {
       console.error("Error creating task:", error);
@@ -640,7 +641,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                       onCheckedChange={(checked) => form.setValue("is_team_task", checked)}
                     />
                     <Label htmlFor="team-task">Make this a team task</Label>
-                    <InfoCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                    <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span className="sr-only">Info</span>
