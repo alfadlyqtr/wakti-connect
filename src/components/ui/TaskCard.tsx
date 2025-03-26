@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { 
   Card, 
@@ -10,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TaskPriority, TaskStatus, SubTask } from "@/types/task.types";
 import { formatDistanceToNow, isPast, addDays, parseISO, format, isValid } from "date-fns";
+import { Progress } from "@/components/ui/progress";
 import {
   Clock,
   CalendarIcon,
@@ -35,6 +37,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { formatTimeString } from "@/utils/dateTimeFormatter";
 
 interface TaskCardProps {
   id: string;
@@ -90,6 +93,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const [showAllSubtasks, setShowAllSubtasks] = useState(false);
   const hasSubtasks = subtasks && subtasks.length > 0;
   const completedSubtasks = subtasks.filter(subtask => subtask.is_completed).length;
+  const subtaskCompletionPercentage = hasSubtasks 
+    ? Math.round((completedSubtasks / subtasks.length) * 100) 
+    : 0;
   
   const isOverdue = status !== 'completed' && status !== 'snoozed' && isPast(dueDate) && dueDate.getTime() < new Date().getTime();
   
@@ -118,18 +124,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
     return formatDistanceToNow(dueDate, { addSuffix: true });
   };
 
-  const formatTime = (time: string | null | undefined) => {
-    if (!time) return null;
-    
-    const [hours, minutes] = time.split(':');
-    
-    const hour = parseInt(hours, 10);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const hour12 = hour % 12 || 12;
-    
-    return `${hour12}:${minutes} ${ampm}`;
-  };
-
   const formatSubtaskDueDate = (dueDate: string | null | undefined, dueTime: string | null | undefined) => {
     if (!dueDate) return null;
     
@@ -138,7 +132,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
       const formattedDate = format(date, 'MMM d');
       
       if (dueTime) {
-        return `${formattedDate}, ${formatTime(dueTime)}`;
+        return `${formattedDate}, ${formatTimeString(dueTime)}`;
       }
       
       return formattedDate;
@@ -282,7 +276,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             <span>
               {formatDueDate()}
               {dueTime && (
-                <span className="font-medium ml-1">at {formatTime(dueTime)}</span>
+                <span className="font-medium ml-1">at {formatTimeString(dueTime)}</span>
               )}
             </span>
           </div>
@@ -319,6 +313,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </CollapsibleTrigger>
               </div>
               
+              {/* Progress bar for subtask completion */}
+              <div className="mb-3">
+                <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                  <span>Progress</span>
+                  <span>{subtaskCompletionPercentage}%</span>
+                </div>
+                <Progress value={subtaskCompletionPercentage} className="h-2" />
+              </div>
+              
+              {/* First few subtasks (always visible) */}
               <div className="space-y-2">
                 {subtasks.slice(0, 2).map((subtask, index) => (
                   <div key={subtask.id || index} className="flex items-start gap-2 text-sm">
@@ -343,6 +347,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 ))}
               </div>
               
+              {/* Remaining subtasks (collapsible) */}
               <CollapsibleContent className="space-y-2 mt-2">
                 {subtasks.slice(2).map((subtask, index) => (
                   <div key={subtask.id || (index + 2)} className="flex items-start gap-2 text-sm">
