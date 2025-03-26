@@ -12,11 +12,13 @@ import { EventFormTab, ShareTab } from "@/types/form.types";
 interface EventCreationFormProps {
   editEvent?: Event | null;
   onCancel?: () => void;
+  onSuccess?: () => void; // New callback for success handling
 }
 
 const EventCreationForm: React.FC<EventCreationFormProps> = ({ 
   editEvent = null,
-  onCancel
+  onCancel,
+  onSuccess
 }) => {
   const {
     register,
@@ -54,7 +56,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     description,
     setTitle,
     setDescription
-  } = useEventForm(editEvent);
+  } = useEventForm(editEvent, onSuccess);
 
   // Use our custom hook for initializing the form with edit data
   useEditEventEffect({

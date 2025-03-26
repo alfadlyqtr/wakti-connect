@@ -12,12 +12,18 @@ export const MapDisplayOptions: React.FC<MapDisplayOptionsProps> = ({
   mapDisplay,
   onMapDisplayChange,
 }) => {
+  const safeMapDisplay = mapDisplay || 'button';
+  
+  const handleValueChange = (value: string) => {
+    onMapDisplayChange(value as 'button' | 'qrcode' | 'both');
+  };
+  
   return (
     <div>
       <h3 className="font-medium text-base mb-3">Map Display</h3>
       <RadioGroup 
-        value={mapDisplay || 'button'} 
-        onValueChange={(value) => onMapDisplayChange(value as 'button' | 'qrcode' | 'both')}
+        value={safeMapDisplay} 
+        onValueChange={handleValueChange}
         className="space-y-3"
       >
         <div className="flex items-center space-x-2">

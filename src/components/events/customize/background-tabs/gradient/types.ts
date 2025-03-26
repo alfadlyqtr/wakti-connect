@@ -1,13 +1,12 @@
 
-export interface GradientPreset {
-  value: string;
-  label?: string;
-}
-
 export interface GradientDirection {
   value: string;
   label: string;
   icon: string;
+}
+
+export interface GradientPreset {
+  value: string;
 }
 
 export interface GradientTabProps {

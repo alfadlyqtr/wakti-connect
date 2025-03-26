@@ -5,6 +5,7 @@ import { EventFormData, EventCustomization } from "@/types/event.types";
 import { InvitationRecipient } from "@/types/invitation.types";
 import { useEvents } from "@/hooks/useEvents";
 import { toast } from "@/components/ui/use-toast";
+import { useEffect } from "react";
 
 interface UseEventSubmissionProps {
   title: string;
@@ -20,6 +21,7 @@ interface UseEventSubmissionProps {
   recipients: InvitationRecipient[];
   resetForm: () => void;
   editEvent?: any; // The event being edited (if any)
+  onSuccess?: () => void; // New callback for success handling
 }
 
 export const useEventSubmission = ({
@@ -35,7 +37,8 @@ export const useEventSubmission = ({
   customization,
   recipients,
   resetForm,
-  editEvent
+  editEvent,
+  onSuccess
 }: UseEventSubmissionProps) => {
   const { createEvent, updateEvent, canCreateEvents } = useEvents();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -104,7 +107,7 @@ export const useEventSubmission = ({
       }
       
       // Added logging to help diagnose issues
-      console.log("Form data before processing:", { formData, title });
+      console.log("Form data before processing:", { formData, title, editingEvent: !!editEvent });
       
       // Check if title is empty before submission
       if (!title.trim()) {
@@ -122,8 +125,11 @@ export const useEventSubmission = ({
       // More logging
       console.log("Processed form data:", completeFormData);
       
-      // Determine status based on recipients
-      const status = recipients.length > 0 ? 'sent' : 'draft';
+      // Determine status based on recipients and current state
+      const status = editEvent?.status === 'draft' && recipients.length === 0 
+        ? 'draft' 
+        : recipients.length > 0 ? 'sent' : 'draft';
+      
       completeFormData.status = status;
       
       let result;
@@ -168,9 +174,14 @@ export const useEventSubmission = ({
       }
       
       if (result?.id) {
-        // Reset form
-        resetForm();
-        reset();
+        // Call the onSuccess callback if provided
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          // Only reset the form if onSuccess isn't provided (for backward compatibility)
+          resetForm();
+          reset();
+        }
       }
     } catch (error: any) {
       console.error("Error with event:", error);
@@ -182,7 +193,7 @@ export const useEventSubmission = ({
     } finally {
       setIsSubmitting(false);
     }
-  }, [canCreateEvents, createEvent, updateEvent, isAllDay, location, locationType, mapsUrl, customization, recipients, title, description, resetForm, reset, selectedDate, startTime, endTime, editEvent]);
+  }, [canCreateEvents, createEvent, updateEvent, isAllDay, location, locationType, mapsUrl, customization, recipients, title, description, resetForm, reset, selectedDate, startTime, endTime, editEvent, onSuccess]);
 
   return {
     register,
@@ -193,6 +204,3 @@ export const useEventSubmission = ({
     onSubmit
   };
 };
-
-// Added missing import
-import { useEffect } from "react";

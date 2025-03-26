@@ -9,8 +9,9 @@ import {
   useEventSubmission,
   useFormReset
 } from "./events";
+import { useEffect } from "react";
 
-export const useEventForm = (editEvent?: Event | null) => {
+export const useEventForm = (editEvent?: Event | null, onSuccess?: () => void) => {
   const { canCreateEvents, userRole } = useEvents();
   
   // Use our smaller, focused hooks
@@ -99,7 +100,8 @@ export const useEventForm = (editEvent?: Event | null) => {
     customization,
     recipients,
     resetForm,
-    editEvent
+    editEvent,
+    onSuccess
   });
 
   return {
@@ -141,6 +143,3 @@ export const useEventForm = (editEvent?: Event | null) => {
     setDescription
   };
 };
-
-// Added missing import
-import { useEffect } from "react";

@@ -1,10 +1,10 @@
 
 import React from "react";
 import { Label } from "@/components/ui/label";
-import { ColorPicker } from "@/components/ui/color-picker";
-import { Button } from "@/components/ui/button";
-import { MapPin, QrCode } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EventCustomization } from "@/types/event.types";
+import { ColorInput } from "@/components/inputs/ColorInput";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface UtilityButtonsStyleProps {
   customization: EventCustomization;
@@ -13,103 +13,146 @@ interface UtilityButtonsStyleProps {
 
 export const UtilityButtonsStyle: React.FC<UtilityButtonsStyleProps> = ({
   customization,
-  onUtilityButtonStyleChange,
+  onUtilityButtonStyleChange
 }) => {
-  const handleUtilityButtonStyleChange = (buttonType: 'calendar' | 'map' | 'qr', property: 'background' | 'color' | 'shape', value: string) => {
-    if (onUtilityButtonStyleChange) {
-      onUtilityButtonStyleChange(buttonType, property, value);
-    }
+  if (!onUtilityButtonStyleChange) return null;
+  
+  const getButtonStyles = (type: 'calendar' | 'map' | 'qr') => {
+    if (!customization.utilityButtons) return { background: '#ffffff', color: '#000000', shape: 'rounded' };
+    
+    return customization.utilityButtons[type] || { background: '#ffffff', color: '#000000', shape: 'rounded' };
   };
 
-  const getUtilityButtonStyle = (type: 'calendar' | 'map' | 'qr') => {
-    const buttonStyle = customization.utilityButtons?.[type];
-    
-    if (!buttonStyle) return {};
-    
-    return {
-      backgroundColor: buttonStyle.background || undefined,
-      color: buttonStyle.color || undefined,
-      borderRadius: buttonStyle.shape === 'pill' ? '9999px' : 
-                    buttonStyle.shape === 'rounded' ? '0.375rem' : '0'
-    };
+  const handleStyleChange = (buttonType: 'calendar' | 'map' | 'qr', property: 'background' | 'color' | 'shape', value: string) => {
+    onUtilityButtonStyleChange(buttonType, property, value);
   };
 
   return (
     <div>
-      <h3 className="font-medium text-base mb-3">Utility Buttons Styling</h3>
+      <h3 className="font-medium text-base mb-3">Utility Button Styles</h3>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        {/* Map Button Styling */}
-        <div className="border rounded-md p-3">
-          <div className="flex items-center gap-2 mb-3">
-            <MapPin className="h-4 w-4" />
-            <span className="font-medium">Map</span>
-          </div>
+      <Tabs defaultValue="calendar" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="calendar">Calendar</TabsTrigger>
+          <TabsTrigger value="map">Map</TabsTrigger>
+          <TabsTrigger value="qr">QR Code</TabsTrigger>
+        </TabsList>
+        
+        {/* Calendar Button Styling */}
+        <TabsContent value="calendar" className="space-y-3 pt-3">
           <div className="space-y-2">
-            <div>
-              <Label className="text-xs">Background</Label>
-              <ColorPicker 
-                value={customization.utilityButtons?.map?.background || '#ffffff'}
-                onChange={(value) => handleUtilityButtonStyleChange('map', 'background', value)}
-              />
-            </div>
-            <div>
-              <Label className="text-xs">Text Color</Label>
-              <ColorPicker 
-                value={customization.utilityButtons?.map?.color || '#000000'}
-                onChange={(value) => handleUtilityButtonStyleChange('map', 'color', value)}
-              />
-            </div>
+            <Label htmlFor="calendar-bg-color">Background Color</Label>
+            <ColorInput 
+              id="calendar-bg-color"
+              value={getButtonStyles('calendar').background} 
+              onChange={(color) => handleStyleChange('calendar', 'background', color)}
+            />
           </div>
-        </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="calendar-text-color">Text Color</Label>
+            <ColorInput 
+              id="calendar-text-color"
+              value={getButtonStyles('calendar').color} 
+              onChange={(color) => handleStyleChange('calendar', 'color', color)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="calendar-shape">Button Shape</Label>
+            <Select 
+              value={getButtonStyles('calendar').shape} 
+              onValueChange={(value) => handleStyleChange('calendar', 'shape', value)}
+            >
+              <SelectTrigger id="calendar-shape">
+                <SelectValue placeholder="Select shape" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rounded">Rounded</SelectItem>
+                <SelectItem value="pill">Pill</SelectItem>
+                <SelectItem value="square">Square</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </TabsContent>
+        
+        {/* Map Button Styling */}
+        <TabsContent value="map" className="space-y-3 pt-3">
+          <div className="space-y-2">
+            <Label htmlFor="map-bg-color">Background Color</Label>
+            <ColorInput 
+              id="map-bg-color"
+              value={getButtonStyles('map').background} 
+              onChange={(color) => handleStyleChange('map', 'background', color)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="map-text-color">Text Color</Label>
+            <ColorInput 
+              id="map-text-color"
+              value={getButtonStyles('map').color} 
+              onChange={(color) => handleStyleChange('map', 'color', color)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="map-shape">Button Shape</Label>
+            <Select 
+              value={getButtonStyles('map').shape} 
+              onValueChange={(value) => handleStyleChange('map', 'shape', value)}
+            >
+              <SelectTrigger id="map-shape">
+                <SelectValue placeholder="Select shape" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rounded">Rounded</SelectItem>
+                <SelectItem value="pill">Pill</SelectItem>
+                <SelectItem value="square">Square</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </TabsContent>
         
         {/* QR Code Button Styling */}
-        <div className="border rounded-md p-3">
-          <div className="flex items-center gap-2 mb-3">
-            <QrCode className="h-4 w-4" />
-            <span className="font-medium">QR Code</span>
-          </div>
+        <TabsContent value="qr" className="space-y-3 pt-3">
           <div className="space-y-2">
-            <div>
-              <Label className="text-xs">Background</Label>
-              <ColorPicker 
-                value={customization.utilityButtons?.qr?.background || '#ffffff'}
-                onChange={(value) => handleUtilityButtonStyleChange('qr', 'background', value)}
-              />
-            </div>
-            <div>
-              <Label className="text-xs">Text Color</Label>
-              <ColorPicker 
-                value={customization.utilityButtons?.qr?.color || '#000000'}
-                onChange={(value) => handleUtilityButtonStyleChange('qr', 'color', value)}
-              />
-            </div>
+            <Label htmlFor="qr-bg-color">Background Color</Label>
+            <ColorInput 
+              id="qr-bg-color"
+              value={getButtonStyles('qr').background}
+
+              onChange={(color) => handleStyleChange('qr', 'background', color)}
+            />
           </div>
-        </div>
-      </div>
-      
-      <div className="p-3 bg-muted/30 rounded-md">
-        <h4 className="text-sm font-medium mb-2">Buttons Preview</h4>
-        <div className="flex flex-wrap gap-2 justify-center">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-xs flex items-center justify-center gap-1"
-            style={getUtilityButtonStyle('map')}
-          >
-            <MapPin className="h-3 w-3" /> Map
-          </Button>
           
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-xs flex items-center justify-center gap-1"
-            style={getUtilityButtonStyle('qr')}
-          >
-            <QrCode className="h-3 w-3" /> QR Code
-          </Button>
-        </div>
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="qr-text-color">Text Color</Label>
+            <ColorInput 
+              id="qr-text-color"
+              value={getButtonStyles('qr').color} 
+              onChange={(color) => handleStyleChange('qr', 'color', color)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="qr-shape">Button Shape</Label>
+            <Select 
+              value={getButtonStyles('qr').shape} 
+              onValueChange={(value) => handleStyleChange('qr', 'shape', value)}
+            >
+              <SelectTrigger id="qr-shape">
+                <SelectValue placeholder="Select shape" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rounded">Rounded</SelectItem>
+                <SelectItem value="pill">Pill</SelectItem>
+                <SelectItem value="square">Square</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

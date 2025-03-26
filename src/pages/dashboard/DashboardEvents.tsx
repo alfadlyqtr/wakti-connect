@@ -107,6 +107,13 @@ const DashboardEvents: React.FC = () => {
     setSelectedEventId(eventId);
     setShowResponsesDialog(true);
   };
+  
+  const handleFormSuccess = () => {
+    // This function will be called when the form submits successfully
+    setShowCreateForm(false);
+    setEditingEvent(null);
+    refetch(); // Refresh events list
+  };
 
   // Helper to filter events based on tab
   const getFilteredTabEvents = () => {
@@ -149,6 +156,7 @@ const DashboardEvents: React.FC = () => {
             <EventCreationForm 
               editEvent={editingEvent}
               onCancel={handleCancelEdit}
+              onSuccess={handleFormSuccess}
             />
           </div>
         ) : (

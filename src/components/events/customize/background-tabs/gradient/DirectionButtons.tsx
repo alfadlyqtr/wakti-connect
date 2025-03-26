@@ -14,6 +14,11 @@ const DirectionButtons: React.FC<DirectionButtonsProps> = ({
   currentDirection,
   onDirectionChange
 }) => {
+  const handleClick = (direction: string) => {
+    console.log("Direction button clicked:", direction);
+    onDirectionChange(direction);
+  };
+
   return (
     <div>
       <Label className="block mb-2">Direction</Label>
@@ -22,10 +27,13 @@ const DirectionButtons: React.FC<DirectionButtonsProps> = ({
           <button
             key={dir.value}
             type="button"
-            onClick={() => onDirectionChange(dir.value)}
+            onClick={() => handleClick(dir.value)}
             className={`flex flex-col items-center justify-center p-2 border rounded-md cursor-pointer ${
-              currentDirection === dir.value ? 'bg-primary/10 border-primary' : 'border-border hover:bg-accent/50'
+              currentDirection === dir.value 
+                ? 'bg-primary/10 border-primary' 
+                : 'border-border hover:bg-accent/50'
             }`}
+            aria-pressed={currentDirection === dir.value}
           >
             <span className="text-xl">{dir.icon}</span>
             <span className="text-xs mt-1">{dir.label}</span>

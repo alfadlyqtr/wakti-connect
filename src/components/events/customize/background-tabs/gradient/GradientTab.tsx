@@ -23,20 +23,25 @@ const GradientTab: React.FC<GradientTabProps> = ({
   const [currentDirection, setCurrentDirection] = useState(direction);
   const [gradientPreview, setGradientPreview] = useState(value);
   
+  // Extract colors from the gradient value when component mounts or updates
   useEffect(() => {
-    // Extract colors from the gradient value if it exists
     if (value && value.includes('linear-gradient')) {
       const [extractedColor1, extractedColor2] = extractColorsFromGradient(value);
-      setColor1(extractedColor1);
-      setColor2(extractedColor2);
+      if (extractedColor1 && extractedColor2) {
+        setColor1(extractedColor1);
+        setColor2(extractedColor2);
+      }
     }
     
-    // Set the current angle from props
+    // Set the current angle/direction from props
     setCurrentAngle(angle);
     setCurrentDirection(direction);
     
     // Update gradient preview
     setGradientPreview(value);
+    
+    // Log for debugging
+    console.log("GradientTab updated with:", { value, angle, direction });
   }, [value, angle, direction]);
 
   // Handle direction change
@@ -58,6 +63,8 @@ const GradientTab: React.FC<GradientTabProps> = ({
     const newGradient = generateGradient(color1, color2, newAngle);
     setGradientPreview(newGradient);
     onChange(newGradient);
+    
+    console.log("Direction changed:", { newDirection, newAngle, newGradient });
   };
 
   // Handle angle change
@@ -71,6 +78,8 @@ const GradientTab: React.FC<GradientTabProps> = ({
     const newGradient = generateGradient(color1, color2, newAngle);
     setGradientPreview(newGradient);
     onChange(newGradient);
+    
+    console.log("Angle changed:", { newAngle, newGradient });
   };
 
   // Handle color changes
@@ -79,6 +88,8 @@ const GradientTab: React.FC<GradientTabProps> = ({
     const newGradient = generateGradient(newColor, color2, currentAngle);
     setGradientPreview(newGradient);
     onChange(newGradient);
+    
+    console.log("Color1 changed:", { newColor, newGradient });
   };
   
   const handleColor2Change = (newColor: string) => {
@@ -86,12 +97,23 @@ const GradientTab: React.FC<GradientTabProps> = ({
     const newGradient = generateGradient(color1, newColor, currentAngle);
     setGradientPreview(newGradient);
     onChange(newGradient);
+    
+    console.log("Color2 changed:", { newColor, newGradient });
   };
 
   // Select a preset gradient
   const handlePresetSelect = (preset: string) => {
     setGradientPreview(preset);
     onChange(preset);
+    
+    // Also update colors when selecting a preset
+    const [extractedColor1, extractedColor2] = extractColorsFromGradient(preset);
+    if (extractedColor1 && extractedColor2) {
+      setColor1(extractedColor1);
+      setColor2(extractedColor2);
+    }
+    
+    console.log("Preset selected:", { preset });
   };
 
   return (
