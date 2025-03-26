@@ -67,7 +67,6 @@ export function CreateTaskDialog({
       
       await onCreateTask({
         ...taskData,
-        is_recurring: isRecurring,
         recurring: isRecurring ? data.recurring : null
       });
       

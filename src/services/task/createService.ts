@@ -5,6 +5,7 @@ import { createNewTask } from "./baseService";
 import { RecurringFormData, EntityType } from "@/types/recurring.types";
 import { createRecurringSetting, generateRecurringDates } from "@/services/recurring/recurringService";
 import { validateTaskStatus, validateTaskPriority } from "./utils/statusValidator";
+import { sanitizeTaskData } from "./utils/validateTaskData";
 
 // Create a new task
 export async function createTask(taskData: TaskFormData, recurringData?: RecurringFormData): Promise<Task> {
@@ -15,16 +16,17 @@ export async function createTask(taskData: TaskFormData, recurringData?: Recurri
     throw new Error("Authentication required to create tasks");
   }
 
+  console.log("Task data before cleaning:", taskData);
+  
   // Create a clean task data object, removing properties that don't belong in the tasks table
-  const cleanTaskData = {
-    title: taskData.title,
-    description: taskData.description,
-    status: taskData.status || "pending",
-    priority: taskData.priority || "normal",
-    due_date: taskData.due_date,
-    due_time: taskData.due_time,
-    assignee_id: taskData.assignee_id
-  };
+  const cleanTaskData = sanitizeTaskData(taskData);
+  
+  // Add the is_recurring flag from recurring data
+  if (recurringData) {
+    cleanTaskData.is_recurring = true;
+  }
+  
+  console.log("Clean task data being sent to database:", cleanTaskData);
   
   // Create the new task using the base service with cleaned data
   const task = await createNewTask(session.user.id, cleanTaskData);

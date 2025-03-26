@@ -1337,6 +1337,7 @@ export type Database = {
           due_date: string | null
           due_time: string | null
           id: string
+          is_recurring: boolean | null
           is_recurring_instance: boolean | null
           parent_recurring_id: string | null
           priority: string
@@ -1355,6 +1356,7 @@ export type Database = {
           due_date?: string | null
           due_time?: string | null
           id?: string
+          is_recurring?: boolean | null
           is_recurring_instance?: boolean | null
           parent_recurring_id?: string | null
           priority?: string
@@ -1373,6 +1375,7 @@ export type Database = {
           due_date?: string | null
           due_time?: string | null
           id?: string
+          is_recurring?: boolean | null
           is_recurring_instance?: boolean | null
           parent_recurring_id?: string | null
           priority?: string
