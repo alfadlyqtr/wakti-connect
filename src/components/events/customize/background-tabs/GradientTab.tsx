@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -22,6 +23,8 @@ const GradientTab: React.FC<GradientTabProps> = ({
 }) => {
   const [color1, setColor1] = useState("#f6d365");
   const [color2, setColor2] = useState("#fda085");
+  const [currentAngle, setCurrentAngle] = useState(angle);
+  const [currentDirection, setCurrentDirection] = useState(direction);
   
   useEffect(() => {
     // Extract colors from the gradient value if it exists
@@ -36,7 +39,11 @@ const GradientTab: React.FC<GradientTabProps> = ({
         // Keep default colors if parsing fails
       }
     }
-  }, []);
+    
+    // Set the current angle from props
+    setCurrentAngle(angle);
+    setCurrentDirection(direction);
+  }, [value, angle, direction]);
   
   // Preset gradients
   const gradientPresets = [
@@ -73,12 +80,10 @@ const GradientTab: React.FC<GradientTabProps> = ({
 
   // Handle direction change
   const handleDirectionChange = (newDirection: string) => {
-    if (onDirectionChange) {
-      onDirectionChange(newDirection);
-    }
+    setCurrentDirection(newDirection);
     
     // Convert direction to angle for the gradient
-    let newAngle = angle;
+    let newAngle = currentAngle;
     switch (newDirection) {
       case 'to-right': newAngle = 90; break;
       case 'to-left': newAngle = 270; break;
@@ -91,6 +96,12 @@ const GradientTab: React.FC<GradientTabProps> = ({
       default: newAngle = 90;
     }
     
+    setCurrentAngle(newAngle);
+    
+    if (onDirectionChange) {
+      onDirectionChange(newDirection);
+    }
+    
     if (onAngleChange) {
       onAngleChange(newAngle);
     }
@@ -100,9 +111,12 @@ const GradientTab: React.FC<GradientTabProps> = ({
 
   // Handle angle change
   const handleAngleChange = (newAngle: number) => {
+    setCurrentAngle(newAngle);
+    
     if (onAngleChange) {
       onAngleChange(newAngle);
     }
+    
     onChange(generateGradient(color1, color2, newAngle));
   };
 
@@ -110,10 +124,10 @@ const GradientTab: React.FC<GradientTabProps> = ({
   const handleColorChange = (colorIndex: 1 | 2, newColor: string) => {
     if (colorIndex === 1) {
       setColor1(newColor);
-      onChange(generateGradient(newColor, color2, angle));
+      onChange(generateGradient(newColor, color2, currentAngle));
     } else {
       setColor2(newColor);
-      onChange(generateGradient(color1, newColor, angle));
+      onChange(generateGradient(color1, newColor, currentAngle));
     }
   };
 
@@ -165,13 +179,13 @@ const GradientTab: React.FC<GradientTabProps> = ({
       </div>
       
       <div>
-        <Label htmlFor="angle" className="block mb-2">Angle: {angle}°</Label>
+        <Label htmlFor="angle" className="block mb-2">Angle: {currentAngle}°</Label>
         <Slider
           id="angle"
           min={0}
           max={360}
           step={1}
-          value={[angle]}
+          value={[currentAngle]}
           onValueChange={(values) => handleAngleChange(values[0])}
           className="py-4"
         />
@@ -186,7 +200,7 @@ const GradientTab: React.FC<GradientTabProps> = ({
               type="button"
               onClick={() => handleDirectionChange(dir.value)}
               className={`flex flex-col items-center justify-center p-2 border rounded-md cursor-pointer ${
-                direction === dir.value ? 'bg-primary/10 border-primary' : 'border-border hover:bg-accent/50'
+                currentDirection === dir.value ? 'bg-primary/10 border-primary' : 'border-border hover:bg-accent/50'
               }`}
             >
               <span className="text-xl">{dir.icon}</span>

@@ -194,10 +194,10 @@ const CreateFromScratchForm: React.FC<CreateFromScratchFormProps> = ({
           <BackgroundTab 
             customization={customization}
             onBackgroundChange={handleBackgroundChange}
-            onAnimationChange={customization.animation ? (val) => onCustomizationChange({...customization, animation: val}) : undefined}
+            onAnimationChange={handleAnimationChange}
             onBackgroundAngleChange={handleBackgroundAngleChange}
             onBackgroundDirectionChange={handleBackgroundDirectionChange}
-            onHeaderImageChange={customization.headerImage ? (val) => onCustomizationChange({...customization, headerImage: val}) : undefined}
+            onHeaderImageChange={handleHeaderImageChange}
           />
         </TabsContent>
         
