@@ -1,38 +1,28 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { TaskWithSharedInfo } from '../types';
-import { validateTaskStatus, validateTaskPriority } from '@/services/task/utils/statusValidator';
-import { fetchSubtasksForTasks } from './fetchSubtasks';
-import { Task, TaskStatus, TaskPriority } from '@/types/task.types';
 
 export const fetchTeamTasks = async (businessId: string): Promise<TaskWithSharedInfo[]> => {
   try {
+    console.log(`Fetching team tasks for business ${businessId}`);
+    
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
       .eq('user_id', businessId)
-      .eq('is_team_task', true);
-      
-    if (error) throw error;
+      .eq('is_team_task', true)
+      .order('due_date', { ascending: true });
     
-    if (!data || data.length === 0) return [];
+    if (error) {
+      console.error("Error fetching team tasks:", error);
+      throw error;
+    }
     
-    // Use type assertion to avoid deep type inference
-    const rawTasks = data as any[];
+    console.log(`Found ${data?.length || 0} team tasks for business ${businessId}`);
     
-    // Map to intermediate objects with simple type
-    const processedTasks = rawTasks.map(rawTask => ({
-      ...rawTask,
-      status: validateTaskStatus(rawTask.status),
-      priority: validateTaskPriority(rawTask.priority)
-    }));
-    
-    // Explicit cast to the target type
-    const typedTasks = processedTasks as TaskWithSharedInfo[];
-    
-    return await fetchSubtasksForTasks(typedTasks);
+    return data || [];
   } catch (error) {
-    console.error("Error fetching team tasks:", error);
+    console.error("Error in fetchTeamTasks:", error);
     return [];
   }
 };
