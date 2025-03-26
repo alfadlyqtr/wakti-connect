@@ -22,5 +22,16 @@ export interface UseTaskOperationsReturn {
   delegateTask: (taskId: string, userId?: string, email?: string) => Promise<void>;
 }
 
+// Return type for useTaskFilters hook
+export interface UseTaskFiltersReturn {
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  filterStatus: string;
+  setFilterStatus: (status: string) => void;
+  filterPriority: string;
+  setFilterPriority: (priority: string) => void;
+  filteredTasks: TaskWithSharedInfo[];
+}
+
 // Re-export TaskTab from task.types to prevent circular dependencies
 export type { TaskTab };

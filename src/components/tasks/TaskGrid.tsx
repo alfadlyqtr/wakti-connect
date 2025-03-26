@@ -68,6 +68,9 @@ const TaskGrid: React.FC<TaskGridProps> = ({ tasks, userRole, tab, refetch }) =>
           isRecurringInstance={task.is_recurring_instance}
           snoozeCount={task.snooze_count}
           snoozedUntil={task.snoozed_until ? new Date(task.snoozed_until) : null}
+          delegatedEmail={task.delegated_email}
+          assigneeId={task.assignee_id}
+          refetch={refetch}
           onEdit={handleEditTask}
           onDelete={handleDeleteTask}
           onStatusChange={handleStatusChange}

@@ -14,19 +14,9 @@ export async function claimDelegatedTask(taskId: string): Promise<boolean> {
       throw new Error("You must be logged in to claim a task");
     }
     
-    // Get the current user's email from profiles table
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('email')
-      .eq('id', session.user.id)
-      .maybeSingle();
-      
-    if (profileError) {
-      console.error("Error fetching user profile:", profileError);
-      throw new Error("Could not determine your email address");
-    }
-    
-    const userEmail = profileData?.email;
+    // Get the current user's email from auth.users directly
+    const { data: authUser } = await supabase.auth.getUser();
+    const userEmail = authUser.user?.email;
     
     if (!userEmail) {
       throw new Error("Could not determine your email address");

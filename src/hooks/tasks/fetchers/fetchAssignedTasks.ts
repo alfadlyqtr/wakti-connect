@@ -9,14 +9,22 @@ export const fetchAssignedTasks = async (userId: string, isBusinessAccount = fal
     let query;
     
     // Get the user's email for checking delegated_email
-    const { data: userProfile } = await supabase
+    const { data: userProfile, error: profileError } = await supabase
       .from('profiles')
-      .select('email')
+      .select('email, full_name, display_name')
       .eq('id', userId)
       .maybeSingle();
     
-    // Get user's email from auth.users table or profile
-    const userEmail = userProfile?.email;
+    if (profileError) {
+      console.error("Error fetching user profile:", profileError);
+      // Continue without email check if profile fetch fails
+    }
+    
+    // Get email from auth table as a fallback
+    const { data: authUser } = await supabase.auth.getUser();
+    
+    // Use email from profile or auth user
+    const userEmail = userProfile?.email || authUser?.user?.email;
     
     if (isBusinessAccount) {
       // Business account - get tasks created by the business

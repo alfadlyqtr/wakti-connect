@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { 
   Card, 
@@ -60,6 +61,9 @@ interface TaskCardProps {
   isRecurringInstance?: boolean;
   snoozeCount?: number;
   snoozedUntil?: Date | null;
+  delegatedEmail?: string | null;
+  assigneeId?: string | null;
+  refetch?: () => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: string) => void;
@@ -86,6 +90,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
   isRecurringInstance,
   snoozeCount = 0,
   snoozedUntil,
+  delegatedEmail,
+  assigneeId,
+  refetch,
   onEdit,
   onDelete,
   onStatusChange,
@@ -176,7 +183,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
       setIsAddingSubtask(false);
       
       setTimeout(() => {
-        window.location.reload();
+        if (refetch) {
+          refetch();
+        } else {
+          window.location.reload();
+        }
       }, 300);
       
     } catch (error) {
@@ -207,12 +218,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
         return;
       }
       
-      const { data: userProfile } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('id', session.user.id)
-        .single();
-        
       const { claimDelegatedTask } = await import('@/services/task/claimDelegatedTask');
       
       const success = await claimDelegatedTask(id);
@@ -241,7 +246,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
   
-  const isDelegatedViaEmail = !!task?.delegated_email && !task?.assignee_id;
+  const isDelegatedViaEmail = !!delegatedEmail && !assigneeId;
 
   return (
     <Card className={`border-l-4 ${isOverdue ? 'border-l-red-500' : `border-l-${priorityColors[priority].split(' ')[0]}`}`}>
