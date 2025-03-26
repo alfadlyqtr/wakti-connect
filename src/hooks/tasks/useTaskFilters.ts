@@ -1,44 +1,36 @@
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { TaskWithSharedInfo, UseTaskFiltersReturn } from './types';
 
 export const useTaskFilters = (tasks: TaskWithSharedInfo[]): UseTaskFiltersReturn => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [filterPriority, setFilterPriority] = useState("all");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [filterPriority, setFilterPriority] = useState<string | null>(null);
+  const [filteredTasks, setFilteredTasks] = useState<TaskWithSharedInfo[]>(tasks);
 
-  // Apply all filters to the tasks
-  const filteredTasks = useMemo(() => {
-    if (!tasks) return [];
-    
-    return tasks.filter(task => {
-      // Apply search filter
-      const searchLower = searchQuery.toLowerCase();
-      const matchesSearch = 
-        task.title.toLowerCase().includes(searchLower) ||
-        (task.description && task.description.toLowerCase().includes(searchLower));
-      
-      // Apply status filter
-      const matchesStatus = 
-        filterStatus === "all" || 
-        task.status === filterStatus;
-      
-      // Apply priority filter
-      const matchesPriority = 
-        filterPriority === "all" || 
-        task.priority === filterPriority;
+  useEffect(() => {
+    const filtered = tasks.filter(task => {
+      const matchesSearch = searchQuery ? 
+        task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase())) : 
+        true;
+        
+      const matchesStatus = filterStatus ? task.status === filterStatus : true;
+      const matchesPriority = filterPriority ? task.priority === filterPriority : true;
       
       return matchesSearch && matchesStatus && matchesPriority;
     });
+    
+    setFilteredTasks(filtered);
   }, [tasks, searchQuery, filterStatus, filterPriority]);
 
   return {
+    filteredTasks,
     searchQuery,
     setSearchQuery,
     filterStatus,
     setFilterStatus,
     filterPriority,
-    setFilterPriority,
-    filteredTasks
+    setFilterPriority
   };
 };

@@ -1,33 +1,41 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { TaskWithSharedInfo } from '../types';
-import { validateTaskStatus, validateTaskPriority } from '@/services/task/utils/statusValidator';
+import { supabase } from "@/integrations/supabase/client";
+import { TaskWithSharedInfo } from "../types";
 
-export const fetchSharedTasks = async (userId: string): Promise<TaskWithSharedInfo[]> => {
-  try {
-    const { data: sharedTasksData, error: sharedError } = await supabase
-      .from('shared_tasks')
-      .select('task_id, tasks(*)')
-      .eq('shared_with', userId);
-      
-    if (sharedError) throw sharedError;
+export async function fetchSharedTasks(userId: string): Promise<TaskWithSharedInfo[]> {
+  // Fetch tasks shared with the user
+  const { data: sharedTaskIds, error: sharedError } = await supabase
+    .from('shared_tasks')
+    .select('task_id, shared_by')
+    .eq('shared_with', userId);
     
-    if (sharedTasksData && sharedTasksData.length > 0) {
-      const taskData: TaskWithSharedInfo[] = sharedTasksData
-        .filter(item => item.tasks)
-        .map(item => ({
-          ...item.tasks,
-          status: validateTaskStatus(item.tasks.status),
-          priority: validateTaskPriority(item.tasks.priority),
-          shared_with: [userId]
-        }));
-      
-      return taskData;
-    }
-    
-    return [];
-  } catch (error) {
-    console.error("Error fetching shared tasks:", error);
+  if (sharedError) throw sharedError;
+  
+  if (!sharedTaskIds || sharedTaskIds.length === 0) {
     return [];
   }
-};
+  
+  const taskIds = sharedTaskIds.map(st => st.task_id);
+  
+  // Fetch the actual task data
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*, subtasks:todo_items(*)')
+    .in('id', taskIds)
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  
+  // Add shared_by information to each task
+  const tasksWithSharedInfo = (data || []).map(task => {
+    const sharedInfo = sharedTaskIds.find(st => st.task_id === task.id);
+    return {
+      ...task,
+      is_shared: true,
+      shared_by: sharedInfo?.shared_by,
+      original_owner_id: task.user_id
+    };
+  });
+  
+  return tasksWithSharedInfo;
+}

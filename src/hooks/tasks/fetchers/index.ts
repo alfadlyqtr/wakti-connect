@@ -1,7 +1,7 @@
 
-export { fetchMyTasks } from './fetchMyTasks';
-export { fetchSharedTasks } from './fetchSharedTasks';
-export { fetchAssignedTasks } from './fetchAssignedTasks';
-export { fetchTeamTasks } from './fetchTeamTasks';
-export { fetchDefaultTasks } from './fetchDefaultTasks';
-export { fetchSubtasksForTasks } from './fetchSubtasks';
+export * from './fetchMyTasks';
+export * from './fetchSharedTasks';
+export * from './fetchAssignedTasks';
+export * from './fetchTeamTasks';
+export * from './fetchDefaultTasks';
+export * from './fetchSubtasks';

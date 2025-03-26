@@ -1,28 +1,15 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { TaskWithSharedInfo } from '../types';
-import { validateTaskStatus, validateTaskPriority } from '@/services/task/utils/statusValidator';
+import { supabase } from "@/integrations/supabase/client";
+import { TaskWithSharedInfo } from "../types";
 
-export const fetchMyTasks = async (userId: string): Promise<TaskWithSharedInfo[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('user_id', userId)
-      .order('due_date', { ascending: true });
-      
-    if (error) throw error;
+export async function fetchMyTasks(userId: string): Promise<TaskWithSharedInfo[]> {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*, subtasks:todo_items(*)')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
     
-    // Apply proper type validations
-    const typedTasks: TaskWithSharedInfo[] = (data || []).map(task => ({
-      ...task,
-      status: validateTaskStatus(task.status),
-      priority: validateTaskPriority(task.priority)
-    }));
-    
-    return typedTasks;
-  } catch (error) {
-    console.error("Error fetching my tasks:", error);
-    return [];
-  }
-};
+  if (error) throw error;
+  
+  return data || [];
+}

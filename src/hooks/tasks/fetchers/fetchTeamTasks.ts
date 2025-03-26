@@ -1,38 +1,16 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { TaskWithSharedInfo } from '../types';
-import { validateTaskStatus, validateTaskPriority } from '@/services/task/utils/statusValidator';
+import { supabase } from "@/integrations/supabase/client";
+import { TaskWithSharedInfo } from "../types";
 
-export const fetchTeamTasks = async (businessId: string): Promise<TaskWithSharedInfo[]> => {
-  try {
-    console.log(`Fetching team tasks for business ${businessId}`);
+export async function fetchTeamTasks(businessId: string): Promise<TaskWithSharedInfo[]> {
+  const { data, error } = await supabase
+    .from('tasks')
+    .select('*, subtasks:todo_items(*)')
+    .eq('user_id', businessId)
+    .eq('is_team_task', true)
+    .order('created_at', { ascending: false });
     
-    // Query tasks that have is_team_task flag set to true
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*, subtasks:todo_items(*)')
-      .eq('user_id', businessId)
-      .eq('is_team_task', true)
-      .order('created_at', { ascending: false });
-      
-    if (error) {
-      console.error("Error fetching team tasks:", error);
-      throw error;
-    }
-    
-    console.log(`Found ${data?.length || 0} team tasks for business ${businessId}`);
-    
-    // Transform task data to ensure correct types
-    const typedTasks: TaskWithSharedInfo[] = (data || []).map(task => ({
-      ...task,
-      status: validateTaskStatus(task.status),
-      priority: validateTaskPriority(task.priority),
-      subtasks: task.subtasks || []
-    }));
-    
-    return typedTasks;
-  } catch (error) {
-    console.error("Error in fetchTeamTasks:", error);
-    return [];
-  }
-};
+  if (error) throw error;
+  
+  return data || [];
+}

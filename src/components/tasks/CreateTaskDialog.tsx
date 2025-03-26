@@ -58,6 +58,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { toast } from "@/components/ui/use-toast";
 
 interface CreateTaskDialogProps {
   open: boolean;
