@@ -19,7 +19,7 @@ import {
 
 interface TimePickerFieldProps {
   form: UseFormReturn<TaskFormValues>;
-  name: "dueTime" | `subtasks.${number}.dueTime`;  // Fix: Changed to accept only valid form field paths
+  name: "dueTime" | `subtasks.${number}.dueTime`;  // Ensure name is properly typed
   label?: string;
 }
 
@@ -50,8 +50,8 @@ export const TimePickerField: React.FC<TimePickerFieldProps> = ({
           <FormLabel>{label}</FormLabel>
           <Select
             onValueChange={field.onChange}
-            defaultValue={field.value || ""}  // Fix: properly handle undefined value
-            value={field.value || ""}  // Fix: properly handle undefined value
+            defaultValue={field.value?.toString() || ""}
+            value={field.value?.toString() || ""}
           >
             <FormControl>
               <SelectTrigger>

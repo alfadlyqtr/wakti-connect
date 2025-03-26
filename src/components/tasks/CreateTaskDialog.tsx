@@ -36,14 +36,14 @@ export function CreateTaskDialog({
       title: "",
       description: "",
       priority: "normal",
-      due_date: new Date().toISOString().split('T')[0],
-      due_time: "",
+      dueDate: new Date().toISOString().split('T')[0],
+      dueTime: "",
       subtasks: [] as SubTask[],
       enableSubtasks: false,
       recurring: {
         frequency: "daily",
         interval: 1,
-        maxOccurrences: 5  // Changed from max_occurrences to maxOccurrences
+        maxOccurrences: 5
       }
     },
   });
@@ -57,8 +57,8 @@ export function CreateTaskDialog({
         title: data.title,
         description: data.description,
         priority: data.priority,
-        due_date: data.due_date,
-        due_time: data.due_time || null,
+        due_date: data.dueDate,
+        due_time: data.dueTime || null,
         is_recurring: isRecurring, // Add is_recurring flag
         // Only include subtasks if enabled
         subtasks: data.enableSubtasks ? data.subtasks : []
