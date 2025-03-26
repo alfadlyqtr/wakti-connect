@@ -17,18 +17,18 @@ export const fetchTeamTasks = async (businessId: string): Promise<TaskWithShared
     
     if (!data || data.length === 0) return [];
     
-    // Break the complex type inference chain by using simpler typing
-    // First map to basic objects, then convert to the required type
-    const processedData = data.map((rawTask) => {
-      return {
-        ...rawTask,
-        status: validateTaskStatus(rawTask.status),
-        priority: validateTaskPriority(rawTask.priority)
-      };
-    });
+    // Use type assertion to avoid deep type inference
+    const rawTasks = data as any[];
     
-    // Now explicitly cast the result to the expected type
-    const typedTasks = processedData as TaskWithSharedInfo[];
+    // Map to intermediate objects with simple type
+    const processedTasks = rawTasks.map(rawTask => ({
+      ...rawTask,
+      status: validateTaskStatus(rawTask.status),
+      priority: validateTaskPriority(rawTask.priority)
+    }));
+    
+    // Explicit cast to the target type
+    const typedTasks = processedTasks as TaskWithSharedInfo[];
     
     return await fetchSubtasksForTasks(typedTasks);
   } catch (error) {
