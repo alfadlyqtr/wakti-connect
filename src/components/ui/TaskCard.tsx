@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   Card, 
@@ -26,7 +25,8 @@ import {
   BellOff,
   Share2Icon,
   UsersIcon,
-  Plus
+  Plus,
+  Loader2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -149,7 +149,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
   
-  // New function to handle adding a subtask
   const handleAddSubtask = async () => {
     if (!newSubtask.trim()) return;
     
@@ -176,7 +175,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
       setNewSubtask("");
       setIsAddingSubtask(false);
       
-      // Refresh subtasks (this could be handled through a callback instead)
       setTimeout(() => {
         window.location.reload();
       }, 300);
@@ -193,6 +191,58 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
   
+  const [isClaimingTask, setIsClaimingTask] = useState(false);
+  
+  const handleClaimTask = async () => {
+    try {
+      setIsClaimingTask(true);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "You must be logged in to claim tasks",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', session.user.id)
+        .single();
+        
+      const { claimDelegatedTask } = await import('@/services/task/claimDelegatedTask');
+      
+      const success = await claimDelegatedTask(id);
+      
+      if (success) {
+        toast({
+          title: "Task claimed successfully",
+          description: "This task is now assigned to you"
+        });
+        
+        if (typeof refetch === 'function') {
+          refetch();
+        } else {
+          setTimeout(() => window.location.reload(), 500);
+        }
+      }
+    } catch (error) {
+      console.error("Error claiming task:", error);
+      toast({
+        title: "Failed to claim task",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsClaimingTask(false);
+    }
+  };
+  
+  const isDelegatedViaEmail = !!task?.delegated_email && !task?.assignee_id;
+
   return (
     <Card className={`border-l-4 ${isOverdue ? 'border-l-red-500' : `border-l-${priorityColors[priority].split(' ')[0]}`}`}>
       <CardHeader className="pb-2">
@@ -365,7 +415,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </CollapsibleTrigger>
               </div>
               
-              {/* Progress bar for subtask completion */}
               <div className="mb-3">
                 <div className="flex justify-between text-xs text-muted-foreground mb-1">
                   <span>Progress</span>
@@ -374,7 +423,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 <Progress value={subtaskCompletionPercentage} className="h-2" />
               </div>
               
-              {/* First few subtasks (always visible) */}
               <div className="space-y-2">
                 {subtasks.slice(0, 2).map((subtask, index) => (
                   <div key={subtask.id || index} className="flex items-start gap-2 text-sm">
@@ -399,7 +447,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 ))}
               </div>
               
-              {/* Remaining subtasks (collapsible) */}
               <CollapsibleContent className="space-y-2 mt-2">
                 {subtasks.slice(2).map((subtask, index) => (
                   <div key={subtask.id || (index + 2)} className="flex items-start gap-2 text-sm">
@@ -424,7 +471,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 ))}
               </CollapsibleContent>
               
-              {/* Add subtask button and input field */}
               {!isAddingSubtask ? (
                 <button 
                   onClick={() => setIsAddingSubtask(true)}
@@ -465,7 +511,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </div>
         )}
         
-        {/* When there are no subtasks yet, show the add subtask button directly */}
         {!hasSubtasks && (
           <div className="mt-4 border rounded-md p-3">
             {!isAddingSubtask ? (
@@ -504,6 +549,30 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </div>
               </div>
             )}
+          </div>
+        )}
+        
+        {isDelegatedViaEmail && (
+          <div className="mt-3 mb-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full border-dashed border-blue-300 text-blue-500 hover:text-blue-700"
+              onClick={handleClaimTask}
+              disabled={isClaimingTask}
+            >
+              {isClaimingTask ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                  Claiming Task...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2Icon className="mr-2 h-4 w-4" /> 
+                  Claim This Task
+                </>
+              )}
+            </Button>
           </div>
         )}
       </CardContent>

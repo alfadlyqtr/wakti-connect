@@ -97,9 +97,9 @@ export const useTasksPageState = () => {
         refetch();
       }
       
-      if (notification.type === 'task_assigned') {
+      if (notification.type === 'task_assigned' || notification.type === 'task_delegated') {
         clearStaffCache().then(() => {
-          console.log("Staff cache cleared after task assignment notification");
+          console.log("Staff cache cleared after task assignment/delegation notification");
           refetch();
         });
       }
@@ -128,6 +128,8 @@ export const useTasksPageState = () => {
       console.log("Creating task with data:", taskData);
       await createTask(taskData);
       setCreateDialogOpen(false);
+      
+      // Make sure to refetch tasks after creation
       setTimeout(() => {
         refetch();
       }, 300);
@@ -146,6 +148,10 @@ export const useTasksPageState = () => {
     
     if (isUserStaffMember && newTab !== "assigned-tasks") {
       console.log("Staff member attempted to switch to non-assigned tab, redirecting");
+      toast({
+        title: "Tab restricted",
+        description: "As a staff member, you can only view tasks assigned or delegated to you",
+      });
       return; // Don't change the tab for staff members
     }
     
@@ -155,6 +161,24 @@ export const useTasksPageState = () => {
       refetch();
     }, 100);
   };
+
+  // Add additional logging
+  useEffect(() => {
+    if (initialCheckDone && !isLoading) {
+      console.log(`Tasks loaded: ${filteredTasks.length} tasks found for ${userRole} user on tab ${activeTab}`);
+      console.log("User is staff member:", isUserStaffMember);
+      
+      // Log details about delegated tasks
+      const delegatedTasks = filteredTasks.filter(t => t.delegated_email && !t.assignee_id);
+      const assignedTasks = filteredTasks.filter(t => t.assignee_id);
+      
+      console.log(`Delegated tasks: ${delegatedTasks.length}, Assigned tasks: ${assignedTasks.length}`);
+      
+      if (delegatedTasks.length > 0) {
+        console.log("Delegated task emails:", delegatedTasks.map(t => t.delegated_email));
+      }
+    }
+  }, [filteredTasks, isLoading, initialCheckDone, userRole, activeTab, isUserStaffMember]);
 
   return {
     userRole,

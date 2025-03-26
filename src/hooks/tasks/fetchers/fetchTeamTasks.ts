@@ -7,13 +7,14 @@ export const fetchTeamTasks = async (businessId: string): Promise<TaskWithShared
   try {
     console.log(`Fetching team tasks for business ${businessId}`);
     
+    // Query tasks that have is_team_task flag set to true
     const { data, error } = await supabase
       .from('tasks')
-      .select('*')
+      .select('*, subtasks:todo_items(*)')
       .eq('user_id', businessId)
       .eq('is_team_task', true)
-      .order('due_date', { ascending: true });
-    
+      .order('created_at', { ascending: false });
+      
     if (error) {
       console.error("Error fetching team tasks:", error);
       throw error;
@@ -21,11 +22,12 @@ export const fetchTeamTasks = async (businessId: string): Promise<TaskWithShared
     
     console.log(`Found ${data?.length || 0} team tasks for business ${businessId}`);
     
-    // Apply proper type validations
+    // Transform task data to ensure correct types
     const typedTasks: TaskWithSharedInfo[] = (data || []).map(task => ({
       ...task,
       status: validateTaskStatus(task.status),
-      priority: validateTaskPriority(task.priority)
+      priority: validateTaskPriority(task.priority),
+      subtasks: task.subtasks || []
     }));
     
     return typedTasks;
