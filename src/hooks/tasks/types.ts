@@ -1,5 +1,6 @@
 
-import { Task, TaskTab } from "@/types/task.types";
+import { Task, TaskStatus, TaskPriority } from "@/types/task.types";
+import type { TaskTab } from "@/types/task.types";
 
 export interface UseTasksReturn {
   tasks: Task[];
@@ -52,4 +53,4 @@ export interface UseTaskFiltersReturn {
 }
 
 // Export TaskTab from types.ts to fix import issue
-export { TaskTab };
+export type { TaskTab };
