@@ -20,9 +20,12 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
   onStatusChange,
   onEdit,
 }) => {
+  // Create a type guard to ensure TypeScript understands our logic
+  const isCompleted = status === "completed";
+  
   return (
     <div className="px-4 py-3 bg-muted/40 flex items-center justify-between">
-      {status === "completed" ? (
+      {isCompleted ? (
         <div className="text-xs text-muted-foreground">
           {completedDate ? (
             <>
@@ -34,7 +37,7 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
         </div>
       ) : (
         <div className="space-x-2">
-          {status !== "completed" && (
+          {!isCompleted && (
             <Button
               variant="outline"
               size="sm"
