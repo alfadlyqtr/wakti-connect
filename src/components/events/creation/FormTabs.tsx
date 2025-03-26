@@ -6,7 +6,7 @@ import { EventCustomization } from "@/types/event.types";
 import { InvitationRecipient } from "@/types/invitation.types";
 import DetailsTab from "./DetailsTab";
 import CustomizeTab from "../customize/CustomizeTab";
-import ShareTabContent from "../creation/ShareTabContent";
+import ShareTabContent from "./ShareTabContent";
 import FormActions from "./FormActions";
 
 interface FormTabsProps {
@@ -86,20 +86,21 @@ const FormTabs: React.FC<FormTabsProps> = ({
 
   return (
     <div>
-      <TabsList className="w-full grid grid-cols-3 mb-4">
-        {tabs.map((tab) => (
-          <TabsTrigger
-            key={tab.id}
-            value={tab.id}
-            onClick={() => setActiveTab(tab.id as EventFormTab)}
-            disabled={tab.id === 'share' && !title.trim()}
-          >
-            {tab.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-
+      {/* The entire component should be wrapped in a single Tabs component */}
       <Tabs value={activeTab} className="space-y-4">
+        <TabsList className="w-full grid grid-cols-3 mb-4">
+          {tabs.map((tab) => (
+            <TabsTrigger
+              key={tab.id}
+              value={tab.id}
+              onClick={() => setActiveTab(tab.id as EventFormTab)}
+              disabled={tab.id === 'share' && !title.trim()}
+            >
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
         <TabsContent value="details" className="space-y-4">
           <DetailsTab
             register={register}
