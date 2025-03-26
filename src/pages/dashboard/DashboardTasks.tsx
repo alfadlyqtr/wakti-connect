@@ -23,11 +23,27 @@ const DashboardTasks = () => {
   useEffect(() => {
     const getUserRole = async () => {
       try {
+        // Check localStorage first for faster loading and to prevent unnecessary db calls
+        const cachedIsStaff = localStorage.getItem('isStaff') === 'true';
+        
+        if (cachedIsStaff) {
+          console.log("Using cached staff status: true");
+          setIsUserStaffMember(true);
+          setUserRole('staff');
+          setActiveTab('assigned-tasks');
+          setInitialCheckDone(true);
+          return;
+        }
+        
+        // If not in cache, do a fresh check
         await clearStaffCache();
         
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (!session?.user) return;
+        if (!session?.user) {
+          setInitialCheckDone(true);
+          return;
+        }
         
         const staffStatus = await isUserStaff();
         setIsUserStaffMember(staffStatus);
@@ -72,7 +88,7 @@ const DashboardTasks = () => {
     userRole: fetchedUserRole,
     isStaff: isStaffFromHook,
     refetch
-  } = useTasks(activeTab as TaskTab);
+  } = useTasks(activeTab);
   
   // Set up notification subscription
   useEffect(() => {

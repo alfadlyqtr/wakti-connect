@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +14,17 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
   useEffect(() => {
     const fetchUserRole = async () => {
       try {
+        // Use cached staff status if available to prevent unnecessary database calls
+        const cachedIsStaff = localStorage.getItem('isStaff') === 'true';
+        
+        if (cachedIsStaff) {
+          setIsStaff(true);
+          setUserRole("staff");
+          console.log("Using cached staff status: true");
+          return;
+        }
+        
+        // Otherwise do a fresh check
         await clearStaffCache();
         
         const { data: { session } } = await supabase.auth.getSession();
@@ -57,7 +67,8 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
       let query;
       let result;
       
-      const staffCheck = await isUserStaff();
+      // Re-check staff status to ensure it's up to date
+      const staffCheck = isStaff || localStorage.getItem('isStaff') === 'true';
       
       if (staffCheck) {
         console.log("Fetching tasks as staff member, tab:", tab);
@@ -180,7 +191,7 @@ async function fetchSubtasksForTasks(tasks: any[]): Promise<TaskWithSharedInfo[]
     
     const { data: subtasksData, error: subtasksError } = await supabase
       .from('todo_items')
-      .select('*')
+      .select('id, content, is_completed, task_id, due_date, due_time')
       .in('task_id', taskIds);
       
     if (subtasksError) {
