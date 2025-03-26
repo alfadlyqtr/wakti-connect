@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskFormData, SubTask, TaskStatus, TaskPriority } from "@/types/task.types";
 import { createNewTask } from "./baseService";
@@ -15,8 +14,19 @@ export async function createTask(taskData: TaskFormData, recurringData?: Recurri
     throw new Error("Authentication required to create tasks");
   }
 
-  // Create the new task using the base service
-  const task = await createNewTask(session.user.id, taskData);
+  // Create a clean task data object, removing properties that don't belong in the tasks table
+  const cleanTaskData = {
+    title: taskData.title,
+    description: taskData.description,
+    status: taskData.status || "pending",
+    priority: taskData.priority || "normal",
+    due_date: taskData.due_date,
+    due_time: taskData.due_time,
+    assignee_id: taskData.assignee_id
+  };
+  
+  // Create the new task using the base service with cleaned data
+  const task = await createNewTask(session.user.id, cleanTaskData);
   
   // If there are subtasks, create them
   if (taskData.subtasks && taskData.subtasks.length > 0) {

@@ -52,18 +52,24 @@ export function CreateTaskDialog({
     try {
       setIsSubmitting(true);
       
-      // Format the task data
+      // Format the task data - extract only what we need for the API
       const taskData = {
-        ...data,
-        is_recurring: isRecurring,
-        recurring: isRecurring ? data.recurring : null,
+        title: data.title,
+        description: data.description,
+        priority: data.priority,
+        due_date: data.due_date,
+        due_time: data.due_time || null,
         // Only include subtasks if enabled
         subtasks: data.enableSubtasks ? data.subtasks : []
       };
       
       console.log("Submitting task data:", taskData);
       
-      await onCreateTask(taskData);
+      await onCreateTask({
+        ...taskData,
+        is_recurring: isRecurring,
+        recurring: isRecurring ? data.recurring : null
+      });
       
       toast({
         title: "Task created",
