@@ -61,14 +61,14 @@ import { Loader2 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { toast } from "@/components/ui/use-toast";
 
-// Use a simple interface for TeamTask to avoid the circular reference
-interface TeamTask {
+// Simplified TeamTask interface with primitive types only
+type SimpleTeamTask = {
   id: string;
   title: string;
-  description?: string | null;
-  due_date?: string | null;
+  description: string | null;
+  due_date: string | null;
   priority: string;
-}
+};
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -90,7 +90,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const [freeAccountAlertOpen, setFreeAccountAlertOpen] = useState(false);
   const [isClaimTask, setIsClaimTask] = useState(false);
   const [selectedTaskToClaim, setSelectedTaskToClaim] = useState<string | null>(null);
-  const [teamTasks, setTeamTasks] = useState<TeamTask[]>([]);
+  const [teamTasks, setTeamTasks] = useState<SimpleTeamTask[]>([]);
 
   useEffect(() => {
     const checkIfStaff = async () => {

@@ -114,7 +114,7 @@ export const useTasks = (): UseTasksReturn => {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  // Fix here: Pass both required arguments to useTaskOperations
+  // Ensure we're passing both required arguments to useTaskOperations
   const { createTask } = useTaskOperations(userRole, false);
 
   return {
