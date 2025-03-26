@@ -1,21 +1,17 @@
 
 import React from "react";
-import { Label } from "@/components/ui/label";
 
 interface GradientPreviewProps {
-  gradientValue: string;
+  gradient: string;
 }
 
-const GradientPreview: React.FC<GradientPreviewProps> = ({ gradientValue }) => {
+export const GradientPreview: React.FC<GradientPreviewProps> = ({ gradient }) => {
   return (
-    <div className="mt-4">
-      <Label className="block mb-2">Preview</Label>
+    <div className="mb-4">
       <div 
-        className="h-16 rounded-md"
-        style={{ backgroundImage: gradientValue }}
+        className="h-20 w-full rounded-md shadow-sm" 
+        style={{ background: gradient }}
       ></div>
     </div>
   );
 };
-
-export default GradientPreview;

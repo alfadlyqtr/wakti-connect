@@ -1,47 +1,34 @@
 
 import React from "react";
-import { Label } from "@/components/ui/label";
+import { DIRECTIONS } from "./constants";
+import { Button } from "@/components/ui/button";
 import { GradientDirection } from "./types";
 
 interface DirectionButtonsProps {
-  directions: GradientDirection[];
-  currentDirection: string;
+  selectedDirection: string;
   onDirectionChange: (direction: string) => void;
 }
 
-const DirectionButtons: React.FC<DirectionButtonsProps> = ({
-  directions,
-  currentDirection,
-  onDirectionChange
+export const DirectionButtons: React.FC<DirectionButtonsProps> = ({
+  selectedDirection,
+  onDirectionChange,
 }) => {
-  const handleClick = (direction: string) => {
-    console.log("Direction button clicked:", direction);
-    onDirectionChange(direction);
-  };
-
   return (
-    <div>
-      <Label className="block mb-2">Direction</Label>
+    <div className="space-y-2 mb-4">
+      <h4 className="text-sm font-medium">Direction</h4>
       <div className="grid grid-cols-4 gap-2">
-        {directions.map((dir) => (
-          <button
-            key={dir.value}
-            type="button"
-            onClick={() => handleClick(dir.value)}
-            className={`flex flex-col items-center justify-center p-2 border rounded-md cursor-pointer ${
-              currentDirection === dir.value 
-                ? 'bg-primary/10 border-primary' 
-                : 'border-border hover:bg-accent/50'
-            }`}
-            aria-pressed={currentDirection === dir.value}
+        {DIRECTIONS.map((direction: GradientDirection) => (
+          <Button
+            key={direction.value}
+            variant={selectedDirection === direction.value ? "default" : "outline"}
+            size="sm"
+            onClick={() => onDirectionChange(direction.value)}
+            className="h-9 px-0"
           >
-            <span className="text-xl">{dir.icon}</span>
-            <span className="text-xs mt-1">{dir.label}</span>
-          </button>
+            {direction.icon}
+          </Button>
         ))}
       </div>
     </div>
   );
 };
-
-export default DirectionButtons;

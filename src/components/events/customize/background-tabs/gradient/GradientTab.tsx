@@ -1,95 +1,98 @@
 
 import React, { useState, useEffect } from "react";
-import { GradientTabProps } from "./types";
-import { DEFAULT_GRADIENT, DIRECTIONS } from "./constants";
-import DirectionButtons from "./DirectionButtons";
-import AngleSlider from "./AngleSlider";
-import ColorInputs from "./ColorInputs";
-import GradientPresets from "./GradientPresets";
-import GradientPreview from "./GradientPreview";
+import { DirectionButtons } from "./DirectionButtons";
+import { AngleSlider } from "./AngleSlider";
+import { ColorInputs } from "./ColorInputs";
+import { GradientPreview } from "./GradientPreview";
+import { GradientPresets } from "./GradientPresets";
+import { DEFAULT_GRADIENT } from "./constants";
 
-const GradientTab: React.FC<GradientTabProps> = ({
+interface GradientTabProps {
+  value: string;
+  onChange: (value: string) => void;
+  direction?: string;
+  onDirectionChange?: (direction: string) => void;
+  angle?: number;
+  onAngleChange?: (angle: number) => void;
+}
+
+export const GradientTab: React.FC<GradientTabProps> = ({
   value,
   onChange,
   direction = DEFAULT_GRADIENT.direction,
-  angle = DEFAULT_GRADIENT.angle,
   onDirectionChange,
-  onAngleChange
+  angle = DEFAULT_GRADIENT.angle,
+  onAngleChange,
 }) => {
   const [colors, setColors] = useState<string[]>(DEFAULT_GRADIENT.colors);
-  const [gradientDirection, setGradientDirection] = useState<string>(direction);
-  const [gradientAngle, setGradientAngle] = useState<number>(angle);
-  const [gradientValue, setGradientValue] = useState<string>(value);
+  const [currentDirection, setCurrentDirection] = useState(direction);
+  const [currentAngle, setCurrentAngle] = useState(angle);
 
-  // Update local state when props change
-  useEffect(() => {
-    setGradientDirection(direction);
-  }, [direction]);
-  
-  useEffect(() => {
-    setGradientAngle(angle);
-  }, [angle]);
-
-  // Parse gradient value when it changes
-  useEffect(() => {
-    if (value.includes("linear-gradient")) {
-      try {
-        // Try to extract colors from the gradient string
-        const colorMatch = value.match(/rgba?\([\d\s,.]+\)|#[a-f\d]{3,8}|[a-z]+/gi);
-        if (colorMatch && colorMatch.length >= 2) {
-          setColors([colorMatch[0], colorMatch[1]]);
-        }
-      } catch (error) {
-        console.error("Error parsing gradient value:", error);
-      }
+  // Generate linear gradient string
+  const buildGradient = () => {
+    if (currentDirection.includes("to-")) {
+      return `linear-gradient(${currentDirection}, ${colors.join(", ")})`;
+    } else {
+      return `linear-gradient(${currentAngle}deg, ${colors.join(", ")})`;
     }
-    setGradientValue(value);
-  }, [value]);
-
-  // Handle color change
-  const handleColorChange = (index: number, color: string) => {
-    const newColors = [...colors];
-    newColors[index] = color;
-    setColors(newColors);
-    
-    // Generate new gradient string
-    const newGradient = `linear-gradient(${gradientDirection}, ${newColors[0]}, ${newColors[1]})`;
-    setGradientValue(newGradient);
-    onChange(newGradient);
   };
 
-  // Handle direction change
-  const handleDirectionChange = (newDirection: string) => {
-    setGradientDirection(newDirection);
-    
-    // Generate new gradient string
-    const newGradient = `linear-gradient(${newDirection}, ${colors[0]}, ${colors[1]})`;
-    setGradientValue(newGradient);
+  // Update the gradient value whenever components change
+  useEffect(() => {
+    const newGradient = buildGradient();
     onChange(newGradient);
-    
+  }, [colors, currentDirection, currentAngle]);
+
+  // Handler for color changes
+  const handleColorChange = (index: number, newColor: string) => {
+    const newColors = [...colors];
+    newColors[index] = newColor;
+    setColors(newColors);
+  };
+
+  // Handler for direction changes
+  const handleDirectionChange = (newDirection: string) => {
+    setCurrentDirection(newDirection);
     if (onDirectionChange) {
       onDirectionChange(newDirection);
     }
   };
 
-  // Handle angle change
+  // Handler for angle changes
   const handleAngleChange = (newAngle: number) => {
-    setGradientAngle(newAngle);
-    
+    setCurrentAngle(newAngle);
     if (onAngleChange) {
       onAngleChange(newAngle);
     }
   };
 
-  // Handle preset selection
+  // Handler for preset selection
   const handlePresetClick = (preset: string) => {
-    setGradientValue(preset);
     onChange(preset);
+    // Extract colors and direction from preset
+    const match = preset.match(/linear-gradient\((.*?),\s*(.*?)\)/);
+    if (match && match.length >= 3) {
+      const directionOrAngle = match[1].trim();
+      const colorsList = match[2].split(',').map(c => c.trim());
+      
+      if (directionOrAngle.includes('to ')) {
+        setCurrentDirection(directionOrAngle);
+        if (onDirectionChange) onDirectionChange(directionOrAngle);
+      } else if (directionOrAngle.endsWith('deg')) {
+        const deg = parseInt(directionOrAngle);
+        setCurrentAngle(deg);
+        if (onAngleChange) onAngleChange(deg);
+      }
+      
+      setColors(colorsList);
+    }
   };
 
   return (
     <div className="space-y-4">
-      <GradientPreview gradient={gradientValue} />
+      <GradientPreview 
+        gradient={buildGradient()} 
+      />
       
       <ColorInputs 
         colors={colors} 
@@ -97,19 +100,18 @@ const GradientTab: React.FC<GradientTabProps> = ({
       />
       
       <DirectionButtons 
-        directions={DIRECTIONS} 
-        currentDirection={gradientDirection} 
+        selectedDirection={currentDirection} 
         onDirectionChange={handleDirectionChange} 
       />
       
       <AngleSlider 
-        angle={gradientAngle} 
-        onAngleChange={handleAngleChange} 
+        value={currentAngle}
+        onChange={handleAngleChange}
       />
       
-      <GradientPresets onPresetClick={handlePresetClick} />
+      <GradientPresets 
+        onPresetClick={handlePresetClick} 
+      />
     </div>
   );
 };
-
-export default GradientTab;
