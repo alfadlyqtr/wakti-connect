@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useCustomization } from "../context/CustomizationContext";
+import { useCustomization } from "../context";
 import HeaderTab from "../tabs/HeaderTab";
 
 const HeaderTabContent: React.FC = () => {

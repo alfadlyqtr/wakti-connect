@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { EventCustomization } from "@/types/event.types";
-import { CustomizationProvider } from "./context/CustomizationContext";
+import { CustomizationProvider } from "./context";
 import CustomizationTabs from "./CustomizationTabs";
 
 interface CreateFromScratchFormProps {

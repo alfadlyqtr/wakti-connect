@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useCustomization } from "../context/CustomizationContext";
+import { useCustomization } from "../context";
 import ElementAnimationsSelector from "../ElementAnimationsSelector";
 
 const AnimationsTabContent: React.FC = () => {

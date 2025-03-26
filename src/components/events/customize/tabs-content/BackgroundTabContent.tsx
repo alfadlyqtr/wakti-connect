@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useCustomization } from "../context/CustomizationContext";
+import { useCustomization } from "../context";
 import BackgroundTab from "../tabs/BackgroundTab";
 
 const BackgroundTabContent: React.FC = () => {
