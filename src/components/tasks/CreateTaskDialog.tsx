@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -130,504 +129,504 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
               due_time: subtask.dueTime || null,
             }))
           : [],
+    };
+
+    // Add recurring settings if enabled
+    if (values.isRecurring && values.recurring) {
+      taskData.recurring = {
+        frequency: values.recurring.frequency,
+        interval: values.recurring.interval,
+        days_of_week: values.recurring.daysOfWeek,
+        day_of_month: values.recurring.dayOfMonth,
+        end_date: values.recurring.endDate,
+        max_occurrences: values.recurring.maxOccurrences,
       };
-
-      // Add recurring settings if enabled
-      if (values.isRecurring && values.recurring) {
-        taskData.recurring = {
-          frequency: values.recurring.frequency,
-          interval: values.recurring.interval,
-          days_of_week: values.recurring.daysOfWeek,
-          day_of_month: values.recurring.dayOfMonth,
-          end_date: values.recurring.endDate,
-          max_occurrences: values.recurring.maxOccurrences,
-        };
-      }
-
-      await onCreateTask(taskData);
-      form.reset();
-      setShowSubtasks(false);
-      setShowRecurring(false);
-      setShowDelegation(false);
-      setShowTeamTask(false);
-    } catch (error) {
-      console.error("Error creating task:", error);
-    } finally {
-      setLoading(false);
     }
-  };
 
-  const confirmFreeAccount = () => {
-    setFreeAccountAlertOpen(false);
-    handleCreateTask(form.getValues());
-  };
+    await onCreateTask(taskData);
+    form.reset();
+    setShowSubtasks(false);
+    setShowRecurring(false);
+    setShowDelegation(false);
+    setShowTeamTask(false);
+  } catch (error) {
+    console.error("Error creating task:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
-  return (
-    <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create New Task</DialogTitle>
-            <DialogDescription>
-              Fill in the details to create a new task.
-            </DialogDescription>
-          </DialogHeader>
+const confirmFreeAccount = () => {
+  setFreeAccountAlertOpen(false);
+  handleCreateTask(form.getValues());
+};
 
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(handleCreateTask)}
-              className="space-y-6"
-            >
+return (
+  <>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Create New Task</DialogTitle>
+          <DialogDescription>
+            Fill in the details to create a new task.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleCreateTask)}
+            className="space-y-6"
+          >
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Task Title</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter task title"
+                      {...field}
+                      autoFocus
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Enter task description"
+                      {...field}
+                      className="min-h-[100px]"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="title"
+                name="priority"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Task Title</FormLabel>
+                    <FormLabel>Priority</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="urgent">Urgent</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="normal">Normal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="in-progress">
+                          In Progress
+                        </SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="dueDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Due Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(new Date(field.value), "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={
+                            field.value
+                              ? new Date(field.value)
+                              : new Date()
+                          }
+                          onSelect={(date) =>
+                            field.onChange(
+                              date
+                                ? format(date, "yyyy-MM-dd")
+                                : format(new Date(), "yyyy-MM-dd")
+                            )
+                          }
+                          disabled={(date) => date < new Date("1900-01-01")}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="dueTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Due Time (optional)</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter task title"
+                        type="time"
+                        placeholder="Select time"
                         {...field}
-                        autoFocus
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </div>
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter task description"
-                        {...field}
-                        className="min-h-[100px]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            {/* Subtasks toggle */}
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="enable-subtasks"
+                checked={showSubtasks}
+                onCheckedChange={setShowSubtasks}
               />
+              <Label htmlFor="enable-subtasks">Add Subtasks</Label>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Subtasks section */}
+            {showSubtasks && (
+              <div className="border rounded-md p-4 space-y-4">
                 <FormField
                   control={form.control}
-                  name="priority"
+                  name="enableSubtasks"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Priority</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select priority" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="urgent">Urgent</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="normal">Normal</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Enable Subtasks</FormLabel>
+                        <FormDescription>
+                          Create a list of subtasks for this task
+                        </FormDescription>
+                      </div>
                     </FormItem>
                   )}
                 />
 
+                {form.watch("enableSubtasks") && (
+                  <div className="space-y-4">
+                    {fields.map((field, index) => (
+                      <div
+                        key={field.id}
+                        className="flex items-center space-x-2"
+                      >
+                        <div className="flex-1">
+                          <FormField
+                            control={form.control}
+                            name={`subtasks.${index}.content`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Subtask content"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => remove(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAddSubtask}
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Add Subtask
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Recurring toggle */}
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="enable-recurring"
+                checked={showRecurring}
+                onCheckedChange={setShowRecurring}
+              />
+              <Label htmlFor="enable-recurring">Make Recurring Task</Label>
+            </div>
+
+            {/* Recurring section */}
+            {showRecurring && (
+              <div className="border rounded-md p-4 space-y-4">
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="isRecurring"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="in-progress">
-                            In Progress
-                          </SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Enable Recurring</FormLabel>
+                        <FormDescription>
+                          Make this task repeat based on a schedule
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                {form.watch("isRecurring") && (
+                  <div className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="recurring.frequency"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Frequency</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select frequency" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="daily">Daily</SelectItem>
+                              <SelectItem value="weekly">Weekly</SelectItem>
+                              <SelectItem value="monthly">Monthly</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="recurring.interval"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Interval</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={1}
+                              placeholder="Enter interval"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(parseInt(e.target.value))
+                              }
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Every how many days/weeks/months the task should
+                            repeat
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Team Task toggle (business accounts only) */}
+            {userRole === "business" && (
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="enable-team-task"
+                  checked={showTeamTask}
+                  onCheckedChange={setShowTeamTask}
+                />
+                <Label htmlFor="enable-team-task">Make Team Task</Label>
+              </div>
+            )}
+
+            {/* Team Task section */}
+            {userRole === "business" && showTeamTask && (
+              <div className="border rounded-md p-4 space-y-4">
+                <FormField
+                  control={form.control}
+                  name="is_team_task"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Team Task</FormLabel>
+                        <FormDescription>
+                          Make this task visible to your team
+                        </FormDescription>
+                      </div>
                     </FormItem>
                   )}
                 />
               </div>
+            )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="dueDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Due Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(new Date(field.value), "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={
-                              field.value
-                                ? new Date(field.value)
-                                : new Date()
-                            }
-                            onSelect={(date) =>
-                              field.onChange(
-                                date
-                                  ? format(date, "yyyy-MM-dd")
-                                  : format(new Date(), "yyyy-MM-dd")
-                              )
-                            }
-                            disabled={(date) => date < new Date("1900-01-01")}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+            {/* Task Delegation toggle (business accounts only) */}
+            {userRole === "business" && (
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="enable-delegation"
+                  checked={showDelegation}
+                  onCheckedChange={setShowDelegation}
                 />
+                <Label htmlFor="enable-delegation">Delegate Task</Label>
+              </div>
+            )}
 
+            {/* Task Delegation section */}
+            {userRole === "business" && showDelegation && (
+              <div className="border rounded-md p-4 space-y-4">
                 <FormField
                   control={form.control}
-                  name="dueTime"
+                  name="delegated_email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Due Time (optional)</FormLabel>
+                      <FormLabel>Delegate to (Email)</FormLabel>
                       <FormControl>
                         <Input
-                          type="time"
-                          placeholder="Select time"
+                          type="email"
+                          placeholder="Enter email address"
                           {...field}
                         />
                       </FormControl>
+                      <FormDescription>
+                        Enter the email of the person to delegate this task to
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+            )}
 
-              {/* Subtasks toggle */}
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="enable-subtasks"
-                  checked={showSubtasks}
-                  onCheckedChange={setShowSubtasks}
-                />
-                <Label htmlFor="enable-subtasks">Add Subtasks</Label>
-              </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Creating..." : "Create Task"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
 
-              {/* Subtasks section */}
-              {showSubtasks && (
-                <div className="border rounded-md p-4 space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="enableSubtasks"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Enable Subtasks</FormLabel>
-                          <FormDescription>
-                            Create a list of subtasks for this task
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-
-                  {form.watch("enableSubtasks") && (
-                    <div className="space-y-4">
-                      {fields.map((field, index) => (
-                        <div
-                          key={field.id}
-                          className="flex items-center space-x-2"
-                        >
-                          <div className="flex-1">
-                            <FormField
-                              control={form.control}
-                              name={`subtasks.${index}.content`}
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormControl>
-                                    <Input
-                                      placeholder="Subtask content"
-                                      {...field}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => remove(index)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAddSubtask}
-                      >
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Subtask
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Recurring toggle */}
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="enable-recurring"
-                  checked={showRecurring}
-                  onCheckedChange={setShowRecurring}
-                />
-                <Label htmlFor="enable-recurring">Make Recurring Task</Label>
-              </div>
-
-              {/* Recurring section */}
-              {showRecurring && (
-                <div className="border rounded-md p-4 space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="isRecurring"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Enable Recurring</FormLabel>
-                          <FormDescription>
-                            Make this task repeat based on a schedule
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-
-                  {form.watch("isRecurring") && (
-                    <div className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="recurring.frequency"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Frequency</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select frequency" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="daily">Daily</SelectItem>
-                                <SelectItem value="weekly">Weekly</SelectItem>
-                                <SelectItem value="monthly">Monthly</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="recurring.interval"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Interval</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min={1}
-                                placeholder="Enter interval"
-                                {...field}
-                                onChange={(e) =>
-                                  field.onChange(parseInt(e.target.value))
-                                }
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              Every how many days/weeks/months the task should
-                              repeat
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Team Task toggle (business accounts only) */}
-              {userRole === "business" && (
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="enable-team-task"
-                    checked={showTeamTask}
-                    onCheckedChange={setShowTeamTask}
-                  />
-                  <Label htmlFor="enable-team-task">Make Team Task</Label>
-                </div>
-              )}
-
-              {/* Team Task section */}
-              {userRole === "business" && showTeamTask && (
-                <div className="border rounded-md p-4 space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="is_team_task"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Team Task</FormLabel>
-                          <FormDescription>
-                            Make this task visible to your team
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
-
-              {/* Task Delegation toggle (business accounts only) */}
-              {userRole === "business" && (
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="enable-delegation"
-                    checked={showDelegation}
-                    onCheckedChange={setShowDelegation}
-                  />
-                  <Label htmlFor="enable-delegation">Delegate Task</Label>
-                </div>
-              )}
-
-              {/* Task Delegation section */}
-              {userRole === "business" && showDelegation && (
-                <div className="border rounded-md p-4 space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="delegated_email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Delegate to (Email)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            placeholder="Enter email address"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Enter the email of the person to delegate this task to
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Creating..." : "Create Task"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog
-        open={freeAccountAlertOpen}
-        onOpenChange={setFreeAccountAlertOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Free Account Limitation</AlertDialogTitle>
-            <AlertDialogDescription>
-              Free accounts can only create one task per month. This task will
-              count towards your monthly limit.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmFreeAccount}>
-              Create Task
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
+    <AlertDialog
+      open={freeAccountAlertOpen}
+      onOpenChange={setFreeAccountAlertOpen}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Free Account Limitation</AlertDialogTitle>
+          <AlertDialogDescription>
+            Free accounts can only create one task per month. This task will
+            count towards your monthly limit.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={confirmFreeAccount}>
+            Create Task
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </>
+);
 };

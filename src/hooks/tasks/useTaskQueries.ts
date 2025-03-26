@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -66,7 +65,7 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
       if (!session) throw new Error("You must be logged in to view tasks");
       
       let query;
-      let result;
+      let result: any[] = [];
       
       // Re-check staff status to ensure it's up to date
       const staffCheck = isStaff || localStorage.getItem('isStaff') === 'true';
@@ -113,13 +112,10 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
                 
               if (taskError) throw taskError;
               
-              result = taskData;
-            } else {
-              result = [];
+              result = taskData || [];
             }
           } catch (error) {
             console.error("Error fetching shared tasks:", error);
-            result = [];
           }
           
         } else if (tab === "assigned-tasks") {
@@ -145,7 +141,7 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
         }
       }
       
-      if (result) {
+      if (result.length > 0) {
         const tasksWithSubtasks = await fetchSubtasksForTasks(result);
         return tasksWithSubtasks;
       }
@@ -160,7 +156,7 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
         
         console.log(`Query returned ${data?.length || 0} tasks`);
         
-        const tasksWithSubtasks = await fetchSubtasksForTasks(data);
+        const tasksWithSubtasks = await fetchSubtasksForTasks(data || []);
         return tasksWithSubtasks;
       }
       
