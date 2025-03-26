@@ -15,7 +15,11 @@ export function sanitizeTaskData(taskData: TaskFormData): Partial<TaskFormData> 
     due_date: taskData.due_date,
     due_time: taskData.due_time,
     assignee_id: taskData.assignee_id,
-    is_recurring: taskData.is_recurring
+    is_recurring: taskData.is_recurring,
+    // Include the new team task and delegation fields
+    is_team_task: taskData.is_team_task,
+    delegated_to: taskData.delegated_to,
+    delegated_email: taskData.delegated_email
     // Do not include enableSubtasks as it's not a database field
   };
 

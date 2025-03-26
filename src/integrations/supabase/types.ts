@@ -1333,12 +1333,15 @@ export type Database = {
           assignee_id: string | null
           completed_at: string | null
           created_at: string
+          delegated_email: string | null
+          delegated_to: string | null
           description: string | null
           due_date: string | null
           due_time: string | null
           id: string
           is_recurring: boolean | null
           is_recurring_instance: boolean | null
+          is_team_task: boolean | null
           parent_recurring_id: string | null
           priority: string
           snooze_count: number | null
@@ -1352,12 +1355,15 @@ export type Database = {
           assignee_id?: string | null
           completed_at?: string | null
           created_at?: string
+          delegated_email?: string | null
+          delegated_to?: string | null
           description?: string | null
           due_date?: string | null
           due_time?: string | null
           id?: string
           is_recurring?: boolean | null
           is_recurring_instance?: boolean | null
+          is_team_task?: boolean | null
           parent_recurring_id?: string | null
           priority?: string
           snooze_count?: number | null
@@ -1371,12 +1377,15 @@ export type Database = {
           assignee_id?: string | null
           completed_at?: string | null
           created_at?: string
+          delegated_email?: string | null
+          delegated_to?: string | null
           description?: string | null
           due_date?: string | null
           due_time?: string | null
           id?: string
           is_recurring?: boolean | null
           is_recurring_instance?: boolean | null
+          is_team_task?: boolean | null
           parent_recurring_id?: string | null
           priority?: string
           snooze_count?: number | null
