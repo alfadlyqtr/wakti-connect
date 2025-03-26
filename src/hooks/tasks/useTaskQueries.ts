@@ -161,7 +161,7 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
     tasks,
     isLoading,
     error,
-    refetch,
+    refetch, // Just return the refetch function directly since we updated the type
     userRole,
     isStaff
   };

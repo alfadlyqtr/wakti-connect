@@ -22,11 +22,12 @@ export interface UseTaskFiltersReturn {
   filteredTasks: TaskWithSharedInfo[];
 }
 
+// Update the return type for refetch to match React Query's actual return type
 export interface UseTaskQueriesReturn {
   tasks: TaskWithSharedInfo[];
   isLoading: boolean;
   error: Error | null;
-  refetch: () => Promise<void>;
+  refetch: () => Promise<any>; // Change from Promise<void> to Promise<any>
   userRole: "free" | "individual" | "business" | "staff" | null;
   isStaff: boolean;
 }
