@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2Icon } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
 interface TaskClaimButtonProps {
@@ -22,32 +21,15 @@ export const TaskClaimButton: React.FC<TaskClaimButtonProps> = ({
     try {
       setIsClaimingTask(true);
       
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Authentication required",
-          description: "You must be logged in to claim tasks",
-          variant: "destructive"
-        });
-        return;
-      }
+      // Simulate a delay
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      const { claimDelegatedTask } = await import('@/services/task/claimDelegatedTask');
+      toast({
+        title: "Task assignment disabled",
+        description: "Task assignment functionality is currently disabled",
+        variant: "default"
+      });
       
-      const success = await claimDelegatedTask(taskId);
-      
-      if (success) {
-        toast({
-          title: "Task claimed successfully",
-          description: "This task is now assigned to you"
-        });
-        
-        if (typeof refetch === 'function') {
-          refetch();
-        } else {
-          setTimeout(() => window.location.reload(), 500);
-        }
-      }
     } catch (error) {
       console.error("Error claiming task:", error);
       toast({
@@ -65,7 +47,7 @@ export const TaskClaimButton: React.FC<TaskClaimButtonProps> = ({
       <Button 
         variant="outline" 
         size="sm" 
-        className="w-full border-dashed border-blue-300 text-blue-500 hover:text-blue-700"
+        className="w-full border-dashed border-blue-300 text-blue-500 hover:text-blue-700 opacity-50"
         onClick={handleClaimTask}
         disabled={isClaimingTask}
       >
@@ -77,7 +59,7 @@ export const TaskClaimButton: React.FC<TaskClaimButtonProps> = ({
         ) : (
           <>
             <CheckCircle2Icon className="mr-2 h-4 w-4" /> 
-            Claim This Task
+            Claim This Task (Disabled)
           </>
         )}
       </Button>

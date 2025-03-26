@@ -29,7 +29,6 @@ interface TaskCardMenuProps {
   onEdit: (id: string) => void;
   onStatusChange: (id: string, status: string) => void;
   onShare: (id: string) => void;
-  onAssign: (id: string) => void;
   onSnooze: (id: string, days: number) => void;
   userRole: "free" | "individual" | "business" | "staff" | null;
   isAssigned: boolean;
@@ -97,9 +96,9 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
             </DropdownMenuItem>
             
             {isBusinessOrStaff && !isAssigned && (
-              <DropdownMenuItem onClick={handleAssign}>
+              <DropdownMenuItem onClick={handleAssign} className="opacity-50">
                 <User className="mr-2 h-4 w-4" />
-                <span>Assign Task</span>
+                <span>Assign Task (Disabled)</span>
               </DropdownMenuItem>
             )}
             

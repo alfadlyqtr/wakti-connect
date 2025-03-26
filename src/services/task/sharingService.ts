@@ -33,54 +33,10 @@ export async function shareTask(taskId: string, userId: string): Promise<void> {
 
 /**
  * Assign a task to a staff member (for business accounts)
+ * This functionality is currently disabled
  */
 export async function assignTask(taskId: string, staffId: string): Promise<void> {
-  // Get current user session for notification info
-  const { data: sessionData } = await supabase.auth.getSession();
-  const assignedBy = sessionData?.session?.user?.id;
-  
-  // First get the task details to preserve important fields
-  const { data: taskData, error: fetchError } = await supabase
-    .from('tasks')
-    .select('*')
-    .eq('id', taskId)
-    .single();
-    
-  if (fetchError) {
-    console.error("Error fetching task details before assignment:", fetchError);
-    throw fetchError;
-  }
-  
-  // Update the task with the assignee ID
-  const { error } = await supabase
-    .from('tasks')
-    .update({ 
-      assignee_id: staffId,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', taskId);
-  
-  if (error) {
-    console.error("Error assigning task:", error);
-    throw error;
-  }
-  
-  console.log(`Task ${taskId} successfully assigned to staff ${staffId}`);
-  
-  // Send notification to the assignee
-  try {
-    await createNotification(
-      staffId,
-      "Task Assigned",
-      "You have been assigned a new task",
-      "task_assigned",
-      taskId,
-      "task"
-    );
-    
-    console.log("Task assignment notification sent");
-  } catch (notifyError) {
-    console.error("Failed to send assignment notification:", notifyError);
-    // Don't throw here - the task was assigned successfully
-  }
+  // This function is intentionally disabled
+  console.log("Task assignment functionality is disabled");
+  throw new Error("Task assignment functionality is not available at this time");
 }

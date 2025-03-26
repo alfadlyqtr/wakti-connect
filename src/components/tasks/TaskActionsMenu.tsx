@@ -1,3 +1,4 @@
+
 import React from "react";
 import { 
   DropdownMenu, 
@@ -51,7 +52,6 @@ export function TaskActionsMenu({
   onDelete,
   onStatusChange,
   onShare,
-  onAssign,
   onSnooze,
   taskId,
   snoozeCount = 0
@@ -173,9 +173,12 @@ export function TaskActionsMenu({
         {canAssignTasks && !isAssigned && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleAssignClick}>
+            <DropdownMenuItem 
+              onClick={handleAssignClick}
+              className="opacity-50"
+            >
               <UserPlus className="h-4 w-4 mr-2" />
-              Assign Task
+              Assign Task (Disabled)
             </DropdownMenuItem>
           </>
         )}

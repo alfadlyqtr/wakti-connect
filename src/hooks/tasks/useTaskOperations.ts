@@ -104,8 +104,6 @@ export const useTaskOperations = (
       
       console.log("Task created successfully:", createdTask);
       
-      // Remove delegation functionality - this was causing issues
-      
       toast({
         title: "Task created",
         description: "Your task has been created successfully",

@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { UserCheck } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
@@ -20,46 +19,15 @@ export const TaskClaimButton: React.FC<TaskClaimButtonProps> = ({
     try {
       setIsClaiming(true);
       
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.user) {
-        throw new Error("You must be logged in to claim tasks");
-      }
-      
-      // Update the task assignee
-      const { error } = await supabase
-        .from('tasks')
-        .update({ assignee_id: session.user.id })
-        .eq('id', taskId);
-        
-      if (error) throw error;
-      
-      // Create a notification for the business owner
-      const { data: taskData } = await supabase
-        .from('tasks')
-        .select('user_id, title')
-        .eq('id', taskId)
-        .single();
-        
-      if (taskData) {
-        await supabase.from('notifications').insert({
-          user_id: taskData.user_id,
-          type: 'task_claimed',
-          title: 'Task Claimed',
-          content: `A staff member has claimed the task: ${taskData.title}`,
-          related_entity_id: taskId,
-          related_entity_type: 'task'
-        });
-      }
+      // Simulating the claim action, but actually not doing anything
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       toast({
-        title: "Task claimed",
-        description: "You have successfully claimed this task",
-        variant: "success"
+        title: "Task assignment disabled",
+        description: "Task assignment functionality is currently disabled",
+        variant: "default"
       });
       
-      // Refetch to update the UI
-      refetch();
     } catch (error) {
       console.error("Error claiming task:", error);
       toast({
@@ -76,12 +44,12 @@ export const TaskClaimButton: React.FC<TaskClaimButtonProps> = ({
     <div className="mt-4">
       <Button 
         variant="outline" 
-        className="w-full" 
+        className="w-full opacity-50" 
         onClick={handleClaimTask}
         disabled={isClaiming}
       >
         <UserCheck className="mr-2 h-4 w-4" />
-        {isClaiming ? "Claiming..." : "Claim this task"}
+        {isClaiming ? "Claiming..." : "Claim this task (Disabled)"}
       </Button>
     </div>
   );
