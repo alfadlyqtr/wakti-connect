@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { InvitationRequest, InvitationResponse, InvitationTarget } from "@/types/invitation.types";
+import { InvitationRequest, InvitationResponse, InvitationRecipient } from "@/types/invitation.types";
 
 /**
  * Send an invitation to a user or email
@@ -17,31 +17,43 @@ export const sendInvitation = async (
       throw new Error("Authentication required");
     }
     
-    // Prepare invitation requests with correct status type
-    const invitationData = invitations.map(invitation => ({
-      event_id: eventId,
-      invited_user_id: invitation.target.type === 'user' ? invitation.target.id : null,
-      email: invitation.target.type === 'email' ? invitation.target.id : null,
-      shared_as_link: invitation.shared_as_link,
-      status: 'pending' as 'pending' | 'accepted' | 'declined',
-      created_at: new Date().toISOString()
-    }));
+    // Prepare invitation requests
+    const results: InvitationResponse[] = [];
     
-    // Insert invitations
-    const { data, error } = await supabase
-      .from('event_invitations')
-      .insert(invitationData)
-      .select();
-    
-    if (error) {
-      throw error;
+    for (const invitation of invitations) {
+      // Process each recipient
+      const invitationData = invitation.recipients.map(recipient => ({
+        event_id: eventId,
+        invited_user_id: recipient.type === 'contact' ? recipient.id : null,
+        email: recipient.type === 'email' ? recipient.email : null,
+        shared_as_link: invitation.shared_as_link || false,
+        status: 'pending' as 'pending' | 'accepted' | 'declined',
+        created_at: new Date().toISOString()
+      }));
+      
+      // Insert invitations
+      const { data, error } = await supabase
+        .from('event_invitations')
+        .insert(invitationData)
+        .select();
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Prepare response
+      const successful = data.map(inv => inv.invited_user_id || inv.email || '');
+      results.push({
+        id: `invitation-batch-${Date.now()}`,
+        status: 'sent',
+        recipients: {
+          successful,
+          failed: []
+        }
+      });
     }
     
-    return data.map(invitation => ({
-      id: invitation.id,
-      status: 'sent',
-      created_at: invitation.created_at
-    }));
+    return results;
   } catch (error) {
     console.error('Error sending invitations:', error);
     throw error;

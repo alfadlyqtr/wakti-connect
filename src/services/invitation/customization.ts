@@ -51,7 +51,7 @@ export const createInvitationCustomization = async (
       throw error;
     }
     
-    return {
+    const result: InvitationCustomization = {
       id: data.id,
       invitationId: data.invitation_id,
       creatorId: data.creator_id,
@@ -68,6 +68,8 @@ export const createInvitationCustomization = async (
       createdAt: data.created_at,
       updatedAt: data.updated_at
     };
+    
+    return result;
   } catch (error) {
     console.error("Error creating invitation customization:", error);
     return null;
@@ -88,7 +90,7 @@ export const getInvitationCustomization = async (invitationId: string): Promise<
       return null;
     }
     
-    return {
+    const result: InvitationCustomization = {
       id: data.id,
       invitationId: data.invitation_id,
       creatorId: data.creator_id,
@@ -105,6 +107,8 @@ export const getInvitationCustomization = async (invitationId: string): Promise<
       createdAt: data.created_at,
       updatedAt: data.updated_at
     };
+    
+    return result;
   } catch (error) {
     console.error("Error getting invitation customization:", error);
     return null;

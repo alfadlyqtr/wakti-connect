@@ -30,6 +30,7 @@ const RecipientSelector: React.FC<RecipientSelectorProps> = ({
     if (!emailInput || !emailInput.includes('@')) return;
     
     onAddRecipient({
+      id: `email-${Date.now()}`, // Generate a unique ID
       name: emailInput,
       email: emailInput,
       type: 'email'

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { DirectionButtons } from "./DirectionButtons";
-import { AngleSlider } from "./AngleSlider";
+import AngleSlider from "./AngleSlider";
 import { ColorInputs } from "./ColorInputs";
 import { GradientPreview } from "./GradientPreview";
 import { GradientPresets } from "./GradientPresets";

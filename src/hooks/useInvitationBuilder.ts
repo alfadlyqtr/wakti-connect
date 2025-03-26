@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   fetchInvitationTemplates, 
   createInvitationCustomization 
-} from "@/services/invitation"; // Updated import
+} from "@/services/invitation"; 
 import { 
   InvitationTemplate, 
   InvitationCustomization, 
@@ -104,16 +104,18 @@ export const useInvitationBuilder = () => {
     if (!selectedTemplate) {
       // Default styles if no template is selected
       return {
-        background: { type: 'solid', value: '#ffffff' },
-        fontFamily: 'Inter',
-        fontSize: 'medium',
-        textAlign: 'center',
-        buttons: {
-          accept: { background: '#4CAF50', color: '#ffffff' },
-          decline: { background: '#f44336', color: '#ffffff' }
+        background: { 
+          type: 'solid', 
+          value: '#ffffff' 
         },
-        shadow: true,
-        headerStyle: 'simple'
+        font: 'Inter',
+        colors: {
+          primary: '#4CAF50',
+          secondary: '#f44336',
+          text: '#333333',
+          accent: '#2196F3'
+        },
+        layout: 'standard'
       };
     }
     
@@ -123,15 +125,17 @@ export const useInvitationBuilder = () => {
     // Apply current customizations
     return {
       background: {
-        type: (currentCustomization.backgroundType || baseStyle.background.type) as 'solid' | 'gradient' | 'image',
+        type: (currentCustomization.backgroundType || baseStyle.background.type),
         value: currentCustomization.backgroundValue || baseStyle.background.value
       },
-      fontFamily: currentCustomization.fontFamily || baseStyle.fontFamily,
-      fontSize: (currentCustomization.fontSize || baseStyle.fontSize) as 'small' | 'medium' | 'large',
-      textAlign: (currentCustomization.textAlign || baseStyle.textAlign) as 'left' | 'center' | 'right',
-      buttons: currentCustomization.buttonStyles || baseStyle.buttons,
-      shadow: currentCustomization.customEffects?.shadow ?? baseStyle.shadow,
-      headerStyle: baseStyle.headerStyle
+      font: currentCustomization.fontFamily || baseStyle.fontFamily,
+      colors: {
+        primary: '#4CAF50',
+        secondary: '#f44336',
+        text: '#333333',
+        accent: '#2196F3'
+      },
+      layout: 'standard'
     };
   };
   
