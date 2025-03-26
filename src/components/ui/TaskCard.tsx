@@ -1,46 +1,69 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { cn } from '@/lib/utils';
-import RecurringBadge from '@/components/ui/RecurringBadge';
-import { TaskStatus, TaskPriority, SubTask } from '@/types/task.types';
-import TaskStatusIcon from '@/components/tasks/TaskStatusIcon';
-import { TaskActionsMenu } from '@/components/tasks/TaskActionsMenu';
-import TaskBadges from '@/components/tasks/TaskBadges';
-import { format } from 'date-fns';
-import { ChevronDown, ChevronRight, Clock } from 'lucide-react';
+import React, { useState } from "react";
+import { 
+  Card, 
+  CardContent, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { TaskPriority, TaskStatus, SubTask } from "@/types/task.types";
+import { formatDistanceToNow, isPast, addDays, parseISO, format, isValid } from "date-fns";
+import {
+  Clock,
+  CalendarIcon,
+  AlertTriangleIcon,
+  CheckCircle2Icon,
+  PauseIcon,
+  PenIcon,
+  TrashIcon,
+  MoreVertical,
+  CheckIcon,
+  PlayIcon,
+  BellSlashIcon,
+  Share2Icon,
+  UsersIcon
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface TaskCardProps {
   id: string;
   title: string;
   description: string;
   dueDate: Date;
+  dueTime?: string | null;
   status: TaskStatus;
   priority: TaskPriority;
-  category?: string;
   userRole: "free" | "individual" | "business" | "staff" | null;
   isAssigned?: boolean;
   isShared?: boolean;
-  isRecurring?: boolean;
-  recurringFrequency?: string;
-  isRecurringInstance?: boolean;
-  subtasks?: { id?: string; content: string; is_completed: boolean; due_date?: string | null; due_time?: string | null }[];
+  subtasks?: SubTask[];
   completedDate?: Date | null;
+  isRecurring?: boolean;
+  isRecurringInstance?: boolean;
   snoozeCount?: number;
   snoozedUntil?: Date | null;
-  dueTime?: string | null;
-  onEdit?: (taskId: string) => void;
-  onDelete?: (taskId: string) => void;
-  onStatusChange?: (taskId: string, newStatus: string) => void;
-  onShare?: (taskId: string) => void;
-  onAssign?: (taskId: string) => void;
-  onSnooze?: (taskId: string, days: number) => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+  onStatusChange: (id: string, status: string) => void;
+  onShare?: (id: string) => void;
+  onAssign?: (id: string) => void;
+  onSnooze?: (id: string, days: number) => void;
   onSubtaskToggle?: (taskId: string, subtaskIndex: number, isCompleted: boolean) => void;
 }
 
-const TaskCard = ({
+const TaskCard: React.FC<TaskCardProps> = ({
   id,
   title,
   description,
@@ -48,17 +71,15 @@ const TaskCard = ({
   dueTime,
   status,
   priority,
-  category,
   userRole,
-  isAssigned = false,
-  isShared = false,
-  isRecurring = false,
-  recurringFrequency,
-  isRecurringInstance = false,
+  isAssigned,
+  isShared,
   subtasks = [],
-  completedDate = null,
+  completedDate,
+  isRecurring,
+  isRecurringInstance,
   snoozeCount = 0,
-  snoozedUntil = null,
+  snoozedUntil,
   onEdit,
   onDelete,
   onStatusChange,
@@ -66,140 +87,335 @@ const TaskCard = ({
   onAssign,
   onSnooze,
   onSubtaskToggle
-}: TaskCardProps) => {
-  const [expandedSubtasks, setExpandedSubtasks] = useState(false);
-  const completedSubtasks = subtasks.filter(task => task.is_completed).length;
-  const totalSubtasks = subtasks.length;
-  const subtaskProgress = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
+}) => {
+  const [showAllSubtasks, setShowAllSubtasks] = useState(false);
+  const hasSubtasks = subtasks && subtasks.length > 0;
+  const completedSubtasks = subtasks.filter(subtask => subtask.is_completed).length;
+  
+  const isOverdue = status !== 'completed' && status !== 'snoozed' && isPast(dueDate) && dueDate.getTime() < new Date().getTime();
+  
+  const priorityColors = {
+    urgent: "bg-red-600 hover:bg-red-700",
+    high: "bg-red-500 hover:bg-red-600",
+    medium: "bg-amber-500 hover:bg-amber-600",
+    normal: "bg-green-500 hover:bg-green-600"
+  };
+  
+  const statusColors = {
+    pending: "bg-amber-500",
+    "in-progress": "bg-blue-500",
+    completed: "bg-green-500",
+    late: "bg-red-500",
+    snoozed: "bg-purple-500"
+  };
+
+  // Format date to show relative time or date
+  const formatDueDate = () => {
+    if (!isValid(dueDate)) return "Invalid date";
+    
+    if (isPast(dueDate) && status !== 'completed') {
+      return `Overdue: ${formatDistanceToNow(dueDate, { addSuffix: true })}`;
+    }
+    
+    return formatDistanceToNow(dueDate, { addSuffix: true });
+  };
+
+  // Format due time if available
+  const formatTime = (time: string | null | undefined) => {
+    if (!time) return null;
+    
+    // Split the time by colon to get hours and minutes
+    const [hours, minutes] = time.split(':');
+    
+    // Convert to 12-hour format
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  // Format subtask due date with time if available
+  const formatSubtaskDueDate = (dueDate: string | null | undefined, dueTime: string | null | undefined) => {
+    if (!dueDate) return null;
+    
+    try {
+      const date = parseISO(dueDate);
+      const formattedDate = format(date, 'MMM d');
+      
+      if (dueTime) {
+        return `${formattedDate}, ${formatTime(dueTime)}`;
+      }
+      
+      return formattedDate;
+    } catch (error) {
+      return null;
+    }
+  };
   
   return (
-    <Card className="border-border/40 shadow-sm hover:shadow transition-shadow">
-      <CardHeader className="pb-2 flex flex-row items-start justify-between gap-2">
-        <div className="space-y-1 w-5/6">
-          <div className="flex items-center gap-2 flex-wrap">
-            <TaskStatusIcon status={status} />
-            {(isRecurring || isRecurringInstance) && (
-              <RecurringBadge 
-                frequency={recurringFrequency} 
-                isRecurringInstance={isRecurringInstance} 
-              />
-            )}
-            {snoozeCount > 0 && (
-              <Badge variant="outline" className="bg-amber-500/10 text-amber-500 text-xs">
-                Snoozed x{snoozeCount}
-              </Badge>
-            )}
-          </div>
-          <h3 className="text-base font-semibold leading-tight">{title}</h3>
+    <Card className={`border-l-4 ${isOverdue ? 'border-l-red-500' : `border-l-${priorityColors[priority].split(' ')[0]}`}`}>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-lg font-medium line-clamp-2">{title}</CardTitle>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[180px]">
+              <DropdownMenuLabel>Task Actions</DropdownMenuLabel>
+              
+              <DropdownMenuSeparator />
+              
+              {/* Status change options */}
+              {status !== 'completed' && (
+                <DropdownMenuItem onClick={() => onStatusChange(id, 'completed')}>
+                  <CheckIcon className="mr-2 h-4 w-4 text-green-500" />
+                  <span>Mark Complete</span>
+                </DropdownMenuItem>
+              )}
+              
+              {status !== 'in-progress' && status !== 'completed' && (
+                <DropdownMenuItem onClick={() => onStatusChange(id, 'in-progress')}>
+                  <PlayIcon className="mr-2 h-4 w-4 text-blue-500" />
+                  <span>Mark In Progress</span>
+                </DropdownMenuItem>
+              )}
+              
+              {status !== 'pending' && status !== 'completed' && (
+                <DropdownMenuItem onClick={() => onStatusChange(id, 'pending')}>
+                  <PauseIcon className="mr-2 h-4 w-4 text-amber-500" />
+                  <span>Mark Pending</span>
+                </DropdownMenuItem>
+              )}
+              
+              <DropdownMenuSeparator />
+              
+              {/* Edit/Delete options */}
+              <DropdownMenuItem onClick={() => onEdit(id)}>
+                <PenIcon className="mr-2 h-4 w-4" />
+                <span>Edit</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem onClick={() => onDelete(id)} className="text-destructive">
+                <TrashIcon className="mr-2 h-4 w-4" />
+                <span>Delete</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              {/* Share option */}
+              {onShare && userRole !== 'free' && !isShared && (
+                <DropdownMenuItem onClick={() => onShare(id)}>
+                  <Share2Icon className="mr-2 h-4 w-4" />
+                  <span>Share</span>
+                </DropdownMenuItem>
+              )}
+              
+              {/* Assign option */}
+              {onAssign && userRole === 'business' && !isAssigned && (
+                <DropdownMenuItem onClick={() => onAssign(id)}>
+                  <UsersIcon className="mr-2 h-4 w-4" />
+                  <span>Assign</span>
+                </DropdownMenuItem>
+              )}
+              
+              {/* Snooze options */}
+              {onSnooze && status !== 'completed' && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>Snooze For</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => onSnooze(id, 1)}>
+                    <BellSlashIcon className="mr-2 h-4 w-4" />
+                    <span>1 Day</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onSnooze(id, 3)}>
+                    <BellSlashIcon className="mr-2 h-4 w-4" />
+                    <span>3 Days</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onSnooze(id, 7)}>
+                    <BellSlashIcon className="mr-2 h-4 w-4" />
+                    <span>1 Week</span>
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <TaskActionsMenu 
-          userRole={userRole || "free"} 
-          isShared={isShared} 
-          isAssigned={isAssigned}
-          status={status}
-          taskId={id}
-          snoozeCount={snoozeCount}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onStatusChange={onStatusChange}
-          onShare={onShare}
-          onAssign={onAssign}
-          onSnooze={onSnooze}
-        />
+        
+        <div className="flex flex-wrap gap-2 mt-2">
+          <Badge variant="secondary" className={`${statusColors[status]}`}>
+            {status === 'in-progress' ? 'In Progress' : status.charAt(0).toUpperCase() + status.slice(1)}
+          </Badge>
+          
+          <Badge variant="secondary" className={priorityColors[priority]}>
+            {priority.charAt(0).toUpperCase() + priority.slice(1)}
+          </Badge>
+          
+          {isRecurring && (
+            <Badge variant="outline" className="border-blue-500 text-blue-500">
+              Recurring
+            </Badge>
+          )}
+          
+          {isRecurringInstance && (
+            <Badge variant="outline" className="border-purple-500 text-purple-500">
+              Instance
+            </Badge>
+          )}
+          
+          {isAssigned && (
+            <Badge variant="outline" className="border-green-500 text-green-500">
+              Assigned
+            </Badge>
+          )}
+          
+          {isShared && (
+            <Badge variant="outline" className="border-blue-500 text-blue-500">
+              Shared
+            </Badge>
+          )}
+        </div>
       </CardHeader>
       
-      <CardContent className="pb-3">
+      <CardContent className="pb-2">
         {description && (
-          <p className="text-muted-foreground text-sm line-clamp-2 mb-2">
+          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
             {description}
           </p>
         )}
         
-        {totalSubtasks > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <button 
-                onClick={() => setExpandedSubtasks(!expandedSubtasks)}
-                className="flex items-center text-xs hover:text-primary transition-colors"
-              >
-                {expandedSubtasks ? <ChevronDown className="h-3 w-3 mr-1" /> : <ChevronRight className="h-3 w-3 mr-1" />}
-                <span>Subtasks: {completedSubtasks}/{totalSubtasks}</span>
-              </button>
-              <span>{Math.round(subtaskProgress)}%</span>
+        <div className="flex flex-col gap-2 text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <CalendarIcon className="h-4 w-4" />
+            <span>
+              {formatDueDate()}
+              {dueTime && (
+                <span className="font-medium ml-1">at {formatTime(dueTime)}</span>
+              )}
+            </span>
+          </div>
+          
+          {status === 'snoozed' && snoozedUntil && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <BellSlashIcon className="h-4 w-4" />
+              <span>
+                Snoozed until {format(snoozedUntil, 'MMM d')}
+                {snoozeCount > 1 && ` (${snoozeCount} times)`}
+              </span>
             </div>
-            <Progress value={subtaskProgress} className="h-1.5" />
-            
-            {expandedSubtasks ? (
-              <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
-                {subtasks.map((subtask, index) => (
-                  <div key={index} className="flex items-start gap-2">
-                    <div className="pt-0.5">
-                      <input 
-                        type="checkbox"
-                        className="rounded text-primary"
-                        checked={subtask.is_completed}
-                        onChange={(e) => onSubtaskToggle?.(id, index, e.target.checked)}
-                      />
-                    </div>
+          )}
+        </div>
+        
+        {/* Subtasks Section */}
+        {hasSubtasks && (
+          <div className="mt-4">
+            <Collapsible
+              open={showAllSubtasks}
+              onOpenChange={setShowAllSubtasks}
+              className="border rounded-md p-2"
+            >
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2Icon className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">
+                    Subtasks ({completedSubtasks}/{subtasks.length})
+                  </span>
+                </div>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-7 px-2">
+                    {showAllSubtasks ? "Hide" : "Show All"}
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+              
+              {/* Always show the first 2 subtasks */}
+              <div className="space-y-2">
+                {subtasks.slice(0, 2).map((subtask, index) => (
+                  <div key={subtask.id || index} className="flex items-start gap-2 text-sm">
+                    <Checkbox 
+                      checked={subtask.is_completed} 
+                      onCheckedChange={(checked) => 
+                        onSubtaskToggle && onSubtaskToggle(id, index, checked as boolean)
+                      }
+                      className="mt-0.5"
+                    />
                     <div className="flex-1">
-                      <div className={cn(
-                        "text-xs",
-                        subtask.is_completed && "line-through text-muted-foreground"
-                      )}>
+                      <div className={`${subtask.is_completed ? 'line-through text-muted-foreground' : ''}`}>
                         {subtask.content}
                       </div>
                       {(subtask.due_date || subtask.due_time) && (
-                        <div className="text-xs text-muted-foreground flex items-center mt-0.5">
-                          <Clock className="h-2.5 w-2.5 mr-1" />
-                          {subtask.due_date && format(new Date(subtask.due_date), 'MMM d')}
-                          {subtask.due_time && subtask.due_date && ' at '}
-                          {subtask.due_time && subtask.due_time}
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {formatSubtaskDueDate(subtask.due_date, subtask.due_time)}
                         </div>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="mt-2">
-                {subtasks.slice(0, 2).map((subtask, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <input 
-                      type="checkbox"
-                      className="rounded text-primary"
-                      checked={subtask.is_completed}
-                      onChange={(e) => onSubtaskToggle?.(id, index, e.target.checked)}
+              
+              {/* Show remaining subtasks when expanded */}
+              <CollapsibleContent className="space-y-2 mt-2">
+                {subtasks.slice(2).map((subtask, index) => (
+                  <div key={subtask.id || (index + 2)} className="flex items-start gap-2 text-sm">
+                    <Checkbox 
+                      checked={subtask.is_completed} 
+                      onCheckedChange={(checked) => 
+                        onSubtaskToggle && onSubtaskToggle(id, index + 2, checked as boolean)
+                      }
+                      className="mt-0.5"
                     />
-                    <span className={cn(
-                      "text-xs line-clamp-1",
-                      subtask.is_completed && "line-through text-muted-foreground"
-                    )}>
-                      {subtask.content}
-                    </span>
+                    <div className="flex-1">
+                      <div className={`${subtask.is_completed ? 'line-through text-muted-foreground' : ''}`}>
+                        {subtask.content}
+                      </div>
+                      {(subtask.due_date || subtask.due_time) && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {formatSubtaskDueDate(subtask.due_date, subtask.due_time)}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
-                {totalSubtasks > 2 && (
-                  <div className="text-xs text-muted-foreground text-center mt-1 cursor-pointer hover:text-primary" onClick={() => setExpandedSubtasks(true)}>
-                    +{totalSubtasks - 2} more subtasks
-                  </div>
-                )}
-              </div>
-            )}
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         )}
       </CardContent>
       
-      <CardFooter className="pt-0 flex justify-between">
-        <TaskBadges 
-          dueDate={dueDate} 
-          priority={priority} 
-          isAssigned={isAssigned} 
-          isShared={isShared}
-          status={status}
-          completedDate={completedDate}
-          snoozedUntil={snoozedUntil}
-          dueTime={dueTime}
-        />
+      <CardFooter className="pt-2 pb-3">
+        <div className="flex justify-between w-full">
+          <div className="flex gap-1">
+            {status !== "completed" ? (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onStatusChange(id, "completed")}
+                className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
+              >
+                <CheckIcon className="h-4 w-4 mr-1" /> 
+                Complete
+              </Button>
+            ) : (
+              <div className="flex items-center text-xs text-muted-foreground">
+                <CheckCircle2Icon className="h-4 w-4 mr-1 text-green-500" />
+                Completed {completedDate && format(completedDate, 'MMM d')}
+              </div>
+            )}
+          </div>
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => onEdit(id)}
+            className="text-muted-foreground"
+          >
+            <PenIcon className="h-4 w-4 mr-1" /> 
+            Edit
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

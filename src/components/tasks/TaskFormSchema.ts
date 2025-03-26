@@ -1,30 +1,45 @@
 
-import * as z from "zod";
+import { z } from "zod";
+import { TaskPriority, TaskStatus } from "@/types/task.types";
 
-export const taskFormSchema = z.object({
-  title: z.string().min(1, "Task title is required"),
-  description: z.string().optional(),
-  priority: z.enum(["urgent", "high", "medium", "normal"]).default("normal"),
-  due_date: z.string(), // Keep as string for form handling
-  due_time: z.string().optional(), // Add due time field
-  subtasks: z.array(
-    z.object({
-      content: z.string().min(1, "Subtask content is required"),
-      is_completed: z.boolean().default(false),
-      due_date: z.string().optional().nullable(),
-      due_time: z.string().optional().nullable()
-    })
-  ).default([]),
-  isRecurring: z.boolean().optional(),
-  enableSubtasks: z.boolean().default(false), // Add toggle for subtasks
-  recurring: z.object({
-    frequency: z.enum(["daily", "weekly", "monthly", "yearly"]).optional(),
-    interval: z.number().optional(),
-    days_of_week: z.array(z.string()).optional(),
-    day_of_month: z.number().optional(),
-    end_date: z.date().optional().nullable(),
-    max_occurrences: z.number().optional()
-  }).optional()
+// Define the recurring settings schema
+const RecurringSettingsSchema = z.object({
+  frequency: z.enum(["daily", "weekly", "monthly"]).default("weekly"),
+  interval: z.number().min(1).max(30).default(1),
+  // Optional fields for more complex recurrence patterns
+  daysOfWeek: z.array(z.number().min(0).max(6)).optional(),
+  dayOfMonth: z.number().min(1).max(31).optional(),
+  endDate: z.string().optional(),
+  maxOccurrences: z.number().optional(),
 });
 
+// Define the subtask schema including due date and time
+const SubtaskSchema = z.object({
+  id: z.string().optional(),
+  content: z.string().min(1, "Subtask content is required"),
+  isCompleted: z.boolean().default(false),
+  dueDate: z.string().optional(),
+  dueTime: z.string().optional(),
+});
+
+// Define the main form schema
+export const taskFormSchema = z.object({
+  title: z.string().min(1, "Title is required").max(100, "Title is too long"),
+  description: z.string().optional(),
+  status: z.enum(["pending", "in-progress", "completed", "late", "snoozed"] as const).default("pending"),
+  priority: z.enum(["urgent", "high", "medium", "normal"] as const).default("normal"),
+  dueDate: z.string().min(1, "Due date is required"),
+  dueTime: z.string().optional(),
+  assigneeId: z.string().optional(),
+  
+  // Recurring task settings
+  isRecurring: z.boolean().default(false),
+  recurring: RecurringSettingsSchema.optional(),
+  
+  // Subtasks
+  enableSubtasks: z.boolean().default(false),
+  subtasks: z.array(SubtaskSchema).default([]),
+});
+
+// Export the TypeScript type
 export type TaskFormValues = z.infer<typeof taskFormSchema>;
