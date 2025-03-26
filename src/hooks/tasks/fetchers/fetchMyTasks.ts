@@ -1,9 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { TaskWithSharedInfo } from "../types";
-import { TaskStatus, TaskPriority } from "@/types/task.types";
+import { Task, TaskStatus, TaskPriority } from "@/types/task.types";
 
-export async function fetchMyTasks(userId: string): Promise<TaskWithSharedInfo[]> {
+export async function fetchMyTasks(userId: string): Promise<Task[]> {
   const { data, error } = await supabase
     .from('tasks')
     .select('*, subtasks:todo_items(*)')

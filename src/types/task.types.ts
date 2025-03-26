@@ -8,7 +8,6 @@ export interface Task {
   due_date: string | null;
   due_time: string | null;
   user_id: string;
-  assignee_id: string | null;
   created_at: string;
   updated_at: string;
   completed_at: string | null;
@@ -18,9 +17,6 @@ export interface Task {
   subtasks?: SubTask[];
   snooze_count?: number;
   snoozed_until?: string | null;
-  delegated_to?: string | null;
-  delegated_email?: string | null;
-  is_team_task?: boolean;
 }
 
 export interface SubTask {
@@ -35,8 +31,6 @@ export interface SubTask {
 export type TaskStatus = "pending" | "in-progress" | "completed" | "late" | "snoozed";
 export type TaskPriority = "urgent" | "high" | "medium" | "normal";
 
-export type TaskTab = "my-tasks" | "shared-tasks" | "assigned-tasks" | "team-tasks";
-
 export interface TaskFormData {
   title: string;
   description?: string;
@@ -44,14 +38,10 @@ export interface TaskFormData {
   priority?: TaskPriority;
   due_date?: string;
   due_time?: string;
-  assignee_id?: string | null;
   subtasks?: SubTask[];
   snooze_count?: number;
   snoozed_until?: string | null;
   is_recurring?: boolean;
-  delegated_to?: string | null;
-  delegated_email?: string | null;
-  is_team_task?: boolean;
 }
 
 export interface TasksResult {

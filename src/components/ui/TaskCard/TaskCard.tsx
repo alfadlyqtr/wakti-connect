@@ -1,13 +1,12 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { TaskPriority, TaskStatus, TaskTab, SubTask } from "@/types/task.types";
+import { TaskPriority, TaskStatus, SubTask } from "@/types/task.types";
 import { TaskCardHeader } from "./TaskCardHeader";
 import { TaskDueDate } from "./TaskDueDate";
 import { TaskSubtasks } from "./TaskSubtasks";
 import { TaskCardFooter } from "./TaskCardFooter";
 import { TaskCardMenu } from "./TaskCardMenu";
-import { TaskClaimButton } from "./TaskClaimButton";
 
 export interface TaskCardProps {
   id: string;
@@ -18,22 +17,16 @@ export interface TaskCardProps {
   status: TaskStatus;
   priority: TaskPriority;
   userRole: "free" | "individual" | "business" | "staff" | null;
-  isAssigned: boolean;
-  isShared: boolean;
   subtasks: SubTask[];
   completedDate: Date | null;
   isRecurring?: boolean;
   isRecurringInstance?: boolean;
   snoozeCount?: number;
   snoozedUntil?: Date | null;
-  delegatedEmail?: string | null;
-  assigneeId?: string | null;
   refetch: () => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, status: string) => void;
-  onShare: (id: string) => void;
-  onAssign: (id: string) => void;
   onSnooze: (id: string, days: number) => void;
   onSubtaskToggle: (taskId: string, subtaskIndex: number, isCompleted: boolean) => void;
 }
@@ -47,26 +40,20 @@ const TaskCard: React.FC<TaskCardProps> = ({
   status,
   priority,
   userRole,
-  isAssigned,
-  isShared,
   subtasks,
   completedDate,
   isRecurring,
   isRecurringInstance,
   snoozeCount,
   snoozedUntil,
-  delegatedEmail,
-  assigneeId,
   refetch,
   onEdit,
   onDelete,
   onStatusChange,
-  onShare,
-  onAssign,
   onSnooze,
   onSubtaskToggle
 }) => {
-  const isBusinessOrStaff = userRole === 'business' || userRole === 'staff';
+  const isPaidAccount = userRole === 'business' || userRole === 'individual';
   
   // Show or hide certain features based on the task status
   const isCompleted = status === 'completed';
@@ -84,8 +71,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
           priority={priority}
           isRecurring={isRecurring}
           isCompleted={isCompleted}
-          isShared={isShared}
-          delegatedEmail={delegatedEmail}
         />
         
         <TaskCardMenu 
@@ -94,12 +79,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
           onDelete={onDelete}
           onEdit={onEdit}
           onStatusChange={onStatusChange}
-          onShare={onShare}
           onSnooze={onSnooze}
-          onAssign={onAssign}
           userRole={userRole}
-          isAssigned={isAssigned}
-          isBusinessOrStaff={isBusinessOrStaff}
+          isPaidAccount={isPaidAccount}
         />
       </CardHeader>
       
@@ -124,14 +106,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
             subtasks={subtasks}
             onSubtaskToggle={onSubtaskToggle}
             refetch={refetch}
-          />
-        )}
-        
-        {/* Staff can claim unassigned team tasks */}
-        {userRole === 'staff' && !assigneeId && (
-          <TaskClaimButton 
-            taskId={id} 
-            refetch={refetch} 
           />
         )}
       </CardContent>

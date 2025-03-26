@@ -1,40 +1,21 @@
 
 import React, { useState } from "react";
-import { Task, TaskTab, SubTask } from "@/types/task.types";
+import { Task, SubTask } from "@/types/task.types";
 import TaskCard from "@/components/ui/TaskCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
-import { shareTask, assignTask } from "@/services/task/sharingService";
 
 interface TaskGridProps {
   tasks: Task[];
   userRole: "free" | "individual" | "business" | "staff" | null;
-  tab: TaskTab;
   refetch: () => void;
 }
 
-const TaskGrid: React.FC<TaskGridProps> = ({ tasks, userRole, tab, refetch }) => {
+const TaskGrid: React.FC<TaskGridProps> = ({ tasks, userRole, refetch }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  
-  // Determine if tasks are editable
-  const isEditable = (task: Task) => {
-    // Business users can edit all tasks they created, including team tasks
-    if (userRole === "business") {
-      return true;
-    }
-    
-    // Staff can edit tasks assigned to them or that they claimed
-    if (userRole === "staff") {
-      return task.assignee_id === localStorage.getItem('userId') || 
-             tab === "assigned-tasks";
-    }
-    
-    // For regular users, they can't edit team tasks
-    return !task.is_team_task;
-  };
 
   // Handler for editing a task
   const handleEditTask = (taskId: string) => {
@@ -128,48 +109,6 @@ const TaskGrid: React.FC<TaskGridProps> = ({ tasks, userRole, tab, refetch }) =>
     }
   };
 
-  // Handler for sharing a task with another user
-  const handleShareTask = async (taskId: string) => {
-    try {
-      // In a real implementation, this would open a dialog to select a user
-      toast({
-        title: "Share Task",
-        description: "Opening share dialog (not implemented yet)",
-      });
-      
-      // For demonstration, we're just showing this would use shareTask service
-      // await shareTask(taskId, selectedUserId);
-    } catch (error) {
-      console.error("Error sharing task:", error);
-      toast({
-        title: "Share failed",
-        description: error instanceof Error ? error.message : "Failed to share task",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Handler for assigning a task to a staff member
-  const handleAssignTask = async (taskId: string) => {
-    try {
-      // In a real implementation, this would open a dialog to select a staff member
-      toast({
-        title: "Assign Task",
-        description: "Opening staff selection dialog (not implemented yet)",
-      });
-      
-      // For demonstration, we're just showing this would use assignTask service
-      // await assignTask(taskId, selectedStaffId);
-    } catch (error) {
-      console.error("Error assigning task:", error);
-      toast({
-        title: "Assignment failed",
-        description: error instanceof Error ? error.message : "Failed to assign task",
-        variant: "destructive",
-      });
-    }
-  };
-
   // Handler for snoozing a task
   const handleSnoozeTask = async (taskId: string, days: number) => {
     try {
@@ -220,21 +159,29 @@ const TaskGrid: React.FC<TaskGridProps> = ({ tasks, userRole, tab, refetch }) =>
   // Handler for toggling a subtask
   const handleSubtaskToggle = async (taskId: string, subtaskIndex: number, isCompleted: boolean) => {
     try {
-      console.log(`Toggling subtask ${subtaskIndex} for task ${taskId} to ${isCompleted}`);
+      const subtask = tasks.find(t => t.id === taskId)?.subtasks?.[subtaskIndex];
       
-      // In a real implementation, this would update the subtask in the database
-      // For now, just show a toast
-      toast({
-        title: "Subtask toggled",
-        description: `Subtask ${subtaskIndex + 1} ${isCompleted ? 'completed' : 'uncompleted'}`,
-      });
-      
-      // Here we would perform the actual update to the subtask
-      // This would typically involve an update to the subtasks in the task or a separate subtasks table
+      if (subtask && subtask.id) {
+        const { error } = await supabase
+          .from('todo_items')
+          .update({ is_completed: isCompleted })
+          .eq('id', subtask.id);
+          
+        if (error) throw error;
+        
+        toast({
+          title: "Subtask updated",
+          description: `Subtask ${isCompleted ? 'completed' : 'uncompleted'}`,
+          variant: "success",
+        });
+        
+        // Refresh tasks
+        refetch();
+      }
     } catch (error) {
       console.error("Error toggling subtask:", error);
       toast({
-        title: "Failed to toggle subtask",
+        title: "Failed to update subtask",
         description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
@@ -255,22 +202,16 @@ const TaskGrid: React.FC<TaskGridProps> = ({ tasks, userRole, tab, refetch }) =>
             status={task.status}
             priority={task.priority}
             userRole={userRole}
-            isAssigned={!!task.assignee_id}
-            isShared={!!task.delegated_to}
             subtasks={task.subtasks || []}
             completedDate={task.completed_at ? new Date(task.completed_at) : null}
             isRecurring={task.is_recurring}
             isRecurringInstance={task.is_recurring_instance}
             snoozeCount={task.snooze_count}
             snoozedUntil={task.snoozed_until ? new Date(task.snoozed_until) : null}
-            delegatedEmail={task.delegated_email}
-            assigneeId={task.assignee_id}
             refetch={refetch}
             onEdit={handleEditTask}
             onDelete={handleDeleteTask}
             onStatusChange={handleStatusChange}
-            onShare={handleShareTask}
-            onAssign={handleAssignTask}
             onSnooze={handleSnoozeTask}
             onSubtaskToggle={handleSubtaskToggle}
           />

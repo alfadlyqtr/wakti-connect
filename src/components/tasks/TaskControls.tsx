@@ -10,13 +10,6 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
-import { TaskTab } from "@/types/task.types";
 import { TaskStatusFilter, TaskPriorityFilter } from "./types";
 
 interface TaskControlsProps {
@@ -27,11 +20,8 @@ interface TaskControlsProps {
   filterPriority: TaskPriorityFilter;
   onPriorityChange: (value: TaskPriorityFilter) => void;
   onCreateTask: () => void;
-  currentTab: TaskTab;
-  onTabChange: (value: TaskTab) => void;
   isPaidAccount: boolean;
   userRole: "free" | "individual" | "business" | "staff";
-  isStaff: boolean;
 }
 
 const TaskControls: React.FC<TaskControlsProps> = ({
@@ -42,16 +32,11 @@ const TaskControls: React.FC<TaskControlsProps> = ({
   filterPriority,
   onPriorityChange,
   onCreateTask,
-  currentTab,
-  onTabChange,
   isPaidAccount,
-  userRole,
-  isStaff
+  userRole
 }) => {
-  // Update tab handler to correctly type the value
-  const handleTabChange = (value: string) => {
-    onTabChange(value as TaskTab);
-  };
+  // Staff members cannot create tasks
+  const canCreateTasks = userRole !== "staff";
 
   return (
     <div className="space-y-4">
@@ -101,39 +86,13 @@ const TaskControls: React.FC<TaskControlsProps> = ({
             </SelectContent>
           </Select>
           
-          {/* Only show Create button if not staff or if on team tasks tab and they are staff */}
-          {(!isStaff || (isStaff && currentTab === "team-tasks")) && (
+          {canCreateTasks && (
             <Button onClick={onCreateTask}>
-              {isStaff ? "Claim Task" : "Add Task"}
+              Add Task
             </Button>
           )}
         </div>
       </div>
-      
-      <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="w-full max-w-md grid-cols-2 md:grid-cols-4">
-          {!isStaff && (
-            <TabsTrigger value="my-tasks">My Tasks</TabsTrigger>
-          )}
-          
-          {isStaff && (
-            <>
-              <TabsTrigger value="assigned-tasks">My Tasks</TabsTrigger>
-              <TabsTrigger value="team-tasks">Team Tasks</TabsTrigger>
-            </>
-          )}
-          
-          {!isStaff && isPaidAccount && (
-            <>
-              <TabsTrigger value="shared-tasks">Shared</TabsTrigger>
-              <TabsTrigger value="assigned-tasks">Assigned</TabsTrigger>
-              {userRole === "business" && (
-                <TabsTrigger value="team-tasks">Team</TabsTrigger>
-              )}
-            </>
-          )}
-        </TabsList>
-      </Tabs>
     </div>
   );
 };

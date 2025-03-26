@@ -11,15 +11,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { TaskStatus } from "@/types/task.types";
 import {
-  Archive,
   Check,
   Clock,
   Edit2,
   MoreVertical,
   Play,
-  Share2,
   Trash2,
-  User,
 } from "lucide-react";
 
 interface TaskCardMenuProps {
@@ -28,12 +25,9 @@ interface TaskCardMenuProps {
   onDelete: (id: string) => void;
   onEdit: (id: string) => void;
   onStatusChange: (id: string, status: string) => void;
-  onShare: (id: string) => void;
   onSnooze: (id: string, days: number) => void;
-  onAssign?: (id: string) => void; // Added this property
   userRole: "free" | "individual" | "business" | "staff" | null;
-  isAssigned: boolean;
-  isBusinessOrStaff: boolean;
+  isPaidAccount: boolean;
 }
 
 export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
@@ -42,19 +36,10 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
   onDelete,
   onEdit,
   onStatusChange,
-  onShare,
   onSnooze,
   userRole,
-  isAssigned,
-  isBusinessOrStaff,
+  isPaidAccount
 }) => {
-  const isPaidAccount = userRole === "individual" || userRole === "business" || userRole === "staff";
-  
-  // Placeholder function for assign that does nothing
-  const handleAssign = () => {
-    console.log("Task assignment functionality disabled");
-  };
-  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -89,20 +74,6 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
         
         {isPaidAccount && status !== "completed" && (
           <>
-            <DropdownMenuSeparator />
-            
-            <DropdownMenuItem onClick={() => onShare(id)}>
-              <Share2 className="mr-2 h-4 w-4" />
-              <span>Share Task</span>
-            </DropdownMenuItem>
-            
-            {isBusinessOrStaff && !isAssigned && (
-              <DropdownMenuItem onClick={handleAssign} className="opacity-50">
-                <User className="mr-2 h-4 w-4" />
-                <span>Assign Task (Disabled)</span>
-              </DropdownMenuItem>
-            )}
-            
             <DropdownMenuSeparator />
             
             <DropdownMenuItem onClick={() => onSnooze(id, 1)}>

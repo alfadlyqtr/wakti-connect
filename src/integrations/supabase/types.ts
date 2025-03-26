@@ -1177,35 +1177,6 @@ export type Database = {
         }
         Relationships: []
       }
-      shared_tasks: {
-        Row: {
-          created_at: string
-          id: string
-          shared_with: string
-          task_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          shared_with: string
-          task_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          shared_with?: string
-          task_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "shared_tasks_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "tasks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       staff_service_assignments: {
         Row: {
           created_at: string
@@ -1333,18 +1304,14 @@ export type Database = {
       }
       tasks: {
         Row: {
-          assignee_id: string | null
           completed_at: string | null
           created_at: string
-          delegated_email: string | null
-          delegated_to: string | null
           description: string | null
           due_date: string | null
           due_time: string | null
           id: string
           is_recurring: boolean | null
           is_recurring_instance: boolean | null
-          is_team_task: boolean | null
           parent_recurring_id: string | null
           priority: string
           snooze_count: number | null
@@ -1355,18 +1322,14 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          assignee_id?: string | null
           completed_at?: string | null
           created_at?: string
-          delegated_email?: string | null
-          delegated_to?: string | null
           description?: string | null
           due_date?: string | null
           due_time?: string | null
           id?: string
           is_recurring?: boolean | null
           is_recurring_instance?: boolean | null
-          is_team_task?: boolean | null
           parent_recurring_id?: string | null
           priority?: string
           snooze_count?: number | null
@@ -1377,18 +1340,14 @@ export type Database = {
           user_id: string
         }
         Update: {
-          assignee_id?: string | null
           completed_at?: string | null
           created_at?: string
-          delegated_email?: string | null
-          delegated_to?: string | null
           description?: string | null
           due_date?: string | null
           due_time?: string | null
           id?: string
           is_recurring?: boolean | null
           is_recurring_instance?: boolean | null
-          is_team_task?: boolean | null
           parent_recurring_id?: string | null
           priority?: string
           snooze_count?: number | null
@@ -1651,6 +1610,12 @@ export type Database = {
       refresh_business_analytics: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      todo_item_belongs_to_user: {
+        Args: {
+          todo_item_id: string
+        }
+        Returns: boolean
       }
       update_existing_staff_contacts: {
         Args: Record<PropertyKey, never>

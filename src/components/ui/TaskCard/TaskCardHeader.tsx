@@ -1,78 +1,47 @@
 
 import React from "react";
-import { Badge } from "@/components/ui/badge";
 import { TaskPriority } from "@/types/task.types";
-import { Repeat, Share2 } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { 
+  AlertTriangle, 
+  Clock, 
+  Repeat
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface TaskCardHeaderProps {
   title: string;
   priority: TaskPriority;
   isRecurring?: boolean;
   isCompleted: boolean;
-  isShared?: boolean;
-  delegatedEmail?: string | null;
 }
 
 export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
   title,
   priority,
   isRecurring,
-  isCompleted,
-  isShared,
-  delegatedEmail
+  isCompleted
 }) => {
   return (
-    <div className="flex justify-between items-start gap-2 mb-2">
-      <div className="flex-1">
-        <h3 className={`font-medium text-base ${isCompleted ? 'line-through text-muted-foreground' : ''}`}>
-          {title}
-        </h3>
-        
-        {delegatedEmail && (
-          <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-            <span>Delegated to:</span>
-            <span className="font-medium">{delegatedEmail}</span>
-          </div>
+    <div className="flex flex-col space-y-1.5">
+      <div className="flex items-center space-x-2">
+        {priority === "urgent" && (
+          <AlertTriangle className="text-red-500 h-4 w-4" />
+        )}
+        {isRecurring && (
+          <Repeat className="text-blue-500 h-4 w-4" />
         )}
       </div>
-      
-      <div className="flex items-center gap-1.5">
-        {isRecurring && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="text-gray-500">
-                <Repeat className="h-4 w-4" />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Recurring task</p>
-            </TooltipContent>
-          </Tooltip>
-        )}
-        
-        {isShared && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="text-gray-500">
-                <Share2 className="h-4 w-4" />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Shared task</p>
-            </TooltipContent>
-          </Tooltip>
-        )}
-        
-        <Badge 
-          className={`${
-            priority === 'urgent' ? 'bg-red-500 hover:bg-red-600' : 
-            priority === 'high' ? 'bg-orange-500 hover:bg-orange-600' : 
-            priority === 'medium' ? 'bg-amber-500 hover:bg-amber-600' : 
-            'bg-green-500 hover:bg-green-600'
-          }`}
-        >
-          {priority}
+      <h3 className={`text-lg font-semibold line-clamp-2 ${isCompleted ? 'line-through text-muted-foreground' : ''}`}>
+        {title}
+      </h3>
+      <div className="flex flex-wrap gap-2 mt-1">
+        <Badge variant={
+          priority === "urgent" ? "destructive" : 
+          priority === "high" ? "destructive" : 
+          priority === "medium" ? "outline" : 
+          "secondary"
+        }>
+          {priority.charAt(0).toUpperCase() + priority.slice(1)}
         </Badge>
       </div>
     </div>
