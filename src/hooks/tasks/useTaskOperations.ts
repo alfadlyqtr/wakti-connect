@@ -116,7 +116,7 @@ export const useTaskOperations = (
           toast({
             title: "Task created but delegation failed",
             description: "Your task was created but we couldn't assign it to the selected person",
-            variant: "warning"
+            variant: "default"  // Changed from "warning" to "default" to fix the type error
           });
           // Don't rethrow - the main task was still created
         }
