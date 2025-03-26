@@ -67,6 +67,14 @@ interface CreateTaskDialogProps {
   userRole: "free" | "individual" | "business" | "staff";
 }
 
+interface TeamTask {
+  id: string;
+  title: string;
+  description?: string | null;
+  due_date?: string | null;
+  priority: string;
+}
+
 export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   open,
   onOpenChange,
@@ -80,7 +88,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const [freeAccountAlertOpen, setFreeAccountAlertOpen] = useState(false);
   const [isClaimTask, setIsClaimTask] = useState(false);
   const [selectedTaskToClaim, setSelectedTaskToClaim] = useState<string | null>(null);
-  const [teamTasks, setTeamTasks] = useState<any[]>([]);
+  const [teamTasks, setTeamTasks] = useState<TeamTask[]>([]);
 
   useEffect(() => {
     const checkIfStaff = async () => {
