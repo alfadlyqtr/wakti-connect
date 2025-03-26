@@ -30,6 +30,7 @@ interface TaskCardMenuProps {
   onStatusChange: (id: string, status: string) => void;
   onShare: (id: string) => void;
   onSnooze: (id: string, days: number) => void;
+  onAssign?: (id: string) => void; // Added this property
   userRole: "free" | "individual" | "business" | "staff" | null;
   isAssigned: boolean;
   isBusinessOrStaff: boolean;
