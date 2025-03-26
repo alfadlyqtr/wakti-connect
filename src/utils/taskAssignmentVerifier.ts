@@ -154,7 +154,7 @@ export async function verifyAllBusinessAssignments(businessId: string) {
     // First, get all staff members for this business
     const { data: staffData, error: staffError } = await supabase
       .from('business_staff')
-      .select('id, user_id')
+      .select('id, staff_id')
       .eq('business_id', businessId);
       
     if (staffError) {
@@ -172,9 +172,9 @@ export async function verifyAllBusinessAssignments(businessId: string) {
     // For each staff member, get their assigned tasks
     const assignments = await Promise.all(
       staffData.map(async (staff) => {
-        const result = await getTasksAssignedToStaff(staff.user_id);
+        const result = await getTasksAssignedToStaff(staff.staff_id);
         return {
-          staffId: staff.user_id,
+          staffId: staff.staff_id,
           staffRelationId: staff.id,
           ...result
         };
