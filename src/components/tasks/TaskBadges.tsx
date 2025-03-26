@@ -15,6 +15,7 @@ interface TaskBadgesProps {
   category?: string;
   completedDate?: Date | null;
   snoozedUntil?: Date | null;
+  dueTime?: string | null;
 }
 
 export const getStatusColor = (status: TaskStatus) => {
@@ -155,17 +156,23 @@ const TaskBadges = ({
   status = "pending",
   category = "personal",
   completedDate = null,
-  snoozedUntil = null
+  snoozedUntil = null,
+  dueTime = null
 }: TaskBadgesProps) => {
+  // Format the date part
   const formattedDate = dueDate.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric'
   });
 
+  // Add time if available
+  const timeDisplay = dueTime ? ` at ${dueTime}` : '';
+
   return (
     <div className="flex flex-wrap gap-2">
       <Badge variant="outline" className="text-xs flex items-center">
-        {formattedDate}
+        <Clock className="h-3 w-3 mr-1" />
+        {formattedDate}{timeDisplay}
       </Badge>
       
       <Badge variant="outline" className={cn("text-xs", getPriorityColor(priority))}>

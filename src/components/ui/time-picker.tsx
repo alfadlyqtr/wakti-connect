@@ -28,7 +28,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [timeOptions, setTimeOptions] = useState<string[]>([]);
   
-  // Generate time options in 15-minute (or specified) intervals
+  // Generate time options in intervals (default 15-minute)
   useEffect(() => {
     const options: string[] = [];
     const startMinutes = minTime 
@@ -38,6 +38,7 @@ export const TimePicker: React.FC<TimePickerProps> = ({
       ? getMinutesFromTimeString(maxTime) 
       : 24 * 60 - interval;
     
+    // Generate more time options by using smaller intervals or full range
     for (let i = startMinutes; i <= endMinutes; i += interval) {
       const hours = Math.floor(i / 60);
       const minutes = i % 60;

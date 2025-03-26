@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -144,7 +143,11 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
       }
       
       // If we already have results (from shared tasks), return them
-      if (result) return result as TaskWithSharedInfo[];
+      if (result) {
+        // We still need to fetch subtasks for these tasks
+        const tasksWithSubtasks = await fetchSubtasksForTasks(result);
+        return tasksWithSubtasks;
+      }
       
       // Otherwise execute the query
       if (query) {
@@ -162,13 +165,40 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
         
         if (error) throw error;
         
-        return data as TaskWithSharedInfo[];
+        // Fetch subtasks for the tasks
+        const tasksWithSubtasks = await fetchSubtasksForTasks(data);
+        return tasksWithSubtasks;
       }
       
       return [] as TaskWithSharedInfo[];
     },
     enabled: !!userRole, // Only run the query if we have the user role
   });
+
+  // Helper function to fetch subtasks for tasks
+  const fetchSubtasksForTasks = async (tasks: any[]): Promise<TaskWithSharedInfo[]> => {
+    if (!tasks || tasks.length === 0) return tasks;
+    
+    try {
+      const taskIds = tasks.map(task => task.id);
+      
+      const { data: subtasksData, error: subtasksError } = await supabase
+        .from('todo_items')
+        .select('*')
+        .in('task_id', taskIds);
+        
+      if (subtasksError) throw subtasksError;
+      
+      // Add subtasks to their respective tasks
+      return tasks.map(task => ({
+        ...task,
+        subtasks: subtasksData?.filter(subtask => subtask.task_id === task.id) || []
+      }));
+    } catch (error) {
+      console.error("Error fetching subtasks:", error);
+      return tasks;
+    }
+  };
 
   // Filter tasks based on search query
   const filteredTasks = tasks.filter(task => {

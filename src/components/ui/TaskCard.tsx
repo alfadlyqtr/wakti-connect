@@ -24,10 +24,11 @@ interface TaskCardProps {
   isRecurring?: boolean;
   recurringFrequency?: string;
   isRecurringInstance?: boolean;
-  subtasks?: { content: string; is_completed: boolean }[];
+  subtasks?: { id?: string; content: string; is_completed: boolean }[];
   completedDate?: Date | null;
   snoozeCount?: number;
   snoozedUntil?: Date | null;
+  dueTime?: string | null;
   onEdit?: (taskId: string) => void;
   onDelete?: (taskId: string) => void;
   onStatusChange?: (taskId: string, newStatus: string) => void;
@@ -42,6 +43,7 @@ const TaskCard = ({
   title,
   description,
   dueDate,
+  dueTime,
   status,
   priority,
   category,
@@ -154,6 +156,7 @@ const TaskCard = ({
           status={status}
           completedDate={completedDate}
           snoozedUntil={snoozedUntil}
+          dueTime={dueTime}
         />
       </CardFooter>
     </Card>

@@ -5,6 +5,19 @@ import { TaskTab, TaskWithSharedInfo } from "@/hooks/useTasks";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { addDays } from "date-fns";
+import { assignTask, shareTask } from "@/services/task/sharingService";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
 
 interface TaskGridProps {
   tasks: TaskWithSharedInfo[];
@@ -15,6 +28,44 @@ interface TaskGridProps {
 
 const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
   const { toast } = useToast();
+  const [sharingDialogOpen, setSharingDialogOpen] = useState(false);
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [userIdInput, setUserIdInput] = useState("");
+  const [staffIdInput, setStaffIdInput] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [staffList, setStaffList] = useState<any[]>([]);
+
+  // Fetch staff members when assign dialog opens
+  React.useEffect(() => {
+    if (assignDialogOpen && userRole === 'business') {
+      fetchStaffMembers();
+    }
+  }, [assignDialogOpen, userRole]);
+
+  const fetchStaffMembers = async () => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.user) return;
+      
+      const { data, error } = await supabase
+        .from('business_staff')
+        .select('id, name, staff_id')
+        .eq('business_id', session.user.id);
+        
+      if (error) throw error;
+      
+      setStaffList(data || []);
+    } catch (error) {
+      console.error("Error fetching staff members:", error);
+      toast({
+        title: "Error",
+        description: "Could not fetch staff members. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleEditTask = (taskId: string) => {
     console.log("Edit task:", taskId);
@@ -79,19 +130,67 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
   };
 
   const handleShareTask = (taskId: string) => {
-    console.log("Share task:", taskId);
-    toast({
-      title: "Share Task",
-      description: "Share functionality will be implemented soon."
-    });
+    setSelectedTaskId(taskId);
+    setSharingDialogOpen(true);
   };
 
   const handleAssignTask = (taskId: string) => {
-    console.log("Assign task:", taskId);
-    toast({
-      title: "Assign Task",
-      description: "Assignment functionality will be implemented soon."
-    });
+    setSelectedTaskId(taskId);
+    setAssignDialogOpen(true);
+  };
+
+  const confirmShareTask = async () => {
+    if (!selectedTaskId || !userIdInput) return;
+    
+    setIsProcessing(true);
+    try {
+      await shareTask(selectedTaskId, userIdInput);
+      
+      toast({
+        title: "Task Shared",
+        description: "Task has been shared successfully."
+      });
+      
+      setSharingDialogOpen(false);
+      setUserIdInput("");
+      if (refetch) refetch();
+    } catch (error) {
+      console.error("Error sharing task:", error);
+      toast({
+        title: "Error",
+        description: "Failed to share task. Please verify the user ID and try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const confirmAssignTask = async () => {
+    if (!selectedTaskId || !staffIdInput) return;
+    
+    setIsProcessing(true);
+    try {
+      await assignTask(selectedTaskId, staffIdInput);
+      
+      toast({
+        title: "Task Assigned",
+        description: "Task has been assigned successfully."
+      });
+      
+      setAssignDialogOpen(false);
+      setStaffIdInput("");
+      if (refetch) refetch();
+    } catch (error) {
+      console.error("Error assigning task:", error);
+      toast({
+        title: "Error",
+        description: "Failed to assign task. Please verify the staff ID and try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleSnoozeTask = async (taskId: string, days: number) => {
@@ -182,35 +281,115 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
   };
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {tasks.map((task) => (
-        <TaskCard
-          key={task.id}
-          id={task.id}
-          title={task.title}
-          description={task.description || ""}
-          dueDate={new Date(task.due_date || new Date())}
-          status={task.status}
-          priority={task.priority}
-          userRole={userRole}
-          isAssigned={!!task.assignee_id || tab === "assigned-tasks"}
-          isShared={!!task.shared_with || tab === "shared-tasks"}
-          subtasks={task.subtasks || []}
-          completedDate={task.completed_at ? new Date(task.completed_at) : null}
-          isRecurring={!!task.parent_recurring_id}
-          isRecurringInstance={!!task.is_recurring_instance}
-          snoozeCount={task.snooze_count || 0}
-          snoozedUntil={task.snoozed_until ? new Date(task.snoozed_until) : null}
-          onEdit={handleEditTask}
-          onDelete={handleDeleteTask}
-          onStatusChange={handleStatusChange}
-          onShare={handleShareTask}
-          onAssign={handleAssignTask}
-          onSnooze={handleSnoozeTask}
-          onSubtaskToggle={handleSubtaskToggle}
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {tasks.map((task) => (
+          <TaskCard
+            key={task.id}
+            id={task.id}
+            title={task.title}
+            description={task.description || ""}
+            dueDate={new Date(task.due_date || new Date())}
+            dueTime={task.due_time}
+            status={task.status}
+            priority={task.priority}
+            userRole={userRole}
+            isAssigned={!!task.assignee_id || tab === "assigned-tasks"}
+            isShared={!!task.shared_with || tab === "shared-tasks"}
+            subtasks={task.subtasks || []}
+            completedDate={task.completed_at ? new Date(task.completed_at) : null}
+            isRecurring={!!task.is_recurring}
+            isRecurringInstance={!!task.is_recurring_instance}
+            snoozeCount={task.snooze_count || 0}
+            snoozedUntil={task.snoozed_until ? new Date(task.snoozed_until) : null}
+            onEdit={handleEditTask}
+            onDelete={handleDeleteTask}
+            onStatusChange={handleStatusChange}
+            onShare={handleShareTask}
+            onAssign={handleAssignTask}
+            onSnooze={handleSnoozeTask}
+            onSubtaskToggle={handleSubtaskToggle}
+          />
+        ))}
+      </div>
+
+      {/* Task sharing dialog */}
+      <Dialog open={sharingDialogOpen} onOpenChange={setSharingDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Share Task</DialogTitle>
+            <DialogDescription>
+              Enter the user ID of the person you want to share this task with.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="user-id">User ID</Label>
+              <Input 
+                id="user-id" 
+                value={userIdInput} 
+                onChange={(e) => setUserIdInput(e.target.value)} 
+                placeholder="Enter user ID"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSharingDialogOpen(false)}>Cancel</Button>
+            <Button onClick={confirmShareTask} disabled={isProcessing || !userIdInput}>
+              {isProcessing ? "Sharing..." : "Share Task"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Task assignment dialog */}
+      <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Assign Task</DialogTitle>
+            <DialogDescription>
+              Select a staff member to assign this task to.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {staffList.length > 0 ? (
+              <div className="grid gap-2">
+                <Label htmlFor="staff-select">Staff Member</Label>
+                <select
+                  id="staff-select"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  value={staffIdInput}
+                  onChange={(e) => setStaffIdInput(e.target.value)}
+                >
+                  <option value="">Select staff member</option>
+                  {staffList.map(staff => (
+                    <option key={staff.id} value={staff.staff_id}>
+                      {staff.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="grid gap-2">
+                <Label htmlFor="staff-id">Staff ID</Label>
+                <Input 
+                  id="staff-id" 
+                  value={staffIdInput} 
+                  onChange={(e) => setStaffIdInput(e.target.value)} 
+                  placeholder="Enter staff ID"
+                />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignDialogOpen(false)}>Cancel</Button>
+            <Button onClick={confirmAssignTask} disabled={isProcessing || !staffIdInput}>
+              {isProcessing ? "Assigning..." : "Assign Task"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
