@@ -1,15 +1,13 @@
-
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Task } from "@/types/task.types";
+import { Task, TaskTab, TaskStatus, TaskPriority } from "@/types/task.types";
 import { isUserStaff, getStaffBusinessId, clearStaffCache } from "@/utils/staffUtils";
 import { createTask as createTaskService } from "@/services/task/createService";
 
-export type TaskPriority = "normal" | "medium" | "high" | "urgent";
-export type TaskStatus = "pending" | "in-progress" | "completed" | "late";
+export type { TaskPriority, TaskStatus } from "@/types/task.types";
 export type TaskCategory = "daily" | "weekly" | "monthly" | "quarterly";
-export type TaskTab = "my-tasks" | "shared-tasks" | "assigned-tasks";
+export { TaskTab } from "@/types/task.types";
 
 export interface TaskWithSharedInfo extends Task {
   shared_with?: string[];
@@ -26,18 +24,15 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
   const [isStaff, setIsStaff] = useState<boolean>(false);
   const queryClient = useQueryClient();
 
-  // Fetch user role for permission checks
   useEffect(() => {
     const fetchUserRole = async () => {
       try {
-        // Clear staff cache to ensure we have fresh data
         await clearStaffCache();
         
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) return;
         
-        // Check if user is staff first
         const staffStatus = await isUserStaff();
         setIsStaff(staffStatus);
         
@@ -62,10 +57,8 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
     fetchUserRole();
   }, []);
 
-  // Define the query key based on the active tab and role
   const queryKey = ['tasks', tab, filterStatus, filterPriority, isStaff, userRole];
 
-  // Task fetching query
   const { data: tasks = [], isLoading, error, refetch } = useQuery({
     queryKey,
     queryFn: async () => {
@@ -76,16 +69,12 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
       let query;
       let result;
       
-      // Check if user is staff one more time
       const staffCheck = await isUserStaff();
       
-      // Special handling for staff members
       if (staffCheck) {
         console.log("Fetching tasks as staff member, tab:", tab);
-        // For staff members, we prioritize assigned tasks
         if (tab === "my-tasks" || tab === "assigned-tasks") {
           console.log("Fetching assigned tasks for staff member:", session.user.id);
-          // In staff view, my-tasks tab will show tasks assigned to them
           query = supabase
             .from('tasks')
             .select('*')
@@ -93,12 +82,10 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
             
           console.log("Query built for staff assigned tasks");
         } else {
-          // Staff should not see shared tasks, return empty array
           console.log("Staff members cannot see shared tasks, returning empty array");
           return [] as TaskWithSharedInfo[];
         }
       } else {
-        // Normal processing for non-staff users
         console.log("Fetching tasks as regular user, tab:", tab);
         
         if (tab === "my-tasks") {
@@ -108,9 +95,7 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
             .eq('user_id', session.user.id);
             
         } else if (tab === "shared-tasks") {
-          // Check if the shared_tasks table exists and get the tasks shared with the user
           try {
-            // First check the structure of shared_tasks table
             const { data: sharedTasksData, error: sharedError } = await supabase
               .from('shared_tasks')
               .select('id, task_id, shared_with')
@@ -118,7 +103,6 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
               
             if (sharedError) throw sharedError;
             
-            // If we have shared tasks, fetch the actual task data
             if (sharedTasksData && sharedTasksData.length > 0) {
               const taskIds = sharedTasksData.map(item => item.task_id);
               
@@ -129,7 +113,6 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
                 
               if (taskError) throw taskError;
               
-              // The tasks are now marked with the user_id as shared_by
               result = taskData;
             } else {
               result = [];
@@ -140,16 +123,13 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
           }
           
         } else if (tab === "assigned-tasks") {
-          // Check if user is business owner or staff
           if (userRole === "business") {
-            // Get all tasks where this business assigned tasks
             const businessId = session.user.id;
             query = supabase
               .from('tasks')
               .select('*')
               .eq('user_id', businessId);
           } else {
-            // For staff and other roles with assigned tasks
             query = supabase
               .from('tasks')
               .select('*')
@@ -158,21 +138,16 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
         }
       }
       
-      // If we already have results (from shared tasks), return them
       if (result) {
-        // We still need to fetch subtasks for these tasks
         const tasksWithSubtasks = await fetchSubtasksForTasks(result);
         return tasksWithSubtasks;
       }
       
-      // Otherwise execute the query
       if (query) {
-        // Apply status filter if not 'all'
         if (filterStatus !== "all") {
           query = query.eq('status', filterStatus);
         }
         
-        // Apply priority filter if not 'all'
         if (filterPriority !== "all") {
           query = query.eq('priority', filterPriority);
         }
@@ -186,19 +161,17 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
         
         console.log(`Query returned ${data?.length || 0} tasks`);
         
-        // Fetch subtasks for the tasks
         const tasksWithSubtasks = await fetchSubtasksForTasks(data);
         return tasksWithSubtasks;
       }
       
       return [] as TaskWithSharedInfo[];
     },
-    enabled: !!userRole, // Only run the query if we have the user role
-    refetchOnWindowFocus: false,  // Disable auto-refetch on window focus
-    staleTime: 30000, // Consider data stale after 30 seconds
+    enabled: !!userRole,
+    refetchOnWindowFocus: false,
+    staleTime: 30000,
   });
 
-  // Helper function to fetch subtasks for tasks
   const fetchSubtasksForTasks = async (tasks: any[]): Promise<TaskWithSharedInfo[]> => {
     if (!tasks || tasks.length === 0) return tasks;
     
@@ -214,7 +187,6 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
       
       console.log(`Fetched ${subtasksData?.length || 0} subtasks for ${taskIds.length} tasks`);
       
-      // Add subtasks to their respective tasks
       return tasks.map(task => ({
         ...task,
         subtasks: subtasksData?.filter(subtask => subtask.task_id === task.id) || []
@@ -225,7 +197,6 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
     }
   };
 
-  // Filter tasks based on search query
   const filteredTasks = tasks.filter(task => {
     const searchLower = searchQuery.toLowerCase();
     return (
@@ -234,18 +205,15 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
     );
   });
 
-  // Create task mutation - UPDATED to use the task service
   const createTask = async (taskData: any) => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) throw new Error("You must be logged in to create a task");
     
-    // If staff, throw error (staff should not create tasks)
     if (isStaff) {
       throw new Error("Staff members cannot create tasks");
     }
     
-    // If free account, check if already created a task this month
     if (userRole === "free") {
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
@@ -264,16 +232,13 @@ export const useTasks = (tab: TaskTab = "my-tasks") => {
       }
     }
     
-    // Extract recurring data from taskData
     const { recurring, ...taskDataWithoutRecurring } = taskData;
     
-    // Check if this is a recurring task
     const isRecurring = !!recurring && taskData.is_recurring;
     
     try {
       console.log("Creating task with data:", taskData);
       
-      // Use the task service which correctly handles recurring settings
       const createdTask = await createTaskService(
         taskDataWithoutRecurring, 
         isRecurring ? recurring : undefined

@@ -50,5 +50,6 @@ export interface TaskFormData {
 
 export interface TasksResult {
   tasks: Task[];
-  userRole: "free" | "individual" | "business";
+  userRole: "free" | "individual" | "business" | "staff";
 }
+
