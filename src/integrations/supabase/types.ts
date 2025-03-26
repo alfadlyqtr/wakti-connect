@@ -1392,6 +1392,8 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          due_date: string | null
+          due_time: string | null
           id: string
           is_completed: boolean
           task_id: string
@@ -1400,6 +1402,8 @@ export type Database = {
         Insert: {
           content: string
           created_at?: string
+          due_date?: string | null
+          due_time?: string | null
           id?: string
           is_completed?: boolean
           task_id: string
@@ -1408,6 +1412,8 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
+          due_date?: string | null
+          due_time?: string | null
           id?: string
           is_completed?: boolean
           task_id?: string

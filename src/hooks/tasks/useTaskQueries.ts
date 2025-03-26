@@ -161,7 +161,7 @@ export const useTaskQueries = (tab: TaskTab = "my-tasks"): UseTaskQueriesReturn 
     tasks,
     isLoading,
     error,
-    refetch, // Just return the refetch function directly since we updated the type
+    refetch,
     userRole,
     isStaff
   };
@@ -174,21 +174,30 @@ async function fetchSubtasksForTasks(tasks: any[]): Promise<TaskWithSharedInfo[]
   try {
     const taskIds = tasks.map(task => task.id);
     
+    console.log("Fetching subtasks for task IDs:", taskIds);
+    
     const { data: subtasksData, error: subtasksError } = await supabase
       .from('todo_items')
       .select('*')
       .in('task_id', taskIds);
       
-    if (subtasksError) throw subtasksError;
+    if (subtasksError) {
+      console.error("Error fetching subtasks:", subtasksError);
+      throw subtasksError;
+    }
     
     console.log(`Fetched ${subtasksData?.length || 0} subtasks for ${taskIds.length} tasks`);
+    
+    if (subtasksData) {
+      console.log("Sample subtask data:", subtasksData.length > 0 ? subtasksData[0] : "No subtasks found");
+    }
     
     return tasks.map(task => ({
       ...task,
       subtasks: subtasksData?.filter(subtask => subtask.task_id === task.id) || []
     }));
   } catch (error) {
-    console.error("Error fetching subtasks:", error);
+    console.error("Error in fetchSubtasksForTasks:", error);
     return tasks;
   }
 }

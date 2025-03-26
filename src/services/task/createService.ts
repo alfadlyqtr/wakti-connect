@@ -82,7 +82,9 @@ async function createSubtasks(taskId: string, subtasks: SubTask[]): Promise<void
     due_time: subtask.due_time || null
   }));
   
-  const { error } = await supabase
+  console.log("Creating subtasks with data:", subtasksToCreate);
+  
+  const { data, error } = await supabase
     .from('todo_items')
     .insert(subtasksToCreate);
     
@@ -90,6 +92,8 @@ async function createSubtasks(taskId: string, subtasks: SubTask[]): Promise<void
     console.error("Failed to create subtasks:", error);
     throw error;
   }
+  
+  console.log("Subtasks created successfully:", data);
 }
 
 // Create recurring task instances

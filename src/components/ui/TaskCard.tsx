@@ -137,9 +137,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
       
       return formattedDate;
     } catch (error) {
+      console.error("Error formatting subtask due date:", error, dueDate);
       return null;
     }
   };
+  
+  console.log("Rendering TaskCard with subtasks:", subtasks);
   
   return (
     <Card className={`border-l-4 ${isOverdue ? 'border-l-red-500' : `border-l-${priorityColors[priority].split(' ')[0]}`}`}>
