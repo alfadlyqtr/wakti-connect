@@ -7,7 +7,7 @@ import { toast } from "@/components/ui/use-toast";
 
 export const useTaskOperations = (
   userRole: "free" | "individual" | "business" | "staff" | null,
-  isStaff: boolean
+  isStaff: boolean = false
 ): UseTaskOperationsReturn => {
   const [isProcessing, setIsProcessing] = useState(false);
 

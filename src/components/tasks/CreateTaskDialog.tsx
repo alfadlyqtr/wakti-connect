@@ -61,20 +61,20 @@ import { Loader2 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { toast } from "@/components/ui/use-toast";
 
-interface CreateTaskDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onCreateTask: (taskData: any) => Promise<void>;
-  userRole: "free" | "individual" | "business" | "staff";
-}
-
-// Define TeamTask interface to avoid deep type instantiation
+// Use a simple interface for TeamTask to avoid the circular reference
 interface TeamTask {
   id: string;
   title: string;
   description?: string | null;
   due_date?: string | null;
   priority: string;
+}
+
+interface CreateTaskDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreateTask: (taskData: any) => Promise<void>;
+  userRole: "free" | "individual" | "business" | "staff";
 }
 
 export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
