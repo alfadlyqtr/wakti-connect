@@ -58,7 +58,7 @@ export const DateTimeFields: React.FC<DateTimeFieldsProps> = ({ form }) => {
                   <Calendar
                     mode="single"
                     selected={field.value ? new Date(field.value) : undefined}
-                    onSelect={(date) => field.onChange(date?.toISOString() || "")}
+                    onSelect={(date) => field.onChange(date?.toISOString().split('T')[0] || "")}
                     initialFocus
                   />
                 </PopoverContent>

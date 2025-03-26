@@ -144,3 +144,57 @@ export function logAssignmentStatus() {
   console.log("Use verifyTaskAssignment(taskId, staffId) to check if a task is properly assigned");
   console.log("Use getTasksAssignedToStaff(staffId) to get all tasks assigned to a staff member");
 }
+
+/**
+ * Utility function to verify all assignments for a business
+ * @param businessId The ID of the business
+ */
+export async function verifyAllBusinessAssignments(businessId: string) {
+  try {
+    // First, get all staff members for this business
+    const { data: staffData, error: staffError } = await supabase
+      .from('business_staff')
+      .select('id, user_id')
+      .eq('business_id', businessId);
+      
+    if (staffError) {
+      throw staffError;
+    }
+    
+    if (!staffData || staffData.length === 0) {
+      return {
+        success: true,
+        message: "No staff members found for this business",
+        assignments: []
+      };
+    }
+    
+    // For each staff member, get their assigned tasks
+    const assignments = await Promise.all(
+      staffData.map(async (staff) => {
+        const result = await getTasksAssignedToStaff(staff.user_id);
+        return {
+          staffId: staff.user_id,
+          staffRelationId: staff.id,
+          ...result
+        };
+      })
+    );
+    
+    return {
+      success: true,
+      message: "Successfully verified all business assignments",
+      assignments,
+      staffCount: staffData.length,
+      totalAssignedTasks: assignments.reduce((total, curr) => total + curr.count, 0)
+    };
+  } catch (error) {
+    console.error("Error verifying all business assignments:", error);
+    return {
+      success: false,
+      message: "Error verifying business assignments",
+      error,
+      assignments: []
+    };
+  }
+}

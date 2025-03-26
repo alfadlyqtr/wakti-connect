@@ -79,21 +79,21 @@ export const TimePicker: React.FC<TimePickerProps> = ({
             variant="ghost"
             size="icon"
             type="button"
-            className="absolute right-0 top-0 h-full"
+            className="absolute right-0 top-0 h-full pointer-events-auto"
             onClick={() => setIsOpen(true)}
           >
             <Clock className="h-4 w-4" />
           </Button>
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-48 p-0">
-        <ScrollArea className="h-60">
+      <PopoverContent className="w-48 p-0" align="start" sideOffset={4}>
+        <ScrollArea className="h-60 overflow-auto bg-background">
           <div className="py-1">
             {timeOptions.map((time) => (
               <Button
                 key={time}
                 variant="ghost"
-                className={`w-full justify-start px-3 ${
+                className={`w-full justify-start px-3 text-left ${
                   time === value ? 'bg-muted' : ''
                 }`}
                 onClick={() => handleSelectTime(time)}

@@ -32,6 +32,7 @@ export const TimePickerField: React.FC<TimePickerFieldProps> = ({
 }) => {
   // Use state to track the input value for direct time input
   const [timeInput, setTimeInput] = useState<string>("");
+  const [isOpen, setIsOpen] = useState(false);
   
   // Common times that people often select
   const quickTimeOptions = [
@@ -61,6 +62,7 @@ export const TimePickerField: React.FC<TimePickerFieldProps> = ({
       const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
       if (timeRegex.test(timeInput)) {
         onChange(timeInput);
+        setIsOpen(false);
       } else {
         // Reset input if invalid
         setTimeInput("");
@@ -87,23 +89,23 @@ export const TimePickerField: React.FC<TimePickerFieldProps> = ({
       render={({ field }) => (
         <FormItem>
           <FormLabel>{label}</FormLabel>
-          <Popover>
+          <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
               <FormControl>
                 <Button
                   variant="outline"
                   className={cn(
-                    "w-full pl-3 text-left font-normal",
+                    "w-full pl-3 text-left font-normal justify-between",
                     !field.value && "text-muted-foreground"
                   )}
                 >
                   {field.value ? formatTimeDisplay(field.value.toString()) : "Select time"}
-                  <Clock className="ml-auto h-4 w-4 opacity-50" />
+                  <Clock className="h-4 w-4 opacity-50 ml-2" />
                 </Button>
               </FormControl>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <div className="p-3 space-y-3">
+            <PopoverContent className="w-auto p-0" align="start" sideOffset={4}>
+              <div className="p-3 space-y-3 bg-background">
                 {/* Quick time selections */}
                 <div className="flex flex-wrap gap-2">
                   {quickTimeOptions.map((option) => (
@@ -111,7 +113,10 @@ export const TimePickerField: React.FC<TimePickerFieldProps> = ({
                       key={option.value}
                       variant="outline"
                       size="sm"
-                      onClick={() => field.onChange(option.value)}
+                      onClick={() => {
+                        field.onChange(option.value);
+                        setIsOpen(false);
+                      }}
                       className={cn(
                         "text-xs",
                         field.value === option.value && "bg-primary text-primary-foreground"
@@ -158,6 +163,7 @@ export const TimePickerField: React.FC<TimePickerFieldProps> = ({
                             const currentValue = field.value?.toString() || "";
                             const currentHour = currentValue.split(":")[0] || "00";
                             field.onChange(`${currentHour}:${minute}`);
+                            
                           }}
                         >
                           {minute}
@@ -188,6 +194,7 @@ export const TimePickerField: React.FC<TimePickerFieldProps> = ({
                   onClick={() => {
                     field.onChange("");
                     setTimeInput("");
+                    setIsOpen(false);
                   }}
                   className="mt-2 w-full"
                 >
