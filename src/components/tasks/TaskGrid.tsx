@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
+import { clearStaffCache } from "@/utils/staffUtils";
 
 interface TaskGridProps {
   tasks: TaskWithSharedInfo[];
@@ -52,10 +53,12 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
       const { data, error } = await supabase
         .from('business_staff')
         .select('id, name, staff_id')
-        .eq('business_id', sessionData.session.user.id);
+        .eq('business_id', sessionData.session.user.id)
+        .eq('status', 'active');
         
       if (error) throw error;
       
+      console.log("Fetched staff members:", data?.length || 0);
       setStaffList(data || []);
     } catch (error) {
       console.error("Error fetching staff members:", error);
@@ -118,7 +121,10 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
         description: `Task status changed to ${newStatus}.`
       });
       
-      if (refetch) refetch();
+      // Add slight delay before refetching to prevent UI freeze
+      setTimeout(() => {
+        if (refetch) refetch();
+      }, 300);
     } catch (error) {
       console.error("Error updating task status:", error);
       toast({
@@ -153,7 +159,11 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
       
       setSharingDialogOpen(false);
       setUserIdInput("");
-      if (refetch) refetch();
+      
+      // Add a small delay before refetching to prevent UI freezing
+      setTimeout(() => {
+        if (refetch) refetch();
+      }, 300);
     } catch (error) {
       console.error("Error sharing task:", error);
       toast({
@@ -171,6 +181,12 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
     
     setIsProcessing(true);
     try {
+      console.log(`Assigning task ${selectedTaskId} to staff ${staffIdInput}`);
+      
+      // Clear staff cache immediately to force refresh on next access
+      await clearStaffCache();
+      
+      // Assign the task
       await assignTask(selectedTaskId, staffIdInput);
       
       toast({
@@ -181,10 +197,10 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
       setAssignDialogOpen(false);
       setStaffIdInput("");
       
-      // Add a small delay before refetching to prevent UI freezing
+      // Add a longer delay before refetching to ensure all database updates are complete
       setTimeout(() => {
         if (refetch) refetch();
-      }, 300);
+      }, 500);
     } catch (error) {
       console.error("Error assigning task:", error);
       toast({
@@ -234,7 +250,10 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
         description: `This task has been snoozed for ${days} day${days > 1 ? 's' : ''}.`
       });
       
-      if (refetch) refetch();
+      // Add a small delay before refetching to prevent UI freezing
+      setTimeout(() => {
+        if (refetch) refetch();
+      }, 300);
     } catch (error) {
       console.error("Error snoozing task:", error);
       toast({

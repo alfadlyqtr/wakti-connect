@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -197,13 +196,42 @@ export const getStaffPermissions = (): Record<string, boolean> => {
 };
 
 /**
- * Clear staff-related cached data
+ * Clear staff-related cached data and force a refresh
+ * This should be called when making task assignments to ensure data is fresh
  */
-export const clearStaffCache = (): void => {
+export const clearStaffCache = async (): Promise<void> => {
+  console.log("Clearing staff cache to ensure fresh data");
   localStorage.removeItem('isStaff');
   localStorage.removeItem('staffPermissions');
   localStorage.removeItem('staffRelationId');
   localStorage.removeItem('staffBusinessId');
+  
+  // Force a check to rebuild the cache if needed
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from('business_staff')
+        .select('id, permissions, business_id')
+        .eq('staff_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+        
+      if (data) {
+        localStorage.setItem('isStaff', 'true');
+        if (data.permissions) {
+          localStorage.setItem('staffPermissions', JSON.stringify(data.permissions));
+        }
+        localStorage.setItem('staffRelationId', data.id);
+        if (data.business_id) {
+          localStorage.setItem('staffBusinessId', data.business_id);
+        }
+        console.log("Staff cache refreshed with latest data");
+      }
+    }
+  } catch (error) {
+    console.error("Error refreshing staff cache:", error);
+  }
 };
 
 /**

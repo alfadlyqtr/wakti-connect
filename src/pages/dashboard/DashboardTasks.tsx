@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
@@ -7,7 +8,8 @@ import TaskControls from "@/components/tasks/TaskControls";
 import EmptyTasksState from "@/components/tasks/EmptyTasksState";
 import TaskGrid from "@/components/tasks/TaskGrid";
 import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog";
-import { isUserStaff } from "@/utils/staffUtils";
+import { isUserStaff, clearStaffCache } from "@/utils/staffUtils";
+import { subscribeToNotifications } from "@/services/notifications";
 
 const DashboardTasks = () => {
   const [userRole, setUserRole] = useState<"free" | "individual" | "business" | "staff" | null>(null);
@@ -34,6 +36,9 @@ const DashboardTasks = () => {
   useEffect(() => {
     const getUserRole = async () => {
       try {
+        // Clear staff cache to ensure we have fresh data
+        await clearStaffCache();
+        
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) return;
@@ -43,7 +48,9 @@ const DashboardTasks = () => {
         setIsUserStaffMember(staffStatus);
         
         if (staffStatus) {
+          console.log("User is staff member, setting appropriate role and tab");
           setUserRole('staff');
+          setActiveTab('assigned-tasks');
         } else {
           // Get regular user role from profile
           const { data: profileData } = await supabase
@@ -52,6 +59,7 @@ const DashboardTasks = () => {
             .eq('id', session.user.id)
             .single();
           
+          console.log(`Setting user role from profile: ${profileData?.account_type || "free"}`);
           setUserRole(profileData?.account_type || "free");
         }
       } catch (error) {
@@ -60,7 +68,30 @@ const DashboardTasks = () => {
     };
 
     getUserRole();
-  }, []);
+    
+    // Subscribe to notifications for real-time updates
+    const unsubscribe = subscribeToNotifications((notification) => {
+      console.log("Received new notification:", notification);
+      
+      // If task-related notification, refetch tasks
+      if (notification.type.includes('task')) {
+        console.log("Task-related notification received, refetching tasks");
+        refetch();
+      }
+      
+      // For assigned tasks, also clear staff cache to ensure fresh data
+      if (notification.type === 'task_assigned') {
+        clearStaffCache().then(() => {
+          console.log("Staff cache cleared after task assignment notification");
+          refetch();
+        });
+      }
+    });
+    
+    return () => {
+      unsubscribe();
+    };
+  }, [refetch]);
 
   useEffect(() => {
     if (error) {
@@ -80,7 +111,9 @@ const DashboardTasks = () => {
       await createTask(taskData);
       setCreateDialogOpen(false);
       // Refresh the task list
-      refetch();
+      setTimeout(() => {
+        refetch();
+      }, 300);
     } catch (error) {
       console.error("Error in handleCreateTask:", error);
       toast({
@@ -93,7 +126,20 @@ const DashboardTasks = () => {
   };
 
   const handleTabChange = (newTab: TaskTab) => {
+    console.log(`Changing tab from ${activeTab} to ${newTab}`);
     setActiveTab(newTab);
+    
+    // Staff members should only see assigned tasks
+    if (isUserStaffMember && newTab !== "assigned-tasks") {
+      console.log("Staff member attempted to switch to non-assigned tab, redirecting");
+      setActiveTab("assigned-tasks");
+      return;
+    }
+    
+    // Force refetch when changing tabs
+    setTimeout(() => {
+      refetch();
+    }, 100);
   };
 
   if (isLoading) {

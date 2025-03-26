@@ -7,13 +7,20 @@ import { validateTaskStatus, validateTaskPriority } from "../utils/statusValidat
  * Fetches tasks assigned to the current user
  */
 export async function fetchAssignedTasks(userId: string): Promise<Task[]> {
+  console.log(`Fetching assigned tasks for user ${userId}`);
+  
   const { data, error } = await supabase
     .from('tasks')
     .select('*')
     .eq('assignee_id', userId)
     .order('due_date', { ascending: true });
     
-  if (error) throw error;
+  if (error) {
+    console.error("Error fetching assigned tasks:", error);
+    throw error;
+  }
+  
+  console.log(`Found ${data?.length || 0} assigned tasks for user ${userId}`);
   
   // Transform data with proper typing
   return (data || []).map(item => ({
