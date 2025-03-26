@@ -1,15 +1,19 @@
 
 import { Task, TaskStatus, TaskPriority, TaskTab } from '@/types/task.types';
 
-// Re-export types that should be available from this module
-export type { TaskPriority, TaskStatus, TaskTab } from '@/types/task.types';
-export type TaskCategory = "daily" | "weekly" | "monthly" | "quarterly";
-
 export interface TaskWithSharedInfo extends Task {
   shared_with?: string[];
   shared_by?: string;
   assigned_by?: string;
   assigned_to?: string;
+  subtasks?: {
+    id: string;
+    content: string;
+    is_completed: boolean;
+    task_id: string;
+    due_date?: string | null;
+    due_time?: string | null;
+  }[];
 }
 
 export interface UseTaskFiltersReturn {
@@ -22,16 +26,21 @@ export interface UseTaskFiltersReturn {
   filteredTasks: TaskWithSharedInfo[];
 }
 
-// Update the return type for refetch to match React Query's actual return type
+export interface UseTaskOperationsReturn {
+  createTask: (taskData: any) => Promise<any>;
+  updateTask?: (taskId: string, taskData: any) => Promise<any>;
+  deleteTask?: (taskId: string) => Promise<void>;
+  shareTask?: (taskId: string, userId: string) => Promise<void>;
+  assignTask?: (taskId: string, assigneeId: string) => Promise<void>;
+}
+
 export interface UseTaskQueriesReturn {
   tasks: TaskWithSharedInfo[];
   isLoading: boolean;
   error: Error | null;
-  refetch: () => Promise<any>; // Change from Promise<void> to Promise<any>
+  refetch: () => void;
   userRole: "free" | "individual" | "business" | "staff" | null;
   isStaff: boolean;
 }
 
-export interface UseTaskOperationsReturn {
-  createTask: (taskData: any) => Promise<Task>;
-}
+export type { TaskTab, TaskStatus, TaskPriority };
