@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { TaskWithSharedInfo } from '../types';
+import { validateTaskStatus, validateTaskPriority } from '@/services/task/utils/statusValidator';
 
 export const fetchTeamTasks = async (businessId: string): Promise<TaskWithSharedInfo[]> => {
   try {
@@ -20,7 +21,14 @@ export const fetchTeamTasks = async (businessId: string): Promise<TaskWithShared
     
     console.log(`Found ${data?.length || 0} team tasks for business ${businessId}`);
     
-    return data || [];
+    // Apply proper type validations
+    const typedTasks: TaskWithSharedInfo[] = (data || []).map(task => ({
+      ...task,
+      status: validateTaskStatus(task.status),
+      priority: validateTaskPriority(task.priority)
+    }));
+    
+    return typedTasks;
   } catch (error) {
     console.error("Error in fetchTeamTasks:", error);
     return [];

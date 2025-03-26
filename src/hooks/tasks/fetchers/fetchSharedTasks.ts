@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { TaskWithSharedInfo } from '../types';
+import { validateTaskStatus, validateTaskPriority } from '@/services/task/utils/statusValidator';
 
 export const fetchSharedTasks = async (userId: string): Promise<TaskWithSharedInfo[]> => {
   try {
@@ -12,10 +13,12 @@ export const fetchSharedTasks = async (userId: string): Promise<TaskWithSharedIn
     if (sharedError) throw sharedError;
     
     if (sharedTasksData && sharedTasksData.length > 0) {
-      const taskData = sharedTasksData
+      const taskData: TaskWithSharedInfo[] = sharedTasksData
         .filter(item => item.tasks)
         .map(item => ({
           ...item.tasks,
+          status: validateTaskStatus(item.tasks.status),
+          priority: validateTaskPriority(item.tasks.priority),
           shared_with: [userId]
         }));
       
