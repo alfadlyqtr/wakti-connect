@@ -45,14 +45,14 @@ const TaskGrid = ({ tasks, userRole, tab, refetch }: TaskGridProps) => {
 
   const fetchStaffMembers = async () => {
     try {
-      const { data: session } = await supabase.auth.getSession();
+      const { data: sessionData } = await supabase.auth.getSession();
       
-      if (!session?.user) return;
+      if (!sessionData?.session) return;
       
       const { data, error } = await supabase
         .from('business_staff')
         .select('id, name, staff_id')
-        .eq('business_id', session.user.id);
+        .eq('business_id', sessionData.session.user.id);
         
       if (error) throw error;
       
