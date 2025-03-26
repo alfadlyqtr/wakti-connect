@@ -1,0 +1,132 @@
+
+import React from "react";
+import { useFieldArray, UseFormReturn } from "react-hook-form";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { TimePicker } from "@/components/ui/time-picker";
+import { Plus, Trash2, Calendar, Clock } from "lucide-react";
+
+interface SubtasksTabProps {
+  form: UseFormReturn<any>;
+  enableSubtasks: boolean;
+}
+
+export function SubtasksTab({ form, enableSubtasks }: SubtasksTabProps) {
+  // Setup field array for subtasks
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "subtasks"
+  });
+
+  if (!enableSubtasks) {
+    return (
+      <div className="flex flex-col items-center justify-center py-6 text-center">
+        <p className="text-muted-foreground mb-2">
+          Enable subtasks on the Details tab first.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 pt-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium">Manage Subtasks</h3>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => append({ content: "", is_completed: false, due_date: null, due_time: null })}
+        >
+          <Plus className="h-4 w-4 mr-1" /> Add Subtask
+        </Button>
+      </div>
+      
+      {fields.length === 0 && (
+        <div className="text-sm text-muted-foreground p-4 border border-dashed rounded-md text-center">
+          No subtasks added yet. Click the button above to add one.
+        </div>
+      )}
+      
+      {fields.map((field, index) => (
+        <div key={field.id} className="border rounded-md p-4 space-y-3">
+          <FormField
+            control={form.control}
+            name={`subtasks.${index}.content`}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Subtask {index + 1}</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter subtask..." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name={`subtasks.${index}.due_date`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
+                    Due Date
+                  </FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="date" 
+                      {...field} 
+                      value={field.value || ""}
+                      max={form.watch("due_date")} // Can't exceed main task due date
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name={`subtasks.${index}.due_time`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-1">
+                    <Clock className="h-4 w-4" />
+                    Due Time
+                  </FormLabel>
+                  <FormControl>
+                    <TimePicker 
+                      value={field.value || ""} 
+                      onChange={field.onChange}
+                      interval={15}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            onClick={() => remove(index)}
+            className="w-full"
+          >
+            <Trash2 className="h-4 w-4 mr-1" /> Remove Subtask
+          </Button>
+        </div>
+      ))}
+    </div>
+  );
+}
