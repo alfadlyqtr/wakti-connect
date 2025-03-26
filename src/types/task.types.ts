@@ -12,6 +12,7 @@ export interface Task {
   created_at: string;
   updated_at: string;
   completed_at: string | null;
+  is_recurring?: boolean;
   is_recurring_instance?: boolean;
   parent_recurring_id?: string | null;
   subtasks?: SubTask[];
@@ -44,6 +45,7 @@ export interface TaskFormData {
   subtasks?: SubTask[];
   snooze_count?: number;
   snoozed_until?: string | null;
+  is_recurring?: boolean;
 }
 
 export interface TasksResult {

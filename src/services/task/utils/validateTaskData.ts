@@ -15,6 +15,7 @@ export function sanitizeTaskData(taskData: TaskFormData): Partial<TaskFormData> 
     due_date: taskData.due_date,
     due_time: taskData.due_time,
     assignee_id: taskData.assignee_id,
+    is_recurring: taskData.is_recurring
     // Do not include enableSubtasks as it's not a database field
   };
 
