@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -24,6 +23,21 @@ const GradientTab: React.FC<GradientTabProps> = ({
 }) => {
   const [color1, setColor1] = useState("#f6d365");
   const [color2, setColor2] = useState("#fda085");
+  
+  useEffect(() => {
+    // Extract colors from the gradient value if it exists
+    if (value && value.includes('linear-gradient')) {
+      try {
+        const colorsMatch = value.match(/rgba?\([\d\s,.]+\)|#[0-9a-f]{3,8}/gi);
+        if (colorsMatch && colorsMatch.length >= 2) {
+          setColor1(colorsMatch[0]);
+          setColor2(colorsMatch[1]);
+        }
+      } catch (e) {
+        // Keep default colors if parsing fails
+      }
+    }
+  }, []);
   
   // Preset gradients
   const gradientPresets = [
@@ -166,24 +180,21 @@ const GradientTab: React.FC<GradientTabProps> = ({
       
       <div>
         <Label className="block mb-2">Direction</Label>
-        <RadioGroup 
-          value={direction} 
-          onValueChange={handleDirectionChange}
-          className="grid grid-cols-4 gap-2"
-        >
+        <div className="grid grid-cols-4 gap-2">
           {directions.map((dir) => (
-            <div 
+            <button
               key={dir.value}
-              className={`flex flex-col items-center justify-center p-2 border rounded-md cursor-pointer ${
-                direction === dir.value ? 'bg-primary/10 border-primary' : ''
-              }`}
+              type="button"
               onClick={() => handleDirectionChange(dir.value)}
+              className={`flex flex-col items-center justify-center p-2 border rounded-md cursor-pointer ${
+                direction === dir.value ? 'bg-primary/10 border-primary' : 'border-border hover:bg-accent/50'
+              }`}
             >
               <span className="text-xl">{dir.icon}</span>
               <span className="text-xs mt-1">{dir.label}</span>
-            </div>
+            </button>
           ))}
-        </RadioGroup>
+        </div>
       </div>
       
       <div>

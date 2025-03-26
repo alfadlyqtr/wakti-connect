@@ -81,9 +81,9 @@ const FormTabs: React.FC<FormTabsProps> = ({
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <TabsList className="grid grid-cols-3 mb-4 w-full max-w-md mx-auto">
-        <TabsTrigger value="details">Details</TabsTrigger>
-        <TabsTrigger value="customize">Customize</TabsTrigger>
-        <TabsTrigger value="share">Share</TabsTrigger>
+        <TabsTrigger value="details" className="px-4 py-2 text-center">Details</TabsTrigger>
+        <TabsTrigger value="customize" className="px-4 py-2 text-center">Customize</TabsTrigger>
+        <TabsTrigger value="share" className="px-4 py-2 text-center">Share</TabsTrigger>
       </TabsList>
       
       <TabsContent value="details">
@@ -126,14 +126,14 @@ const FormTabs: React.FC<FormTabsProps> = ({
         <div className="px-6 py-4 flex justify-between">
           <button 
             type="button" 
-            className="px-4 py-2 border rounded-md" 
+            className="px-4 py-2 border rounded-md hover:bg-muted transition-colors" 
             onClick={handlePrevTab}
           >
             Back
           </button>
           <button 
             type="button" 
-            className="px-4 py-2 bg-primary text-white rounded-md" 
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors" 
             onClick={handleNextTab}
           >
             Next: Share

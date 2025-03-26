@@ -64,8 +64,8 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="template">Choose Template</TabsTrigger>
-              <TabsTrigger value="scratch">Customize</TabsTrigger>
+              <TabsTrigger value="template" className="px-3 py-2 text-center">Choose Template</TabsTrigger>
+              <TabsTrigger value="scratch" className="px-3 py-2 text-center">Customize</TabsTrigger>
             </TabsList>
             
             <TabsContent value="template">

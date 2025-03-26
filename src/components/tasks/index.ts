@@ -1,5 +1,5 @@
 
-export { TaskFormFields } from "./form-fields";
+export { TaskFormFields, BasicFields, DateTimeFields, SubtasksSection, PriorityField } from "./form-fields";
 export { TaskFormTabs } from "./TaskFormTabs";
 export { CreateTaskDialog } from "./CreateTaskDialog";
 export { default as TaskGrid } from "./TaskGrid";
