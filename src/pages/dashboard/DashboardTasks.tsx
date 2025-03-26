@@ -6,6 +6,7 @@ import TasksLoading from "@/components/tasks/TasksLoading";
 import TasksHeader from "@/components/tasks/TasksHeader";
 import TasksContainer from "@/components/tasks/TasksContainer";
 import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog";
+import { TaskStatusFilter, TaskPriorityFilter } from "@/components/tasks/types";
 
 const DashboardTasks = () => {
   const {
@@ -40,9 +41,9 @@ const DashboardTasks = () => {
       <TaskControls
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        filterStatus={filterStatus}
+        filterStatus={filterStatus as TaskStatusFilter}
         onStatusChange={setFilterStatus}
-        filterPriority={filterPriority}
+        filterPriority={filterPriority as TaskPriorityFilter}
         onPriorityChange={setFilterPriority}
         onCreateTask={() => setCreateDialogOpen(true)}
         currentTab={activeTab}
