@@ -7,7 +7,7 @@ import { createTask as createTaskService } from "@/services/task/createService";
 
 export type { TaskPriority, TaskStatus } from "@/types/task.types";
 export type TaskCategory = "daily" | "weekly" | "monthly" | "quarterly";
-export { TaskTab } from "@/types/task.types";
+export type { TaskTab } from "@/types/task.types";
 
 export interface TaskWithSharedInfo extends Task {
   shared_with?: string[];
