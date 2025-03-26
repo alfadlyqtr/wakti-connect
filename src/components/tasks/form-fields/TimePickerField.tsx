@@ -19,7 +19,7 @@ import {
 
 interface TimePickerFieldProps {
   form: UseFormReturn<TaskFormValues>;
-  name: "dueTime" | "subtasks.0.dueTime" | string;
+  name: "dueTime" | `subtasks.${number}.dueTime`;  // Fix: Changed to accept only valid form field paths
   label?: string;
 }
 
@@ -28,11 +28,11 @@ export const TimePickerField: React.FC<TimePickerFieldProps> = ({
   name,
   label = "Time" 
 }) => {
-  // Generate time options from 00:00 to 23:45 in 15-minute intervals
+  // Generate time options from 00:00 to 23:45 in 5-minute intervals
   const timeOptions = React.useMemo(() => {
     const options = [];
     for (let hour = 0; hour < 24; hour++) {
-      for (let minute = 0; minute < 60; minute += 15) {
+      for (let minute = 0; minute < 60; minute += 5) {
         const hourFormatted = hour.toString().padStart(2, '0');
         const minuteFormatted = minute.toString().padStart(2, '0');
         options.push(`${hourFormatted}:${minuteFormatted}`);
@@ -50,8 +50,8 @@ export const TimePickerField: React.FC<TimePickerFieldProps> = ({
           <FormLabel>{label}</FormLabel>
           <Select
             onValueChange={field.onChange}
-            defaultValue={field.value || undefined}
-            value={field.value || undefined}
+            defaultValue={field.value || ""}  // Fix: properly handle undefined value
+            value={field.value || ""}  // Fix: properly handle undefined value
           >
             <FormControl>
               <SelectTrigger>

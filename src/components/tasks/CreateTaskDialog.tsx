@@ -43,7 +43,7 @@ export function CreateTaskDialog({
       recurring: {
         frequency: "daily",
         interval: 1,
-        max_occurrences: 5
+        maxOccurrences: 5  // Changed from max_occurrences to maxOccurrences
       }
     },
   });

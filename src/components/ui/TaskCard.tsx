@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   Card, 
@@ -22,7 +21,7 @@ import {
   MoreVertical,
   CheckIcon,
   PlayIcon,
-  BellSlashIcon,
+  BellOff,
   Share2Icon,
   UsersIcon
 } from "lucide-react";
@@ -109,7 +108,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
     snoozed: "bg-purple-500"
   };
 
-  // Format date to show relative time or date
   const formatDueDate = () => {
     if (!isValid(dueDate)) return "Invalid date";
     
@@ -120,14 +118,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
     return formatDistanceToNow(dueDate, { addSuffix: true });
   };
 
-  // Format due time if available
   const formatTime = (time: string | null | undefined) => {
     if (!time) return null;
     
-    // Split the time by colon to get hours and minutes
     const [hours, minutes] = time.split(':');
     
-    // Convert to 12-hour format
     const hour = parseInt(hours, 10);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const hour12 = hour % 12 || 12;
@@ -135,7 +130,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
     return `${hour12}:${minutes} ${ampm}`;
   };
 
-  // Format subtask due date with time if available
   const formatSubtaskDueDate = (dueDate: string | null | undefined, dueTime: string | null | undefined) => {
     if (!dueDate) return null;
     
@@ -169,7 +163,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
               
               <DropdownMenuSeparator />
               
-              {/* Status change options */}
               {status !== 'completed' && (
                 <DropdownMenuItem onClick={() => onStatusChange(id, 'completed')}>
                   <CheckIcon className="mr-2 h-4 w-4 text-green-500" />
@@ -193,7 +186,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
               
               <DropdownMenuSeparator />
               
-              {/* Edit/Delete options */}
               <DropdownMenuItem onClick={() => onEdit(id)}>
                 <PenIcon className="mr-2 h-4 w-4" />
                 <span>Edit</span>
@@ -206,7 +198,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
               
               <DropdownMenuSeparator />
               
-              {/* Share option */}
               {onShare && userRole !== 'free' && !isShared && (
                 <DropdownMenuItem onClick={() => onShare(id)}>
                   <Share2Icon className="mr-2 h-4 w-4" />
@@ -214,7 +205,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </DropdownMenuItem>
               )}
               
-              {/* Assign option */}
               {onAssign && userRole === 'business' && !isAssigned && (
                 <DropdownMenuItem onClick={() => onAssign(id)}>
                   <UsersIcon className="mr-2 h-4 w-4" />
@@ -222,21 +212,20 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </DropdownMenuItem>
               )}
               
-              {/* Snooze options */}
               {onSnooze && status !== 'completed' && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel>Snooze For</DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => onSnooze(id, 1)}>
-                    <BellSlashIcon className="mr-2 h-4 w-4" />
+                    <BellOff className="mr-2 h-4 w-4" />
                     <span>1 Day</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onSnooze(id, 3)}>
-                    <BellSlashIcon className="mr-2 h-4 w-4" />
+                    <BellOff className="mr-2 h-4 w-4" />
                     <span>3 Days</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onSnooze(id, 7)}>
-                    <BellSlashIcon className="mr-2 h-4 w-4" />
+                    <BellOff className="mr-2 h-4 w-4" />
                     <span>1 Week</span>
                   </DropdownMenuItem>
                 </>
@@ -300,7 +289,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           
           {status === 'snoozed' && snoozedUntil && (
             <div className="flex items-center gap-2 text-muted-foreground">
-              <BellSlashIcon className="h-4 w-4" />
+              <BellOff className="h-4 w-4" />
               <span>
                 Snoozed until {format(snoozedUntil, 'MMM d')}
                 {snoozeCount > 1 && ` (${snoozeCount} times)`}
@@ -309,7 +298,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
           )}
         </div>
         
-        {/* Subtasks Section */}
         {hasSubtasks && (
           <div className="mt-4">
             <Collapsible
@@ -331,7 +319,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </CollapsibleTrigger>
               </div>
               
-              {/* Always show the first 2 subtasks */}
               <div className="space-y-2">
                 {subtasks.slice(0, 2).map((subtask, index) => (
                   <div key={subtask.id || index} className="flex items-start gap-2 text-sm">
@@ -356,7 +343,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 ))}
               </div>
               
-              {/* Show remaining subtasks when expanded */}
               <CollapsibleContent className="space-y-2 mt-2">
                 {subtasks.slice(2).map((subtask, index) => (
                   <div key={subtask.id || (index + 2)} className="flex items-start gap-2 text-sm">
