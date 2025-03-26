@@ -25,7 +25,8 @@ import {
   PlayIcon,
   BellOff,
   Share2Icon,
-  UsersIcon
+  UsersIcon,
+  Plus
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -38,6 +39,9 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { formatTimeString } from "@/utils/dateTimeFormatter";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 interface TaskCardProps {
   id: string;
@@ -91,6 +95,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onSubtaskToggle
 }) => {
   const [showAllSubtasks, setShowAllSubtasks] = useState(false);
+  const [newSubtask, setNewSubtask] = useState("");
+  const [isAddingSubtask, setIsAddingSubtask] = useState(false);
+  const [isSubmittingSubtask, setIsSubmittingSubtask] = useState(false);
   const hasSubtasks = subtasks && subtasks.length > 0;
   const completedSubtasks = subtasks.filter(subtask => subtask.is_completed).length;
   const subtaskCompletionPercentage = hasSubtasks 
@@ -142,7 +149,49 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
   
-  console.log("Rendering TaskCard with subtasks:", subtasks);
+  // New function to handle adding a subtask
+  const handleAddSubtask = async () => {
+    if (!newSubtask.trim()) return;
+    
+    try {
+      setIsSubmittingSubtask(true);
+      
+      const { data, error } = await supabase
+        .from('todo_items')
+        .insert({
+          task_id: id,
+          content: newSubtask.trim(),
+          is_completed: false
+        })
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Subtask added",
+        description: "Your subtask has been added successfully."
+      });
+      
+      setNewSubtask("");
+      setIsAddingSubtask(false);
+      
+      // Refresh subtasks (this could be handled through a callback instead)
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
+      
+    } catch (error) {
+      console.error("Error adding subtask:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add subtask. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmittingSubtask(false);
+    }
+  };
   
   return (
     <Card className={`border-l-4 ${isOverdue ? 'border-l-red-500' : `border-l-${priorityColors[priority].split(' ')[0]}`}`}>
@@ -374,7 +423,87 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   </div>
                 ))}
               </CollapsibleContent>
+              
+              {/* Add subtask button and input field */}
+              {!isAddingSubtask ? (
+                <button 
+                  onClick={() => setIsAddingSubtask(true)}
+                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mt-3 w-full"
+                >
+                  <Plus className="h-4 w-4" /> Add subtask
+                </button>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  <Input 
+                    placeholder="Enter subtask"
+                    value={newSubtask}
+                    onChange={(e) => setNewSubtask(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddSubtask()}
+                    className="text-sm"
+                  />
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => setIsAddingSubtask(false)}
+                      className="text-xs h-8"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={handleAddSubtask}
+                      disabled={isSubmittingSubtask || !newSubtask.trim()}
+                      className="text-xs h-8"
+                    >
+                      {isSubmittingSubtask ? "Adding..." : "Add"}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </Collapsible>
+          </div>
+        )}
+        
+        {/* When there are no subtasks yet, show the add subtask button directly */}
+        {!hasSubtasks && (
+          <div className="mt-4 border rounded-md p-3">
+            {!isAddingSubtask ? (
+              <button 
+                onClick={() => setIsAddingSubtask(true)}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground w-full"
+              >
+                <Plus className="h-4 w-4" /> Add subtask
+              </button>
+            ) : (
+              <div className="space-y-2">
+                <Input 
+                  placeholder="Enter subtask"
+                  value={newSubtask}
+                  onChange={(e) => setNewSubtask(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddSubtask()}
+                  className="text-sm"
+                />
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setIsAddingSubtask(false)}
+                    className="text-xs h-8"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    onClick={handleAddSubtask}
+                    disabled={isSubmittingSubtask || !newSubtask.trim()}
+                    className="text-xs h-8"
+                  >
+                    {isSubmittingSubtask ? "Adding..." : "Add"}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
