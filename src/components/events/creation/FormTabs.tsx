@@ -1,12 +1,12 @@
 
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EventFormTab, ShareTab } from "@/types/form.types";
+import { EventFormTab, ShareTab, SHARE_TABS } from "@/types/form.types";
 import { EventCustomization } from "@/types/event.types";
 import { InvitationRecipient } from "@/types/invitation.types";
 import DetailsTab from "./DetailsTab";
 import CustomizeTab from "../customize/CustomizeTab";
-import ShareTab from "./ShareTab";
+import ShareTabContent from "./ShareTab";
 import FormActions from "./FormActions";
 
 interface FormTabsProps {
@@ -144,7 +144,7 @@ const FormTabs: React.FC<FormTabsProps> = ({
         </TabsContent>
 
         <TabsContent value="share" className="space-y-4">
-          <ShareTab
+          <ShareTabContent
             activeTab={shareTab}
             setActiveTab={setShareTab}
             recipients={recipients}

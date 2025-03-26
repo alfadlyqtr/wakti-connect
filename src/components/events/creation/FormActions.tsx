@@ -16,43 +16,46 @@ const FormActions: React.FC<FormActionsProps> = ({
   onNext,
   isSubmitting = false,
   showSubmit = false,
-  submitLabel = "Create Event"
+  submitLabel = "Save"
 }) => {
   return (
-    <div className="pt-4 flex justify-between">
+    <div className="flex justify-between items-center pt-4 px-4">
       <Button 
         type="button" 
         variant="outline" 
         onClick={onPrev}
-        className="px-6"
+        disabled={isSubmitting}
       >
-        Back
+        Previous
       </Button>
       
-      {showSubmit ? (
-        <Button 
-          type="submit" 
-          disabled={isSubmitting}
-          className="px-6"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            submitLabel
-          )}
-        </Button>
-      ) : (
-        <Button 
-          type="button" 
-          onClick={onNext}
-          className="px-6"
-        >
-          Next
-        </Button>
-      )}
+      <div className="space-x-2">
+        {!showSubmit && (
+          <Button 
+            type="button" 
+            onClick={onNext}
+            disabled={isSubmitting}
+          >
+            Next
+          </Button>
+        )}
+        
+        {showSubmit && (
+          <Button 
+            type="submit"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing
+              </>
+            ) : (
+              submitLabel
+            )}
+          </Button>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { 
   Tabs, 
@@ -8,6 +7,7 @@ import {
 } from "@/components/ui/tabs";
 import { EventCustomization } from "@/types/event.types";
 import { InvitationRecipient } from "@/types/invitation.types";
+import { ShareTab, SHARE_TABS } from "@/types/form.types";
 import { 
   CopyIcon, 
   MailIcon, 
@@ -24,8 +24,8 @@ import { toast } from "@/components/ui/use-toast";
 import QRCode from "react-qr-code";
 
 interface ShareTabProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  activeTab: ShareTab;
+  setActiveTab: (tab: ShareTab) => void;
   recipients: InvitationRecipient[];
   addRecipient: (recipient: InvitationRecipient) => void;
   removeRecipient: (index: number) => void;
@@ -34,7 +34,7 @@ interface ShareTabProps {
   customization: EventCustomization;
 }
 
-const ShareTab: React.FC<ShareTabProps> = ({
+const ShareTabContent: React.FC<ShareTabProps> = ({
   activeTab,
   setActiveTab,
   recipients,
@@ -157,7 +157,7 @@ const ShareTab: React.FC<ShareTabProps> = ({
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="flex justify-between bg-muted/40">
-          <TabsTrigger value="email" className="flex gap-1 items-center">
+          <TabsTrigger value={SHARE_TABS.RECIPIENTS} className="flex gap-1 items-center">
             <MailIcon className="h-4 w-4" />
             <span>Email</span>
           </TabsTrigger>
@@ -165,7 +165,7 @@ const ShareTab: React.FC<ShareTabProps> = ({
             <UsersIcon className="h-4 w-4" />
             <span>Contacts</span>
           </TabsTrigger>
-          <TabsTrigger value="link" className="flex gap-1 items-center">
+          <TabsTrigger value={SHARE_TABS.LINKS} className="flex gap-1 items-center">
             <CopyIcon className="h-4 w-4" />
             <span>Link</span>
           </TabsTrigger>
@@ -175,7 +175,7 @@ const ShareTab: React.FC<ShareTabProps> = ({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="email">
+        <TabsContent value={SHARE_TABS.RECIPIENTS}>
           <div className="space-y-4">
             <div className="flex space-x-2">
               <div className="flex-1">
@@ -246,7 +246,7 @@ const ShareTab: React.FC<ShareTabProps> = ({
           </div>
         </TabsContent>
 
-        <TabsContent value="link">
+        <TabsContent value={SHARE_TABS.LINKS}>
           <div className="space-y-4">
             <Label htmlFor="share-link">Shareable Link</Label>
             <div className="flex space-x-2">
@@ -321,4 +321,4 @@ const ShareTab: React.FC<ShareTabProps> = ({
   );
 };
 
-export default ShareTab;
+export default ShareTabContent;
