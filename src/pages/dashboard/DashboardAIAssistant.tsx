@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { Bot } from "lucide-react";
@@ -28,7 +27,6 @@ const DashboardAIAssistant = () => {
   const [canAccess, setCanAccess] = useState(false);
   const isMobile = !useBreakpoint().includes("md");
 
-  // Check if user has access to AI
   useEffect(() => {
     const checkAccess = async () => {
       if (!user) {
@@ -41,7 +39,6 @@ const DashboardAIAssistant = () => {
       try {
         console.log("Checking AI access for user:", user.id);
         
-        // Try RPC function first
         const { data: canUse, error: rpcError } = await supabase.rpc("can_use_ai_assistant");
         
         if (!rpcError && canUse !== null) {
@@ -54,7 +51,6 @@ const DashboardAIAssistant = () => {
         console.log("RPC check failed with error:", rpcError?.message);
         console.log("Falling back to direct profile check");
         
-        // Fallback to direct profile check
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("account_type")
@@ -70,11 +66,9 @@ const DashboardAIAssistant = () => {
           });
           setCanAccess(false);
         } else {
-          // Check the account type
           const hasAccess = profile?.account_type === "business" || profile?.account_type === "individual";
           setCanAccess(hasAccess);
           
-          // Log the account type for debugging
           console.log("Account type:", profile?.account_type, "Has access:", hasAccess);
         }
       } catch (error) {
@@ -88,11 +82,9 @@ const DashboardAIAssistant = () => {
     checkAccess();
   }, [user]);
 
-  // Also use the hook's canUseAI value as a backup
   useEffect(() => {
     if (hookCanUseAI !== undefined && !isChecking) {
       console.log("Hook canUseAI value:", hookCanUseAI);
-      // Only update if our direct check said false but hook says true
       if (!canAccess && hookCanUseAI) {
         console.log("Using hook's canUseAI value as backup");
         setCanAccess(hookCanUseAI);
@@ -116,7 +108,6 @@ const DashboardAIAssistant = () => {
     setInputMessage("");
   };
 
-  // If still checking access, show loading
   if (isChecking) {
     console.log("Still checking access, showing loader");
     return <AIAssistantLoader />;

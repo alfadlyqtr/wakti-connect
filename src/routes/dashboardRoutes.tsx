@@ -21,6 +21,7 @@ const DashboardBusinessPage = lazy(() => import("@/pages/dashboard/DashboardBusi
 const StaffDashboard = lazy(() => import("@/pages/dashboard/StaffDashboard"));
 const DashboardJobs = lazy(() => import("@/pages/dashboard/DashboardJobs"));
 const DashboardJobCards = lazy(() => import("@/pages/dashboard/DashboardJobCards"));
+const DashboardBusinessReports = lazy(() => import("@/pages/dashboard/DashboardBusinessReports"));
 
 // Wrap dynamic imports with suspense
 const withSuspense = (Component: React.ComponentType) => (
@@ -94,15 +95,19 @@ export const dashboardRoutes: RouteObject[] = [
     element: withSuspense(DashboardBusinessAnalytics),
   },
   {
-    path: "messaging",
+    path: "messages",
     element: withSuspense(DashboardMessages),
   },
   {
-    path: "ai",
+    path: "ai-assistant",
     element: withSuspense(DashboardAIAssistant),
   },
   {
-    path: "landing-page",
+    path: "business-page",
     element: withSuspense(DashboardBusinessPage),
+  },
+  {
+    path: "reports",
+    element: withSuspense(DashboardBusinessReports),
   },
 ];

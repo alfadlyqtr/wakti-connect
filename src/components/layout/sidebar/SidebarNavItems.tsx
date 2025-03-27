@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { navItems, NavItem } from "./sidebarNavConfig";
 import SidebarNavItem from "./SidebarNavItem";

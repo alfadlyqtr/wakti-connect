@@ -1,16 +1,10 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { 
-  Tooltip, 
-  TooltipContent, 
-  TooltipProvider, 
-  TooltipTrigger 
-} from "@/components/ui/tooltip";
 import { NavItem } from "./sidebarNavConfig";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface SidebarNavItemProps {
   item: NavItem;
@@ -25,71 +19,80 @@ const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
   isActive,
   isMobile,
   isCollapsed = false,
-  onClick
+  onClick,
 }) => {
-  const Icon = item.icon;
+  const { label, path, icon: Icon, badge } = item;
   
-  const buttonContent = (
-    <Button
-      variant={isActive ? "default" : "ghost"}
-      size={isMobile || isCollapsed ? "icon" : "sm"}
-      asChild
-      className={cn(
-        "w-full",
-        (isMobile || isCollapsed) ? "h-9 w-9 p-0" : "h-9 justify-start px-3",
-        isActive && "bg-wakti-blue text-white hover:bg-wakti-blue/90"
-      )}
-      onClick={() => onClick(item.path)}
-    >
-      <Link 
-        to={`/dashboard/${item.path}`} 
-        className={cn(
-          "flex items-center gap-2.5",
-          !isCollapsed && !isMobile && "w-full"
-        )}
-      >
-        <Icon className="h-4 w-4 shrink-0" />
-        {!isMobile && !isCollapsed && (
-          <span className="text-xs truncate">{item.label}</span>
-        )}
-        {item.badge && !isMobile && !isCollapsed && (
-          <Badge 
-            variant="secondary" 
-            className="ml-auto text-[10px] h-4 min-w-4 flex items-center justify-center"
-          >
-            {item.badge}
-          </Badge>
-        )}
-      </Link>
-    </Button>
+  // Handle click for mobile navigation
+  const handleClick = () => {
+    onClick(path);
+  };
+
+  // Base classes
+  const itemClasses = cn(
+    "flex items-center rounded-md px-3 py-2 text-sm transition-colors",
+    isActive
+      ? "bg-primary/10 font-medium text-primary"
+      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+    {
+      "justify-center": isCollapsed,
+    }
   );
-  
+
+  // For collapsed sidebar, show tooltip with label
   if (isCollapsed && !isMobile) {
     return (
-      <TooltipProvider delayDuration={300}>
+      <TooltipProvider delayDuration={0}>
         <Tooltip>
           <TooltipTrigger asChild>
-            {buttonContent}
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            <div className="flex items-center gap-2">
-              <p>{item.label}</p>
-              {item.badge && (
-                <Badge 
-                  variant="secondary" 
-                  className="text-xs h-5 min-w-5 flex items-center justify-center"
-                >
-                  {item.badge}
+            <Link
+              to={`/dashboard/${path}`}
+              onClick={handleClick}
+              className={itemClasses}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <Icon className="h-5 w-5" />
+              {badge && (
+                <Badge variant="secondary" className="ml-auto px-1 min-w-5 h-5">
+                  {badge}
                 </Badge>
               )}
-            </div>
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="flex items-center gap-4">
+            {label}
+            {badge && (
+              <Badge variant="secondary" className="px-1 min-w-5 h-5">
+                {badge}
+              </Badge>
+            )}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
     );
   }
-  
-  return buttonContent;
+
+  // Regular sidebar item
+  return (
+    <Link
+      to={`/dashboard/${path}`}
+      onClick={handleClick}
+      className={itemClasses}
+      aria-current={isActive ? "page" : undefined}
+    >
+      <Icon className={cn("h-5 w-5", isCollapsed ? "" : "mr-2")} />
+      {!isCollapsed && (
+        <>
+          <span>{label}</span>
+          {badge && (
+            <Badge variant="secondary" className="ml-auto px-1 min-w-5 h-5">
+              {badge}
+            </Badge>
+          )}
+        </>
+      )}
+    </Link>
+  );
 };
 
 export default SidebarNavItem;
