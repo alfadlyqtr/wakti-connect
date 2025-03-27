@@ -9,15 +9,15 @@ import { useCallback, useRef } from 'react';
  * @param delay Delay in milliseconds
  * @returns A debounced version of the callback
  */
-export function useDebouncedCallback<T extends any[]>(
-  callback: (...args: T) => Promise<void> | void,
+export function useDebouncedCallback<T extends any[], R>(
+  callback: (...args: T) => Promise<R> | R,
   delay: number = 500
-): (...args: T) => Promise<void> {
+): (...args: T) => Promise<R> {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const debouncedFn = useCallback(
-    (...args: T): Promise<void> => {
-      return new Promise<void>((resolve) => {
+    (...args: T): Promise<R> => {
+      return new Promise<R>((resolve) => {
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
         }
@@ -27,12 +27,14 @@ export function useDebouncedCallback<T extends any[]>(
             const result = callback(...args);
             // Handle both Promise and non-Promise returns
             if (result instanceof Promise) {
-              await result;
+              const awaitedResult = await result;
+              resolve(awaitedResult);
+            } else {
+              resolve(result as R);
             }
-            resolve();
           } catch (error) {
             console.error("Error in debounced callback:", error);
-            resolve();
+            throw error;
           }
         }, delay);
       });

@@ -7,11 +7,11 @@ import { useState, useCallback, useRef, useEffect } from 'react';
  * @param delay - Debounce delay in milliseconds
  * @returns Object with refresh function and loading state
  */
-export function useDebouncedRefresh(
-  refreshFn: () => Promise<void>,
+export function useDebouncedRefresh<T = void>(
+  refreshFn: () => Promise<T>,
   delay: number = 500
 ): { 
-  refresh: () => Promise<void>; 
+  refresh: () => Promise<T>; 
   isRefreshing: boolean;
 } {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -28,7 +28,7 @@ export function useDebouncedRefresh(
     };
   }, []);
   
-  const refresh = useCallback(async (): Promise<void> => {
+  const refresh = useCallback(async (): Promise<T> => {
     // Clear any existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -37,15 +37,15 @@ export function useDebouncedRefresh(
     // Set a flag indicating a refresh is pending
     setIsRefreshing(true);
     
-    return new Promise<void>((resolve) => {
+    return new Promise<T>((resolve) => {
       // Create a new debounced refresh
       timeoutRef.current = setTimeout(async () => {
         try {
-          await refreshFn();
-          resolve();
+          const result = await refreshFn();
+          resolve(result);
         } catch (error) {
           console.error("Error in debounced refresh:", error);
-          resolve();
+          throw error;
         } finally {
           // Only update state if component is still mounted
           if (isMountedRef.current) {
