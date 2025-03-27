@@ -22,7 +22,7 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
   canAccess 
 }) => {
   return (
-    <div className="space-y-6 w-full">
+    <div className="space-y-4 w-full flex flex-col">
       {messages.map((message) => (
         <AIAssistantMessage key={message.id} message={message} />
       ))}

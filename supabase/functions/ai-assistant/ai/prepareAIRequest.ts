@@ -2,6 +2,13 @@
 export async function prepareAIRequest(user, message, context, supabaseClient) {
   console.log("Preparing AI request for user:", user.id);
   
+  // Check if message contains a special context flag
+  const hasRemindContext = message.includes("[CONTEXT: remind_about_wakti_focus]");
+  if (hasRemindContext) {
+    // Remove the context flag before processing
+    message = message.replace("[CONTEXT: remind_about_wakti_focus]", "").trim();
+  }
+  
   // Get user's AI assistant settings
   console.log("Fetching AI assistant settings...");
   let settings;
@@ -108,8 +115,10 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
   // Add functionality information
   systemMessage += "You can help with task management, event planning, staff management, and business analytics. ";
   
-  // Add topic control instructions
-  systemMessage += "Always stay focused on productivity and business management topics. If users ask about unrelated topics, politely redirect them back to how you can help with the WAKTI platform. After 2-3 off-topic questions, inform them that for general chat they should visit TMW AI (https://tmw.qa/ai-chat-bot/). ";
+  // Add topic control instructions - improved to be more gradual
+  systemMessage += "Always stay focused on productivity and business management topics. ";
+  systemMessage += "If users ask about unrelated topics, politely guide them back to WAKTI-related topics by showcasing what you can do to help with their productivity needs. ";
+  systemMessage += "After multiple off-topic questions (5+), gently suggest that for general chat topics they can visit TMW AI (https://tmw.qa/ai-chat-bot/), but continue to offer help with WAKTI features. ";
   
   // Add WAKTI promotion instructions
   systemMessage += "Consistently promote WAKTI features and benefits in your responses. Highlight how WAKTI can improve productivity, organization, and business management. ";
@@ -131,6 +140,14 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
   // Add context if provided
   if (context) {
     conversation.push({ role: "system", content: `Current context: ${context}` });
+  }
+  
+  // If we need to remind about WAKTI focus, add special instruction
+  if (hasRemindContext) {
+    conversation.push({ 
+      role: "system", 
+      content: "The user's questions appear to be off-topic. In your response, gently remind them that you're designed to help with WAKTI platform features like task management, scheduling, and business tools. Then try to answer their question but also pivot back to WAKTI-related topics by showcasing what you can do for them."
+    });
   }
   
   // Add the user message

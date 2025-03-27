@@ -32,28 +32,36 @@ export const useAIChatOperations = (userId?: string, userName: string = "") => {
       
       console.log("Sending message to AI assistant", { message, token: token.substring(0, 10) + "..." });
       
-      // Check if we need to enforce topic control (after 3 messages)
+      // Check if we need to enforce topic control
       const nonAssistantMessages = messages.filter(m => m.role === "user").length;
       
-      if (nonAssistantMessages >= 2 && offTopicCount >= 2) {
-        // Force redirection after multiple off-topic messages
-        const redirectMessage = `I notice we're getting a bit off-topic. As WAKTI AI, I'm specifically designed to help you with tasks, events, scheduling, business management, and other WAKTI platform features. For more general chat assistance, I recommend TMW AI which you can find at https://tmw.qa/ai-chat-bot/. Now, how can I help you with your productivity and business management needs?`;
+      // Check if message appears to be off-topic
+      const isOffTopic = checkIfOffTopic(message);
+      
+      // Different response strategy based on off-topic count
+      if (isOffTopic) {
+        setOffTopicCount(prev => prev + 1);
         
-        addAssistantMessage(redirectMessage);
-        setOffTopicCount(0); // Reset counter after redirection
-        return { response: redirectMessage };
+        // After 5+ off-topic messages, suggest TMW AI
+        if (offTopicCount >= 5) {
+          const redirectMessage = `I notice we're getting a bit off-topic. As WAKTI AI, I'm specifically designed to help you with tasks, events, scheduling, business management, and other WAKTI platform features. For more general chat assistance, I recommend visiting TMW AI at https://tmw.qa/ai-chat-bot/.`;
+          
+          addAssistantMessage(redirectMessage);
+          setOffTopicCount(0); // Reset counter after redirection
+          return { response: redirectMessage };
+        }
+        // After 2-4 off-topic messages, give a gentle reminder but still answer
+        else if (offTopicCount >= 2) {
+          // Continue with the AI call but let the backend know to include a reminder
+          message = message + " [CONTEXT: remind_about_wakti_focus]";
+        }
+      } else {
+        // Reset counter when back on topic
+        setOffTopicCount(0);
       }
       
       // Call the edge function
       const data = await callAIAssistant(token, message, userName);
-      
-      // Check if response appears to be off-topic
-      const isOffTopic = checkIfOffTopic(message);
-      if (isOffTopic) {
-        setOffTopicCount(prev => prev + 1);
-      } else {
-        setOffTopicCount(0); // Reset if back on topic
-      }
       
       // Add AI response to the list
       addAssistantMessage(data.response);
