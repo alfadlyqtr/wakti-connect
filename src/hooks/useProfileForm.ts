@@ -67,17 +67,12 @@ export const useProfileForm = (
         throw new Error("Profile ID is missing");
       }
       
-      // If user is staff and doesn't have edit permission, only update the fields they're allowed to
-      if (isStaff && !canEdit) {
-        // Staff can only update display_name and occupation
-        await updateProfileData(profile.id, {
-          display_name: data.display_name,
-          occupation: data.occupation
-        });
-        
+      // If user is staff, they can't update profile
+      if (isStaff) {
         toast({
-          title: "Basic info updated",
-          description: "Your basic profile information has been updated successfully."
+          title: "Permission denied",
+          description: "Staff members cannot update profile information.",
+          variant: "destructive"
         });
         return;
       }

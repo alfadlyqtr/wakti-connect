@@ -17,7 +17,7 @@ interface ProfileFormProps {
 }
 
 const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
-  const { isStaff, canEditProfile, loading } = useStaffPermissions();
+  const { isStaff, loading } = useStaffPermissions();
   
   const {
     register,
@@ -27,7 +27,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
     isBusinessAccount,
     watch,
     errors
-  } = useProfileForm(profile, { canEdit: canEditProfile, isStaff });
+  } = useProfileForm(profile, { canEdit: !isStaff, isStaff });
   
   if (loading) {
     return <div className="flex items-center justify-center p-4">
@@ -38,11 +38,11 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="space-y-6">
-        {isStaff && !canEditProfile && (
+        {isStaff && (
           <Alert variant="warning" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              You have limited permissions to edit your profile. Some fields are view-only.
+              Staff members can only view profile information. Profile editing is restricted.
             </AlertDescription>
           </Alert>
         )}
@@ -52,8 +52,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
           register={register} 
           watch={watch} 
           errors={errors} 
-          readOnly={isStaff && !canEditProfile}
-          canEditBasicInfo={isStaff} // Staff can always edit display_name and occupation
+          readOnly={isStaff}
+          canEditBasicInfo={false}
         />
         
         {/* Account type specific fields */}
@@ -62,20 +62,20 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
             register={register} 
             watch={watch} 
             errors={errors} 
-            readOnly={isStaff && !canEditProfile} 
+            readOnly={isStaff} 
           />
         ) : (
           <IndividualProfileFields 
             register={register} 
             errors={errors} 
-            readOnly={isStaff && !canEditProfile} 
+            readOnly={isStaff} 
           />
         )}
         
         <Button 
           type="submit"
           className="w-full sm:w-auto bg-wakti-blue hover:bg-wakti-blue/90"
-          disabled={isSubmitting || (isStaff && !canEditProfile)}
+          disabled={isSubmitting || isStaff}
         >
           {isSubmitting ? "Saving..." : (isBusinessAccount ? "Save Business Info" : "Save Profile")}
         </Button>

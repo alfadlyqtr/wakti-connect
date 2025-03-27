@@ -16,12 +16,11 @@ export const useStaffPermissions = () => {
         // Get user role from localStorage
         const userRole = localStorage.getItem('userRole');
         
-        // If user is staff, check their specific permissions
+        // If user is staff, they can only edit theme preferences
         if (userRole === 'staff') {
           setIsStaff(true);
-          // Check if staff has permission to edit their profile
-          const canEdit = hasStaffPermission('can_edit_profile');
-          setCanEditProfile(canEdit);
+          // Staff cannot edit their profile regardless of permissions
+          setCanEditProfile(false);
         } else {
           // Non-staff users (business owners, individuals) can always edit
           setIsStaff(false);
@@ -43,7 +42,8 @@ export const useStaffPermissions = () => {
     isStaff,
     canEditProfile,
     loading,
-    // Which fields can be edited by staff regardless of permissions
-    canEditBasicInfo: isStaff, // Staff can always edit display_name and occupation
+    // Staff can only edit theme preferences
+    canEditTheme: true, // Everyone can edit theme
+    canEditBasicInfo: false // Staff cannot edit any profile info
   };
 };

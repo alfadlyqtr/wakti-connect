@@ -63,7 +63,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
             <div>
               <CardTitle>Account Information</CardTitle>
               <CardDescription>
-                Manage your account settings and personal details
+                {isStaff ? "View your account settings" : "Manage your account settings and personal details"}
               </CardDescription>
             </div>
           </div>
@@ -85,9 +85,11 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
               <div>
                 <CardTitle>{isBusinessAccount ? "Business Details" : "Profile Information"}</CardTitle>
                 <CardDescription>
-                  {isBusinessAccount
-                    ? "Manage your business information and contact details"
-                    : "Update your public profile information"}
+                  {isStaff 
+                    ? "View your profile information" 
+                    : isBusinessAccount
+                      ? "Manage your business information and contact details"
+                      : "Update your public profile information"}
                 </CardDescription>
               </div>
             </div>

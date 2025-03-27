@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/auth";
+import { toast } from "@/components/ui/use-toast";
 
 const ThemeToggle = () => {
   const { theme, setTheme } = useTheme();
@@ -28,8 +29,18 @@ const ThemeToggle = () => {
             updated_at: new Date().toISOString()
           })
           .eq('id', user.id);
+          
+        toast({
+          title: "Theme updated",
+          description: `Theme preference set to ${newTheme}.`
+        });
       } catch (error) {
         console.error("Failed to save theme preference:", error);
+        toast({
+          title: "Update failed",
+          description: "Could not save theme preference.",
+          variant: "destructive"
+        });
       }
     }
   };

@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useStaffPermissions } from "@/hooks/useStaffPermissions";
 
 // Form schema for profile
 const profileFormSchema = z.object({
@@ -47,6 +49,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   profile,
   updateProfile
 }) => {
+  const { isStaff } = useStaffPermissions();
+
   if (!isEditing) {
     // Display mode
     return (
@@ -73,17 +77,31 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
             </div>
           )}
         </div>
-        <Button 
-          onClick={() => setIsEditing(true)}
-          className="w-full"
-        >
-          Edit Profile
-        </Button>
+        {!isStaff && (
+          <Button 
+            onClick={() => setIsEditing(true)}
+            className="w-full"
+          >
+            Edit Profile
+          </Button>
+        )}
       </div>
     );
   }
 
-  // Edit mode
+  // Edit mode - Staff should never reach this state
+  if (isStaff) {
+    return (
+      <Alert variant="warning" className="mb-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Staff members cannot edit profile information. Please contact your administrator.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  // Edit mode for non-staff
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
