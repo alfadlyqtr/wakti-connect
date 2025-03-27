@@ -5,7 +5,7 @@ import TasksLoading from "@/components/tasks/TasksLoading";
 import TaskGrid from "@/components/tasks/TaskGrid";
 import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog";
 import { EditTaskDialog } from "@/components/tasks/EditTaskDialog";
-import { useTasksPageState } from "@/hooks/tasks/useTasksPageState";
+import { useTasksPageState } from "@/components/tasks/useTasksPageState";
 import { TaskStatusFilter, TaskPriorityFilter } from "@/components/tasks/types";
 import TaskTabs from "@/components/tasks/TaskTabs";
 import { Archive } from "lucide-react";
@@ -65,13 +65,6 @@ const DashboardTasks = () => {
     setEditTaskDialogOpen(true);
   };
 
-  // Wrapper function to handle Promise returned by refetchTasks
-  const handleRefetch = (): Promise<void> => {
-    return refetchTasks().catch(error => {
-      console.error("Error refetching tasks:", error);
-    });
-  };
-
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">Tasks</h1>
@@ -119,7 +112,7 @@ const DashboardTasks = () => {
         <TaskGrid
           tasks={filteredTasks}
           userRole={userRole}
-          refetch={handleRefetch}
+          refetch={refetchTasks}
           isArchiveView={activeTab === "archived"}
           onEdit={handleEditTask}
           onArchive={handleArchiveTask}

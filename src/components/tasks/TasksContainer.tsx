@@ -9,7 +9,7 @@ import { useDebouncedRefresh } from "@/hooks/useDebouncedRefresh";
 interface TasksContainerProps {
   tasks: Task[];
   userRole: "free" | "individual" | "business" | "staff" | null;
-  refetch: () => Promise<void>;
+  refetch: () => void;
   isPaidAccount: boolean;
   onCreateTask: () => void;
   isArchiveView?: boolean;

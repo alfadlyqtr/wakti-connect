@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus, TaskPriority, TaskTab } from '@/types/task.types';
@@ -49,88 +50,10 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
 
   const isPaidAccount = userRole === "individual" || userRole === "business";
 
-  const fetchTasks = useCallback(async () => {
-    const currentTimestamp = Date.now();
-    setFetchTimestamp(currentTimestamp);
-    setIsLoading(true);
-    
-    try {
-      console.log('Fetching tasks for tab:', activeTab);
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        setTasks([]);
-        setIsLoading(false);
-        return;
-      }
-      
-      if (userRole === "staff") {
-        setTasks([]);
-        setIsLoading(false);
-        return;
-      }
-      
-      let query = supabase
-        .from('tasks')
-        .select('*, subtasks:todo_items(*)')
-        .eq('user_id', session.user.id);
-        
-      if (activeTab === 'archived') {
-        query = query.not('archived_at', 'is', null);
-      } else {
-        query = query.is('archived_at', null);
-      }
-      
-      const { data, error } = await query.order('created_at', { ascending: false });
-        
-      if (error) throw error;
-      
-      if (currentTimestamp === fetchTimestamp) {
-        console.log(`Fetched ${data.length} tasks for ${activeTab} tab`);
-        
-        const typedTasks: Task[] = data.map((task: any) => ({
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          status: task.status as TaskStatus,
-          priority: task.priority as TaskPriority,
-          due_date: task.due_date,
-          due_time: task.due_time,
-          user_id: task.user_id,
-          created_at: task.created_at,
-          updated_at: task.updated_at,
-          completed_at: task.completed_at,
-          is_recurring: task.is_recurring,
-          is_recurring_instance: task.is_recurring_instance,
-          parent_recurring_id: task.parent_recurring_id,
-          snooze_count: task.snooze_count,
-          snoozed_until: task.snoozed_until,
-          subtasks: task.subtasks || [],
-          archived_at: task.archived_at,
-          archive_reason: task.archive_reason
-        }));
-        
-        setTasks(typedTasks);
-      }
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-      toast({
-        title: "Failed to load tasks",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive"
-      });
-    } finally {
-      if (currentTimestamp === fetchTimestamp) {
-        setIsLoading(false);
-      }
-    }
-  }, [activeTab, userRole, fetchTimestamp]);
-
-  const debouncedFetch = useDebouncedCallback(fetchTasks, 500);
-
-  useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks, activeTab]);
+  // Setup debounced refresh to prevent UI freezing
+  const debouncedFetch = useDebouncedCallback(async () => {
+    await fetchTasks();
+  }, 500);
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -177,6 +100,89 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     
     fetchUserRole();
   }, []);
+
+  const fetchTasks = useCallback(async () => {
+    const currentTimestamp = Date.now();
+    setFetchTimestamp(currentTimestamp);
+    setIsLoading(true);
+    
+    try {
+      console.log('Fetching tasks for tab:', activeTab);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        setTasks([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      if (userRole === "staff") {
+        setTasks([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      let query = supabase
+        .from('tasks')
+        .select('*, subtasks:todo_items(*)')
+        .eq('user_id', session.user.id);
+        
+      if (activeTab === 'archived') {
+        query = query.not('archived_at', 'is', null);
+      } else {
+        query = query.is('archived_at', null);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      // Only update state if this is still the most recent fetch
+      if (currentTimestamp === fetchTimestamp) {
+        console.log(`Fetched ${data.length} tasks for ${activeTab} tab`);
+        
+        const typedTasks: Task[] = data.map((task: any) => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          status: task.status as TaskStatus,
+          priority: task.priority as TaskPriority,
+          due_date: task.due_date,
+          due_time: task.due_time,
+          user_id: task.user_id,
+          created_at: task.created_at,
+          updated_at: task.updated_at,
+          completed_at: task.completed_at,
+          is_recurring: task.is_recurring,
+          is_recurring_instance: task.is_recurring_instance,
+          parent_recurring_id: task.parent_recurring_id,
+          snooze_count: task.snooze_count,
+          snoozed_until: task.snoozed_until,
+          subtasks: task.subtasks || [],
+          archived_at: task.archived_at,
+          archive_reason: task.archive_reason
+        }));
+        
+        setTasks(typedTasks);
+      }
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      toast({
+        title: "Failed to load tasks",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      // Only update loading state if this is still the most recent fetch
+      if (currentTimestamp === fetchTimestamp) {
+        setIsLoading(false);
+      }
+    }
+  }, [activeTab, userRole, fetchTimestamp]);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks, activeTab]);
 
   const handleCreateTask = async (taskData: any) => {
     if (userRole === "staff") {
@@ -237,6 +243,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     console.log("Creating task with data:", taskToCreate);
     
     try {
+      // Add to local state immediately for optimistic update
       const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       const optimisticTask: Task = {
         ...taskToCreate,
@@ -249,6 +256,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         priority: (taskData.priority || "normal") as TaskPriority
       };
       
+      // Don't add optimistic update if we're in archived view
       if (activeTab === "my-tasks") {
         setTasks(prev => [optimisticTask, ...prev]);
       }
@@ -283,10 +291,13 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      await debouncedFetch();
+      // Background refresh after successful creation
+      debouncedFetch();
+      
     } catch (err) {
       console.error("Error creating task:", err);
       
+      // Remove optimistic task on error
       if (activeTab === "my-tasks") {
         setTasks(prev => prev.filter(task => !task.id.startsWith('temp-')));
       }
@@ -297,7 +308,8 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "destructive"
       });
       
-      await debouncedFetch();
+      // Refresh to ensure UI is in sync with server
+      debouncedFetch();
     }
   };
 
@@ -327,6 +339,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
       
       console.log("Updating task with data:", updateData);
       
+      // Optimistic UI update
       setTasks(prev => 
         prev.map(task => 
           task.id === taskId ? { ...task, ...updateData } : task
@@ -346,7 +359,8 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      await debouncedFetch();
+      // Background refresh after successful update
+      debouncedFetch();
       
     } catch (error) {
       console.error("Error updating task:", error);
@@ -356,7 +370,8 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "destructive"
       });
       
-      await debouncedFetch();
+      // Refresh to ensure UI is in sync with server
+      debouncedFetch();
     } finally {
       setIsUpdating(false);
     }
@@ -375,6 +390,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     try {
       console.log(`Archiving task ${taskId} with reason: ${reason}`);
       
+      // Optimistic UI update - remove from view immediately
       setTasks(prev => prev.filter(task => task.id !== taskId));
       
       const updates = {
@@ -405,7 +421,8 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "destructive"
       });
       
-      await debouncedFetch();
+      // Refresh to ensure UI is in sync with server
+      debouncedFetch();
     }
   };
 
@@ -422,6 +439,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     try {
       console.log(`Restoring task ${taskId} from archive`);
       
+      // Optimistic UI update - remove from current view immediately
       setTasks(prev => prev.filter(task => task.id !== taskId));
       
       const { data: task } = await supabase
@@ -458,7 +476,8 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "destructive"
       });
       
-      await debouncedFetch();
+      // Refresh to ensure UI is in sync with server
+      debouncedFetch();
     }
   };
 
@@ -474,10 +493,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     
     return matchesSearch && matchesStatus && matchesPriority;
   });
-
-  const refetchTasks = useCallback(async (): Promise<void> => {
-    return debouncedFetch();
-  }, [debouncedFetch]);
 
   return {
     tasks,
@@ -499,7 +514,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     handleUpdateTask,
     handleArchiveTask,
     handleRestoreTask,
-    refetchTasks,
+    refetchTasks: debouncedFetch, // Use debounced fetch to prevent UI freezing
     filteredTasks,
     isPaidAccount,
     activeTab,

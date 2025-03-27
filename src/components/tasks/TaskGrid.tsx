@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback } from "react";
-import { Task, SubTask, TaskStatus, TaskPriority, ArchiveReason } from "@/types/task.types";
+import { Task, SubTask } from "@/types/task.types";
 import TaskCard from "@/components/ui/TaskCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -11,7 +11,7 @@ import { useDebouncedRefresh } from "@/hooks/useDebouncedRefresh";
 interface TaskGridProps {
   tasks: Task[];
   userRole: "free" | "individual" | "business" | "staff" | null;
-  refetch: () => Promise<void>;
+  refetch: () => void;
   isArchiveView?: boolean;
   onEdit: (task: Task) => void;
   onArchive: (taskId: string, reason: "deleted" | "canceled") => Promise<void>;
@@ -107,14 +107,14 @@ const TaskGrid: React.FC<TaskGridProps> = ({
       }
       
       // Refresh in the background without freezing the UI
-      await debouncedRefetch();
+      debouncedRefetch();
       
     } catch (error) {
       console.error("Error deleting/archiving task:", error);
       
       // Revert the optimistic update on error
       if (!isArchiveView) {
-        await debouncedRefetch();
+        debouncedRefetch();
       }
       
       toast({
@@ -137,20 +137,17 @@ const TaskGrid: React.FC<TaskGridProps> = ({
       setOperationInProgress(true);
       console.log(`Changing status of task ${taskId} to ${newStatus}`);
       
-      // Validate the status before using it
-      const validatedStatus = newStatus as TaskStatus;
-      
       // Optimistic UI update
       const updatedTasks = localTasks.map(task => {
         if (task.id === taskId) {
-          const updated: Task = { 
+          const updated = { 
             ...task, 
-            status: validatedStatus,
+            status: newStatus as any,
             updated_at: new Date().toISOString()
           };
           
           // If marking as completed, set the completed_at timestamp
-          if (validatedStatus === 'completed') {
+          if (newStatus === 'completed') {
             updated.completed_at = new Date().toISOString();
           }
           
@@ -162,7 +159,7 @@ const TaskGrid: React.FC<TaskGridProps> = ({
       setLocalTasks(updatedTasks);
       
       let updates: any = {
-        status: validatedStatus,
+        status: newStatus,
         updated_at: new Date().toISOString()
       };
       
@@ -192,13 +189,13 @@ const TaskGrid: React.FC<TaskGridProps> = ({
       });
       
       // Refresh in the background without freezing the UI
-      await debouncedRefetch();
+      debouncedRefetch();
       
     } catch (error) {
       console.error("Error updating task status:", error);
       
       // Revert the optimistic update on error
-      await debouncedRefetch();
+      debouncedRefetch();
       
       toast({
         title: "Status update failed",
@@ -233,7 +230,7 @@ const TaskGrid: React.FC<TaskGridProps> = ({
         if (task.id === taskId) {
           return {
             ...task,
-            status: 'snoozed' as TaskStatus,
+            status: 'snoozed',
             snoozed_until: snoozedUntil.toISOString(),
             snooze_count: currentSnoozeCount + 1,
             updated_at: new Date().toISOString()
@@ -263,13 +260,13 @@ const TaskGrid: React.FC<TaskGridProps> = ({
       });
       
       // Refresh in the background without freezing the UI
-      await debouncedRefetch();
+      debouncedRefetch();
       
     } catch (error) {
       console.error("Error snoozing task:", error);
       
       // Revert the optimistic update on error
-      await debouncedRefetch();
+      debouncedRefetch();
       
       toast({
         title: "Snooze failed",
@@ -326,13 +323,13 @@ const TaskGrid: React.FC<TaskGridProps> = ({
         });
         
         // Refresh in the background without freezing the UI
-        await debouncedRefetch();
+        debouncedRefetch();
       }
     } catch (error) {
       console.error("Error toggling subtask:", error);
       
       // Revert the optimistic update on error
-      await debouncedRefetch();
+      debouncedRefetch();
       
       toast({
         title: "Failed to update subtask",
@@ -364,13 +361,13 @@ const TaskGrid: React.FC<TaskGridProps> = ({
       });
       
       // Refresh in the background without freezing the UI
-      await debouncedRefetch();
+      debouncedRefetch();
       
     } catch (error) {
       console.error("Error restoring task:", error);
       
       // Revert optimistic update on error
-      await debouncedRefetch();
+      debouncedRefetch();
       
       toast({
         title: "Restore failed",

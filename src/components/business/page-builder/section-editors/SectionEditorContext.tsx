@@ -32,7 +32,7 @@ export const SectionEditorProvider: React.FC<{
     setIsDirty(false);
   }, [section]);
   
-  // Use debounced save function
+  // Debounced auto-save function
   const debouncedSave = useDebouncedCallback((content: any) => {
     updateSection.mutate({
       sectionId: section.id,
