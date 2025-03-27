@@ -25,7 +25,16 @@ export interface ProfileFormData {
   business_website?: string;
 }
 
-export const useProfileForm = (profile?: Tables<"profiles"> & { email?: string }) => {
+interface ProfileFormOptions {
+  canEdit?: boolean;
+  isStaff?: boolean;
+}
+
+export const useProfileForm = (
+  profile?: Tables<"profiles"> & { email?: string },
+  options: ProfileFormOptions = {}
+) => {
+  const { canEdit = true, isStaff = false } = options;
   const isBusinessAccount = profile?.account_type === 'business';
 
   const { register, handleSubmit, formState: { isSubmitting, errors }, watch, setError } = useForm<ProfileFormData>({
@@ -53,7 +62,23 @@ export const useProfileForm = (profile?: Tables<"profiles"> & { email?: string }
       if (!profile?.id) {
         throw new Error("Profile ID is missing");
       }
+      
+      // If user is staff and doesn't have edit permission, only update the fields they're allowed to
+      if (isStaff && !canEdit) {
+        // Staff can only update display_name and occupation
+        await updateProfileData(profile.id, {
+          display_name: data.display_name,
+          occupation: data.occupation
+        });
+        
+        toast({
+          title: "Basic info updated",
+          description: "Your basic profile information has been updated successfully."
+        });
+        return;
+      }
 
+      // Regular update for users with full permissions
       await updateProfileData(profile.id, {
         display_name: data.display_name,
         business_name: data.business_name,

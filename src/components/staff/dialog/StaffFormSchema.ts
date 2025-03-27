@@ -18,12 +18,12 @@ export const staffFormSchema = z.object({
     can_create_job_cards: z.boolean().default(false),
     can_track_hours: z.boolean().default(true),
     can_log_earnings: z.boolean().default(false),
-    can_edit_profile: z.boolean().default(true),
+    can_edit_profile: z.boolean().default(false), // Changed to default false
     can_view_customer_bookings: z.boolean().default(false),
     can_view_analytics: z.boolean().default(false),
     can_update_task_status: z.boolean().default(false),
     can_update_booking_status: z.boolean().default(false),
-    can_update_profile: z.boolean().default(true)
+    can_update_profile: z.boolean().default(false) // Staff can't update profile by default
   }).default({
     can_view_tasks: true,
     can_manage_tasks: false,
@@ -32,12 +32,12 @@ export const staffFormSchema = z.object({
     can_create_job_cards: false,
     can_track_hours: true,
     can_log_earnings: false,
-    can_edit_profile: true,
+    can_edit_profile: false, // Changed to default false
     can_view_customer_bookings: false,
     can_view_analytics: false,
     can_update_task_status: false,
     can_update_booking_status: false,
-    can_update_profile: true
+    can_update_profile: false // Staff can't update profile by default
   })
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match",

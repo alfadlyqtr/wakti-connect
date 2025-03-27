@@ -10,6 +10,7 @@ import ThemeToggle from "./profile/ThemeToggle";
 import FeedbackForm from "./profile/FeedbackForm";
 import { User, Palette, MessageSquare, UserCog } from "lucide-react";
 import AccountInfoForm from "./account/AccountInfoForm";
+import { useStaffPermissions } from "@/hooks/useStaffPermissions";
 
 interface ProfileTabProps {
   profile?: (Tables<"profiles"> & {
@@ -20,6 +21,7 @@ interface ProfileTabProps {
 const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
   const isMobile = useIsMobile();
   const { data: fetchedProfile, isLoading } = useProfileSettings();
+  const { isStaff } = useStaffPermissions();
   
   // Use either the provided profile or the fetched one
   const profile = propProfile || fetchedProfile;
@@ -117,21 +119,23 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
         </CardContent>
       </Card>
       
-      {/* Feedback Section - Last card */}
-      <Card className="border-gray-200 shadow-sm overflow-hidden">
-        <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-wakti-blue" />
-            <div>
-              <CardTitle>Feedback</CardTitle>
-              <CardDescription>Share your thoughts with us</CardDescription>
+      {/* Feedback Section - Last card - Hide for staff users */}
+      {!isStaff && (
+        <Card className="border-gray-200 shadow-sm overflow-hidden">
+          <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-wakti-blue" />
+              <div>
+                <CardTitle>Feedback</CardTitle>
+                <CardDescription>Share your thoughts with us</CardDescription>
+              </div>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent className="px-4 sm:px-6 pt-4">
-          <FeedbackForm />
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="px-4 sm:px-6 pt-4">
+            <FeedbackForm />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

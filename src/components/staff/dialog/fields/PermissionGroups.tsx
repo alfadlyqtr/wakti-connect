@@ -1,4 +1,3 @@
-
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { StaffFormValues } from "../StaffFormSchema";
@@ -19,7 +18,8 @@ import {
   CreditCard,
   FileBarChart, 
   User,
-  CheckCircle
+  CheckCircle,
+  Settings
 } from "lucide-react";
 
 interface PermissionGroupsProps {

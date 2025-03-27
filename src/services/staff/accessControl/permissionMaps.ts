@@ -10,5 +10,6 @@ export const functionPermissionMap: Record<string, string> = {
   'trackHours': 'can_track_hours',
   'messageStaff': 'can_message_staff',
   'messageCustomers': 'can_message_customers',
-  'viewAnalytics': 'can_view_own_analytics'
+  'viewAnalytics': 'can_view_own_analytics',
+  'editProfile': 'can_edit_profile' // Add the new permission mapping
 };

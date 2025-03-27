@@ -1,137 +1,187 @@
 
 import React from "react";
+import { UseFormRegister, FieldErrors, UseFormWatch } from "react-hook-form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { UseFormRegister, UseFormWatch, FieldErrors } from "react-hook-form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { ProfileFormData } from "@/hooks/useProfileForm";
-import { Separator } from "@/components/ui/separator";
-import { User, MapPin } from "lucide-react";
 
 interface CommonProfileFieldsProps {
   register: UseFormRegister<ProfileFormData>;
-  watch?: UseFormWatch<ProfileFormData>;
-  errors?: FieldErrors<ProfileFormData>;
+  watch: UseFormWatch<ProfileFormData>;
+  errors: FieldErrors<ProfileFormData>;
+  readOnly?: boolean;
+  canEditBasicInfo?: boolean;
 }
 
 const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({ 
   register, 
-  watch,
-  errors 
+  watch, 
+  errors,
+  readOnly = false,
+  canEditBasicInfo = false
 }) => {
+  // Staff can always edit display_name and occupation regardless of overall permissions
   return (
-    <div className="space-y-6">
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <User className="h-5 w-5 text-wakti-blue" />
-          <h3 className="text-lg font-medium">Basic Information</h3>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Your profile details visible to others
-        </p>
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <FormField
+        name="display_name"
+        render={() => (
+          <FormItem>
+            <FormLabel>Display Name</FormLabel>
+            <FormControl>
+              <Input
+                {...register("display_name")}
+                className={`${readOnly && !canEditBasicInfo ? "bg-gray-50" : ""}`}
+                placeholder="Your display name"
+                readOnly={readOnly && !canEditBasicInfo}
+              />
+            </FormControl>
+            {errors.display_name && (
+              <FormMessage>{errors.display_name.message}</FormMessage>
+            )}
+          </FormItem>
+        )}
+      />
       
-      <Separator className="bg-gray-200" />
+      <FormField
+        name="occupation"
+        render={() => (
+          <FormItem>
+            <FormLabel>Occupation</FormLabel>
+            <FormControl>
+              <Input
+                {...register("occupation")}
+                className={`${readOnly && !canEditBasicInfo ? "bg-gray-50" : ""}`}
+                placeholder="Your occupation"
+                readOnly={readOnly && !canEditBasicInfo}
+              />
+            </FormControl>
+            {errors.occupation && (
+              <FormMessage>{errors.occupation.message}</FormMessage>
+            )}
+          </FormItem>
+        )}
+      />
       
-      <div className="grid gap-5">
-        <div className="space-y-2">
-          <Label htmlFor="display_name" className="font-medium">Display Name</Label>
-          <Input 
-            id="display_name" 
-            placeholder="How you want to be addressed" 
-            className="border-gray-300 focus-visible:ring-wakti-blue"
-            {...register("display_name")} 
-          />
-          {errors?.display_name && (
-            <p className="text-sm font-medium text-destructive">{errors.display_name.message}</p>
-          )}
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="occupation" className="font-medium">Occupation</Label>
-          <Input 
-            id="occupation" 
-            placeholder="Your job title or profession" 
-            className="border-gray-300 focus-visible:ring-wakti-blue"
-            {...register("occupation")} 
-          />
-        </div>
-      </div>
+      <FormField
+        name="country"
+        render={() => (
+          <FormItem>
+            <FormLabel>Country</FormLabel>
+            <FormControl>
+              <Input
+                {...register("country")}
+                className={`${readOnly ? "bg-gray-50" : ""}`}
+                placeholder="Your country"
+                readOnly={readOnly}
+              />
+            </FormControl>
+            {errors.country && (
+              <FormMessage>{errors.country.message}</FormMessage>
+            )}
+          </FormItem>
+        )}
+      />
       
-      <div className="space-y-1 pt-2">
-        <div className="flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-wakti-blue" />
-          <h3 className="text-lg font-medium">Address Information</h3>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Your location details (optional)
-        </p>
-      </div>
+      <FormField
+        name="state_province"
+        render={() => (
+          <FormItem>
+            <FormLabel>State/Province</FormLabel>
+            <FormControl>
+              <Input
+                {...register("state_province")}
+                className={`${readOnly ? "bg-gray-50" : ""}`}
+                placeholder="Your state or province"
+                readOnly={readOnly}
+              />
+            </FormControl>
+            {errors.state_province && (
+              <FormMessage>{errors.state_province.message}</FormMessage>
+            )}
+          </FormItem>
+        )}
+      />
       
-      <Separator className="bg-gray-200" />
+      <FormField
+        name="city"
+        render={() => (
+          <FormItem>
+            <FormLabel>City</FormLabel>
+            <FormControl>
+              <Input
+                {...register("city")}
+                className={`${readOnly ? "bg-gray-50" : ""}`}
+                placeholder="Your city"
+                readOnly={readOnly}
+              />
+            </FormControl>
+            {errors.city && (
+              <FormMessage>{errors.city.message}</FormMessage>
+            )}
+          </FormItem>
+        )}
+      />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className="space-y-2">
-          <Label htmlFor="country" className="font-medium">Country</Label>
-          <Input 
-            id="country" 
-            placeholder="Your country" 
-            className="border-gray-300 focus-visible:ring-wakti-blue"
-            {...register("country")} 
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="state_province" className="font-medium">State/Province</Label>
-          <Input 
-            id="state_province" 
-            placeholder="Your state or province" 
-            className="border-gray-300 focus-visible:ring-wakti-blue"
-            {...register("state_province")} 
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="city" className="font-medium">City</Label>
-          <Input 
-            id="city" 
-            placeholder="Your city" 
-            className="border-gray-300 focus-visible:ring-wakti-blue"
-            {...register("city")} 
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="postal_code" className="font-medium">Postal/ZIP Code</Label>
-          <Input 
-            id="postal_code" 
-            placeholder="Your postal code" 
-            className="border-gray-300 focus-visible:ring-wakti-blue"
-            {...register("postal_code")} 
-          />
-        </div>
-      </div>
+      <FormField
+        name="postal_code"
+        render={() => (
+          <FormItem>
+            <FormLabel>Postal Code</FormLabel>
+            <FormControl>
+              <Input
+                {...register("postal_code")}
+                className={`${readOnly ? "bg-gray-50" : ""}`}
+                placeholder="Your postal code"
+                readOnly={readOnly}
+              />
+            </FormControl>
+            {errors.postal_code && (
+              <FormMessage>{errors.postal_code.message}</FormMessage>
+            )}
+          </FormItem>
+        )}
+      />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="street_address" className="font-medium">Street Address</Label>
-          <Input 
-            id="street_address" 
-            placeholder="Your street address" 
-            className="border-gray-300 focus-visible:ring-wakti-blue"
-            {...register("street_address")} 
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="po_box" className="font-medium">P.O. Box</Label>
-          <Input 
-            id="po_box" 
-            placeholder="Your P.O. Box (if applicable)" 
-            className="border-gray-300 focus-visible:ring-wakti-blue"
-            {...register("po_box")} 
-          />
-        </div>
-      </div>
+      <FormField
+        name="street_address"
+        render={() => (
+          <FormItem>
+            <FormLabel>Street Address</FormLabel>
+            <FormControl>
+              <Input
+                {...register("street_address")}
+                className={`${readOnly ? "bg-gray-50" : ""}`}
+                placeholder="Your street address"
+                readOnly={readOnly}
+              />
+            </FormControl>
+            {errors.street_address && (
+              <FormMessage>{errors.street_address.message}</FormMessage>
+            )}
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        name="po_box"
+        render={() => (
+          <FormItem>
+            <FormLabel>PO Box</FormLabel>
+            <FormControl>
+              <Input
+                {...register("po_box")}
+                className={`${readOnly ? "bg-gray-50" : ""}`}
+                placeholder="Your PO Box"
+                readOnly={readOnly}
+              />
+            </FormControl>
+            {errors.po_box && (
+              <FormMessage>{errors.po_box.message}</FormMessage>
+            )}
+          </FormItem>
+        )}
+      />
     </div>
   );
 };
