@@ -36,7 +36,7 @@ export const navItems: NavItem[] = [
     label: "Tasks",
     path: "tasks",
     icon: ListChecks,
-    showFor: ['free', 'individual', 'business'], // Removed 'staff' from here
+    showFor: ['free', 'individual', 'business'], // Staff can't see tasks
   },
   {
     label: "Events",
@@ -84,7 +84,7 @@ export const navItems: NavItem[] = [
     label: "Jobs",
     path: "jobs",
     icon: KanbanSquare,
-    showFor: ['business'],
+    showFor: ['business', 'staff'], // Added staff here to restore access
   },
   {
     label: "Analytics",

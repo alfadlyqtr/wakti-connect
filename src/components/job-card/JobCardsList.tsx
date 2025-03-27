@@ -45,10 +45,6 @@ const JobCardsList: React.FC<JobCardsListProps> = ({
     );
   }
   
-  // Debug: Log job cards to verify their structure
-  console.log("Active job cards:", activeJobCards);
-  console.log("Completed job cards:", completedJobCards);
-  
   if (activeJobCards.length === 0 && completedJobCards.length === 0) {
     return <EmptyJobCards onCreateJobCard={onCreateJobCard} canCreateCard={canCreateCard} />;
   }

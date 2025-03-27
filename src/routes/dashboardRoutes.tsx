@@ -19,6 +19,8 @@ const DashboardMessages = lazy(() => import("@/pages/dashboard/DashboardMessages
 const DashboardAIAssistant = lazy(() => import("@/pages/dashboard/DashboardAIAssistant"));
 const DashboardBusinessPage = lazy(() => import("@/pages/dashboard/DashboardBusinessPage"));
 const StaffDashboard = lazy(() => import("@/pages/dashboard/StaffDashboard"));
+const DashboardJobs = lazy(() => import("@/pages/dashboard/DashboardJobs"));
+const DashboardJobCards = lazy(() => import("@/pages/dashboard/DashboardJobCards"));
 
 // Wrap dynamic imports with suspense
 const withSuspense = (Component: React.ComponentType) => (
@@ -68,9 +70,20 @@ export const dashboardRoutes: RouteObject[] = [
     path: "team",
     element: withSuspense(DashboardTeamManagement),
   },
+  // Updated the work route to be accessible by staff - no StaffRoleGuard here
   {
     path: "work",
     element: withSuspense(DashboardWorkManagement),
+  },
+  // Added the jobs route accessible by staff - no StaffRoleGuard here
+  {
+    path: "jobs",
+    element: withSuspense(DashboardJobs),
+  },
+  // Added the job-cards route accessible by staff - no StaffRoleGuard here
+  {
+    path: "job-cards",
+    element: withSuspense(DashboardJobCards),
   },
   {
     path: "settings",
