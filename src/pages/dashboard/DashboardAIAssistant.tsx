@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { Bot } from "lucide-react";
@@ -12,6 +13,7 @@ import { toast } from "@/components/ui/use-toast";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { AISettingsProvider } from "@/components/settings/ai";
 import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
+import { TMWAIChatbotPromotion } from "@/components/ai/assistant/TMWAIChatbotPromotion";
 
 const DashboardAIAssistant = () => {
   const { user } = useAuth();
@@ -127,7 +129,7 @@ const DashboardAIAssistant = () => {
               <Bot className="h-5 w-5 md:h-6 md:w-6 text-wakti-blue" />
             </div>
             <p className="text-sm md:text-base text-muted-foreground">
-              Your AI-powered productivity assistant
+              Your AI-powered productivity assistant for tasks, events, and business management
             </p>
           </div>
 
@@ -141,20 +143,24 @@ const DashboardAIAssistant = () => {
               {!canAccess ? (
                 <AIAssistantUpgradeCard />
               ) : (
-                <AIAssistantChatCard
-                  messages={messages}
-                  inputMessage={inputMessage}
-                  setInputMessage={setInputMessage}
-                  handleSendMessage={handleSendMessage}
-                  isLoading={isLoading}
-                  canAccess={canAccess}
-                  clearMessages={clearMessages}
-                />
+                <>
+                  <AIAssistantChatCard
+                    messages={messages}
+                    inputMessage={inputMessage}
+                    setInputMessage={setInputMessage}
+                    handleSendMessage={handleSendMessage}
+                    isLoading={isLoading}
+                    canAccess={canAccess}
+                    clearMessages={clearMessages}
+                  />
+                  <TMWAIChatbotPromotion />
+                </>
               )}
             </TabsContent>
 
             <TabsContent value="history" className="mt-4 md:mt-6">
               <AIAssistantHistoryCard canAccess={canAccess} />
+              <TMWAIChatbotPromotion />
             </TabsContent>
           </Tabs>
         </div>

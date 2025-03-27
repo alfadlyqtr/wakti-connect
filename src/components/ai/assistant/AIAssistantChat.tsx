@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { AIMessage } from '@/types/ai-assistant.types';
 import { AIAssistantMessage } from '../message/AIAssistantMessage';
 import { Loader2 } from 'lucide-react';
@@ -15,10 +15,23 @@ export interface AIAssistantChatProps {
 
 export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({ 
   messages, 
-  isLoading 
+  isLoading,
+  inputMessage,
+  setInputMessage,
+  handleSendMessage,
+  canAccess 
 }) => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to the bottom when new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full overflow-hidden">
       {messages.map((message) => (
         <AIAssistantMessage key={message.id} message={message} />
       ))}
@@ -33,6 +46,8 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
           </div>
         </div>
       )}
+      
+      <div ref={messagesEndRef} />
     </div>
   );
 };

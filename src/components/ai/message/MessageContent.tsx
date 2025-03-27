@@ -13,7 +13,7 @@ export function MessageContent({ content, timestamp, isUser }: MessageContentPro
   return (
     <div
       className={cn(
-        "rounded-lg p-2 sm:p-3 text-xs sm:text-sm max-w-[75%] sm:max-w-md break-words",
+        "rounded-lg p-2 sm:p-3 text-xs sm:text-sm max-w-[75%] sm:max-w-md break-words overflow-hidden",
         isUser ? "bg-wakti-blue text-white" : "bg-muted"
       )}
     >

@@ -10,6 +10,7 @@ import { AIMessage } from '@/types/ai-assistant.types';
 import { AIAssistantChat } from './AIAssistantChat';
 import { SuggestionPrompts } from './SuggestionPrompts';
 import { useAISettings } from '@/components/settings/ai/context/AISettingsContext';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -19,11 +20,6 @@ interface AIAssistantChatCardProps {
   isLoading: boolean;
   canAccess: boolean;
   clearMessages: () => void;
-}
-
-// Interface for SuggestionPrompts
-interface SuggestionPromptsProps {
-  onPromptClick: (prompt: string) => void;
 }
 
 export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
@@ -39,9 +35,10 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
-  
   const { settings } = useAISettings();
-  const assistantName = settings?.assistant_name || "WAKTI AI";
+  
+  // Always use WAKTI AI as the assistant name regardless of settings
+  const assistantName = "WAKTI AI";
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -63,6 +60,15 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
       inputRef.current.focus();
     }
   };
+
+  // Custom loading animation for the thinking state
+  const LoadingAnimation = () => (
+    <div className="flex items-center space-x-2">
+      <div className="h-2 w-2 bg-wakti-blue rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+      <div className="h-2 w-2 bg-wakti-blue rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+      <div className="h-2 w-2 bg-wakti-blue rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+    </div>
+  );
 
   return (
     <Card className="w-full h-[calc(80vh)] flex flex-col">
@@ -128,22 +134,28 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
         <form onSubmit={handleSendMessage} className="p-4 pt-2 mt-auto">
           <div className="relative">
             <Input 
-              placeholder={isLoading ? "Thinking..." : "Type your message..."}
+              placeholder={isLoading ? "WAKTI AI is thinking..." : "Type your message..."}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               disabled={isLoading || !canAccess}
               className="pr-10"
               ref={inputRef}
             />
-            <Button 
-              size="icon" 
-              type="submit" 
-              disabled={isLoading || !inputMessage.trim() || !canAccess}
-              className="absolute right-0 top-0 bottom-0 rounded-l-none"
-            >
-              <SendHorizontal className="h-4 w-4" />
-              <span className="sr-only">Send message</span>
-            </Button>
+            {isLoading ? (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <LoadingAnimation />
+              </div>
+            ) : (
+              <Button 
+                size="icon" 
+                type="submit" 
+                disabled={isLoading || !inputMessage.trim() || !canAccess}
+                className="absolute right-0 top-0 bottom-0 rounded-l-none"
+              >
+                <SendHorizontal className="h-4 w-4" />
+                <span className="sr-only">Send message</span>
+              </Button>
+            )}
           </div>
         </form>
       </CardContent>

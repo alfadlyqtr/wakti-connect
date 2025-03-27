@@ -48,8 +48,8 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
     ? "Custom knowledge: " + knowledgeUploads.map(k => `${k.title}: ${k.content}`).join(" | ")
     : "";
 
-  // Prepare AI personality based on settings
-  const aiName = settings?.assistant_name || "WAKTI";
+  // Prepare AI personality - always use WAKTI AI as the name
+  const aiName = "WAKTI AI";
   const tone = settings?.tone || "balanced";
   const responseLength = settings?.response_length || "balanced";
   
@@ -110,6 +110,9 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
   
   // Add topic control instructions
   systemMessage += "Always stay focused on productivity and business management topics. If users ask about unrelated topics, politely redirect them back to how you can help with the WAKTI platform. After 2-3 off-topic questions, inform them that for general chat they should visit TMW AI (https://tmw.qa/ai-chat-bot/). ";
+  
+  // Add WAKTI promotion instructions
+  systemMessage += "Consistently promote WAKTI features and benefits in your responses. Highlight how WAKTI can improve productivity, organization, and business management. ";
   
   // Add personalization instructions
   systemMessage += "Always address the user by name when greeting them. ";
