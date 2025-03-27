@@ -10,32 +10,32 @@ import { useCallback, useRef } from 'react';
 export function useDebouncedCallback<T extends (...args: any[]) => any>(
   callback: T,
   delay: number = 500
-): (...args: Parameters<T>) => Promise<ReturnType<T>> {
+): (...args: Parameters<T>) => Promise<ReturnType<T> extends Promise<infer R> ? R : ReturnType<T>> {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const debouncedCallback = useCallback(
-    (...args: Parameters<T>): Promise<ReturnType<T>> => {
-      return new Promise<ReturnType<T>>((resolve, reject) => {
+    (...args: Parameters<T>): Promise<ReturnType<T> extends Promise<infer R> ? R : ReturnType<T>> => {
+      return new Promise((resolve, reject) => {
         // Clear any existing timeout
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
         }
 
         // Set a new timeout
-        timeoutRef.current = setTimeout(() => {
+        timeoutRef.current = setTimeout(async () => {
           try {
             // Execute the callback
             const result = callback(...args);
             
             // Handle both Promise and non-Promise returns
             if (result instanceof Promise) {
-              // If it's a Promise, chain it
+              // If it's a Promise, resolve with its result
               result
-                .then(value => resolve(value as ReturnType<T>))
+                .then(value => resolve(value as any))
                 .catch(error => reject(error));
             } else {
               // If it's not a Promise, just resolve with the value
-              resolve(result as ReturnType<T>);
+              resolve(result as any);
             }
           } catch (error) {
             console.error("Error in debounced callback:", error);

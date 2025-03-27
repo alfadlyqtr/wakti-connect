@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus, TaskPriority, TaskTab } from '@/types/task.types';
@@ -26,7 +27,7 @@ interface UseTasksPageStateReturn {
   handleUpdateTask: (taskId: string, taskData: any) => Promise<void>;
   handleArchiveTask: (taskId: string, reason: "deleted" | "canceled") => Promise<void>;
   handleRestoreTask: (taskId: string) => Promise<void>;
-  refetchTasks: () => void;
+  refetchTasks: () => Promise<void>;
   filteredTasks: Task[];
   isPaidAccount: boolean;
   activeTab: TaskTab;
@@ -475,8 +476,9 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  const refetchTasks = useCallback(() => {
-    return debouncedFetch();
+  const refetchTasks = useCallback(async (): Promise<void> => {
+    const result = await debouncedFetch();
+    return result;
   }, [debouncedFetch]);
 
   return {
