@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus, TaskPriority, TaskTab } from '@/types/task.types';
@@ -42,11 +41,10 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
   const [editTaskDialogOpen, setEditTaskDialogOpen] = useState(false);
   const [currentEditTask, setCurrentEditTask] = useState<Task | null>(null);
   const [activeTab, setActiveTab] = useState<TaskTab>("my-tasks");
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  // Determine if user has a paid account
   const isPaidAccount = userRole === "individual" || userRole === "business";
 
-  // Fetch user role
   useEffect(() => {
     const fetchUserRole = async () => {
       try {
@@ -73,7 +71,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     fetchUserRole();
   }, []);
 
-  // Fetch tasks
   const fetchTasks = useCallback(async () => {
     setIsLoading(true);
     
@@ -86,13 +83,11 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         return;
       }
       
-      // Query based on the active tab
       let query = supabase
         .from('tasks')
         .select('*, subtasks:todo_items(*)')
         .eq('user_id', session.user.id);
         
-      // Filter by archived status based on active tab
       if (activeTab === 'archived') {
         query = query.not('archived_at', 'is', null);
       } else {
@@ -103,7 +98,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         
       if (error) throw error;
       
-      // Convert data to properly typed Task objects
       const typedTasks: Task[] = data.map((task: any) => ({
         id: task.id,
         title: task.title,
@@ -139,15 +133,12 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     }
   }, [activeTab]);
 
-  // Initial fetch
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks, activeTab]);
 
-  // Handle creating a new task
   const handleCreateTask = async (taskData: any) => {
     try {
-      // Check if free user has reached their task limit
       if (userRole === "free") {
         const { data: { session } } = await supabase.auth.getSession();
         
@@ -177,18 +168,16 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         }
       }
       
-      // Create the task
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
         throw new Error("You must be logged in to create tasks");
       }
       
-      // Set the default status to "in-progress"
       const taskToCreate = {
         title: taskData.title,
         description: taskData.description || null,
-        status: "in-progress", // Always start as in-progress
+        status: "in-progress",
         priority: taskData.priority || "normal",
         due_date: taskData.due_date,
         due_time: taskData.due_time,
@@ -206,7 +195,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         
       if (error) throw error;
       
-      // Create subtasks if any
       if (taskData.subtasks && taskData.subtasks.length > 0) {
         const subtasksToInsert = taskData.subtasks.map((subtask: any) => ({
           task_id: data.id,
@@ -229,7 +217,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      await fetchTasks(); // Refresh tasks list
+      await fetchTasks();
     } catch (error) {
       console.error("Error creating task:", error);
       toast({
@@ -241,33 +229,32 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     }
   };
 
-  // Handle updating a task
   const handleUpdateTask = async (taskId: string, taskData: any) => {
     try {
-      const updates = {
+      setIsUpdating(true);
+      
+      const updateData = {
         title: taskData.title,
-        description: taskData.description || null,
+        description: taskData.description,
         status: taskData.status,
         priority: taskData.priority,
         due_date: taskData.due_date,
         due_time: taskData.due_time,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
       
-      if (taskData.status === 'completed' && !taskData.completed_at) {
-        updates.completed_at = new Date().toISOString();
+      if (taskData.status === "completed") {
+        updateData.completed_at = new Date().toISOString();
       }
       
-      console.log("Updating task with data:", updates);
+      console.log("Updating task with data:", updateData);
       
       const { error } = await supabase
         .from('tasks')
-        .update(updates)
+        .update(updateData)
         .eq('id', taskId);
         
       if (error) throw error;
-      
-      // Handle subtasks updates if needed (implementation would go here)
       
       toast({
         title: "Task updated",
@@ -275,7 +262,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      await fetchTasks(); // Refresh tasks list
+      await fetchTasks();
     } catch (error) {
       console.error("Error updating task:", error);
       toast({
@@ -283,10 +270,11 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         description: error instanceof Error ? error.message : "An unexpected error occurred",
         variant: "destructive"
       });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
-  // Archive a task (soft delete)
   const handleArchiveTask = async (taskId: string, reason: "deleted" | "canceled") => {
     try {
       const updates = {
@@ -309,7 +297,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      await fetchTasks(); // Refresh tasks list
+      await fetchTasks();
     } catch (error) {
       console.error("Error archiving task:", error);
       toast({
@@ -320,7 +308,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     }
   };
 
-  // Restore a task from archive
   const handleRestoreTask = async (taskId: string) => {
     try {
       const { data: task } = await supabase
@@ -330,7 +317,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         .single();
         
       const updates = {
-        status: "in-progress" as TaskStatus, // Default to in-progress when restoring
+        status: "in-progress" as TaskStatus,
         archived_at: null,
         archive_reason: null,
         updated_at: new Date().toISOString()
@@ -349,7 +336,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      await fetchTasks(); // Refresh tasks list
+      await fetchTasks();
     } catch (error) {
       console.error("Error restoring task:", error);
       toast({
@@ -360,7 +347,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     }
   };
 
-  // Filter tasks based on search and filters
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = searchQuery ? 
       task.title.toLowerCase().includes(searchQuery.toLowerCase()) || 

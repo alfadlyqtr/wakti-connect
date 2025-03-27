@@ -1,10 +1,10 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { TaskStatus } from "@/types/task.types";
-import { Check, Clock, ThumbsUp, Loader2 } from "lucide-react";
+import { Check, ThumbsUp, Loader2 } from "lucide-react";
 import { format, isPast, isToday } from "date-fns";
 import { TaskCardCompletionAnimation } from "./TaskCardCompletionAnimation";
+import { TaskStatus } from "@/types/task.types";
 
 interface TaskCardFooterProps {
   id: string;
@@ -87,8 +87,6 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
           )}
         </div>
       )}
-      
-      {/* Edit button removed from here - now only in dropdown menu */}
       
       {/* Completion animation */}
       <TaskCardCompletionAnimation 

@@ -4,6 +4,7 @@ import { TaskCardMenu } from "./TaskCardMenu";
 import { TaskCardFooter } from "./TaskCardFooter";
 import { TaskDueDate } from "./TaskDueDate";
 import { TaskSubtasks } from "./TaskSubtasks";
+import { TaskCardCompletionAnimation } from "./TaskCardCompletionAnimation";
 
 // Re-export all components
 export { 
@@ -11,7 +12,8 @@ export {
   TaskCardMenu, 
   TaskCardFooter, 
   TaskDueDate,
-  TaskSubtasks
+  TaskSubtasks,
+  TaskCardCompletionAnimation
 };
 
 // No default export since we're using named exports
