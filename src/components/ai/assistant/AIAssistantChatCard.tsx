@@ -5,9 +5,9 @@ import { Bot, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AIMessage } from '@/types/ai-assistant.types';
 import { AIAssistantChat } from './AIAssistantChat';
-import { SuggestionPrompts } from './SuggestionPrompts';
 import { useAISettings } from '@/components/settings/ai/context/AISettingsContext';
 import { MessageInputForm } from './MessageInputForm';
+import { EmptyStateView } from './EmptyStateView';
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -30,7 +30,6 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
-  const { settings } = useAISettings();
   
   // Always use WAKTI AI as the assistant name regardless of settings
   const assistantName = "WAKTI AI";
@@ -93,24 +92,5 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
         />
       </CardContent>
     </Card>
-  );
-};
-
-// Empty state component for when there are no messages
-const EmptyStateView: React.FC<{ onPromptClick: (prompt: string) => void }> = ({ onPromptClick }) => {
-  return (
-    <div className="h-full flex flex-col">
-      <div className="text-center my-8">
-        <Bot className="w-12 h-12 mx-auto text-wakti-blue opacity-80" />
-        <h3 className="mt-4 text-lg font-medium">
-          How can I help you today?
-        </h3>
-        <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-          Ask me anything about tasks, scheduling, or your business. I'm here to make your workflow easier.
-        </p>
-      </div>
-      
-      <SuggestionPrompts onPromptClick={onPromptClick} />
-    </div>
   );
 };
