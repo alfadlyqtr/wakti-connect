@@ -41,7 +41,7 @@ const DashboardTasks = () => {
 
   // Redirect staff users away from tasks page
   // Cast userRole to UserRole to ensure TypeScript recognizes "staff" as a valid option
-  if (userRole === "staff") {
+  if ((userRole as UserRole) === "staff") {
     return <Navigate to="/dashboard" replace />;
   }
 
