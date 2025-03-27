@@ -41,18 +41,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Show a loading state until auth is fully initialized
-  if (!authInitialized && isLoading) {
+  if (!authInitialized) {
     return <AuthLoadingState authError={authError} />;
   }
 
   // If we have an auth error but initialization is complete, show a recovery UI
-  if (authError && authInitialized) {
+  if (authError) {
     return <AuthErrorState authError={authError} />;
-  }
-
-  // If auth is initialized but still loading, show a simpler loading state
-  if (isLoading) {
-    return <AuthLoadingState authError={null} />;
   }
 
   return (

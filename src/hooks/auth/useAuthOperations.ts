@@ -8,16 +8,26 @@ export function useAuthOperations(
 ) {
   const login = async (email: string, password: string) => {
     try {
+      setIsLoading(true);
       const result = await loginOperation(email, password, setIsLoading, setUser);
       return result; // Return the result for components that need it
     } catch (error) {
+      // Ensure we're no longer in loading state if there's an error
+      setIsLoading(false);
       // Rethrow the error so it can be caught by callers
       throw error;
     }
   };
 
   const logout = async () => {
-    return logoutOperation(setIsLoading, setUser);
+    try {
+      setIsLoading(true);
+      await logoutOperation(setIsLoading, setUser);
+    } catch (error) {
+      // Ensure we're no longer in loading state if there's an error
+      setIsLoading(false);
+      throw error;
+    }
   };
 
   const register = async (
@@ -27,7 +37,14 @@ export function useAuthOperations(
     accountType: string = 'free', 
     businessName?: string
   ) => {
-    return registerOperation(email, password, name, accountType, businessName, setIsLoading, setUser);
+    try {
+      setIsLoading(true);
+      await registerOperation(email, password, name, accountType, businessName, setIsLoading, setUser);
+    } catch (error) {
+      // Ensure we're no longer in loading state if there's an error
+      setIsLoading(false);
+      throw error;
+    }
   };
 
   return { login, logout, register };

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface AuthLoadingStateProps {
@@ -7,13 +7,41 @@ interface AuthLoadingStateProps {
 }
 
 const AuthLoadingState: React.FC<AuthLoadingStateProps> = ({ authError }) => {
+  const [extendedLoading, setExtendedLoading] = useState(false);
+  
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setExtendedLoading(true);
+    }, 5000);
+    
+    return () => clearTimeout(timeout);
+  }, []);
+  
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <div className="text-center max-w-md">
         <LoadingSpinner color="border-wakti-blue" />
-        <p className="mt-4 text-gray-600">Initializing application...</p>
+        <p className="mt-4 text-gray-600">
+          {extendedLoading
+            ? "Still working on connecting to services..."
+            : "Initializing application..."}
+        </p>
+        {extendedLoading && !authError && (
+          <p className="mt-2 text-sm text-gray-500">
+            This is taking longer than expected. Please wait a moment.
+          </p>
+        )}
         {authError && (
-          <p className="mt-2 text-red-500 text-sm">{authError}</p>
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-600 font-medium">Connection Error</p>
+            <p className="text-sm text-red-500 mt-1">{authError}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-3 px-4 py-2 bg-primary text-white text-sm rounded-md"
+            >
+              Reload Page
+            </button>
+          </div>
         )}
       </div>
     </div>
