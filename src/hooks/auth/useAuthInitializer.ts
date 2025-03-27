@@ -18,160 +18,115 @@ export function useAuthInitializer() {
     let authCheckComplete = false;
     let authTimeout: NodeJS.Timeout;
     
-    // First check if we can connect to Supabase
-    const checkSupabaseConnection = async () => {
+    // Function to handle profile data - isolated for clarity
+    const handleUserProfile = async (userId: string, userEmail: string) => {
       try {
-        const { error } = await supabase.from('_metadata').select('*').limit(1).maybeSingle();
-        if (error && !error.message.includes("does not exist")) {
-          console.error("Supabase connection test failed:", error);
-          throw new Error("Failed to connect to database service. Please check application configuration.");
+        // First try to get existing profile
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", userId)
+          .maybeSingle();
+          
+        if (error) {
+          console.error("Error fetching profile:", error);
+          return null;
         }
+        
+        if (data) {
+          console.log("Found existing profile");
+          return data;
+        }
+        
+        // Create new profile if it doesn't exist
+        console.log("No profile found, creating new one");
+        return await createProfile(userId, userEmail || "");
       } catch (error) {
-        console.warn("Metadata table may not exist yet, continuing initialization");
-        // Don't block auth - this might be first run
+        console.error("Error in profile handling:", error);
+        return null;
       }
     };
     
-    // Run connection check but don't await it to avoid blocking auth flow
-    checkSupabaseConnection().catch(console.error);
-    
-    // Set up Supabase auth listener
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state changed:", event, session?.user?.id);
         
-        // Prevent multiple state updates for the same event
+        // Prevent multiple processing for the same event
         if (authCheckComplete && event === 'INITIAL_SESSION') {
           console.log("Ignoring duplicate INITIAL_SESSION event");
           return;
         }
         
-        if (session?.user) {
-          try {
-            console.log("User authenticated, fetching profile data");
+        try {
+          if (session?.user) {
+            // User is authenticated
+            const profileData = await handleUserProfile(
+              session.user.id, 
+              session.user.email || ""
+            );
             
-            // Try to get or create profile
-            let profileResult = null;
-            try {
-              // Attempt to fetch existing profile first
-              const { data, error } = await supabase
-                .from("profiles")
-                .select("*")
-                .eq("id", session.user.id)
-                .maybeSingle();
-              
-              if (error) throw error;
-              
-              if (data) {
-                profileResult = data;
-                console.log("Found existing profile:", profileResult);
-              } else {
-                // Create profile if it doesn't exist
-                profileResult = await createProfile(session.user.id, session.user.email || "");
-                console.log("Created new profile:", profileResult);
-              }
-            } catch (error) {
-              console.error("Failed to handle profile operation:", error);
-            }
-            
-            // Always create a user object, even with minimal data if profile fetch fails
-            if (profileResult) {
-              setUser(createUserFromProfile(session.user.id, session.user.email || "", profileResult));
+            // Set user data based on profile availability
+            if (profileData) {
+              setUser(createUserFromProfile(session.user.id, session.user.email || "", profileData));
             } else {
-              // If we still don't have a profile, create a basic user object
-              console.warn("Failed to get or create profile, using basic user data");
               setUser(createBasicUser(session.user.id, session.user.email || ""));
             }
-          } catch (error: any) {
-            console.error("Error processing session:", error);
-            // Even in case of error, set basic user data to prevent blocking the app
-            setUser(createBasicUser(session.user.id, session.user.email || ""));
-            
-            // Provide user feedback only for critical errors
-            if (error.message && error.message.includes("database schema")) {
-              toast({
-                title: "Application Error",
-                description: "There was a problem initializing the application. Please contact support.",
-                variant: "destructive"
-              });
-            }
+          } else {
+            // No user authenticated
+            setUser(null);
           }
-        } else {
-          console.log("No authenticated user");
-          setUser(null);
+        } catch (error) {
+          console.error("Error processing auth state change:", error);
+          // Set basic user data even in case of error to prevent blocking the app
+          if (session?.user) {
+            setUser(createBasicUser(session.user.id, session.user.email || ""));
+          }
+        } finally {
+          // Mark auth check as complete and clean up
+          authCheckComplete = true;
+          clearTimeout(authTimeout);
+          setIsLoading(false);
+          setAuthInitialized(true);
         }
-        
-        authCheckComplete = true;
-        clearTimeout(authTimeout);
-        setIsLoading(false);
-        setAuthInitialized(true);
       }
     );
 
-    // Check for existing session on mount
-    const checkSession = async () => {
+    // Check for existing session once on mount
+    const checkInitialSession = async () => {
       try {
-        console.log("Checking for existing session...");
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error("Error getting session:", error);
+          console.error("Error getting initial session:", error);
           setAuthError("Unable to verify your authentication status.");
           return;
         }
         
-        // If auth listener has already processed this session, don't duplicate the work
+        // If auth listener has already processed this session, don't duplicate work
         if (authCheckComplete) {
-          console.log("Auth check already completed by listener, skipping duplicate work");
+          console.log("Auth already initialized by listener");
           return;
         }
         
+        // Process the session same way as in the listener
         if (session?.user) {
-          console.log("Existing session found for user:", session.user.id);
+          const profileData = await handleUserProfile(
+            session.user.id, 
+            session.user.email || ""
+          );
           
-          try {
-            // Try to get existing profile
-            let profileResult = null;
-            try {
-              const { data, error } = await supabase
-                .from("profiles")
-                .select("*")
-                .eq("id", session.user.id)
-                .maybeSingle();
-                
-              if (error) throw error;
-              
-              if (data) {
-                profileResult = data;
-              } else {
-                // Create profile if it doesn't exist
-                profileResult = await createProfile(session.user.id, session.user.email || "");
-              }
-            } catch (error) {
-              console.error("Failed to handle profile operation:", error);
-            }
-            
-            // Always create a user object, even with minimal data if profile fetch fails
-            if (profileResult) {
-              setUser(createUserFromProfile(session.user.id, session.user.email || "", profileResult));
-            } else {
-              // If we still don't have a profile, create a basic user object
-              console.warn("Failed to get or create profile, using basic user data");
-              setUser(createBasicUser(session.user.id, session.user.email || ""));
-            }
-          } catch (error: any) {
-            console.error("Error processing existing session:", error);
-            // Even in case of error, set basic user data to prevent blocking the app
+          if (profileData) {
+            setUser(createUserFromProfile(session.user.id, session.user.email || "", profileData));
+          } else {
             setUser(createBasicUser(session.user.id, session.user.email || ""));
           }
-        } else {
-          console.log("No existing session found");
         }
-      } catch (error: any) {
-        console.error("Error checking session:", error);
-        setAuthError(error.message || "Error checking authentication");
+      } catch (error) {
+        console.error("Error checking initial session:", error);
+        setAuthError(error instanceof Error ? error.message : "Error checking authentication");
       } finally {
-        // Only finalize initialization if the auth listener hasn't already done so
+        // Only finalize if the auth listener hasn't already done so
         if (!authCheckComplete) {
           authCheckComplete = true;
           setIsLoading(false);
@@ -180,22 +135,22 @@ export function useAuthInitializer() {
       }
     };
     
-    // Set a timeout to prevent hanging indefinitely - extended to 15 seconds
+    // Set timeout to prevent hanging indefinitely
     authTimeout = setTimeout(() => {
       if (!authCheckComplete) {
-        console.warn("Auth check timed out");
+        console.warn("Auth check timed out after 15 seconds");
+        setAuthError("Authentication service timed out. Please reload the page.");
         setIsLoading(false);
         setAuthInitialized(true);
-        setAuthError("Authentication service timed out. Please reload the page.");
       }
-    }, 15000); // Extended timeout to 15 seconds
+    }, 15000);
     
-    // Call the checkSession function
-    checkSession();
+    // Run initial session check
+    checkInitialSession();
 
-    // Clean up subscriptions and timers on unmount
+    // Clean up on unmount
     return () => {
-      console.log("Cleaning up auth listener subscription");
+      console.log("Cleaning up auth listener");
       subscription.unsubscribe();
       clearTimeout(authTimeout);
     };
