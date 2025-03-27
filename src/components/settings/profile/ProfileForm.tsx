@@ -38,7 +38,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
   }
   
   return (
-    <Form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit)}>
       <div className="space-y-6">
         {isStaff && (
           <Alert variant="warning" className="mb-4">
@@ -85,7 +85,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
           {isSubmitting ? "Saving..." : (isBusinessAccount ? "Save Business Info" : "Save Profile")}
         </Button>
       </div>
-    </Form>
+    </form>
   );
 };
 
