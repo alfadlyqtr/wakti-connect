@@ -9,3 +9,9 @@ verify_jwt = false
 
 [functions.ai-assistant]
 verify_jwt = false
+
+[functions.ai-voice-to-text]
+verify_jwt = false
+
+[functions.ai-text-to-voice]
+verify_jwt = false

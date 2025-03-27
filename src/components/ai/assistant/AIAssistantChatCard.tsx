@@ -4,13 +4,15 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlertCircle, Bot, SendHorizontal, Trash2 } from 'lucide-react';
+import { AlertCircle, Bot, Mic, MicOff, SendHorizontal, Speaker, Trash2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AIMessage } from '@/types/ai-assistant.types';
 import { AIAssistantChat } from './AIAssistantChat';
 import { SuggestionPrompts } from './SuggestionPrompts';
 import { useAISettings } from '@/components/settings/ai/context/AISettingsContext';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
+import { toast } from '@/components/ui/use-toast';
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -40,6 +42,27 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   // Always use WAKTI AI as the assistant name regardless of settings
   const assistantName = "WAKTI AI";
 
+  // Voice interaction hook
+  const {
+    isListening,
+    isSpeaking,
+    supportsVoice,
+    lastTranscript,
+    startListening,
+    stopListening,
+    speak,
+    stopSpeaking,
+    clearTranscript
+  } = useVoiceInteraction();
+
+  // Use the transcript when it changes
+  useEffect(() => {
+    if (lastTranscript) {
+      setInputMessage(lastTranscript);
+      clearTranscript();
+    }
+  }, [lastTranscript, setInputMessage, clearTranscript]);
+
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -61,6 +84,41 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     }
   };
 
+  // Handle voice input toggle
+  const toggleVoiceInput = () => {
+    if (!supportsVoice) {
+      toast({
+        title: "Voice Not Supported",
+        description: "Your browser doesn't support voice recognition.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+
+  // Speak the last assistant message
+  const speakLastMessage = () => {
+    const lastAssistantMessage = [...messages].reverse().find(m => m.role === 'assistant');
+    if (lastAssistantMessage) {
+      if (isSpeaking) {
+        stopSpeaking();
+      } else {
+        speak(lastAssistantMessage.content);
+      }
+    } else {
+      toast({
+        title: "No Message to Speak",
+        description: "There is no assistant message to read.",
+      });
+    }
+  };
+
   // Custom loading animation for the thinking state
   const LoadingAnimation = () => (
     <div className="flex items-center space-x-2">
@@ -77,17 +135,33 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
           <Bot className="w-5 h-5 mr-2 text-wakti-blue" />
           <h3 className="font-medium text-sm md:text-base">Chat with {assistantName}</h3>
         </div>
-        {messages.length > 0 && (
+        <div className="flex gap-2">
+          {/* Voice output button - will read the last assistant message */}
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={clearMessages}
+            onClick={speakLastMessage}
             className="h-8 w-8"
+            disabled={messages.length === 0 || isLoading}
+            aria-label={isSpeaking ? "Stop speaking" : "Speak message"}
+            title={isSpeaking ? "Stop speaking" : "Speak last message"}
           >
-            <Trash2 className="h-4 w-4" />
-            <span className="sr-only">Clear chat</span>
+            <Speaker className={`h-4 w-4 ${isSpeaking ? 'text-wakti-blue' : ''}`} />
           </Button>
-        )}
+          
+          {messages.length > 0 && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={clearMessages}
+              className="h-8 w-8"
+              aria-label="Clear chat"
+              title="Clear chat"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="p-0 flex-1 flex flex-col">
         <ScrollArea className="flex-1 p-4 pb-0">
@@ -132,30 +206,51 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
         </ScrollArea>
         
         <form onSubmit={handleSendMessage} className="p-4 pt-2 mt-auto">
-          <div className="relative">
-            <Input 
-              placeholder={isLoading ? "WAKTI AI is thinking..." : "Type your message..."}
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              disabled={isLoading || !canAccess}
-              className="pr-10"
-              ref={inputRef}
-            />
-            {isLoading ? (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <LoadingAnimation />
-              </div>
-            ) : (
-              <Button 
-                size="icon" 
-                type="submit" 
-                disabled={isLoading || !inputMessage.trim() || !canAccess}
-                className="absolute right-0 top-0 bottom-0 rounded-l-none"
+          <div className="relative flex items-center gap-2">
+            {supportsVoice && (
+              <Button
+                type="button"
+                size="icon"
+                variant={isListening ? "default" : "ghost"}
+                onClick={toggleVoiceInput}
+                className={`size-10 flex-shrink-0 ${isListening ? 'bg-wakti-blue text-white' : ''}`}
+                disabled={isLoading || !canAccess}
+                aria-label={isListening ? "Stop listening" : "Start voice input"}
+                title={isListening ? "Stop listening" : "Start voice input"}
               >
-                <SendHorizontal className="h-4 w-4" />
-                <span className="sr-only">Send message</span>
+                {isListening ? (
+                  <MicOff className="h-5 w-5" />
+                ) : (
+                  <Mic className="h-5 w-5" />
+                )}
               </Button>
             )}
+            
+            <div className="relative flex-1">
+              <Input 
+                placeholder={isListening ? "Listening..." : isLoading ? "WAKTI AI is thinking..." : "Type your message..."}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                disabled={isLoading || !canAccess || isListening}
+                className={`pr-10 ${isListening ? 'bg-blue-50' : ''}`}
+                ref={inputRef}
+              />
+              {isLoading ? (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <LoadingAnimation />
+                </div>
+              ) : (
+                <Button 
+                  size="icon" 
+                  type="submit" 
+                  disabled={isLoading || !inputMessage.trim() || !canAccess || isListening}
+                  className="absolute right-0 top-0 bottom-0 rounded-l-none"
+                >
+                  <SendHorizontal className="h-4 w-4" />
+                  <span className="sr-only">Send message</span>
+                </Button>
+              )}
+            </div>
           </div>
         </form>
       </CardContent>

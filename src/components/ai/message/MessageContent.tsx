@@ -17,7 +17,7 @@ export function MessageContent({ content, timestamp, isUser }: MessageContentPro
         isUser ? "bg-wakti-blue text-white" : "bg-muted"
       )}
     >
-      <div className="prose prose-xs sm:prose-sm max-w-none dark:prose-invert overflow-auto">
+      <div className="prose prose-xs sm:prose-sm max-w-none dark:prose-invert overflow-auto max-h-[400px] thin-scrollbar">
         <Markdown>{content}</Markdown>
       </div>
       <div className={cn(
