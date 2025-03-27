@@ -4,6 +4,7 @@ import { Task } from "@/types/task.types";
 import TaskGrid from "./TaskGrid";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
+import { useDebouncedRefresh } from "@/hooks/useDebouncedRefresh";
 
 interface TasksContainerProps {
   tasks: Task[];
@@ -28,6 +29,9 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   onArchive,
   onRestore
 }) => {
+  // Use the debounced refresh hook to prevent UI freezing
+  const { refresh: debouncedRefetch, isRefreshing } = useDebouncedRefresh(refetch);
+
   if (tasks.length === 0) {
     return (
       <div className="text-center py-12 border rounded-lg">
@@ -41,7 +45,10 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
         </p>
         
         {!isArchiveView && (
-          <Button onClick={onCreateTask}>
+          <Button 
+            onClick={onCreateTask}
+            disabled={isRefreshing}
+          >
             <PlusCircle className="mr-2 h-4 w-4" />
             Create Task
           </Button>
@@ -54,7 +61,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
     <TaskGrid 
       tasks={tasks} 
       userRole={userRole} 
-      refetch={refetch}
+      refetch={debouncedRefetch}
       isArchiveView={isArchiveView}
       onEdit={onEdit}
       onArchive={onArchive}
