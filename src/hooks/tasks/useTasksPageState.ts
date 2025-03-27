@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus, TaskPriority, TaskTab } from '@/types/task.types';
@@ -477,8 +476,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
   });
 
   const refetchTasks = useCallback(async (): Promise<void> => {
-    const result = await debouncedFetch();
-    return result;
+    return debouncedFetch();
   }, [debouncedFetch]);
 
   return {

@@ -22,7 +22,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
         }
 
         // Set a new timeout
-        timeoutRef.current = setTimeout(async () => {
+        timeoutRef.current = setTimeout(() => {
           try {
             // Execute the callback
             const result = callback(...args);
@@ -38,7 +38,6 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
               resolve(result as any);
             }
           } catch (error) {
-            console.error("Error in debounced callback:", error);
             reject(error);
           }
         }, delay);
