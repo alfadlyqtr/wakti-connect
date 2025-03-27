@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -60,7 +59,6 @@ import { Loader2 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { toast } from "@/components/ui/use-toast";
 
-// Define a simple interface with primitive types only
 interface SimpleTeamTask {
   id: string;
   title: string;

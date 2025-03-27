@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+// Define a simple interface with only primitive types
 interface StaffStats {
   tasksCount: number;
   bookingsCount: number;
