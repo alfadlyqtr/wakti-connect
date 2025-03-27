@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { BusinessPage } from "@/types/business.types";
@@ -49,13 +48,12 @@ const PageSettingsTab: React.FC<PageSettingsTabProps> = ({
   const [isDirty, setIsDirty] = useState(false);
   const { socialLinks, addSocialLink, updateSocialLink, deleteSocialLink } = useBusinessSocialLinks(businessId);
   
-  // Set up debounced auto-save
-  const debouncedAutoSave = useDebouncedCallback(async (data) => {
+  // Set up debounced auto-save - no need for async/await anymore
+  const debouncedAutoSave = useDebouncedCallback((data) => {
     if (autoSavePageSettings) {
       autoSavePageSettings(data);
       setIsDirty(false);
     }
-    return true;
   }, 2000);
   
   // Custom input change handler that triggers auto-save
