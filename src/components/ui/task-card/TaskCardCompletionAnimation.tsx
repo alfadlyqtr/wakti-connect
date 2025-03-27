@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, ThumbsUp, Award } from 'lucide-react';
+import { CheckCircle2, Award } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface TaskCardCompletionAnimationProps {
@@ -71,15 +71,23 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
           >
             {isAheadOfTime ? (
               <>
+                {/* Passport stamp design for ahead-of-time completion */}
                 <motion.div
+                  className="relative mb-4 p-6 border-4 border-amber-600 rounded-full overflow-hidden bg-amber-50"
                   animate={{ 
                     rotate: [0, 10, -10, 10, 0],
                     scale: [1, 1.2, 1]
                   }}
                   transition={{ duration: 1, repeat: 1 }}
-                  className="text-yellow-500 mb-4"
                 >
-                  <Award size={60} className="text-yellow-500" />
+                  <div className="absolute inset-0 bg-amber-50 opacity-50"></div>
+                  <div className="absolute top-0 left-0 w-full h-full border-4 border-dashed border-amber-600 rounded-full"></div>
+                  
+                  <div className="relative z-10 text-center">
+                    <Award size={40} className="mx-auto text-amber-600 mb-1" />
+                    <div className="text-amber-800 font-bold text-sm">EARLY</div>
+                    <div className="text-amber-800 text-xs">{new Date().toLocaleDateString()}</div>
+                  </div>
                 </motion.div>
                 <motion.h2 
                   className="text-xl font-bold mb-2 text-center"
@@ -94,12 +102,20 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
               </>
             ) : (
               <>
+                {/* Passport stamp design for regular completion */}
                 <motion.div
+                  className="relative mb-4 p-6 border-4 border-green-600 rounded-full overflow-hidden bg-green-50"
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 0.5, repeat: 1 }}
-                  className="text-green-500 mb-4"
                 >
-                  <CheckCircle2 size={60} />
+                  <div className="absolute inset-0 bg-green-50 opacity-50"></div>
+                  <div className="absolute top-0 left-0 w-full h-full border-4 border-dashed border-green-600 rounded-full"></div>
+                  
+                  <div className="relative z-10 text-center">
+                    <CheckCircle2 size={40} className="mx-auto text-green-600 mb-1" />
+                    <div className="text-green-800 font-bold text-sm">COMPLETED</div>
+                    <div className="text-green-800 text-xs">{new Date().toLocaleDateString()}</div>
+                  </div>
                 </motion.div>
                 <motion.h2 
                   className="text-xl font-bold mb-2"

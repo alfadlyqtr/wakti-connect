@@ -96,4 +96,4 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
       />
     </div>
   );
-};
+}

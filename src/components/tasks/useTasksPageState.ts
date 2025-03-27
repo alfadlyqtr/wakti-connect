@@ -241,9 +241,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         due_date: taskData.due_date,
         due_time: taskData.due_time,
         updated_at: new Date().toISOString(),
-        ...(taskData.status === "completed" && {
-          completed_at: new Date().toISOString()
-        })
+        completed_at: taskData.status === "completed" ? new Date().toISOString() : null
       };
       
       console.log("Updating task with data:", updateData);

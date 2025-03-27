@@ -10,7 +10,7 @@ interface TasksOverviewProps {
 
 const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
   // Group tasks by status
-  const pendingTasks = tasks.filter(task => task.status === 'pending' as TaskStatus);
+  const pendingTasks = tasks.filter(task => task.status === 'pending');
   const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
   const completedTasks = tasks.filter(task => task.status === 'completed');
   

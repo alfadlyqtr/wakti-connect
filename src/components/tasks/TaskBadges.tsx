@@ -1,4 +1,3 @@
-
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -78,7 +77,6 @@ export const TaskSharingBadges = ({ isShared, isAssigned }: { isShared?: boolean
   );
 };
 
-// Task completion status badge
 export const TaskCompletionBadge = ({ 
   status, 
   dueDate, 
@@ -90,7 +88,6 @@ export const TaskCompletionBadge = ({
   completedDate?: Date | null,
   snoozedUntil?: Date | null
 }) => {
-  // Check if task is snoozed
   if (status === "snoozed" && snoozedUntil) {
     return (
       <Badge variant="outline" className="bg-amber-500/10 text-amber-500 text-xs">
@@ -100,7 +97,6 @@ export const TaskCompletionBadge = ({
     );
   }
   
-  // If task is not completed, check if it's overdue
   if (status !== "completed") {
     if (status === "in-progress" && isToday(dueDate)) {
       return (
@@ -120,7 +116,6 @@ export const TaskCompletionBadge = ({
     return null;
   }
   
-  // For completed tasks
   if (completedDate) {
     if (isBefore(completedDate, dueDate)) {
       return (
@@ -139,7 +134,6 @@ export const TaskCompletionBadge = ({
     }
   }
   
-  // Default completed badge
   return (
     <Badge variant="outline" className="bg-green-500/10 text-green-500 text-xs">
       <CheckCircle className="h-3 w-3 mr-1" />
@@ -153,13 +147,12 @@ const TaskBadges = ({
   priority, 
   isShared, 
   isAssigned,
-  status = "pending" as TaskStatus,
+  status = "pending",
   category = "personal",
   completedDate = null,
   snoozedUntil = null,
   dueTime = null
 }: TaskBadgesProps) => {
-  // Format the date part
   const formattedDate = dueDate.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric'
@@ -181,7 +174,6 @@ const TaskBadges = ({
       
       <TaskSharingBadges isShared={isShared} isAssigned={isAssigned} />
       
-      {/* Display the completion status badge */}
       {TaskCompletionBadge({ status, dueDate, completedDate, snoozedUntil })}
     </div>
   );

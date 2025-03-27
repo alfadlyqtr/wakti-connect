@@ -1,4 +1,3 @@
-
 import { Task, TaskStatus } from "@/types/task.types";
 
 // Function to get upcoming tasks
@@ -10,7 +9,7 @@ export const getUpcomingTasks = async (): Promise<Task[]> => {
       id: "task-1",
       title: "Client meeting",
       description: "Discuss project timeline",
-      status: "pending" as TaskStatus,
+      status: "pending",
       priority: "high",
       due_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       due_time: null,
@@ -51,7 +50,7 @@ export const getTaskById = async (id: string): Promise<Task | null> => {
       id: "task-1",
       title: "Client meeting",
       description: "Discuss project timeline",
-      status: "pending" as TaskStatus,
+      status: "pending",
       priority: "high",
       due_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       due_time: null,

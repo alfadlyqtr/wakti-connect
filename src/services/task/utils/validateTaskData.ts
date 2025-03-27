@@ -10,7 +10,7 @@ export function sanitizeTaskData(taskData: TaskFormData): Partial<TaskFormData> 
   return {
     title: taskData.title,
     description: taskData.description,
-    status: (taskData.status || "pending") as TaskStatus,
+    status: validateTaskStatus(taskData.status),
     priority: taskData.priority || "normal",
     due_date: taskData.due_date,
     due_time: taskData.due_time,
@@ -18,4 +18,9 @@ export function sanitizeTaskData(taskData: TaskFormData): Partial<TaskFormData> 
     snoozed_until: taskData.snoozed_until || null,
     is_recurring: taskData.is_recurring || false
   };
+}
+
+function validateTaskStatus(status?: TaskStatus): TaskStatus {
+  if (!status) return "pending";
+  return status;
 }

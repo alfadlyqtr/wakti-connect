@@ -1304,6 +1304,8 @@ export type Database = {
       }
       tasks: {
         Row: {
+          archive_reason: string | null
+          archived_at: string | null
           completed_at: string | null
           created_at: string
           description: string | null
@@ -1322,6 +1324,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          archive_reason?: string | null
+          archived_at?: string | null
           completed_at?: string | null
           created_at?: string
           description?: string | null
@@ -1340,6 +1344,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          archive_reason?: string | null
+          archived_at?: string | null
           completed_at?: string | null
           created_at?: string
           description?: string | null
