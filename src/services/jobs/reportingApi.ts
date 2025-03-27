@@ -5,6 +5,9 @@ import { ensurePaymentMethodType } from "./jobCardsApi";
 
 /**
  * Fetch job cards with detailed information for reporting
+ * @param staffRelationId - The staff relation ID to filter by (required)
+ * @param startDate - Optional date to filter results from
+ * @returns Promise with array of job cards with additional details
  */
 export const fetchJobCardsWithDetails = async (
   staffRelationId: string,
@@ -19,7 +22,10 @@ export const fetchJobCardsWithDetails = async (
         name,
         description,
         duration,
-        default_price
+        default_price,
+        business_id,
+        created_at,
+        updated_at
       ),
       business_staff:staff_relation_id (
         id,
@@ -77,10 +83,7 @@ export const fetchJobCardsWithDetails = async (
     const jobCard: JobCard = {
       ...card,
       job: jobData ? {
-        ...jobData,
-        business_id: '', // Add required fields that might be missing
-        created_at: '',
-        updated_at: ''
+        ...jobData
       } : undefined,
       staff_name: staffName,
       payment_method: ensurePaymentMethodType(card.payment_method)
@@ -96,18 +99,93 @@ export const fetchJobCardsWithDetails = async (
 
 /**
  * Fetch staff performance summary for a business
+ * This is used by business owners to see aggregate performance data
+ * @param businessId The business ID to fetch performance data for
+ * @param timeRange Time range for the report (day, week, month, etc.)
  */
-export const fetchStaffPerformanceSummary = async (businessId: string, timeRange: string = 'month') => {
+export const fetchStaffPerformanceSummary = async (
+  businessId: string, 
+  timeRange: string = 'month'
+) => {
   try {
-    // This would be a more complex query in a real application
-    // It would aggregate job cards by staff member and calculate performance metrics
+    // Get current date and calculate start date based on time range
+    const now = new Date();
+    let startDate: Date;
     
-    // For now, we're returning placeholder data
+    switch (timeRange) {
+      case 'week':
+        startDate = new Date(now.setDate(now.getDate() - 7));
+        break;
+      case 'month':
+        startDate = new Date(now.setMonth(now.getMonth() - 1));
+        break;
+      case 'quarter':
+        startDate = new Date(now.setMonth(now.getMonth() - 3));
+        break;
+      case 'year':
+        startDate = new Date(now.setFullYear(now.getFullYear() - 1));
+        break;
+      default:
+        startDate = new Date(now.setMonth(now.getMonth() - 1)); // Default to month
+    }
+    
+    // Query job cards for all staff in this business
+    const { data: staffRelations, error: staffError } = await supabase
+      .from('business_staff')
+      .select('id, name')
+      .eq('business_id', businessId)
+      .eq('status', 'active');
+      
+    if (staffError) {
+      console.error("Error fetching staff relations:", staffError);
+      throw new Error(`Error fetching staff relations: ${staffError.message}`);
+    }
+    
+    // Collect performance metrics for each staff member
+    const staffMetrics = [];
+    let totalJobs = 0;
+    let totalEarnings = 0;
+    
+    for (const staff of staffRelations || []) {
+      // Get job cards for this staff member
+      const { data: jobCards, error: jobsError } = await supabase
+        .from('job_cards')
+        .select('*, jobs:job_id(*)')
+        .eq('staff_relation_id', staff.id)
+        .gte('start_time', startDate.toISOString());
+        
+      if (jobsError) {
+        console.error(`Error fetching job cards for staff ${staff.id}:`, jobsError);
+        continue;
+      }
+      
+      // Calculate metrics
+      const staffJobs = jobCards?.length || 0;
+      const staffEarnings = jobCards?.reduce((sum, card) => sum + (card.payment_amount || 0), 0) || 0;
+      
+      totalJobs += staffJobs;
+      totalEarnings += staffEarnings;
+      
+      // Add to staff metrics if they have job cards
+      if (staffJobs > 0) {
+        staffMetrics.push({
+          staffId: staff.id,
+          staffName: staff.name,
+          totalJobs: staffJobs,
+          totalEarnings: staffEarnings,
+          avgPerJob: staffJobs > 0 ? staffEarnings / staffJobs : 0
+        });
+      }
+    }
+    
+    // Sort by earnings (highest first)
+    staffMetrics.sort((a, b) => b.totalEarnings - a.totalEarnings);
+    
     return {
-      staffMetrics: [],
+      staffMetrics,
       timeRange,
-      totalJobs: 0,
-      totalEarnings: 0
+      totalJobs,
+      totalEarnings
     };
   } catch (error) {
     console.error("Error fetching staff performance summary:", error);
