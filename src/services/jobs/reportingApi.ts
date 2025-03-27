@@ -52,13 +52,25 @@ export const fetchJobCardsWithDetails = async (
     // Extract job information
     const jobData = card.jobs || undefined;
     
-    // Extract staff name for reporting - with proper null checking
+    // Extract staff name for reporting - with proper type guards for null safety
     let staffName = "Unknown Staff";
-    if (card.business_staff && 
-        typeof card.business_staff === 'object' && 
-        card.business_staff !== null && 
-        'name' in card.business_staff) {
-      staffName = card.business_staff.name as string;
+    
+    // Use a type guard function to check if business_staff exists and has the right structure
+    const hasValidStaffData = (
+      staff: any
+    ): staff is { id: string; name: string } => {
+      return (
+        staff !== null &&
+        typeof staff === 'object' &&
+        staff !== undefined &&
+        'name' in staff &&
+        typeof staff.name === 'string'
+      );
+    };
+    
+    // Apply the type guard
+    if (hasValidStaffData(card.business_staff)) {
+      staffName = card.business_staff.name;
     }
     
     // Create a properly typed JobCard object
