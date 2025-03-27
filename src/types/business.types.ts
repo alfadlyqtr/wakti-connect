@@ -64,7 +64,9 @@ export type SectionType =
   | 'contact'
   | 'gallery'
   | 'hours'
-  | 'testimonials';
+  | 'testimonials'
+  | 'booking'
+  | 'instagram';
 
 export interface BusinessSocialLink {
   id: string;

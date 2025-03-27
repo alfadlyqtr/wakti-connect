@@ -1,81 +1,83 @@
 
 import React from "react";
-import { BusinessPageSection } from "@/types/business.types";
-import BusinessHeader from "./BusinessHeader";
-import BusinessAbout from "./BusinessAbout";
-import BusinessServicesList from "./BusinessServicesList";
-import BusinessContactInfo from "./BusinessContactInfo";
-import BusinessGallery from "./BusinessGallery";
-import BusinessHours from "./BusinessHours";
-import BusinessTestimonials from "./BusinessTestimonials";
+import { BusinessPageSection, BusinessPage } from "@/types/business.types";
+
+// Import section renderers
+import BusinessPageHeader from "./sections/BusinessPageHeader";
+import BusinessAboutSection from "./sections/BusinessAboutSection";
+import BusinessContactSection from "./sections/BusinessContactSection";
+import BusinessHoursSection from "./sections/BusinessHoursSection";
+import BusinessGallerySection from "./sections/BusinessGallerySection";
+import BusinessServicesSection from "./sections/BusinessServicesSection";
+import BusinessTestimonialsSection from "./sections/BusinessTestimonialsSection";
+import BusinessBookingSection from "./sections/BusinessBookingSection";
+import BusinessInstagramSection from "./sections/BusinessInstagramSection";
 
 interface BusinessPageSectionsProps {
   pageSections: BusinessPageSection[];
-  businessPage: any;
+  businessPage: BusinessPage;
 }
 
-const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({ 
-  pageSections, 
-  businessPage 
-}) => {
+const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectionsProps) => {
+  if (!pageSections || pageSections.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">No content sections available.</p>
+      </div>
+    );
+  }
+
   const renderSection = (section: BusinessPageSection) => {
     if (!section.is_visible) return null;
     
+    const content = section.section_content || {};
+    
     switch (section.section_type) {
       case 'header':
-        return businessPage ? (
-          <BusinessHeader key={section.id} section={section} businessPage={businessPage} />
-        ) : null;
-      
+        return <BusinessPageHeader key={section.id} content={content} />;
+        
       case 'about':
-        return <BusinessAbout key={section.id} section={section} />;
-      
-      case 'services':
-        return <BusinessServicesList key={section.id} section={section} businessId={businessPage?.business_id} />;
-      
+        return <BusinessAboutSection key={section.id} content={content} />;
+        
       case 'contact':
-        return <BusinessContactInfo key={section.id} section={section} />;
-      
-      case 'gallery':
-        return <BusinessGallery key={section.id} section={section} />;
-      
+        return <BusinessContactSection key={section.id} content={content} businessId={businessPage.business_id} />;
+        
       case 'hours':
-        return <BusinessHours key={section.id} section={section} />;
-      
+        return <BusinessHoursSection key={section.id} content={content} />;
+        
+      case 'gallery':
+        return <BusinessGallerySection key={section.id} content={content} />;
+        
+      case 'services':
+        return <BusinessServicesSection key={section.id} content={content} businessId={businessPage.business_id} />;
+        
       case 'testimonials':
-        return <BusinessTestimonials key={section.id} section={section} />;
-      
+        return <BusinessTestimonialsSection key={section.id} content={content} />;
+
+      case 'booking':
+        return <BusinessBookingSection key={section.id} content={content} businessId={businessPage.business_id} />;
+        
+      case 'instagram':
+        return <BusinessInstagramSection key={section.id} content={content} />;
+        
       default:
         return (
-          <div key={section.id} className="py-6">
-            <p className="text-muted-foreground text-center">Unknown section type</p>
+          <div key={section.id} className="py-8">
+            <h2 className="text-2xl font-bold mb-4 capitalize">{section.section_type}</h2>
+            <p className="text-muted-foreground">
+              This section type is not yet supported for display.
+            </p>
           </div>
         );
     }
   };
 
-  if (!pageSections || pageSections.length === 0) {
-    return (
-      <div className="py-16 text-center">
-        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-          {businessPage.page_title}
-        </h1>
-        {businessPage.description && (
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            {businessPage.description}
-          </p>
-        )}
-      </div>
-    );
-  }
-  
   return (
-    <>
+    <div className="space-y-16 py-8">
       {pageSections
         .sort((a, b) => a.section_order - b.section_order)
-        .map(renderSection)
-      }
-    </>
+        .map(renderSection)}
+    </div>
   );
 };
 

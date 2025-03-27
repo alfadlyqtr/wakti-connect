@@ -7,6 +7,10 @@ import HoursEditor from "./HoursEditor";
 import AboutEditor from "./AboutEditor";
 import DefaultEditor from "./DefaultEditor";
 import GalleryEditor from "./gallery";
+import BookingTemplateSection from "../sections/BookingTemplateSection";
+import InstagramFeedSection from "../sections/InstagramFeedSection";
+import ServicesEditor from "./ServicesEditor";
+import TestimonialsEditor from "./TestimonialsEditor";
 
 const SectionEditorFields: React.FC = () => {
   const { section, contentData, handleInputChange } = useSectionEditor();
@@ -27,6 +31,18 @@ const SectionEditorFields: React.FC = () => {
         
       case 'gallery':
         return <GalleryEditor contentData={contentData} handleInputChange={handleInputChange} />;
+        
+      case 'booking':
+        return <BookingTemplateSection />;
+        
+      case 'instagram':
+        return <InstagramFeedSection />;
+        
+      case 'services':
+        return <ServicesEditor contentData={contentData} handleInputChange={handleInputChange} />;
+        
+      case 'testimonials':
+        return <TestimonialsEditor contentData={contentData} handleInputChange={handleInputChange} />;
         
       default:
         return <DefaultEditor contentData={contentData} handleInputChange={handleInputChange} />;
