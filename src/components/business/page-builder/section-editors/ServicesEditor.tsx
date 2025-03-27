@@ -5,21 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { EditorProps } from "./types";
 
-interface ServicesEditorProps {
-  contentData: Record<string, any>;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-}
-
-const ServicesEditor: React.FC<ServicesEditorProps> = ({ contentData, handleInputChange }) => {
+const ServicesEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) => {
   const handleSwitchChange = (name: string, checked: boolean) => {
-    const syntheticEvent = {
+    // Create a custom handler for the switch that will call the parent's handleInputChange
+    // with the appropriate value, properly cast to unknown first to avoid TypeScript errors
+    handleInputChange({
       target: {
         name,
         value: checked
       }
-    } as React.ChangeEvent<HTMLInputElement>;
-    handleInputChange(syntheticEvent);
+    } as unknown as React.ChangeEvent<HTMLInputElement>);
   };
 
   return (
