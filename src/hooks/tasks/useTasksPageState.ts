@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus, TaskPriority, TaskTab } from '@/types/task.types';
@@ -126,6 +127,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     }
   }, [activeTab, userRole, fetchTimestamp]);
 
+  // Define debouncedFetch after fetchTasks is defined
   const debouncedFetch = useDebouncedCallback(fetchTasks, 500);
 
   useEffect(() => {
@@ -475,6 +477,11 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
+  // Fix the refetchTasks function to avoid nested promises
+  const refetchTasks = useCallback(() => {
+    return debouncedFetch();
+  }, [debouncedFetch]);
+
   return {
     tasks,
     isLoading,
@@ -495,7 +502,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     handleUpdateTask,
     handleArchiveTask,
     handleRestoreTask,
-    refetchTasks: () => debouncedFetch(),
+    refetchTasks,
     filteredTasks,
     isPaidAccount,
     activeTab,
