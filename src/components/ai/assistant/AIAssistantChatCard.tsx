@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlertCircle, Bot, Mic, MicOff, SendHorizontal, Speaker, Trash2 } from 'lucide-react';
+import { AlertCircle, Bot, Loader2, Mic, MicOff, SendHorizontal, Speaker, Square, Trash2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AIMessage } from '@/types/ai-assistant.types';
 import { AIAssistantChat } from './AIAssistantChat';
@@ -48,6 +48,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     isSpeaking,
     supportsVoice,
     lastTranscript,
+    isProcessing,
     startListening,
     stopListening,
     speak,
@@ -119,15 +120,6 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     }
   };
 
-  // Custom loading animation for the thinking state
-  const LoadingAnimation = () => (
-    <div className="flex items-center space-x-2">
-      <div className="h-2 w-2 bg-wakti-blue rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-      <div className="h-2 w-2 bg-wakti-blue rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-      <div className="h-2 w-2 bg-wakti-blue rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
-    </div>
-  );
-
   return (
     <Card className="w-full h-[calc(80vh)] flex flex-col">
       <CardHeader className="py-3 px-4 border-b flex-row justify-between items-center">
@@ -146,7 +138,11 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
             aria-label={isSpeaking ? "Stop speaking" : "Speak message"}
             title={isSpeaking ? "Stop speaking" : "Speak last message"}
           >
-            <Speaker className={`h-4 w-4 ${isSpeaking ? 'text-wakti-blue' : ''}`} />
+            {isSpeaking ? (
+              <Square className="h-4 w-4 text-red-500" />
+            ) : (
+              <Speaker className={`h-4 w-4 ${isSpeaking ? 'text-wakti-blue' : ''}`} />
+            )}
           </Button>
           
           {messages.length > 0 && (
@@ -214,12 +210,14 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
                 variant={isListening ? "default" : "ghost"}
                 onClick={toggleVoiceInput}
                 className={`size-10 flex-shrink-0 ${isListening ? 'bg-wakti-blue text-white' : ''}`}
-                disabled={isLoading || !canAccess}
+                disabled={isLoading || !canAccess || isProcessing}
                 aria-label={isListening ? "Stop listening" : "Start voice input"}
                 title={isListening ? "Stop listening" : "Start voice input"}
               >
                 {isListening ? (
                   <MicOff className="h-5 w-5" />
+                ) : isProcessing ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   <Mic className="h-5 w-5" />
                 )}
@@ -228,22 +226,35 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
             
             <div className="relative flex-1">
               <Input 
-                placeholder={isListening ? "Listening..." : isLoading ? "WAKTI AI is thinking..." : "Type your message..."}
+                placeholder={
+                  isListening ? "Listening..." : 
+                  isProcessing ? "Processing speech..." :
+                  isLoading ? "WAKTI AI is thinking..." : 
+                  "Type your message..."
+                }
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                disabled={isLoading || !canAccess || isListening}
-                className={`pr-10 ${isListening ? 'bg-blue-50' : ''}`}
+                disabled={isLoading || !canAccess || isListening || isProcessing}
+                className={cn(
+                  "pr-10",
+                  isListening ? "bg-blue-50" : "",
+                  isProcessing ? "bg-yellow-50" : ""
+                )}
                 ref={inputRef}
               />
               {isLoading ? (
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <LoadingAnimation />
+                  <div className="flex items-center space-x-2">
+                    <div className="h-2 w-2 bg-wakti-blue rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                    <div className="h-2 w-2 bg-wakti-blue rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                    <div className="h-2 w-2 bg-wakti-blue rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                  </div>
                 </div>
               ) : (
                 <Button 
                   size="icon" 
                   type="submit" 
-                  disabled={isLoading || !inputMessage.trim() || !canAccess || isListening}
+                  disabled={isLoading || !inputMessage.trim() || !canAccess || isListening || isProcessing}
                   className="absolute right-0 top-0 bottom-0 rounded-l-none"
                 >
                   <SendHorizontal className="h-4 w-4" />

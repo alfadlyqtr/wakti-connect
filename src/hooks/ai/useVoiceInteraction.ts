@@ -8,6 +8,7 @@ export interface VoiceInteractionState {
   isSpeaking: boolean;
   supportsVoice: boolean;
   lastTranscript: string;
+  isProcessing: boolean;
 }
 
 export function useVoiceInteraction() {
@@ -16,6 +17,7 @@ export function useVoiceInteraction() {
     isSpeaking: false,
     supportsVoice: 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window,
     lastTranscript: "",
+    isProcessing: false
   });
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -47,17 +49,22 @@ export function useVoiceInteraction() {
       
       mediaRecorder.onstop = async () => {
         if (audioChunksRef.current.length === 0) {
-          setState(prev => ({ ...prev, isListening: false }));
+          setState(prev => ({ ...prev, isListening: false, isProcessing: false }));
           return;
         }
         
         try {
+          setState(prev => ({ ...prev, isListening: false, isProcessing: true }));
+          
           // Create audio blob and convert to base64
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
           const reader = new FileReader();
           
           reader.onload = async () => {
-            if (!reader.result) return;
+            if (!reader.result) {
+              setState(prev => ({ ...prev, isProcessing: false }));
+              return;
+            }
             
             const base64data = (reader.result as string).split(',')[1];
             
@@ -70,20 +77,35 @@ export function useVoiceInteraction() {
               console.error("Error in voice-to-text:", error);
               toast({
                 title: "Voice Recognition Failed",
-                description: "Could not process your speech. Please try again.",
+                description: error.message || "Could not process your speech. Please try again.",
                 variant: "destructive",
               });
+              setState(prev => ({ ...prev, isProcessing: false }));
             } else if (data?.text) {
-              setState(prev => ({ ...prev, lastTranscript: data.text }));
+              setState(prev => ({ ...prev, lastTranscript: data.text, isProcessing: false }));
+            } else {
+              setState(prev => ({ ...prev, isProcessing: false }));
             }
-            
-            setState(prev => ({ ...prev, isListening: false }));
+          };
+          
+          reader.onerror = () => {
+            toast({
+              title: "Voice Recognition Failed",
+              description: "Failed to read audio data. Please try again.",
+              variant: "destructive",
+            });
+            setState(prev => ({ ...prev, isProcessing: false }));
           };
           
           reader.readAsDataURL(audioBlob);
         } catch (err) {
           console.error("Error processing audio:", err);
-          setState(prev => ({ ...prev, isListening: false }));
+          toast({
+            title: "Voice Recognition Failed",
+            description: "Failed to process audio. Please try again.",
+            variant: "destructive",
+          });
+          setState(prev => ({ ...prev, isListening: false, isProcessing: false }));
         }
       };
       
@@ -98,6 +120,7 @@ export function useVoiceInteraction() {
         description: "Please allow microphone access to use voice features.",
         variant: "destructive",
       });
+      setState(prev => ({ ...prev, isListening: false, isProcessing: false }));
     }
   }, []);
   
@@ -130,7 +153,7 @@ export function useVoiceInteraction() {
         console.error("Error in text-to-voice:", error);
         toast({
           title: "Speech Generation Failed",
-          description: "Could not generate speech. Please try again.",
+          description: error.message || "Could not generate speech. Please try again.",
           variant: "destructive",
         });
         setState(prev => ({ ...prev, isSpeaking: false }));
@@ -146,18 +169,43 @@ export function useVoiceInteraction() {
           audioRef.current.onended = () => {
             setState(prev => ({ ...prev, isSpeaking: false }));
           };
-          audioRef.current.onerror = () => {
-            console.error("Error playing audio");
+          audioRef.current.onerror = (e) => {
+            console.error("Error playing audio", e);
+            toast({
+              title: "Audio Playback Failed",
+              description: "Could not play the generated speech. Please try again.",
+              variant: "destructive",
+            });
             setState(prev => ({ ...prev, isSpeaking: false }));
           };
           
-          await audioRef.current.play();
+          try {
+            await audioRef.current.play();
+          } catch (playError) {
+            console.error("Error playing audio:", playError);
+            toast({
+              title: "Audio Playback Failed",
+              description: "Browser prevented audio playback. Try clicking the speaker button again.",
+              variant: "destructive",
+            });
+            setState(prev => ({ ...prev, isSpeaking: false }));
+          }
         }
       } else {
+        toast({
+          title: "Speech Generation Failed",
+          description: "No audio content received. Please try again.",
+          variant: "destructive",
+        });
         setState(prev => ({ ...prev, isSpeaking: false }));
       }
     } catch (err) {
       console.error("Error in speech synthesis:", err);
+      toast({
+        title: "Speech Generation Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
       setState(prev => ({ ...prev, isSpeaking: false }));
     }
   }, []);

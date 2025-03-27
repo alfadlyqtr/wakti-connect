@@ -7,7 +7,7 @@ import { MessageContent } from "./MessageContent";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useVoiceInteraction } from "@/hooks/ai/useVoiceInteraction";
 import { Button } from "@/components/ui/button";
-import { Speaker } from "lucide-react";
+import { Loader2, Speaker, Square } from "lucide-react";
 
 interface AIAssistantMessageProps {
   message: AIMessage;
@@ -18,8 +18,10 @@ export function AIAssistantMessage({ message }: AIAssistantMessageProps) {
   const isMobile = useIsMobile();
   const { speak, stopSpeaking, isSpeaking } = useVoiceInteraction();
 
-  const handleSpeak = () => {
-    if (!isUser) {
+  const handleSpeakerClick = () => {
+    if (isSpeaking) {
+      stopSpeaking();
+    } else if (!isUser) {
       speak(message.content);
     }
   };
@@ -45,11 +47,16 @@ export function AIAssistantMessage({ message }: AIAssistantMessageProps) {
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={handleSpeak}
+              onClick={handleSpeakerClick}
               className="h-6 w-6 rounded-full opacity-50 hover:opacity-100"
+              title={isSpeaking ? "Stop speaking" : "Read message"}
             >
-              <Speaker className="h-3 w-3" />
-              <span className="sr-only">Read message</span>
+              {isSpeaking ? (
+                <Square className="h-3 w-3 text-red-500" />
+              ) : (
+                <Speaker className="h-3 w-3" />
+              )}
+              <span className="sr-only">{isSpeaking ? "Stop reading" : "Read message"}</span>
             </Button>
           </div>
         )}
