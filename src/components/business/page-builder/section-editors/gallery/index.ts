@@ -1,3 +1,3 @@
 
-import GalleryEditor from './GalleryEditor';
+import GalleryEditor from "./GalleryEditor";
 export default GalleryEditor;

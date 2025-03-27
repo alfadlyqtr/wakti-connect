@@ -21,6 +21,7 @@ const PagePreviewTab: React.FC<PagePreviewTabProps> = ({ getPublicPageUrl }) => 
   const updatePreviewUrl = () => {
     const baseUrl = getPublicPageUrl();
     const timestamp = new Date().getTime();
+    // Make sure we're always accessing the business page with the preview flag
     const url = baseUrl.includes('?') 
       ? `${baseUrl}&preview=true&t=${timestamp}` 
       : `${baseUrl}?preview=true&t=${timestamp}`;
@@ -88,6 +89,7 @@ const PagePreviewTab: React.FC<PagePreviewTabProps> = ({ getPublicPageUrl }) => 
                 src={previewUrl}
                 className="w-full h-[600px]"
                 title="Page Preview"
+                key={previewUrl} // Force iframe reload when URL changes
               />
             )}
           </div>

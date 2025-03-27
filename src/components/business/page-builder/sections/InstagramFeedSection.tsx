@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from "lucide-react";
+import { Info, Eye } from "lucide-react";
 import { useSectionEditor } from "@/hooks/useSectionEditor";
 import { Switch } from "@/components/ui/switch";
 import InstagramEmbed from "react-instagram-embed";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const InstagramFeedSection: React.FC = () => {
   const { contentData, handleInputChange, setContentData, setIsDirty } = useSectionEditor();
@@ -58,7 +59,32 @@ const InstagramFeedSection: React.FC = () => {
           </div>
           
           <div>
-            <Label htmlFor="instagramUrl">Instagram Post URL</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="instagramUrl">Instagram Post URL</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
+                    <Eye className="h-4 w-4 mr-1" />
+                    How to get a post URL
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">How to get an Instagram post URL:</h4>
+                    <ol className="list-decimal pl-4 space-y-1 text-sm">
+                      <li>Open Instagram and go to the post you want to embed</li>
+                      <li>Tap the three dots (⋯) in the top right of the post</li>
+                      <li>Select "Copy Link" or "Share to..."</li>
+                      <li>Choose "Copy Link" from the options</li>
+                      <li>Paste the URL here (format: https://www.instagram.com/p/XXXXXXX/)</li>
+                    </ol>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Note: The post must be from a public account for embedding to work
+                    </p>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
             <Input
               id="instagramUrl"
               name="instagramUrl"

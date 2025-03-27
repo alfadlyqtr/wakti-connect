@@ -1,66 +1,90 @@
 
 import React from "react";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useSectionTemplates } from "@/hooks/useSectionTemplates";
+import { LayoutGrid, Rows, Columns, Grid3X3 } from "lucide-react";
+import { EditorProps } from "../types";
 
-interface GalleryTemplateSectionProps {
-  contentData: Record<string, any>;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+interface GalleryLayoutTemplate {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  columns: number;
+  imageFit: string;
 }
 
-const GalleryTemplateSection: React.FC<GalleryTemplateSectionProps> = ({
+const GalleryTemplateSection: React.FC<EditorProps> = ({
   contentData,
   handleInputChange
 }) => {
-  const { templates } = useSectionTemplates('gallery');
+  // Common gallery layout templates
+  const templates: GalleryLayoutTemplate[] = [
+    {
+      id: "grid-3-cover",
+      name: "Grid (3 columns)",
+      icon: <Grid3X3 className="h-5 w-5" />,
+      columns: 3,
+      imageFit: "cover"
+    },
+    {
+      id: "grid-2-cover",
+      name: "Grid (2 columns)",
+      icon: <Columns className="h-5 w-5" />,
+      columns: 2,
+      imageFit: "cover"
+    },
+    {
+      id: "grid-4-cover",
+      name: "Gallery (4 columns)",
+      icon: <LayoutGrid className="h-5 w-5" />,
+      columns: 4,
+      imageFit: "cover"
+    },
+    {
+      id: "list-1-contain",
+      name: "List View",
+      icon: <Rows className="h-5 w-5" />,
+      columns: 1,
+      imageFit: "contain"
+    }
+  ];
   
-  const applyTemplate = (templateContent: any) => {
-    // Apply template properties selectively, preserving existing images
-    if (templateContent.title) {
-      handleInputChange({
-        target: {
-          name: 'title',
-          value: templateContent.title
-        }
-      } as React.ChangeEvent<HTMLInputElement>);
-    }
+  // Apply a template
+  const handleSelectTemplate = (template: GalleryLayoutTemplate) => {
+    // Create a synthetic event to update the content data
+    const changes = {
+      columns: template.columns,
+      imageFit: template.imageFit
+    };
     
-    if (templateContent.layout) {
+    // Update each property
+    Object.entries(changes).forEach(([key, value]) => {
       handleInputChange({
         target: {
-          name: 'layout',
-          value: templateContent.layout
+          name: key,
+          value: value
         }
-      } as React.ChangeEvent<HTMLInputElement>);
-    }
-    
-    if (templateContent.showCaptions !== undefined) {
-      handleInputChange({
-        target: {
-          name: 'showCaptions',
-          value: templateContent.showCaptions
-        }
-      } as React.ChangeEvent<HTMLInputElement>);
-    }
+      } as unknown as React.ChangeEvent<HTMLInputElement>);
+    });
   };
-  
-  if (!templates || templates.length === 0) {
-    return null;
-  }
   
   return (
     <div className="space-y-2">
-      <Label>Quick Templates</Label>
-      <div className="flex flex-wrap gap-2">
-        {templates.map(template => (
-          <Button 
-            key={template.id} 
-            variant="outline" 
-            size="sm"
-            onClick={() => applyTemplate(template.template_content)}
+      <label className="text-sm font-medium">Gallery Layout Templates</label>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {templates.map((template) => (
+          <Button
+            key={template.id}
+            variant="outline"
+            className={`flex flex-col h-auto py-4 ${
+              contentData.columns === template.columns && 
+              contentData.imageFit === template.imageFit
+                ? "border-primary bg-primary/5"
+                : ""
+            }`}
+            onClick={() => handleSelectTemplate(template)}
           >
-            {template.template_name}
+            <div className="mb-2">{template.icon}</div>
+            <span className="text-xs">{template.name}</span>
           </Button>
         ))}
       </div>

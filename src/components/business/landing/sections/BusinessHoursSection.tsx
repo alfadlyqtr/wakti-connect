@@ -8,20 +8,28 @@ interface BusinessHoursSectionProps {
 const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ content }) => {
   const { 
     title = "Business Hours",
-    description = "When you can find us",
-    hours = [],
-    note = ""
+    description = "When you can visit us",
+    hours = [
+      { day: "Monday", hours: "9:00 AM - 5:00 PM" },
+      { day: "Tuesday", hours: "9:00 AM - 5:00 PM" },
+      { day: "Wednesday", hours: "9:00 AM - 5:00 PM" },
+      { day: "Thursday", hours: "9:00 AM - 5:00 PM" },
+      { day: "Friday", hours: "9:00 AM - 5:00 PM" },
+      { day: "Saturday", hours: "10:00 AM - 3:00 PM" },
+      { day: "Sunday", hours: "Closed" }
+    ],
+    showCurrentDay = true,
+    layout = "grid" // or "list"
   } = content;
   
-  const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  // Determine current day
+  const getCurrentDay = () => {
+    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const today = days[new Date().getDay()];
+    return today;
+  };
   
-  // Default hours structure if not provided
-  const businessHours = hours.length ? hours : daysOfWeek.map(day => ({
-    day,
-    isOpen: day !== "Sunday",
-    openTime: "9:00 AM",
-    closeTime: "5:00 PM"
-  }));
+  const currentDay = getCurrentDay();
   
   return (
     <section className="py-12 md:py-16">
@@ -31,31 +39,55 @@ const BusinessHoursSection: React.FC<BusinessHoursSectionProps> = ({ content }) 
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{description}</p>
         </div>
         
-        <div className="max-w-xl mx-auto">
-          <div className="bg-card rounded-lg shadow-sm p-6">
-            <div className="space-y-4">
-              {businessHours.map((item, index) => (
+        {layout === "grid" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            {hours.map((item, index) => (
+              <div 
+                key={index} 
+                className={`p-4 rounded-lg border ${
+                  showCurrentDay && item.day === currentDay 
+                    ? "bg-primary/10 border-primary" 
+                    : "bg-card"
+                }`}
+              >
+                <div className="font-semibold">{item.day}</div>
+                <div className="mt-1">{item.hours}</div>
+                {showCurrentDay && item.day === currentDay && (
+                  <div className="mt-2 text-xs font-medium text-primary">
+                    Today
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-card rounded-lg border overflow-hidden">
+              {hours.map((item, index) => (
                 <div 
                   key={index} 
-                  className="flex justify-between items-center py-2 border-b last:border-b-0"
+                  className={`flex justify-between p-4 ${
+                    index < hours.length - 1 ? "border-b" : ""
+                  } ${
+                    showCurrentDay && item.day === currentDay 
+                      ? "bg-primary/10" 
+                      : ""
+                  }`}
                 >
-                  <span className="font-medium">{item.day}</span>
-                  <span className="text-muted-foreground">
-                    {item.isOpen 
-                      ? `${item.openTime} - ${item.closeTime}` 
-                      : "Closed"}
-                  </span>
+                  <div className="font-medium">{item.day}</div>
+                  <div className="flex items-center">
+                    <span>{item.hours}</span>
+                    {showCurrentDay && item.day === currentDay && (
+                      <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                        Today
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
-            
-            {note && (
-              <div className="mt-6 pt-4 border-t">
-                <p className="text-sm text-muted-foreground italic">{note}</p>
-              </div>
-            )}
           </div>
-        </div>
+        )}
       </div>
     </section>
   );

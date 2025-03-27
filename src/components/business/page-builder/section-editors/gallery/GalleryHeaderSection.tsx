@@ -2,83 +2,91 @@
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { EditorProps } from "../types";
+import { 
+  Select, 
+  SelectTrigger, 
+  SelectValue, 
+  SelectContent, 
+  SelectItem 
+} from "@/components/ui/select";
 
-interface GalleryHeaderSectionProps {
-  contentData: Record<string, any>;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-}
-
-const GalleryHeaderSection: React.FC<GalleryHeaderSectionProps> = ({ 
-  contentData, 
-  handleInputChange 
-}) => {
-  const handleLayoutChange = (layout: string) => {
-    // Type assertion for the synthetic event
+const GalleryHeaderSection: React.FC<EditorProps> = ({ contentData, handleInputChange }) => {
+  // Handle select change since it doesn't generate standard form events
+  const handleSelectChange = (name: string, value: string) => {
     handleInputChange({
       target: {
-        name: 'layout',
-        value: layout
+        name,
+        value
       }
     } as unknown as React.ChangeEvent<HTMLInputElement>);
   };
-  
-  const handleShowCaptionsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Type assertion for the synthetic event
-    handleInputChange({
-      target: {
-        name: 'showCaptions',
-        value: e.target.checked
-      }
-    } as unknown as React.ChangeEvent<HTMLInputElement>);
-  };
-  
+
   return (
-    <>
-      <div className="space-y-2">
+    <div className="space-y-4">
+      <div>
         <Label htmlFor="title">Gallery Title</Label>
-        <Input
-          id="title"
-          name="title"
-          value={contentData.title || "Our Gallery"}
+        <Input 
+          id="title" 
+          name="title" 
+          value={contentData.title || "Gallery"} 
           onChange={handleInputChange}
-          placeholder="Our Gallery"
+          placeholder="Gallery Title"
         />
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="layout">Gallery Layout</Label>
-          <Select
-            value={contentData.layout || "grid"}
-            onValueChange={handleLayoutChange}
+      <div>
+        <Label htmlFor="description">Gallery Description</Label>
+        <Textarea 
+          id="description" 
+          name="description" 
+          value={contentData.description || "Take a look at our work"} 
+          onChange={handleInputChange}
+          placeholder="Gallery Description"
+          rows={3}
+        />
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="columns">Columns</Label>
+          <Select 
+            name="columns" 
+            value={contentData.columns?.toString() || "3"} 
+            onValueChange={(value) => handleSelectChange("columns", value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select layout" />
+              <SelectValue placeholder="3" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="grid">Grid</SelectItem>
-              <SelectItem value="masonry">Masonry</SelectItem>
-              <SelectItem value="carousel">Carousel</SelectItem>
+              <SelectItem value="1">1 Column</SelectItem>
+              <SelectItem value="2">2 Columns</SelectItem>
+              <SelectItem value="3">3 Columns</SelectItem>
+              <SelectItem value="4">4 Columns</SelectItem>
             </SelectContent>
           </Select>
         </div>
         
-        <div className="space-y-2">
-          <Label>Display Options</Label>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="showCaptions"
-              checked={contentData.showCaptions || false}
-              onChange={handleShowCaptionsChange}
-              className="rounded border-gray-300"
-            />
-            <Label htmlFor="showCaptions">Show Captions</Label>
-          </div>
+        <div>
+          <Label htmlFor="imageFit">Image Fit</Label>
+          <Select 
+            name="imageFit" 
+            value={contentData.imageFit || "cover"} 
+            onValueChange={(value) => handleSelectChange("imageFit", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Cover" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="cover">Cover</SelectItem>
+              <SelectItem value="contain">Contain</SelectItem>
+              <SelectItem value="fill">Fill</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
