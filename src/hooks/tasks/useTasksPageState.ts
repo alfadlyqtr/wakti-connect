@@ -477,9 +477,9 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  // Fix the refetchTasks function to avoid nested promises
-  const refetchTasks = useCallback(() => {
-    return debouncedFetch();
+  // Fix the refetchTasks function to properly resolve the promise
+  const refetchTasks = useCallback(async (): Promise<void> => {
+    await debouncedFetch();
   }, [debouncedFetch]);
 
   return {
