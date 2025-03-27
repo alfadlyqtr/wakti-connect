@@ -59,9 +59,7 @@ const DashboardTasks = () => {
       
       <CreateTaskDialog
         open={createTaskDialogOpen}
-        onOpenChange={setCreateDialogOpen => {
-          setCreateTaskDialogOpen(setCreateDialogOpen);
-        }}
+        onOpenChange={setCreateTaskDialogOpen}
         onCreateTask={handleCreateTask}
         userRole={userRole || "free"}
       />

@@ -49,11 +49,6 @@ export const useTaskOperations = (
         }
       }
       
-      // Handle team task for business accounts
-      if (userRole === "business" && taskData.is_team_task) {
-        taskData.is_team_task = true;
-      }
-      
       // Prepare the task data
       const { recurring, ...taskDataWithoutRecurring } = taskData;
       
@@ -61,7 +56,6 @@ export const useTaskOperations = (
       
       console.log("Processing task data:", { 
         role: userRole, 
-        isTeamTask: taskData.is_team_task,
         isRecurring
       });
       

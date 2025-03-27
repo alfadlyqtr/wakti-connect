@@ -21,15 +21,13 @@ const SubtaskSchema = z.object({
   dueTime: z.string().optional(),
 });
 
-// Define the main form schema
+// Define the main form schema - simplified for personal tasks only
 export const taskFormSchema = z.object({
   title: z.string().min(1, "Title is required").max(100, "Title is too long"),
   description: z.string().optional(),
-  // Status removed from initial creation form
   priority: z.enum(["urgent", "high", "medium", "normal"] as const).default("normal"),
   dueDate: z.string().min(1, "Due date is required"),
   dueTime: z.string().optional(),
-  assigneeId: z.string().optional(),
   
   // Recurring task settings
   isRecurring: z.boolean().default(false),
@@ -38,10 +36,6 @@ export const taskFormSchema = z.object({
   // Subtasks
   enableSubtasks: z.boolean().default(false),
   subtasks: z.array(SubtaskSchema).default([]),
-  
-  // Task delegation (for business accounts)
-  delegated_to: z.string().optional(),
-  delegated_email: z.string().email().optional(),
 });
 
 // Export the TypeScript type
