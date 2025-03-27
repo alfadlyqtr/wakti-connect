@@ -66,8 +66,8 @@ const DashboardTasks = () => {
   };
 
   // Wrapper function to handle Promise returned by refetchTasks
-  const handleRefetch = () => {
-    refetchTasks().catch(error => {
+  const handleRefetch = (): Promise<void> => {
+    return refetchTasks().catch(error => {
       console.error("Error refetching tasks:", error);
     });
   };
