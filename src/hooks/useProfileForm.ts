@@ -23,6 +23,9 @@ export interface ProfileFormData {
   business_email?: string;
   business_phone?: string;
   business_website?: string;
+  
+  // Contact fields
+  telephone?: string;
 }
 
 interface ProfileFormOptions {
@@ -53,7 +56,8 @@ export const useProfileForm = (
       // Business contact fields - might be from extensions
       business_email: (profile as any)?.business_email || '',
       business_phone: (profile as any)?.business_phone || '',
-      business_website: (profile as any)?.business_website || ''
+      business_website: (profile as any)?.business_website || '',
+      telephone: profile?.telephone || '',
     }
   });
   
@@ -94,7 +98,8 @@ export const useProfileForm = (
         // Cast as any to avoid TypeScript errors since these fields might not be in the profile type yet
         business_email: data.business_email as any,
         business_phone: data.business_phone as any,
-        business_website: data.business_website as any
+        business_website: data.business_website as any,
+        telephone: data.telephone
       });
       
       toast({
