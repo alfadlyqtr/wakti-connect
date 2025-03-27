@@ -6,12 +6,14 @@ interface SidebarContainerProps {
   children: React.ReactNode;
   isOpen: boolean;
   collapsed: boolean;
+  onCollapseChange?: (collapsed: boolean) => void;
 }
 
 const SidebarContainer: React.FC<SidebarContainerProps> = ({ 
   children, 
   isOpen, 
-  collapsed 
+  collapsed,
+  onCollapseChange
 }) => {
   const location = useLocation();
   
@@ -27,6 +29,13 @@ const SidebarContainer: React.FC<SidebarContainerProps> = ({
     
     handleRouteChange();
   }, [location.pathname]);
+
+  // Call the onCollapseChange handler when collapsed state changes
+  useEffect(() => {
+    if (onCollapseChange) {
+      onCollapseChange(collapsed);
+    }
+  }, [collapsed, onCollapseChange]);
 
   return (
     <aside 

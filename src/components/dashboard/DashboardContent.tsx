@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import StaffDashboardHeader from './StaffDashboardHeader';
 import DashboardLoading from './DashboardLoading';
@@ -12,6 +13,7 @@ interface DashboardContentProps {
   isMobile: boolean;
   currentPath?: string;
   userRole?: UserRole;
+  sidebarCollapsed?: boolean;
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
@@ -21,7 +23,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   userId,
   isMobile,
   currentPath = '',
-  userRole = 'free'
+  userRole = 'free',
+  sidebarCollapsed = true
 }) => {
   const navigate = useNavigate();
   
@@ -45,7 +48,9 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   // Calculate main content padding based on sidebar state
   const mainContentClass = isMobile 
     ? "transition-all duration-300" 
-    : "lg:pl-[70px] transition-all duration-300";
+    : sidebarCollapsed 
+      ? "lg:pl-[70px] transition-all duration-300" 
+      : "lg:pl-52 transition-all duration-300";
 
   return (
     <main className={`flex-1 overflow-y-auto pt-4 px-4 pb-12 ${mainContentClass}`}>

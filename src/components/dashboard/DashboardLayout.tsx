@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import "@/components/layout/sidebar/sidebar.css";
@@ -19,6 +19,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const { isSidebarOpen, toggleSidebar, isMobile } = useSidebarToggle();
   const location = useLocation();
   const navigate = useNavigate();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   
   // Fetch user profile data
   const { 
@@ -37,6 +38,11 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
     accountType as any, 
     isStaff
   );
+
+  // Handle sidebar collapse state
+  const handleCollapseChange = (collapsed: boolean) => {
+    setSidebarCollapsed(collapsed);
+  };
 
   // Redirect to appropriate dashboard based on role if on main dashboard
   useEffect(() => {
@@ -75,7 +81,8 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
       <div className="flex flex-1 overflow-hidden">
         <Sidebar 
           isOpen={isSidebarOpen} 
-          userRole={userRoleValue} 
+          userRole={userRoleValue}
+          onCollapseChange={handleCollapseChange}
         />
         
         <DashboardContent
@@ -85,6 +92,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
           isMobile={isMobile}
           currentPath={location.pathname}
           userRole={userRoleValue}
+          sidebarCollapsed={sidebarCollapsed}
         >
           {children}
         </DashboardContent>

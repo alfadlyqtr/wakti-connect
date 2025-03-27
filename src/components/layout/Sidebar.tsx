@@ -22,9 +22,10 @@ interface SidebarProfileData {
 interface SidebarProps {
   isOpen: boolean;
   userRole: "free" | "individual" | "business" | "staff";
+  onCollapseChange?: (collapsed: boolean) => void;
 }
 
-const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
+const Sidebar = ({ isOpen, userRole, onCollapseChange }: SidebarProps) => {
   const [collapsed, setCollapsed] = useState(true); // Default to collapsed
   
   // Check local storage for saved sidebar state
@@ -32,14 +33,22 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
     const savedState = localStorage.getItem('sidebarCollapsed');
     if (savedState !== null) {
       setCollapsed(savedState === 'true');
+      // Notify parent about initial collapsed state
+      if (onCollapseChange) {
+        onCollapseChange(savedState === 'true');
+      }
     }
-  }, []);
+  }, [onCollapseChange]);
   
   // Save sidebar state to local storage
   const toggleCollapse = () => {
     const newState = !collapsed;
     setCollapsed(newState);
     localStorage.setItem('sidebarCollapsed', String(newState));
+    // Notify parent about changed collapsed state
+    if (onCollapseChange) {
+      onCollapseChange(newState);
+    }
   };
   
   // Fetch user profile for sidebar
@@ -68,7 +77,11 @@ const Sidebar = ({ isOpen, userRole }: SidebarProps) => {
   });
 
   return (
-    <SidebarContainer isOpen={isOpen} collapsed={collapsed}>
+    <SidebarContainer 
+      isOpen={isOpen} 
+      collapsed={collapsed} 
+      onCollapseChange={onCollapseChange}
+    >
       {/* Toggle collapse button - Only visible on desktop */}
       <CollapseToggle collapsed={collapsed} toggleCollapse={toggleCollapse} />
       
