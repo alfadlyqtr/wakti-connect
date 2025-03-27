@@ -13,6 +13,7 @@ import { useAISettings } from '@/components/settings/ai/context/AISettingsContex
 import { Skeleton } from '@/components/ui/skeleton';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { toast } from '@/components/ui/use-toast';
+import { cn } from '@/lib/utils';
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];

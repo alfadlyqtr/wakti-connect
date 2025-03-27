@@ -1,230 +1,274 @@
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
-export interface VoiceInteractionState {
-  isListening: boolean;
-  isSpeaking: boolean;
-  supportsVoice: boolean;
-  lastTranscript: string;
-  isProcessing: boolean;
-}
+export const useVoiceInteraction = () => {
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [supportsVoice, setSupportsVoice] = useState(false);
+  const [lastTranscript, setLastTranscript] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [recorder, setRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
 
-export function useVoiceInteraction() {
-  const [state, setState] = useState<VoiceInteractionState>({
-    isListening: false,
-    isSpeaking: false,
-    supportsVoice: 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window,
-    lastTranscript: "",
-    isProcessing: false
-  });
-  
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Check if browser supports Speech Recognition
+  useEffect(() => {
+    const checkVoiceSupport = () => {
+      const supportsMediaDevices = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+      setSupportsVoice(supportsMediaDevices);
+    };
+    
+    checkVoiceSupport();
+  }, []);
 
-  // Initialize audio element for playback
-  if (typeof window !== 'undefined' && !audioRef.current) {
-    audioRef.current = new Audio();
-  }
-
-  // Start recording for voice to text
+  // Start listening using MediaRecorder
   const startListening = useCallback(async () => {
+    if (!supportsVoice) {
+      toast({
+        title: "Voice Input Not Supported",
+        description: "Your browser doesn't support voice recognition.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
+      // Reset state
+      setAudioChunks([]);
+      setLastTranscript("");
+      
       // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       
-      // Create new media recorder
+      // Create a new MediaRecorder instance
       const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
+      setRecorder(mediaRecorder);
       
-      // Set up event handlers
+      // Add event listeners
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-      
-      mediaRecorder.onstop = async () => {
-        if (audioChunksRef.current.length === 0) {
-          setState(prev => ({ ...prev, isListening: false, isProcessing: false }));
-          return;
-        }
-        
-        try {
-          setState(prev => ({ ...prev, isListening: false, isProcessing: true }));
-          
-          // Create audio blob and convert to base64
-          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          const reader = new FileReader();
-          
-          reader.onload = async () => {
-            if (!reader.result) {
-              setState(prev => ({ ...prev, isProcessing: false }));
-              return;
-            }
-            
-            const base64data = (reader.result as string).split(',')[1];
-            
-            // Send to Supabase Edge Function
-            const { data, error } = await supabase.functions.invoke("ai-voice-to-text", {
-              body: { audio: base64data },
-            });
-            
-            if (error) {
-              console.error("Error in voice-to-text:", error);
-              toast({
-                title: "Voice Recognition Failed",
-                description: error.message || "Could not process your speech. Please try again.",
-                variant: "destructive",
-              });
-              setState(prev => ({ ...prev, isProcessing: false }));
-            } else if (data?.text) {
-              setState(prev => ({ ...prev, lastTranscript: data.text, isProcessing: false }));
-            } else {
-              setState(prev => ({ ...prev, isProcessing: false }));
-            }
-          };
-          
-          reader.onerror = () => {
-            toast({
-              title: "Voice Recognition Failed",
-              description: "Failed to read audio data. Please try again.",
-              variant: "destructive",
-            });
-            setState(prev => ({ ...prev, isProcessing: false }));
-          };
-          
-          reader.readAsDataURL(audioBlob);
-        } catch (err) {
-          console.error("Error processing audio:", err);
-          toast({
-            title: "Voice Recognition Failed",
-            description: "Failed to process audio. Please try again.",
-            variant: "destructive",
-          });
-          setState(prev => ({ ...prev, isListening: false, isProcessing: false }));
+          setAudioChunks((chunks) => [...chunks, event.data]);
         }
       };
       
       // Start recording
       mediaRecorder.start();
-      setState(prev => ({ ...prev, isListening: true }));
+      setIsListening(true);
       
-    } catch (err) {
-      console.error("Error accessing microphone:", err);
       toast({
-        title: "Microphone Access Denied",
-        description: "Please allow microphone access to use voice features.",
+        title: "Listening...",
+        description: "Speak clearly into your microphone.",
+      });
+    } catch (error) {
+      console.error("Error starting voice recording:", error);
+      toast({
+        title: "Voice Input Error",
+        description: error instanceof Error ? error.message : "Could not access microphone",
         variant: "destructive",
       });
-      setState(prev => ({ ...prev, isListening: false, isProcessing: false }));
     }
-  }, []);
-  
-  // Stop recording
-  const stopListening = useCallback(() => {
-    if (mediaRecorderRef.current && state.isListening) {
-      mediaRecorderRef.current.stop();
-      // State will be updated in onstop handler
-      
-      // Stop all tracks in the stream
-      if (mediaRecorderRef.current.stream) {
-        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+  }, [supportsVoice]);
+
+  // Stop listening and process the audio
+  const stopListening = useCallback(async () => {
+    if (!recorder || recorder.state === "inactive") {
+      return;
+    }
+    
+    setIsListening(false);
+    setIsProcessing(true);
+    
+    // Stop the recorder
+    recorder.stop();
+    
+    // Process the recorded audio after a short delay to ensure all data is collected
+    setTimeout(async () => {
+      try {
+        // Create a blob from the audio chunks
+        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        
+        // Convert Blob to base64
+        const base64Audio = await blobToBase64(audioBlob);
+        
+        // Call the Supabase edge function to convert speech to text
+        const { data, error } = await supabase.functions.invoke("ai-voice-to-text", {
+          body: { audio: base64Audio }
+        });
+        
+        if (error) {
+          console.error("Voice-to-text error:", error);
+          toast({
+            title: "Voice Processing Failed",
+            description: "Could not convert your speech to text. Please try again.",
+            variant: "destructive",
+          });
+          setIsProcessing(false);
+          return;
+        }
+        
+        if (data.text) {
+          setLastTranscript(data.text);
+          console.log("Transcription:", data.text);
+        } else if (data.error) {
+          console.error("Voice-to-text API error:", data.error);
+          toast({
+            title: "Voice Processing Failed",
+            description: data.error || "Could not convert your speech to text",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error("Error processing voice:", error);
+        toast({
+          title: "Voice Processing Error",
+          description: error instanceof Error ? error.message : "An error occurred while processing your voice",
+          variant: "destructive",
+        });
+      } finally {
+        setIsProcessing(false);
+        
+        // Stop all audio tracks in the stream
+        recorder.stream.getTracks().forEach(track => track.stop());
+        setRecorder(null);
       }
-    }
-  }, [state.isListening]);
-  
-  // Convert text to speech
+    }, 500);
+  }, [recorder, audioChunks]);
+
+  // Convert blob to base64
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === "string") {
+          // Remove the data URL prefix (e.g., "data:audio/webm;base64,")
+          const base64 = reader.result.split(",")[1];
+          resolve(base64);
+        } else {
+          reject(new Error("Failed to convert blob to base64"));
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  // Clear the transcript
+  const clearTranscript = useCallback(() => {
+    setLastTranscript("");
+  }, []);
+
+  // Text-to-speech function
   const speak = useCallback(async (text: string) => {
-    if (!text) return;
+    if (isSpeaking) {
+      stopSpeaking();
+    }
     
     try {
-      setState(prev => ({ ...prev, isSpeaking: true }));
-      
-      // Call the Supabase Edge Function
+      // Call the Supabase edge function to convert text to speech
       const { data, error } = await supabase.functions.invoke("ai-text-to-voice", {
-        body: { text, voice: "nova" }, // Using "nova" voice for a professional sound
+        body: { text, voice: "nova" }
       });
       
       if (error) {
-        console.error("Error in text-to-voice:", error);
+        console.error("Text-to-speech error:", error);
         toast({
           title: "Speech Generation Failed",
-          description: error.message || "Could not generate speech. Please try again.",
+          description: "Could not generate speech from text. Please try again.",
           variant: "destructive",
         });
-        setState(prev => ({ ...prev, isSpeaking: false }));
         return;
       }
       
-      if (data?.audioContent) {
-        // Convert base64 to audio and play it
-        const audioSrc = `data:audio/mp3;base64,${data.audioContent}`;
-        
-        if (audioRef.current) {
-          audioRef.current.src = audioSrc;
-          audioRef.current.onended = () => {
-            setState(prev => ({ ...prev, isSpeaking: false }));
-          };
-          audioRef.current.onerror = (e) => {
-            console.error("Error playing audio", e);
-            toast({
-              title: "Audio Playback Failed",
-              description: "Could not play the generated speech. Please try again.",
-              variant: "destructive",
-            });
-            setState(prev => ({ ...prev, isSpeaking: false }));
-          };
-          
-          try {
-            await audioRef.current.play();
-          } catch (playError) {
-            console.error("Error playing audio:", playError);
-            toast({
-              title: "Audio Playback Failed",
-              description: "Browser prevented audio playback. Try clicking the speaker button again.",
-              variant: "destructive",
-            });
-            setState(prev => ({ ...prev, isSpeaking: false }));
-          }
-        }
-      } else {
+      if (data.error) {
+        console.error("Text-to-speech API error:", data.error);
         toast({
           title: "Speech Generation Failed",
-          description: "No audio content received. Please try again.",
+          description: data.error || "Could not generate speech from text",
           variant: "destructive",
         });
-        setState(prev => ({ ...prev, isSpeaking: false }));
+        return;
       }
-    } catch (err) {
-      console.error("Error in speech synthesis:", err);
+      
+      // Convert base64 audio to ArrayBuffer
+      const binaryString = atob(data.audioContent);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      // Create an AudioContext and play the audio
+      const audioContext = new AudioContext();
+      const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
+      
+      const source = audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(audioContext.destination);
+      
+      // Set speaking state
+      setIsSpeaking(true);
+      
+      // Handle when audio stops playing
+      source.onended = () => {
+        setIsSpeaking(false);
+      };
+      
+      // Store reference to source for stopping
+      (window as any).__audioSource = source;
+      
+      // Start playing
+      source.start(0);
+    } catch (error) {
+      console.error("Error playing speech:", error);
+      setIsSpeaking(false);
       toast({
-        title: "Speech Generation Failed",
-        description: "An unexpected error occurred. Please try again.",
+        title: "Speech Playback Error",
+        description: error instanceof Error ? error.message : "Failed to play speech",
         variant: "destructive",
       });
-      setState(prev => ({ ...prev, isSpeaking: false }));
     }
-  }, []);
-  
+  }, [isSpeaking]);
+
   // Stop speaking
   const stopSpeaking = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      setState(prev => ({ ...prev, isSpeaking: false }));
+    try {
+      if ((window as any).__audioSource) {
+        (window as any).__audioSource.stop();
+        delete (window as any).__audioSource;
+      }
+      setIsSpeaking(false);
+    } catch (error) {
+      console.error("Error stopping speech:", error);
     }
   }, []);
-  
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Stop recording if component unmounts while recording
+      if (recorder && recorder.state === "recording") {
+        recorder.stop();
+        recorder.stream.getTracks().forEach(track => track.stop());
+      }
+      
+      // Stop speaking if component unmounts while speaking
+      if (isSpeaking) {
+        stopSpeaking();
+      }
+    };
+  }, [recorder, isSpeaking, stopSpeaking]);
+
   return {
-    ...state,
+    isListening,
+    isSpeaking,
+    supportsVoice,
+    lastTranscript,
+    isProcessing,
     startListening,
     stopListening,
     speak,
     stopSpeaking,
-    clearTranscript: () => setState(prev => ({ ...prev, lastTranscript: "" })),
+    clearTranscript
   };
-}
+};
