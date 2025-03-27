@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskStatus, TaskPriority } from "@/types/task.types";
+import { Task, TaskStatus, TaskPriority, ArchiveReason } from "@/types/task.types";
 
 export async function fetchMyTasks(userId: string): Promise<Task[]> {
   const { data, error } = await supabase
@@ -28,7 +28,9 @@ export async function fetchMyTasks(userId: string): Promise<Task[]> {
     parent_recurring_id: task.parent_recurring_id || null, 
     snooze_count: task.snooze_count || 0,
     snoozed_until: task.snoozed_until || null,
-    subtasks: task.subtasks || []
+    subtasks: task.subtasks || [],
+    archived_at: task.archived_at || null,
+    archive_reason: task.archive_reason as ArchiveReason || null
   }));
   
   return typedTasks;

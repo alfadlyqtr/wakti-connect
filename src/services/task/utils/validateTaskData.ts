@@ -1,5 +1,5 @@
 
-import { TaskFormData, TaskStatus } from "@/types/task.types";
+import { TaskFormData, TaskStatus, ArchiveReason } from "@/types/task.types";
 
 /**
  * Sanitizes and validates task data before database operations
@@ -16,11 +16,18 @@ export function sanitizeTaskData(taskData: TaskFormData): Partial<TaskFormData> 
     due_time: taskData.due_time,
     snooze_count: taskData.snooze_count || 0,
     snoozed_until: taskData.snoozed_until || null,
-    is_recurring: taskData.is_recurring || false
+    is_recurring: taskData.is_recurring || false,
+    archived_at: taskData.archived_at || null,
+    archive_reason: taskData.archive_reason || null
   };
 }
 
 function validateTaskStatus(status?: TaskStatus): TaskStatus {
   if (!status) return "pending";
   return status;
+}
+
+export function validateArchiveReason(reason?: string): ArchiveReason | null {
+  if (!reason) return null;
+  return reason as ArchiveReason;
 }
