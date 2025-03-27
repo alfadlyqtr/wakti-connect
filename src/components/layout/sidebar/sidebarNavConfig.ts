@@ -84,7 +84,13 @@ export const navItems: NavItem[] = [
     label: "Jobs",
     path: "jobs",
     icon: KanbanSquare,
-    showFor: ['business', 'staff'], // Added staff here to restore access
+    showFor: ['business'], // Business users go to the jobs page
+  },
+  {
+    label: "Job Cards",
+    path: "job-cards",
+    icon: FileText,
+    showFor: ['staff'], // Staff users go directly to job-cards page
   },
   {
     label: "Analytics",
