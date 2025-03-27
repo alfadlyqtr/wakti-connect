@@ -143,7 +143,7 @@ const TaskGrid: React.FC<TaskGridProps> = ({
       // Optimistic UI update
       const updatedTasks = localTasks.map(task => {
         if (task.id === taskId) {
-          const updated = { 
+          const updated: Task = { 
             ...task, 
             status: validatedStatus,
             updated_at: new Date().toISOString()

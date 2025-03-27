@@ -49,9 +49,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
 
   const isPaidAccount = userRole === "individual" || userRole === "business";
 
-  const debouncedFetch = useDebouncedCallback(async () => {
-    await fetchTasks();
-  }, 500);
+  const debouncedFetch = useDebouncedCallback(fetchTasks, 500);
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -497,7 +495,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     handleUpdateTask,
     handleArchiveTask,
     handleRestoreTask,
-    refetchTasks: debouncedFetch,
+    refetchTasks: () => debouncedFetch(),
     filteredTasks,
     isPaidAccount,
     activeTab,
