@@ -26,7 +26,7 @@ interface UseTasksPageStateReturn {
   handleUpdateTask: (taskId: string, taskData: any) => Promise<void>;
   handleArchiveTask: (taskId: string, reason: "deleted" | "canceled") => Promise<void>;
   handleRestoreTask: (taskId: string) => Promise<void>;
-  refetchTasks: () => Promise<void>;
+  refetchTasks: () => void;
   filteredTasks: Task[];
   isPaidAccount: boolean;
   activeTab: TaskTab;
@@ -475,7 +475,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  const refetchTasks = useCallback((): Promise<void> => {
+  const refetchTasks = useCallback(() => {
     return debouncedFetch();
   }, [debouncedFetch]);
 
