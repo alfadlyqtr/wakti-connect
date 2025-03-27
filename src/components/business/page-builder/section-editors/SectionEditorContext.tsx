@@ -32,7 +32,7 @@ export const SectionEditorProvider: React.FC<{
     setIsDirty(false);
   }, [section]);
   
-  // Debounced auto-save function - no need for async/await anymore
+  // Use debounced save function
   const debouncedSave = useDebouncedCallback((content: any) => {
     updateSection.mutate({
       sectionId: section.id,
