@@ -9,6 +9,7 @@ import CommonProfileFields from "./CommonProfileFields";
 import { useStaffPermissions } from "@/hooks/useStaffPermissions";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Form } from "@/components/ui/form";
 
 interface ProfileFormProps {
   profile?: (Tables<"profiles"> & {
@@ -26,7 +27,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
     isSubmitting,
     isBusinessAccount,
     watch,
-    errors
+    errors,
+    control
   } = useProfileForm(profile, { canEdit: !isStaff, isStaff });
   
   if (loading) {
@@ -36,7 +38,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
   }
   
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <Form onSubmit={handleSubmit(onSubmit)}>
       <div className="space-y-6">
         {isStaff && (
           <Alert variant="warning" className="mb-4">
@@ -52,6 +54,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
           register={register} 
           watch={watch} 
           errors={errors} 
+          control={control}
           readOnly={isStaff}
           canEditBasicInfo={false}
         />
@@ -62,12 +65,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
             register={register} 
             watch={watch} 
             errors={errors} 
+            control={control}
             readOnly={isStaff} 
           />
         ) : (
           <IndividualProfileFields 
             register={register} 
             errors={errors} 
+            control={control}
             readOnly={isStaff} 
           />
         )}
@@ -80,7 +85,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
           {isSubmitting ? "Saving..." : (isBusinessAccount ? "Save Business Info" : "Save Profile")}
         </Button>
       </div>
-    </form>
+    </Form>
   );
 };
 

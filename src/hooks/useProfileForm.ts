@@ -40,7 +40,14 @@ export const useProfileForm = (
   const { canEdit = true, isStaff = false } = options;
   const isBusinessAccount = profile?.account_type === 'business';
 
-  const { register, handleSubmit, formState: { isSubmitting, errors }, watch, setError } = useForm<ProfileFormData>({
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { isSubmitting, errors }, 
+    watch, 
+    setError,
+    control 
+  } = useForm<ProfileFormData>({
     defaultValues: {
       display_name: profile?.display_name || '',
       business_name: profile?.business_name || '',
@@ -144,6 +151,7 @@ export const useProfileForm = (
     isSubmitting,
     isBusinessAccount,
     watch,
-    errors
+    errors,
+    control
   };
 };

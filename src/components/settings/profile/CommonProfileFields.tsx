@@ -1,6 +1,11 @@
 
 import React from "react";
-import { UseFormRegister, FieldErrors, UseFormWatch } from "react-hook-form";
+import { 
+  UseFormRegister, 
+  FieldErrors, 
+  UseFormWatch,
+  Control
+} from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { ProfileFormData } from "@/hooks/useProfileForm";
@@ -9,6 +14,7 @@ interface CommonProfileFieldsProps {
   register: UseFormRegister<ProfileFormData>;
   watch: UseFormWatch<ProfileFormData>;
   errors: FieldErrors<ProfileFormData>;
+  control: Control<ProfileFormData>;
   readOnly?: boolean;
   canEditBasicInfo?: boolean;
 }
@@ -17,6 +23,7 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
   register, 
   watch, 
   errors,
+  control,
   readOnly = false,
   canEditBasicInfo = false
 }) => {
@@ -24,13 +31,14 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <FormField
+        control={control}
         name="display_name"
-        render={() => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>Display Name</FormLabel>
             <FormControl>
               <Input
-                {...register("display_name")}
+                {...field}
                 className={`${readOnly && !canEditBasicInfo ? "bg-gray-50" : ""}`}
                 placeholder="Your display name"
                 readOnly={readOnly && !canEditBasicInfo}
@@ -44,13 +52,14 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
       />
       
       <FormField
+        control={control}
         name="occupation"
-        render={() => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>Occupation</FormLabel>
             <FormControl>
               <Input
-                {...register("occupation")}
+                {...field}
                 className={`${readOnly && !canEditBasicInfo ? "bg-gray-50" : ""}`}
                 placeholder="Your occupation"
                 readOnly={readOnly && !canEditBasicInfo}
@@ -64,13 +73,14 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
       />
       
       <FormField
+        control={control}
         name="country"
-        render={() => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>Country</FormLabel>
             <FormControl>
               <Input
-                {...register("country")}
+                {...field}
                 className={`${readOnly ? "bg-gray-50" : ""}`}
                 placeholder="Your country"
                 readOnly={readOnly}
@@ -84,13 +94,14 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
       />
       
       <FormField
+        control={control}
         name="state_province"
-        render={() => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>State/Province</FormLabel>
             <FormControl>
               <Input
-                {...register("state_province")}
+                {...field}
                 className={`${readOnly ? "bg-gray-50" : ""}`}
                 placeholder="Your state or province"
                 readOnly={readOnly}
@@ -104,13 +115,14 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
       />
       
       <FormField
+        control={control}
         name="city"
-        render={() => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>City</FormLabel>
             <FormControl>
               <Input
-                {...register("city")}
+                {...field}
                 className={`${readOnly ? "bg-gray-50" : ""}`}
                 placeholder="Your city"
                 readOnly={readOnly}
@@ -124,13 +136,14 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
       />
       
       <FormField
+        control={control}
         name="postal_code"
-        render={() => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>Postal Code</FormLabel>
             <FormControl>
               <Input
-                {...register("postal_code")}
+                {...field}
                 className={`${readOnly ? "bg-gray-50" : ""}`}
                 placeholder="Your postal code"
                 readOnly={readOnly}
@@ -144,13 +157,14 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
       />
       
       <FormField
+        control={control}
         name="street_address"
-        render={() => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>Street Address</FormLabel>
             <FormControl>
               <Input
-                {...register("street_address")}
+                {...field}
                 className={`${readOnly ? "bg-gray-50" : ""}`}
                 placeholder="Your street address"
                 readOnly={readOnly}
@@ -164,13 +178,14 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
       />
       
       <FormField
+        control={control}
         name="po_box"
-        render={() => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>PO Box</FormLabel>
             <FormControl>
               <Input
-                {...register("po_box")}
+                {...field}
                 className={`${readOnly ? "bg-gray-50" : ""}`}
                 placeholder="Your PO Box"
                 readOnly={readOnly}

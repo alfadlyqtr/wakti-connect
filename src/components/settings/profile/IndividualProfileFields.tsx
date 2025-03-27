@@ -1,6 +1,11 @@
 
 import React from "react";
-import { UseFormRegister, FieldErrors, UseFormWatch } from "react-hook-form";
+import { 
+  UseFormRegister, 
+  FieldErrors, 
+  UseFormWatch,
+  Control 
+} from "react-hook-form";
 import { ProfileFormData } from "@/hooks/useProfileForm";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -8,6 +13,7 @@ import { Input } from "@/components/ui/input";
 interface IndividualProfileFieldsProps {
   register: UseFormRegister<ProfileFormData>;
   errors: FieldErrors<ProfileFormData>;
+  control: Control<ProfileFormData>;
   readOnly?: boolean;
   watch?: UseFormWatch<ProfileFormData>;
 }
@@ -15,6 +21,7 @@ interface IndividualProfileFieldsProps {
 const IndividualProfileFields: React.FC<IndividualProfileFieldsProps> = ({ 
   register, 
   errors,
+  control,
   readOnly = false,
   watch
 }) => {
@@ -22,13 +29,14 @@ const IndividualProfileFields: React.FC<IndividualProfileFieldsProps> = ({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       {/* Individual-specific fields */}
       <FormField
+        control={control}
         name="telephone"
-        render={() => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>Phone Number</FormLabel>
             <FormControl>
               <Input
-                {...register("telephone")}
+                {...field}
                 placeholder="Enter your phone number"
                 readOnly={readOnly}
                 className={readOnly ? "bg-gray-50" : ""}
@@ -40,13 +48,14 @@ const IndividualProfileFields: React.FC<IndividualProfileFieldsProps> = ({
       />
       
       <FormField
+        control={control}
         name="state_province"
-        render={() => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>State/Province</FormLabel>
             <FormControl>
               <Input
-                {...register("state_province")}
+                {...field}
                 placeholder="State or province"
                 readOnly={readOnly}
                 className={readOnly ? "bg-gray-50" : ""}
@@ -58,13 +67,14 @@ const IndividualProfileFields: React.FC<IndividualProfileFieldsProps> = ({
       />
       
       <FormField
+        control={control}
         name="city"
-        render={() => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>City</FormLabel>
             <FormControl>
               <Input
-                {...register("city")}
+                {...field}
                 placeholder="City"
                 readOnly={readOnly}
                 className={readOnly ? "bg-gray-50" : ""}
@@ -76,13 +86,14 @@ const IndividualProfileFields: React.FC<IndividualProfileFieldsProps> = ({
       />
       
       <FormField
+        control={control}
         name="postal_code"
-        render={() => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>Postal Code</FormLabel>
             <FormControl>
               <Input
-                {...register("postal_code")}
+                {...field}
                 placeholder="Postal code"
                 readOnly={readOnly}
                 className={readOnly ? "bg-gray-50" : ""}
@@ -94,13 +105,14 @@ const IndividualProfileFields: React.FC<IndividualProfileFieldsProps> = ({
       />
       
       <FormField
+        control={control}
         name="street_address"
-        render={() => (
+        render={({ field }) => (
           <FormItem className="md:col-span-2">
             <FormLabel>Street Address</FormLabel>
             <FormControl>
               <Input
-                {...register("street_address")}
+                {...field}
                 placeholder="Street address"
                 readOnly={readOnly}
                 className={readOnly ? "bg-gray-50" : ""}

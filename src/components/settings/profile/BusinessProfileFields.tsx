@@ -1,6 +1,11 @@
 
 import React from "react";
-import { UseFormRegister, UseFormWatch, FieldErrors } from "react-hook-form";
+import { 
+  UseFormRegister, 
+  UseFormWatch, 
+  FieldErrors,
+  Control
+} from "react-hook-form";
 import { ProfileFormData } from "@/hooks/useProfileForm";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -10,6 +15,7 @@ interface BusinessProfileFieldsProps {
   register: UseFormRegister<ProfileFormData>;
   watch: UseFormWatch<ProfileFormData>;
   errors: FieldErrors<ProfileFormData>;
+  control: Control<ProfileFormData>;
   readOnly?: boolean;
 }
 
@@ -17,18 +23,20 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
   register, 
   watch, 
   errors,
+  control,
   readOnly = false
 }) => {
   return (
     <div className="grid grid-cols-1 gap-5">
       <FormField
+        control={control}
         name="business_name"
-        render={() => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>Business Name</FormLabel>
             <FormControl>
               <Input
-                {...register("business_name")}
+                {...field}
                 className={`${readOnly ? "bg-gray-50" : ""}`}
                 placeholder="Your business name"
                 readOnly={readOnly}
@@ -42,13 +50,14 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
       />
       
       <FormField
+        control={control}
         name="business_type"
-        render={() => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>Business Type</FormLabel>
             <FormControl>
               <Input
-                {...register("business_type")}
+                {...field}
                 className={`${readOnly ? "bg-gray-50" : ""}`}
                 placeholder="E.g. Retail, Service, Consulting"
                 readOnly={readOnly}
@@ -62,13 +71,14 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
       />
       
       <FormField
+        control={control}
         name="business_address"
-        render={() => (
+        render={({ field }) => (
           <FormItem>
             <FormLabel>Business Description</FormLabel>
             <FormControl>
               <Textarea
-                {...register("business_address")}
+                {...field}
                 className={`min-h-[100px] ${readOnly ? "bg-gray-50" : ""}`}
                 placeholder="Brief description of your business"
                 readOnly={readOnly}
@@ -83,13 +93,14 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <FormField
+          control={control}
           name="business_email"
-          render={() => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Business Email</FormLabel>
               <FormControl>
                 <Input
-                  {...register("business_email")}
+                  {...field}
                   className={`${readOnly ? "bg-gray-50" : ""}`}
                   placeholder="business@example.com"
                   readOnly={readOnly}
@@ -103,13 +114,14 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
         />
         
         <FormField
+          control={control}
           name="business_phone"
-          render={() => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Business Phone</FormLabel>
               <FormControl>
                 <Input
-                  {...register("business_phone")}
+                  {...field}
                   className={`${readOnly ? "bg-gray-50" : ""}`}
                   placeholder="+1 (555) 123-4567"
                   readOnly={readOnly}
@@ -123,13 +135,14 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
         />
         
         <FormField
+          control={control}
           name="business_website"
-          render={() => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Business Website</FormLabel>
               <FormControl>
                 <Input
-                  {...register("business_website")}
+                  {...field}
                   className={`${readOnly ? "bg-gray-50" : ""}`}
                   placeholder="www.example.com"
                   readOnly={readOnly}
