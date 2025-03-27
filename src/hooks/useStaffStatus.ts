@@ -25,9 +25,12 @@ export const useStaffStatus = () => {
     queryFn: async () => {
       try {
         setError(null);
-        return await fetchStaffRelation();
+        const result = await fetchStaffRelation();
+        console.log("Staff relation query result:", result);
+        return result;
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Failed to fetch staff relation');
+        console.error("Error fetching staff relation:", error);
         setError(error);
         return null;
       }
@@ -37,6 +40,7 @@ export const useStaffStatus = () => {
   // Set staff relation ID when data is loaded
   useEffect(() => {
     if (staffRelation) {
+      console.log("Setting staff relation ID:", staffRelation.id);
       setStaffRelationId(staffRelation.id);
     }
   }, [staffRelation]);
@@ -50,7 +54,11 @@ export const useStaffStatus = () => {
     queryKey: ['activeWorkSession', staffRelationId],
     queryFn: async () => {
       try {
-        if (!staffRelationId) return null;
+        if (!staffRelationId) {
+          console.log("No staff relation ID available for active work session query");
+          return null;
+        }
+        console.log("Fetching active work session for staff ID:", staffRelationId);
         return await fetchActiveWorkSession(staffRelationId);
       } catch (err) {
         console.error('Error fetching active session:', err);
@@ -63,10 +71,15 @@ export const useStaffStatus = () => {
   // Mutation to start work session
   const startSessionMutation = useMutation({
     mutationFn: () => {
-      if (!staffRelationId) return Promise.reject('No staff relation ID');
+      if (!staffRelationId) {
+        console.error("Cannot start work session: No staff relation ID");
+        return Promise.reject('No staff relation ID');
+      }
+      console.log("Starting work session for staff ID:", staffRelationId);
       return startWorkSession(staffRelationId);
     },
     onSuccess: () => {
+      console.log("Work session started successfully");
       queryClient.invalidateQueries({ queryKey: ['activeWorkSession', staffRelationId] });
       toast({
         title: 'Work session started',
@@ -75,6 +88,7 @@ export const useStaffStatus = () => {
       });
     },
     onError: (error: Error) => {
+      console.error("Error starting work session:", error);
       toast({
         title: 'Error starting work session',
         description: error.message,
@@ -86,10 +100,15 @@ export const useStaffStatus = () => {
   // Mutation to end work session
   const endSessionMutation = useMutation({
     mutationFn: () => {
-      if (!activeWorkSession) return Promise.reject('No active work session');
+      if (!activeWorkSession) {
+        console.error("Cannot end work session: No active work session");
+        return Promise.reject('No active work session');
+      }
+      console.log("Ending work session:", activeWorkSession.id);
       return endWorkSession(activeWorkSession.id);
     },
     onSuccess: () => {
+      console.log("Work session ended successfully");
       queryClient.invalidateQueries({ queryKey: ['activeWorkSession', staffRelationId] });
       toast({
         title: 'Work session ended',
@@ -98,6 +117,7 @@ export const useStaffStatus = () => {
       });
     },
     onError: (error: Error) => {
+      console.error("Error ending work session:", error);
       toast({
         title: 'Error ending work session',
         description: error.message,

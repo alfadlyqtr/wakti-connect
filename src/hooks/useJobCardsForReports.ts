@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { fetchJobCardsWithDetails } from '@/services/jobs';
+import { fetchJobCardsWithDetails } from '@/services/jobs/reportingApi';
 import { JobCard } from '@/types/jobs.types';
 import { subDays, startOfMonth, startOfWeek } from 'date-fns';
 
@@ -33,10 +33,13 @@ export const useJobCardsForReports = (staffRelationId: string, timeRange: string
       }
       
       const formattedStartDate = startDate.toISOString();
+      console.log(`Fetching job cards for reports. Staff ID: ${staffRelationId}, Time range: ${timeRange}, Start date: ${formattedStartDate}`);
       
       try {
         // Fetch job cards with detailed information for reporting
-        return await fetchJobCardsWithDetails(staffRelationId, formattedStartDate);
+        const result = await fetchJobCardsWithDetails(staffRelationId, formattedStartDate);
+        console.log(`Fetched ${result.length} job cards for reporting`);
+        return result;
       } catch (err) {
         console.error("Error fetching job cards for reports:", err);
         throw err;
