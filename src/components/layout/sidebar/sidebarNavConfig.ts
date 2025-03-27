@@ -36,7 +36,7 @@ export const navItems: NavItem[] = [
     label: "Tasks",
     path: "tasks",
     icon: ListChecks,
-    showFor: ['free', 'individual', 'business', 'staff'],
+    showFor: ['free', 'individual', 'business'], // Removed 'staff' from here
   },
   {
     label: "Events",
@@ -45,22 +45,16 @@ export const navItems: NavItem[] = [
     showFor: ['free', 'individual', 'business'],
   },
   {
-    label: "Job Cards",
-    path: "job-cards",
-    icon: FileText,
-    showFor: ['staff'],
-  },
-  {
     label: "Bookings",
     path: "bookings",
     icon: Calendar,
-    showFor: ['business', 'staff'],
+    showFor: ['business', 'staff'], // Staff can see bookings
   },
   {
     label: "Messages",
     path: "messages",
     icon: MessageSquare,
-    showFor: ['individual', 'business', 'staff'],
+    showFor: ['individual', 'business'],
   },
   {
     label: "WAKTI AI",

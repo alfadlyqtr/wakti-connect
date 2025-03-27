@@ -20,7 +20,7 @@ const StaffRoleGuard: React.FC<StaffRoleGuardProps> = ({
   disallowStaff = true,
   messageTitle = "Access Restricted",
   messageDescription = "This feature is not available for staff accounts",
-  redirectTo = "/dashboard"
+  redirectTo = "/dashboard/bookings" // Changed to redirect to bookings instead of dashboard
 }) => {
   const location = useLocation();
   const userRole = localStorage.getItem('userRole') as UserRole;
@@ -34,7 +34,7 @@ const StaffRoleGuard: React.FC<StaffRoleGuardProps> = ({
       variant: "destructive",
     });
     
-    // Redirect to the dashboard or specified redirect path
+    // Redirect to the bookings page for staff (instead of dashboard)
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
   

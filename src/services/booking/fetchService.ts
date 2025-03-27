@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { BookingTab, BookingWithRelations, BookingsResult } from "@/types/booking.types";
+import { getStaffRelationId } from "@/utils/staffUtils";
 
 /**
  * Fetches bookings based on the selected tab (business accounts only)
@@ -11,7 +12,7 @@ export const fetchBookings = async (
   try {
     let bookings: BookingWithRelations[] = [];
 
-    // Get the user's account type (must be business)
+    // Get the user's account type 
     const { data: userRoleData, error: roleError } = await supabase.rpc(
       "get_auth_user_account_type"
     );
@@ -21,7 +22,28 @@ export const fetchBookings = async (
       throw new Error(`Failed to check user role: ${roleError.message}`);
     }
 
-    if (userRoleData !== "business") {
+    // Special handling for staff users
+    const userRole = userRoleData;
+    let isStaff = false;
+    let staffRelationId = null;
+    
+    // Check if user is staff
+    const storedIsStaff = localStorage.getItem('isStaff');
+    if (storedIsStaff === 'true') {
+      isStaff = true;
+      staffRelationId = await getStaffRelationId();
+      
+      if (!staffRelationId) {
+        console.error("Staff relation ID not found");
+        return {
+          bookings: [],
+          userRole: "business"
+        };
+      }
+    }
+
+    // For non-business/non-staff accounts, return empty bookings
+    if (userRole !== "business" && !isStaff) {
       return {
         bookings: [],
         userRole: "business"
@@ -31,73 +53,91 @@ export const fetchBookings = async (
     // Fetch bookings based on the selected tab
     try {
       const userId = await getUserId();
-      
       let rawBookings = [];
       
-      switch (tab) {
-        case "all-bookings":
-          // Fetch all bookings for the business
-          const { data: allBookings, error: allBookingsError } = await supabase
-            .from('bookings')
-            .select(`
-              *,
-              service:service_id(name, description, price),
-              staff:staff_assigned_id(name)
-            `)
-            .eq('business_id', userId)
-            .order('created_at', { ascending: false });
-            
-          if (allBookingsError) throw allBookingsError;
-          rawBookings = allBookings || [];
-          break;
+      // If staff user, only show bookings assigned to them
+      if (isStaff) {
+        console.log("Fetching bookings for staff with relation ID:", staffRelationId);
+        
+        const { data: staffBookings, error: staffBookingsError } = await supabase
+          .from('bookings')
+          .select(`
+            *,
+            service:service_id(name, description, price),
+            staff:staff_assigned_id(name)
+          `)
+          .eq('staff_assigned_id', staffRelationId)
+          .order('created_at', { ascending: false });
           
-        case "pending-bookings":
-          // Fetch pending bookings for the business
-          const { data: pendingBookings, error: pendingBookingsError } = await supabase
-            .from('bookings')
-            .select(`
-              *,
-              service:service_id(name, description, price),
-              staff:staff_assigned_id(name)
-            `)
-            .eq('business_id', userId)
-            .eq('status', 'pending')
-            .order('created_at', { ascending: false });
+        if (staffBookingsError) throw staffBookingsError;
+        rawBookings = staffBookings || [];
+      } else {
+        // Regular business user flow - show all bookings based on tab
+        switch (tab) {
+          case "all-bookings":
+            // Fetch all bookings for the business
+            const { data: allBookings, error: allBookingsError } = await supabase
+              .from('bookings')
+              .select(`
+                *,
+                service:service_id(name, description, price),
+                staff:staff_assigned_id(name)
+              `)
+              .eq('business_id', userId)
+              .order('created_at', { ascending: false });
+              
+            if (allBookingsError) throw allBookingsError;
+            rawBookings = allBookings || [];
+            break;
             
-          if (pendingBookingsError) throw pendingBookingsError;
-          rawBookings = pendingBookings || [];
-          break;
-          
-        case "staff-bookings":
-          // Fetch bookings assigned to staff
-          const { data: staffBookings, error: staffBookingsError } = await supabase
-            .from('bookings')
-            .select(`
-              *,
-              service:service_id(name, description, price),
-              staff:staff_assigned_id(name)
-            `)
-            .eq('business_id', userId)
-            .not('staff_assigned_id', 'is', null)
-            .order('created_at', { ascending: false });
+          case "pending-bookings":
+            // Fetch pending bookings for the business
+            const { data: pendingBookings, error: pendingBookingsError } = await supabase
+              .from('bookings')
+              .select(`
+                *,
+                service:service_id(name, description, price),
+                staff:staff_assigned_id(name)
+              `)
+              .eq('business_id', userId)
+              .eq('status', 'pending')
+              .order('created_at', { ascending: false });
+              
+            if (pendingBookingsError) throw pendingBookingsError;
+            rawBookings = pendingBookings || [];
+            break;
             
-          if (staffBookingsError) throw staffBookingsError;
-          rawBookings = staffBookings || [];
-          break;
-            
-        default:
-          const { data: defaultBookings, error: defaultBookingsError } = await supabase
-            .from('bookings')
-            .select(`
-              *,
-              service:service_id(name, description, price),
-              staff:staff_assigned_id(name)
-            `)
-            .eq('business_id', userId)
-            .order('created_at', { ascending: false });
-            
-          if (defaultBookingsError) throw defaultBookingsError;
-          rawBookings = defaultBookings || [];
+          case "staff-bookings":
+            // Fetch bookings assigned to staff
+            const { data: staffBookings, error: staffBookingsError } = await supabase
+              .from('bookings')
+              .select(`
+                *,
+                service:service_id(name, description, price),
+                staff:staff_assigned_id(name)
+              `)
+              .eq('business_id', userId)
+              .not('staff_assigned_id', 'is', null)
+              .order('created_at', { ascending: false });
+              
+            if (staffBookingsError) throw staffBookingsError;
+            rawBookings = staffBookings || [];
+            break;
+              
+          default:
+            const { data: defaultBookings, error: defaultBookingsError } = await supabase
+              .from('bookings')
+              .select(`
+                *,
+                service:service_id(name, description, price),
+                staff:staff_assigned_id(name)
+              `)
+              .eq('business_id', userId)
+              .order('created_at', { ascending: false });
+              
+            if (defaultBookingsError) throw defaultBookingsError;
+            rawBookings = defaultBookings || [];
+        }
       }
       
       // Process the data to handle potential relation errors

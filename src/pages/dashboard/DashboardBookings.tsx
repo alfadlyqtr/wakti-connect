@@ -18,6 +18,7 @@ import BookingTemplatesTab from "@/components/bookings/templates/BookingTemplate
 const DashboardBookings = () => {
   const { activeTab, setActiveTab } = useBookingsTabState();
   const queryClient = useQueryClient();
+  const isStaff = localStorage.getItem('isStaff') === 'true';
   
   // Fetch bookings based on the selected tab
   const { 
@@ -25,7 +26,7 @@ const DashboardBookings = () => {
     isLoading, 
     error, 
     refetch 
-  } = useBookings(activeTab);
+  } = useBookings(isStaff ? 'all-bookings' : activeTab);
 
   // Mutation to update booking status
   const updateBookingMutation = useMutation({
@@ -89,7 +90,7 @@ const DashboardBookings = () => {
     }
   };
 
-  if (isLoading && activeTab !== "templates") {
+  if (isLoading) {
     return (
       <div className="container py-8 flex justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -97,10 +98,34 @@ const DashboardBookings = () => {
     );
   }
 
-  if (error && activeTab !== "templates") {
+  if (error) {
     return <BookingsError error={error} queryClient={queryClient} />;
   }
 
+  // For staff users, we show a simplified view with just their bookings
+  if (isStaff) {
+    return (
+      <div className="container py-8">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2">My Bookings</h1>
+          <p className="text-muted-foreground">
+            View and manage bookings assigned to you
+          </p>
+        </div>
+        
+        <BookingsTabContent 
+          bookings={bookings} 
+          onUpdateStatus={(bookingId, status) => 
+            updateBookingMutation.mutate({ bookingId, status })
+          }
+          isUpdating={updateBookingMutation.isPending}
+          emptyMessage="No bookings have been assigned to you yet."
+        />
+      </div>
+    );
+  }
+
+  // For business users, show the full tabbed interface
   return (
     <div className="container py-8">
       <BookingsHeader setActiveTab={setActiveTab} />
