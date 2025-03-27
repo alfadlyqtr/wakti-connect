@@ -1,7 +1,7 @@
 
 import React from "react";
 import { TaskList } from "./TaskList";
-import { Task } from "@/types/task.types";
+import { Task, TaskStatus } from "@/types/task.types";
 import { CalendarEvent } from "@/types/calendar.types";
 
 interface TasksOverviewProps {
@@ -10,7 +10,7 @@ interface TasksOverviewProps {
 
 const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
   // Group tasks by status
-  const pendingTasks = tasks.filter(task => task.status === 'pending');
+  const pendingTasks = tasks.filter(task => task.status === 'pending' as TaskStatus);
   const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
   const completedTasks = tasks.filter(task => task.status === 'completed');
   

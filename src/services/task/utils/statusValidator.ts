@@ -2,10 +2,10 @@
 import { TaskStatus, TaskPriority } from "@/types/task.types";
 
 export function validateTaskStatus(status: string | null | undefined): TaskStatus {
-  const validStatuses: TaskStatus[] = ["pending", "in-progress", "completed", "late", "snoozed"];
+  const validStatuses: TaskStatus[] = ["pending", "in-progress", "completed", "late", "snoozed", "archived"];
   
   if (!status || !validStatuses.includes(status as TaskStatus)) {
-    return "pending";
+    return "pending" as TaskStatus;
   }
   
   return status as TaskStatus;

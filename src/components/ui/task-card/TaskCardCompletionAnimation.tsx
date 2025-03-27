@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Fireworks, CheckCircle, ThumbsUp } from 'lucide-react';
+import { CheckCircle2, ThumbsUp, Award } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface TaskCardCompletionAnimationProps {
@@ -79,7 +79,7 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
                   transition={{ duration: 1, repeat: 1 }}
                   className="text-yellow-500 mb-4"
                 >
-                  <Fireworks size={60} className="text-yellow-500" />
+                  <Award size={60} className="text-yellow-500" />
                 </motion.div>
                 <motion.h2 
                   className="text-xl font-bold mb-2 text-center"
@@ -99,7 +99,7 @@ export const TaskCardCompletionAnimation: React.FC<TaskCardCompletionAnimationPr
                   transition={{ duration: 0.5, repeat: 1 }}
                   className="text-green-500 mb-4"
                 >
-                  <CheckCircle size={60} />
+                  <CheckCircle2 size={60} />
                 </motion.div>
                 <motion.h2 
                   className="text-xl font-bold mb-2"

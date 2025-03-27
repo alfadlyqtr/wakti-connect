@@ -30,7 +30,7 @@ export interface SubTask {
   due_time?: string | null;
 }
 
-export type TaskStatus = "in-progress" | "completed" | "late" | "snoozed" | "archived";
+export type TaskStatus = "pending" | "in-progress" | "completed" | "late" | "snoozed" | "archived";
 export type TaskPriority = "urgent" | "high" | "medium" | "normal";
 export type TaskTab = "my-tasks" | "archived";
 export type ArchiveReason = "deleted" | "canceled";

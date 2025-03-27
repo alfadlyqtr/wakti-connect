@@ -153,7 +153,7 @@ const TaskBadges = ({
   priority, 
   isShared, 
   isAssigned,
-  status = "pending",
+  status = "pending" as TaskStatus,
   category = "personal",
   completedDate = null,
   snoozedUntil = null,

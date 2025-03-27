@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, ThumbsUp, Loader2 } from "lucide-react";
 import { format, isPast, isToday } from "date-fns";
-import { TaskCardCompletionAnimation } from "./TaskCardCompletionAnimation";
+import { TaskCardCompletionAnimation } from "../task-card/TaskCardCompletionAnimation";
 import { TaskStatus } from "@/types/task.types";
 
 interface TaskCardFooterProps {

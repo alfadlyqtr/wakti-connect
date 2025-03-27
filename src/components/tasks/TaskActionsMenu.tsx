@@ -47,7 +47,7 @@ export function TaskActionsMenu({
   isShared = false,
   isAssigned = false,
   isTeamTask = false,
-  status = "pending",
+  status = "pending" as TaskStatus,
   onEdit,
   onDelete,
   onStatusChange,
@@ -118,7 +118,7 @@ export function TaskActionsMenu({
           </DropdownMenuItem>
         )}
         
-        {status !== "pending" && (
+        {status !== "pending" as TaskStatus && (
           <DropdownMenuItem onClick={() => handleAction(onStatusChange, "pending")}>
             <Clock className="h-4 w-4 mr-2" />
             Mark Pending

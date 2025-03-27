@@ -1,5 +1,5 @@
 
-import { TaskFormData } from "@/types/task.types";
+import { TaskFormData, TaskStatus } from "@/types/task.types";
 
 /**
  * Sanitizes and validates task data before database operations
@@ -10,7 +10,7 @@ export function sanitizeTaskData(taskData: TaskFormData): Partial<TaskFormData> 
   return {
     title: taskData.title,
     description: taskData.description,
-    status: taskData.status || "pending",
+    status: (taskData.status || "pending") as TaskStatus,
     priority: taskData.priority || "normal",
     due_date: taskData.due_date,
     due_time: taskData.due_time,
