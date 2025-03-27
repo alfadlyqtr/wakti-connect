@@ -11,7 +11,7 @@ export function useDebouncedRefresh(
   refreshFn: () => Promise<void>,
   delay: number = 500
 ): { 
-  refresh: () => void; 
+  refresh: () => Promise<void>; 
   isRefreshing: boolean;
 } {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -28,7 +28,7 @@ export function useDebouncedRefresh(
     };
   }, []);
   
-  const refresh = useCallback(() => {
+  const refresh = useCallback(async () => {
     // Clear any existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -37,19 +37,22 @@ export function useDebouncedRefresh(
     // Set a flag indicating a refresh is pending
     setIsRefreshing(true);
     
-    // Create a new debounced refresh
-    timeoutRef.current = setTimeout(async () => {
-      try {
-        await refreshFn();
-      } catch (error) {
-        console.error("Error in debounced refresh:", error);
-      } finally {
-        // Only update state if component is still mounted
-        if (isMountedRef.current) {
-          setIsRefreshing(false);
+    return new Promise<void>((resolve) => {
+      // Create a new debounced refresh
+      timeoutRef.current = setTimeout(async () => {
+        try {
+          await refreshFn();
+        } catch (error) {
+          console.error("Error in debounced refresh:", error);
+        } finally {
+          // Only update state if component is still mounted
+          if (isMountedRef.current) {
+            setIsRefreshing(false);
+          }
+          resolve();
         }
-      }
-    }, delay);
+      }, delay);
+    });
   }, [refreshFn, delay]);
   
   return { refresh, isRefreshing };
