@@ -9,7 +9,7 @@ import CommonProfileFields from "./CommonProfileFields";
 import { useStaffPermissions } from "@/hooks/useStaffPermissions";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Form } from "@/components/ui/form";
+import { FormProvider } from "react-hook-form";
 
 interface ProfileFormProps {
   profile?: (Tables<"profiles"> & {
@@ -21,14 +21,12 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
   const { isStaff, loading } = useStaffPermissions();
   
   const {
-    register,
-    handleSubmit,
+    form,
     onSubmit,
     isSubmitting,
     isBusinessAccount,
     watch,
     errors,
-    control
   } = useProfileForm(profile, { canEdit: !isStaff, isStaff });
   
   if (loading) {
@@ -38,54 +36,50 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
   }
   
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="space-y-6">
-        {isStaff && (
-          <Alert variant="warning" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Staff members can only view profile information. Profile editing is restricted.
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        {/* Common fields for all account types */}
-        <CommonProfileFields 
-          register={register} 
-          watch={watch} 
-          errors={errors} 
-          control={control}
-          readOnly={isStaff}
-          canEditBasicInfo={false}
-        />
-        
-        {/* Account type specific fields */}
-        {isBusinessAccount ? (
-          <BusinessProfileFields 
-            register={register} 
+    <FormProvider {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="space-y-6">
+          {isStaff && (
+            <Alert variant="warning" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Staff members can only view profile information. Profile editing is restricted.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {/* Common fields for all account types */}
+          <CommonProfileFields 
             watch={watch} 
             errors={errors} 
-            control={control}
-            readOnly={isStaff} 
+            readOnly={isStaff}
+            canEditBasicInfo={false}
           />
-        ) : (
-          <IndividualProfileFields 
-            register={register} 
-            errors={errors} 
-            control={control}
-            readOnly={isStaff} 
-          />
-        )}
-        
-        <Button 
-          type="submit"
-          className="w-full sm:w-auto bg-wakti-blue hover:bg-wakti-blue/90"
-          disabled={isSubmitting || isStaff}
-        >
-          {isSubmitting ? "Saving..." : (isBusinessAccount ? "Save Business Info" : "Save Profile")}
-        </Button>
-      </div>
-    </form>
+          
+          {/* Account type specific fields */}
+          {isBusinessAccount ? (
+            <BusinessProfileFields 
+              watch={watch} 
+              errors={errors} 
+              readOnly={isStaff} 
+            />
+          ) : (
+            <IndividualProfileFields 
+              errors={errors} 
+              readOnly={isStaff} 
+            />
+          )}
+          
+          <Button 
+            type="submit"
+            className="w-full sm:w-auto bg-wakti-blue hover:bg-wakti-blue/90"
+            disabled={isSubmitting || isStaff}
+          >
+            {isSubmitting ? "Saving..." : (isBusinessAccount ? "Save Business Info" : "Save Profile")}
+          </Button>
+        </div>
+      </form>
+    </FormProvider>
   );
 };
 

@@ -1,29 +1,19 @@
-
 import React from "react";
-import { 
-  UseFormRegister, 
-  FieldErrors, 
-  UseFormWatch,
-  Control
-} from "react-hook-form";
+import { FieldErrors } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { ProfileFormData } from "@/hooks/useProfileForm";
 
 interface CommonProfileFieldsProps {
-  register: UseFormRegister<ProfileFormData>;
-  watch: UseFormWatch<ProfileFormData>;
+  watch?: any;
   errors: FieldErrors<ProfileFormData>;
-  control: Control<ProfileFormData>;
   readOnly?: boolean;
   canEditBasicInfo?: boolean;
 }
 
 const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({ 
-  register, 
   watch, 
   errors,
-  control,
   readOnly = false,
   canEditBasicInfo = false
 }) => {
@@ -31,7 +21,6 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       <FormField
-        control={control}
         name="display_name"
         render={({ field }) => (
           <FormItem>
@@ -52,7 +41,6 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
       />
       
       <FormField
-        control={control}
         name="occupation"
         render={({ field }) => (
           <FormItem>
@@ -73,7 +61,6 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
       />
       
       <FormField
-        control={control}
         name="country"
         render={({ field }) => (
           <FormItem>
@@ -94,7 +81,6 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
       />
       
       <FormField
-        control={control}
         name="state_province"
         render={({ field }) => (
           <FormItem>
@@ -115,7 +101,6 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
       />
       
       <FormField
-        control={control}
         name="city"
         render={({ field }) => (
           <FormItem>
@@ -136,7 +121,6 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
       />
       
       <FormField
-        control={control}
         name="postal_code"
         render={({ field }) => (
           <FormItem>
@@ -157,7 +141,6 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
       />
       
       <FormField
-        control={control}
         name="street_address"
         render={({ field }) => (
           <FormItem>
@@ -178,7 +161,6 @@ const CommonProfileFields: React.FC<CommonProfileFieldsProps> = ({
       />
       
       <FormField
-        control={control}
         name="po_box"
         render={({ field }) => (
           <FormItem>

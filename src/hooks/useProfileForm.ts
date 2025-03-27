@@ -40,14 +40,7 @@ export const useProfileForm = (
   const { canEdit = true, isStaff = false } = options;
   const isBusinessAccount = profile?.account_type === 'business';
 
-  const { 
-    register, 
-    handleSubmit, 
-    formState: { isSubmitting, errors }, 
-    watch, 
-    setError,
-    control 
-  } = useForm<ProfileFormData>({
+  const form = useForm<ProfileFormData>({
     defaultValues: {
       display_name: profile?.display_name || '',
       business_name: profile?.business_name || '',
@@ -117,19 +110,19 @@ export const useProfileForm = (
       let errorMessage = "There was a problem updating your information.";
       
       if (error.message && error.message.includes("profile with this display name already exists")) {
-        setError('display_name', { 
+        form.setError('display_name', { 
           type: 'manual',
           message: 'This display name is already in use. Please choose a different one.' 
         });
         errorMessage = "This display name is already in use. Please choose a different one.";
       } else if (error.message && error.message.includes("business with this name already exists")) {
-        setError('business_name', { 
+        form.setError('business_name', { 
           type: 'manual',
           message: 'This business name is already registered. Please choose a different name.' 
         });
         errorMessage = "This business name is already registered. Please choose a different name.";
       } else if (error.message && error.message.includes("business with this email already exists")) {
-        setError('business_email', { 
+        form.setError('business_email', { 
           type: 'manual',
           message: 'This business email is already registered. Please use a different email.' 
         });
@@ -145,13 +138,11 @@ export const useProfileForm = (
   };
 
   return {
-    register,
-    handleSubmit,
+    form,
     onSubmit,
-    isSubmitting,
+    isSubmitting: form.formState.isSubmitting,
     isBusinessAccount,
-    watch,
-    errors,
-    control
+    watch: form.watch,
+    errors: form.formState.errors
   };
 };

@@ -1,35 +1,24 @@
-
 import React from "react";
-import { 
-  UseFormRegister, 
-  UseFormWatch, 
-  FieldErrors,
-  Control
-} from "react-hook-form";
+import { UseFormWatch, FieldErrors } from "react-hook-form";
 import { ProfileFormData } from "@/hooks/useProfileForm";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 interface BusinessProfileFieldsProps {
-  register: UseFormRegister<ProfileFormData>;
   watch: UseFormWatch<ProfileFormData>;
   errors: FieldErrors<ProfileFormData>;
-  control: Control<ProfileFormData>;
   readOnly?: boolean;
 }
 
 const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({ 
-  register, 
   watch, 
   errors,
-  control,
   readOnly = false
 }) => {
   return (
     <div className="grid grid-cols-1 gap-5">
       <FormField
-        control={control}
         name="business_name"
         render={({ field }) => (
           <FormItem>
@@ -50,7 +39,6 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
       />
       
       <FormField
-        control={control}
         name="business_type"
         render={({ field }) => (
           <FormItem>
@@ -71,7 +59,6 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
       />
       
       <FormField
-        control={control}
         name="business_address"
         render={({ field }) => (
           <FormItem>
@@ -93,7 +80,6 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <FormField
-          control={control}
           name="business_email"
           render={({ field }) => (
             <FormItem>
@@ -114,7 +100,6 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
         />
         
         <FormField
-          control={control}
           name="business_phone"
           render={({ field }) => (
             <FormItem>
@@ -135,7 +120,6 @@ const BusinessProfileFields: React.FC<BusinessProfileFieldsProps> = ({
         />
         
         <FormField
-          control={control}
           name="business_website"
           render={({ field }) => (
             <FormItem>

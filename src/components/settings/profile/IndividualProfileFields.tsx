@@ -1,35 +1,22 @@
-
 import React from "react";
-import { 
-  UseFormRegister, 
-  FieldErrors, 
-  UseFormWatch,
-  Control 
-} from "react-hook-form";
+import { FieldErrors } from "react-hook-form";
 import { ProfileFormData } from "@/hooks/useProfileForm";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
 interface IndividualProfileFieldsProps {
-  register: UseFormRegister<ProfileFormData>;
   errors: FieldErrors<ProfileFormData>;
-  control: Control<ProfileFormData>;
   readOnly?: boolean;
-  watch?: UseFormWatch<ProfileFormData>;
 }
 
 const IndividualProfileFields: React.FC<IndividualProfileFieldsProps> = ({ 
-  register, 
   errors,
-  control,
   readOnly = false,
-  watch
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
       {/* Individual-specific fields */}
       <FormField
-        control={control}
         name="telephone"
         render={({ field }) => (
           <FormItem>
@@ -48,7 +35,6 @@ const IndividualProfileFields: React.FC<IndividualProfileFieldsProps> = ({
       />
       
       <FormField
-        control={control}
         name="state_province"
         render={({ field }) => (
           <FormItem>
@@ -67,7 +53,6 @@ const IndividualProfileFields: React.FC<IndividualProfileFieldsProps> = ({
       />
       
       <FormField
-        control={control}
         name="city"
         render={({ field }) => (
           <FormItem>
@@ -86,7 +71,6 @@ const IndividualProfileFields: React.FC<IndividualProfileFieldsProps> = ({
       />
       
       <FormField
-        control={control}
         name="postal_code"
         render={({ field }) => (
           <FormItem>
@@ -105,7 +89,6 @@ const IndividualProfileFields: React.FC<IndividualProfileFieldsProps> = ({
       />
       
       <FormField
-        control={control}
         name="street_address"
         render={({ field }) => (
           <FormItem className="md:col-span-2">
