@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus, TaskPriority, TaskTab } from '@/types/task.types';
@@ -477,9 +476,9 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  // Fix the refetchTasks function to properly resolve the promise
-  const refetchTasks = useCallback(async (): Promise<void> => {
-    await debouncedFetch();
+  // Fix the refetchTasks function to properly return the Promise from debouncedFetch
+  const refetchTasks = useCallback((): Promise<void> => {
+    return debouncedFetch();
   }, [debouncedFetch]);
 
   return {
