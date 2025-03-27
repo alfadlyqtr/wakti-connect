@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus, TaskPriority, TaskTab } from '@/types/task.types';
@@ -75,6 +76,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     setIsLoading(true);
     
     try {
+      console.log('Fetching tasks for tab:', activeTab);
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
@@ -97,6 +99,8 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
       const { data, error } = await query.order('created_at', { ascending: false });
         
       if (error) throw error;
+      
+      console.log(`Fetched ${data.length} tasks for ${activeTab} tab`);
       
       const typedTasks: Task[] = data.map((task: any) => ({
         id: task.id,
@@ -274,6 +278,8 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
 
   const handleArchiveTask = async (taskId: string, reason: "deleted" | "canceled") => {
     try {
+      console.log(`Archiving task ${taskId} with reason: ${reason}`);
+      
       const updates = {
         status: "archived" as TaskStatus,
         archived_at: new Date().toISOString(),
@@ -294,7 +300,14 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      await fetchTasks();
+      // Instead of immediately fetching tasks, update state locally first
+      setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
+      
+      // Then refetch in the background
+      setTimeout(() => {
+        fetchTasks();
+      }, 500);
+      
     } catch (error) {
       console.error("Error archiving task:", error);
       toast({
@@ -307,6 +320,8 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
 
   const handleRestoreTask = async (taskId: string) => {
     try {
+      console.log(`Restoring task ${taskId} from archive`);
+      
       const { data: task } = await supabase
         .from('tasks')
         .select('status')
@@ -333,7 +348,14 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      await fetchTasks();
+      // Instead of immediately fetching tasks, update state locally first
+      setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
+      
+      // Then refetch in the background
+      setTimeout(() => {
+        fetchTasks();
+      }, 500);
+      
     } catch (error) {
       console.error("Error restoring task:", error);
       toast({
@@ -350,8 +372,11 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
       (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase())) : 
       true;
       
-    const matchesStatus = filterStatus ? task.status === filterStatus : true;
-    const matchesPriority = filterPriority ? task.priority === filterPriority : true;
+    // Fix for "all" status filter - if filterStatus is null or "all", show all statuses
+    const matchesStatus = !filterStatus || filterStatus === "all" ? true : task.status === filterStatus;
+    
+    // Fix for "all" priority filter
+    const matchesPriority = !filterPriority || filterPriority === "all" ? true : task.priority === filterPriority;
     
     return matchesSearch && matchesStatus && matchesPriority;
   });

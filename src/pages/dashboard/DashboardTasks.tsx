@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import TaskControls from "@/components/tasks/TaskControls";
 import TasksLoading from "@/components/tasks/TasksLoading";
 import TasksContainer from "@/components/tasks/TasksContainer";
@@ -39,13 +39,19 @@ const DashboardTasks = () => {
     setActiveTab
   } = useTasksPageState();
 
+  // Set default filters to "all" on component mount
+  useEffect(() => {
+    setFilterStatus("all");
+    setFilterPriority("all");
+  }, [setFilterStatus, setFilterPriority]);
+
   if (isLoading) {
     return <TasksLoading />;
   }
 
   // Cast the filter values to their appropriate types
-  const statusFilter = filterStatus as TaskStatusFilter || "all";
-  const priorityFilter = filterPriority as TaskPriorityFilter || "all";
+  const statusFilter = (filterStatus || "all") as TaskStatusFilter;
+  const priorityFilter = (filterPriority || "all") as TaskPriorityFilter;
   
   // When a task is selected for editing
   const handleEditTask = (task: any) => {
@@ -53,13 +59,20 @@ const DashboardTasks = () => {
     setEditTaskDialogOpen(true);
   };
 
+  // Log the number of filtered tasks for debugging
+  console.log(`Filtered tasks: ${filteredTasks.length} of ${filteredTasks.length} total tasks`);
+  console.log(`Current filters - Status: ${statusFilter}, Priority: ${priorityFilter}`);
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">Tasks</h1>
       
       <TaskTabs 
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => {
+          console.log(`Changing to tab: ${tab}`);
+          setActiveTab(tab);
+        }}
       />
       
       {activeTab === "archived" && (
@@ -78,9 +91,15 @@ const DashboardTasks = () => {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         filterStatus={statusFilter}
-        onStatusChange={(status) => setFilterStatus(status as string | null)}
+        onStatusChange={(status) => {
+          console.log(`Setting status filter to: ${status}`);
+          setFilterStatus(status as string | null);
+        }}
         filterPriority={priorityFilter}
-        onPriorityChange={(priority) => setFilterPriority(priority as string | null)}
+        onPriorityChange={(priority) => {
+          console.log(`Setting priority filter to: ${priority}`);
+          setFilterPriority(priority as string | null);
+        }}
         onCreateTask={() => setCreateTaskDialogOpen(true)}
         isPaidAccount={isPaidAccount}
         userRole={userRole || "free"}

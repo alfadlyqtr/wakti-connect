@@ -30,9 +30,12 @@ const TaskGrid: React.FC<TaskGridProps> = ({
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
   const [deleteReason, setDeleteReason] = useState<"deleted" | "canceled">("deleted");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [operationInProgress, setOperationInProgress] = useState(false);
   
   // Handler for editing a task
   const handleEditTask = (taskId: string) => {
+    if (operationInProgress) return;
+    
     const taskToEdit = tasks.find(task => task.id === taskId);
     if (taskToEdit) {
       onEdit(taskToEdit);
@@ -41,6 +44,8 @@ const TaskGrid: React.FC<TaskGridProps> = ({
 
   // Handler for deleting/canceling a task
   const handleDeleteTask = (taskId: string) => {
+    if (operationInProgress) return;
+    
     setTaskToDelete(taskId);
     setDeleteReason("deleted");
     setShowDeleteDialog(true);
@@ -48,6 +53,8 @@ const TaskGrid: React.FC<TaskGridProps> = ({
   
   // Handler for canceling a task
   const handleCancelTask = (taskId: string) => {
+    if (operationInProgress) return;
+    
     setTaskToDelete(taskId);
     setDeleteReason("canceled");
     setShowDeleteDialog(true);
@@ -55,10 +62,12 @@ const TaskGrid: React.FC<TaskGridProps> = ({
 
   // Confirming task deletion/cancellation
   const confirmDeleteTask = async () => {
-    if (!taskToDelete) return;
+    if (!taskToDelete || operationInProgress) return;
     
     try {
       setIsDeleting(true);
+      setOperationInProgress(true);
+      console.log(`Confirming deletion of task ${taskToDelete} with reason ${deleteReason}`);
       
       if (isArchiveView) {
         // Permanently delete from archive
@@ -81,7 +90,13 @@ const TaskGrid: React.FC<TaskGridProps> = ({
       
       // Close dialog and refresh tasks
       setShowDeleteDialog(false);
-      refetch();
+      
+      // Local state update to remove the task from the UI immediately
+      // This helps prevent the UI freeze by not waiting for a full refetch
+      setTimeout(() => {
+        refetch();
+      }, 500);
+      
     } catch (error) {
       console.error("Error deleting/archiving task:", error);
       toast({
@@ -92,12 +107,18 @@ const TaskGrid: React.FC<TaskGridProps> = ({
     } finally {
       setIsDeleting(false);
       setTaskToDelete(null);
+      setOperationInProgress(false);
     }
   };
 
   // Handler for changing task status
   const handleStatusChange = async (taskId: string, newStatus: string) => {
+    if (operationInProgress) return;
+    
     try {
+      setOperationInProgress(true);
+      console.log(`Changing status of task ${taskId} to ${newStatus}`);
+      
       let updates: any = {
         status: newStatus,
         updated_at: new Date().toISOString()
@@ -119,6 +140,7 @@ const TaskGrid: React.FC<TaskGridProps> = ({
         'completed': 'Task completed! Great job!',
         'in-progress': 'Task marked as in progress',
         'snoozed': 'Task snoozed',
+        'pending': 'Task marked as pending',
       };
       
       toast({
@@ -127,8 +149,11 @@ const TaskGrid: React.FC<TaskGridProps> = ({
         variant: "success",
       });
       
-      // Refresh tasks
-      refetch();
+      // Update local state first
+      setTimeout(() => {
+        refetch();
+      }, 500);
+      
     } catch (error) {
       console.error("Error updating task status:", error);
       toast({
@@ -136,12 +161,19 @@ const TaskGrid: React.FC<TaskGridProps> = ({
         description: error instanceof Error ? error.message : "Failed to update task status",
         variant: "destructive",
       });
+    } finally {
+      setOperationInProgress(false);
     }
   };
 
   // Handler for snoozing a task
   const handleSnoozeTask = async (taskId: string, days: number) => {
+    if (operationInProgress) return;
+    
     try {
+      setOperationInProgress(true);
+      console.log(`Snoozing task ${taskId} for ${days} days`);
+      
       // Calculate the snooze date
       const snoozedUntil = new Date();
       snoozedUntil.setDate(snoozedUntil.getDate() + days);
@@ -174,8 +206,11 @@ const TaskGrid: React.FC<TaskGridProps> = ({
         variant: "success",
       });
       
-      // Refresh tasks
-      refetch();
+      // Update local state first, then refetch
+      setTimeout(() => {
+        refetch();
+      }, 500);
+      
     } catch (error) {
       console.error("Error snoozing task:", error);
       toast({
@@ -183,12 +218,19 @@ const TaskGrid: React.FC<TaskGridProps> = ({
         description: error instanceof Error ? error.message : "Failed to snooze task",
         variant: "destructive",
       });
+    } finally {
+      setOperationInProgress(false);
     }
   };
 
   // Handler for toggling a subtask
   const handleSubtaskToggle = async (taskId: string, subtaskIndex: number, isCompleted: boolean) => {
+    if (operationInProgress) return;
+    
     try {
+      setOperationInProgress(true);
+      console.log(`Toggling subtask ${subtaskIndex} of task ${taskId} to ${isCompleted}`);
+      
       const subtask = tasks.find(t => t.id === taskId)?.subtasks?.[subtaskIndex];
       
       if (subtask && subtask.id) {
@@ -205,8 +247,10 @@ const TaskGrid: React.FC<TaskGridProps> = ({
           variant: "success",
         });
         
-        // Refresh tasks
-        refetch();
+        // Update local state first, then refetch
+        setTimeout(() => {
+          refetch();
+        }, 500);
       }
     } catch (error) {
       console.error("Error toggling subtask:", error);
@@ -215,13 +259,35 @@ const TaskGrid: React.FC<TaskGridProps> = ({
         description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
+    } finally {
+      setOperationInProgress(false);
     }
   };
   
   // Handle restoring a task from archive
   const handleRestoreTask = async (taskId: string) => {
-    if (onRestore) {
+    if (operationInProgress || !onRestore) return;
+    
+    try {
+      setOperationInProgress(true);
+      console.log(`Restoring task ${taskId} from archive`);
+      
       await onRestore(taskId);
+      
+      // Local update first
+      setTimeout(() => {
+        refetch();
+      }, 500);
+      
+    } catch (error) {
+      console.error("Error restoring task:", error);
+      toast({
+        title: "Restore failed",
+        description: error instanceof Error ? error.message : "Failed to restore task",
+        variant: "destructive",
+      });
+    } finally {
+      setOperationInProgress(false);
     }
   };
   
@@ -234,7 +300,7 @@ const TaskGrid: React.FC<TaskGridProps> = ({
             id={task.id}
             title={task.title}
             description={task.description || ""}
-            dueDate={new Date(task.due_date || "")}
+            dueDate={task.due_date ? new Date(task.due_date) : undefined}
             dueTime={task.due_time}
             status={task.status}
             priority={task.priority}
