@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus, TaskPriority, TaskTab } from '@/types/task.types';
@@ -101,7 +100,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     fetchUserRole();
   }, []);
 
-  const fetchTasks = useCallback(async () => {
+  const fetchTasks = useCallback(async (): Promise<void> => {
     const currentTimestamp = Date.now();
     setFetchTimestamp(currentTimestamp);
     setIsLoading(true);
@@ -514,7 +513,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     handleUpdateTask,
     handleArchiveTask,
     handleRestoreTask,
-    refetchTasks: debouncedFetch, // Use debounced fetch to prevent UI freezing
+    refetchTasks: debouncedFetch, // Use the debounced fetch function that returns Promise<void>
     filteredTasks,
     isPaidAccount,
     activeTab,
