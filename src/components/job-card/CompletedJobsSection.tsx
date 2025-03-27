@@ -1,92 +1,152 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatTime } from '@/utils/formatUtils';
 import { JobCard } from '@/types/jobs.types';
-import { format } from 'date-fns';
-import { Check, Clock } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { format, isToday, isThisWeek, isThisMonth, parseISO } from 'date-fns';
+import { Check, Clock, Download, ArrowDownUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { exportToCSV } from '@/utils/exportUtils';
 
 interface CompletedJobsSectionProps {
   completedJobs: JobCard[];
+  filterPeriod: 'all' | 'today' | 'thisWeek' | 'thisMonth';
+  paymentFilter: 'all' | 'cash' | 'pos' | 'none';
+  sortOption: 'newest' | 'oldest' | 'highest-amount' | 'lowest-amount';
+  isBusinessView?: boolean;
 }
 
-const CompletedJobsSection: React.FC<CompletedJobsSectionProps> = ({ completedJobs }) => {
-  const [timeFilter, setTimeFilter] = useState<string>("today");
-  
-  // Calculate start date for filtering
-  const getFilterDate = (): Date => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    switch (timeFilter) {
-      case "week":
-        const lastWeek = new Date(today);
-        lastWeek.setDate(today.getDate() - 7);
-        return lastWeek;
-      case "month":
-        const lastMonth = new Date(today);
-        lastMonth.setMonth(today.getMonth() - 1);
-        return lastMonth;
-      case "today":
-      default:
-        return today;
+const CompletedJobsSection: React.FC<CompletedJobsSectionProps> = ({ 
+  completedJobs,
+  filterPeriod,
+  paymentFilter,
+  sortOption,
+  isBusinessView = false
+}) => {
+  const filteredAndSortedJobs = useMemo(() => {
+    // First apply time filter
+    let filtered = completedJobs;
+    if (filterPeriod !== 'all') {
+      filtered = completedJobs.filter(job => {
+        const date = parseISO(job.end_time as string);
+        switch (filterPeriod) {
+          case 'today': return isToday(date);
+          case 'thisWeek': return isThisWeek(date);
+          case 'thisMonth': return isThisMonth(date);
+          default: return true;
+        }
+      });
     }
+    
+    // Then apply payment filter
+    if (paymentFilter !== 'all') {
+      filtered = filtered.filter(job => job.payment_method === paymentFilter);
+    }
+    
+    // Finally sort the filtered results
+    return filtered.sort((a, b) => {
+      switch (sortOption) {
+        case 'oldest': 
+          return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
+        case 'highest-amount': 
+          return b.payment_amount - a.payment_amount;
+        case 'lowest-amount': 
+          return a.payment_amount - b.payment_amount;
+        case 'newest':
+        default: 
+          return new Date(b.start_time).getTime() - new Date(a.start_time).getTime();
+      }
+    });
+  }, [completedJobs, filterPeriod, paymentFilter, sortOption]);
+  
+  // Calculate totals
+  const totalEarnings = useMemo(() => {
+    return filteredAndSortedJobs.reduce((sum, job) => sum + job.payment_amount, 0);
+  }, [filteredAndSortedJobs]);
+  
+  // Count by payment method
+  const paymentMethodCounts = useMemo(() => {
+    return filteredAndSortedJobs.reduce((counts, job) => {
+      counts[job.payment_method] = (counts[job.payment_method] || 0) + 1;
+      return counts;
+    }, {} as Record<string, number>);
+  }, [filteredAndSortedJobs]);
+  
+  const handleExportData = () => {
+    const data = filteredAndSortedJobs.map(job => ({
+      Job: job.job?.name || 'Unknown Job',
+      Date: format(new Date(job.start_time), 'yyyy-MM-dd'),
+      StartTime: format(new Date(job.start_time), 'HH:mm'),
+      EndTime: job.end_time ? format(new Date(job.end_time), 'HH:mm') : 'In Progress',
+      PaymentMethod: job.payment_method.toUpperCase(),
+      Amount: job.payment_amount,
+      Notes: job.notes || ''
+    }));
+    
+    exportToCSV(data, `job-cards-export-${format(new Date(), 'yyyy-MM-dd')}`);
   };
-  
-  // Filter jobs based on selected timeframe
-  const filteredJobs = completedJobs.filter(job => {
-    const filterDate = getFilterDate();
-    const jobDate = new Date(job.end_time as string);
-    return jobDate >= filterDate;
-  });
-  
-  // Enhanced debugging logs to see job data structure
-  console.log("Completed jobs data:", completedJobs);
-  console.log("Job names available:", completedJobs.map(job => ({
-    id: job.id,
-    job_id: job.job_id,
-    job_data: job.job,
-    job_name: job.job?.name || "No job name found"
-  })));
   
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
         <h3 className="text-lg font-medium">Completed Jobs</h3>
-        <Select
-          value={timeFilter}
-          onValueChange={(value) => setTimeFilter(value)}
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleExportData}
+          className="mt-2 sm:mt-0"
         >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by time" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="today">Today</SelectItem>
-            <SelectItem value="week">Last 7 days</SelectItem>
-            <SelectItem value="month">Last 30 days</SelectItem>
-          </SelectContent>
-        </Select>
+          <Download className="h-4 w-4 mr-2" />
+          Export
+        </Button>
       </div>
       
-      {filteredJobs.length === 0 ? (
+      {/* Summary cards for quick metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-sm text-muted-foreground mb-2">Total Jobs</div>
+            <div className="text-2xl font-bold">{filteredAndSortedJobs.length}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-sm text-muted-foreground mb-2">Total Earnings</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+              {formatCurrency(totalEarnings)}
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-sm text-muted-foreground mb-2">Cash Payments</div>
+            <div className="text-2xl font-bold">{paymentMethodCounts['cash'] || 0}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-sm text-muted-foreground mb-2">POS Payments</div>
+            <div className="text-2xl font-bold">{paymentMethodCounts['pos'] || 0}</div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {filteredAndSortedJobs.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
             <div className="text-center text-muted-foreground">
-              No completed jobs found for the selected period
+              No completed jobs found for the selected filters
             </div>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
-          {filteredJobs.map(job => (
+          {filteredAndSortedJobs.map(job => (
             <Card key={job.id} className="overflow-hidden border-l-4 border-l-green-500">
               <CardContent className="p-4">
                 <div className="flex flex-col sm:flex-row sm:items-center">
@@ -127,6 +187,13 @@ const CompletedJobsSection: React.FC<CompletedJobsSectionProps> = ({ completedJo
                 {job.notes && (
                   <div className="mt-2 text-sm text-muted-foreground border-t pt-2">
                     {job.notes}
+                  </div>
+                )}
+                
+                {/* Show staff name for business view */}
+                {isBusinessView && job.staff_name && (
+                  <div className="mt-2 text-xs text-right">
+                    <Badge variant="secondary">Staff: {job.staff_name}</Badge>
                   </div>
                 )}
               </CardContent>

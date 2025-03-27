@@ -11,12 +11,14 @@ import { Loader2 } from 'lucide-react';
 import { isBusinessOwner } from '@/utils/jobsUtils';
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, BarChart2, Filter } from 'lucide-react';
+import JobCardReports from './JobCardReports';
 
 const JobCardsPage: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isBusinessAccount, setIsBusinessAccount] = useState(false);
   const [isCheckingBusinessStatus, setIsCheckingBusinessStatus] = useState(true);
+  const [activeTab, setActiveTab] = useState("job-cards");
   
   const { 
     isStaff, 
@@ -103,10 +105,16 @@ const JobCardsPage: React.FC = () => {
           />
         )}
         
-        <Tabs defaultValue="job-cards">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs defaultValue="job-cards" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="job-cards">Job Cards</TabsTrigger>
             <TabsTrigger value="work-history">Work History</TabsTrigger>
+            <TabsTrigger value="reports">
+              <span className="flex items-center">
+                <BarChart2 className="h-4 w-4 mr-2" />
+                Reports
+              </span>
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="job-cards" className="mt-6">
@@ -115,6 +123,7 @@ const JobCardsPage: React.FC = () => {
                 staffRelationId={staffRelationId}
                 onCreateJobCard={() => setIsCreateOpen(true)}
                 canCreateCard={!!activeWorkSession || isBusinessAccount}
+                isBusinessAccount={isBusinessAccount}
               />
             )}
           </TabsContent>
@@ -124,6 +133,15 @@ const JobCardsPage: React.FC = () => {
               <WorkHistory
                 staffRelationId={staffRelationId}
                 activeWorkSession={activeWorkSession}
+              />
+            )}
+          </TabsContent>
+          
+          <TabsContent value="reports" className="mt-6">
+            {staffRelationId && (
+              <JobCardReports
+                staffRelationId={staffRelationId}
+                isBusinessAccount={isBusinessAccount}
               />
             )}
           </TabsContent>

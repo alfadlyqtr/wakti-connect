@@ -1,23 +1,48 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useJobCards } from '@/hooks/useJobCards';
-import { Loader2, PlusCircle } from 'lucide-react';
+import { Loader2, PlusCircle, Filter, ArrowUpDown } from 'lucide-react';
 import ActiveJobCard from './ActiveJobCard';
 import CompletedJobsSection from './CompletedJobsSection';
 import EmptyJobCards from './EmptyJobCards';
+import { Card, CardContent } from '@/components/ui/card';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 
 interface JobCardsListProps {
   staffRelationId: string;
   onCreateJobCard: () => void;
   canCreateCard: boolean;
+  isBusinessAccount?: boolean;
 }
+
+type SortOption = 'newest' | 'oldest' | 'highest-amount' | 'lowest-amount';
+type FilterPeriod = 'all' | 'today' | 'thisWeek' | 'thisMonth';
+type PaymentFilter = 'all' | 'cash' | 'pos' | 'none';
 
 const JobCardsList: React.FC<JobCardsListProps> = ({ 
   staffRelationId, 
   onCreateJobCard,
-  canCreateCard
+  canCreateCard,
+  isBusinessAccount = false
 }) => {
+  // Filtering and sorting state
+  const [sortOption, setSortOption] = useState<SortOption>('newest');
+  const [filterPeriod, setFilterPeriod] = useState<FilterPeriod>('all');
+  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all');
+  
   const { 
     activeJobCards, 
     completedJobCards, 
@@ -51,7 +76,7 @@ const JobCardsList: React.FC<JobCardsListProps> = ({
   
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <Button 
           onClick={onCreateJobCard}
           disabled={!canCreateCard}
@@ -59,6 +84,61 @@ const JobCardsList: React.FC<JobCardsListProps> = ({
           <PlusCircle className="h-4 w-4 mr-2" />
           Create Job Card
         </Button>
+        
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Time period filter */}
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={filterPeriod} onValueChange={(value) => setFilterPeriod(value as FilterPeriod)}>
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="Time period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All time</SelectItem>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="thisWeek">This week</SelectItem>
+                <SelectItem value="thisMonth">This month</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Payment method filter */}
+          <Select value={paymentFilter} onValueChange={(value) => setPaymentFilter(value as PaymentFilter)}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Payment type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All payments</SelectItem>
+              <SelectItem value="cash">Cash only</SelectItem>
+              <SelectItem value="pos">POS only</SelectItem>
+              <SelectItem value="none">No payment</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          {/* Sorting options */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <ArrowUpDown className="h-4 w-4 mr-2" />
+                Sort
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setSortOption('newest')}>
+                Newest first
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortOption('oldest')}>
+                Oldest first
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortOption('highest-amount')}>
+                Highest amount
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSortOption('lowest-amount')}>
+                Lowest amount
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
       
       {activeJobCards.length > 0 && (
@@ -76,7 +156,13 @@ const JobCardsList: React.FC<JobCardsListProps> = ({
       )}
       
       {completedJobCards.length > 0 && (
-        <CompletedJobsSection completedJobs={completedJobCards} />
+        <CompletedJobsSection 
+          completedJobs={completedJobCards} 
+          filterPeriod={filterPeriod}
+          paymentFilter={paymentFilter}
+          sortOption={sortOption}
+          isBusinessView={isBusinessAccount}
+        />
       )}
     </div>
   );
