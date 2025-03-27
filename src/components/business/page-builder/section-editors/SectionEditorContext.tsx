@@ -33,12 +33,13 @@ export const SectionEditorProvider: React.FC<{
   }, [section]);
   
   // Debounced auto-save function
-  const debouncedSave = useDebouncedCallback((content: any) => {
-    updateSection.mutate({
+  const debouncedSave = useDebouncedCallback(async (content: any) => {
+    await updateSection.mutate({
       sectionId: section.id,
       content
     });
     setIsDirty(false);
+    return true;
   }, 2000);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

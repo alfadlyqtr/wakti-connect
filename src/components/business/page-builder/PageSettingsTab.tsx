@@ -50,11 +50,12 @@ const PageSettingsTab: React.FC<PageSettingsTabProps> = ({
   const { socialLinks, addSocialLink, updateSocialLink, deleteSocialLink } = useBusinessSocialLinks(businessId);
   
   // Set up debounced auto-save
-  const debouncedAutoSave = useDebouncedCallback((data) => {
+  const debouncedAutoSave = useDebouncedCallback(async (data) => {
     if (autoSavePageSettings) {
       autoSavePageSettings(data);
       setIsDirty(false);
     }
+    return true;
   }, 2000);
   
   // Custom input change handler that triggers auto-save
