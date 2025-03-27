@@ -5,3 +5,4 @@ export * from "./AIAssistantLoader";
 export * from "./SuggestionPrompts";
 export * from "./MessageInputForm";
 export * from "./EmptyStateView";
+export * from "./PoweredByTMW";

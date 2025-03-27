@@ -13,7 +13,6 @@ import { toast } from "@/components/ui/use-toast";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { AISettingsProvider } from "@/components/settings/ai";
 import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
-import { TMWAIChatbotPromotion } from "@/components/ai/assistant/TMWAIChatbotPromotion";
 
 const DashboardAIAssistant = () => {
   const { user } = useAuth();
@@ -143,24 +142,20 @@ const DashboardAIAssistant = () => {
               {!canAccess ? (
                 <AIAssistantUpgradeCard />
               ) : (
-                <>
-                  <AIAssistantChatCard
-                    messages={messages}
-                    inputMessage={inputMessage}
-                    setInputMessage={setInputMessage}
-                    handleSendMessage={handleSendMessage}
-                    isLoading={isLoading}
-                    canAccess={canAccess}
-                    clearMessages={clearMessages}
-                  />
-                  <TMWAIChatbotPromotion />
-                </>
+                <AIAssistantChatCard
+                  messages={messages}
+                  inputMessage={inputMessage}
+                  setInputMessage={setInputMessage}
+                  handleSendMessage={handleSendMessage}
+                  isLoading={isLoading}
+                  canAccess={canAccess}
+                  clearMessages={clearMessages}
+                />
               )}
             </TabsContent>
 
             <TabsContent value="history" className="mt-4 md:mt-6">
               <AIAssistantHistoryCard canAccess={canAccess} />
-              <TMWAIChatbotPromotion />
             </TabsContent>
           </Tabs>
         </div>

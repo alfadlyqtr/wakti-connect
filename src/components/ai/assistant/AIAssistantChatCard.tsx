@@ -8,6 +8,7 @@ import { AIAssistantChat } from './AIAssistantChat';
 import { useAISettings } from '@/components/settings/ai/context/AISettingsContext';
 import { MessageInputForm } from './MessageInputForm';
 import { EmptyStateView } from './EmptyStateView';
+import { PoweredByTMW } from './PoweredByTMW';
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -67,21 +68,23 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
           )}
         </div>
       </CardHeader>
-      <CardContent className="p-0 flex-1 flex flex-col">
-        {messages.length === 0 && showSuggestions ? (
-          <EmptyStateView onPromptClick={handlePromptClick} />
-        ) : (
-          <AIAssistantChat 
-            messages={messages} 
-            isLoading={isLoading}
-            inputMessage={inputMessage}
-            setInputMessage={setInputMessage}
-            handleSendMessage={handleSendMessage}
-            canAccess={canAccess}
-          />
-        )}
-        
-        <div ref={messagesEndRef} />
+      <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto p-4">
+          {messages.length === 0 && showSuggestions ? (
+            <EmptyStateView onPromptClick={handlePromptClick} />
+          ) : (
+            <AIAssistantChat 
+              messages={messages} 
+              isLoading={isLoading}
+              inputMessage={inputMessage}
+              setInputMessage={setInputMessage}
+              handleSendMessage={handleSendMessage}
+              canAccess={canAccess}
+            />
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
         
         <MessageInputForm
           inputMessage={inputMessage}
@@ -90,6 +93,8 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
           isLoading={isLoading}
           canAccess={canAccess}
         />
+        
+        <PoweredByTMW />
       </CardContent>
     </Card>
   );

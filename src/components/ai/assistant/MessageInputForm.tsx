@@ -2,9 +2,8 @@
 import React, { useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Mic, MicOff, SendHorizontal } from 'lucide-react';
+import { Loader2, SendHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 
 interface MessageInputFormProps {
   inputMessage: string;
@@ -22,31 +21,6 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   canAccess
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  
-  // Voice interaction hook
-  const {
-    isListening,
-    supportsVoice,
-    lastTranscript,
-    isProcessing,
-    startListening,
-    stopListening,
-    clearTranscript
-  } = useVoiceInteraction();
-
-  // Use the transcript when it changes
-  useEffect(() => {
-    if (lastTranscript) {
-      setInputMessage(lastTranscript);
-      clearTranscript();
-      
-      // Auto-submit if we have a clear transcript
-      if (lastTranscript.length > 5 && canAccess && !isLoading) {
-        const submitEvent = new Event('submit', { cancelable: true, bubbles: true }) as unknown as React.FormEvent;
-        handleSendMessage(submitEvent);
-      }
-    }
-  }, [lastTranscript, setInputMessage, clearTranscript, handleSendMessage, canAccess, isLoading]);
 
   useEffect(() => {
     // Focus input when the component mounts
@@ -55,53 +29,18 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
     }
   }, []);
 
-  // Handle voice input toggle
-  const toggleVoiceInput = () => {
-    if (isListening) {
-      stopListening();
-    } else {
-      startListening();
-    }
-  };
-
   return (
     <form onSubmit={handleSendMessage} className="p-4 pt-2 mt-auto">
-      <div className="relative flex items-center gap-2">
-        <Button
-          type="button"
-          size="icon"
-          variant={isListening ? "default" : "ghost"}
-          onClick={toggleVoiceInput}
-          className={`size-10 flex-shrink-0 ${isListening ? 'bg-wakti-blue text-white' : ''}`}
-          disabled={isLoading || !canAccess || isProcessing}
-          aria-label={isListening ? "Stop listening" : "Start voice input"}
-          title={isListening ? "Stop listening" : "Start voice input"}
-        >
-          {isListening ? (
-            <MicOff className="h-5 w-5" />
-          ) : isProcessing ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <Mic className="h-5 w-5" />
-          )}
-        </Button>
-        
+      <div className="relative flex items-center">
         <div className="relative flex-1">
           <Input 
             placeholder={
-              isListening ? "Listening..." : 
-              isProcessing ? "Processing..." :
-              isLoading ? "WAKTI AI is thinking..." : 
-              "Type your message..."
+              isLoading ? "WAKTI AI is thinking..." : "Type your message..."
             }
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            disabled={isLoading || !canAccess || isListening || isProcessing}
-            className={cn(
-              "pr-10",
-              isListening ? "bg-blue-50" : "",
-              isProcessing ? "bg-yellow-50" : ""
-            )}
+            disabled={isLoading || !canAccess}
+            className="pr-10"
             ref={inputRef}
           />
           {isLoading ? (
@@ -110,7 +49,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
             <Button 
               size="icon" 
               type="submit" 
-              disabled={isLoading || !inputMessage.trim() || !canAccess || isListening || isProcessing}
+              disabled={isLoading || !inputMessage.trim() || !canAccess}
               className="absolute right-0 top-0 bottom-0 rounded-l-none"
             >
               <SendHorizontal className="h-4 w-4" />
