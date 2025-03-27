@@ -17,6 +17,8 @@ export interface Task {
   subtasks?: SubTask[];
   snooze_count?: number;
   snoozed_until?: string | null;
+  archived_at?: string | null;
+  archive_reason?: ArchiveReason | null;
 }
 
 export interface SubTask {
@@ -28,9 +30,10 @@ export interface SubTask {
   due_time?: string | null;
 }
 
-export type TaskStatus = "pending" | "in-progress" | "completed" | "late" | "snoozed";
+export type TaskStatus = "in-progress" | "completed" | "late" | "snoozed" | "archived";
 export type TaskPriority = "urgent" | "high" | "medium" | "normal";
-export type TaskTab = "my-tasks";
+export type TaskTab = "my-tasks" | "archived";
+export type ArchiveReason = "deleted" | "canceled";
 
 export interface TaskFormData {
   title: string;

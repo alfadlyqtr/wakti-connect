@@ -2,7 +2,8 @@
 import React from "react";
 import { Task } from "@/types/task.types";
 import TaskGrid from "./TaskGrid";
-import { EmptyTasks } from "./EmptyTasks";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
 
 interface TasksContainerProps {
   tasks: Task[];
@@ -10,6 +11,10 @@ interface TasksContainerProps {
   refetch: () => void;
   isPaidAccount: boolean;
   onCreateTask: () => void;
+  isArchiveView?: boolean;
+  onEdit: (task: Task) => void;
+  onArchive: (taskId: string, reason: "deleted" | "canceled") => Promise<void>;
+  onRestore?: (taskId: string) => Promise<void>;
 }
 
 const TasksContainer: React.FC<TasksContainerProps> = ({
@@ -17,22 +22,43 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   userRole,
   refetch,
   isPaidAccount,
-  onCreateTask
+  onCreateTask,
+  isArchiveView = false,
+  onEdit,
+  onArchive,
+  onRestore
 }) => {
-  if (!tasks.length) {
+  if (tasks.length === 0) {
     return (
-      <EmptyTasks 
-        isPaidAccount={isPaidAccount}
-        onCreateTask={onCreateTask}
-      />
+      <div className="text-center py-12 border rounded-lg">
+        <h3 className="text-lg font-medium mb-2">
+          {isArchiveView ? "No archived tasks" : "No tasks found"}
+        </h3>
+        <p className="text-muted-foreground mb-6">
+          {isArchiveView 
+            ? "Tasks that you delete or cancel will appear here" 
+            : "Get started by creating your first task"}
+        </p>
+        
+        {!isArchiveView && (
+          <Button onClick={onCreateTask}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Create Task
+          </Button>
+        )}
+      </div>
     );
   }
 
   return (
-    <TaskGrid
-      tasks={tasks}
-      userRole={userRole}
+    <TaskGrid 
+      tasks={tasks} 
+      userRole={userRole} 
       refetch={refetch}
+      isArchiveView={isArchiveView}
+      onEdit={onEdit}
+      onArchive={onArchive}
+      onRestore={onRestore}
     />
   );
 };

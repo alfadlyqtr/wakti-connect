@@ -5,64 +5,88 @@ import TaskCard from "@/components/ui/TaskCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { TaskCardCompletionAnimation } from "@/components/ui/task-card/TaskCardCompletionAnimation";
 
 interface TaskGridProps {
   tasks: Task[];
   userRole: "free" | "individual" | "business" | "staff" | null;
   refetch: () => void;
+  isArchiveView?: boolean;
+  onEdit: (task: Task) => void;
+  onArchive: (taskId: string, reason: "deleted" | "canceled") => Promise<void>;
+  onRestore?: (taskId: string) => Promise<void>;
 }
 
-const TaskGrid: React.FC<TaskGridProps> = ({ tasks, userRole, refetch }) => {
+const TaskGrid: React.FC<TaskGridProps> = ({ 
+  tasks, 
+  userRole, 
+  refetch,
+  isArchiveView = false,
+  onEdit,
+  onArchive,
+  onRestore
+}) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
+  const [deleteReason, setDeleteReason] = useState<"deleted" | "canceled">("deleted");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
+  
   // Handler for editing a task
   const handleEditTask = (taskId: string) => {
-    // In a real implementation, this would open a modal or navigate to edit page
-    console.log("Editing task:", taskId);
-    
-    // For now, just show a toast that this functionality is not yet implemented
-    toast({
-      title: "Edit Task",
-      description: `Opening edit modal for task ${taskId}`,
-    });
+    const taskToEdit = tasks.find(task => task.id === taskId);
+    if (taskToEdit) {
+      onEdit(taskToEdit);
+    }
   };
 
-  // Handler for deleting a task
+  // Handler for deleting/canceling a task
   const handleDeleteTask = (taskId: string) => {
     setTaskToDelete(taskId);
+    setDeleteReason("deleted");
+    setShowDeleteDialog(true);
+  };
+  
+  // Handler for canceling a task
+  const handleCancelTask = (taskId: string) => {
+    setTaskToDelete(taskId);
+    setDeleteReason("canceled");
     setShowDeleteDialog(true);
   };
 
-  // Confirming task deletion
+  // Confirming task deletion/cancellation
   const confirmDeleteTask = async () => {
     if (!taskToDelete) return;
     
     try {
       setIsDeleting(true);
       
-      const { error } = await supabase
-        .from('tasks')
-        .delete()
-        .eq('id', taskToDelete);
+      if (isArchiveView) {
+        // Permanently delete from archive
+        const { error } = await supabase
+          .from('tasks')
+          .delete()
+          .eq('id', taskToDelete);
+          
+        if (error) throw error;
         
-      if (error) throw error;
-      
-      toast({
-        title: "Task deleted",
-        description: "The task has been successfully deleted",
-        variant: "success",
-      });
+        toast({
+          title: "Task permanently deleted",
+          description: "The task has been permanently removed",
+          variant: "success",
+        });
+      } else {
+        // Move to archive
+        await onArchive(taskToDelete, deleteReason);
+      }
       
       // Close dialog and refresh tasks
       setShowDeleteDialog(false);
       refetch();
     } catch (error) {
-      console.error("Error deleting task:", error);
+      console.error("Error deleting/archiving task:", error);
       toast({
-        title: "Delete failed",
-        description: error instanceof Error ? error.message : "Failed to delete task",
+        title: "Operation failed",
+        description: error instanceof Error ? error.message : "Failed to process task",
         variant: "destructive",
       });
     } finally {
@@ -91,9 +115,15 @@ const TaskGrid: React.FC<TaskGridProps> = ({ tasks, userRole, refetch }) => {
         
       if (error) throw error;
       
+      const statusMessages = {
+        'completed': 'Task completed! Great job!',
+        'in-progress': 'Task marked as in progress',
+        'snoozed': 'Task snoozed',
+      };
+      
       toast({
         title: "Status updated",
-        description: `Task marked as ${newStatus}`,
+        description: statusMessages[newStatus as keyof typeof statusMessages] || `Task marked as ${newStatus}`,
         variant: "success",
       });
       
@@ -188,6 +218,13 @@ const TaskGrid: React.FC<TaskGridProps> = ({ tasks, userRole, refetch }) => {
     }
   };
   
+  // Handle restoring a task from archive
+  const handleRestoreTask = async (taskId: string) => {
+    if (onRestore) {
+      await onRestore(taskId);
+    }
+  };
+  
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -202,6 +239,7 @@ const TaskGrid: React.FC<TaskGridProps> = ({ tasks, userRole, refetch }) => {
             status={task.status}
             priority={task.priority}
             userRole={userRole}
+            isArchived={isArchiveView}
             subtasks={task.subtasks || []}
             completedDate={task.completed_at ? new Date(task.completed_at) : null}
             isRecurring={task.is_recurring}
@@ -211,17 +249,25 @@ const TaskGrid: React.FC<TaskGridProps> = ({ tasks, userRole, refetch }) => {
             refetch={refetch}
             onEdit={handleEditTask}
             onDelete={handleDeleteTask}
+            onCancel={handleCancelTask}
             onStatusChange={handleStatusChange}
             onSnooze={handleSnoozeTask}
+            onRestore={handleRestoreTask}
             onSubtaskToggle={handleSubtaskToggle}
           />
         ))}
       </div>
       
-      {/* Delete Confirmation Dialog */}
+      {/* Delete/Cancel Confirmation Dialog */}
       <ConfirmationDialog
-        title="Delete Task"
-        description="Are you sure you want to delete this task? This action cannot be undone."
+        title={isArchiveView ? "Permanently Delete Task" : (deleteReason === "deleted" ? "Delete Task" : "Cancel Task")}
+        description={isArchiveView 
+          ? "Are you sure you want to permanently delete this task? This action cannot be undone."
+          : (deleteReason === "deleted" 
+              ? "Are you sure you want to delete this task? It will be moved to the archive."
+              : "Are you sure you want to cancel this task? It will be moved to the archive."
+            )
+        }
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
         onConfirm={confirmDeleteTask}

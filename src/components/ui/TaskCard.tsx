@@ -18,6 +18,7 @@ interface TaskCardProps {
   status: TaskStatus;
   priority: TaskPriority;
   userRole: "free" | "individual" | "business" | "staff" | null;
+  isArchived?: boolean;
   subtasks?: SubTask[];
   completedDate?: Date | null;
   isRecurring?: boolean;
@@ -27,8 +28,10 @@ interface TaskCardProps {
   refetch?: () => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  onCancel?: (id: string) => void;
   onStatusChange: (id: string, status: string) => void;
   onSnooze?: (id: string, days: number) => void;
+  onRestore?: (id: string) => void;
   onSubtaskToggle?: (taskId: string, subtaskIndex: number, isCompleted: boolean) => void;
 }
 
@@ -41,6 +44,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   status,
   priority,
   userRole,
+  isArchived = false,
   subtasks = [],
   completedDate,
   isRecurring,
@@ -50,32 +54,63 @@ const TaskCard: React.FC<TaskCardProps> = ({
   refetch,
   onEdit,
   onDelete,
+  onCancel,
   onStatusChange,
   onSnooze,
+  onRestore,
   onSubtaskToggle
 }) => {
+  const isPaidAccount = userRole === "individual" || userRole === "business";
+  
+  // Show or hide certain features based on the task status
+  const isCompleted = status === "completed";
+  const isSnoozed = status === "snoozed";
   const isOverdue = status !== 'completed' && 
                     status !== 'snoozed' && 
+                    status !== 'archived' &&
                     isPast(dueDate) && 
                     dueDate.getTime() < new Date().getTime();
 
   return (
-    <Card className={`border-l-4 ${isOverdue ? 'border-l-red-500' : `border-l-${priority === 'urgent' ? 'red-600' : priority === 'high' ? 'red-500' : priority === 'medium' ? 'amber-500' : 'green-500'}`}`}>
-      <TaskCardHeader
-        title={title}
-        priority={priority}
-        isRecurring={isRecurring}
-        isCompleted={status === 'completed'}
-      />
+    <Card className={`overflow-hidden border-l-4 ${
+      status === 'archived' ? 'border-l-gray-400' :
+      isOverdue ? 'border-l-red-500' : 
+      priority === 'urgent' ? 'border-l-red-500' : 
+      priority === 'high' ? 'border-l-orange-500' : 
+      priority === 'medium' ? 'border-l-amber-500' : 
+      'border-l-green-500'
+    } ${isCompleted ? 'bg-green-50/30 dark:bg-green-950/10' : ''}`}>
+      <div className="p-4 pb-2 flex items-start justify-between">
+        <TaskCardHeader 
+          title={title}
+          priority={priority}
+          isRecurring={isRecurring}
+          isCompleted={isCompleted}
+        />
+        
+        <TaskCardMenu 
+          id={id}
+          status={status}
+          isArchived={isArchived}
+          onDelete={onDelete}
+          onEdit={onEdit}
+          onCancel={onCancel}
+          onSnooze={onSnooze}
+          onRestore={onRestore}
+          onStatusChange={onStatusChange}
+          userRole={userRole}
+          isPaidAccount={isPaidAccount}
+        />
+      </div>
       
-      <CardContent className="pb-2">
+      <CardContent className="p-4 pt-2">
         {description && (
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+          <p className={`text-sm mb-3 ${isCompleted ? 'text-muted-foreground line-through' : ''}`}>
             {description}
           </p>
         )}
         
-        <TaskDueDate
+        <TaskDueDate 
           dueDate={dueDate}
           dueTime={dueTime}
           status={status}
@@ -83,21 +118,26 @@ const TaskCard: React.FC<TaskCardProps> = ({
           snoozeCount={snoozeCount}
         />
         
-        <TaskSubtasks
-          taskId={id}
-          subtasks={subtasks}
-          onSubtaskToggle={onSubtaskToggle}
-          refetch={refetch}
-        />
+        {subtasks && subtasks.length > 0 && (
+          <TaskSubtasks 
+            taskId={id}
+            subtasks={subtasks}
+            onSubtaskToggle={onSubtaskToggle}
+            refetch={refetch}
+          />
+        )}
       </CardContent>
       
-      <TaskCardFooter
-        id={id}
-        status={status}
-        completedDate={completedDate}
-        onStatusChange={onStatusChange}
-        onEdit={onEdit}
-      />
+      {!isArchived && (
+        <TaskCardFooter 
+          id={id}
+          status={status}
+          completedDate={completedDate}
+          dueDate={dueDate}
+          onStatusChange={onStatusChange}
+          onEdit={onEdit}
+        />
+      )}
     </Card>
   );
 };

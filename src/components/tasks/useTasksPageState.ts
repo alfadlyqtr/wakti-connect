@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Task, TaskStatus, TaskPriority } from '@/types/task.types';
+import { Task, TaskStatus, TaskPriority, TaskTab } from '@/types/task.types';
 import { toast } from "@/components/ui/use-toast";
 
 interface UseTasksPageStateReturn {
@@ -16,10 +16,19 @@ interface UseTasksPageStateReturn {
   userRole: "free" | "individual" | "business" | "staff" | null;
   createTaskDialogOpen: boolean;
   setCreateTaskDialogOpen: (open: boolean) => void;
+  editTaskDialogOpen: boolean;
+  setEditTaskDialogOpen: (open: boolean) => void;
+  currentEditTask: Task | null;
+  setCurrentEditTask: (task: Task | null) => void;
   handleCreateTask: (taskData: any) => Promise<void>;
+  handleUpdateTask: (taskId: string, taskData: any) => Promise<void>;
+  handleArchiveTask: (taskId: string, reason: "deleted" | "canceled") => Promise<void>;
+  handleRestoreTask: (taskId: string) => Promise<void>;
   refetchTasks: () => Promise<void>;
   filteredTasks: Task[];
   isPaidAccount: boolean;
+  activeTab: TaskTab;
+  setActiveTab: (tab: TaskTab) => void;
 }
 
 export const useTasksPageState = (): UseTasksPageStateReturn => {
@@ -30,6 +39,9 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<"free" | "individual" | "business" | "staff" | null>(null);
   const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
+  const [editTaskDialogOpen, setEditTaskDialogOpen] = useState(false);
+  const [currentEditTask, setCurrentEditTask] = useState<Task | null>(null);
+  const [activeTab, setActiveTab] = useState<TaskTab>("my-tasks");
 
   // Determine if user has a paid account
   const isPaidAccount = userRole === "individual" || userRole === "business";
@@ -74,11 +86,20 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         return;
       }
       
-      const { data, error } = await supabase
+      // Query based on the active tab
+      let query = supabase
         .from('tasks')
         .select('*, subtasks:todo_items(*)')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
+        .eq('user_id', session.user.id);
+        
+      // Filter by archived status based on active tab
+      if (activeTab === 'archived') {
+        query = query.not('archived_at', 'is', null);
+      } else {
+        query = query.is('archived_at', null);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
         
       if (error) throw error;
       
@@ -100,7 +121,9 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         parent_recurring_id: task.parent_recurring_id,
         snooze_count: task.snooze_count,
         snoozed_until: task.snoozed_until,
-        subtasks: task.subtasks || []
+        subtasks: task.subtasks || [],
+        archived_at: task.archived_at,
+        archive_reason: task.archive_reason
       }));
       
       setTasks(typedTasks);
@@ -114,12 +137,12 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [activeTab]);
 
   // Initial fetch
   useEffect(() => {
     fetchTasks();
-  }, [fetchTasks]);
+  }, [fetchTasks, activeTab]);
 
   // Handle creating a new task
   const handleCreateTask = async (taskData: any) => {
@@ -161,11 +184,11 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         throw new Error("You must be logged in to create tasks");
       }
       
-      // Prepare the task data
+      // Set the default status to "in-progress"
       const taskToCreate = {
         title: taskData.title,
         description: taskData.description || null,
-        status: taskData.status || "pending",
+        status: "in-progress", // Always start as in-progress
         priority: taskData.priority || "normal",
         due_date: taskData.due_date,
         due_time: taskData.due_time,
@@ -218,6 +241,125 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     }
   };
 
+  // Handle updating a task
+  const handleUpdateTask = async (taskId: string, taskData: any) => {
+    try {
+      const updates = {
+        title: taskData.title,
+        description: taskData.description || null,
+        status: taskData.status,
+        priority: taskData.priority,
+        due_date: taskData.due_date,
+        due_time: taskData.due_time,
+        updated_at: new Date().toISOString()
+      };
+      
+      if (taskData.status === 'completed' && !taskData.completed_at) {
+        updates.completed_at = new Date().toISOString();
+      }
+      
+      console.log("Updating task with data:", updates);
+      
+      const { error } = await supabase
+        .from('tasks')
+        .update(updates)
+        .eq('id', taskId);
+        
+      if (error) throw error;
+      
+      // Handle subtasks updates if needed (implementation would go here)
+      
+      toast({
+        title: "Task updated",
+        description: "Your task has been updated successfully",
+        variant: "success"
+      });
+      
+      await fetchTasks(); // Refresh tasks list
+    } catch (error) {
+      console.error("Error updating task:", error);
+      toast({
+        title: "Failed to update task",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Archive a task (soft delete)
+  const handleArchiveTask = async (taskId: string, reason: "deleted" | "canceled") => {
+    try {
+      const updates = {
+        status: "archived" as TaskStatus,
+        archived_at: new Date().toISOString(),
+        archive_reason: reason,
+        updated_at: new Date().toISOString()
+      };
+      
+      const { error } = await supabase
+        .from('tasks')
+        .update(updates)
+        .eq('id', taskId);
+        
+      if (error) throw error;
+      
+      toast({
+        title: reason === "deleted" ? "Task deleted" : "Task canceled",
+        description: `Task moved to archive. It will be permanently removed in 7 days.`,
+        variant: "success"
+      });
+      
+      await fetchTasks(); // Refresh tasks list
+    } catch (error) {
+      console.error("Error archiving task:", error);
+      toast({
+        title: "Failed to archive task",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Restore a task from archive
+  const handleRestoreTask = async (taskId: string) => {
+    try {
+      const { data: task } = await supabase
+        .from('tasks')
+        .select('status')
+        .eq('id', taskId)
+        .single();
+        
+      const updates = {
+        status: "in-progress" as TaskStatus, // Default to in-progress when restoring
+        archived_at: null,
+        archive_reason: null,
+        updated_at: new Date().toISOString()
+      };
+      
+      const { error } = await supabase
+        .from('tasks')
+        .update(updates)
+        .eq('id', taskId);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Task restored",
+        description: "Task has been restored from the archive",
+        variant: "success"
+      });
+      
+      await fetchTasks(); // Refresh tasks list
+    } catch (error) {
+      console.error("Error restoring task:", error);
+      toast({
+        title: "Failed to restore task",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Filter tasks based on search and filters
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = searchQuery ? 
@@ -243,9 +385,18 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     userRole,
     createTaskDialogOpen,
     setCreateTaskDialogOpen,
+    editTaskDialogOpen,
+    setEditTaskDialogOpen,
+    currentEditTask,
+    setCurrentEditTask,
     handleCreateTask,
+    handleUpdateTask,
+    handleArchiveTask,
+    handleRestoreTask,
     refetchTasks: fetchTasks,
     filteredTasks,
-    isPaidAccount
+    isPaidAccount,
+    activeTab,
+    setActiveTab
   };
 };

@@ -1,6 +1,5 @@
 
 import React from "react";
-import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -10,18 +9,20 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Search, Plus } from "lucide-react";
 import { TaskStatusFilter, TaskPriorityFilter } from "./types";
 
 interface TaskControlsProps {
   searchQuery: string;
-  onSearchChange: (value: string) => void;
+  onSearchChange: (query: string) => void;
   filterStatus: TaskStatusFilter;
-  onStatusChange: (value: TaskStatusFilter) => void;
+  onStatusChange: (status: TaskStatusFilter) => void;
   filterPriority: TaskPriorityFilter;
-  onPriorityChange: (value: TaskPriorityFilter) => void;
+  onPriorityChange: (priority: TaskPriorityFilter) => void;
   onCreateTask: () => void;
   isPaidAccount: boolean;
   userRole: "free" | "individual" | "business" | "staff";
+  showCreateButton?: boolean;
 }
 
 const TaskControls: React.FC<TaskControlsProps> = ({
@@ -33,66 +34,63 @@ const TaskControls: React.FC<TaskControlsProps> = ({
   onPriorityChange,
   onCreateTask,
   isPaidAccount,
-  userRole
+  userRole,
+  showCreateButton = true
 }) => {
-  // Staff members cannot create tasks
-  const canCreateTasks = userRole !== "staff";
-
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-4 justify-between">
-        <div className="flex-1 relative max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+    <div className="flex flex-col gap-4 sm:flex-row justify-between">
+      <div className="flex flex-1 items-center space-x-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground/70" />
           <Input
             type="search"
             placeholder="Search tasks..."
-            className="pl-8"
+            className="pl-8 w-full sm:max-w-[300px]"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
-        
-        <div className="flex items-center gap-2">
-          <Select
-            value={filterStatus}
-            onValueChange={(value: string) => onStatusChange(value as TaskStatusFilter)}
-          >
-            <SelectTrigger className="w-[130px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="in-progress">In Progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="late">Late</SelectItem>
+
+        <Select
+          value={filterStatus}
+          onValueChange={(value) => onStatusChange(value as TaskStatusFilter)}
+        >
+          <SelectTrigger className="w-[130px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="in-progress">In Progress</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            {isPaidAccount && (
               <SelectItem value="snoozed">Snoozed</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Select
-            value={filterPriority}
-            onValueChange={(value: string) => onPriorityChange(value as TaskPriorityFilter)}
-          >
-            <SelectTrigger className="w-[130px]">
-              <SelectValue placeholder="Priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Priorities</SelectItem>
-              <SelectItem value="urgent">Urgent</SelectItem>
-              <SelectItem value="high">High</SelectItem>
-              <SelectItem value="medium">Medium</SelectItem>
-              <SelectItem value="normal">Normal</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          {canCreateTasks && (
-            <Button onClick={onCreateTask}>
-              Add Task
-            </Button>
-          )}
-        </div>
+            )}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filterPriority}
+          onValueChange={(value) => onPriorityChange(value as TaskPriorityFilter)}
+        >
+          <SelectTrigger className="w-[130px]">
+            <SelectValue placeholder="Priority" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Priority</SelectItem>
+            <SelectItem value="urgent">Urgent</SelectItem>
+            <SelectItem value="high">High</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="normal">Normal</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
+
+      {showCreateButton && (
+        <Button onClick={onCreateTask} className="shrink-0">
+          <Plus className="mr-2 h-4 w-4" />
+          Create Task
+        </Button>
+      )}
     </div>
   );
 };
