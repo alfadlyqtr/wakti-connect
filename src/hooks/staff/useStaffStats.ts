@@ -11,9 +11,9 @@ interface StaffStats {
 }
 
 export const useStaffStats = (staffRelationId: string | null, userId: string | null) => {
-  return useQuery({
+  return useQuery<StaffStats, Error>({
     queryKey: ['staffStats', staffRelationId],
-    queryFn: async (): Promise<StaffStats> => {
+    queryFn: async () => {
       if (!staffRelationId || !userId) return {
         tasksCount: 0,
         bookingsCount: 0,
