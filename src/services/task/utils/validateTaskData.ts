@@ -18,7 +18,7 @@ export function sanitizeTaskData(taskData: TaskFormData): Partial<TaskFormData> 
     snoozed_until: taskData.snoozed_until || null,
     is_recurring: taskData.is_recurring || false,
     archived_at: taskData.archived_at || null,
-    archive_reason: taskData.archive_reason || null
+    archive_reason: validateArchiveReason(taskData.archive_reason)
   };
 }
 
@@ -27,7 +27,14 @@ function validateTaskStatus(status?: TaskStatus): TaskStatus {
   return status;
 }
 
-export function validateArchiveReason(reason?: string): ArchiveReason | null {
+export function validateArchiveReason(reason?: string | ArchiveReason): ArchiveReason | null {
   if (!reason) return null;
-  return reason as ArchiveReason;
+  
+  // Verify that the reason is a valid ArchiveReason
+  const validReasons: ArchiveReason[] = ["deleted", "canceled"];
+  if (validReasons.includes(reason as ArchiveReason)) {
+    return reason as ArchiveReason;
+  }
+  
+  return null;
 }

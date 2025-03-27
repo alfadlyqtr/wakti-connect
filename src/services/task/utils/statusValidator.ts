@@ -1,5 +1,5 @@
 
-import { TaskStatus, TaskPriority } from "@/types/task.types";
+import { TaskStatus, TaskPriority, ArchiveReason } from "@/types/task.types";
 
 export function validateTaskStatus(status: string | null | undefined): TaskStatus {
   const validStatuses: TaskStatus[] = ["pending", "in-progress", "completed", "late", "snoozed", "archived"];
@@ -19,4 +19,15 @@ export function validateTaskPriority(priority: string | null | undefined): TaskP
   }
   
   return priority as TaskPriority;
+}
+
+export function validateArchiveReason(reason: string | null | undefined): ArchiveReason | null {
+  if (!reason) return null;
+  
+  const validReasons: ArchiveReason[] = ["deleted", "canceled"];
+  if (validReasons.includes(reason as ArchiveReason)) {
+    return reason as ArchiveReason;
+  }
+  
+  return null;
 }

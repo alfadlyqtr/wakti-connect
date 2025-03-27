@@ -46,4 +46,6 @@ export interface TaskFormData {
   snooze_count?: number;
   snoozed_until?: string | null;
   is_recurring?: boolean;
+  archived_at?: string | null;
+  archive_reason?: ArchiveReason | null;
 }
