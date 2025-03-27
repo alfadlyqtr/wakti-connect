@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -87,36 +86,14 @@ export const useVoiceInteraction = () => {
         // Create a blob from the audio chunks
         const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
         
-        // Convert Blob to base64
-        const base64Audio = await blobToBase64(audioBlob);
-        
-        // Call the Supabase edge function to convert speech to text
-        const { data, error } = await supabase.functions.invoke("ai-voice-to-text", {
-          body: { audio: base64Audio }
+        // Instead of sending to OpenAI for conversion, use a fallback browser-based solution
+        // For demonstration, we'll use a simple message
+        setLastTranscript("Voice input detected. Please type your question instead for now.");
+        toast({
+          title: "Voice Processing Limitation",
+          description: "Voice-to-text with DeepSeek is currently being implemented. Please type your message for now.",
+          variant: "default",
         });
-        
-        if (error) {
-          console.error("Voice-to-text error:", error);
-          toast({
-            title: "Voice Processing Failed",
-            description: "Could not convert your speech to text. Please try again.",
-            variant: "destructive",
-          });
-          setIsProcessing(false);
-          return;
-        }
-        
-        if (data.text) {
-          setLastTranscript(data.text);
-          console.log("Transcription:", data.text);
-        } else if (data.error) {
-          console.error("Voice-to-text API error:", data.error);
-          toast({
-            title: "Voice Processing Failed",
-            description: data.error || "Could not convert your speech to text",
-            variant: "destructive",
-          });
-        }
       } catch (error) {
         console.error("Error processing voice:", error);
         toast({
@@ -134,7 +111,7 @@ export const useVoiceInteraction = () => {
     }, 500);
   }, [recorder, audioChunks]);
 
-  // Convert blob to base64
+  // Convert blob to base64 (keeping this utility function)
   const blobToBase64 = (blob: Blob): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();

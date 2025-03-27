@@ -136,9 +136,9 @@ const DashboardAIAssistant = () => {
 
           <Alert className="bg-blue-50 border-blue-200">
             <AlertCircle className="h-4 w-4 text-blue-600" />
-            <AlertTitle className="text-blue-800">Voice Output Temporarily Disabled</AlertTitle>
+            <AlertTitle className="text-blue-800">Using DeepSeek AI Only</AlertTitle>
             <AlertDescription className="text-blue-700">
-              Voice output is temporarily disabled to optimize costs. You can still use voice input, and we'll provide text responses. Voice output will be restored in the future.
+              This AI assistant uses DeepSeek for text responses. Voice input feature is currently limited - your voice will be recorded but transcription is not fully implemented. Please type your messages for the best experience.
             </AlertDescription>
           </Alert>
 
