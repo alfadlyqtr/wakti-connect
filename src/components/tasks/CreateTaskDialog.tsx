@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,7 +42,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusCircle, Trash2, CalendarIcon, HelpCircle, UsersIcon, Info } from "lucide-react";
+import { PlusCircle, Trash2, CalendarIcon, HelpCircle, UsersIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
@@ -52,13 +53,12 @@ import {
 } from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { toast } from "@/components/ui/use-toast";
 
+// Define a simple interface for team tasks to avoid deep type instantiation
 interface TeamTaskBasic {
   id: string;
   title: string;
@@ -83,7 +83,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const [loading, setLoading] = useState(false);
   const [showSubtasks, setShowSubtasks] = useState(false);
   const [showRecurring, setShowRecurring] = useState(false);
-  const [showTeamTask, setShowTeamTask] = useState(false);
   const [freeAccountAlertOpen, setFreeAccountAlertOpen] = useState(false);
   const [isClaimTask, setIsClaimTask] = useState(false);
   const [selectedTaskToClaim, setSelectedTaskToClaim] = useState<string | null>(null);
@@ -106,7 +105,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
             .from('tasks')
             .select('id, title, description, due_date, priority')
             .eq('user_id', businessId)
-            .eq('is_team_task', true)
             .is('assignee_id', null)
             .order('created_at', { ascending: false });
             
@@ -138,7 +136,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         interval: 1,
       },
       delegated_email: "",
-      is_team_task: false,
     },
   });
 
@@ -189,7 +186,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         due_time: values.dueTime || null,
         is_recurring: values.isRecurring,
         delegated_email: values.delegated_email || null,
-        is_team_task: values.is_team_task || false,
       };
 
       console.log("Form values:", values);
@@ -646,26 +642,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                         />
                       </div>
                     )}
-                  </div>
-                )}
-
-                {userRole === "business" && (
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="team-task"
-                      checked={form.watch("is_team_task")}
-                      onCheckedChange={(checked) => form.setValue("is_team_task", checked)}
-                    />
-                    <Label htmlFor="team-task">Make this a team task</Label>
-                    <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="sr-only">Info</span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        Team tasks can be claimed and completed by any staff member
-                      </TooltipContent>
-                    </Tooltip>
                   </div>
                 )}
 

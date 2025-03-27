@@ -155,6 +155,13 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         user_id: session.user.id
       };
       
+      // Remove any references to team_task which doesn't exist in the database
+      if (taskToCreate.is_team_task !== undefined) {
+        delete taskToCreate.is_team_task;
+      }
+      
+      console.log("Creating task with data:", taskToCreate);
+      
       const { data, error } = await supabase
         .from('tasks')
         .insert(taskToCreate)

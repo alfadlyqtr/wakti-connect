@@ -26,7 +26,7 @@ export const useStaffStats = (staffRelationId: string | null, userId: string | n
         const { count: tasksCount, error: tasksError } = await supabase
           .from('tasks')
           .select('*', { count: 'exact', head: true })
-          .eq('assignee_id', userId);
+          .eq('user_id', userId);
           
         if (tasksError) throw tasksError;
         
