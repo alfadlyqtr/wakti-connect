@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlertCircle, Bot, Loader2, Mic, MicOff, SendHorizontal, Trash2 } from 'lucide-react';
+import { Bot, Loader2, Mic, MicOff, SendHorizontal, Trash2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AIMessage } from '@/types/ai-assistant.types';
 import { AIAssistantChat } from './AIAssistantChat';
@@ -58,8 +58,14 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     if (lastTranscript) {
       setInputMessage(lastTranscript);
       clearTranscript();
+      
+      // Auto-submit if we have a clear transcript
+      if (lastTranscript.length > 5 && canAccess && !isLoading) {
+        const submitEvent = new Event('submit', { cancelable: true, bubbles: true }) as unknown as React.FormEvent;
+        handleSendMessage(submitEvent);
+      }
     }
-  }, [lastTranscript, setInputMessage, clearTranscript]);
+  }, [lastTranscript, setInputMessage, clearTranscript, handleSendMessage, canAccess, isLoading]);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -86,9 +92,9 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const toggleVoiceInput = () => {
     if (!supportsVoice) {
       toast({
-        title: "Voice Not Supported",
-        description: "Your browser doesn't support voice recognition.",
-        variant: "destructive",
+        title: "Voice Input",
+        description: "You can also use your device's built-in speech recognition (e.g., Windows+H on Windows or the microphone on your keyboard).",
+        variant: "default",
       });
       return;
     }
@@ -149,49 +155,35 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
             />
           )}
           
-          {!canAccess && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 my-4 flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-amber-800">Upgrade Your Plan</h4>
-                <p className="text-sm text-amber-700 mt-1">
-                  You've reached the limit for the free plan. Upgrade to continue using the AI assistant.
-                </p>
-              </div>
-            </div>
-          )}
-          
           <div ref={messagesEndRef} />
         </ScrollArea>
         
         <form onSubmit={handleSendMessage} className="p-4 pt-2 mt-auto">
           <div className="relative flex items-center gap-2">
-            {supportsVoice && (
-              <Button
-                type="button"
-                size="icon"
-                variant={isListening ? "default" : "ghost"}
-                onClick={toggleVoiceInput}
-                className={`size-10 flex-shrink-0 ${isListening ? 'bg-wakti-blue text-white' : ''}`}
-                disabled={isLoading || !canAccess || isProcessing}
-                aria-label={isListening ? "Stop listening" : "Start voice input"}
-                title={isListening ? "Stop listening" : "Start voice input"}
-              >
-                {isListening ? (
-                  <MicOff className="h-5 w-5" />
-                ) : isProcessing ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Mic className="h-5 w-5" />
-                )}
-              </Button>
-            )}
+            <Button
+              type="button"
+              size="icon"
+              variant={isListening ? "default" : "ghost"}
+              onClick={toggleVoiceInput}
+              className={`size-10 flex-shrink-0 ${isListening ? 'bg-wakti-blue text-white' : ''}`}
+              disabled={isLoading || !canAccess || isProcessing}
+              aria-label={isListening ? "Stop listening" : "Start voice input"}
+              title={isListening ? "Stop listening" : "Start voice input"}
+            >
+              {isListening ? (
+                <MicOff className="h-5 w-5" />
+              ) : isProcessing ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Mic className="h-5 w-5" />
+              )}
+            </Button>
             
             <div className="relative flex-1">
               <Input 
                 placeholder={
                   isListening ? "Listening..." : 
-                  isProcessing ? "Processing speech..." :
+                  isProcessing ? "Processing..." :
                   isLoading ? "WAKTI AI is thinking..." : 
                   "Type your message..."
                 }

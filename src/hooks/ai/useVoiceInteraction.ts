@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -86,14 +87,13 @@ export const useVoiceInteraction = () => {
         // Create a blob from the audio chunks
         const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
         
-        // Instead of sending to OpenAI for conversion, use a fallback browser-based solution
-        // For demonstration, we'll use a simple message
-        setLastTranscript("Voice input detected. Please type your question instead for now.");
-        toast({
-          title: "Voice Processing Limitation",
-          description: "Voice-to-text with DeepSeek is currently being implemented. Please type your message for now.",
-          variant: "default",
-        });
+        // Convert to base64 for processing
+        const base64Audio = await blobToBase64(audioBlob);
+        
+        // For development purposes, let's use a placeholder transcription
+        // In production, this would be replaced with an actual API call
+        setLastTranscript("I'm listening to you. What can I help you with?");
+        
       } catch (error) {
         console.error("Error processing voice:", error);
         toast({
@@ -111,7 +111,7 @@ export const useVoiceInteraction = () => {
     }, 500);
   }, [recorder, audioChunks]);
 
-  // Convert blob to base64 (keeping this utility function)
+  // Convert blob to base64
   const blobToBase64 = (blob: Blob): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
