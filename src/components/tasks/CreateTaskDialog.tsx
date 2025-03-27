@@ -134,8 +134,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       recurring: {
         frequency: "weekly",
         interval: 1,
-      },
-      delegated_email: "",
+      }
     },
   });
 
@@ -184,8 +183,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
         priority: values.priority,
         due_date: values.dueDate,
         due_time: values.dueTime || null,
-        is_recurring: values.isRecurring,
-        delegated_email: values.delegated_email || null,
+        is_recurring: values.isRecurring
       };
 
       console.log("Form values:", values);
