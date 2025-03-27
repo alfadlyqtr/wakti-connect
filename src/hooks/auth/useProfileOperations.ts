@@ -40,15 +40,21 @@ export function useProfileOperations() {
   // Handle profile creation with simplified approach
   const createProfile = async (userId: string, userEmail: string) => {
     try {
-      // Get user metadata directly
-      const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
+      // Simple check if profile already exists to avoid duplicate insert
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", userId)
+        .maybeSingle();
       
-      if (userError) {
-        console.error("Error getting user data:", userError);
-        throw userError;
+      if (existingProfile) {
+        console.log("Profile already exists, skipping creation");
+        return existingProfile;
       }
       
-      const metadata = authUser?.user_metadata || {};
+      // Get user metadata for profile creation
+      const { data: userData } = await supabase.auth.getUser();
+      const metadata = userData?.user?.user_metadata || {};
       
       // Create profile
       const { data: newProfile, error: createError } = await supabase
@@ -60,21 +66,22 @@ export function useProfileOperations() {
           business_name: metadata?.business_name || null,
           display_name: metadata?.display_name || metadata?.full_name || "",
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          email: userEmail // Store email in profile for easier queries
         })
         .select()
-        .maybeSingle();
+        .single();
         
       if (createError) {
         console.error("Error creating profile:", createError);
-        throw createError;
+        return null;
       }
       
       console.log("Profile created successfully:", newProfile);
       return newProfile;
     } catch (error) {
       console.error("Failed to create profile:", error);
-      throw error;
+      return null;
     }
   };
 

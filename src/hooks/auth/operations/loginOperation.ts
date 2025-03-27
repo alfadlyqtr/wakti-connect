@@ -14,28 +14,6 @@ export async function loginOperation(
 ) {
   try {
     console.log("Attempting login for:", email);
-    setIsLoading(true);
-    
-    // Check if profiles table exists before proceeding
-    try {
-      const { data: tableExists, error: checkError } = await supabase.rpc('check_profiles_table');
-      
-      if (checkError) {
-        console.warn("Could not verify profiles table:", checkError);
-        // Continue anyway, as this might just be an RPC error
-      } else if (!tableExists) {
-        console.error("Profiles table does not exist");
-        throw new Error(
-          "Application database is not properly initialized. Please contact support."
-        );
-      }
-    } catch (schemaError: any) {
-      console.error("Schema verification failed:", schemaError);
-      // If the RPC function itself failed, continue with login
-      if (!schemaError.message.includes("does not exist")) {
-        throw schemaError;
-      }
-    }
     
     // Proceed with authentication
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -58,9 +36,7 @@ export async function loginOperation(
       throw error;
     }
     
-    console.log("Login successful:", data);
-    // User is set by the auth listener
-    
+    console.log("Login successful:", data.user?.id);
     return data; // Properly return the data for components that need it
   } catch (error: any) {
     console.error("Login error:", error);
@@ -74,8 +50,6 @@ export async function loginOperation(
       errorMessage = "Application initialization issue. Please contact support.";
     } else if (error.message.includes("database") || error.message.includes("profiles")) {
       errorMessage = "Authentication service is experiencing issues. Please try again in a few moments.";
-    } else if (error.message.includes("connect to authentication service")) {
-      errorMessage = error.message;
     } else if (error.message) {
       errorMessage = error.message;
     }
@@ -85,9 +59,8 @@ export async function loginOperation(
       description: errorMessage,
       variant: "destructive",
     });
+    
+    setIsLoading(false); // Ensure loading state is reset on error
     throw error;
-  } finally {
-    // We need to keep loading state active until the auth listener finishes processing
-    // So don't set isLoading false here, it will be handled by the auth listener
   }
 }

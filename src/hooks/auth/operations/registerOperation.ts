@@ -17,16 +17,6 @@ export async function registerOperation(
 ) {
   try {
     console.log("Attempting registration for:", email);
-    setIsLoading(true);
-    
-    // First verify we can connect to Supabase
-    try {
-      // Try a simple query to verify connection
-      await supabase.from('_metadata').select('*').limit(1).maybeSingle();
-    } catch (connectionError) {
-      // Don't block registration if this fails - might be first run
-      console.warn("Metadata table check failed, might be first run:", connectionError);
-    }
     
     // Prepare metadata with all necessary fields
     const metadata: any = {
@@ -46,6 +36,7 @@ export async function registerOperation(
       password,
       options: {
         data: metadata,
+        emailRedirectTo: window.location.origin + '/auth/login'
       },
     });
     
@@ -58,10 +49,11 @@ export async function registerOperation(
     
     toast({
       title: "Registration successful",
-      description: "Please check your email for verification",
+      description: "Please check your email for verification instructions",
     });
     
-    // User is set by the auth listener if email verification is disabled
+    // Return the user data
+    return data;
   } catch (error: any) {
     console.error("Registration error:", error);
     
@@ -81,8 +73,8 @@ export async function registerOperation(
       description: errorMessage,
       variant: "destructive",
     });
+    
+    setIsLoading(false); // Ensure loading state is reset on error
     throw error;
-  } finally {
-    setIsLoading(false);
   }
 }

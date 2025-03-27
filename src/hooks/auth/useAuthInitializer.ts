@@ -15,79 +15,103 @@ export function useAuthInitializer() {
 
   useEffect(() => {
     console.log("Setting up auth state listener...");
-    let authCheckComplete = false;
+    let mounted = true;
     let authTimeout: NodeJS.Timeout;
     
-    // Function to handle profile data - isolated for clarity
-    const handleUserProfile = async (userId: string, userEmail: string) => {
+    // Create a non-blocking timeout that will ensure we don't hang indefinitely
+    authTimeout = setTimeout(() => {
+      if (mounted && !authInitialized) {
+        console.warn("Auth initialization timed out after 15 seconds");
+        setAuthError("Authentication service timed out. Please reload the page.");
+        setIsLoading(false);
+        setAuthInitialized(true);
+      }
+    }, 15000);
+
+    // Function to handle profile data
+    const processUserProfile = async (userId: string, userEmail: string) => {
       try {
         // First try to get existing profile
-        const { data, error } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", userId)
           .maybeSingle();
           
-        if (error) {
-          console.error("Error fetching profile:", error);
-          return null;
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          // Return basic user on profile error
+          return createBasicUser(userId, userEmail);
         }
         
-        if (data) {
+        if (profileData) {
           console.log("Found existing profile");
-          return data;
+          return createUserFromProfile(userId, userEmail, profileData);
         }
         
         // Create new profile if it doesn't exist
         console.log("No profile found, creating new one");
-        return await createProfile(userId, userEmail || "");
+        const newProfile = await createProfile(userId, userEmail);
+        return newProfile ? 
+          createUserFromProfile(userId, userEmail, newProfile) : 
+          createBasicUser(userId, userEmail);
       } catch (error) {
         console.error("Error in profile handling:", error);
-        return null;
+        // Return basic user on any error
+        return createBasicUser(userId, userEmail);
       }
     };
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("Auth state changed:", event, session?.user?.id);
+        if (!mounted) return;
         
-        // Prevent multiple processing for the same event
-        if (authCheckComplete && event === 'INITIAL_SESSION') {
-          console.log("Ignoring duplicate INITIAL_SESSION event");
-          return;
-        }
+        console.log("Auth state changed:", event, session?.user?.id);
         
         try {
           if (session?.user) {
-            // User is authenticated
-            const profileData = await handleUserProfile(
-              session.user.id, 
-              session.user.email || ""
-            );
-            
-            // Set user data based on profile availability
-            if (profileData) {
-              setUser(createUserFromProfile(session.user.id, session.user.email || "", profileData));
-            } else {
-              setUser(createBasicUser(session.user.id, session.user.email || ""));
-            }
+            // Process user data outside the main auth callback to avoid deadlocks
+            setTimeout(async () => {
+              if (!mounted) return;
+              try {
+                const userData = await processUserProfile(
+                  session.user.id, 
+                  session.user.email || ""
+                );
+                
+                if (mounted) {
+                  setUser(userData);
+                  setIsLoading(false);
+                  setAuthInitialized(true);
+                  clearTimeout(authTimeout);
+                }
+              } catch (error) {
+                console.error("Error processing user profile:", error);
+                if (mounted) {
+                  setUser(createBasicUser(session.user.id, session.user.email || ""));
+                  setIsLoading(false);
+                  setAuthInitialized(true);
+                  clearTimeout(authTimeout);
+                }
+              }
+            }, 0);
           } else {
             // No user authenticated
-            setUser(null);
+            if (mounted) {
+              setUser(null);
+              setIsLoading(false);
+              setAuthInitialized(true);
+              clearTimeout(authTimeout);
+            }
           }
         } catch (error) {
-          console.error("Error processing auth state change:", error);
-          // Set basic user data even in case of error to prevent blocking the app
-          if (session?.user) {
-            setUser(createBasicUser(session.user.id, session.user.email || ""));
+          console.error("Error in auth state change:", error);
+          if (mounted) {
+            setIsLoading(false);
+            setAuthInitialized(true);
+            clearTimeout(authTimeout);
           }
-        } finally {
-          // Mark auth check as complete and clean up
-          authCheckComplete = true;
-          clearTimeout(authTimeout);
-          setIsLoading(false);
-          setAuthInitialized(true);
         }
       }
     );
@@ -99,60 +123,71 @@ export function useAuthInitializer() {
         
         if (error) {
           console.error("Error getting initial session:", error);
-          setAuthError("Unable to verify your authentication status.");
-          return;
-        }
-        
-        // If auth listener has already processed this session, don't duplicate work
-        if (authCheckComplete) {
-          console.log("Auth already initialized by listener");
-          return;
-        }
-        
-        // Process the session same way as in the listener
-        if (session?.user) {
-          const profileData = await handleUserProfile(
-            session.user.id, 
-            session.user.email || ""
-          );
-          
-          if (profileData) {
-            setUser(createUserFromProfile(session.user.id, session.user.email || "", profileData));
-          } else {
-            setUser(createBasicUser(session.user.id, session.user.email || ""));
+          if (mounted) {
+            setAuthError("Unable to verify your authentication status.");
+            setIsLoading(false);
+            setAuthInitialized(true);
+            clearTimeout(authTimeout);
           }
+          return;
         }
+        
+        if (!session) {
+          console.log("No session found");
+          if (mounted) {
+            setUser(null);
+            setIsLoading(false);
+            setAuthInitialized(true);
+            clearTimeout(authTimeout);
+          }
+          return;
+        }
+        
+        // Process authentication outside the main auth callback
+        setTimeout(async () => {
+          if (!mounted) return;
+          try {
+            const userData = await processUserProfile(
+              session.user.id, 
+              session.user.email || ""
+            );
+            
+            if (mounted) {
+              setUser(userData);
+              setIsLoading(false);
+              setAuthInitialized(true);
+              clearTimeout(authTimeout);
+            }
+          } catch (error) {
+            console.error("Error processing initial session:", error);
+            if (mounted) {
+              // Set basic user data even in case of error
+              setUser(createBasicUser(session.user.id, session.user.email || ""));
+              setIsLoading(false);
+              setAuthInitialized(true);
+              clearTimeout(authTimeout);
+            }
+          }
+        }, 0);
       } catch (error) {
         console.error("Error checking initial session:", error);
-        setAuthError(error instanceof Error ? error.message : "Error checking authentication");
-      } finally {
-        // Only finalize if the auth listener hasn't already done so
-        if (!authCheckComplete) {
-          authCheckComplete = true;
+        if (mounted) {
+          setAuthError(error instanceof Error ? error.message : "Error checking authentication");
           setIsLoading(false);
           setAuthInitialized(true);
+          clearTimeout(authTimeout);
         }
       }
     };
-    
-    // Set timeout to prevent hanging indefinitely
-    authTimeout = setTimeout(() => {
-      if (!authCheckComplete) {
-        console.warn("Auth check timed out after 15 seconds");
-        setAuthError("Authentication service timed out. Please reload the page.");
-        setIsLoading(false);
-        setAuthInitialized(true);
-      }
-    }, 15000);
     
     // Run initial session check
     checkInitialSession();
 
     // Clean up on unmount
     return () => {
-      console.log("Cleaning up auth listener");
-      subscription.unsubscribe();
+      mounted = false;
       clearTimeout(authTimeout);
+      subscription.unsubscribe();
     };
   }, []);
 
