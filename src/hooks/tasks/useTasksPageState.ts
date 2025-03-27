@@ -49,54 +49,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
 
   const isPaidAccount = userRole === "individual" || userRole === "business";
 
-  const debouncedFetch = useDebouncedCallback(fetchTasks, 500);
-
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          setUserRole("free");
-          return;
-        }
-        
-        const storedIsStaff = localStorage.getItem('isStaff');
-        if (storedIsStaff === 'true') {
-          console.log("User identified as staff from localStorage");
-          setUserRole("staff");
-          return;
-        }
-        
-        const { data: staffData } = await supabase
-          .from('business_staff')
-          .select('id')
-          .eq('staff_id', session.user.id)
-          .maybeSingle();
-          
-        if (staffData) {
-          console.log("User identified as staff from database");
-          localStorage.setItem('isStaff', 'true');
-          setUserRole("staff");
-          return;
-        }
-        
-        const { data } = await supabase
-          .from('profiles')
-          .select('account_type')
-          .eq('id', session.user.id)
-          .single();
-          
-        setUserRole((data?.account_type as UserRole) || "free");
-      } catch (error) {
-        console.error("Error fetching user role:", error);
-        setUserRole("free");
-      }
-    };
-    
-    fetchUserRole();
-  }, []);
-
   const fetchTasks = useCallback(async () => {
     const currentTimestamp = Date.now();
     setFetchTimestamp(currentTimestamp);
@@ -173,6 +125,8 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
       }
     }
   }, [activeTab, userRole, fetchTimestamp]);
+
+  const debouncedFetch = useDebouncedCallback(fetchTasks, 500);
 
   useEffect(() => {
     fetchTasks();
