@@ -1,8 +1,9 @@
 
 // Add or verify TaskTab type is exported from this file
-export type TaskStatus = "pending" | "in-progress" | "completed" | "snoozed" | "archived";
+export type TaskStatus = "pending" | "in-progress" | "completed" | "snoozed" | "archived" | "late";
 export type TaskPriority = "urgent" | "high" | "medium" | "normal";
 export type TaskTab = "my-tasks" | "archived";
+export type ArchiveReason = "deleted" | "canceled";
 
 export interface SubTask {
   id: string;
@@ -32,5 +33,20 @@ export interface Task {
   snooze_count?: number;
   snoozed_until?: string | null;
   archived_at?: string | null;
-  archive_reason?: string | null;
+  archive_reason?: ArchiveReason | null;
+}
+
+export interface TaskFormData {
+  title: string;
+  description?: string;
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  due_date?: string;
+  due_time?: string;
+  subtasks?: SubTask[];
+  snooze_count?: number;
+  snoozed_until?: string | null;
+  is_recurring?: boolean;
+  archived_at?: string | null;
+  archive_reason?: ArchiveReason | null;
 }
