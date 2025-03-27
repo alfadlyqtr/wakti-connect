@@ -52,9 +52,12 @@ export const fetchJobCardsWithDetails = async (
     // Extract job information
     const jobData = card.jobs || undefined;
     
-    // Extract staff name for reporting
+    // Extract staff name for reporting - with proper null checking
     let staffName = "Unknown Staff";
-    if (card.business_staff && typeof card.business_staff === 'object' && 'name' in card.business_staff) {
+    if (card.business_staff && 
+        typeof card.business_staff === 'object' && 
+        card.business_staff !== null && 
+        'name' in card.business_staff) {
       staffName = card.business_staff.name as string;
     }
     
