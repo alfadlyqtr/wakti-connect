@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { taskFormSchema, TaskFormValues } from "@/components/tasks/TaskFormSchema";
 import { Button } from "@/components/ui/button";
@@ -41,7 +42,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TaskPriority, TaskStatus } from "@/types/task.types";
 import { PlusCircle, Trash2, CalendarIcon, HelpCircle, UsersIcon, Info } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -60,13 +60,14 @@ import { Loader2 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { toast } from "@/components/ui/use-toast";
 
-type SimpleTeamTask = {
+// Define a simple interface with primitive types only
+interface SimpleTeamTask {
   id: string;
   title: string;
   description: string | null;
   due_date: string | null;
   priority: string;
-};
+}
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -232,8 +233,8 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
     } catch (error) {
       console.error("Error creating task:", error);
       toast({
-        title: "Failed to create task",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        title: "Task creation failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
         variant: "destructive"
       });
     } finally {
