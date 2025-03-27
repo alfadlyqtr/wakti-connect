@@ -126,17 +126,28 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     try {
       // Check if free user has reached their task limit
       if (userRole === "free") {
-        const { count, error } = await supabase
-          .from('tasks')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', taskData.user_id);
-          
-        if (error) throw error;
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (count && count >= 1) {
+        if (!session) {
+          throw new Error("You must be logged in to create tasks");
+        }
+        
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        
+        const { data: existingTasks, error: countError } = await supabase
+          .from('tasks')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .gte('created_at', startOfMonth.toISOString());
+          
+        if (countError) throw countError;
+        
+        if (existingTasks && existingTasks.length >= 1) {
           toast({
             title: "Task limit reached",
-            description: "Free accounts are limited to 1 task. Please upgrade to create more tasks.",
+            description: "Free accounts are limited to 1 task per month. Please upgrade to create more tasks.",
             variant: "destructive"
           });
           return;
@@ -150,8 +161,15 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         throw new Error("You must be logged in to create tasks");
       }
       
+      // Prepare the task data
       const taskToCreate = {
-        ...taskData,
+        title: taskData.title,
+        description: taskData.description || null,
+        status: taskData.status || "pending",
+        priority: taskData.priority || "normal",
+        due_date: taskData.due_date,
+        due_time: taskData.due_time,
+        is_recurring: taskData.is_recurring || false,
         user_id: session.user.id
       };
       
@@ -170,7 +188,9 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         const subtasksToInsert = taskData.subtasks.map((subtask: any) => ({
           task_id: data.id,
           content: subtask.content,
-          is_completed: false
+          is_completed: subtask.is_completed || false,
+          due_date: subtask.due_date || null,
+          due_time: subtask.due_time || null
         }));
         
         const { error: subtaskError } = await supabase
@@ -186,8 +206,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      setCreateTaskDialogOpen(false);
-      fetchTasks(); // Refresh tasks list
+      await fetchTasks(); // Refresh tasks list
     } catch (error) {
       console.error("Error creating task:", error);
       toast({
@@ -195,6 +214,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         description: error instanceof Error ? error.message : "An unexpected error occurred",
         variant: "destructive"
       });
+      throw error;
     }
   };
 
