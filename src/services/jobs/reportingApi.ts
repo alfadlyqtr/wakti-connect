@@ -21,7 +21,7 @@ export const fetchJobCardsWithDetails = async (
         duration,
         default_price
       ),
-      staff:staff_relation_id (
+      business_staff:staff_relation_id (
         id,
         name
       )
@@ -54,8 +54,8 @@ export const fetchJobCardsWithDetails = async (
     
     // Extract staff name for reporting
     let staffName = "Unknown Staff";
-    if (card.staff && card.staff.name) {
-      staffName = card.staff.name;
+    if (card.business_staff && typeof card.business_staff === 'object' && 'name' in card.business_staff) {
+      staffName = card.business_staff.name as string;
     }
     
     // Create a properly typed JobCard object
@@ -73,7 +73,7 @@ export const fetchJobCardsWithDetails = async (
     
     // Remove unnecessary nested data
     delete (jobCard as any).jobs;
-    delete (jobCard as any).staff;
+    delete (jobCard as any).business_staff;
     
     return jobCard;
   });
