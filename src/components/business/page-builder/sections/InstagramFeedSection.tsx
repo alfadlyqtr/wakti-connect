@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InfoCircle } from "lucide-react";
+import { Info } from "lucide-react";
 import { useSectionEditor } from "@/hooks/useSectionEditor";
 import { Switch } from "@/components/ui/switch";
 import InstagramEmbed from "react-instagram-embed";
@@ -72,7 +72,7 @@ const InstagramFeedSection: React.FC = () => {
           </div>
           
           <Alert>
-            <InfoCircle className="h-4 w-4" />
+            <Info className="h-4 w-4" />
             <AlertDescription>
               Instagram embeds require the post to be from a public account and may require approval from Instagram.
             </AlertDescription>

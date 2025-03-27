@@ -41,7 +41,7 @@ export const AIPageBuilder: React.FC<AIPageBuilderProps> = ({
   
   const { messages, sendMessage, clearMessages } = useAIChatOperations(
     user?.id,
-    user?.user_metadata?.full_name || "there"
+    user?.name || "there"
   );
 
   const handleAnswerChange = (id: string, value: string) => {

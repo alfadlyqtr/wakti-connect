@@ -12,6 +12,16 @@ interface ServicesEditorProps {
 }
 
 const ServicesEditor: React.FC<ServicesEditorProps> = ({ contentData, handleInputChange }) => {
+  const handleSwitchChange = (name: string, checked: boolean) => {
+    const syntheticEvent = {
+      target: {
+        name,
+        value: checked
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    handleInputChange(syntheticEvent);
+  };
+
   return (
     <Tabs defaultValue="content">
       <TabsList className="mb-4">
@@ -54,15 +64,7 @@ const ServicesEditor: React.FC<ServicesEditorProps> = ({ contentData, handleInpu
               id="showPrices"
               name="showPrices"
               checked={contentData.showPrices !== false}
-              onChange={(e) => {
-                const syntheticEvent = {
-                  target: {
-                    name: "showPrices",
-                    value: e.target.checked
-                  }
-                } as React.ChangeEvent<HTMLInputElement>;
-                handleInputChange(syntheticEvent);
-              }}
+              onCheckedChange={(checked) => handleSwitchChange("showPrices", checked)}
             />
           </div>
           
@@ -72,15 +74,7 @@ const ServicesEditor: React.FC<ServicesEditorProps> = ({ contentData, handleInpu
               id="showDuration"
               name="showDuration"
               checked={contentData.showDuration !== false}
-              onChange={(e) => {
-                const syntheticEvent = {
-                  target: {
-                    name: "showDuration",
-                    value: e.target.checked
-                  }
-                } as React.ChangeEvent<HTMLInputElement>;
-                handleInputChange(syntheticEvent);
-              }}
+              onCheckedChange={(checked) => handleSwitchChange("showDuration", checked)}
             />
           </div>
           
@@ -90,15 +84,7 @@ const ServicesEditor: React.FC<ServicesEditorProps> = ({ contentData, handleInpu
               id="displayAsCards"
               name="displayAsCards"
               checked={contentData.displayAsCards !== false}
-              onChange={(e) => {
-                const syntheticEvent = {
-                  target: {
-                    name: "displayAsCards",
-                    value: e.target.checked
-                  }
-                } as React.ChangeEvent<HTMLInputElement>;
-                handleInputChange(syntheticEvent);
-              }}
+              onCheckedChange={(checked) => handleSwitchChange("displayAsCards", checked)}
             />
           </div>
         </div>
