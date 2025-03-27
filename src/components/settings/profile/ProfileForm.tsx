@@ -39,7 +39,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile }) => {
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="space-y-6">
         {isStaff && !canEditProfile && (
-          <Alert variant="warning" className="mb-4 bg-amber-50">
+          <Alert variant="warning" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               You have limited permissions to edit your profile. Some fields are view-only.
