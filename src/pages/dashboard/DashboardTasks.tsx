@@ -10,6 +10,7 @@ import { TaskStatusFilter, TaskPriorityFilter } from "@/components/tasks/types";
 import TaskTabs from "@/components/tasks/TaskTabs";
 import { Archive } from "lucide-react";
 import { Navigate } from "react-router-dom";
+import { UserRole } from "@/types/user";
 
 const DashboardTasks = () => {
   const {
@@ -39,6 +40,7 @@ const DashboardTasks = () => {
   } = useTasksPageState();
 
   // Redirect staff users away from tasks page
+  // Cast userRole to UserRole to ensure TypeScript recognizes "staff" as a valid option
   if (userRole === "staff") {
     return <Navigate to="/dashboard" replace />;
   }

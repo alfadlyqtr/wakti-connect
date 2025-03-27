@@ -1,7 +1,9 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus, TaskPriority, TaskTab } from '@/types/task.types';
 import { toast } from "@/components/ui/use-toast";
+import { UserRole } from "@/types/user";
 
 interface UseTasksPageStateReturn {
   tasks: Task[];
@@ -12,7 +14,7 @@ interface UseTasksPageStateReturn {
   setFilterStatus: (status: string | null) => void;
   filterPriority: string | null;
   setFilterPriority: (priority: string | null) => void;
-  userRole: "free" | "individual" | "business" | "staff" | null;
+  userRole: UserRole;
   createTaskDialogOpen: boolean;
   setCreateTaskDialogOpen: (open: boolean) => void;
   editTaskDialogOpen: boolean;
@@ -36,7 +38,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [filterPriority, setFilterPriority] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<"free" | "individual" | "business" | "staff" | null>(null);
+  const [userRole, setUserRole] = useState<UserRole>("free");
   const [createTaskDialogOpen, setCreateTaskDialogOpen] = useState(false);
   const [editTaskDialogOpen, setEditTaskDialogOpen] = useState(false);
   const [currentEditTask, setCurrentEditTask] = useState<Task | null>(null);
@@ -81,7 +83,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
           .eq('id', session.user.id)
           .single();
           
-        setUserRole(data?.account_type || "free");
+        setUserRole((data?.account_type as UserRole) || "free");
       } catch (error) {
         console.error("Error fetching user role:", error);
         setUserRole("free");

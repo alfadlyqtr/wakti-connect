@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Search, Plus } from "lucide-react";
 import { TaskStatusFilter, TaskPriorityFilter } from "./types";
+import { UserRole } from "@/types/user";
 
 interface TaskControlsProps {
   searchQuery: string;
@@ -21,7 +22,7 @@ interface TaskControlsProps {
   onPriorityChange: (priority: TaskPriorityFilter) => void;
   onCreateTask: () => void;
   isPaidAccount: boolean;
-  userRole: "free" | "individual" | "business" | "staff";
+  userRole: UserRole;
   showCreateButton?: boolean;
 }
 
