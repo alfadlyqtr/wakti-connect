@@ -2,15 +2,14 @@
 import React, { useEffect } from "react";
 import TaskControls from "@/components/tasks/TaskControls";
 import TasksLoading from "@/components/tasks/TasksLoading";
-import TasksContainer from "@/components/tasks/TasksContainer";
+import TaskGrid from "@/components/tasks/TaskGrid";
 import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog";
 import { EditTaskDialog } from "@/components/tasks/EditTaskDialog";
 import { useTasksPageState } from "@/components/tasks/useTasksPageState";
 import { TaskStatusFilter, TaskPriorityFilter } from "@/components/tasks/types";
 import TaskTabs from "@/components/tasks/TaskTabs";
-import TaskGrid from "@/components/tasks/TaskGrid";
-import { Badge } from "@/components/ui/badge";
 import { Archive } from "lucide-react";
+import { Navigate } from "react-router-dom";
 
 const DashboardTasks = () => {
   const {
@@ -39,6 +38,11 @@ const DashboardTasks = () => {
     setActiveTab
   } = useTasksPageState();
 
+  // Redirect staff users away from tasks page
+  if (userRole === "staff") {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   // Set default filters to "all" on component mount
   useEffect(() => {
     setFilterStatus("all");
@@ -58,10 +62,6 @@ const DashboardTasks = () => {
     setCurrentEditTask(task);
     setEditTaskDialogOpen(true);
   };
-
-  // Log the number of filtered tasks for debugging
-  console.log(`Filtered tasks: ${filteredTasks.length} of ${filteredTasks.length} total tasks`);
-  console.log(`Current filters - Status: ${statusFilter}, Priority: ${priorityFilter}`);
 
   return (
     <div className="space-y-6">
@@ -127,7 +127,7 @@ const DashboardTasks = () => {
               : "Get started by creating your first task"}
           </p>
           
-          {activeTab === "my-tasks" && (
+          {activeTab === "my-tasks" && userRole !== "staff" && (
             <button
               onClick={() => setCreateTaskDialogOpen(true)}
               className="inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90"

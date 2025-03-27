@@ -2,6 +2,7 @@
 import { RouteObject } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
 
 // Use dynamic imports for better code splitting
 const DashboardHome = lazy(() => import("@/pages/dashboard/DashboardHome"));
@@ -17,6 +18,7 @@ const DashboardBusinessAnalytics = lazy(() => import("@/pages/dashboard/Dashboar
 const DashboardMessages = lazy(() => import("@/pages/dashboard/DashboardMessages"));
 const DashboardAIAssistant = lazy(() => import("@/pages/dashboard/DashboardAIAssistant"));
 const DashboardBusinessPage = lazy(() => import("@/pages/dashboard/DashboardBusinessPage"));
+const StaffDashboard = lazy(() => import("@/pages/dashboard/StaffDashboard"));
 
 // Wrap dynamic imports with suspense
 const withSuspense = (Component: React.ComponentType) => (
@@ -32,7 +34,15 @@ export const dashboardRoutes: RouteObject[] = [
   },
   {
     path: "tasks/*",
-    element: withSuspense(DashboardTasks),
+    element: (
+      <StaffRoleGuard 
+        disallowStaff={true}
+        messageTitle="Tasks Not Available" 
+        messageDescription="Task management is not available for staff accounts"
+      >
+        {withSuspense(DashboardTasks)}
+      </StaffRoleGuard>
+    ),
   },
   {
     path: "events",
@@ -45,6 +55,10 @@ export const dashboardRoutes: RouteObject[] = [
   {
     path: "staff",
     element: withSuspense(DashboardStaffManagement),
+  },
+  {
+    path: "staff-dashboard",
+    element: withSuspense(StaffDashboard),
   },
   {
     path: "bookings",

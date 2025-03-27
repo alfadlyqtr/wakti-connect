@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus, TaskPriority, TaskTab } from '@/types/task.types';
@@ -56,6 +55,26 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
           return;
         }
         
+        const storedIsStaff = localStorage.getItem('isStaff');
+        if (storedIsStaff === 'true') {
+          console.log("User identified as staff from localStorage");
+          setUserRole("staff");
+          return;
+        }
+        
+        const { data: staffData } = await supabase
+          .from('business_staff')
+          .select('id')
+          .eq('staff_id', session.user.id)
+          .maybeSingle();
+          
+        if (staffData) {
+          console.log("User identified as staff from database");
+          localStorage.setItem('isStaff', 'true');
+          setUserRole("staff");
+          return;
+        }
+        
         const { data } = await supabase
           .from('profiles')
           .select('account_type')
@@ -80,6 +99,12 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
+        setTasks([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      if (userRole === "staff") {
         setTasks([]);
         setIsLoading(false);
         return;
@@ -135,105 +160,113 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab]);
+  }, [activeTab, userRole]);
 
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks, activeTab]);
 
   const handleCreateTask = async (taskData: any) => {
-    try {
-      if (userRole === "free") {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          throw new Error("You must be logged in to create tasks");
-        }
-        
-        const startOfMonth = new Date();
-        startOfMonth.setDate(1);
-        startOfMonth.setHours(0, 0, 0, 0);
-        
-        const { data: existingTasks, error: countError } = await supabase
-          .from('tasks')
-          .select('id')
-          .eq('user_id', session.user.id)
-          .gte('created_at', startOfMonth.toISOString());
-          
-        if (countError) throw countError;
-        
-        if (existingTasks && existingTasks.length >= 1) {
-          toast({
-            title: "Task limit reached",
-            description: "Free accounts are limited to 1 task per month. Please upgrade to create more tasks.",
-            variant: "destructive"
-          });
-          return;
-        }
-      }
-      
+    if (userRole === "staff") {
+      toast({
+        title: "Access denied",
+        description: "Staff accounts cannot create tasks",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (userRole === "free") {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
         throw new Error("You must be logged in to create tasks");
       }
       
-      const taskToCreate = {
-        title: taskData.title,
-        description: taskData.description || null,
-        status: "in-progress",
-        priority: taskData.priority || "normal",
-        due_date: taskData.due_date,
-        due_time: taskData.due_time,
-        is_recurring: taskData.is_recurring || false,
-        user_id: session.user.id
-      };
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
       
-      console.log("Creating task with data:", taskToCreate);
-      
-      const { data, error } = await supabase
+      const { data: existingTasks, error: countError } = await supabase
         .from('tasks')
-        .insert(taskToCreate)
-        .select()
-        .single();
+        .select('id')
+        .eq('user_id', session.user.id)
+        .gte('created_at', startOfMonth.toISOString());
         
-      if (error) throw error;
+      if (countError) throw countError;
       
-      if (taskData.subtasks && taskData.subtasks.length > 0) {
-        const subtasksToInsert = taskData.subtasks.map((subtask: any) => ({
-          task_id: data.id,
-          content: subtask.content,
-          is_completed: subtask.is_completed || false,
-          due_date: subtask.due_date || null,
-          due_time: subtask.due_time || null
-        }));
-        
-        const { error: subtaskError } = await supabase
-          .from('todo_items')
-          .insert(subtasksToInsert);
-          
-        if (subtaskError) throw subtaskError;
+      if (existingTasks && existingTasks.length >= 1) {
+        toast({
+          title: "Task limit reached",
+          description: "Free accounts are limited to 1 task per month. Please upgrade to create more tasks.",
+          variant: "destructive"
+        });
+        return;
       }
-      
-      toast({
-        title: "Task created",
-        description: "Your task has been created successfully",
-        variant: "success"
-      });
-      
-      await fetchTasks();
-    } catch (error) {
-      console.error("Error creating task:", error);
-      toast({
-        title: "Failed to create task",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive"
-      });
-      throw error;
     }
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error("You must be logged in to create tasks");
+    }
+    
+    const taskToCreate = {
+      title: taskData.title,
+      description: taskData.description || null,
+      status: "in-progress",
+      priority: taskData.priority || "normal",
+      due_date: taskData.due_date,
+      due_time: taskData.due_time,
+      is_recurring: taskData.is_recurring || false,
+      user_id: session.user.id
+    };
+    
+    console.log("Creating task with data:", taskToCreate);
+    
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert(taskToCreate)
+      .select()
+      .single();
+      
+    if (error) throw error;
+    
+    if (taskData.subtasks && taskData.subtasks.length > 0) {
+      const subtasksToInsert = taskData.subtasks.map((subtask: any) => ({
+        task_id: data.id,
+        content: subtask.content,
+        is_completed: subtask.is_completed || false,
+        due_date: subtask.due_date || null,
+        due_time: subtask.due_time || null
+      }));
+      
+      const { error: subtaskError } = await supabase
+        .from('todo_items')
+        .insert(subtasksToInsert);
+        
+      if (subtaskError) throw subtaskError;
+    }
+    
+    toast({
+      title: "Task created",
+      description: "Your task has been created successfully",
+      variant: "success"
+    });
+    
+    await fetchTasks();
   };
 
   const handleUpdateTask = async (taskId: string, taskData: any) => {
+    if (userRole === "staff") {
+      toast({
+        title: "Access denied",
+        description: "Staff accounts cannot modify tasks",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
       setIsUpdating(true);
       
@@ -277,6 +310,15 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
   };
 
   const handleArchiveTask = async (taskId: string, reason: "deleted" | "canceled") => {
+    if (userRole === "staff") {
+      toast({
+        title: "Access denied",
+        description: "Staff accounts cannot modify tasks",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
       console.log(`Archiving task ${taskId} with reason: ${reason}`);
       
@@ -300,10 +342,8 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      // Instead of immediately fetching tasks, update state locally first
       setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
       
-      // Then refetch in the background
       setTimeout(() => {
         fetchTasks();
       }, 500);
@@ -319,6 +359,15 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
   };
 
   const handleRestoreTask = async (taskId: string) => {
+    if (userRole === "staff") {
+      toast({
+        title: "Access denied",
+        description: "Staff accounts cannot modify tasks",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
       console.log(`Restoring task ${taskId} from archive`);
       
@@ -348,10 +397,8 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      // Instead of immediately fetching tasks, update state locally first
       setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
       
-      // Then refetch in the background
       setTimeout(() => {
         fetchTasks();
       }, 500);
@@ -372,10 +419,8 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
       (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase())) : 
       true;
       
-    // Fix for "all" status filter - if filterStatus is null or "all", show all statuses
     const matchesStatus = !filterStatus || filterStatus === "all" ? true : task.status === filterStatus;
     
-    // Fix for "all" priority filter
     const matchesPriority = !filterPriority || filterPriority === "all" ? true : task.priority === filterPriority;
     
     return matchesSearch && matchesStatus && matchesPriority;

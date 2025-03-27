@@ -44,7 +44,15 @@ const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
   }, []);
   
   // Filter navigation items based on user role, with correct prioritization
-  const filteredNavItems = navItems.filter(item => hasRoleAccess(userRole, item.showFor as UserRole[]));
+  // Filter out the Tasks link for staff users specifically
+  const filteredNavItems = navItems.filter(item => {
+    // Skip the tasks link for staff users
+    if (item.path === "tasks" && userRole === "staff") {
+      return false;
+    }
+    
+    return hasRoleAccess(userRole, item.showFor as UserRole[]);
+  });
   
   // Helper to check if a nav item is active
   const isActive = (item: NavItem) => {

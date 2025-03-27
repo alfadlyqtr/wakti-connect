@@ -86,7 +86,7 @@ const TaskControls: React.FC<TaskControlsProps> = ({
         </Select>
       </div>
 
-      {showCreateButton && (
+      {showCreateButton && userRole !== "staff" && (
         <Button onClick={onCreateTask} className="shrink-0">
           <Plus className="mr-2 h-4 w-4" />
           Create Task
