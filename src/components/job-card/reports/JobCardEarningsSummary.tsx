@@ -99,11 +99,11 @@ const JobCardEarningsSummary: React.FC<JobCardEarningsSummaryProps> = ({
           <TableBody>
             {sortedDays.map(day => {
               const date = parseISO(day.date);
-              let badgeVariant = 'outline';
+              let badgeVariant: "default" | "destructive" | "outline" | "secondary" | "success" | "warning" = "outline";
               
               // Highlight based on date
               if (isThisWeek(date)) {
-                badgeVariant = 'default';
+                badgeVariant = "default";
               }
               
               return (

@@ -23,8 +23,7 @@ export const fetchJobCardsWithDetails = async (
       ),
       staff:staff_relation_id (
         id,
-        name,
-        business_staff:id (name)
+        name
       )
     `);
   
@@ -55,16 +54,19 @@ export const fetchJobCardsWithDetails = async (
     
     // Extract staff name for reporting
     let staffName = "Unknown Staff";
-    if (card.staff && card.staff.business_staff && card.staff.business_staff.length > 0) {
-      staffName = card.staff.business_staff[0].name;
-    } else if (card.staff && card.staff.name) {
+    if (card.staff && card.staff.name) {
       staffName = card.staff.name;
     }
     
     // Create a properly typed JobCard object
     const jobCard: JobCard = {
       ...card,
-      job: jobData,
+      job: jobData ? {
+        ...jobData,
+        business_id: '', // Add required fields that might be missing
+        created_at: '',
+        updated_at: ''
+      } : undefined,
       staff_name: staffName,
       payment_method: ensurePaymentMethodType(card.payment_method)
     };
