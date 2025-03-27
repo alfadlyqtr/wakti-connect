@@ -132,6 +132,52 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     fetchTasks();
   }, [fetchTasks, activeTab]);
 
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          setUserRole("free");
+          return;
+        }
+        
+        const storedIsStaff = localStorage.getItem('isStaff');
+        if (storedIsStaff === 'true') {
+          console.log("User identified as staff from localStorage");
+          setUserRole("staff");
+          return;
+        }
+        
+        const { data: staffData } = await supabase
+          .from('business_staff')
+          .select('id')
+          .eq('staff_id', session.user.id)
+          .maybeSingle();
+          
+        if (staffData) {
+          console.log("User identified as staff from database");
+          localStorage.setItem('isStaff', 'true');
+          setUserRole("staff");
+          return;
+        }
+        
+        const { data } = await supabase
+          .from('profiles')
+          .select('account_type')
+          .eq('id', session.user.id)
+          .single();
+          
+        setUserRole((data?.account_type as UserRole) || "free");
+      } catch (error) {
+        console.error("Error fetching user role:", error);
+        setUserRole("free");
+      }
+    };
+    
+    fetchUserRole();
+  }, []);
+
   const handleCreateTask = async (taskData: any) => {
     if (userRole === "staff") {
       toast({
@@ -237,7 +283,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      debouncedFetch();
+      await debouncedFetch();
     } catch (err) {
       console.error("Error creating task:", err);
       
@@ -251,7 +297,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "destructive"
       });
       
-      debouncedFetch();
+      await debouncedFetch();
     }
   };
 
@@ -300,7 +346,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      debouncedFetch();
+      await debouncedFetch();
       
     } catch (error) {
       console.error("Error updating task:", error);
@@ -310,7 +356,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "destructive"
       });
       
-      debouncedFetch();
+      await debouncedFetch();
     } finally {
       setIsUpdating(false);
     }
@@ -359,7 +405,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "destructive"
       });
       
-      debouncedFetch();
+      await debouncedFetch();
     }
   };
 
@@ -412,7 +458,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "destructive"
       });
       
-      debouncedFetch();
+      await debouncedFetch();
     }
   };
 
