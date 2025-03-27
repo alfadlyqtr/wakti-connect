@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "./types";
@@ -10,7 +11,7 @@ export function useAuthInitializer() {
   const [authInitialized, setAuthInitialized] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  const { handleProfileOperation, createUserFromProfile, createBasicUser } = useProfileOperations();
+  const { createUserFromProfile, createBasicUser, createProfile } = useProfileOperations();
 
   useEffect(() => {
     console.log("Setting up auth state listener...");
@@ -49,10 +50,26 @@ export function useAuthInitializer() {
           try {
             console.log("User authenticated, fetching profile data");
             
-            // Try to get or create profile with retries
+            // Try to get or create profile
             let profileResult = null;
             try {
-              profileResult = await handleProfileOperation(session.user.id, session.user.email || "");
+              // Attempt to fetch existing profile first
+              const { data, error } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", session.user.id)
+                .maybeSingle();
+              
+              if (error) throw error;
+              
+              if (data) {
+                profileResult = data;
+                console.log("Found existing profile:", profileResult);
+              } else {
+                // Create profile if it doesn't exist
+                profileResult = await createProfile(session.user.id, session.user.email || "");
+                console.log("Created new profile:", profileResult);
+              }
             } catch (error) {
               console.error("Failed to handle profile operation:", error);
             }
@@ -113,10 +130,23 @@ export function useAuthInitializer() {
           console.log("Existing session found for user:", session.user.id);
           
           try {
-            // Try to get or create profile with retries
+            // Try to get existing profile
             let profileResult = null;
             try {
-              profileResult = await handleProfileOperation(session.user.id, session.user.email || "");
+              const { data, error } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", session.user.id)
+                .maybeSingle();
+                
+              if (error) throw error;
+              
+              if (data) {
+                profileResult = data;
+              } else {
+                // Create profile if it doesn't exist
+                profileResult = await createProfile(session.user.id, session.user.email || "");
+              }
             } catch (error) {
               console.error("Failed to handle profile operation:", error);
             }
@@ -150,7 +180,7 @@ export function useAuthInitializer() {
       }
     };
     
-    // Set a timeout to prevent hanging indefinitely
+    // Set a timeout to prevent hanging indefinitely - extended to 15 seconds
     authTimeout = setTimeout(() => {
       if (!authCheckComplete) {
         console.warn("Auth check timed out");
@@ -158,7 +188,7 @@ export function useAuthInitializer() {
         setAuthInitialized(true);
         setAuthError("Authentication service timed out. Please reload the page.");
       }
-    }, 10000); // 10 second timeout
+    }, 15000); // Extended timeout to 15 seconds
     
     // Call the checkSession function
     checkSession();
