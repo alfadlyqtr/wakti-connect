@@ -5,7 +5,6 @@ import { toast } from "@/components/ui/use-toast";
 
 export const useVoiceInteraction = () => {
   const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [supportsVoice, setSupportsVoice] = useState(false);
   const [lastTranscript, setLastTranscript] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -158,91 +157,6 @@ export const useVoiceInteraction = () => {
     setLastTranscript("");
   }, []);
 
-  // Text-to-speech function
-  const speak = useCallback(async (text: string) => {
-    if (isSpeaking) {
-      stopSpeaking();
-    }
-    
-    try {
-      // Call the Supabase edge function to convert text to speech
-      const { data, error } = await supabase.functions.invoke("ai-text-to-voice", {
-        body: { text, voice: "nova" }
-      });
-      
-      if (error) {
-        console.error("Text-to-speech error:", error);
-        toast({
-          title: "Speech Generation Failed",
-          description: "Could not generate speech from text. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      if (data.error) {
-        console.error("Text-to-speech API error:", data.error);
-        toast({
-          title: "Speech Generation Failed",
-          description: data.error || "Could not generate speech from text",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Convert base64 audio to ArrayBuffer
-      const binaryString = atob(data.audioContent);
-      const len = binaryString.length;
-      const bytes = new Uint8Array(len);
-      for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      
-      // Create an AudioContext and play the audio
-      const audioContext = new AudioContext();
-      const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
-      
-      const source = audioContext.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(audioContext.destination);
-      
-      // Set speaking state
-      setIsSpeaking(true);
-      
-      // Handle when audio stops playing
-      source.onended = () => {
-        setIsSpeaking(false);
-      };
-      
-      // Store reference to source for stopping
-      (window as any).__audioSource = source;
-      
-      // Start playing
-      source.start(0);
-    } catch (error) {
-      console.error("Error playing speech:", error);
-      setIsSpeaking(false);
-      toast({
-        title: "Speech Playback Error",
-        description: error instanceof Error ? error.message : "Failed to play speech",
-        variant: "destructive",
-      });
-    }
-  }, [isSpeaking]);
-
-  // Stop speaking
-  const stopSpeaking = useCallback(() => {
-    try {
-      if ((window as any).__audioSource) {
-        (window as any).__audioSource.stop();
-        delete (window as any).__audioSource;
-      }
-      setIsSpeaking(false);
-    } catch (error) {
-      console.error("Error stopping speech:", error);
-    }
-  }, []);
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -251,24 +165,16 @@ export const useVoiceInteraction = () => {
         recorder.stop();
         recorder.stream.getTracks().forEach(track => track.stop());
       }
-      
-      // Stop speaking if component unmounts while speaking
-      if (isSpeaking) {
-        stopSpeaking();
-      }
     };
-  }, [recorder, isSpeaking, stopSpeaking]);
+  }, [recorder]);
 
   return {
     isListening,
-    isSpeaking,
     supportsVoice,
     lastTranscript,
     isProcessing,
     startListening,
     stopListening,
-    speak,
-    stopSpeaking,
     clearTranscript
   };
 };

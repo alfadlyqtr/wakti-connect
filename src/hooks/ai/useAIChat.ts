@@ -5,7 +5,6 @@ import { toast } from "@/components/ui/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { AIMessage } from "@/types/ai-assistant.types";
-import { useVoiceInteraction } from "@/hooks/ai/useVoiceInteraction";
 
 export const useAIChat = () => {
   const { user } = useAuth();
@@ -19,7 +18,6 @@ export const useAIChat = () => {
   ]);
   const [offTopicCount, setOffTopicCount] = useState(0);
   const [userFirstName, setUserFirstName] = useState<string>("");
-  const { speak } = useVoiceInteraction();
   
   // Fetch user's name for personalized greetings
   useEffect(() => {

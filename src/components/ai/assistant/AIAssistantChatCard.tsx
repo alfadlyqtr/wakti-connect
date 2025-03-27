@@ -4,13 +4,12 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlertCircle, Bot, Loader2, Mic, MicOff, SendHorizontal, Speaker, Square, Trash2 } from 'lucide-react';
+import { AlertCircle, Bot, Loader2, Mic, MicOff, SendHorizontal, Trash2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { AIMessage } from '@/types/ai-assistant.types';
 import { AIAssistantChat } from './AIAssistantChat';
 import { SuggestionPrompts } from './SuggestionPrompts';
 import { useAISettings } from '@/components/settings/ai/context/AISettingsContext';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
@@ -46,14 +45,11 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   // Voice interaction hook
   const {
     isListening,
-    isSpeaking,
     supportsVoice,
     lastTranscript,
     isProcessing,
     startListening,
     stopListening,
-    speak,
-    stopSpeaking,
     clearTranscript
   } = useVoiceInteraction();
 
@@ -104,23 +100,6 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     }
   };
 
-  // Speak the last assistant message
-  const speakLastMessage = () => {
-    const lastAssistantMessage = [...messages].reverse().find(m => m.role === 'assistant');
-    if (lastAssistantMessage) {
-      if (isSpeaking) {
-        stopSpeaking();
-      } else {
-        speak(lastAssistantMessage.content);
-      }
-    } else {
-      toast({
-        title: "No Message to Speak",
-        description: "There is no assistant message to read.",
-      });
-    }
-  };
-
   return (
     <Card className="w-full h-[calc(80vh)] flex flex-col">
       <CardHeader className="py-3 px-4 border-b flex-row justify-between items-center">
@@ -129,23 +108,6 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
           <h3 className="font-medium text-sm md:text-base">Chat with {assistantName}</h3>
         </div>
         <div className="flex gap-2">
-          {/* Voice output button - will read the last assistant message */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={speakLastMessage}
-            className="h-8 w-8"
-            disabled={messages.length === 0 || isLoading}
-            aria-label={isSpeaking ? "Stop speaking" : "Speak message"}
-            title={isSpeaking ? "Stop speaking" : "Speak last message"}
-          >
-            {isSpeaking ? (
-              <Square className="h-4 w-4 text-red-500" />
-            ) : (
-              <Speaker className={`h-4 w-4 ${isSpeaking ? 'text-wakti-blue' : ''}`} />
-            )}
-          </Button>
-          
           {messages.length > 0 && (
             <Button 
               variant="ghost" 
