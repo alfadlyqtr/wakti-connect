@@ -59,7 +59,7 @@ import { Loader2 } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { toast } from "@/components/ui/use-toast";
 
-interface SimpleTeamTask {
+interface TeamTaskBasic {
   id: string;
   title: string;
   description: string | null;
@@ -87,7 +87,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const [freeAccountAlertOpen, setFreeAccountAlertOpen] = useState(false);
   const [isClaimTask, setIsClaimTask] = useState(false);
   const [selectedTaskToClaim, setSelectedTaskToClaim] = useState<string | null>(null);
-  const [teamTasks, setTeamTasks] = useState<SimpleTeamTask[]>([]);
+  const [teamTasks, setTeamTasks] = useState<TeamTaskBasic[]>([]);
 
   useEffect(() => {
     const checkIfStaff = async () => {
