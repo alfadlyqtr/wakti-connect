@@ -53,6 +53,8 @@ export const fetchBookings = async (
     // Fetch bookings based on the selected tab
     try {
       const userId = await getUserId();
+      console.log(`Fetching bookings for tab: ${tab}, user ID: ${userId}, isStaff: ${isStaff}`);
+      
       let rawBookings = [];
       
       // If staff user, only show bookings assigned to them
@@ -102,6 +104,8 @@ export const fetchBookings = async (
               
             if (templatesError) throw templatesError;
             
+            console.log(`Found ${allBookings?.length || 0} regular bookings and ${publishedTemplates?.length || 0} templates`);
+            
             // Process templates into booking format
             const templateBookings = (publishedTemplates || []).map(template => {
               // Create a booking representation from template
@@ -111,7 +115,7 @@ export const fetchBookings = async (
                 service_id: template.service_id,
                 title: template.name,
                 description: template.description,
-                status: 'completed', // Use a valid status that won't require action
+                status: 'completed' as BookingWithRelations['status'], // Use a valid status that won't require action
                 staff_assigned_id: template.staff_assigned_id,
                 created_at: template.created_at,
                 updated_at: template.updated_at,
@@ -130,6 +134,13 @@ export const fetchBookings = async (
             
             // Combine actual bookings with template representations
             rawBookings = [...(allBookings || []), ...templateBookings];
+            console.log(`Total combined bookings: ${rawBookings.length}`);
+            break;
+            
+          case "templates":
+            // In the templates tab, use the dedicated templates management system
+            // This will be handled by the BookingTemplatesTab component
+            rawBookings = [];
             break;
             
           case "pending-bookings":

@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useEffect } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,15 +28,30 @@ const DashboardBookings = () => {
     refetch 
   } = useBookings(isStaff ? 'all-bookings' : activeTab);
 
+  // Log bookings data for debugging
+  useEffect(() => {
+    if (bookings.length > 0) {
+      console.log(`Retrieved ${bookings.length} bookings for tab ${activeTab}`);
+      
+      // Check for templates
+      const templates = bookings.filter(b => (b as any).is_template);
+      if (templates.length > 0) {
+        console.log(`Found ${templates.length} template bookings`);
+      }
+    }
+  }, [bookings, activeTab]);
+
   // Mutation to update booking status
   const updateBookingMutation = useMutation({
     mutationFn: async ({ bookingId, status }: { bookingId: string, status: BookingStatus }) => {
       // Don't try to update templates (they're not real bookings)
       const booking = bookings.find(b => b.id === bookingId);
       if (booking && (booking as any).is_template) {
+        console.log("Attempted to update a template booking - skipping", bookingId);
         return { bookingId, status: 'completed' as BookingStatus };
       }
       
+      console.log(`Updating booking ${bookingId} status to ${status}`);
       const { error } = await supabase
         .from('bookings')
         .update({ status, updated_at: new Date().toISOString() })

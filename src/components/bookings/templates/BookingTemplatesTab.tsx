@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -9,8 +9,23 @@ import CreateTemplateButton from "./CreateTemplateButton";
 import TemplateAvailabilityManager from "./TemplateAvailabilityManager";
 import { BookingTemplateWithRelations, BookingTemplateFormData } from "@/types/booking.types";
 import { useBookingTemplates } from "@/hooks/useBookingTemplates";
+import { supabase } from "@/integrations/supabase/client";
 
 const BookingTemplatesTab: React.FC = () => {
+  const [businessId, setBusinessId] = useState<string | null>(null);
+  
+  // Get the current user's ID on component mount
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        setBusinessId(session.user.id);
+      }
+    };
+    
+    fetchCurrentUser();
+  }, []);
+
   const {
     templates,
     filteredTemplates,
@@ -38,7 +53,7 @@ const BookingTemplatesTab: React.FC = () => {
     isAddingException,
     deleteException,
     isDeletingException
-  } = useBookingTemplates();
+  } = useBookingTemplates(businessId);
 
   const [editTemplate, setEditTemplate] = useState<BookingTemplateWithRelations | null>(null);
   const [availabilityTemplate, setAvailabilityTemplate] = useState<BookingTemplateWithRelations | null>(null);
@@ -72,13 +87,31 @@ const BookingTemplatesTab: React.FC = () => {
   // Handle create template action
   const handleCreateTemplate = async (data: BookingTemplateFormData) => {
     try {
-      await createTemplate(data);
+      if (!businessId) {
+        throw new Error("Business ID not found");
+      }
+      
+      const templateData = {
+        ...data,
+        business_id: businessId
+      };
+      
+      await createTemplate(templateData);
       return Promise.resolve();
     } catch (error) {
       console.error("Error in create template:", error);
       return Promise.reject(error);
     }
   };
+
+  // Display loading state if we're still fetching the business ID
+  if (!businessId) {
+    return (
+      <div className="flex justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookingWithRelations, BookingStatus } from "@/types/booking.types";
@@ -23,11 +24,13 @@ const BookingsTabContent: React.FC<BookingsTabContentProps> = ({
     ? bookings.filter(filterFunction) 
     : bookings;
 
-  // Filter out template bookings for tabs that shouldn't show them
-  // Only keep them in the All Bookings tab
-  const displayBookings = filteredBookings;
+  console.log(`BookingsTabContent: Total bookings: ${bookings.length}, Filtered: ${filteredBookings.length}`);
+  
+  // Debug: Log bookings with is_template flag
+  const templates = bookings.filter(b => (b as any).is_template);
+  console.log(`Found ${templates.length} template bookings:`, templates);
 
-  if (displayBookings.length === 0) {
+  if (filteredBookings.length === 0) {
     return (
       <Card>
         <CardContent className="pt-6 text-center">
@@ -39,7 +42,7 @@ const BookingsTabContent: React.FC<BookingsTabContentProps> = ({
 
   return (
     <BookingsList 
-      bookings={displayBookings} 
+      bookings={filteredBookings} 
       onUpdateStatus={onUpdateStatus}
       isUpdating={isUpdating}
     />

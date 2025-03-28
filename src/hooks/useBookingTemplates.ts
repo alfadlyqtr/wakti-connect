@@ -1,5 +1,5 @@
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/helper";
@@ -23,16 +23,39 @@ import {
   deleteTemplateException
 } from "@/services/booking/templates";
 
-export const useBookingTemplates = (businessId?: string) => {
+export const useBookingTemplates = (businessId?: string | null) => {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPublished, setFilterPublished] = useState<boolean | null>(null);
+  const [currentBusinessId, setCurrentBusinessId] = useState<string | null>(null);
+
+  // If businessId is not provided, try to get it from the current user
+  useEffect(() => {
+    if (businessId) {
+      setCurrentBusinessId(businessId);
+      return;
+    }
+
+    const fetchCurrentUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        setCurrentBusinessId(session.user.id);
+      }
+    };
+    
+    fetchCurrentUser();
+  }, [businessId]);
 
   // Fetch booking templates
   const templatesQuery = useQuery({
-    queryKey: ['bookingTemplates', businessId],
+    queryKey: ['bookingTemplates', currentBusinessId],
     queryFn: async () => {
-      if (!businessId) return [];
+      if (!currentBusinessId) {
+        console.log("No business ID available for template fetch");
+        return [];
+      }
+      
+      console.log("Fetching templates for business ID:", currentBusinessId);
       
       const { data, error } = await fromTable('booking_templates')
         .select(`
@@ -46,7 +69,7 @@ export const useBookingTemplates = (businessId?: string) => {
             name
           )
         `)
-        .eq('business_id', businessId)
+        .eq('business_id', currentBusinessId)
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -54,14 +77,16 @@ export const useBookingTemplates = (businessId?: string) => {
         throw error;
       }
       
+      console.log(`Found ${data?.length || 0} templates for business ${currentBusinessId}`);
       return data as BookingTemplateWithRelations[];
     },
-    enabled: !!businessId
+    enabled: !!currentBusinessId
   });
 
   // Filter templates based on search query and published filter
   const filteredTemplates = useCallback(() => {
     const templates = templatesQuery.data || [];
+    console.log(`Filtering ${templates.length} templates`);
     
     return templates.filter(template => {
       // Apply search filter
@@ -79,10 +104,16 @@ export const useBookingTemplates = (businessId?: string) => {
   // Create template mutation
   const createTemplateMutation = useMutation({
     mutationFn: async (data: BookingTemplateFormData) => {
+      console.log("Creating template with data:", data);
+      if (!data.business_id && currentBusinessId) {
+        data.business_id = currentBusinessId;
+      }
       return await createBookingTemplate(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookingTemplates'] });
+      // Also invalidate regular bookings as templates may be shown there
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
       toast({
         title: "Template created",
         description: "Booking template has been created successfully.",
@@ -90,6 +121,7 @@ export const useBookingTemplates = (businessId?: string) => {
       });
     },
     onError: (error: any) => {
+      console.error("Error creating template:", error);
       toast({
         title: "Failed to create template",
         description: error.message || "An error occurred while creating the template.",
@@ -105,6 +137,8 @@ export const useBookingTemplates = (businessId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookingTemplates'] });
+      // Also invalidate regular bookings as templates may be shown there
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
       toast({
         title: "Template updated",
         description: "Booking template has been updated successfully.",
@@ -127,6 +161,8 @@ export const useBookingTemplates = (businessId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookingTemplates'] });
+      // Also invalidate regular bookings as templates may be shown there
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
       toast({
         title: "Template deleted",
         description: "Booking template has been deleted successfully.",
@@ -149,6 +185,8 @@ export const useBookingTemplates = (businessId?: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookingTemplates'] });
+      // Also invalidate regular bookings as templates may be shown there
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
       toast({
         title: "Template status updated",
         description: "Booking template status has been updated successfully.",
