@@ -1,11 +1,10 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { SectionType } from "@/types/business.types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Plus, Layout, Image, Clock, MapPin, FileText, Star, Calendar, Instagram, Wand2 } from "lucide-react";
+import { Loader2, Plus, Layout, Image, Clock, MapPin, FileText, Star, Calendar, Instagram } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { AIPageBuilder } from "../ai-assistant/AIPageBuilder";
 
 interface AddSectionButtonsProps {
   onAddSection: (sectionType: SectionType) => void;
@@ -16,7 +15,6 @@ const sectionCategories = {
   "basic": [
     { type: "header" as SectionType, icon: Layout, title: "Header", description: "Add a header with a title, subtitle, and call-to-action" },
     { type: "about" as SectionType, icon: FileText, title: "About", description: "Share information about your business" },
-    { type: "services" as SectionType, icon: Star, title: "Services", description: "List your services or products" },
     { type: "contact" as SectionType, icon: MapPin, title: "Contact", description: "Add your contact information and location" },
   ],
   "advanced": [
@@ -31,15 +29,6 @@ const sectionCategories = {
 };
 
 const AddSectionButtons: React.FC<AddSectionButtonsProps> = ({ onAddSection, isCreating }) => {
-  const [aiBuilderOpen, setAiBuilderOpen] = useState(false);
-  
-  const handleAIGenerated = (data: any) => {
-    console.log("AI generated content:", data);
-    // Here we would process and add the sections from AI
-    // For now, just demonstrate by adding a header section
-    onAddSection("header");
-  };
-
   return (
     <div className="space-y-4">
       <Tabs defaultValue="basic">
@@ -49,11 +38,6 @@ const AddSectionButtons: React.FC<AddSectionButtonsProps> = ({ onAddSection, isC
             <TabsTrigger value="advanced">Advanced</TabsTrigger>
             <TabsTrigger value="integration">Integration</TabsTrigger>
           </TabsList>
-          
-          <Button variant="outline" onClick={() => setAiBuilderOpen(true)}>
-            <Wand2 className="h-4 w-4 mr-2" />
-            AI Builder
-          </Button>
         </div>
         
         <TabsContent value="basic" className="mt-4">
@@ -95,12 +79,6 @@ const AddSectionButtons: React.FC<AddSectionButtonsProps> = ({ onAddSection, isC
           </div>
         </TabsContent>
       </Tabs>
-      
-      <AIPageBuilder 
-        open={aiBuilderOpen} 
-        onOpenChange={setAiBuilderOpen}
-        onPageGenerated={handleAIGenerated}
-      />
     </div>
   );
 };

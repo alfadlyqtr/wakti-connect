@@ -137,21 +137,7 @@ const SectionTemplateSelector: React.FC<SectionTemplateSelectorProps> = ({
           }
         ];
         
-      case 'services':
-        return [
-          {
-            id: 'basic-services',
-            name: 'Basic Services',
-            description: 'Simple list of services',
-            content: {
-              title: 'Our Services',
-              services: [
-                { name: 'Service 1', description: 'Description of service 1', price: '$XX' },
-                { name: 'Service 2', description: 'Description of service 2', price: '$XX' }
-              ]
-            }
-          }
-        ];
+      // Remove the 'services' case as it's no longer a valid SectionType
         
       default:
         return [];
