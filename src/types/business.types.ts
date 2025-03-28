@@ -42,6 +42,8 @@ export interface BusinessPage {
   is_published: boolean;
   chatbot_enabled?: boolean;
   chatbot_code?: string;
+  show_subscribe_button?: boolean;
+  subscribe_button_text?: string; 
   created_at?: string;
   updated_at?: string;
 }

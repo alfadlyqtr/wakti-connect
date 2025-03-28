@@ -11,6 +11,7 @@ import { BookingTemplateCard } from "@/components/business/page-builder/componen
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBookingTemplates } from "@/hooks/useBookingTemplates";
+import { Button } from "@/components/ui/button";
 
 const BookingTemplateSection: React.FC = () => {
   const { contentData, handleInputChange, setContentData, setIsDirty } = useSectionEditor();
@@ -46,6 +47,11 @@ const BookingTemplateSection: React.FC = () => {
     setIsDirty(true);
   };
 
+  const handleInputChangeWithOptions = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleInputChange(e);
+    setIsDirty(true);
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center p-8">
@@ -62,6 +68,7 @@ const BookingTemplateSection: React.FC = () => {
         <TabsTrigger value="content">Content</TabsTrigger>
         <TabsTrigger value="templates">Select Templates</TabsTrigger>
         <TabsTrigger value="appearance">Appearance</TabsTrigger>
+        <TabsTrigger value="button">Button Settings</TabsTrigger>
       </TabsList>
       
       <TabsContent value="content">
@@ -86,6 +93,17 @@ const BookingTemplateSection: React.FC = () => {
               onChange={handleInputChange}
               placeholder="Description"
               rows={3}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="buttonText">Button Text</Label>
+            <Input
+              id="buttonText"
+              name="buttonText"
+              value={contentData.buttonText || "Book Now"}
+              onChange={handleInputChange}
+              placeholder="Button Text"
             />
           </div>
         </div>
@@ -210,6 +228,75 @@ const BookingTemplateSection: React.FC = () => {
                 setIsDirty(true);
               }}
             />
+          </div>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="button">
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="buttonText">Button Text</Label>
+            <Input
+              id="buttonText"
+              name="buttonText"
+              value={contentData.buttonText || "Book Now"}
+              onChange={handleInputChangeWithOptions}
+              placeholder="Book Now"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="buttonColor">Button Color</Label>
+            <div className="flex gap-2">
+              <Input
+                id="buttonColor"
+                name="buttonColor"
+                type="color"
+                value={contentData.buttonColor || "#7C3AED"}
+                onChange={handleInputChangeWithOptions}
+                className="w-20"
+              />
+              <Input
+                name="buttonColor"
+                value={contentData.buttonColor || "#7C3AED"}
+                onChange={handleInputChangeWithOptions}
+                placeholder="#7C3AED"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <Label htmlFor="buttonTextColor">Button Text Color</Label>
+            <div className="flex gap-2">
+              <Input
+                id="buttonTextColor"
+                name="buttonTextColor"
+                type="color"
+                value={contentData.buttonTextColor || "#FFFFFF"}
+                onChange={handleInputChangeWithOptions}
+                className="w-20"
+              />
+              <Input
+                name="buttonTextColor"
+                value={contentData.buttonTextColor || "#FFFFFF"}
+                onChange={handleInputChangeWithOptions}
+                placeholder="#FFFFFF"
+              />
+            </div>
+          </div>
+          
+          <div className="mt-4">
+            <Label>Preview</Label>
+            <div className="mt-2">
+              <Button 
+                style={{
+                  backgroundColor: contentData.buttonColor || undefined,
+                  color: contentData.buttonTextColor || undefined
+                }}
+              >
+                {contentData.buttonText || "Book Now"}
+              </Button>
+            </div>
           </div>
         </div>
       </TabsContent>

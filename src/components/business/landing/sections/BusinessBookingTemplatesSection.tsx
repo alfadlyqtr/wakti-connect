@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookingTemplateWithRelations } from "@/types/booking.types";
 import { formatCurrency } from "@/utils/formatUtils";
-import { Clock, Calendar } from "lucide-react";
+import { Clock, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { fetchPublishedBookingTemplates } from "@/services/booking/templates/fetchTemplates";
 
@@ -26,12 +26,16 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
     displayAsCards = true,
     displayAs = "grid", // grid, carousel, list
     selectedTemplates = [], // ids of templates to display
+    buttonText = "Book Now",
+    buttonColor = "",
+    buttonTextColor = "",
   } = content;
 
   const navigate = useNavigate();
   const [templates, setTemplates] = useState<BookingTemplateWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     const loadBookingTemplates = async () => {
@@ -65,6 +69,18 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
     navigate(`/booking/${businessId}/${templateId}`);
   };
 
+  const nextSlide = () => {
+    setActiveIndex((prevIndex) => 
+      prevIndex === templates.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+
+  const prevSlide = () => {
+    setActiveIndex((prevIndex) => 
+      prevIndex === 0 ? templates.length - 1 : prevIndex - 1
+    );
+  };
+
   if (isLoading) {
     return (
       <section className="py-12 md:py-16">
@@ -91,6 +107,12 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
       </section>
     );
   }
+
+  // Custom button style based on settings
+  const buttonStyle = {
+    backgroundColor: buttonColor || undefined,
+    color: buttonTextColor || undefined,
+  };
 
   const renderGridLayout = () => (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -121,8 +143,9 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
             <Button 
               className="w-full" 
               onClick={() => handleBookNow(template.id)}
+              style={buttonStyle}
             >
-              Book Now
+              {buttonText}
             </Button>
           </CardFooter>
         </Card>
@@ -148,25 +171,87 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                       <span>{template.duration} min</span>
                     </div>
                   )}
+                  {showPrice && template.price !== null && (
+                    <div className="text-sm font-medium">
+                      {formatCurrency(template.price)}
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                {showPrice && template.price !== null && (
-                  <div className="text-sm font-medium">
-                    {formatCurrency(template.price)}
-                  </div>
-                )}
-                <Button 
-                  size="sm"
-                  onClick={() => handleBookNow(template.id)}
-                >
-                  Book
-                </Button>
-              </div>
+              <Button 
+                onClick={() => handleBookNow(template.id)}
+                style={buttonStyle}
+              >
+                {buttonText}
+              </Button>
             </div>
           </CardContent>
         </Card>
       ))}
+    </div>
+  );
+
+  const renderCarouselLayout = () => (
+    <div className="relative max-w-3xl mx-auto">
+      <div className="overflow-hidden">
+        <div className="transition-transform duration-300 ease-in-out" 
+          style={{ transform: `translateX(-${activeIndex * 100}%)`, display: 'flex' }}>
+          {templates.map(template => (
+            <Card key={template.id} className="w-full flex-shrink-0 mx-2">
+              <CardHeader>
+                <CardTitle className="text-xl">{template.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {showDescription && template.description && (
+                  <p className="text-muted-foreground mb-4">{template.description}</p>
+                )}
+                <div className="space-y-2">
+                  {showDuration && (
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Clock className="h-4 w-4 mr-2" />
+                      <span>{template.duration} minutes</span>
+                    </div>
+                  )}
+                  {showPrice && template.price !== null && (
+                    <div className="text-sm font-medium">
+                      {formatCurrency(template.price)}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  className="w-full" 
+                  onClick={() => handleBookNow(template.id)}
+                  style={buttonStyle}
+                >
+                  {buttonText}
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
+      
+      {templates.length > 1 && (
+        <div className="flex justify-between items-center mt-4">
+          <Button variant="outline" size="icon" onClick={prevSlide}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex space-x-1">
+            {templates.map((_, index) => (
+              <div 
+                key={index} 
+                className={`h-2 w-2 rounded-full transition-colors ${index === activeIndex ? 'bg-primary' : 'bg-gray-300'}`}
+                onClick={() => setActiveIndex(index)}
+              />
+            ))}
+          </div>
+          <Button variant="outline" size="icon" onClick={nextSlide}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 
@@ -180,7 +265,9 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
         
         {displayAs === "list" 
           ? renderListLayout() 
-          : renderGridLayout()
+          : displayAs === "carousel" 
+            ? renderCarouselLayout()
+            : renderGridLayout()
         }
       </div>
     </section>

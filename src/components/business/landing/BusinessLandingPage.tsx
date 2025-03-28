@@ -2,7 +2,7 @@
 import React, { useEffect } from "react";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
 import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import BusinessSocialLinks from "./BusinessSocialLinks";
@@ -12,6 +12,7 @@ import BusinessPageNotFound from "./BusinessPageNotFound";
 import { BusinessProfile } from "@/types/business.types";
 import PoweredByWAKTI from "./PoweredByWAKTI";
 import BusinessSubscribeButton from "./BusinessSubscribeButton";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface BusinessLandingPageComponentProps {
   slug?: string;
@@ -25,6 +26,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
   const { businessPage, pageSections, socialLinks, isLoading } = useBusinessPage(slug);
   const { isSubscribed, subscriptionId, subscribe, unsubscribe, checkingSubscription } = useBusinessSubscribers(businessPage?.business_id);
   const [isAuthenticated, setIsAuthenticated] = React.useState<boolean | null>(null);
+  const [showAuthAlert, setShowAuthAlert] = React.useState(false);
   
   React.useEffect(() => {
     // Skip auth check in preview mode
@@ -78,6 +80,16 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
     business_name: businessPage.page_title || "Business",
     account_type: "business"
   };
+
+  const handleTrySubscribe = () => {
+    if (!isAuthenticated) {
+      setShowAuthAlert(true);
+      // Scroll to the alert
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
+    }
+  };
   
   return (
     <div className="flex flex-col min-h-screen">
@@ -91,16 +103,41 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
         } as React.CSSProperties}
         className="flex-1"
       >
+        {/* Authentication Alert */}
+        {showAuthAlert && (
+          <div className="container mx-auto px-4 pt-4">
+            <Alert variant="warning">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Authentication Required</AlertTitle>
+              <AlertDescription>
+                You need to create an account or log in to subscribe to this business.
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+        
         {/* Find the header section in the pageSections array */}
         <BusinessPageHeader 
           content={pageSections?.find(s => s.section_type === 'header')?.section_content || {}}
         />
         
         <div className="container mx-auto px-4 py-4">
-          {/* Subscribe button - if not in preview mode and user is authenticated */}
-          {!isPreviewMode && isAuthenticated && (
+          {/* Subscribe button - if not in preview mode and business has enabled the button */}
+          {!isPreviewMode && businessPage.show_subscribe_button !== false && (
             <div className="flex justify-end mb-6">
-              <BusinessSubscribeButton businessId={businessPage.business_id} />
+              {isAuthenticated ? (
+                <BusinessSubscribeButton 
+                  businessId={businessPage.business_id} 
+                  customText={businessPage.subscribe_button_text}
+                />
+              ) : (
+                <Button 
+                  variant="outline" 
+                  onClick={handleTrySubscribe}
+                >
+                  {businessPage.subscribe_button_text || "Subscribe"}
+                </Button>
+              )}
             </div>
           )}
           

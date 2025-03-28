@@ -19,6 +19,8 @@ interface GeneralSettingsTabProps {
     description: string;
     is_published: boolean;
     logo_url?: string;
+    show_subscribe_button?: boolean;
+    subscribe_button_text?: string;
   };
   businessId?: string;
   handleInputChangeWithAutoSave: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
@@ -137,6 +139,41 @@ const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
             </div>
           </div>
         </div>
+        
+        {/* Subscribe Button Settings */}
+        <Card className="border-dashed">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Subscribe Button Settings</CardTitle>
+            <CardDescription>
+              Allow users to subscribe to your business updates
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="show_subscribe_button">Show Subscribe Button</Label>
+                <Switch
+                  id="show_subscribe_button"
+                  checked={pageData.show_subscribe_button !== false}
+                  onCheckedChange={(checked) => handleToggleWithAutoSave('show_subscribe_button', checked)}
+                />
+              </div>
+              
+              {pageData.show_subscribe_button !== false && (
+                <div>
+                  <Label htmlFor="subscribe_button_text">Button Text</Label>
+                  <Input
+                    id="subscribe_button_text"
+                    name="subscribe_button_text"
+                    value={pageData.subscribe_button_text || "Subscribe"}
+                    onChange={handleInputChangeWithAutoSave}
+                    placeholder="Subscribe"
+                  />
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
         
         <div className="flex items-center justify-between pt-4">
           <div className="flex items-center space-x-2">

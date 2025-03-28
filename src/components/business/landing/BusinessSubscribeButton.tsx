@@ -8,9 +8,10 @@ import { useNavigate } from "react-router-dom";
 
 interface BusinessSubscribeButtonProps {
   businessId: string;
+  customText?: string;
 }
 
-const BusinessSubscribeButton = ({ businessId }: BusinessSubscribeButtonProps) => {
+const BusinessSubscribeButton = ({ businessId, customText }: BusinessSubscribeButtonProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -58,7 +59,7 @@ const BusinessSubscribeButton = ({ businessId }: BusinessSubscribeButtonProps) =
       ) : (
         <>
           <Heart className={`mr-2 h-4 w-4 ${isSubscribed ? "fill-primary" : ""}`} />
-          {isSubscribed ? "Unsubscribe" : "Subscribe"}
+          {isSubscribed ? (customText ? `Unsubscribe` : "Unsubscribe") : (customText || "Subscribe")}
         </>
       )}
     </Button>
