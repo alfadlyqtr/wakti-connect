@@ -59,7 +59,7 @@ const BusinessSubscribeButton = ({ businessId, customText }: BusinessSubscribeBu
       ) : (
         <>
           <Heart className={`mr-2 h-4 w-4 ${isSubscribed ? "fill-primary" : ""}`} />
-          {isSubscribed ? (customText ? `Unsubscribe` : "Unsubscribe") : (customText || "Subscribe")}
+          {isSubscribed ? "Unsubscribe" : (customText || "Subscribe")}
         </>
       )}
     </Button>
