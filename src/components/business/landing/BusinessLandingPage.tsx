@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
 import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
@@ -13,6 +12,7 @@ import { BusinessProfile } from "@/types/business.types";
 import PoweredByWAKTI from "./PoweredByWAKTI";
 import BusinessSubscribeButton from "./BusinessSubscribeButton";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 interface BusinessLandingPageComponentProps {
   slug?: string;
