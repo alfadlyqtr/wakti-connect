@@ -107,7 +107,7 @@ const BookingsList: React.FC<BookingsListProps> = ({
                     <div className="mb-2">
                       <span className="text-sm font-medium">Provider:</span>
                       <span className="text-sm ml-2">
-                        {booking.staff?.name || 'Not assigned'}
+                        {booking.staff?.name || booking.staff_name || 'Not assigned'}
                       </span>
                     </div>
                     <div className="flex space-x-2 mt-4">

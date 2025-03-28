@@ -27,7 +27,7 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
     refetchOnWindowFocus: true,
     retry: 2,
     retryDelay: attemptIndex => Math.min(1000 * Math.pow(2, attemptIndex), 30000),
-    staleTime: 30 * 1000,
+    staleTime: 30 * 1000, // 30 seconds
     meta: {
       onError: (err: any) => {
         console.error("Booking fetch error:", err);
@@ -58,7 +58,7 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
         description: "Your booking has been created successfully",
       });
 
-      // Refetch bookings
+      // Force immediate refetch to show the new booking
       refetch();
       
       return result;

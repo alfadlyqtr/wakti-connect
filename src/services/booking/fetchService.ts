@@ -55,6 +55,7 @@ export const fetchBookings = async (
       const userId = await getUserId();
       console.log(`Fetching bookings for tab: ${tab}, user ID: ${userId}, isStaff: ${isStaff}`);
       
+      // IMPORTANT: We'll fetch bookings and related data separately to avoid join errors
       let rawBookings = [];
       
       // If staff user, only show bookings assigned to them
@@ -63,11 +64,7 @@ export const fetchBookings = async (
         
         const { data: staffBookings, error: staffBookingsError } = await supabase
           .from('bookings')
-          .select(`
-            *,
-            service:service_id(name, description, price),
-            staff:staff_assigned_id(name)
-          `)
+          .select('*')
           .eq('staff_assigned_id', staffRelationId)
           .order('created_at', { ascending: false });
           
@@ -81,11 +78,7 @@ export const fetchBookings = async (
             console.log(`Fetching all bookings for business: ${userId}`);
             const { data: allBookings, error: allBookingsError } = await supabase
               .from('bookings')
-              .select(`
-                *,
-                service:service_id(name, description, price),
-                staff:staff_assigned_id(name)
-              `)
+              .select('*')
               .eq('business_id', userId)
               .order('created_at', { ascending: false });
               
@@ -99,11 +92,7 @@ export const fetchBookings = async (
             // Fetch published templates and convert them to booking format
             const { data: publishedTemplates, error: templatesError } = await supabase
               .from('booking_templates')
-              .select(`
-                *,
-                service:service_id(name, description, price),
-                staff:staff_assigned_id(name)
-              `)
+              .select('*')
               .eq('business_id', userId)
               .eq('is_published', true)
               .order('created_at', { ascending: false });
@@ -121,12 +110,10 @@ export const fetchBookings = async (
                 service_id: template.service_id,
                 title: template.name,
                 description: template.description,
-                status: 'completed' as BookingWithRelations['status'], // Use a valid status that won't require action
+                status: 'completed' as BookingWithRelations['status'], 
                 staff_assigned_id: template.staff_assigned_id,
                 created_at: template.created_at,
                 updated_at: template.updated_at,
-                service: template.service,
-                staff: template.staff,
                 // Template-specific markers
                 is_template: true,
                 duration: template.duration,
@@ -152,11 +139,7 @@ export const fetchBookings = async (
           case "pending-bookings":
             const { data: pendingBookings, error: pendingBookingsError } = await supabase
               .from('bookings')
-              .select(`
-                *,
-                service:service_id(name, description, price),
-                staff:staff_assigned_id(name)
-              `)
+              .select('*')
               .eq('business_id', userId)
               .eq('status', 'pending')
               .order('created_at', { ascending: false });
@@ -168,11 +151,7 @@ export const fetchBookings = async (
           case "staff-bookings":
             const { data: staffBookings, error: staffBookingsError } = await supabase
               .from('bookings')
-              .select(`
-                *,
-                service:service_id(name, description, price),
-                staff:staff_assigned_id(name)
-              `)
+              .select('*')
               .eq('business_id', userId)
               .not('staff_assigned_id', 'is', null)
               .order('created_at', { ascending: false });
@@ -184,11 +163,7 @@ export const fetchBookings = async (
           default:
             const { data: defaultBookings, error: defaultBookingsError } = await supabase
               .from('bookings')
-              .select(`
-                *,
-                service:service_id(name, description, price),
-                staff:staff_assigned_id(name)
-              `)
+              .select('*')
               .eq('business_id', userId)
               .order('created_at', { ascending: false });
               
@@ -197,14 +172,60 @@ export const fetchBookings = async (
         }
       }
       
-      // Process the data to handle potential relation errors
-      // Explicitly cast the result to BookingWithRelations[]
-      bookings = rawBookings.map(booking => ({
-        ...booking,
-        service: booking.service && typeof booking.service === 'object' ? booking.service : null,
-        staff: booking.staff && typeof booking.staff === 'object' ? booking.staff : null
-      })) as BookingWithRelations[];
+      // Now that we have the bookings, let's fetch related services and staff
+      const serviceIds = rawBookings
+        .filter(booking => booking.service_id)
+        .map(booking => booking.service_id);
+        
+      const staffIds = rawBookings
+        .filter(booking => booking.staff_assigned_id)
+        .map(booking => booking.staff_assigned_id);
+        
+      // Fetch related services
+      let services = {};
+      if (serviceIds.length > 0) {
+        const { data: servicesData } = await supabase
+          .from('business_services')
+          .select('id, name, description, price')
+          .in('id', serviceIds);
+          
+        if (servicesData) {
+          services = servicesData.reduce((acc, service) => {
+            acc[service.id] = service;
+            return acc;
+          }, {});
+        }
+      }
       
+      // Fetch related staff
+      let staffMembers = {};
+      if (staffIds.length > 0) {
+        const { data: staffData } = await supabase
+          .from('business_staff')
+          .select('id, name')
+          .in('id', staffIds);
+          
+        if (staffData) {
+          staffMembers = staffData.reduce((acc, staff) => {
+            acc[staff.id] = staff;
+            return acc;
+          }, {});
+        }
+      }
+      
+      // Combine bookings with their related data
+      bookings = rawBookings.map(booking => {
+        const serviceData = booking.service_id ? services[booking.service_id] : null;
+        const staffData = booking.staff_assigned_id ? staffMembers[booking.staff_assigned_id] : null;
+        
+        return {
+          ...booking,
+          service: serviceData || null,
+          staff: staffData || null
+        };
+      });
+      
+      console.log(`Successfully processed ${bookings.length} bookings with relations`);
     } catch (fetchError: any) {
       console.error(`Error fetching bookings for tab "${tab}":`, fetchError);
       bookings = [];
