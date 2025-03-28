@@ -14,9 +14,22 @@ export function useServiceSelection(
     if (selectedServiceId) {
       const selectedService = services.find(service => service.id === selectedServiceId);
       if (selectedService) {
-        // Auto-fill title with service name
-        setValue('title', `Booking for ${selectedService.name}`);
+        // Auto-fill multiple fields based on service data
+        setValue('title', `${selectedService.name}`);
+        setValue('description', selectedService.description || '');
+        setValue('duration', selectedService.duration);
+        
+        // Only set price if it exists
+        if (selectedService.price !== null) {
+          setValue('price', selectedService.price);
+        }
+        
+        // Default to published if linked to a service
+        setValue('is_published', true);
       }
+    } else {
+      // Reset form fields if "None" is selected
+      setValue('is_published', false);
     }
   }, [selectedServiceId, services, setValue]);
 

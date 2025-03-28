@@ -1,7 +1,7 @@
 
 import React from "react";
-import { Control } from "react-hook-form";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Control, useWatch } from "react-hook-form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -10,6 +10,13 @@ interface BasicInfoFieldsProps {
 }
 
 const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({ control }) => {
+  const serviceId = useWatch({
+    control,
+    name: "service_id",
+  });
+
+  const isLinkedToService = !!serviceId;
+
   return (
     <>
       <FormField
@@ -21,6 +28,11 @@ const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({ control }) => {
             <FormControl>
               <Input placeholder="e.g., One-hour Consultation" {...field} />
             </FormControl>
+            {isLinkedToService && (
+              <FormDescription>
+                Auto-filled from linked service
+              </FormDescription>
+            )}
             <FormMessage />
           </FormItem>
         )}
@@ -39,6 +51,11 @@ const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({ control }) => {
                 value={field.value || ""} 
               />
             </FormControl>
+            {isLinkedToService && field.value && (
+              <FormDescription>
+                Auto-filled from linked service
+              </FormDescription>
+            )}
             <FormMessage />
           </FormItem>
         )}

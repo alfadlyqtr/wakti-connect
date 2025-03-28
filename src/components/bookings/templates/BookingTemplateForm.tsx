@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -70,7 +69,7 @@ const BookingTemplateForm: React.FC<BookingTemplateFormProps> = ({
     }
   });
 
-  // Service selection logic
+  // Service selection logic with enhanced auto-fill
   const { selectedServiceId, handleServiceSelection } = useServiceSelection(
     services, 
     initialData?.service_id, 

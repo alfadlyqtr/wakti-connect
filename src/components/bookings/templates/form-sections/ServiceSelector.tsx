@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Control } from "react-hook-form";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Service } from "@/types/service.types";
 
@@ -22,7 +22,7 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
       name="service_id"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Linked Service (Auto-fills Pre-Booking Name)</FormLabel>
+          <FormLabel>Link to Service</FormLabel>
           <Select 
             onValueChange={(value) => {
               field.onChange(value === "none" ? undefined : value);
@@ -39,11 +39,15 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
               <SelectItem value="none">None</SelectItem>
               {services.map((service) => (
                 <SelectItem key={service.id} value={service.id}>
-                  {service.name}
+                  {service.name} ({service.duration} min)
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          <FormDescription>
+            Selecting a service will auto-fill name, duration, price, and other details.
+            Linked services are automatically set to be published.
+          </FormDescription>
           <FormMessage />
         </FormItem>
       )}

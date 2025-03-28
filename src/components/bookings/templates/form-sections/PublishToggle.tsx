@@ -1,7 +1,7 @@
 
 import React from "react";
-import { Control } from "react-hook-form";
-import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { Control, useWatch } from "react-hook-form";
+import { FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 
 interface PublishToggleProps {
@@ -9,6 +9,13 @@ interface PublishToggleProps {
 }
 
 const PublishToggle: React.FC<PublishToggleProps> = ({ control }) => {
+  const serviceId = useWatch({
+    control,
+    name: "service_id",
+  });
+
+  const isLinkedToService = !!serviceId;
+
   return (
     <FormField
       control={control}
@@ -16,12 +23,12 @@ const PublishToggle: React.FC<PublishToggleProps> = ({ control }) => {
       render={({ field }) => (
         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
           <div className="space-y-0.5">
-            <FormLabel className="text-base">
-              Publish Pre-Booking
-            </FormLabel>
-            <p className="text-sm text-muted-foreground">
-              Make this pre-booking visible to customers on your booking page
-            </p>
+            <FormLabel className="text-base">Publish Pre-Booking</FormLabel>
+            <FormDescription>
+              {isLinkedToService 
+                ? "This booking is linked to a service and will be published on your business page."
+                : "Make this pre-booking available on your business page."}
+            </FormDescription>
           </div>
           <FormControl>
             <Switch

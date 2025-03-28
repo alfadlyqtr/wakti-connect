@@ -1,7 +1,7 @@
 
 import React from "react";
-import { Control } from "react-hook-form";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Control, useWatch } from "react-hook-form";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
 interface DurationAndPriceFieldsProps {
@@ -9,6 +9,13 @@ interface DurationAndPriceFieldsProps {
 }
 
 const DurationAndPriceFields: React.FC<DurationAndPriceFieldsProps> = ({ control }) => {
+  const serviceId = useWatch({
+    control,
+    name: "service_id",
+  });
+
+  const isLinkedToService = !!serviceId;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <FormField
@@ -25,6 +32,11 @@ const DurationAndPriceFields: React.FC<DurationAndPriceFieldsProps> = ({ control
                 onChange={(e) => field.onChange(parseInt(e.target.value))}
               />
             </FormControl>
+            {isLinkedToService && (
+              <FormDescription>
+                Auto-filled from linked service
+              </FormDescription>
+            )}
             <FormMessage />
           </FormItem>
         )}
@@ -46,6 +58,11 @@ const DurationAndPriceFields: React.FC<DurationAndPriceFieldsProps> = ({ control
                 onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
               />
             </FormControl>
+            {isLinkedToService && field.value !== undefined && (
+              <FormDescription>
+                Auto-filled from linked service
+              </FormDescription>
+            )}
             <FormMessage />
           </FormItem>
         )}
