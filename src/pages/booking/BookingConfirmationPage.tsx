@@ -63,7 +63,9 @@ const BookingConfirmationPage = () => {
         // Check if service exists, is an object, and doesn't have an error
         if (data.service !== null && typeof data.service === 'object') {
           // Need to check for 'error' property before accessing
-          if (!('error' in data.service)) {
+          // Using type assertion to help TypeScript understand we're checking a generic object
+          const serviceObj = data.service as Record<string, unknown>;
+          if (!('error' in serviceObj)) {
             // Type assertion after we've checked the shape is correct
             const serviceData = data.service as { name: string; description: string | null; price: number | null };
             formattedBooking.service = {
@@ -79,7 +81,9 @@ const BookingConfirmationPage = () => {
         // Check if staff exists, is an object, and doesn't have an error
         if (data.staff !== null && typeof data.staff === 'object') {
           // Need to check for 'error' property before accessing
-          if (!('error' in data.staff)) {
+          // Using type assertion to help TypeScript understand we're checking a generic object
+          const staffObj = data.staff as Record<string, unknown>;
+          if (!('error' in staffObj)) {
             // Type assertion after we've checked the shape is correct
             const staffData = data.staff as { name: string };
             formattedBooking.staff = {
