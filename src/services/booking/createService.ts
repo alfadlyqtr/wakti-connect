@@ -63,6 +63,7 @@ export const createBooking = async (
       end_time: bookingData.end_time,
       status: status as BookingStatus,
       staff_assigned_id: bookingData.staff_assigned_id,
+      staff_name: bookingData.staff_name, // Include staff_name in the booking
       price: bookingData.price
     };
     

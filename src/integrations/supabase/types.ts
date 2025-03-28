@@ -327,6 +327,7 @@ export type Database = {
           price: number | null
           service_id: string | null
           staff_assigned_id: string | null
+          staff_name: string | null
           start_time: string
           status: Database["public"]["Enums"]["booking_status"] | null
           template_id: string | null
@@ -346,6 +347,7 @@ export type Database = {
           price?: number | null
           service_id?: string | null
           staff_assigned_id?: string | null
+          staff_name?: string | null
           start_time: string
           status?: Database["public"]["Enums"]["booking_status"] | null
           template_id?: string | null
@@ -365,6 +367,7 @@ export type Database = {
           price?: number | null
           service_id?: string | null
           staff_assigned_id?: string | null
+          staff_name?: string | null
           start_time?: string
           status?: Database["public"]["Enums"]["booking_status"] | null
           template_id?: string | null

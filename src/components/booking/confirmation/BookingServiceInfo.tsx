@@ -17,6 +17,9 @@ const BookingServiceInfo: React.FC<BookingServiceInfoProps> = ({
   // Get the price, checking both service and the booking itself
   const price = booking.service?.price || booking.price || null;
   
+  // Get staff name from either the relation or the direct field
+  const staffName = booking.staff?.name || booking.staff_name;
+  
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
@@ -34,9 +37,9 @@ const BookingServiceInfo: React.FC<BookingServiceInfoProps> = ({
         </p>
       )}
       
-      {booking.staff?.name && (
+      {staffName && (
         <div className="mt-2 text-sm">
-          <span className="text-muted-foreground">Staff:</span> {booking.staff.name}
+          <span className="text-muted-foreground">Staff:</span> {staffName}
         </div>
       )}
       

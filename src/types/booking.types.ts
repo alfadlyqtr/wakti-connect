@@ -1,3 +1,4 @@
+
 export interface Booking {
   id: string;
   business_id: string;
@@ -12,6 +13,7 @@ export interface Booking {
   end_time: string;
   status: BookingStatus;
   staff_assigned_id?: string;
+  staff_name?: string;
   created_at: string;
   updated_at: string | null;
   price?: number;
@@ -55,6 +57,7 @@ export interface BookingFormData {
   start_time?: string;
   end_time?: string;
   staff_assigned_id?: string;
+  staff_name?: string;
   business_id?: string;
   price?: number;
   
