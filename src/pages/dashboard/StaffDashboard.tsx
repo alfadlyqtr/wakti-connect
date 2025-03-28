@@ -12,6 +12,7 @@ import StaffStats from "@/components/staff/dashboard/StaffStats";
 import WorkDaySection from "@/components/staff/dashboard/WorkDaySection";
 import WorkHistorySection from "@/components/staff/dashboard/WorkHistorySection";
 import PermissionsCard from "@/components/staff/dashboard/PermissionsCard";
+import BookingsWidget from "@/components/staff/dashboard/BookingsWidget";
 
 // Type for staff permissions
 interface StaffPermissions {
@@ -86,6 +87,13 @@ const StaffDashboard = () => {
       
       {/* Stats Cards */}
       <StaffStats stats={stats} permissions={permissions} />
+      
+      {/* Bookings Widget */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <BookingsWidget />
+        
+        {/* You could add other widgets in this grid too */}
+      </div>
       
       {/* Work History Section */}
       {permissions.can_track_hours && staffRelationId && (

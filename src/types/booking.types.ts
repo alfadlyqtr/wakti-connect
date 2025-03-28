@@ -1,4 +1,3 @@
-
 export interface Booking {
   id: string;
   business_id: string;
@@ -17,6 +16,8 @@ export interface Booking {
   created_at: string;
   updated_at: string | null;
   price?: number;
+  is_acknowledged?: boolean;
+  acknowledged_at?: string | null;
 }
 
 export interface ServiceRelation {
@@ -137,3 +138,9 @@ export interface BookingTemplatesResult {
   templates: BookingTemplateWithRelations[];
   userRole: "business";
 }
+
+export type BookingUpdateData = {
+  status?: BookingStatus;
+  is_acknowledged?: boolean;
+  acknowledged_at?: string | null;
+};

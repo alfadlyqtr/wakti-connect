@@ -1,16 +1,20 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 import { 
   fetchBookings, 
   createBooking as createBookingService,
+  updateBookingStatus,
+  acknowledgeBooking,
   BookingTab,
   BookingFormData,
-  BookingWithRelations
+  BookingWithRelations,
+  BookingStatus
 } from "@/services/booking";
 
 export const useBookings = (tab: BookingTab = "all-bookings") => {
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterDate, setFilterDate] = useState<Date | null>(null);
@@ -75,6 +79,45 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
     }
   };
 
+  // Update booking status
+  const updateStatus = useMutation({
+    mutationFn: ({ bookingId, status }: { bookingId: string, status: BookingStatus }) => 
+      updateBookingStatus(bookingId, status),
+    onSuccess: () => {
+      toast({
+        title: "Booking Updated",
+        description: "Booking status has been updated successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error?.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Acknowledge booking
+  const acknowledgeBookingMutation = useMutation({
+    mutationFn: (bookingId: string) => acknowledgeBooking(bookingId),
+    onSuccess: () => {
+      toast({
+        title: "Booking Acknowledged",
+        description: "The booking has been acknowledged and added to your calendar",
+      });
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Acknowledgement Failed",
+        description: error?.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Filter bookings based on search and filters
   const getFilteredBookings = () => {
     const bookingsList = data?.bookings || [];
@@ -108,6 +151,8 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
     filterDate,
     setFilterDate,
     createBooking,
+    updateStatus,
+    acknowledgeBooking: acknowledgeBookingMutation,
     refetch
   };
 };

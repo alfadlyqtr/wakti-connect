@@ -1,6 +1,7 @@
 
 import { fetchBookings } from "./fetchService";
 import { createBooking as createBookingService } from "./createService";
+import { updateBookingStatus, updateBooking, acknowledgeBooking } from "./updateService";
 import { 
   fetchBookingTemplates,
   fetchBookingTemplate,
@@ -28,13 +29,17 @@ import {
   BookingTemplateAvailability, 
   BookingTemplateException, 
   BookingTemplateFormData, 
-  BookingTemplatesResult 
+  BookingTemplatesResult,
+  BookingUpdateData
 } from "@/types/booking.types";
 
 export {
   // Booking operations
   fetchBookings,
   createBookingService as createBooking,
+  updateBookingStatus,
+  updateBooking,
+  acknowledgeBooking,
   
   // Template operations
   fetchBookingTemplates,
@@ -62,5 +67,6 @@ export {
   type BookingTemplateAvailability,
   type BookingTemplateException,
   type BookingTemplateFormData,
-  type BookingTemplatesResult
+  type BookingTemplatesResult,
+  type BookingUpdateData
 };

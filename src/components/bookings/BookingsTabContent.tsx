@@ -8,7 +8,9 @@ interface BookingsTabContentProps {
   bookings: BookingWithRelations[];
   filterFunction?: (booking: BookingWithRelations) => boolean;
   onUpdateStatus: (bookingId: string, status: BookingStatus) => void;
+  onAcknowledgeBooking?: (bookingId: string) => void;
   isUpdating: boolean;
+  isAcknowledging?: boolean;
   emptyMessage?: string;
 }
 
@@ -16,7 +18,9 @@ const BookingsTabContent: React.FC<BookingsTabContentProps> = ({
   bookings,
   filterFunction,
   onUpdateStatus,
+  onAcknowledgeBooking,
   isUpdating,
+  isAcknowledging = false,
   emptyMessage = "No bookings found."
 }) => {
   // Apply filter if provided, otherwise use all bookings
@@ -44,7 +48,9 @@ const BookingsTabContent: React.FC<BookingsTabContentProps> = ({
     <BookingsList 
       bookings={filteredBookings} 
       onUpdateStatus={onUpdateStatus}
+      onAcknowledgeBooking={onAcknowledgeBooking}
       isUpdating={isUpdating}
+      isAcknowledging={isAcknowledging}
     />
   );
 };

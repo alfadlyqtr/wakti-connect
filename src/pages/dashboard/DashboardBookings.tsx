@@ -25,7 +25,9 @@ const DashboardBookings = () => {
     bookings, 
     isLoading, 
     error, 
-    refetch 
+    refetch,
+    updateStatus,
+    acknowledgeBooking
   } = useBookings(isStaff ? 'all-bookings' : activeTab);
 
   // Log bookings data for debugging
@@ -50,55 +52,7 @@ const DashboardBookings = () => {
     }
   }, [bookings, activeTab, refetch]);
 
-  // Mutation to update booking status
-  const updateBookingMutation = useMutation({
-    mutationFn: async ({ bookingId, status }: { bookingId: string, status: BookingStatus }) => {
-      // Don't try to update templates (they're not real bookings)
-      const booking = bookings.find(b => b.id === bookingId);
-      if (booking && (booking as any).is_template) {
-        console.log("Attempted to update a template booking - skipping", bookingId);
-        return { bookingId, status: 'completed' as BookingStatus };
-      }
-      
-      console.log(`Updating booking ${bookingId} status to ${status}`);
-      const { error } = await supabase
-        .from('bookings')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', bookingId);
-        
-      if (error) throw error;
-      
-      return { bookingId, status };
-    },
-    onSuccess: (data) => {
-      // Skip notifications for templates
-      if ((data.bookingId && bookings.find(b => b.id === data.bookingId && (b as any).is_template))) {
-        return;
-      }
-      
-      // Invalidate and refetch
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
-      
-      // Send notification to customer
-      sendStatusNotification(data.bookingId, data.status);
-      
-      toast({
-        title: `Booking ${data.status}`,
-        description: `The booking has been ${data.status}.`,
-        variant: "success"
-      });
-    },
-    onError: (error) => {
-      console.error("Error updating booking:", error);
-      toast({
-        title: "Update Failed",
-        description: "There was an error updating the booking status.",
-        variant: "destructive"
-      });
-    }
-  });
-  
-  // Send notification to customer when booking status changes
+  // Mutation to send notification when booking status changes
   const sendStatusNotification = async (bookingId: string, status: BookingStatus) => {
     try {
       // Get booking details
@@ -122,6 +76,37 @@ const DashboardBookings = () => {
       }
     } catch (error) {
       console.error("Error sending notification:", error);
+    }
+  };
+
+  // Function to handle booking status updates
+  const handleUpdateStatus = async (bookingId: string, status: BookingStatus) => {
+    try {
+      // Skip processing for templates
+      const booking = bookings.find(b => b.id === bookingId);
+      if (booking && (booking as any).is_template) {
+        console.log("Attempted to update a template booking - skipping", bookingId);
+        return;
+      }
+      
+      console.log(`Updating booking ${bookingId} status to ${status}`);
+      
+      // Call the mutation
+      await updateStatus.mutateAsync({ bookingId, status });
+      
+      // Send notification
+      sendStatusNotification(bookingId, status);
+    } catch (error) {
+      console.error("Error in handleUpdateStatus:", error);
+    }
+  };
+
+  // Function to handle booking acknowledgment
+  const handleAcknowledgeBooking = async (bookingId: string) => {
+    try {
+      await acknowledgeBooking.mutateAsync(bookingId);
+    } catch (error) {
+      console.error("Error acknowledging booking:", error);
     }
   };
 
@@ -150,10 +135,10 @@ const DashboardBookings = () => {
         
         <BookingsTabContent 
           bookings={bookings} 
-          onUpdateStatus={(bookingId, status) => 
-            updateBookingMutation.mutate({ bookingId, status })
-          }
-          isUpdating={updateBookingMutation.isPending}
+          onUpdateStatus={handleUpdateStatus}
+          onAcknowledgeBooking={handleAcknowledgeBooking}
+          isUpdating={updateStatus.isPending}
+          isAcknowledging={acknowledgeBooking.isPending}
           emptyMessage="No bookings have been assigned to you yet."
         />
       </div>
@@ -176,10 +161,8 @@ const DashboardBookings = () => {
         <TabsContent value="all-bookings">
           <BookingsTabContent 
             bookings={bookings} 
-            onUpdateStatus={(bookingId, status) => 
-              updateBookingMutation.mutate({ bookingId, status })
-            }
-            isUpdating={updateBookingMutation.isPending}
+            onUpdateStatus={handleUpdateStatus}
+            isUpdating={updateStatus.isPending}
           />
         </TabsContent>
         
@@ -187,10 +170,8 @@ const DashboardBookings = () => {
           <BookingsTabContent 
             bookings={bookings} 
             filterFunction={(booking) => booking.status === 'pending'}
-            onUpdateStatus={(bookingId, status) => 
-              updateBookingMutation.mutate({ bookingId, status })
-            }
-            isUpdating={updateBookingMutation.isPending}
+            onUpdateStatus={handleUpdateStatus}
+            isUpdating={updateStatus.isPending}
             emptyMessage="No pending bookings found."
           />
         </TabsContent>
@@ -199,10 +180,8 @@ const DashboardBookings = () => {
           <BookingsTabContent 
             bookings={bookings} 
             filterFunction={(booking) => booking.staff_assigned_id !== null}
-            onUpdateStatus={(bookingId, status) => 
-              updateBookingMutation.mutate({ bookingId, status })
-            }
-            isUpdating={updateBookingMutation.isPending}
+            onUpdateStatus={handleUpdateStatus}
+            isUpdating={updateStatus.isPending}
             emptyMessage="No staff assigned bookings found."
           />
         </TabsContent>

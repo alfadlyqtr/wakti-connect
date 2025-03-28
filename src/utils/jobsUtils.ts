@@ -1,82 +1,85 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { Job } from '@/types/jobs.types';
+import { supabase } from "@/integrations/supabase/client";
+import { BookingWithRelations } from "@/types/booking.types";
+import { JobCardFormData } from "@/types/jobs.types";
 
 /**
- * Checks if a job is being used in any active job card
- * Only active job cards (where end_time is null) should prevent edits
- */
-export const isJobInUse = async (jobId: string): Promise<boolean> => {
-  const { data, error } = await supabase
-    .from('job_cards')
-    .select('id')
-    .eq('job_id', jobId)
-    .is('end_time', null) // Only consider active job cards (end_time is null)
-    .limit(1);
-    
-  if (error) {
-    console.error('Error checking if job is in use:', error);
-    return false;
-  }
-  
-  return data && data.length > 0;
-};
-
-/**
- * Checks if the user is a business owner
- * Business owners don't need to clock in to create job cards
+ * Check if the current user is a business owner
  */
 export const isBusinessOwner = async (): Promise<boolean> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return false;
+    // Call the Supabase function to check the user's role
+    const { data, error } = await supabase.rpc('get_user_role');
     
-    // Get user role from profiles table
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('account_type')
-      .eq('id', session.user.id)
-      .single();
-      
     if (error) {
-      console.error('Error checking user role:', error);
+      console.error("Error checking if user is business owner:", error);
       return false;
     }
     
-    return data?.account_type === 'business';
+    return data === 'business';
   } catch (error) {
-    console.error('Error in isBusinessOwner:', error);
+    console.error("Error in isBusinessOwner:", error);
     return false;
   }
 };
 
 /**
- * Get jobs that are not used in any active job cards
- * These are the only jobs that can be safely edited or deleted
+ * Create a job card from a booking
  */
-export const getEditableJobs = async (): Promise<Job[]> => {
+export const createJobCardFromBooking = async (
+  booking: BookingWithRelations,
+  staffRelationId: string
+): Promise<boolean> => {
   try {
-    // First get all jobs
-    const { data: allJobs, error: jobsError } = await supabase
-      .from('jobs')
-      .select('*');
-      
-    if (jobsError) throw jobsError;
-    if (!allJobs) return [];
+    if (!booking.id || !staffRelationId) {
+      console.error("Missing required data for creating job card");
+      return false;
+    }
     
-    // Then get all job IDs that are used in active job cards (where end_time is null)
-    const { data: activeJobCards, error: cardsError } = await supabase
+    // Create job card data
+    const jobCardData: JobCardFormData = {
+      job_id: booking.service_id || "",
+      payment_method: "none", // Will be updated when job is completed
+      payment_amount: booking.price || booking.service?.price || 0,
+      start_time: new Date().toISOString(),
+      notes: `Job created from booking: ${booking.title} (ID: ${booking.id})`
+    };
+    
+    // Insert into job_cards table
+    const { data, error } = await supabase
       .from('job_cards')
-      .select('job_id')
-      .is('end_time', null);
+      .insert({
+        staff_relation_id: staffRelationId,
+        job_id: jobCardData.job_id,
+        start_time: jobCardData.start_time,
+        payment_method: jobCardData.payment_method,
+        payment_amount: jobCardData.payment_amount,
+        notes: jobCardData.notes
+      })
+      .select()
+      .single();
       
-    if (cardsError) throw cardsError;
+    if (error) {
+      console.error("Error creating job card from booking:", error);
+      return false;
+    }
     
-    // Filter out jobs that are used in active job cards
-    const activeJobIds = activeJobCards ? activeJobCards.map(card => card.job_id) : [];
-    return allJobs.filter(job => !activeJobIds.includes(job.id));
+    // Update booking status to reflect job has started
+    const { error: updateError } = await supabase
+      .from('bookings')
+      .update({ 
+        status: 'confirmed',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', booking.id);
+      
+    if (updateError) {
+      console.error("Error updating booking status:", updateError);
+    }
+    
+    return true;
   } catch (error) {
-    console.error('Error getting editable jobs:', error);
-    return [];
+    console.error("Error in createJobCardFromBooking:", error);
+    return false;
   }
 };
