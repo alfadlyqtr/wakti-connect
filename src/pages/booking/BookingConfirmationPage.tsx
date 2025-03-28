@@ -62,6 +62,7 @@ const BookingConfirmationPage = () => {
         
         // Check if service exists, is an object, and doesn't have an error
         if (data.service !== null && typeof data.service === 'object') {
+          // Need to check for 'error' property before accessing
           if (!('error' in data.service)) {
             // Type assertion after we've checked the shape is correct
             const serviceData = data.service as { name: string; description: string | null; price: number | null };
@@ -77,6 +78,7 @@ const BookingConfirmationPage = () => {
         
         // Check if staff exists, is an object, and doesn't have an error
         if (data.staff !== null && typeof data.staff === 'object') {
+          // Need to check for 'error' property before accessing
           if (!('error' in data.staff)) {
             // Type assertion after we've checked the shape is correct
             const staffData = data.staff as { name: string };
