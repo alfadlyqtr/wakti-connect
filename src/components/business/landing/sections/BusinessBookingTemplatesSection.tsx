@@ -1,13 +1,15 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { useBookingTemplates } from "@/hooks/useBookingTemplates";
 import { Loader2, Calendar } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
+import BookingModalContent from "@/components/business/landing/booking/BookingModalContent";
 
 interface BusinessBookingTemplatesSectionProps {
   content: Record<string, any>;
@@ -24,7 +26,11 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
   } = content;
 
   const { templates, isLoading, error } = useBookingTemplates(businessId);
-  const navigate = useNavigate();
+  const { formatCurrency } = useCurrencyFormat();
+  
+  // State for booking modal
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
 
   // For debugging
   React.useEffect(() => {
@@ -56,10 +62,10 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
     );
   }
 
-  const handleBookNow = (templateId: string, templateName: string) => {
-    // Validate IDs before navigation
-    if (!businessId || !templateId) {
-      console.error("Missing required IDs for booking", { businessId, templateId });
+  const handleBookNow = (template: any) => {
+    // Validate template before opening modal
+    if (!template || !template.id) {
+      console.error("Invalid template selected for booking", template);
       toast({
         title: "Error",
         description: "Unable to process booking request. Please try again.",
@@ -68,21 +74,9 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
       return;
     }
     
-    console.log(`Booking template ${templateId}: ${templateName} for business ${businessId}`);
-    
-    // Use absolute path for navigation with the proper /booking prefix
-    // This ensures we route to the booking system not the main WAKTI site
-    const bookingPath = `/booking/${businessId}/${templateId}`;
-    console.log("Navigating to booking path:", bookingPath);
-    
-    // Navigate to the booking page with template and business info
-    navigate(bookingPath, {
-      state: {
-        businessId,
-        templateId,
-        templateName
-      }
-    });
+    console.log(`Opening booking modal for template: ${template.id}: ${template.name}`);
+    setSelectedTemplate(template);
+    setIsBookingModalOpen(true);
   };
 
   return (
@@ -115,7 +109,7 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                         {template.duration} minutes
                       </span>
                       <span className="text-primary font-bold">
-                        {template.price ? `$${template.price.toFixed(2)}` : "Free"}
+                        {template.price ? formatCurrency(template.price) : "Free"}
                       </span>
                     </div>
                   </div>
@@ -124,7 +118,7 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                   <CardFooter className="p-4 pt-0">
                     <Button 
                       className="w-full" 
-                      onClick={() => handleBookNow(template.id, template.name)}
+                      onClick={() => handleBookNow(template)}
                     >
                       <Calendar className="mr-2 h-4 w-4" /> {buttonText}
                     </Button>
@@ -150,13 +144,13 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                   <div className="flex items-center justify-between sm:flex-col sm:items-end space-y-1">
                     <span className="text-sm">{template.duration} minutes</span>
                     <span className="text-primary font-bold">
-                      {template.price ? `$${template.price.toFixed(2)}` : "Free"}
+                      {template.price ? formatCurrency(template.price) : "Free"}
                     </span>
                     {showBookButton && (
                       <Button 
                         size="sm" 
                         className="mt-2"
-                        onClick={() => handleBookNow(template.id, template.name)}
+                        onClick={() => handleBookNow(template)}
                       >
                         <Calendar className="mr-2 h-4 w-4" /> {buttonText}
                       </Button>
@@ -188,7 +182,7 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                             {template.duration} minutes
                           </span>
                           <span className="text-primary font-bold">
-                            {template.price ? `$${template.price.toFixed(2)}` : "Free"}
+                            {template.price ? formatCurrency(template.price) : "Free"}
                           </span>
                         </div>
                       </div>
@@ -197,7 +191,7 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                       <CardFooter className="p-4 pt-0">
                         <Button 
                           className="w-full" 
-                          onClick={() => handleBookNow(template.id, template.name)}
+                          onClick={() => handleBookNow(template)}
                         >
                           <Calendar className="mr-2 h-4 w-4" /> {buttonText}
                         </Button>
@@ -212,6 +206,26 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
           </Carousel>
         </TabsContent>
       </Tabs>
+
+      {/* Booking Modal */}
+      <Dialog open={isBookingModalOpen} onOpenChange={setIsBookingModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Book {selectedTemplate?.name}</DialogTitle>
+            <DialogDescription>
+              Fill out the details to book your appointment
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedTemplate && (
+            <BookingModalContent 
+              businessId={businessId}
+              template={selectedTemplate}
+              onClose={() => setIsBookingModalOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
