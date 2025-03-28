@@ -85,8 +85,9 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
       } as React.CSSProperties}
       className="min-h-screen pb-16"
     >
+      {/* Find the header section in the pageSections array instead of directly accessing businessPage.page_sections */}
       <BusinessPageHeader 
-        content={businessPage.page_sections?.find(s => s.section_type === 'header')?.section_content || {}}
+        content={pageSections?.find(s => s.section_type === 'header')?.section_content || {}}
       />
       
       <div className="container mx-auto px-4">
