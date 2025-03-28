@@ -13,11 +13,13 @@ import { format, addDays, parse, isAfter, isBefore } from "date-fns";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CalendarIcon, CheckCircle, Loader2 } from "lucide-react";
+import { CalendarIcon, CheckCircle, Loader2, LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 interface BookingModalContentProps {
   businessId: string;
@@ -39,6 +41,8 @@ type BookingFormValues = z.infer<typeof bookingFormSchema>;
 
 const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, template, onClose }) => {
   const { formatCurrency } = useCurrencyFormat();
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -49,8 +53,8 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
-      customerName: "",
-      customerEmail: "",
+      customerName: user?.name || "",
+      customerEmail: user?.email || "",
       customerPhone: "",
       bookingDate: new Date(),
       notes: "",
@@ -59,6 +63,14 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
 
   // Watch for date changes to update available times
   const selectedDate = form.watch("bookingDate");
+
+  // If user is logged in, pre-fill the form
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      form.setValue("customerName", user.name || "");
+      form.setValue("customerEmail", user.email || "");
+    }
+  }, [isAuthenticated, user, form]);
 
   // Fetch template availability when component mounts
   useEffect(() => {
@@ -76,6 +88,11 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
         console.log("Template availability:", data);
       } catch (error) {
         console.error("Error fetching template availability:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load availability. Please try again.",
+          variant: "destructive",
+        });
       } finally {
         setIsLoadingAvailability(false);
       }
@@ -162,11 +179,14 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
           staff_assigned_id: template.staff_assigned_id,
           customer_name: data.customerName,
           customer_email: data.customerEmail,
+          customer_phone: data.customerPhone,
           title: `Booking for ${template.name}`,
           description: data.notes || null,
           start_time: bookingDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
-          status: 'pending'
+          status: 'pending',
+          // Add price from template to the booking for reference
+          price: template.price
         })
         .select()
         .single();
@@ -181,10 +201,16 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
 
       setIsSuccess(true);
       
-      // Close modal after a delay
+      // Navigate to confirmation page after a short delay
       setTimeout(() => {
+        navigate(`/booking/confirmation/${booking.id}`, {
+          state: {
+            booking,
+            templateName: template.name
+          }
+        });
         onClose();
-      }, 3000);
+      }, 1500);
     } catch (error: any) {
       console.error("Booking error:", error);
       toast({
@@ -197,15 +223,22 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
     }
   };
 
+  const handleSignIn = () => {
+    onClose();
+    navigate('/login');
+  };
+
   if (isSuccess) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
         <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
         <h3 className="text-xl font-semibold mb-2">Booking Confirmed!</h3>
         <p className="text-muted-foreground mb-6">
-          Your booking has been successfully submitted. You'll receive a confirmation shortly.
+          Your booking has been successfully submitted. You'll be redirected to the confirmation page shortly.
         </p>
-        <Button onClick={onClose}>Close</Button>
+        <div className="mt-4">
+          <Loader2 className="animate-spin h-6 w-6 mx-auto" />
+        </div>
       </div>
     );
   }
@@ -213,6 +246,22 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
       <div className="md:col-span-2">
+        {!isAuthenticated && (
+          <div className="mb-6 p-4 border border-primary/20 rounded-md bg-primary/5">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h3 className="text-sm font-medium">Already have a WAKTI account?</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Sign in to auto-fill your details and manage all your bookings in one place.
+                </p>
+              </div>
+              <Button variant="secondary" size="sm" onClick={handleSignIn}>
+                <LogIn className="h-4 w-4 mr-2" /> Sign In
+              </Button>
+            </div>
+          </div>
+        )}
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -372,7 +421,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
       </div>
 
       <div>
-        <Card>
+        <Card className="border-primary/20 shadow-sm">
           <CardContent className="pt-6">
             <div className="space-y-4">
               <div>
