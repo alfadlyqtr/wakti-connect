@@ -4,11 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 
 interface AdvancedSettingsTabProps {
   pageData: {
     chatbot_enabled: boolean;
     chatbot_code?: string;
+    show_subscribe_button?: boolean;
+    subscribe_button_text?: string;
   };
   handleInputChangeWithAutoSave: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleToggleWithAutoSave: (name: string, checked: boolean) => void;
@@ -28,6 +32,36 @@ const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Subscribe Button Settings */}
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="show_subscribe_button"
+              checked={pageData.show_subscribe_button !== false} // Default to true if undefined
+              onCheckedChange={(checked) => handleToggleWithAutoSave('show_subscribe_button', checked)}
+            />
+            <Label htmlFor="show_subscribe_button" className="font-medium">
+              Show Subscribe Button
+            </Label>
+          </div>
+          
+          {pageData.show_subscribe_button !== false && (
+            <div className="ml-7 space-y-2 border-l-2 pl-4 border-primary/20">
+              <Label htmlFor="subscribe_button_text">Subscribe Button Text</Label>
+              <Input
+                id="subscribe_button_text"
+                name="subscribe_button_text"
+                value={pageData.subscribe_button_text || "Subscribe"}
+                onChange={handleInputChangeWithAutoSave}
+                placeholder="Subscribe"
+              />
+            </div>
+          )}
+        </div>
+
+        <Separator className="my-4" />
+
+        {/* TMW AI Chatbot Settings */}
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
             <Switch

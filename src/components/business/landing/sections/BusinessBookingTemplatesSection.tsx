@@ -1,10 +1,11 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { useBookingTemplates } from "@/hooks/useBookingTemplates";
-import { Loader2 } from "lucide-react";
+import { Loader2, Calendar } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Button } from "@/components/ui/button";
 
 interface BusinessBookingTemplatesSectionProps {
   content: Record<string, any>;
@@ -16,9 +17,21 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
     title = "Book an Appointment",
     subtitle = "Schedule a time to meet with us",
     layout = "grid", // grid, list, or carousel
+    buttonText = "Book Now", // Default button text
+    showBookButton = true, // Control if book buttons are shown
   } = content;
 
   const { templates, isLoading, error } = useBookingTemplates(businessId);
+
+  // For debugging
+  React.useEffect(() => {
+    console.log("BusinessBookingTemplatesSection mounted");
+    console.log("Content:", content);
+    console.log("BusinessId:", businessId);
+    console.log("Templates:", templates);
+    console.log("IsLoading:", isLoading);
+    console.log("Error:", error);
+  }, [content, businessId, templates, isLoading, error]);
 
   if (isLoading) {
     return (
@@ -40,6 +53,12 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
     );
   }
 
+  const handleBookNow = (templateId: string) => {
+    console.log(`Booking template ${templateId}`);
+    // In a real implementation, this would navigate to a booking page or open a booking modal
+    window.alert(`Booking template ${templateId} - This feature is under development`);
+  };
+
   return (
     <div className="py-8">
       <h2 className="text-2xl font-bold mb-2">{title}</h2>
@@ -56,11 +75,11 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
         <TabsContent value="grid" className="w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {templates.map((template) => (
-              <Card key={template.id} className="overflow-hidden">
+              <Card key={template.id} className="overflow-hidden flex flex-col">
                 <CardHeader className="bg-primary/5 p-4">
                   <h3 className="text-lg font-medium">{template.name}</h3>
                 </CardHeader>
-                <CardContent className="p-4">
+                <CardContent className="p-4 flex-grow">
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
                       {template.description || "No description available"}
@@ -75,6 +94,16 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                     </div>
                   </div>
                 </CardContent>
+                {showBookButton && (
+                  <CardFooter className="p-4 pt-0">
+                    <Button 
+                      className="w-full" 
+                      onClick={() => handleBookNow(template.id)}
+                    >
+                      <Calendar className="mr-2 h-4 w-4" /> {buttonText}
+                    </Button>
+                  </CardFooter>
+                )}
               </Card>
             ))}
           </div>
@@ -97,6 +126,15 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                     <span className="text-primary font-bold">
                       {template.price ? `$${template.price.toFixed(2)}` : "Free"}
                     </span>
+                    {showBookButton && (
+                      <Button 
+                        size="sm" 
+                        className="mt-2"
+                        onClick={() => handleBookNow(template.id)}
+                      >
+                        <Calendar className="mr-2 h-4 w-4" /> {buttonText}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </Card>
@@ -110,11 +148,11 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
             <CarouselContent>
               {templates.map((template) => (
                 <CarouselItem key={template.id} className="sm:basis-1/2 lg:basis-1/3">
-                  <Card className="h-full">
+                  <Card className="h-full flex flex-col">
                     <CardHeader className="bg-primary/5 p-4">
                       <h3 className="text-lg font-medium">{template.name}</h3>
                     </CardHeader>
-                    <CardContent className="p-4">
+                    <CardContent className="p-4 flex-grow">
                       <div className="space-y-2">
                         <p className="text-sm text-muted-foreground">
                           {template.description || "No description available"}
@@ -129,6 +167,16 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                         </div>
                       </div>
                     </CardContent>
+                    {showBookButton && (
+                      <CardFooter className="p-4 pt-0">
+                        <Button 
+                          className="w-full" 
+                          onClick={() => handleBookNow(template.id)}
+                        >
+                          <Calendar className="mr-2 h-4 w-4" /> {buttonText}
+                        </Button>
+                      </CardFooter>
+                    )}
                   </Card>
                 </CarouselItem>
               ))}

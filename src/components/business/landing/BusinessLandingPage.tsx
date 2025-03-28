@@ -44,7 +44,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
     checkAuth();
   }, [isPreviewMode]);
   
-  // Inject TMW AI Chatbot script if enabled
+  // Improved TMW AI Chatbot script injection
   useEffect(() => {
     // Clear any previously added chatbot scripts
     const existingScript = document.getElementById('tmw-chatbot-script');
@@ -54,17 +54,20 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
     
     if (businessPage?.chatbot_enabled && businessPage?.chatbot_code) {
       try {
-        // Create a script element to inject the chatbot code
+        // Create a script element
         const script = document.createElement('script');
         script.id = 'tmw-chatbot-script';
         
-        // Use innerHTML for the script content, which allows it to be properly parsed
-        script.innerHTML = businessPage.chatbot_code;
+        // Clean the chatbot code - trim whitespace and ensure it's valid JavaScript
+        const cleanCode = businessPage.chatbot_code.trim();
         
-        // Insert the script into the document
-        document.body.appendChild(script);
+        // Add the script content
+        script.text = cleanCode; // Using text instead of innerHTML for better script evaluation
         
-        console.log('TMW AI Chatbot script has been injected');
+        // Insert the script into the document head for better script execution
+        document.head.appendChild(script);
+        
+        console.log('TMW AI Chatbot script has been injected', cleanCode);
       } catch (error) {
         console.error('Error injecting TMW AI Chatbot script:', error);
       }
@@ -73,7 +76,11 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
       return () => {
         const scriptToRemove = document.getElementById('tmw-chatbot-script');
         if (scriptToRemove) {
-          document.body.removeChild(scriptToRemove);
+          try {
+            scriptToRemove.parentNode?.removeChild(scriptToRemove);
+          } catch (error) {
+            console.error('Error removing TMW chatbot script:', error);
+          }
         }
       };
     }
