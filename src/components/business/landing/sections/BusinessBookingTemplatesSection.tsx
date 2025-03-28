@@ -53,10 +53,10 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
     );
   }
 
-  const handleBookNow = (templateId: string) => {
-    console.log(`Booking template ${templateId}`);
+  const handleBookNow = (templateId: string, templateName: string) => {
+    console.log(`Booking template ${templateId}: ${templateName}`);
     // In a real implementation, this would navigate to a booking page or open a booking modal
-    window.alert(`Booking template ${templateId} - This feature is under development`);
+    window.alert(`Booking template ${templateName} - This feature is under development`);
   };
 
   return (
@@ -98,7 +98,7 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                   <CardFooter className="p-4 pt-0">
                     <Button 
                       className="w-full" 
-                      onClick={() => handleBookNow(template.id)}
+                      onClick={() => handleBookNow(template.id, template.name)}
                     >
                       <Calendar className="mr-2 h-4 w-4" /> {buttonText}
                     </Button>
@@ -130,7 +130,7 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                       <Button 
                         size="sm" 
                         className="mt-2"
-                        onClick={() => handleBookNow(template.id)}
+                        onClick={() => handleBookNow(template.id, template.name)}
                       >
                         <Calendar className="mr-2 h-4 w-4" /> {buttonText}
                       </Button>
@@ -171,7 +171,7 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                       <CardFooter className="p-4 pt-0">
                         <Button 
                           className="w-full" 
-                          onClick={() => handleBookNow(template.id)}
+                          onClick={() => handleBookNow(template.id, template.name)}
                         >
                           <Calendar className="mr-2 h-4 w-4" /> {buttonText}
                         </Button>

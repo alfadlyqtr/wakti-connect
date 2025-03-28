@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
 import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
 import { Loader2, AlertCircle } from "lucide-react";
@@ -28,6 +28,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
   const { isSubscribed, subscriptionId, subscribe, unsubscribe, checkingSubscription } = useBusinessSubscribers(businessPage?.business_id);
   const [isAuthenticated, setIsAuthenticated] = React.useState<boolean | null>(null);
   const [showAuthAlert, setShowAuthAlert] = React.useState(false);
+  const chatbotScriptRef = useRef<HTMLScriptElement | null>(null);
   
   React.useEffect(() => {
     // Skip auth check in preview mode
@@ -44,46 +45,76 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
     checkAuth();
   }, [isPreviewMode]);
   
-  // Improved TMW AI Chatbot script injection
+  // Improved TMW AI Chatbot script injection with direct DOM manipulation
   useEffect(() => {
     // Clear any previously added chatbot scripts
-    const existingScript = document.getElementById('tmw-chatbot-script');
-    if (existingScript) {
-      document.body.removeChild(existingScript);
+    if (chatbotScriptRef.current) {
+      try {
+        document.body.removeChild(chatbotScriptRef.current);
+        chatbotScriptRef.current = null;
+      } catch (error) {
+        console.error("Error removing previous chatbot script:", error);
+      }
     }
+    
+    const existingScripts = document.querySelectorAll('[id^="tmw-chatbot"]');
+    existingScripts.forEach(script => {
+      try {
+        script.parentNode?.removeChild(script);
+      } catch (err) {
+        console.error("Error removing existing chatbot script:", err);
+      }
+    });
     
     if (businessPage?.chatbot_enabled && businessPage?.chatbot_code) {
       try {
+        console.log("TMW AI Chatbot is enabled with code:", businessPage.chatbot_code);
+        
         // Create a script element
         const script = document.createElement('script');
-        script.id = 'tmw-chatbot-script';
+        script.id = 'tmw-chatbot-script-' + Date.now(); // Unique ID to avoid conflicts
+        chatbotScriptRef.current = script;
         
-        // Clean the chatbot code - trim whitespace and ensure it's valid JavaScript
-        const cleanCode = businessPage.chatbot_code.trim();
+        // Clean the chatbot code
+        let cleanCode = businessPage.chatbot_code.trim();
         
-        // Add the script content
-        script.text = cleanCode; // Using text instead of innerHTML for better script evaluation
+        // Set the script content
+        if (cleanCode.startsWith('<script>') && cleanCode.endsWith('</script>')) {
+          // Extract code from within script tags
+          cleanCode = cleanCode.substring(8, cleanCode.length - 9);
+        }
         
-        // Insert the script into the document head for better script execution
-        document.head.appendChild(script);
+        // Add the script content directly to the script tag
+        script.textContent = cleanCode;
         
-        console.log('TMW AI Chatbot script has been injected', cleanCode);
+        // Append to document body for better visibility
+        document.body.appendChild(script);
+        
+        console.log('TMW AI Chatbot script has been injected', {
+          id: script.id,
+          content: cleanCode.substring(0, 50) + '...' // Log just the beginning for debugging
+        });
       } catch (error) {
         console.error('Error injecting TMW AI Chatbot script:', error);
       }
-      
-      // Cleanup function to remove the script when component unmounts
-      return () => {
-        const scriptToRemove = document.getElementById('tmw-chatbot-script');
-        if (scriptToRemove) {
-          try {
-            scriptToRemove.parentNode?.removeChild(scriptToRemove);
-          } catch (error) {
-            console.error('Error removing TMW chatbot script:', error);
-          }
-        }
-      };
+    } else {
+      console.log("TMW AI Chatbot is disabled or has no code", {
+        enabled: businessPage?.chatbot_enabled,
+        hasCode: !!businessPage?.chatbot_code
+      });
     }
+    
+    // Cleanup function
+    return () => {
+      if (chatbotScriptRef.current) {
+        try {
+          document.body.removeChild(chatbotScriptRef.current);
+          chatbotScriptRef.current = null;
+        } catch (error) {
+          console.error('Error removing TMW chatbot script on unmount:', error);
+        }
+      }
+    };
   }, [businessPage?.chatbot_enabled, businessPage?.chatbot_code]);
   
   if (isLoading) {
