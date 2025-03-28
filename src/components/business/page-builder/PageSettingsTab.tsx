@@ -87,7 +87,7 @@ const PageSettingsTab: React.FC<PageSettingsTabProps> = ({
   };
 
   // Logo upload functionality with adapter to match the required prop type
-  const { uploadingLogo, handleLogoUpload: uploadLogo } = useLogoUpload(
+  const { uploadingLogo, handleLogoUpload } = useLogoUpload(
     businessId, 
     (logoUrl) => {
       if (autoSavePageSettings) {
@@ -98,11 +98,6 @@ const PageSettingsTab: React.FC<PageSettingsTabProps> = ({
       }
     }
   );
-  
-  // Adapter function to convert the file directly without event
-  const handleLogoUpload = (file: File) => {
-    uploadLogo(file);
-  };
   
   return (
     <Tabs defaultValue="general">

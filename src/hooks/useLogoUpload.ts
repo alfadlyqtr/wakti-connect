@@ -9,8 +9,17 @@ export const useLogoUpload = (
 ) => {
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  // Handle both direct File uploads and event-based uploads
+  const handleLogoUpload = async (fileOrEvent: File | React.ChangeEvent<HTMLInputElement>) => {
+    let file: File | undefined;
+    
+    // Check if the input is a File or an event
+    if (fileOrEvent instanceof File) {
+      file = fileOrEvent;
+    } else if (fileOrEvent.target && fileOrEvent.target.files) {
+      file = fileOrEvent.target.files[0];
+    }
+    
     if (!file || !businessId) return;
     
     try {

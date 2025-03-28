@@ -24,7 +24,7 @@ interface GeneralSettingsTabProps {
   businessId?: string;
   handleInputChangeWithAutoSave: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleToggleWithAutoSave: (name: string, checked: boolean) => void;
-  handleLogoUpload: (file: File) => void;
+  handleLogoUpload: (fileOrEvent: File | React.ChangeEvent<HTMLInputElement>) => void;
   getPublicPageUrl: () => string;
   uploadingLogo: boolean;
 }
@@ -70,10 +70,9 @@ const GeneralSettingsTab = ({
     window.open(url, '_blank');
   };
 
+  // This now passes the event directly to the handleLogoUpload function
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleLogoUpload(e.target.files[0]);
-    }
+    handleLogoUpload(e);
   };
 
   return (
