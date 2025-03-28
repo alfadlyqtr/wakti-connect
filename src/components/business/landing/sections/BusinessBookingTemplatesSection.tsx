@@ -6,6 +6,8 @@ import { Loader2, Calendar } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/use-toast";
 
 interface BusinessBookingTemplatesSectionProps {
   content: Record<string, any>;
@@ -22,6 +24,7 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
   } = content;
 
   const { templates, isLoading, error } = useBookingTemplates(businessId);
+  const navigate = useNavigate();
 
   // For debugging
   React.useEffect(() => {
@@ -55,8 +58,15 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
 
   const handleBookNow = (templateId: string, templateName: string) => {
     console.log(`Booking template ${templateId}: ${templateName}`);
-    // In a real implementation, this would navigate to a booking page or open a booking modal
-    window.alert(`Booking template ${templateName} - This feature is under development`);
+    
+    // Navigate to the booking page with template and business info
+    navigate(`/booking/${businessId}/${templateId}`, {
+      state: {
+        businessId,
+        templateId,
+        templateName
+      }
+    });
   };
 
   return (
