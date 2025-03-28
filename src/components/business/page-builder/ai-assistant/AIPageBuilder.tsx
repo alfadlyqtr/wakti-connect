@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { AIAssistantMessage } from "@/components/ai/message/AIAssistantMessage";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
+import { SectionType } from "@/types/business.types";
 
 interface AIPageBuilderProps {
   open: boolean;
@@ -27,6 +28,9 @@ const questionnaire = [
   { id: "contactInfo", label: "Any specific contact information to include?", placeholder: "E.g., specific hours, phone, location, etc." },
 ];
 
+// Basic section types to generate with the AI
+const basicSectionTypes: SectionType[] = ['header', 'about', 'contact', 'hours', 'booking'];
+
 export const AIPageBuilder: React.FC<AIPageBuilderProps> = ({ 
   open, 
   onOpenChange,
@@ -37,7 +41,8 @@ export const AIPageBuilder: React.FC<AIPageBuilderProps> = ({
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [customPrompt, setCustomPrompt] = useState("");
   const [generating, setGenerating] = useState(false);
-  const [generatedData, setGeneratedData] = useState<any>(null);
+  const [isPreviewReady, setIsPreviewReady] = useState(false);
+  const [previewData, setPreviewData] = useState<any>(null);
   
   const { messages, sendMessage, clearMessages } = useAIChatOperations(
     user?.id,
@@ -51,6 +56,7 @@ export const AIPageBuilder: React.FC<AIPageBuilderProps> = ({
   const generateFromQuestionnaire = async () => {
     setGenerating(true);
     setActiveTab("results");
+    setIsPreviewReady(false);
     
     // Format the answers into a prompt
     const formattedPrompt = `
@@ -61,18 +67,23 @@ export const AIPageBuilder: React.FC<AIPageBuilderProps> = ({
       Main Services: ${answers.services || "Not specified"}
       Contact Information: ${answers.contactInfo || "Not specified"}
       
-      Based on this information, generate page content for a business landing page. Provide the results in a structured JSON format that includes:
-      1. Header section content
-      2. About section content
-      3. Services section with multiple services
-      4. Contact information section content
-      5. Recommended color palette
-      6. Suggested layout/sections order
+      Based on this information, generate page content for a business landing page. Provide the results in structured format that I can easily use to populate my business page.
+      
+      Focus on generating content for: header section, about section, services, and contact information.
     `;
     
     try {
       await sendMessage.mutateAsync(formattedPrompt);
       setGenerating(false);
+      setIsPreviewReady(true);
+      
+      // Create sample preview data
+      setPreviewData({
+        businessType: answers.businessType || "Business",
+        primaryColor: answers.primaryColor || "#7C3AED",
+        sections: basicSectionTypes
+      });
+      
     } catch (error) {
       console.error("Error generating page:", error);
       toast({
@@ -96,23 +107,20 @@ export const AIPageBuilder: React.FC<AIPageBuilderProps> = ({
     
     setGenerating(true);
     setActiveTab("results");
-    
-    const formattedPrompt = `
-      Please help me create a business landing page with the following instructions:
-      ${customPrompt}
-      
-      Based on these instructions, generate page content for a business landing page. Provide the results in a structured JSON format that includes:
-      1. Header section content
-      2. About section content
-      3. Services section with multiple services
-      4. Contact information section content
-      5. Recommended color palette
-      6. Suggested layout/sections order
-    `;
+    setIsPreviewReady(false);
     
     try {
-      await sendMessage.mutateAsync(formattedPrompt);
+      await sendMessage.mutateAsync(customPrompt);
       setGenerating(false);
+      setIsPreviewReady(true);
+      
+      // Create sample preview data
+      setPreviewData({
+        businessType: "Custom Business",
+        primaryColor: "#7C3AED",
+        sections: basicSectionTypes
+      });
+      
     } catch (error) {
       console.error("Error generating page:", error);
       toast({
@@ -128,46 +136,53 @@ export const AIPageBuilder: React.FC<AIPageBuilderProps> = ({
     clearMessages();
     setAnswers({});
     setCustomPrompt("");
-    setGeneratedData(null);
+    setPreviewData(null);
+    setIsPreviewReady(false);
     setActiveTab("questionnaire");
     onOpenChange(false);
   };
 
-  const parseAndApplyResults = () => {
-    // Here we would parse the AI response and apply it to the page
-    // For now, just close the dialog
-    handleClose();
-    
+  const applyGeneratedContent = () => {
+    // Let the parent component know we've generated content
+    // It will handle creating the actual sections
     if (onPageGenerated) {
-      // Parse the last AI message to extract structured data
-      // This is a simplified example - in reality, we'd need more robust parsing
-      const lastAIMessage = messages.filter(m => m.role === "assistant").pop();
-      if (lastAIMessage) {
-        try {
-          // Try to find JSON in the message
-          const jsonMatch = lastAIMessage.content.match(/```json\n([\s\S]*?)\n```/);
-          const jsonContent = jsonMatch ? jsonMatch[1] : null;
-          
-          if (jsonContent) {
-            const parsedContent = JSON.parse(jsonContent);
-            onPageGenerated(parsedContent);
-            return;
-          }
-          
-          // Fallback to the whole message
-          onPageGenerated({
-            aiResponse: lastAIMessage.content
-          });
-        } catch (error) {
-          console.error("Error parsing AI response:", error);
-          toast({
-            variant: "destructive",
-            title: "Parsing error",
-            description: "Could not parse the AI response. Please try again.",
-          });
+      // Create a simplified data structure that can be used to create sections
+      const generatedData = {
+        sections: basicSectionTypes,
+        content: messages.filter(m => m.role === "assistant").map(m => m.content),
+        businessInfo: {
+          type: answers.businessType || "Business",
+          color: answers.primaryColor || "#7C3AED",
         }
-      }
+      };
+      
+      onPageGenerated(generatedData);
     }
+    
+    handleClose();
+  };
+
+  const renderPreview = () => {
+    if (!isPreviewReady || !previewData) return null;
+    
+    return (
+      <div className="mt-6 border rounded-lg p-4">
+        <h3 className="text-lg font-medium mb-2">Generated Page Preview</h3>
+        <div className="space-y-2">
+          <p><strong>Business Type:</strong> {previewData.businessType}</p>
+          <p><strong>Primary Color:</strong> <span className="inline-block w-4 h-4 rounded-full" style={{ backgroundColor: previewData.primaryColor }}></span> {previewData.primaryColor}</p>
+          <p><strong>Sections:</strong></p>
+          <ul className="list-disc pl-5">
+            {previewData.sections.map((section: string) => (
+              <li key={section} className="capitalize">{section}</li>
+            ))}
+          </ul>
+        </div>
+        <Button onClick={applyGeneratedContent} className="mt-4">
+          Apply to My Page
+        </Button>
+      </div>
+    );
   };
 
   return (
@@ -241,18 +256,14 @@ export const AIPageBuilder: React.FC<AIPageBuilderProps> = ({
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4 h-[400px] overflow-y-auto pr-2">
-                  {messages.map((message) => (
-                    <AIAssistantMessage key={message.id} message={message} />
-                  ))}
+                <div className="space-y-4">
+                  <div className="h-[300px] overflow-y-auto pr-2 mb-4">
+                    {messages.map((message) => (
+                      <AIAssistantMessage key={message.id} message={message} />
+                    ))}
+                  </div>
                   
-                  {messages.length > 0 && messages.some(m => m.role === "assistant") && (
-                    <div className="flex justify-end mt-4">
-                      <Button onClick={parseAndApplyResults}>
-                        Apply This Content
-                      </Button>
-                    </div>
-                  )}
+                  {isPreviewReady && renderPreview()}
                 </div>
               )}
             </TabsContent>
