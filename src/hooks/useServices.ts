@@ -23,12 +23,6 @@ export const useServices = () => {
     deleteServiceMutation
   } = useServiceCrud();
 
-  // Create a map of staff assignments by service
-  const staffAssignments = services?.reduce((acc, service) => {
-    acc[service.id] = service.assigned_staff?.length || 0;
-    return acc;
-  }, {} as Record<string, number>) || {};
-
   const handleSubmit = (values: ServiceFormValues) => {
     if (editingService) {
       updateServiceMutation.mutate({ id: editingService.id, formData: values });
@@ -71,7 +65,6 @@ export const useServices = () => {
     isPendingAdd: addServiceMutation.isPending,
     isPendingUpdate: updateServiceMutation.isPending,
     isPendingDelete: deleteServiceMutation.isPending,
-    staffAssignments,
     searchQuery,
     setSearchQuery,
     serviceToDelete,

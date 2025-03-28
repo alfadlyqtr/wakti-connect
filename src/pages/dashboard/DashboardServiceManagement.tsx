@@ -24,7 +24,6 @@ const DashboardServiceManagement = () => {
     isPendingAdd,
     isPendingUpdate,
     isPendingDelete,
-    staffAssignments,
     searchQuery,
     setSearchQuery,
     serviceToDelete,
@@ -100,7 +99,6 @@ const DashboardServiceManagement = () => {
         onEditService={handleEditService}
         onDeleteService={handleDeleteClick}
         isDeleting={isPendingDelete}
-        staffAssignments={staffAssignments}
       />
 
       <ConfirmationDialog

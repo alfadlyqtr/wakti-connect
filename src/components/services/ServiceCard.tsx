@@ -3,24 +3,21 @@ import React from "react";
 import { Card, CardHeader, CardContent, CardFooter, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Edit, Trash2, Users } from "lucide-react";
+import { Clock, Edit, Trash2 } from "lucide-react";
 import { Service } from "@/types/service.types";
-import StaffAssignmentButton from "./StaffAssignmentButton";
 
 interface ServiceCardProps {
   service: Service;
   onEdit: (service: Service) => void;
   onDelete: (service: Service) => void;
   isDeleting: boolean;
-  staffCount?: number;
 }
 
 const ServiceCard: React.FC<ServiceCardProps> = ({ 
   service, 
   onEdit, 
   onDelete,
-  isDeleting,
-  staffCount = 0
+  isDeleting
 }) => {
   return (
     <Card className="h-full flex flex-col transition-all hover:shadow-md">
@@ -43,19 +40,6 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           <Clock className="h-4 w-4 mr-2" />
           <span>{service.duration} minutes</span>
         </div>
-        
-        <StaffAssignmentButton 
-          serviceId={service.id} 
-          serviceName={service.name}
-          staffCount={staffCount}
-        />
-        
-        {staffCount > 0 && (
-          <div className="flex items-center text-xs text-muted-foreground mt-1">
-            <Users className="h-3 w-3 mr-1" />
-            <span>{staffCount} staff {staffCount === 1 ? 'member' : 'members'} assigned</span>
-          </div>
-        )}
       </CardContent>
       
       <CardFooter className="flex justify-between pt-4 border-t">
