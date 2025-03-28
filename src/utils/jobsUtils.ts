@@ -24,6 +24,31 @@ export const isBusinessOwner = async (): Promise<boolean> => {
 };
 
 /**
+ * Check if a job is currently in use (in an active job card)
+ * This prevents editing/deleting jobs that are in use
+ */
+export const isJobInUse = async (jobId: string): Promise<boolean> => {
+  try {
+    // Check if the job is used in any incomplete job cards (where end_time is null)
+    const { data, error, count } = await supabase
+      .from('job_cards')
+      .select('id', { count: 'exact' })
+      .eq('job_id', jobId)
+      .is('end_time', null);
+      
+    if (error) {
+      console.error("Error checking if job is in use:", error);
+      return true; // Assume it's in use if there's an error (safer)
+    }
+    
+    return (count !== null && count > 0);
+  } catch (error) {
+    console.error("Error in isJobInUse:", error);
+    return true; // Assume it's in use if there's an error (safer)
+  }
+};
+
+/**
  * Create a job card from a booking
  */
 export const createJobCardFromBooking = async (
