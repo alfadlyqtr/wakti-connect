@@ -7,4 +7,8 @@ export const businessRoutes: RouteObject[] = [
     path: ":slug",
     element: <BusinessPage />,
   },
+  {
+    path: ":slug/preview",
+    element: <BusinessPage isPreview={true} />,
+  },
 ];

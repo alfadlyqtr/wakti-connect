@@ -8,9 +8,8 @@ import BusinessAboutSection from "./sections/BusinessAboutSection";
 import BusinessContactSection from "./sections/BusinessContactSection";
 import BusinessHoursSection from "./sections/BusinessHoursSection";
 import BusinessGallerySection from "./sections/BusinessGallerySection";
-import BusinessServicesSection from "./sections/BusinessServicesSection";
 import BusinessTestimonialsSection from "./sections/BusinessTestimonialsSection";
-import BusinessBookingSection from "./sections/BusinessBookingSection";
+import BusinessBookingTemplatesSection from "./sections/BusinessBookingTemplatesSection";
 import BusinessInstagramSection from "./sections/BusinessInstagramSection";
 
 interface BusinessPageSectionsProps {
@@ -48,14 +47,11 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
       case 'gallery':
         return <BusinessGallerySection key={section.id} content={content} />;
         
-      case 'services':
-        return <BusinessServicesSection key={section.id} content={content} businessId={businessPage.business_id} />;
-        
       case 'testimonials':
         return <BusinessTestimonialsSection key={section.id} content={content} />;
 
       case 'booking':
-        return <BusinessBookingSection key={section.id} content={content} businessId={businessPage.business_id} />;
+        return <BusinessBookingTemplatesSection key={section.id} content={content} businessId={businessPage.business_id} />;
         
       case 'instagram':
         return <BusinessInstagramSection key={section.id} content={content} />;

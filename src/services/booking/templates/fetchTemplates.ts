@@ -55,3 +55,30 @@ export const fetchBookingTemplate = async (templateId: string): Promise<BookingT
 
   return data;
 };
+
+// Fetch only published booking templates for a business
+export const fetchPublishedBookingTemplates = async (businessId: string): Promise<BookingTemplateWithRelations[]> => {
+  const { data, error } = await supabase
+    .from('booking_templates')
+    .select(`
+      *,
+      service:service_id (
+        name,
+        description,
+        price
+      ),
+      staff:staff_assigned_id (
+        name
+      )
+    `)
+    .eq('business_id', businessId)
+    .eq('is_published', true)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error("Error fetching published booking templates:", error);
+    throw error;
+  }
+
+  return data || [];
+};

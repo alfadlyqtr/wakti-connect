@@ -10,6 +10,8 @@ import BusinessPageHeader from "./sections/BusinessPageHeader";
 import BusinessPageSections from "./BusinessPageSections";
 import BusinessPageNotFound from "./BusinessPageNotFound";
 import { BusinessProfile } from "@/types/business.types";
+import PoweredByWAKTI from "./PoweredByWAKTI";
+import BusinessSubscribeButton from "./BusinessSubscribeButton";
 
 interface BusinessLandingPageComponentProps {
   slug?: string;
@@ -78,31 +80,46 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
   };
   
   return (
-    <div 
-      style={{
-        '--primary-color': businessPage.primary_color,
-        '--secondary-color': businessPage.secondary_color
-      } as React.CSSProperties}
-      className="min-h-screen pb-16"
-    >
-      {/* Find the header section in the pageSections array instead of directly accessing businessPage.page_sections */}
-      <BusinessPageHeader 
-        content={pageSections?.find(s => s.section_type === 'header')?.section_content || {}}
-      />
+    <div className="flex flex-col min-h-screen">
+      {/* Top WAKTI Attribution - only show when not in preview mode */}
+      {!isPreviewMode && <PoweredByWAKTI position="top" />}
       
-      <div className="container mx-auto px-4">
-        <BusinessPageSections 
-          pageSections={pageSections} 
-          businessPage={businessPage} 
+      <div 
+        style={{
+          '--primary-color': businessPage.primary_color || '#7C3AED',
+          '--secondary-color': businessPage.secondary_color || '#8B5CF6'
+        } as React.CSSProperties}
+        className="flex-1"
+      >
+        {/* Find the header section in the pageSections array */}
+        <BusinessPageHeader 
+          content={pageSections?.find(s => s.section_type === 'header')?.section_content || {}}
         />
         
-        {/* Social Links Footer */}
-        {socialLinks && socialLinks.length > 0 && (
-          <div className="mt-12 pt-6 border-t">
-            <BusinessSocialLinks socialLinks={socialLinks} />
-          </div>
-        )}
+        <div className="container mx-auto px-4 py-4">
+          {/* Subscribe button - if not in preview mode and user is authenticated */}
+          {!isPreviewMode && isAuthenticated && (
+            <div className="flex justify-end mb-6">
+              <BusinessSubscribeButton businessId={businessPage.business_id} />
+            </div>
+          )}
+          
+          <BusinessPageSections 
+            pageSections={pageSections} 
+            businessPage={businessPage} 
+          />
+          
+          {/* Social Links Footer */}
+          {socialLinks && socialLinks.length > 0 && (
+            <div className="mt-12 pt-6 border-t">
+              <BusinessSocialLinks socialLinks={socialLinks} />
+            </div>
+          )}
+        </div>
       </div>
+      
+      {/* Bottom WAKTI Attribution */}
+      <PoweredByWAKTI position="bottom" />
     </div>
   );
 };

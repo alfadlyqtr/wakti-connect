@@ -1,15 +1,29 @@
 
 import React from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useSearchParams } from "react-router-dom";
 import BusinessLandingPageComponent from "@/components/business/landing/BusinessLandingPage";
 import Header from "@/components/landing/Header";
+import { Helmet } from "react-helmet-async";
 
-const BusinessLandingPage = () => {
+interface BusinessLandingPageProps {
+  isPreview?: boolean;
+}
+
+const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({ isPreview: isPreviewProp }) => {
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   
-  // Check if we're in preview mode
-  const isPreviewMode = location.search.includes('preview=true');
+  // Check if we're in preview mode from props, URL path, or search param
+  const isPreviewMode = isPreviewProp || 
+                      location.pathname.endsWith('/preview') || 
+                      searchParams.get('preview') === 'true';
+  
+  // Extract business page name for SEO title
+  const businessName = slug?.replace(/-/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
   
   if (!slug) {
     return (
@@ -20,9 +34,13 @@ const BusinessLandingPage = () => {
     );
   }
   
-  // Only render the Wakti header if NOT in preview mode
   return (
     <>
+      <Helmet>
+        <title>{businessName ? `${businessName} | WAKTI` : 'Business Page | WAKTI'}</title>
+      </Helmet>
+      
+      {/* Only render the Wakti header if NOT in preview mode */}
       {!isPreviewMode && <Header />}
       <BusinessLandingPageComponent slug={slug} isPreviewMode={isPreviewMode} />
     </>

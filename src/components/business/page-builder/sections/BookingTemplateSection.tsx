@@ -1,7 +1,5 @@
 
 import React from "react";
-import { BusinessPageSection } from "@/types/business.types";
-import { useBookingTemplates } from "@/hooks/useBookingTemplates";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +9,8 @@ import { useSectionEditor } from "@/hooks/useSectionEditor";
 import { Label } from "@/components/ui/label";
 import { BookingTemplateCard } from "@/components/business/page-builder/components/BookingTemplateCard";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useBookingTemplates } from "@/hooks/useBookingTemplates";
 
 const BookingTemplateSection: React.FC = () => {
   const { contentData, handleInputChange, setContentData, setIsDirty } = useSectionEditor();
@@ -36,6 +36,14 @@ const BookingTemplateSection: React.FC = () => {
       
       return newSelection;
     });
+  };
+
+  const handleDisplayChange = (value: string) => {
+    setContentData({
+      ...contentData,
+      displayAs: value
+    });
+    setIsDirty(true);
   };
 
   if (isLoading) {
@@ -123,6 +131,23 @@ const BookingTemplateSection: React.FC = () => {
       
       <TabsContent value="appearance">
         <div className="space-y-4">
+          <div>
+            <Label htmlFor="displayAs">Display Layout</Label>
+            <Select 
+              value={contentData.displayAs || "grid"} 
+              onValueChange={handleDisplayChange}
+            >
+              <SelectTrigger id="displayAs">
+                <SelectValue placeholder="Select display style" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="grid">Grid</SelectItem>
+                <SelectItem value="list">List</SelectItem>
+                <SelectItem value="carousel">Carousel</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
           <div className="flex items-center justify-between">
             <Label htmlFor="showDuration">Show Duration</Label>
             <Switch
