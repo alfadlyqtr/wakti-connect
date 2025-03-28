@@ -1,8 +1,23 @@
 
 import React from "react";
+import { Link } from "react-router-dom";
+import { format, parseISO } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash, Globe, EyeOff, CalendarClock, Bookmark } from "lucide-react";
+import { 
+  Edit, 
+  Trash, 
+  Globe, 
+  EyeOff, 
+  Calendar, 
+  Clock, 
+  User, 
+  Mail, 
+  Bookmark, 
+  Settings, 
+  CheckCircle, 
+  XCircle 
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { BookingWithRelations, BookingStatus } from "@/types/booking.types";

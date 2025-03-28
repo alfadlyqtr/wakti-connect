@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { BookingFormData, Booking } from "@/types/booking.types";
+import { BookingFormData, Booking, BookingStatus } from "@/types/booking.types";
 
 /**
  * Creates a new booking (business accounts only)
@@ -42,6 +42,9 @@ export const createBooking = async (
       throw new Error("Booking must have start and end times");
     }
     
+    // Ensure we use a valid booking status (explicitly cast)
+    const status = bookingData.status || 'pending';
+    
     // Add the business_id to the booking data
     const completeBookingData = {
       business_id: session.user.id,
@@ -53,7 +56,7 @@ export const createBooking = async (
       customer_name: bookingData.customer_name,
       start_time: bookingData.start_time,
       end_time: bookingData.end_time,
-      status: bookingData.status || 'pending',
+      status: status as BookingStatus, // Ensure this is a valid BookingStatus
       staff_assigned_id: bookingData.staff_assigned_id
     };
 
