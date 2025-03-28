@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { 
@@ -104,16 +105,17 @@ const BookingPage = () => {
       const endDateTime = new Date(bookingDateTime);
       endDateTime.setMinutes(endDateTime.getMinutes() + template.duration);
 
-      // Store both staff_assigned_id and staff_name for display purposes
-      const staffData = template.staff_assigned_id ? {
-        staff_assigned_id: template.staff_assigned_id,
-        staff_name: template.staff?.name || null
-      } : {};
+      // Fix the staff property access issue - use staff data if it exists
+      // In BookingTemplateWithRelations we can access staff, but not in BookingTemplate
+      const staffName = template.staff_assigned_id ? 
+        (template as any).staff?.name || "Assigned Staff" : 
+        undefined;
 
       console.log("Creating booking with the following data:", {
         business_id: businessId,
         service_id: template.service_id,
-        ...staffData,
+        staff_assigned_id: template.staff_assigned_id,
+        staff_name: staffName,
         customer_name: data.customerName,
         customer_email: data.customerEmail,
         customer_phone: data.customerPhone || null,
@@ -128,7 +130,8 @@ const BookingPage = () => {
       const booking = await createBooking({
         business_id: businessId,
         service_id: template.service_id,
-        ...staffData,
+        staff_assigned_id: template.staff_assigned_id,
+        staff_name: staffName,
         customer_name: data.customerName,
         customer_email: data.customerEmail,
         customer_phone: data.customerPhone || null,
