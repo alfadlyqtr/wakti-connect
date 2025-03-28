@@ -8,14 +8,8 @@ import { businessRoutes, bookingRoutes } from "./routes/businessRoutes";
 import NotFound from "./pages/NotFound";
 
 const router = createBrowserRouter([
-  // Public routes
-  ...publicRoutes,
-  
-  // Auth routes  
-  ...authRoutes,
-  
-  // Dashboard routes
-  ...dashboardRoutes,
+  // Booking routes - prioritized first to avoid conflicts
+  ...bookingRoutes,
   
   // Business routes
   {
@@ -23,8 +17,14 @@ const router = createBrowserRouter([
     children: businessRoutes,
   },
   
-  // Booking routes
-  ...bookingRoutes,
+  // Auth routes  
+  ...authRoutes,
+  
+  // Dashboard routes
+  ...dashboardRoutes,
+  
+  // Public routes
+  ...publicRoutes,
   
   // 404 page
   {

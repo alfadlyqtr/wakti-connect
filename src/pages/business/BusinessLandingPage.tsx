@@ -25,6 +25,14 @@ const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({ isPreview: is
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
   
+  // Log the current path for debugging
+  React.useEffect(() => {
+    console.log("BusinessLandingPage mounted");
+    console.log("Current path:", location.pathname);
+    console.log("Is preview mode:", isPreviewMode);
+    console.log("Slug:", slug);
+  }, [location.pathname, isPreviewMode, slug]);
+  
   if (!slug) {
     return (
       <div className="text-center py-12">

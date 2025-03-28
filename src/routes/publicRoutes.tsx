@@ -10,7 +10,7 @@ import PrivacyPage from "@/pages/public/PrivacyPage";
 import TermsPage from "@/pages/public/TermsPage";
 import Index from "@/pages/Index";
 import BookServicePage from "@/pages/booking/BookServicePage";
-import BookingConfirmationPage from "@/pages/booking/BookingConfirmationPage";
+// Removed BookingConfirmationPage import as it's now handled in businessRoutes
 
 export const publicRoutes: RouteObject[] = [
   {
@@ -53,10 +53,7 @@ export const publicRoutes: RouteObject[] = [
     path: "/book/:serviceId",
     element: <BookServicePage />,
   },
-  {
-    path: "/booking/confirmation/:bookingId",
-    element: <BookingConfirmationPage />,
-  },
+  // Removed duplicate booking confirmation route
 ];
 
 export default publicRoutes;

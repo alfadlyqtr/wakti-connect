@@ -57,10 +57,25 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
   }
 
   const handleBookNow = (templateId: string, templateName: string) => {
-    console.log(`Booking template ${templateId}: ${templateName}`);
+    // Validate IDs before navigation
+    if (!businessId || !templateId) {
+      console.error("Missing required IDs for booking", { businessId, templateId });
+      toast({
+        title: "Error",
+        description: "Unable to process booking request. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    console.log(`Booking template ${templateId}: ${templateName} for business ${businessId}`);
+    
+    // Use absolute path for navigation to avoid relative path issues
+    const bookingPath = `/booking/${businessId}/${templateId}`;
+    console.log("Navigating to:", bookingPath);
     
     // Navigate to the booking page with template and business info
-    navigate(`/booking/${businessId}/${templateId}`, {
+    navigate(bookingPath, {
       state: {
         businessId,
         templateId,
