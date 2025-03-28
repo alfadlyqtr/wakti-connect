@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { 
@@ -26,12 +27,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { format, addDays } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBookingTemplates } from "@/hooks/useBookingTemplates";
 import { BookingTemplate } from "@/types/booking.types";
 import { toast } from "@/components/ui/use-toast";
 import { createBooking } from "@/services/booking";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const bookingFormSchema = z.object({
   customerName: z.string().min(2, { message: "Please enter your name" }),
@@ -48,11 +50,12 @@ const BookingPage = () => {
   const { businessId, templateId } = useParams<{ businessId: string; templateId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const { templates, isLoading } = useBookingTemplates(businessId);
+  const { templates, isLoading, error: templatesError } = useBookingTemplates(businessId);
   
   const [template, setTemplate] = useState<BookingTemplate | null>(null);
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
@@ -82,6 +85,7 @@ const BookingPage = () => {
 
   const onSubmit = async (data: BookingFormValues) => {
     if (!businessId || !templateId || !template) {
+      setBookingError("Missing required booking information");
       toast({
         title: "Error",
         description: "Missing required booking information",
@@ -91,6 +95,7 @@ const BookingPage = () => {
     }
 
     setIsSubmitting(true);
+    setBookingError(null);
 
     try {
       const bookingDateTime = new Date(data.bookingDate);
@@ -100,13 +105,28 @@ const BookingPage = () => {
       const endDateTime = new Date(bookingDateTime);
       endDateTime.setMinutes(endDateTime.getMinutes() + template.duration);
 
+      console.log("Creating booking with the following data:", {
+        business_id: businessId,
+        service_id: template.service_id,
+        staff_assigned_id: template.staff_assigned_id,
+        customer_name: data.customerName,
+        customer_email: data.customerEmail,
+        customer_phone: data.customerPhone || null,
+        title: `Booking for ${template.name}`,
+        description: data.notes || null,
+        start_time: bookingDateTime.toISOString(),
+        end_time: endDateTime.toISOString(),
+        status: 'pending',
+        price: template.price
+      });
+
       const booking = await createBooking({
         business_id: businessId,
         service_id: template.service_id,
         staff_assigned_id: template.staff_assigned_id,
         customer_name: data.customerName,
         customer_email: data.customerEmail,
-        customer_phone: data.customerPhone,
+        customer_phone: data.customerPhone || null,
         title: `Booking for ${template.name}`,
         description: data.notes || null,
         start_time: bookingDateTime.toISOString(),
@@ -129,6 +149,7 @@ const BookingPage = () => {
       });
     } catch (error: any) {
       console.error("Booking error:", error);
+      setBookingError(error.message || "There was a problem submitting your booking");
       toast({
         title: "Booking Failed",
         description: error.message || "There was a problem submitting your booking",
@@ -143,6 +164,33 @@ const BookingPage = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (templatesError) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Error Loading Service</CardTitle>
+            <CardDescription>
+              We encountered a problem loading the booking service details.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {templatesError.message || "Please try again later or contact support."}
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={() => navigate(-1)}>Go Back</Button>
+          </CardFooter>
+        </Card>
       </div>
     );
   }
@@ -175,6 +223,14 @@ const BookingPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {bookingError && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{bookingError}</AlertDescription>
+            </Alert>
+          )}
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2">
               <Form {...form}>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { BookingTemplate, BookingTemplateAvailability } from "@/types/booking.types";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
@@ -12,7 +13,7 @@ import { format, addDays, parse, isAfter, isBefore } from "date-fns";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CalendarIcon, CheckCircle, Loader2, LogIn } from "lucide-react";
+import { CalendarIcon, CheckCircle, Loader2, LogIn, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -20,6 +21,7 @@ import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { createBooking } from "@/services/booking";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface BookingModalContentProps {
   businessId: string;
@@ -48,6 +50,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
   const [isSuccess, setIsSuccess] = useState(false);
   const [availability, setAvailability] = useState<BookingTemplateAvailability[]>([]);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(true);
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
@@ -137,6 +140,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
 
   const onSubmit = async (data: BookingFormValues) => {
     if (!businessId || !template) {
+      setBookingError("Missing required booking information");
       toast({
         title: "Error",
         description: "Missing required booking information",
@@ -146,6 +150,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
     }
 
     setIsSubmitting(true);
+    setBookingError(null);
 
     try {
       const bookingDateTime = new Date(data.bookingDate);
@@ -155,13 +160,28 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
       const endDateTime = new Date(bookingDateTime);
       endDateTime.setMinutes(endDateTime.getMinutes() + template.duration);
 
+      console.log("Creating booking with the following data:", {
+        business_id: businessId,
+        service_id: template.service_id,
+        staff_assigned_id: template.staff_assigned_id,
+        customer_name: data.customerName,
+        customer_email: data.customerEmail,
+        customer_phone: data.customerPhone || null,
+        title: `Booking for ${template.name}`,
+        description: data.notes || null,
+        start_time: bookingDateTime.toISOString(),
+        end_time: endDateTime.toISOString(),
+        status: 'pending',
+        price: template.price
+      });
+
       const booking = await createBooking({
         business_id: businessId,
         service_id: template.service_id,
         staff_assigned_id: template.staff_assigned_id,
         customer_name: data.customerName,
         customer_email: data.customerEmail,
-        customer_phone: data.customerPhone,
+        customer_phone: data.customerPhone || null,
         title: `Booking for ${template.name}`,
         description: data.notes || null,
         start_time: bookingDateTime.toISOString(),
@@ -189,6 +209,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
       }, 1500);
     } catch (error: any) {
       console.error("Booking error:", error);
+      setBookingError(error.message || "There was a problem submitting your booking");
       toast({
         title: "Booking Failed",
         description: error.message || "There was a problem submitting your booking",
@@ -236,6 +257,14 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
               </Button>
             </div>
           </div>
+        )}
+
+        {bookingError && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{bookingError}</AlertDescription>
+          </Alert>
         )}
 
         <Form {...form}>
@@ -399,7 +428,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
       <div>
         <Card className="border-primary/20 shadow-sm">
           <CardContent className="pt-6">
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
                 <Label className="text-muted-foreground text-sm">Service</Label>
                 <p className="font-medium">{template?.name}</p>
