@@ -9,7 +9,6 @@ import DefaultEditor from "./DefaultEditor";
 import GalleryEditor from "./gallery";
 import BookingTemplateSection from "../sections/BookingTemplateSection";
 import InstagramFeedSection from "../sections/InstagramFeedSection";
-import ServicesEditor from "./ServicesEditor";
 import TestimonialsEditor from "./TestimonialsEditor";
 
 const SectionEditorFields: React.FC = () => {
@@ -37,9 +36,6 @@ const SectionEditorFields: React.FC = () => {
         
       case 'instagram':
         return <InstagramFeedSection />;
-        
-      case 'services':
-        return <ServicesEditor contentData={contentData} handleInputChange={handleInputChange} />;
         
       case 'testimonials':
         return <TestimonialsEditor contentData={contentData} handleInputChange={handleInputChange} />;

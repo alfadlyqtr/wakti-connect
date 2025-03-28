@@ -60,7 +60,6 @@ export interface BusinessPageSection {
 export type SectionType = 
   | 'header'
   | 'about'
-  | 'services'
   | 'contact'
   | 'gallery'
   | 'hours'

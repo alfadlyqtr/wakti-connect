@@ -1,8 +1,8 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { BusinessPageSection, SectionType } from "@/types/business.types";
 import { Button } from "@/components/ui/button";
-import { Globe, Wand2 } from "lucide-react";
+import { Globe } from "lucide-react";
 import { AddSectionButtons } from "./";
 import { EmptySectionState } from "./";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,7 +10,6 @@ import { fromTable } from "@/integrations/supabase/helper";
 import { toast } from "@/components/ui/use-toast";
 import { DragDropProvider } from "../drag-drop/DragDropContext";
 import DraggableSectionList from "../drag-drop/DraggableSectionList";
-import { AIPageBuilder } from "../ai-assistant/AIPageBuilder";
 
 interface PageSectionsTabProps {
   pageSections?: BusinessPageSection[];
@@ -24,7 +23,6 @@ const PageSectionsTab: React.FC<PageSectionsTabProps> = ({
   getPublicPageUrl 
 }) => {
   const queryClient = useQueryClient();
-  const [aiBuilderOpen, setAiBuilderOpen] = useState(false);
 
   // Section creation mutation
   const createSection = useMutation({
@@ -149,32 +147,11 @@ const PageSectionsTab: React.FC<PageSectionsTabProps> = ({
     }
   };
 
-  const handleAIGenerated = (data: any) => {
-    console.log("AI generated page content:", data);
-    // Implementation for adding AI-generated sections would go here
-    toast({
-      title: "AI Builder",
-      description: "Content generated successfully. Now adding sections to your page.",
-    });
-    
-    // For demonstration, add a header and about section
-    createSection.mutate("header");
-    setTimeout(() => createSection.mutate("about"), 500);
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-xl font-medium">Available Sections</h2>
-        <div className="ml-auto flex flex-wrap gap-2">
-          <Button 
-            variant="outline"
-            onClick={() => setAiBuilderOpen(true)}
-          >
-            <Wand2 className="h-4 w-4 mr-2" />
-            AI Page Builder
-          </Button>
-          
+        <div className="ml-auto flex flex-wrap gap-2">  
           <Button 
             variant="outline" 
             asChild
@@ -205,12 +182,6 @@ const PageSectionsTab: React.FC<PageSectionsTabProps> = ({
           <EmptySectionState onAddSection={() => handleAddSection('header')} />
         )}
       </div>
-      
-      <AIPageBuilder 
-        open={aiBuilderOpen}
-        onOpenChange={setAiBuilderOpen}
-        onPageGenerated={handleAIGenerated}
-      />
     </div>
   );
 };
