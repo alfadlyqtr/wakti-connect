@@ -60,24 +60,32 @@ const BookingConfirmationPage = () => {
           staff: null
         };
         
-        // Check if service is valid and assign it
-        if (data.service && typeof data.service === 'object' && !('error' in data.service)) {
-          formattedBooking.service = {
-            name: data.service.name,
-            description: data.service.description,
-            price: data.service.price
-          };
-        } else if (data.service && 'error' in data.service) {
-          console.warn("Service relation error:", data.service);
+        // Check if service exists, is an object, and doesn't have an error
+        if (data.service && typeof data.service === 'object') {
+          if (!('error' in data.service)) {
+            // Type assertion after we've checked the shape is correct
+            const serviceData = data.service as { name: string; description: string | null; price: number | null };
+            formattedBooking.service = {
+              name: serviceData.name,
+              description: serviceData.description,
+              price: serviceData.price
+            };
+          } else {
+            console.warn("Service relation error:", data.service);
+          }
         }
         
-        // Check if staff is valid and assign it
-        if (data.staff && typeof data.staff === 'object' && !('error' in data.staff)) {
-          formattedBooking.staff = {
-            name: data.staff.name
-          };
-        } else if (data.staff && 'error' in data.staff) {
-          console.warn("Staff relation error:", data.staff);
+        // Check if staff exists, is an object, and doesn't have an error
+        if (data.staff && typeof data.staff === 'object') {
+          if (!('error' in data.staff)) {
+            // Type assertion after we've checked the shape is correct
+            const staffData = data.staff as { name: string };
+            formattedBooking.staff = {
+              name: staffData.name
+            };
+          } else {
+            console.warn("Staff relation error:", data.staff);
+          }
         }
         
         setBooking(formattedBooking);
