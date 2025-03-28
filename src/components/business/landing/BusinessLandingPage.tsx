@@ -46,18 +46,34 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
   
   // Inject TMW AI Chatbot script if enabled
   useEffect(() => {
+    // Clear any previously added chatbot scripts
+    const existingScript = document.getElementById('tmw-chatbot-script');
+    if (existingScript) {
+      document.body.removeChild(existingScript);
+    }
+    
     if (businessPage?.chatbot_enabled && businessPage?.chatbot_code) {
-      // Create a script element to inject the chatbot code
-      const script = document.createElement('script');
-      script.id = 'tmw-chatbot-script';
-      script.innerHTML = businessPage.chatbot_code;
-      document.body.appendChild(script);
+      try {
+        // Create a script element to inject the chatbot code
+        const script = document.createElement('script');
+        script.id = 'tmw-chatbot-script';
+        
+        // Use innerHTML for the script content, which allows it to be properly parsed
+        script.innerHTML = businessPage.chatbot_code;
+        
+        // Insert the script into the document
+        document.body.appendChild(script);
+        
+        console.log('TMW AI Chatbot script has been injected');
+      } catch (error) {
+        console.error('Error injecting TMW AI Chatbot script:', error);
+      }
       
       // Cleanup function to remove the script when component unmounts
       return () => {
-        const existingScript = document.getElementById('tmw-chatbot-script');
-        if (existingScript) {
-          document.body.removeChild(existingScript);
+        const scriptToRemove = document.getElementById('tmw-chatbot-script');
+        if (scriptToRemove) {
+          document.body.removeChild(scriptToRemove);
         }
       };
     }
