@@ -45,6 +45,12 @@ const BookingServiceInfo: React.FC<BookingServiceInfoProps> = ({
           <span className="text-muted-foreground">Booked for:</span> {booking.customer_name}
         </div>
       )}
+      
+      {booking.customer_phone && (
+        <div className="text-sm">
+          <span className="text-muted-foreground">Phone:</span> {booking.customer_phone}
+        </div>
+      )}
     </div>
   );
 };

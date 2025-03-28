@@ -320,9 +320,11 @@ export type Database = {
           customer_email: string | null
           customer_id: string | null
           customer_name: string | null
+          customer_phone: string | null
           description: string | null
           end_time: string
           id: string
+          price: number | null
           service_id: string | null
           staff_assigned_id: string | null
           start_time: string
@@ -337,9 +339,11 @@ export type Database = {
           customer_email?: string | null
           customer_id?: string | null
           customer_name?: string | null
+          customer_phone?: string | null
           description?: string | null
           end_time: string
           id?: string
+          price?: number | null
           service_id?: string | null
           staff_assigned_id?: string | null
           start_time: string
@@ -354,9 +358,11 @@ export type Database = {
           customer_email?: string | null
           customer_id?: string | null
           customer_name?: string | null
+          customer_phone?: string | null
           description?: string | null
           end_time?: string
           id?: string
+          price?: number | null
           service_id?: string | null
           staff_assigned_id?: string | null
           start_time?: string

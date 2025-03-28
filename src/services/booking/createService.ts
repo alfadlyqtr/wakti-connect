@@ -54,10 +54,12 @@ export const createBooking = async (
       customer_id: bookingData.customer_id,
       customer_email: bookingData.customer_email,
       customer_name: bookingData.customer_name,
+      customer_phone: bookingData.customer_phone, // Include the phone field
       start_time: bookingData.start_time,
       end_time: bookingData.end_time,
       status: status as BookingStatus, // Ensure this is a valid BookingStatus
-      staff_assigned_id: bookingData.staff_assigned_id
+      staff_assigned_id: bookingData.staff_assigned_id,
+      price: bookingData.price // Include the price field
     };
 
     const { data: booking, error } = await supabase

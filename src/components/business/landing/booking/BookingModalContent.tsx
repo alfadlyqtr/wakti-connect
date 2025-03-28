@@ -179,7 +179,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
           staff_assigned_id: template.staff_assigned_id,
           customer_name: data.customerName,
           customer_email: data.customerEmail,
-          customer_phone: data.customerPhone,
+          customer_phone: data.customerPhone, // Include phone field
           title: `Booking for ${template.name}`,
           description: data.notes || null,
           start_time: bookingDateTime.toISOString(),

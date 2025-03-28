@@ -116,11 +116,13 @@ const BookingPage = () => {
           staff_assigned_id: template.staff_assigned_id,
           customer_name: data.customerName,
           customer_email: data.customerEmail,
+          customer_phone: data.customerPhone, // Include phone field
           title: `Booking for ${template.name}`,
           description: data.notes || null,
           start_time: bookingDateTime.toISOString(),
           end_time: endDateTime.toISOString(),
-          status: 'pending'
+          status: 'pending',
+          price: template.price // Include price field
         })
         .select()
         .single();

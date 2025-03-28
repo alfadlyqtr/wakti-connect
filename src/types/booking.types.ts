@@ -1,4 +1,3 @@
-
 export interface Booking {
   id: string;
   business_id: string;
@@ -6,6 +5,7 @@ export interface Booking {
   customer_id?: string;
   customer_email?: string;
   customer_name?: string;
+  customer_phone?: string;
   title: string;
   description: string | null;
   start_time: string;
@@ -14,6 +14,7 @@ export interface Booking {
   staff_assigned_id?: string;
   created_at: string;
   updated_at: string | null;
+  price?: number;
 }
 
 export interface ServiceRelation {
@@ -30,17 +31,14 @@ export interface BookingWithRelations extends Booking {
   service: ServiceRelation | null;
   staff: StaffRelation | null;
   
-  // Add template-specific fields that might be present
   is_template?: boolean;
   duration?: number;
   price?: number;
   is_published?: boolean;
 }
 
-// Update this type to match what the database expects
 export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
 
-// Add a separate type for UI representation that includes template
 export type BookingDisplayStatus = BookingStatus | "template";
 
 export type BookingTab = "all-bookings" | "pending-bookings" | "staff-bookings" | "templates";
@@ -52,13 +50,14 @@ export interface BookingFormData {
   customer_id?: string;
   customer_email?: string;
   customer_name?: string;
+  customer_phone?: string;
   status?: BookingStatus;
   start_time?: string;
   end_time?: string;
   staff_assigned_id?: string;
   business_id?: string;
+  price?: number;
   
-  // Form-specific fields (used in form UI but transformed before API calls)
   date?: Date;
   startTime?: string;
   endTime?: string;
@@ -94,9 +93,9 @@ export interface BookingTemplateWithRelations extends BookingTemplate {
 export interface BookingTemplateAvailability {
   id: string;
   template_id: string;
-  day_of_week: number; // 0=Sunday, 1=Monday, ..., 6=Saturday
-  start_time: string; // Format: "HH:MM" in 24-hour
-  end_time: string; // Format: "HH:MM" in 24-hour
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
   is_available: boolean;
   created_at: string;
   updated_at: string;
@@ -105,7 +104,7 @@ export interface BookingTemplateAvailability {
 export interface BookingTemplateException {
   id: string;
   template_id: string;
-  exception_date: string; // ISO date string
+  exception_date: string;
   is_available: boolean;
   created_at: string;
   updated_at: string;
@@ -117,10 +116,10 @@ export interface BookingTemplateFormData {
   duration: number;
   price?: number | null;
   service_id?: string | null;
-  staff_assigned_ids?: string[]; // Changed from staff_assigned_id to support multiple staff
+  staff_assigned_ids?: string[];
   is_published?: boolean;
   max_daily_bookings?: number | null;
-  default_starting_hour?: number; 
+  default_starting_hour?: number;
   default_ending_hour?: number;
   business_id?: string;
 }
