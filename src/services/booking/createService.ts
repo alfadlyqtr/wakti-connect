@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { BookingFormData, Booking, BookingStatus } from "@/types/booking.types";
+import { createNotification } from "@/services/notifications";
 
 /**
  * Creates a new booking (for both business accounts and public users)
@@ -96,6 +97,23 @@ export const createBooking = async (
 
     if (!booking) {
       throw new Error("Failed to create booking: No data returned");
+    }
+
+    // Create a notification for the business owner
+    try {
+      // Create a notification that a new booking has been made
+      await createNotification(
+        booking.business_id,
+        "New Booking",
+        `A new booking has been created for ${booking.customer_name || 'a customer'}`,
+        "booking",
+        booking.id,
+        "bookings"
+      );
+      console.log("Booking notification sent to business owner");
+    } catch (notifError) {
+      console.error("Error sending booking notification:", notifError);
+      // We don't want to fail the booking creation if notification fails
     }
 
     return booking;

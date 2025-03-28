@@ -9,7 +9,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { publicRoutes } from "./routes/publicRoutes";
 import { authRoutes } from "./routes/authRoutes";
 import { dashboardRoutes } from "./routes/dashboardRoutes";
-import { businessRoutes } from "./routes/businessRoutes";
+import { businessRoutes, bookingRoutes } from "./routes/businessRoutes";
 import ScrollToTop from "./components/ui/scroll-to-top";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
@@ -46,6 +46,17 @@ function App() {
                     {/* Public routes with PublicLayout */}
                     <Route element={<PublicLayout />}>
                       {publicRoutes.map((route) => (
+                        <Route
+                          key={route.path}
+                          path={route.path}
+                          element={route.element}
+                        />
+                      ))}
+                    </Route>
+                    
+                    {/* Booking routes - must be defined before auth routes */}
+                    <Route path="/booking">
+                      {bookingRoutes.map((route) => (
                         <Route
                           key={route.path}
                           path={route.path}

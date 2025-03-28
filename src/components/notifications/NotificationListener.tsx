@@ -15,6 +15,19 @@ const NotificationListener = () => {
         // Invalidate queries to refresh notification data
         queryClient.invalidateQueries({ queryKey: ['notifications'] });
         queryClient.invalidateQueries({ queryKey: ['unreadNotificationsCount'] });
+        
+        // Special handling for booking notifications
+        if (notification.type === 'booking') {
+          queryClient.invalidateQueries({ queryKey: ['bookings'] });
+          
+          // Show a more prominent toast for booking notifications
+          toast({
+            title: "New Booking Received!",
+            description: notification.content,
+            duration: 8000,
+            variant: "success"
+          });
+        }
       };
 
       // Subscribe to notifications

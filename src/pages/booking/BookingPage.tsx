@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { 
@@ -147,6 +146,7 @@ const BookingPage = () => {
         variant: "success",
       });
 
+      // Improved navigation to confirmation page with proper state passing
       navigate(`/booking/confirmation/${booking.id}`, {
         state: {
           booking,
