@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -60,6 +59,7 @@ const BookingTemplateSection: React.FC = () => {
     );
   }
 
+  // Filter to show only published templates
   const publishedTemplates = templates.filter(t => t.is_published);
 
   return (

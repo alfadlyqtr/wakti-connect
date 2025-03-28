@@ -5,20 +5,42 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { BusinessPage } from "@/types/business.types";
-import { useDebounce } from "@/hooks/useDebouncedCallback";
+import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
+import { Button } from "@/components/ui/button";
+import { Loader2, Copy, ExternalLink } from "lucide-react";
 
 interface GeneralSettingsTabProps {
-  businessPage: BusinessPage;
-  onUpdate: (values: Partial<BusinessPage>) => void;
+  pageData: {
+    page_title: string;
+    page_slug: string;
+    description: string;
+    is_published: boolean;
+    chatbot_enabled: boolean;
+    chatbot_code?: string;
+    primary_color: string;
+    secondary_color: string;
+    logo_url?: string;
+    show_subscribe_button?: boolean;
+    subscribe_button_text?: string;
+  };
+  businessId?: string;
+  handleInputChangeWithAutoSave: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleToggleWithAutoSave: (name: string, checked: boolean) => void;
+  handleLogoUpload: (file: File) => void;
+  getPublicPageUrl: () => string;
+  uploadingLogo: boolean;
 }
 
-const GeneralSettingsTab = ({ businessPage, onUpdate }: GeneralSettingsTabProps) => {
+const GeneralSettingsTab = ({ 
+  pageData, 
+  businessId, 
+  handleInputChangeWithAutoSave, 
+  handleToggleWithAutoSave,
+  handleLogoUpload,
+  getPublicPageUrl,
+  uploadingLogo
+}: GeneralSettingsTabProps) => {
   // In a real application, we would validate the slug to ensure it's URL-safe
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    onUpdate({ [name]: value });
-  };
-
   const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     // Create a safe slug - lowercase, remove special chars, replace spaces with hyphens
@@ -27,11 +49,33 @@ const GeneralSettingsTab = ({ businessPage, onUpdate }: GeneralSettingsTabProps)
       .replace(/[^\w\s-]/g, '')
       .replace(/\s+/g, '-');
     
-    onUpdate({ page_slug: safeSlug });
+    const event = {
+      ...e,
+      target: {
+        ...e.target,
+        name: 'page_slug',
+        value: safeSlug
+      }
+    };
+    
+    handleInputChangeWithAutoSave(event);
   };
 
-  const handleToggleChange = (checked: boolean, field: keyof BusinessPage) => {
-    onUpdate({ [field]: checked });
+  const copyPageUrl = () => {
+    const url = getPublicPageUrl();
+    navigator.clipboard.writeText(url);
+    // Could add a toast here
+  };
+  
+  const visitPage = () => {
+    const url = getPublicPageUrl();
+    window.open(url, '_blank');
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleLogoUpload(e.target.files[0]);
+    }
   };
 
   return (
@@ -42,8 +86,8 @@ const GeneralSettingsTab = ({ businessPage, onUpdate }: GeneralSettingsTabProps)
           <Input 
             id="page_title"
             name="page_title"
-            value={businessPage.page_title || ''}
-            onChange={handleChange}
+            value={pageData.page_title || ''}
+            onChange={handleInputChangeWithAutoSave}
             placeholder="Your Business Name"
           />
           <p className="text-sm text-muted-foreground mt-1">
@@ -58,15 +102,27 @@ const GeneralSettingsTab = ({ businessPage, onUpdate }: GeneralSettingsTabProps)
             <Input 
               id="page_slug"
               name="page_slug"
-              value={businessPage.page_slug || ''}
+              value={pageData.page_slug || ''}
               onChange={handleSlugChange}
               placeholder="your-business-name"
               className="flex-1"
             />
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            This will be the URL of your business page.
-          </p>
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-sm text-muted-foreground">
+              This will be the URL of your business page.
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={copyPageUrl}>
+                <Copy className="h-4 w-4 mr-1" />
+                Copy URL
+              </Button>
+              <Button variant="outline" size="sm" onClick={visitPage}>
+                <ExternalLink className="h-4 w-4 mr-1" />
+                Visit
+              </Button>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -74,14 +130,58 @@ const GeneralSettingsTab = ({ businessPage, onUpdate }: GeneralSettingsTabProps)
           <Textarea 
             id="description"
             name="description"
-            value={businessPage.description || ''}
-            onChange={handleChange}
+            value={pageData.description || ''}
+            onChange={handleInputChangeWithAutoSave}
             placeholder="Brief description of your business"
             rows={3}
           />
           <p className="text-sm text-muted-foreground mt-1">
             This will be used for SEO and may appear in search results.
           </p>
+        </div>
+        
+        <div>
+          <Label htmlFor="logo">Business Logo</Label>
+          <div className="mt-2 flex items-center space-x-4">
+            {pageData.logo_url && (
+              <div className="relative w-16 h-16 rounded-md overflow-hidden border">
+                <img 
+                  src={pageData.logo_url} 
+                  alt="Business Logo" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            <div>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={uploadingLogo}
+                onClick={() => document.getElementById('logo-upload')?.click()}
+              >
+                {uploadingLogo ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    {pageData.logo_url ? 'Change Logo' : 'Upload Logo'}
+                  </>
+                )}
+              </Button>
+              <input
+                id="logo-upload"
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Recommended size: 200x200px
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center justify-between border-t pt-4 mt-4">
@@ -93,8 +193,8 @@ const GeneralSettingsTab = ({ businessPage, onUpdate }: GeneralSettingsTabProps)
           </div>
           <Switch
             id="is_published"
-            checked={businessPage.is_published}
-            onCheckedChange={(checked) => handleToggleChange(checked, 'is_published')}
+            checked={pageData.is_published}
+            onCheckedChange={(checked) => handleToggleWithAutoSave('is_published', checked)}
           />
         </div>
 
@@ -107,19 +207,19 @@ const GeneralSettingsTab = ({ businessPage, onUpdate }: GeneralSettingsTabProps)
           </div>
           <Switch
             id="show_subscribe_button"
-            checked={businessPage.show_subscribe_button !== false} // Default to true if undefined
-            onCheckedChange={(checked) => handleToggleChange(checked, 'show_subscribe_button')}
+            checked={pageData.show_subscribe_button !== false} // Default to true if undefined
+            onCheckedChange={(checked) => handleToggleWithAutoSave('show_subscribe_button', checked)}
           />
         </div>
 
-        {businessPage.show_subscribe_button !== false && (
+        {pageData.show_subscribe_button !== false && (
           <div className="mt-2 pl-4 border-l-2 border-muted">
             <Label htmlFor="subscribe_button_text">Subscribe Button Text</Label>
             <Input 
               id="subscribe_button_text"
               name="subscribe_button_text"
-              value={businessPage.subscribe_button_text || 'Subscribe'}
-              onChange={handleChange}
+              value={pageData.subscribe_button_text || 'Subscribe'}
+              onChange={handleInputChangeWithAutoSave}
               placeholder="Subscribe"
             />
           </div>
