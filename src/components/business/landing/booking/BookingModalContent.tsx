@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { BookingTemplate, BookingTemplateAvailability } from "@/types/booking.types";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
@@ -20,6 +19,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { createBooking } from "@/services/booking";
 
 interface BookingModalContentProps {
   businessId: string;
@@ -49,7 +49,6 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
   const [availability, setAvailability] = useState<BookingTemplateAvailability[]>([]);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(true);
 
-  // Initialize form
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
@@ -61,10 +60,8 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
     },
   });
 
-  // Watch for date changes to update available times
   const selectedDate = form.watch("bookingDate");
 
-  // If user is logged in, pre-fill the form
   useEffect(() => {
     if (isAuthenticated && user) {
       form.setValue("customerName", user.name || "");
@@ -72,7 +69,6 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
     }
   }, [isAuthenticated, user, form]);
 
-  // Fetch template availability when component mounts
   useEffect(() => {
     const fetchAvailability = async () => {
       try {
@@ -103,22 +99,17 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
     }
   }, [template]);
 
-  // Generate available time slots based on selected date
   useEffect(() => {
     if (!selectedDate || !template) return;
     
-    // Get day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
     const dayOfWeek = selectedDate.getDay();
     
-    // Find availability for this day
     const dayAvailability = availability.find(a => a.day_of_week === dayOfWeek);
     
     if (dayAvailability && dayAvailability.is_available) {
-      // Parse start and end times
       const startTime = parse(dayAvailability.start_time, "HH:mm", new Date());
       const endTime = parse(dayAvailability.end_time, "HH:mm", new Date());
       
-      // Generate time slots
       const slots = [];
       const appointmentDuration = template.duration;
       let currentTime = startTime;
@@ -126,10 +117,8 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
       while (isBefore(currentTime, endTime)) {
         slots.push(format(currentTime, "HH:mm"));
         
-        // Add appointment duration to current time
         currentTime = new Date(currentTime.getTime() + appointmentDuration * 60000);
         
-        // If adding another appointment would exceed end time, break
         if (isAfter(new Date(currentTime.getTime() + appointmentDuration * 60000), endTime)) {
           break;
         }
@@ -137,9 +126,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
       
       setAvailableTimes(slots);
     } else {
-      // Default slots if no availability data
       const defaultSlots = [];
-      // Generate time slots from 9 AM to 5 PM
       for (let hour = 9; hour <= 17; hour++) {
         defaultSlots.push(`${hour.toString().padStart(2, '0')}:00`);
         if (hour < 17) defaultSlots.push(`${hour.toString().padStart(2, '0')}:30`);
@@ -161,37 +148,27 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
     setIsSubmitting(true);
 
     try {
-      // Format date and time for the booking
       const bookingDateTime = new Date(data.bookingDate);
       const [hours, minutes] = data.bookingTime.split(':').map(Number);
       bookingDateTime.setHours(hours, minutes);
 
-      // Calculate end time based on template duration
       const endDateTime = new Date(bookingDateTime);
       endDateTime.setMinutes(endDateTime.getMinutes() + template.duration);
 
-      // Create booking record
-      const { data: booking, error } = await supabase
-        .from('bookings')
-        .insert({
-          business_id: businessId,
-          service_id: template.service_id,
-          staff_assigned_id: template.staff_assigned_id,
-          customer_name: data.customerName,
-          customer_email: data.customerEmail,
-          customer_phone: data.customerPhone, // Include phone field
-          title: `Booking for ${template.name}`,
-          description: data.notes || null,
-          start_time: bookingDateTime.toISOString(),
-          end_time: endDateTime.toISOString(),
-          status: 'pending',
-          // Add price from template to the booking for reference
-          price: template.price
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const booking = await createBooking({
+        business_id: businessId,
+        service_id: template.service_id,
+        staff_assigned_id: template.staff_assigned_id,
+        customer_name: data.customerName,
+        customer_email: data.customerEmail,
+        customer_phone: data.customerPhone,
+        title: `Booking for ${template.name}`,
+        description: data.notes || null,
+        start_time: bookingDateTime.toISOString(),
+        end_time: endDateTime.toISOString(),
+        status: 'pending',
+        price: template.price
+      });
 
       toast({
         title: "Booking Confirmed",
@@ -201,7 +178,6 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
 
       setIsSuccess(true);
       
-      // Navigate to confirmation page after a short delay
       setTimeout(() => {
         navigate(`/booking/confirmation/${booking.id}`, {
           state: {

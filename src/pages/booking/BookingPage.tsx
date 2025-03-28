@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { 
@@ -31,10 +30,9 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBookingTemplates } from "@/hooks/useBookingTemplates";
 import { BookingTemplate } from "@/types/booking.types";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { createBooking } from "@/services/booking";
 
-// Create form schema for validation
 const bookingFormSchema = z.object({
   customerName: z.string().min(2, { message: "Please enter your name" }),
   customerEmail: z.string().email({ message: "Please enter a valid email" }),
@@ -56,7 +54,6 @@ const BookingPage = () => {
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize form
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
@@ -67,14 +64,12 @@ const BookingPage = () => {
     },
   });
 
-  // Find the template from the templates array
   useEffect(() => {
     if (templates && templateId) {
       const foundTemplate = templates.find(t => t.id === templateId);
       if (foundTemplate) {
         setTemplate(foundTemplate);
         
-        // Generate dummy time slots for now (9 AM to 5 PM)
         const times = [];
         for (let hour = 9; hour <= 17; hour++) {
           times.push(`${hour}:00`);
@@ -98,36 +93,27 @@ const BookingPage = () => {
     setIsSubmitting(true);
 
     try {
-      // Format date and time for the booking
       const bookingDateTime = new Date(data.bookingDate);
       const [hours, minutes] = data.bookingTime.split(':').map(Number);
       bookingDateTime.setHours(hours, minutes);
 
-      // Calculate end time based on template duration
       const endDateTime = new Date(bookingDateTime);
       endDateTime.setMinutes(endDateTime.getMinutes() + template.duration);
 
-      // Create booking record
-      const { data: booking, error } = await supabase
-        .from('bookings')
-        .insert({
-          business_id: businessId,
-          service_id: template.service_id,
-          staff_assigned_id: template.staff_assigned_id,
-          customer_name: data.customerName,
-          customer_email: data.customerEmail,
-          customer_phone: data.customerPhone, // Include phone field
-          title: `Booking for ${template.name}`,
-          description: data.notes || null,
-          start_time: bookingDateTime.toISOString(),
-          end_time: endDateTime.toISOString(),
-          status: 'pending',
-          price: template.price // Include price field
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const booking = await createBooking({
+        business_id: businessId,
+        service_id: template.service_id,
+        staff_assigned_id: template.staff_assigned_id,
+        customer_name: data.customerName,
+        customer_email: data.customerEmail,
+        customer_phone: data.customerPhone,
+        title: `Booking for ${template.name}`,
+        description: data.notes || null,
+        start_time: bookingDateTime.toISOString(),
+        end_time: endDateTime.toISOString(),
+        status: 'pending',
+        price: template.price
+      });
 
       toast({
         title: "Booking Confirmed",
@@ -135,7 +121,6 @@ const BookingPage = () => {
         variant: "success",
       });
 
-      // Redirect to confirmation page
       navigate(`/booking/confirmation/${booking.id}`, {
         state: {
           booking,
