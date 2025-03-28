@@ -2,7 +2,6 @@
 import React from "react";
 import { useParams, useLocation, useSearchParams } from "react-router-dom";
 import BusinessLandingPageComponent from "@/components/business/landing/BusinessLandingPage";
-import Header from "@/components/landing/Header";
 import { Helmet } from "react-helmet-async";
 
 interface BusinessLandingPageProps {
@@ -48,8 +47,8 @@ const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({ isPreview: is
         <title>{businessName ? `${businessName} | WAKTI` : 'Business Page | WAKTI'}</title>
       </Helmet>
       
-      {/* Only render the Wakti header if NOT in preview mode */}
-      {!isPreviewMode && <Header />}
+      {/* We're removing the Header component and letting the BusinessLandingPageComponent 
+          handle all WAKTI attribution with PoweredByWAKTI */}
       <BusinessLandingPageComponent slug={slug} isPreviewMode={isPreviewMode} />
     </>
   );

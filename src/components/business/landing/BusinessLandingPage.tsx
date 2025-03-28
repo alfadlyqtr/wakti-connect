@@ -148,8 +148,8 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
   
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Top WAKTI Attribution - only show when not in preview mode */}
-      {!isPreviewMode && <PoweredByWAKTI position="top" />}
+      {/* Top WAKTI Attribution - always visible, even in preview mode */}
+      <PoweredByWAKTI position="top" />
       
       <div 
         style={{
@@ -210,7 +210,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
         </div>
       </div>
       
-      {/* Bottom WAKTI Attribution */}
+      {/* Bottom WAKTI Attribution - always visible */}
       <PoweredByWAKTI position="bottom" />
     </div>
   );
