@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { BookingTab, BookingWithRelations, BookingsResult } from "@/types/booking.types";
 import { getStaffRelationId } from "@/utils/staffUtils";
@@ -110,7 +111,7 @@ export const fetchBookings = async (
                 service_id: template.service_id,
                 title: template.name,
                 description: template.description,
-                status: 'template' as any, // Special status for templates
+                status: 'completed', // Use a valid status that won't require action
                 staff_assigned_id: template.staff_assigned_id,
                 created_at: template.created_at,
                 updated_at: template.updated_at,

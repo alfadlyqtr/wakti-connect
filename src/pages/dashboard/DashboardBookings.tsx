@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,8 +32,8 @@ const DashboardBookings = () => {
     mutationFn: async ({ bookingId, status }: { bookingId: string, status: BookingStatus }) => {
       // Don't try to update templates (they're not real bookings)
       const booking = bookings.find(b => b.id === bookingId);
-      if (booking && (booking.status === 'template' || (booking as any).is_template)) {
-        return { bookingId, status: 'template' as BookingStatus };
+      if (booking && (booking as any).is_template) {
+        return { bookingId, status: 'completed' as BookingStatus };
       }
       
       const { error } = await supabase
@@ -48,7 +47,9 @@ const DashboardBookings = () => {
     },
     onSuccess: (data) => {
       // Skip notifications for templates
-      if (data.status === 'template') return;
+      if ((data.bookingId && bookings.find(b => b.id === data.bookingId && (b as any).is_template))) {
+        return;
+      }
       
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['bookings'] });

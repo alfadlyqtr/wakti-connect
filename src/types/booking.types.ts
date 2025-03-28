@@ -37,7 +37,11 @@ export interface BookingWithRelations extends Booking {
   is_published?: boolean;
 }
 
-export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed" | "template";
+// Update this type to match what the database expects
+export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
+
+// Add a separate type for UI representation that includes template
+export type BookingDisplayStatus = BookingStatus | "template";
 
 export type BookingTab = "all-bookings" | "pending-bookings" | "staff-bookings" | "templates";
 

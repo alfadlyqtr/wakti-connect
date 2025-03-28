@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -30,14 +29,12 @@ const BookServicePage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authUser, setAuthUser] = useState<any>(null);
 
-  // Get current user session
   useEffect(() => {
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setAuthUser(session.user);
         
-        // If logged in, get user profile
         const { data: profile } = await supabase
           .from('profiles')
           .select('full_name, display_name')
@@ -54,7 +51,6 @@ const BookServicePage = () => {
     getUser();
   }, []);
 
-  // Fetch service details
   const { data: service, isLoading: isLoadingService } = useQuery({
     queryKey: ['service', serviceId],
     queryFn: async () => {
@@ -72,13 +68,11 @@ const BookServicePage = () => {
     enabled: !!serviceId
   });
 
-  // Fetch staff members assigned to this service
   const { data: staffMembers, isLoading: isLoadingStaff } = useQuery({
     queryKey: ['serviceStaff', serviceId],
     queryFn: async () => {
       if (!serviceId) return [];
       
-      // Get staff assignments
       const { data: assignments, error: assignmentsError } = await supabase
         .from('staff_service_assignments')
         .select('staff_id')
@@ -90,7 +84,6 @@ const BookServicePage = () => {
       
       const staffIds = assignments.map(a => a.staff_id);
       
-      // Get staff details
       const { data: staffData, error: staffError } = await supabase
         .from('business_staff')
         .select('id, name, role, is_service_provider')
@@ -104,7 +97,6 @@ const BookServicePage = () => {
     enabled: !!serviceId
   });
 
-  // Set end time based on service duration when start time changes
   useEffect(() => {
     if (startTime && service?.duration) {
       const [hours, minutes] = startTime.split(':').map(Number);
@@ -133,7 +125,6 @@ const BookServicePage = () => {
     setIsSubmitting(true);
     
     try {
-      // Combine date and time
       const startDate = new Date(date);
       const [startHours, startMinutes] = startTime.split(':').map(Number);
       startDate.setHours(startHours, startMinutes, 0, 0);
@@ -142,7 +133,6 @@ const BookServicePage = () => {
       const [endHours, endMinutes] = endTime.split(':').map(Number);
       endDate.setHours(endHours, endMinutes, 0, 0);
       
-      // Create booking data with properly named fields and typed status
       const bookingData = {
         business_id: service?.business_id || '',
         title: `Booking for ${service?.name}`,
@@ -153,10 +143,9 @@ const BookServicePage = () => {
         staff_assigned_id: selectedStaffId,
         start_time: startDate.toISOString(),
         end_time: endDate.toISOString(),
-        status: 'pending' as BookingStatus
+        status: 'pending'
       };
       
-      // Insert booking
       const { data, error } = await supabase
         .from('bookings')
         .insert(bookingData)
@@ -165,7 +154,6 @@ const BookServicePage = () => {
         
       if (error) throw error;
       
-      // Create notification for service provider
       await supabase
         .from('notifications')
         .insert({
@@ -177,7 +165,6 @@ const BookServicePage = () => {
           related_entity_type: "booking"
         });
         
-      // Create notification for business owner
       if (service?.business_id) {
         await supabase
           .from('notifications')
@@ -197,7 +184,6 @@ const BookServicePage = () => {
         variant: "success"
       });
       
-      // Redirect to confirmation page or back to services
       navigate(`/booking/confirmation/${data.id}`);
     } catch (error: any) {
       console.error("Booking error:", error);
@@ -284,7 +270,6 @@ const BookServicePage = () => {
             <CardContent>
               <form id="booking-form" onSubmit={handleSubmit}>
                 <div className="space-y-6">
-                  {/* Date selection */}
                   <div className="space-y-2">
                     <Label>Select Date</Label>
                     <div className="border rounded-md p-4">
@@ -300,7 +285,6 @@ const BookServicePage = () => {
                   
                   <Separator />
                   
-                  {/* Time selection */}
                   <div className="space-y-2">
                     <Label>Select Start Time</Label>
                     <TimePicker
@@ -319,7 +303,6 @@ const BookServicePage = () => {
                   
                   <Separator />
                   
-                  {/* Staff selection */}
                   <div className="space-y-2">
                     <Label>Select Service Provider</Label>
                     {isStaffAvailable ? (
@@ -349,7 +332,6 @@ const BookServicePage = () => {
                   
                   <Separator />
                   
-                  {/* Customer information */}
                   <div className="space-y-4">
                     <h3 className="font-medium">Your Information</h3>
                     

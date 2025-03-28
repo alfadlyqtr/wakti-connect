@@ -2,10 +2,12 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { format, parseISO } from "date-fns";
-import { Calendar, Clock, User, Mail, CheckCircle, XCircle, FileTemplate, Settings } from "lucide-react";
+import { Edit, Trash, Globe, EyeOff, CalendarClock, Bookmark } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { BookingWithRelations, BookingStatus } from "@/types/booking.types";
-import { Link } from "react-router-dom";
+import { formatCurrency } from "@/utils/formatUtils";
+import { useMobileBreakpoint } from "@/hooks/useBreakpoint";
 
 interface BookingsListProps {
   bookings: BookingWithRelations[];
@@ -32,14 +34,14 @@ const BookingsList: React.FC<BookingsListProps> = ({
     <div className="grid gap-4">
       {bookings.map((booking) => {
         // Check if this is a template booking
-        const isTemplate = booking.status === 'template' || (booking as any).is_template;
+        const isTemplate = (booking as any).is_template;
         
         return (
           <Card key={booking.id} className="overflow-hidden">
             <CardHeader className="bg-muted pb-2">
               <div className="flex justify-between items-start">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  {isTemplate && <FileTemplate className="h-4 w-4 text-primary" />}
+                  {isTemplate && <Bookmark className="h-4 w-4 text-primary" />}
                   {booking.title}
                 </CardTitle>
                 
