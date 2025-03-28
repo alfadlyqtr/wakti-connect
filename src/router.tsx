@@ -8,10 +8,13 @@ import { businessRoutes, bookingRoutes } from "./routes/businessRoutes";
 import NotFound from "./pages/NotFound";
 
 const router = createBrowserRouter([
-  // Booking routes - prioritized first to avoid conflicts
-  ...bookingRoutes,
+  // Booking routes - kept completely separate from business routes
+  {
+    path: "/booking",
+    children: bookingRoutes,
+  },
   
-  // Business routes
+  // Business routes - completely separate path
   {
     path: "/business",
     children: businessRoutes,

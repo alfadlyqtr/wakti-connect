@@ -15,14 +15,14 @@ export const businessRoutes: RouteObject[] = [
   },
 ];
 
-// Booking routes
+// Booking routes - now completely separate from business routes
 export const bookingRoutes: RouteObject[] = [
   {
-    path: "booking/:businessId/:templateId",
+    path: ":businessId/:templateId",
     element: <BookingPage />,
   },
   {
-    path: "booking/confirmation/:bookingId",
+    path: "confirmation/:bookingId",
     element: <BookingConfirmationPage />,
   },
 ];

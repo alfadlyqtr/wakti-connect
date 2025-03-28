@@ -70,9 +70,10 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
     
     console.log(`Booking template ${templateId}: ${templateName} for business ${businessId}`);
     
-    // Use absolute path for navigation to avoid relative path issues
+    // Use absolute path for navigation with the proper /booking prefix
+    // This ensures we route to the booking system not the main WAKTI site
     const bookingPath = `/booking/${businessId}/${templateId}`;
-    console.log("Navigating to:", bookingPath);
+    console.log("Navigating to booking path:", bookingPath);
     
     // Navigate to the booking page with template and business info
     navigate(bookingPath, {
