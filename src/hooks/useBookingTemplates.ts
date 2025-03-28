@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/helper";
 import { toast } from "@/components/ui/use-toast";
 import {
-  BookingTemplate,
   BookingTemplateFormData,
   BookingTemplateWithRelations,
   BookingTemplateAvailability,
@@ -24,19 +23,6 @@ import {
   deleteTemplateException
 } from "@/services/booking/templates";
 
-export interface BookingTemplate {
-  id: string;
-  business_id: string;
-  name: string;
-  description?: string;
-  duration_minutes: number;
-  price?: number;
-  is_active: boolean;
-  service_id?: string;
-  created_at: string;
-  updated_at?: string;
-}
-
 export const useBookingTemplates = (businessId?: string) => {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,9 +35,18 @@ export const useBookingTemplates = (businessId?: string) => {
       if (!businessId) return [];
       
       const { data, error } = await fromTable('booking_templates')
-        .select('*')
+        .select(`
+          *,
+          service:service_id (
+            name,
+            description,
+            price
+          ),
+          staff:staff_assigned_id (
+            name
+          )
+        `)
         .eq('business_id', businessId)
-        .eq('is_active', true)
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -59,7 +54,7 @@ export const useBookingTemplates = (businessId?: string) => {
         throw error;
       }
       
-      return data as BookingTemplate[];
+      return data as BookingTemplateWithRelations[];
     },
     enabled: !!businessId
   });
@@ -195,7 +190,7 @@ export const useBookingTemplates = (businessId?: string) => {
 
   // Add availability mutation
   const addAvailabilityMutation = useMutation({
-    mutationFn: async (data: Partial<BookingTemplateAvailability>) => {
+    mutationFn: async (data: Omit<BookingTemplateAvailability, "id" | "created_at" | "updated_at">) => {
       return await addTemplateAvailability(data);
     },
     onSuccess: () => {
@@ -239,7 +234,7 @@ export const useBookingTemplates = (businessId?: string) => {
 
   // Add exception mutation
   const addExceptionMutation = useMutation({
-    mutationFn: async (data: Partial<BookingTemplateException>) => {
+    mutationFn: async (data: Omit<BookingTemplateException, "id" | "created_at" | "updated_at">) => {
       return await addTemplateException(data);
     },
     onSuccess: () => {

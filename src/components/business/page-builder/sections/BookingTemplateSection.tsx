@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useBookingTemplates } from "@/hooks/useBookingTemplates";
 import { Button } from "@/components/ui/button";
+import { BookingTemplateWithRelations } from "@/types/booking.types";
 
 const BookingTemplateSection: React.FC = () => {
   const { contentData, handleInputChange, setContentData, setIsDirty } = useSectionEditor();
@@ -60,7 +62,7 @@ const BookingTemplateSection: React.FC = () => {
   }
 
   // Filter to show only published templates
-  const publishedTemplates = templates.filter(t => t.is_published);
+  const publishedTemplates = (templates as BookingTemplateWithRelations[]).filter(t => t.is_published);
 
   return (
     <Tabs defaultValue="content">

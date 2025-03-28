@@ -26,6 +26,8 @@ interface PageSettingsTabProps {
     primary_color: string;
     secondary_color: string;
     logo_url?: string;
+    show_subscribe_button?: boolean;
+    subscribe_button_text?: string;
   };
   businessId?: string;
   handlePageDataChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
@@ -84,8 +86,8 @@ const PageSettingsTab: React.FC<PageSettingsTabProps> = ({
     }
   };
 
-  // Logo upload functionality
-  const { uploadingLogo, handleLogoUpload } = useLogoUpload(
+  // Logo upload functionality with adapter to match the required prop type
+  const { uploadingLogo, handleLogoUpload: uploadLogo } = useLogoUpload(
     businessId, 
     (logoUrl) => {
       if (autoSavePageSettings) {
@@ -96,6 +98,11 @@ const PageSettingsTab: React.FC<PageSettingsTabProps> = ({
       }
     }
   );
+  
+  // Adapter function to convert the file directly without event
+  const handleLogoUpload = (file: File) => {
+    uploadLogo(file);
+  };
   
   return (
     <Tabs defaultValue="general">

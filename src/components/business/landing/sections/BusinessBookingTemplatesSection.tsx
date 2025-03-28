@@ -18,7 +18,7 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
     layout = "grid", // grid, list, or carousel
   } = content;
 
-  const { data: templates, isLoading, error } = useBookingTemplates(businessId);
+  const { templates, isLoading, error } = useBookingTemplates(businessId);
 
   if (isLoading) {
     return (
@@ -67,7 +67,7 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                     </p>
                     <div className="flex justify-between items-center pt-2">
                       <span className="text-sm font-medium">
-                        {template.duration_minutes} minutes
+                        {template.duration} minutes
                       </span>
                       <span className="text-primary font-bold">
                         {template.price ? `$${template.price.toFixed(2)}` : "Free"}
@@ -93,7 +93,7 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                     </p>
                   </div>
                   <div className="flex items-center justify-between sm:flex-col sm:items-end space-y-1">
-                    <span className="text-sm">{template.duration_minutes} minutes</span>
+                    <span className="text-sm">{template.duration} minutes</span>
                     <span className="text-primary font-bold">
                       {template.price ? `$${template.price.toFixed(2)}` : "Free"}
                     </span>
@@ -121,7 +121,7 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                         </p>
                         <div className="flex justify-between items-center pt-2">
                           <span className="text-sm font-medium">
-                            {template.duration_minutes} minutes
+                            {template.duration} minutes
                           </span>
                           <span className="text-primary font-bold">
                             {template.price ? `$${template.price.toFixed(2)}` : "Free"}
