@@ -53,23 +53,31 @@ const BookingConfirmationPage = () => {
         if (error) throw error;
         if (!data) throw new Error("Booking not found");
         
-        // Ensure the data structure matches BookingWithRelations
+        // Prepare the booking object with properly typed relations
         const formattedBooking: BookingWithRelations = {
           ...data,
-          service: data.service || null,
-          staff: data.staff || null
+          service: null,
+          staff: null
         };
         
-        // Check if the service property is an error object and handle it
-        if (data.service && 'error' in data.service) {
+        // Check if service is valid and assign it
+        if (data.service && typeof data.service === 'object' && !('error' in data.service)) {
+          formattedBooking.service = {
+            name: data.service.name,
+            description: data.service.description,
+            price: data.service.price
+          };
+        } else if (data.service && 'error' in data.service) {
           console.warn("Service relation error:", data.service);
-          formattedBooking.service = null;
         }
         
-        // Check if the staff property is an error object and handle it
-        if (data.staff && 'error' in data.staff) {
+        // Check if staff is valid and assign it
+        if (data.staff && typeof data.staff === 'object' && !('error' in data.staff)) {
+          formattedBooking.staff = {
+            name: data.staff.name
+          };
+        } else if (data.staff && 'error' in data.staff) {
           console.warn("Staff relation error:", data.staff);
-          formattedBooking.staff = null;
         }
         
         setBooking(formattedBooking);
