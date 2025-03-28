@@ -103,7 +103,7 @@ const PagePreviewTab: React.FC<PagePreviewTabProps> = ({ getPublicPageUrl }) => 
           variant="outline" 
           asChild
         >
-          <a href={previewUrl} target="_blank" rel="noopener noreferrer">
+          <a href={getPublicPageUrl()} target="_blank" rel="noopener noreferrer">
             <Globe className="h-4 w-4 mr-2" />
             View Full Page
           </a>

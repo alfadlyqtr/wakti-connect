@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { publicRoutes } from "./routes/publicRoutes";
 import { authRoutes } from "./routes/authRoutes";
 import { dashboardRoutes } from "./routes/dashboardRoutes";
+import { businessRoutes } from "./routes/businessRoutes";
 import ScrollToTop from "./components/ui/scroll-to-top";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DashboardLayout from "./components/dashboard/DashboardLayout";
@@ -80,6 +81,21 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+                  
+                  {/* Business routes */}
+                  <Route path="/business/*">
+                    <Route
+                      index
+                      element={<Navigate to="/" replace />}
+                    />
+                    {businessRoutes.map((route) => (
+                      <Route
+                        key={route.path}
+                        path={route.path}
+                        element={route.element}
+                      />
+                    ))}
+                  </Route>
                   
                   {/* Catch-all redirect */}
                   <Route path="*" element={<Navigate to="/" replace />} />

@@ -4,8 +4,7 @@ import BusinessPage from "@/pages/business/BusinessLandingPage";
 
 export const businessRoutes: RouteObject[] = [
   {
-    path: "",
+    path: ":slug",
     element: <BusinessPage />,
   },
 ];
-

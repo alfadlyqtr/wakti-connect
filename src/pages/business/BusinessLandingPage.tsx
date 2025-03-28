@@ -24,7 +24,7 @@ const BusinessLandingPage = () => {
   return (
     <>
       {!isPreviewMode && <Header />}
-      <BusinessLandingPageComponent />
+      <BusinessLandingPageComponent slug={slug} isPreviewMode={isPreviewMode} />
     </>
   );
 };

@@ -1,26 +1,28 @@
 
 import React, { useEffect } from "react";
-import { useParams, useLocation } from "react-router-dom";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
 import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import BusinessSocialLinks from "./BusinessSocialLinks";
-import BusinessPageHeader from "./BusinessPageHeader";
+import BusinessPageHeader from "./sections/BusinessPageHeader";
 import BusinessPageSections from "./BusinessPageSections";
 import BusinessPageNotFound from "./BusinessPageNotFound";
 import { BusinessProfile } from "@/types/business.types";
 
-const BusinessLandingPageComponent = () => {
-  const { slug } = useParams<{ slug: string }>();
+interface BusinessLandingPageComponentProps {
+  slug?: string;
+  isPreviewMode?: boolean;
+}
+
+const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> = ({ 
+  slug, 
+  isPreviewMode = false 
+}) => {
   const { businessPage, pageSections, socialLinks, isLoading } = useBusinessPage(slug);
   const { isSubscribed, subscriptionId, subscribe, unsubscribe, checkingSubscription } = useBusinessSubscribers(businessPage?.business_id);
   const [isAuthenticated, setIsAuthenticated] = React.useState<boolean | null>(null);
-  const location = useLocation();
-  
-  // Check if we're in preview mode
-  const isPreviewMode = location.search.includes('preview=true');
   
   React.useEffect(() => {
     // Skip auth check in preview mode
@@ -84,14 +86,7 @@ const BusinessLandingPageComponent = () => {
       className="min-h-screen pb-16"
     >
       <BusinessPageHeader 
-        business={businessProfile}
-        isPreviewMode={isPreviewMode}
-        isAuthenticated={isAuthenticated}
-        isSubscribed={isSubscribed}
-        subscriptionId={subscriptionId}
-        checkingSubscription={checkingSubscription}
-        subscribe={subscribe}
-        unsubscribe={unsubscribe}
+        content={businessPage.page_sections?.find(s => s.section_type === 'header')?.section_content || {}}
       />
       
       <div className="container mx-auto px-4">
