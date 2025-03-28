@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Check, Calendar, Clock, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { BookingWithRelations } from "@/types/booking.types";
+import { toast } from "@/components/ui/use-toast";
 
 const BookingConfirmationPage = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
@@ -51,10 +53,34 @@ const BookingConfirmationPage = () => {
         if (error) throw error;
         if (!data) throw new Error("Booking not found");
         
-        setBooking(data as BookingWithRelations);
+        // Ensure the data structure matches BookingWithRelations
+        const formattedBooking: BookingWithRelations = {
+          ...data,
+          service: data.service || null,
+          staff: data.staff || null
+        };
+        
+        // Check if the service property is an error object and handle it
+        if (data.service && 'error' in data.service) {
+          console.warn("Service relation error:", data.service);
+          formattedBooking.service = null;
+        }
+        
+        // Check if the staff property is an error object and handle it
+        if (data.staff && 'error' in data.staff) {
+          console.warn("Staff relation error:", data.staff);
+          formattedBooking.staff = null;
+        }
+        
+        setBooking(formattedBooking);
       } catch (err: any) {
         console.error("Error fetching booking:", err);
         setError(err.message || "Failed to load booking information");
+        toast({
+          title: "Error",
+          description: "There was a problem loading the booking details",
+          variant: "destructive"
+        });
       } finally {
         setIsLoading(false);
       }
