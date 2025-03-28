@@ -71,6 +71,7 @@ const BookingPage = () => {
     if (templates && templateId) {
       const foundTemplate = templates.find(t => t.id === templateId);
       if (foundTemplate) {
+        console.log("Found template:", foundTemplate);
         setTemplate(foundTemplate);
         
         const times = [];
@@ -79,6 +80,8 @@ const BookingPage = () => {
           if (hour < 17) times.push(`${hour}:30`);
         }
         setAvailableTimes(times);
+      } else {
+        console.error("Template not found with ID:", templateId);
       }
     }
   }, [templates, templateId]);

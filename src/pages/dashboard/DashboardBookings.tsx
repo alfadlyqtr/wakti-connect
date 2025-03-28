@@ -38,8 +38,17 @@ const DashboardBookings = () => {
       if (templates.length > 0) {
         console.log(`Found ${templates.length} template bookings`);
       }
+    } else {
+      console.log(`No bookings found for tab ${activeTab}. Check if there's an issue with data fetching.`);
+      // Force a refresh after a short delay
+      const timer = setTimeout(() => {
+        console.log("Triggering a manual refetch of bookings data");
+        refetch();
+      }, 1000);
+      
+      return () => clearTimeout(timer);
     }
-  }, [bookings, activeTab]);
+  }, [bookings, activeTab, refetch]);
 
   // Mutation to update booking status
   const updateBookingMutation = useMutation({

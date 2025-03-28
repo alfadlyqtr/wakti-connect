@@ -78,6 +78,7 @@ export const fetchBookings = async (
         switch (tab) {
           case "all-bookings":
             // Fetch all actual bookings for the business
+            console.log(`Fetching all bookings for business: ${userId}`);
             const { data: allBookings, error: allBookingsError } = await supabase
               .from('bookings')
               .select(`
@@ -88,7 +89,12 @@ export const fetchBookings = async (
               .eq('business_id', userId)
               .order('created_at', { ascending: false });
               
-            if (allBookingsError) throw allBookingsError;
+            if (allBookingsError) {
+              console.error("Error fetching all bookings:", allBookingsError);
+              throw allBookingsError;
+            }
+            
+            console.log(`Retrieved ${allBookings?.length || 0} bookings from database`);
             
             // Fetch published templates and convert them to booking format
             const { data: publishedTemplates, error: templatesError } = await supabase
