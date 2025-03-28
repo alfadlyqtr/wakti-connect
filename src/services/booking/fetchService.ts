@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { BookingTab, BookingWithRelations, BookingsResult } from "@/types/booking.types";
 import { getStaffRelationId } from "@/utils/staffUtils";
@@ -75,7 +74,7 @@ export const fetchBookings = async (
         // Regular business user flow - show all bookings based on tab
         switch (tab) {
           case "all-bookings":
-            // Fetch all bookings for the business
+            // Fetch all actual bookings for the business
             const { data: allBookings, error: allBookingsError } = await supabase
               .from('bookings')
               .select(`
@@ -87,11 +86,52 @@ export const fetchBookings = async (
               .order('created_at', { ascending: false });
               
             if (allBookingsError) throw allBookingsError;
-            rawBookings = allBookings || [];
+            
+            // Fetch published templates and convert them to booking format
+            const { data: publishedTemplates, error: templatesError } = await supabase
+              .from('booking_templates')
+              .select(`
+                *,
+                service:service_id(name, description, price),
+                staff:staff_assigned_id(name)
+              `)
+              .eq('business_id', userId)
+              .eq('is_published', true)
+              .order('created_at', { ascending: false });
+              
+            if (templatesError) throw templatesError;
+            
+            // Process templates into booking format
+            const templateBookings = (publishedTemplates || []).map(template => {
+              // Create a booking representation from template
+              return {
+                id: template.id,
+                business_id: template.business_id,
+                service_id: template.service_id,
+                title: template.name,
+                description: template.description,
+                status: 'template' as any, // Special status for templates
+                staff_assigned_id: template.staff_assigned_id,
+                created_at: template.created_at,
+                updated_at: template.updated_at,
+                service: template.service,
+                staff: template.staff,
+                // Template-specific markers
+                is_template: true,
+                duration: template.duration,
+                price: template.price,
+                is_published: template.is_published,
+                // Dummy values for required booking fields
+                start_time: new Date().toISOString(),
+                end_time: new Date().toISOString(),
+              };
+            });
+            
+            // Combine actual bookings with template representations
+            rawBookings = [...(allBookings || []), ...templateBookings];
             break;
             
           case "pending-bookings":
-            // Fetch pending bookings for the business
             const { data: pendingBookings, error: pendingBookingsError } = await supabase
               .from('bookings')
               .select(`
@@ -108,7 +148,6 @@ export const fetchBookings = async (
             break;
             
           case "staff-bookings":
-            // Fetch bookings assigned to staff
             const { data: staffBookings, error: staffBookingsError } = await supabase
               .from('bookings')
               .select(`

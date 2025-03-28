@@ -29,9 +29,15 @@ export interface StaffRelation {
 export interface BookingWithRelations extends Booking {
   service: ServiceRelation | null;
   staff: StaffRelation | null;
+  
+  // Add template-specific fields that might be present
+  is_template?: boolean;
+  duration?: number;
+  price?: number;
+  is_published?: boolean;
 }
 
-export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
+export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed" | "template";
 
 export type BookingTab = "all-bookings" | "pending-bookings" | "staff-bookings" | "templates";
 

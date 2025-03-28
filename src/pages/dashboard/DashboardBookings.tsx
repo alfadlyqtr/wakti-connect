@@ -31,6 +31,12 @@ const DashboardBookings = () => {
   // Mutation to update booking status
   const updateBookingMutation = useMutation({
     mutationFn: async ({ bookingId, status }: { bookingId: string, status: BookingStatus }) => {
+      // Don't try to update templates (they're not real bookings)
+      const booking = bookings.find(b => b.id === bookingId);
+      if (booking && (booking.status === 'template' || (booking as any).is_template)) {
+        return { bookingId, status: 'template' as BookingStatus };
+      }
+      
       const { error } = await supabase
         .from('bookings')
         .update({ status, updated_at: new Date().toISOString() })
@@ -41,6 +47,9 @@ const DashboardBookings = () => {
       return { bookingId, status };
     },
     onSuccess: (data) => {
+      // Skip notifications for templates
+      if (data.status === 'template') return;
+      
       // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       

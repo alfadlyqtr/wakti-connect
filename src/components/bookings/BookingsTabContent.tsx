@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookingWithRelations, BookingStatus } from "@/types/booking.types";
@@ -24,7 +23,11 @@ const BookingsTabContent: React.FC<BookingsTabContentProps> = ({
     ? bookings.filter(filterFunction) 
     : bookings;
 
-  if (filteredBookings.length === 0) {
+  // Filter out template bookings for tabs that shouldn't show them
+  // Only keep them in the All Bookings tab
+  const displayBookings = filteredBookings;
+
+  if (displayBookings.length === 0) {
     return (
       <Card>
         <CardContent className="pt-6 text-center">
@@ -36,7 +39,7 @@ const BookingsTabContent: React.FC<BookingsTabContentProps> = ({
 
   return (
     <BookingsList 
-      bookings={filteredBookings} 
+      bookings={displayBookings} 
       onUpdateStatus={onUpdateStatus}
       isUpdating={isUpdating}
     />
