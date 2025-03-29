@@ -7,6 +7,9 @@ import {
   createBooking as createBookingService,
   updateBookingStatus,
   acknowledgeBooking,
+  markBookingNoShow,
+  approveNoShow,
+  rejectNoShow,
   BookingTab,
   BookingFormData,
   BookingWithRelations,
@@ -118,6 +121,64 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
     }
   });
 
+  // Mark booking as no-show
+  const markNoShowMutation = useMutation({
+    mutationFn: (bookingId: string) => markBookingNoShow(bookingId),
+    onSuccess: () => {
+      toast({
+        title: "No-Show Reported",
+        description: "The booking has been marked as a no-show and is pending business approval",
+        variant: "info",
+      });
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "No-Show Report Failed",
+        description: error?.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Approve no-show (business owner only)
+  const approveNoShowMutation = useMutation({
+    mutationFn: (bookingId: string) => approveNoShow(bookingId),
+    onSuccess: () => {
+      toast({
+        title: "No-Show Approved",
+        description: "The no-show has been approved and booking status updated",
+      });
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Approval Failed",
+        description: error?.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Reject no-show (business owner only)
+  const rejectNoShowMutation = useMutation({
+    mutationFn: (bookingId: string) => rejectNoShow(bookingId),
+    onSuccess: () => {
+      toast({
+        title: "No-Show Rejected",
+        description: "The no-show report has been rejected",
+      });
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Rejection Failed",
+        description: error?.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Filter bookings based on search and filters
   const getFilteredBookings = () => {
     const bookingsList = data?.bookings || [];
@@ -139,9 +200,19 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
     });
   };
 
+  // Filter for no-show bookings (either pending approval or approved)
+  const getNoShowBookings = () => {
+    const bookingsList = data?.bookings || [];
+    
+    return bookingsList.filter((booking) => {
+      return booking.is_no_show === true || booking.status === 'no_show';
+    });
+  };
+
   return {
     bookings: data?.bookings || [],
     filteredBookings: getFilteredBookings(),
+    noShowBookings: getNoShowBookings(),
     isLoading,
     error,
     searchQuery,
@@ -153,6 +224,9 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
     createBooking,
     updateStatus,
     acknowledgeBooking: acknowledgeBookingMutation,
+    markNoShow: markNoShowMutation,
+    approveNoShow: approveNoShowMutation,
+    rejectNoShow: rejectNoShowMutation,
     refetch
   };
 };

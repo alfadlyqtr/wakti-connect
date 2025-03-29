@@ -18,6 +18,9 @@ export interface Booking {
   price?: number;
   is_acknowledged?: boolean;
   acknowledged_at?: string | null;
+  is_no_show?: boolean;
+  no_show_at?: string | null;
+  no_show_pending_approval?: boolean;
 }
 
 export interface ServiceRelation {
@@ -40,11 +43,11 @@ export interface BookingWithRelations extends Booking {
   is_published?: boolean;
 }
 
-export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
+export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
 
 export type BookingDisplayStatus = BookingStatus | "template";
 
-export type BookingTab = "all-bookings" | "pending-bookings" | "staff-bookings" | "templates";
+export type BookingTab = "all-bookings" | "pending-bookings" | "staff-bookings" | "templates" | "no-show-bookings";
 
 export interface BookingFormData {
   title: string;
@@ -143,4 +146,7 @@ export type BookingUpdateData = {
   status?: BookingStatus;
   is_acknowledged?: boolean;
   acknowledged_at?: string | null;
+  is_no_show?: boolean;
+  no_show_at?: string | null;
+  no_show_pending_approval?: boolean;
 };

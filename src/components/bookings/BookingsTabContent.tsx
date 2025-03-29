@@ -9,8 +9,10 @@ interface BookingsTabContentProps {
   filterFunction?: (booking: BookingWithRelations) => boolean;
   onUpdateStatus: (bookingId: string, status: BookingStatus) => void;
   onAcknowledgeBooking?: (bookingId: string) => void;
+  onMarkNoShow?: (bookingId: string) => void;
   isUpdating: boolean;
   isAcknowledging?: boolean;
+  isMarkingNoShow?: boolean;
   emptyMessage?: string;
 }
 
@@ -19,8 +21,10 @@ const BookingsTabContent: React.FC<BookingsTabContentProps> = ({
   filterFunction,
   onUpdateStatus,
   onAcknowledgeBooking,
+  onMarkNoShow,
   isUpdating,
   isAcknowledging = false,
+  isMarkingNoShow = false,
   emptyMessage = "No bookings found."
 }) => {
   // Apply filter if provided, otherwise use all bookings
@@ -49,8 +53,10 @@ const BookingsTabContent: React.FC<BookingsTabContentProps> = ({
       bookings={filteredBookings} 
       onUpdateStatus={onUpdateStatus}
       onAcknowledgeBooking={onAcknowledgeBooking}
+      onMarkNoShow={onMarkNoShow}
       isUpdating={isUpdating}
       isAcknowledging={isAcknowledging}
+      isMarkingNoShow={isMarkingNoShow}
     />
   );
 };

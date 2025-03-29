@@ -4,13 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Link } from 'react-router-dom';
 import { useBookings } from '@/hooks/useBookings';
 import { BookingWithRelations } from '@/types/booking.types';
-import { parseISO, format, isToday, isTomorrow, isAfter } from 'date-fns';
-import { CalendarClock, ArrowRight, CheckCircle, Clock } from 'lucide-react';
+import { parseISO, format, isToday, isTomorrow, isAfter, differenceInMinutes } from 'date-fns';
+import { CalendarClock, ArrowRight, CheckCircle, Clock, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const BookingsWidget = () => {
-  const { bookings, isLoading, acknowledgeBooking } = useBookings();
+  const { bookings, isLoading, acknowledgeBooking, markNoShow } = useBookings();
+  const currentTime = new Date();
   
   if (isLoading) {
     return (
@@ -37,6 +39,8 @@ const BookingsWidget = () => {
       booking.staff_assigned_id && 
       booking.status !== 'cancelled' && 
       booking.status !== 'completed' &&
+      booking.status !== 'no_show' &&
+      !booking.is_no_show &&
       isAfter(parseISO(booking.start_time), new Date())
     )
     .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
@@ -46,14 +50,40 @@ const BookingsWidget = () => {
   const unacknowledgedCount = bookings.filter(booking => 
     booking.staff_assigned_id && 
     booking.status !== 'cancelled' && 
+    booking.status !== 'no_show' &&
+    !booking.is_no_show &&
     booking.is_acknowledged !== true
   ).length;
+  
+  // Check if a booking can be marked as no-show
+  const canMarkNoShow = (booking: BookingWithRelations) => {
+    if (!booking) return false;
+    
+    const bookingStartTime = parseISO(booking.start_time);
+    const minutesPast = differenceInMinutes(currentTime, bookingStartTime);
+    
+    return (
+      booking.status !== 'cancelled' && 
+      booking.status !== 'completed' &&
+      booking.status !== 'no_show' &&
+      !booking.is_no_show &&
+      minutesPast >= 10 // At least 10 minutes past the start time
+    );
+  };
   
   const handleAcknowledge = async (booking: BookingWithRelations) => {
     try {
       await acknowledgeBooking.mutateAsync(booking.id);
     } catch (error) {
       console.error("Error acknowledging booking:", error);
+    }
+  };
+  
+  const handleMarkNoShow = async (booking: BookingWithRelations) => {
+    try {
+      await markNoShow.mutateAsync(booking.id);
+    } catch (error) {
+      console.error("Error marking booking as no-show:", error);
     }
   };
   
@@ -100,24 +130,46 @@ const BookingsWidget = () => {
                     </p>
                   </div>
                 </div>
-                {!booking.is_acknowledged && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="mt-2"
-                    onClick={() => handleAcknowledge(booking)}
-                    disabled={acknowledgeBooking.isPending}
-                  >
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    Acknowledge
-                  </Button>
-                )}
-                {booking.is_acknowledged && (
-                  <div className="flex items-center mt-2 text-sm text-green-600">
-                    <CheckCircle className="mr-1 h-4 w-4" />
-                    Acknowledged
-                  </div>
-                )}
+                <div className="flex justify-between mt-2">
+                  {!booking.is_acknowledged && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleAcknowledge(booking)}
+                      disabled={acknowledgeBooking.isPending}
+                    >
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Acknowledge
+                    </Button>
+                  )}
+                  {booking.is_acknowledged && (
+                    <div className="flex items-center text-sm text-green-600">
+                      <CheckCircle className="mr-1 h-4 w-4" />
+                      Acknowledged
+                    </div>
+                  )}
+                  
+                  {canMarkNoShow(booking) && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => handleMarkNoShow(booking)}
+                            disabled={markNoShow.isPending}
+                          >
+                            <UserX className="mr-1 h-4 w-4" />
+                            No-Show
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Mark customer as no-show (10+ min late)</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
               </div>
             ))}
           </div>

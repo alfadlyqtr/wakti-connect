@@ -1,7 +1,7 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, differenceInMinutes } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -18,7 +18,8 @@ import {
   CheckCircle, 
   XCircle,
   ThumbsUp,
-  PlayCircle
+  PlayCircle,
+  UserX
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
@@ -27,24 +28,39 @@ import { formatCurrency } from "@/utils/formatUtils";
 import { useMobileBreakpoint } from "@/hooks/useBreakpoint";
 import { useStaffStatus } from "@/hooks/useStaffStatus";
 import { useJobCards } from "@/hooks/useJobCards";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface BookingsListProps {
   bookings: BookingWithRelations[];
   onUpdateStatus: (bookingId: string, status: BookingStatus) => void;
   onAcknowledgeBooking?: (bookingId: string) => void;
+  onMarkNoShow?: (bookingId: string) => void;
   isUpdating: boolean;
   isAcknowledging?: boolean;
+  isMarkingNoShow?: boolean;
 }
 
 const BookingsList: React.FC<BookingsListProps> = ({ 
   bookings, 
   onUpdateStatus,
   onAcknowledgeBooking,
+  onMarkNoShow,
   isUpdating,
-  isAcknowledging = false
+  isAcknowledging = false,
+  isMarkingNoShow = false
 }) => {
   const { isStaff, staffRelationId } = useStaffStatus();
   const { createJobCard } = useJobCards(staffRelationId);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Update current time every minute to check for no-show eligibility
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+    
+    return () => clearInterval(interval);
+  }, []);
   
   // Helper function to create a job card from a booking
   const handleStartJob = async (booking: BookingWithRelations) => {
@@ -70,6 +86,22 @@ const BookingsList: React.FC<BookingsListProps> = ({
     }
   };
 
+  // Helper function to check if a booking is eligible for no-show marking
+  const canMarkNoShow = (booking: BookingWithRelations) => {
+    if (!booking) return false;
+    
+    const bookingStartTime = parseISO(booking.start_time);
+    const minutesPast = differenceInMinutes(currentTime, bookingStartTime);
+    
+    return (
+      booking.status !== 'cancelled' && 
+      booking.status !== 'completed' &&
+      booking.status !== 'no_show' &&
+      !booking.is_no_show &&
+      minutesPast >= 10 // At least 10 minutes past the start time
+    );
+  };
+
   if (bookings.length === 0) {
     return (
       <Card>
@@ -88,13 +120,20 @@ const BookingsList: React.FC<BookingsListProps> = ({
         // Check if this is a template booking
         const isTemplate = (booking as any).is_template;
         const isAcknowledged = booking.is_acknowledged === true;
+        const isNoShow = booking.is_no_show === true || booking.status === 'no_show';
+        const isPendingNoShowApproval = booking.is_no_show === true && booking.no_show_pending_approval === true;
+        const showNoShowButton = canMarkNoShow(booking) && isStaff && !isNoShow && onMarkNoShow;
         
         return (
-          <Card key={booking.id} className="overflow-hidden">
+          <Card 
+            key={booking.id} 
+            className={`overflow-hidden ${isNoShow ? 'border-red-300' : ''}`}
+          >
             <CardHeader className="bg-muted pb-2">
               <div className="flex justify-between items-start">
                 <CardTitle className="text-lg flex items-center gap-2">
                   {isTemplate && <Bookmark className="h-4 w-4 text-primary" />}
+                  {isNoShow && <UserX className="h-4 w-4 text-destructive" />}
                   {booking.title}
                 </CardTitle>
                 
@@ -105,14 +144,22 @@ const BookingsList: React.FC<BookingsListProps> = ({
                     </span>
                   )}
                   
+                  {isPendingNoShowApproval && (
+                    <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800">
+                      No-Show Pending
+                    </span>
+                  )}
+                  
                   <span className={`px-2 py-1 text-xs rounded-full ${
                     isTemplate ? 'bg-purple-100 text-purple-800' :
                     booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                     booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
                     booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                    booking.status === 'no_show' ? 'bg-red-100 text-red-800' :
                     'bg-blue-100 text-blue-800'
                   }`}>
                     {isTemplate ? 'Pre-Booking Template' : 
+                      booking.status === 'no_show' ? 'No-Show' :
                       booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                   </span>
                 </div>
@@ -216,7 +263,7 @@ const BookingsList: React.FC<BookingsListProps> = ({
                     {/* Different actions depending on role and status */}
                     <div className="flex flex-wrap space-x-2 mt-4">
                       {/* Staff actions - Acknowledge booking */}
-                      {isStaff && !isAcknowledged && booking.status !== 'cancelled' && onAcknowledgeBooking && (
+                      {isStaff && !isAcknowledged && booking.status !== 'cancelled' && booking.status !== 'no_show' && onAcknowledgeBooking && (
                         <Button 
                           size="sm" 
                           variant="outline"
@@ -229,8 +276,31 @@ const BookingsList: React.FC<BookingsListProps> = ({
                         </Button>
                       )}
                       
+                      {/* Staff actions - Mark as No-Show */}
+                      {showNoShowButton && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                size="sm" 
+                                variant="destructive"
+                                className="flex items-center mb-2"
+                                onClick={() => onMarkNoShow && onMarkNoShow(booking.id)}
+                                disabled={isMarkingNoShow}
+                              >
+                                <UserX className="h-4 w-4 mr-1" />
+                                Mark No-Show
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Mark customer as no-show (10+ min late)</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                      
                       {/* Staff actions - Start Job (only for acknowledged bookings) */}
-                      {isStaff && isAcknowledged && booking.status !== 'cancelled' && booking.status !== 'completed' && (
+                      {isStaff && isAcknowledged && booking.status !== 'cancelled' && booking.status !== 'completed' && booking.status !== 'no_show' && !booking.is_no_show && (
                         <Button 
                           size="sm" 
                           className="flex items-center mb-2"
@@ -243,7 +313,7 @@ const BookingsList: React.FC<BookingsListProps> = ({
                       )}
                       
                       {/* Admin/Business actions for pending bookings */}
-                      {booking.status === 'pending' && !isStaff && (
+                      {booking.status === 'pending' && !isStaff && !booking.is_no_show && (
                         <>
                           <Button 
                             size="sm" 
@@ -268,7 +338,7 @@ const BookingsList: React.FC<BookingsListProps> = ({
                       )}
                       
                       {/* Admin/Business actions for confirmed bookings */}
-                      {booking.status === 'confirmed' && !isStaff && (
+                      {booking.status === 'confirmed' && !isStaff && !booking.is_no_show && (
                         <>
                           <Button 
                             size="sm" 

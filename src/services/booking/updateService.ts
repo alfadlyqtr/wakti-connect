@@ -74,3 +74,52 @@ export const acknowledgeBooking = async (bookingId: string): Promise<boolean> =>
     return false;
   }
 };
+
+/**
+ * Mark a booking as no-show (requires business approval)
+ */
+export const markBookingNoShow = async (bookingId: string): Promise<boolean> => {
+  try {
+    // Use the database function to mark the booking as no-show
+    const { data, error } = await supabase
+      .rpc('mark_booking_no_show', { booking_id_param: bookingId });
+      
+    if (error) throw error;
+    return data || false;
+  } catch (error) {
+    console.error("Error marking booking as no-show:", error);
+    return false;
+  }
+};
+
+/**
+ * Approve a no-show booking (business owners only)
+ */
+export const approveNoShow = async (bookingId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .rpc('approve_no_show', { booking_id_param: bookingId });
+      
+    if (error) throw error;
+    return data || false;
+  } catch (error) {
+    console.error("Error approving no-show:", error);
+    return false;
+  }
+};
+
+/**
+ * Reject a no-show booking (business owners only)
+ */
+export const rejectNoShow = async (bookingId: string): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .rpc('reject_no_show', { booking_id_param: bookingId });
+      
+    if (error) throw error;
+    return data || false;
+  } catch (error) {
+    console.error("Error rejecting no-show:", error);
+    return false;
+  }
+};

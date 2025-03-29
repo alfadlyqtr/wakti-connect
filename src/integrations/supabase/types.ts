@@ -324,6 +324,9 @@ export type Database = {
           description: string | null
           end_time: string
           id: string
+          is_no_show: boolean | null
+          no_show_at: string | null
+          no_show_pending_approval: boolean | null
           price: number | null
           service_id: string | null
           staff_assigned_id: string | null
@@ -344,6 +347,9 @@ export type Database = {
           description?: string | null
           end_time: string
           id?: string
+          is_no_show?: boolean | null
+          no_show_at?: string | null
+          no_show_pending_approval?: boolean | null
           price?: number | null
           service_id?: string | null
           staff_assigned_id?: string | null
@@ -364,6 +370,9 @@ export type Database = {
           description?: string | null
           end_time?: string
           id?: string
+          is_no_show?: boolean | null
+          no_show_at?: string | null
+          no_show_pending_approval?: boolean | null
           price?: number | null
           service_id?: string | null
           staff_assigned_id?: string | null
@@ -1498,6 +1507,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_no_show: {
+        Args: {
+          booking_id_param: string
+        }
+        Returns: boolean
+      }
       can_create_event: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -1612,6 +1627,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      mark_booking_no_show: {
+        Args: {
+          booking_id_param: string
+        }
+        Returns: boolean
+      }
       populate_access_control: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1625,6 +1646,12 @@ export type Database = {
       refresh_business_analytics: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      reject_no_show: {
+        Args: {
+          booking_id_param: string
+        }
+        Returns: boolean
       }
       todo_item_belongs_to_user: {
         Args: {
@@ -1652,7 +1679,12 @@ export type Database = {
     Enums: {
       account_type: "free" | "individual" | "business" | "staff"
       appointment_status: "scheduled" | "cancelled" | "completed"
-      booking_status: "pending" | "confirmed" | "cancelled" | "completed"
+      booking_status:
+        | "pending"
+        | "confirmed"
+        | "cancelled"
+        | "completed"
+        | "no_show"
       event_status: "draft" | "sent" | "accepted" | "declined" | "recalled"
       invitation_status: "pending" | "accepted" | "declined"
     }

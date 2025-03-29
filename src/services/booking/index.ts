@@ -1,7 +1,14 @@
 
 import { fetchBookings } from "./fetchService";
 import { createBooking as createBookingService } from "./createService";
-import { updateBookingStatus, updateBooking, acknowledgeBooking } from "./updateService";
+import { 
+  updateBookingStatus, 
+  updateBooking, 
+  acknowledgeBooking,
+  markBookingNoShow,
+  approveNoShow,
+  rejectNoShow
+} from "./updateService";
 import { 
   fetchBookingTemplates,
   fetchBookingTemplate,
@@ -40,6 +47,9 @@ export {
   updateBookingStatus,
   updateBooking,
   acknowledgeBooking,
+  markBookingNoShow,
+  approveNoShow,
+  rejectNoShow,
   
   // Template operations
   fetchBookingTemplates,

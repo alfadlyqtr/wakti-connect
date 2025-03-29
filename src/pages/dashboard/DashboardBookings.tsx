@@ -14,6 +14,7 @@ import BookingsHeader from "@/components/bookings/BookingsHeader";
 import BookingsTabContent from "@/components/bookings/BookingsTabContent";
 import BookingsError from "@/components/bookings/BookingsError";
 import BookingTemplatesTab from "@/components/bookings/templates/BookingTemplatesTab";
+import NoShowBookingsTab from "@/components/bookings/NoShowBookingsTab";
 
 const DashboardBookings = () => {
   const { activeTab, setActiveTab } = useBookingsTabState();
@@ -22,12 +23,16 @@ const DashboardBookings = () => {
   
   // Fetch bookings based on the selected tab
   const { 
-    bookings, 
+    bookings,
+    noShowBookings, 
     isLoading, 
     error, 
     refetch,
     updateStatus,
-    acknowledgeBooking
+    acknowledgeBooking,
+    markNoShow,
+    approveNoShow,
+    rejectNoShow
   } = useBookings(isStaff ? 'all-bookings' : activeTab);
 
   // Log bookings data for debugging
@@ -110,6 +115,32 @@ const DashboardBookings = () => {
     }
   };
 
+  // Function to handle marking a booking as no-show
+  const handleMarkNoShow = async (bookingId: string) => {
+    try {
+      await markNoShow.mutateAsync(bookingId);
+    } catch (error) {
+      console.error("Error marking booking as no-show:", error);
+    }
+  };
+
+  // Functions to handle approving/rejecting no-shows
+  const handleApproveNoShow = async (bookingId: string) => {
+    try {
+      await approveNoShow.mutateAsync(bookingId);
+    } catch (error) {
+      console.error("Error approving no-show:", error);
+    }
+  };
+
+  const handleRejectNoShow = async (bookingId: string) => {
+    try {
+      await rejectNoShow.mutateAsync(bookingId);
+    } catch (error) {
+      console.error("Error rejecting no-show:", error);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container py-8 flex justify-center">
@@ -137,8 +168,10 @@ const DashboardBookings = () => {
           bookings={bookings} 
           onUpdateStatus={handleUpdateStatus}
           onAcknowledgeBooking={handleAcknowledgeBooking}
+          onMarkNoShow={handleMarkNoShow}
           isUpdating={updateStatus.isPending}
           isAcknowledging={acknowledgeBooking.isPending}
+          isMarkingNoShow={markNoShow.isPending}
           emptyMessage="No bookings have been assigned to you yet."
         />
       </div>
@@ -155,6 +188,7 @@ const DashboardBookings = () => {
           <TabsTrigger value="all-bookings">All Bookings</TabsTrigger>
           <TabsTrigger value="pending-bookings">Pending</TabsTrigger>
           <TabsTrigger value="staff-bookings">Staff Assigned</TabsTrigger>
+          <TabsTrigger value="no-show-bookings">No Shows</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
         </TabsList>
         
@@ -183,6 +217,16 @@ const DashboardBookings = () => {
             onUpdateStatus={handleUpdateStatus}
             isUpdating={updateStatus.isPending}
             emptyMessage="No staff assigned bookings found."
+          />
+        </TabsContent>
+        
+        <TabsContent value="no-show-bookings">
+          <NoShowBookingsTab 
+            noShowBookings={noShowBookings}
+            onApproveNoShow={handleApproveNoShow}
+            onRejectNoShow={handleRejectNoShow}
+            isApproving={approveNoShow.isPending}
+            isRejecting={rejectNoShow.isPending}
           />
         </TabsContent>
         
