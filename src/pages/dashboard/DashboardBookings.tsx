@@ -217,6 +217,7 @@ const DashboardBookings = () => {
             onUpdateStatus={handleUpdateStatus}
             isUpdating={updateStatus.isPending}
             emptyMessage="No staff assigned bookings found."
+            isStaffTab={true}
           />
         </TabsContent>
         

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
@@ -21,6 +20,7 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterDate, setFilterDate] = useState<Date | null>(null);
+  const [filterStaff, setFilterStaff] = useState<string>("all");
 
   // Fetch bookings with React Query
   const { 
@@ -128,7 +128,7 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
       toast({
         title: "No-Show Reported",
         description: "The booking has been marked as a no-show and is pending business approval",
-        variant: "info",
+        variant: "default",
       });
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
     },
@@ -196,7 +196,12 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
       // Date filter
       const matchesDate = !filterDate ? true : new Date(booking.start_time).toDateString() === filterDate.toDateString();
       
-      return matchesSearch && matchesStatus && matchesDate;
+      // Staff filter
+      const matchesStaff = filterStaff === "all" ? true : 
+        (booking.staff?.name?.toLowerCase() === filterStaff.toLowerCase() || 
+         booking.staff_name?.toLowerCase() === filterStaff.toLowerCase());
+      
+      return matchesSearch && matchesStatus && matchesDate && matchesStaff;
     });
   };
 
@@ -221,6 +226,8 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
     setFilterStatus,
     filterDate,
     setFilterDate,
+    filterStaff,
+    setFilterStaff,
     createBooking,
     updateStatus,
     acknowledgeBooking: acknowledgeBookingMutation,
