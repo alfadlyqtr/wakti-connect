@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
@@ -14,6 +15,7 @@ import {
   BookingWithRelations,
   BookingStatus
 } from "@/services/booking";
+import { useEffect } from "react";
 
 export const useBookings = (tab: BookingTab = "all-bookings") => {
   const queryClient = useQueryClient();
@@ -47,6 +49,41 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
     }
   });
 
+  // Function to check if a time slot is already booked
+  const isTimeSlotBooked = (startTime: string, endTime: string, staffId?: string): boolean => {
+    const bookingsList = data?.bookings || [];
+    
+    // Skip for template bookings
+    if (tab === "templates") return false;
+    
+    // Convert input times to Date objects for comparison
+    const newStartTime = new Date(startTime);
+    const newEndTime = new Date(endTime);
+    
+    // Check for conflicts with existing bookings
+    return bookingsList.some(booking => {
+      // Skip no-show or cancelled bookings
+      if (booking.status === 'no_show' || booking.status === 'cancelled') {
+        return false;
+      }
+      
+      // If filtering by staff and staff IDs are provided, only check conflicts for that staff
+      if (staffId && booking.staff_assigned_id && staffId !== booking.staff_assigned_id) {
+        return false;
+      }
+      
+      const existingStart = new Date(booking.start_time);
+      const existingEnd = new Date(booking.end_time);
+      
+      // Check for time slot overlap
+      return (
+        (newStartTime >= existingStart && newStartTime < existingEnd) || // New booking starts during existing booking
+        (newEndTime > existingStart && newEndTime <= existingEnd) || // New booking ends during existing booking
+        (newStartTime <= existingStart && newEndTime >= existingEnd) // New booking completely covers existing booking
+      );
+    });
+  };
+
   // Create a new booking
   const createBooking = async (bookingData: Partial<BookingFormData>) => {
     try {
@@ -56,6 +93,11 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
       
       if (!bookingData.start_time || !bookingData.end_time) {
         throw new Error("Booking must have start and end times");
+      }
+      
+      // Check if the time slot is already booked
+      if (isTimeSlotBooked(bookingData.start_time, bookingData.end_time, bookingData.staff_assigned_id)) {
+        throw new Error("This time slot is already booked. Please select another time.");
       }
       
       const result = await createBookingService(bookingData as BookingFormData);
@@ -234,6 +276,7 @@ export const useBookings = (tab: BookingTab = "all-bookings") => {
     markNoShow: markNoShowMutation,
     approveNoShow: approveNoShowMutation,
     rejectNoShow: rejectNoShowMutation,
+    isTimeSlotBooked,
     refetch
   };
 };

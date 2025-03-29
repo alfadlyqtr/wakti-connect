@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { BookingWithRelations } from "@/types/booking.types";
 import { format } from "date-fns";
-import { Calendar, Clock } from "lucide-react";
+import { Calendar, Clock, MapPin, Heart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import BookingServiceInfo from "./BookingServiceInfo";
 import BookingReferenceDisplay from "./BookingReferenceDisplay";
@@ -13,6 +13,9 @@ import ConfirmationAnimation from "./ConfirmationAnimation";
 import AccountPromotionCard from "./AccountPromotionCard";
 import CalendarExportOptions from "./CalendarExportOptions";
 import BookingDetailsCard from "./BookingDetailsCard";
+import { supabase } from "@/integrations/supabase/client";
+import { BusinessProfile } from "@/types/business.types";
+import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
 
 interface ConfirmationCardProps {
   booking: BookingWithRelations;
@@ -24,6 +27,57 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
   const { user, isAuthenticated } = useAuth();
   const [showPromotion, setShowPromotion] = useState(false);
   const [showCalendarOptions, setShowCalendarOptions] = useState(false);
+  const [businessLogo, setBusinessLogo] = useState<string | null>(null);
+  const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null);
+  const { isSubscribed, subscribe } = useBusinessSubscribers(booking.business_id);
+  const [businessLocation, setBusinessLocation] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Fetch business profile and logo
+    const fetchBusinessDetails = async () => {
+      if (!booking.business_id) return;
+
+      try {
+        // Get business profile
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('business_name, avatar_url, id, street_address, city, state_province, country')
+          .eq('id', booking.business_id)
+          .single();
+
+        if (profileError) throw profileError;
+        
+        if (profileData) {
+          setBusinessProfile({
+            id: profileData.id,
+            business_name: profileData.business_name || "Business",
+            avatar_url: profileData.avatar_url || undefined,
+            account_type: "business"
+          });
+          
+          setBusinessLogo(profileData.avatar_url);
+          
+          // Construct location string if available
+          if (profileData.street_address || profileData.city) {
+            const locationParts = [
+              profileData.street_address,
+              profileData.city,
+              profileData.state_province,
+              profileData.country
+            ].filter(Boolean);
+            
+            if (locationParts.length > 0) {
+              setBusinessLocation(locationParts.join(', '));
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching business details:", error);
+      }
+    };
+
+    fetchBusinessDetails();
+  }, [booking.business_id]);
   
   useEffect(() => {
     // If user is not authenticated, show the account promotion
@@ -37,6 +91,7 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
       // For authenticated users, auto-integrate with WAKTI calendar
       // This would normally involve saving to user's calendar in the database
       console.log("Auto-adding booking to WAKTI user calendar");
+      setShowCalendarOptions(true);
     }
   }, [isAuthenticated]);
   
@@ -55,9 +110,36 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
     }
   };
 
+  const handleSubscribe = () => {
+    if (isAuthenticated && businessProfile) {
+      subscribe.mutate(booking.business_id);
+    } else {
+      // Redirect to login first
+      navigate("/login", { 
+        state: { from: window.location.pathname, subscribeAfter: booking.business_id } 
+      });
+    }
+  };
+
+  const handleOpenMaps = () => {
+    if (businessLocation) {
+      const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(businessLocation)}`;
+      window.open(mapUrl, '_blank');
+    }
+  };
+
   return (
     <Card className="w-full shadow-md overflow-hidden border-primary/10">
       <CardHeader className="text-center bg-primary/5 pb-6">
+        {businessLogo && (
+          <div className="flex justify-center mb-4">
+            <img 
+              src={businessLogo} 
+              alt={businessProfile?.business_name || "Business"} 
+              className="h-16 w-16 rounded-full object-cover border-2 border-primary/20"
+            />
+          </div>
+        )}
         <ConfirmationAnimation />
       </CardHeader>
       
@@ -68,12 +150,43 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
         
         <BookingReferenceDisplay bookingId={booking.id} />
         
+        {businessLocation && (
+          <div className="mt-4 border rounded-md p-3 bg-muted/20">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span className="truncate max-w-[200px]">{businessLocation}</span>
+              </div>
+              <Button size="sm" variant="outline" onClick={handleOpenMaps}>
+                View Map
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {/* Calendar Export Options - always visible */}
+        <CalendarExportOptions booking={booking} serviceName={serviceName} />
+        
         {showPromotion && !isAuthenticated && (
           <AccountPromotionCard onCalendarExport={handleCalendarExport} />
         )}
         
-        {(showCalendarOptions || isAuthenticated) && (
-          <CalendarExportOptions booking={booking} serviceName={serviceName} />
+        {/* Subscribe to Business Button */}
+        {!isSubscribed && isAuthenticated && businessProfile && (
+          <div className="mt-4 text-center">
+            <Button 
+              variant="outline" 
+              onClick={handleSubscribe}
+              className="w-full sm:w-auto"
+              disabled={subscribe.isPending}
+            >
+              <Heart className="mr-2 h-4 w-4" />
+              Subscribe to {businessProfile.business_name}
+            </Button>
+            <p className="text-xs text-muted-foreground mt-1">
+              Get updates about services and special offers
+            </p>
+          </div>
         )}
       </CardContent>
       

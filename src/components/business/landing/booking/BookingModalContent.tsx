@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { BookingTemplate, BookingTemplateAvailability } from "@/types/booking.types";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
@@ -22,6 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { createBooking } from "@/services/booking";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useBookings } from "@/hooks/useBookings";
 
 interface BookingModalContentProps {
   businessId: string;
@@ -51,6 +51,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
   const [availability, setAvailability] = useState<BookingTemplateAvailability[]>([]);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(true);
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const { isTimeSlotBooked } = useBookings();
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
@@ -64,6 +65,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
   });
 
   const selectedDate = form.watch("bookingDate");
+  const selectedTime = form.watch("bookingTime");
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -118,7 +120,25 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
       let currentTime = startTime;
       
       while (isBefore(currentTime, endTime)) {
-        slots.push(format(currentTime, "HH:mm"));
+        const timeSlot = format(currentTime, "HH:mm");
+        
+        const slotEndTime = new Date(currentTime.getTime() + appointmentDuration * 60000);
+        
+        const startDateTime = new Date(selectedDate);
+        startDateTime.setHours(currentTime.getHours(), currentTime.getMinutes());
+        
+        const endDateTime = new Date(selectedDate);
+        endDateTime.setHours(slotEndTime.getHours(), slotEndTime.getMinutes());
+        
+        const isBooked = isTimeSlotBooked(
+          startDateTime.toISOString(), 
+          endDateTime.toISOString(),
+          template.staff_assigned_id
+        );
+        
+        if (!isBooked) {
+          slots.push(timeSlot);
+        }
         
         currentTime = new Date(currentTime.getTime() + appointmentDuration * 60000);
         
@@ -136,7 +156,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
       }
       setAvailableTimes(defaultSlots);
     }
-  }, [selectedDate, template, availability]);
+  }, [selectedDate, template, availability, isTimeSlotBooked]);
 
   const onSubmit = async (data: BookingFormValues) => {
     if (!businessId || !template) {
@@ -159,6 +179,16 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
 
       const endDateTime = new Date(bookingDateTime);
       endDateTime.setMinutes(endDateTime.getMinutes() + template.duration);
+
+      const isBooked = isTimeSlotBooked(
+        bookingDateTime.toISOString(),
+        endDateTime.toISOString(),
+        template.staff_assigned_id
+      );
+
+      if (isBooked) {
+        throw new Error("This time slot has just been booked by someone else. Please select another time.");
+      }
 
       console.log("Creating booking with the following data:", {
         business_id: businessId,
@@ -342,7 +372,10 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
                         <Calendar
                           mode="single"
                           selected={field.value}
-                          onSelect={field.onChange}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            form.setValue("bookingTime", "");
+                          }}
                           disabled={(date) => 
                             date < new Date(new Date().setHours(0, 0, 0, 0)) || 
                             date > addDays(new Date(), 30)
@@ -362,7 +395,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Time</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a time" />
