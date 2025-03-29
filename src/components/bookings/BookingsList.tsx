@@ -18,7 +18,8 @@ import {
   XCircle,
   ThumbsUp,
   PlayCircle,
-  UserX
+  UserX,
+  Copy
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
@@ -27,6 +28,7 @@ import { formatCurrency } from "@/utils/formatUtils";
 import { useMobileBreakpoint } from "@/hooks/useBreakpoint";
 import { useStaffStatus } from "@/hooks/useStaffStatus";
 import { useJobCards } from "@/hooks/useJobCards";
+import { toast } from "@/components/ui/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface BookingsListProps {
@@ -104,6 +106,19 @@ const BookingsList: React.FC<BookingsListProps> = ({
       !booking.is_no_show &&
       minutesPast >= 10
     );
+  };
+
+  const formatBookingId = (id: string) => {
+    const shortId = id.substring(0, 8).toUpperCase();
+    return `${shortId.substring(0, 4)}-${shortId.substring(4)}`;
+  };
+
+  const copyToClipboard = (id: string) => {
+    navigator.clipboard.writeText(id);
+    toast({
+      title: "Copied to clipboard",
+      description: "Booking reference has been copied to your clipboard.",
+    });
   };
 
   if (bookings.length === 0) {
@@ -216,6 +231,22 @@ const BookingsList: React.FC<BookingsListProps> = ({
               ) : (
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
+                    <div className="flex items-center justify-between mb-3 bg-primary/5 p-2 rounded-md">
+                      <div className="flex items-center">
+                        <span className="text-xs font-medium mr-2">Ref:</span>
+                        <code className="text-xs font-mono">{formatBookingId(booking.id)}</code>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => copyToClipboard(booking.id)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <span className="sr-only">Copy</span>
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    
                     <div className="flex items-center mb-2">
                       <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
                       <span className="text-sm">
