@@ -15,37 +15,37 @@ const ReportsTab = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Tabs defaultValue="financial">
-        <TabsList className={`grid w-full ${isMobile ? "grid-cols-1 gap-2" : "grid-cols-3"}`}>
+        <TabsList className="flex overflow-x-auto space-x-1 py-1 px-1">
           <TabsTrigger value="financial">Financial</TabsTrigger>
           <TabsTrigger value="appointments">Appointments</TabsTrigger>
           <TabsTrigger value="staff">Staff</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="financial" className="mt-6">
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+        <TabsContent value="financial" className="mt-4 sm:mt-6">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <FileText className="h-5 w-5" />
                   Monthly Revenue Report
                 </CardTitle>
                 <CardDescription>
-                  Detailed breakdown of monthly revenue by service and staff
+                  Detailed breakdown of monthly revenue
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   This report includes total revenue, service-wise breakdown, payment methods, and trends compared to previous periods.
                 </p>
               </CardContent>
-              <CardFooter className={`${isMobile ? 'flex-col gap-2' : 'flex justify-between'}`}>
-                <Button variant="outline" className={isMobile ? 'w-full' : ''} onClick={() => handleGenerateReport('monthly-revenue')}>
+              <CardFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between">
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => handleGenerateReport('monthly-revenue')}>
                   <Download className="mr-2 h-4 w-4" />
                   Download
                 </Button>
-                <Button variant="outline" className={isMobile ? 'w-full' : ''} onClick={() => handleGenerateReport('monthly-revenue-print')}>
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => handleGenerateReport('monthly-revenue-print')}>
                   <Printer className="mr-2 h-4 w-4" />
                   Print
                 </Button>
@@ -53,8 +53,8 @@ const ReportsTab = () => {
             </Card>
             
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <FileText className="h-5 w-5" />
                   Annual Financial Summary
                 </CardTitle>
@@ -63,16 +63,16 @@ const ReportsTab = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   This report provides a comprehensive overview of your annual revenue, expenses, and profit margins with quarter-by-quarter comparison.
                 </p>
               </CardContent>
-              <CardFooter className={`${isMobile ? 'flex-col gap-2' : 'flex justify-between'}`}>
-                <Button variant="outline" className={isMobile ? 'w-full' : ''} onClick={() => handleGenerateReport('annual-summary')}>
+              <CardFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between">
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => handleGenerateReport('annual-summary')}>
                   <Download className="mr-2 h-4 w-4" />
                   Download
                 </Button>
-                <Button variant="outline" className={isMobile ? 'w-full' : ''} onClick={() => handleGenerateReport('annual-summary-print')}>
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => handleGenerateReport('annual-summary-print')}>
                   <Printer className="mr-2 h-4 w-4" />
                   Print
                 </Button>
@@ -81,11 +81,11 @@ const ReportsTab = () => {
           </div>
         </TabsContent>
         
-        <TabsContent value="appointments" className="mt-6">
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+        <TabsContent value="appointments" className="mt-4 sm:mt-6">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <CalendarDays className="h-5 w-5" />
                   Appointment Analysis
                 </CardTitle>
@@ -94,16 +94,16 @@ const ReportsTab = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   This report shows appointment trends, popular time slots, most booked services, and customer retention metrics.
                 </p>
               </CardContent>
-              <CardFooter className={`${isMobile ? 'flex-col gap-2' : 'flex justify-between'}`}>
-                <Button variant="outline" className={isMobile ? 'w-full' : ''} onClick={() => handleGenerateReport('appointment-analysis')}>
+              <CardFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between">
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => handleGenerateReport('appointment-analysis')}>
                   <Download className="mr-2 h-4 w-4" />
                   Download
                 </Button>
-                <Button variant="outline" className={isMobile ? 'w-full' : ''} onClick={() => handleGenerateReport('appointment-analysis-print')}>
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => handleGenerateReport('appointment-analysis-print')}>
                   <Printer className="mr-2 h-4 w-4" />
                   Print
                 </Button>
@@ -111,8 +111,8 @@ const ReportsTab = () => {
             </Card>
             
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <CalendarDays className="h-5 w-5" />
                   No-Show Report
                 </CardTitle>
@@ -121,16 +121,16 @@ const ReportsTab = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   This report identifies patterns in cancellations and no-shows, helping you optimize your scheduling and reminder systems.
                 </p>
               </CardContent>
-              <CardFooter className={`${isMobile ? 'flex-col gap-2' : 'flex justify-between'}`}>
-                <Button variant="outline" className={isMobile ? 'w-full' : ''} onClick={() => handleGenerateReport('no-show-report')}>
+              <CardFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between">
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => handleGenerateReport('no-show-report')}>
                   <Download className="mr-2 h-4 w-4" />
                   Download
                 </Button>
-                <Button variant="outline" className={isMobile ? 'w-full' : ''} onClick={() => handleGenerateReport('no-show-report-print')}>
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => handleGenerateReport('no-show-report-print')}>
                   <Printer className="mr-2 h-4 w-4" />
                   Print
                 </Button>
@@ -139,11 +139,11 @@ const ReportsTab = () => {
           </div>
         </TabsContent>
         
-        <TabsContent value="staff" className="mt-6">
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+        <TabsContent value="staff" className="mt-4 sm:mt-6">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <Users className="h-5 w-5" />
                   Staff Performance
                 </CardTitle>
@@ -152,16 +152,16 @@ const ReportsTab = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   This report provides detailed performance metrics for each staff member, including appointments handled, revenue generated, and customer feedback scores.
                 </p>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => handleGenerateReport('staff-performance')}>
+              <CardFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between">
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => handleGenerateReport('staff-performance')}>
                   <Download className="mr-2 h-4 w-4" />
                   Download
                 </Button>
-                <Button variant="outline" onClick={() => handleGenerateReport('staff-performance-print')}>
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => handleGenerateReport('staff-performance-print')}>
                   <Printer className="mr-2 h-4 w-4" />
                   Print
                 </Button>
@@ -169,8 +169,8 @@ const ReportsTab = () => {
             </Card>
             
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <Users className="h-5 w-5" />
                   Work Hours Summary
                 </CardTitle>
@@ -179,16 +179,16 @@ const ReportsTab = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   This report summarizes staff attendance, work hours, overtime, and productivity metrics to help with scheduling and payroll.
                 </p>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => handleGenerateReport('work-hours-summary')}>
+              <CardFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between">
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => handleGenerateReport('work-hours-summary')}>
                   <Download className="mr-2 h-4 w-4" />
                   Download
                 </Button>
-                <Button variant="outline" onClick={() => handleGenerateReport('work-hours-summary-print')}>
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => handleGenerateReport('work-hours-summary-print')}>
                   <Printer className="mr-2 h-4 w-4" />
                   Print
                 </Button>

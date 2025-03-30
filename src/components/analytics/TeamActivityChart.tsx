@@ -15,24 +15,24 @@ export const TeamActivityChart: React.FC = () => {
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={isMobile ? 300 : "100%"}>
+    <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
       <BarChart 
         data={chartData} 
         margin={{ 
-          top: 10, 
-          right: isMobile ? 10 : 30, 
-          left: isMobile ? 5 : 20, 
-          bottom: isMobile ? 70 : 5 
+          top: 20, 
+          right: isMobile ? 15 : 30, 
+          left: isMobile ? 15 : 20, 
+          bottom: isMobile ? 50 : 5 
         }}
-        barSize={isMobile ? 20 : 40}
+        barSize={isMobile ? 25 : 40}
       >
         <XAxis 
           dataKey="name" 
           tick={{ fontSize: isMobile ? 11 : 12 }}
-          tickMargin={isMobile ? 10 : 5}
-          angle={isMobile ? -45 : 0}
+          tickMargin={isMobile ? 5 : 5}
+          angle={isMobile ? -30 : 0}
           textAnchor={isMobile ? "end" : "middle"}
-          height={isMobile ? 70 : 30}
+          height={isMobile ? 60 : 30}
           interval={0}
         />
         <YAxis 

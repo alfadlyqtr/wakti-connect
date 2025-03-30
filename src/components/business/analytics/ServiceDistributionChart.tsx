@@ -47,7 +47,7 @@ export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> =
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: isMobile ? 'bottom' as const : 'bottom' as const,
+        position: 'bottom' as const,
         align: 'center' as const,
         labels: {
           boxWidth: isMobile ? 10 : 12,
@@ -68,8 +68,8 @@ export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> =
     },
     layout: {
       padding: {
-        top: isMobile ? 5 : 0,
-        bottom: isMobile ? 10 : 0
+        top: isMobile ? 5 : 10,
+        bottom: isMobile ? 15 : 5
       }
     }
   };

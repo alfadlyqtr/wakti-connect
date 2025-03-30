@@ -53,11 +53,11 @@ const DashboardBusinessReports = () => {
   };
 
   return (
-    <div className="container py-6 space-y-6">
+    <div className="container py-4 sm:py-6 space-y-4 sm:space-y-6 px-2 sm:px-4">
       <div className="flex flex-col md:flex-row justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Business Reports</h1>
-          <p className="text-muted-foreground">Track your business performance and analyze key metrics.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Business Reports</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Track your business performance and analyze key metrics.</p>
         </div>
         <Button className="md:self-start" onClick={handleDownloadReport}>
           <Download className="mr-2 h-4 w-4" />
@@ -65,7 +65,7 @@ const DashboardBusinessReports = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
         <StatsCard
           title="Subscribers"
           value={subscribersLoading ? (
@@ -97,57 +97,57 @@ const DashboardBusinessReports = () => {
       </div>
 
       <Tabs defaultValue="growth">
-        <TabsList className={`grid w-full ${isMobile ? "grid-cols-1 gap-2" : "grid-cols-4"}`}>
+        <TabsList className="flex overflow-x-auto space-x-1 py-1 px-1">
           <TabsTrigger value="growth">Growth</TabsTrigger>
           <TabsTrigger value="engagement">Engagement</TabsTrigger>
           <TabsTrigger value="services">Services</TabsTrigger>
           <TabsTrigger value="staff">Staff</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="growth" className="mt-6">
+        <TabsContent value="growth" className="mt-4 sm:mt-6">
           <SubscriberGrowthChart />
         </TabsContent>
         
-        <TabsContent value="engagement" className="mt-6">
+        <TabsContent value="engagement" className="mt-4 sm:mt-6">
           <BookingActivityChart />
         </TabsContent>
         
-        <TabsContent value="services" className="mt-6">
+        <TabsContent value="services" className="mt-4 sm:mt-6">
           <ServicePopularityChart />
         </TabsContent>
         
-        <TabsContent value="staff" className="mt-6">
-          <div className="grid gap-6 grid-cols-1">
+        <TabsContent value="staff" className="mt-4 sm:mt-6">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1">
             <Card className="w-full">
-              <CardHeader>
+              <CardHeader className="pb-2">
                 <CardTitle>Staff Activity Hours</CardTitle>
               </CardHeader>
-              <CardContent className="h-[400px]">
+              <CardContent className="h-[350px] sm:h-[400px] pt-0">
                 <TeamActivityChart />
               </CardContent>
             </Card>
             
             <Card className="w-full">
-              <CardHeader>
+              <CardHeader className="pb-2">
                 <CardTitle>Staff Availability & Utilization</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <h3 className="text-lg font-medium mb-4">Staff Availability</h3>
-                    <div className="space-y-3">
+                    <h3 className="text-lg font-medium mb-3">Staff Availability</h3>
+                    <div className="space-y-2 sm:space-y-3">
                       {[
                         { name: 'John Doe', availability: '90%', hours: 38 },
                         { name: 'Jane Smith', availability: '85%', hours: 42 },
                         { name: 'Bob Johnson', availability: '75%', hours: 32 },
                         { name: 'Alice Williams', availability: '95%', hours: 40 },
                       ].map((staff) => (
-                        <div key={staff.name} className="flex justify-between items-center p-3 bg-muted rounded-md">
+                        <div key={staff.name} className="flex justify-between items-center p-2 sm:p-3 bg-muted rounded-md">
                           <div>
-                            <p className="font-medium">{staff.name}</p>
+                            <p className="font-medium text-sm sm:text-base">{staff.name}</p>
                             <p className="text-xs text-muted-foreground">{staff.hours} hrs/week</p>
                           </div>
-                          <div className="bg-background px-2 py-1 rounded text-sm font-medium">
+                          <div className="bg-background px-2 py-1 rounded text-xs sm:text-sm font-medium">
                             {staff.availability}
                           </div>
                         </div>
@@ -156,12 +156,12 @@ const DashboardBusinessReports = () => {
                   </div>
                   
                   <div>
-                    <h3 className="text-lg font-medium mb-4">Staff Utilization</h3>
-                    <div className="space-y-4">
+                    <h3 className="text-lg font-medium mb-3">Staff Utilization</h3>
+                    <div className="space-y-3 sm:space-y-4">
                       <div>
                         <div className="flex justify-between mb-1">
-                          <span className="text-sm font-medium">Service Allocation</span>
-                          <span className="text-sm font-medium">78%</span>
+                          <span className="text-xs sm:text-sm font-medium">Service Allocation</span>
+                          <span className="text-xs sm:text-sm font-medium">78%</span>
                         </div>
                         <div className="w-full bg-muted rounded-full h-2.5">
                           <div className="bg-primary h-2.5 rounded-full" style={{ width: '78%' }}></div>
@@ -170,8 +170,8 @@ const DashboardBusinessReports = () => {
                       
                       <div>
                         <div className="flex justify-between mb-1">
-                          <span className="text-sm font-medium">Administrative Tasks</span>
-                          <span className="text-sm font-medium">15%</span>
+                          <span className="text-xs sm:text-sm font-medium">Administrative Tasks</span>
+                          <span className="text-xs sm:text-sm font-medium">15%</span>
                         </div>
                         <div className="w-full bg-muted rounded-full h-2.5">
                           <div className="bg-primary h-2.5 rounded-full" style={{ width: '15%' }}></div>
@@ -180,8 +180,8 @@ const DashboardBusinessReports = () => {
                       
                       <div>
                         <div className="flex justify-between mb-1">
-                          <span className="text-sm font-medium">Training</span>
-                          <span className="text-sm font-medium">7%</span>
+                          <span className="text-xs sm:text-sm font-medium">Training</span>
+                          <span className="text-xs sm:text-sm font-medium">7%</span>
                         </div>
                         <div className="w-full bg-muted rounded-full h-2.5">
                           <div className="bg-primary h-2.5 rounded-full" style={{ width: '7%' }}></div>
@@ -189,18 +189,18 @@ const DashboardBusinessReports = () => {
                       </div>
                     </div>
                     
-                    <div className="mt-6">
-                      <h4 className="font-medium mb-2">Staff Contribution to Revenue</h4>
-                      <div className="p-3 bg-muted rounded-md">
-                        <div className="grid grid-cols-2 gap-4">
+                    <div className="mt-4 sm:mt-6">
+                      <h4 className="font-medium mb-2 text-sm sm:text-base">Staff Contribution to Revenue</h4>
+                      <div className="p-2 sm:p-3 bg-muted rounded-md">
+                        <div className="grid grid-cols-2 gap-2 sm:gap-4">
                           <div>
-                            <p className="text-sm text-muted-foreground">Top Performer</p>
-                            <p className="font-medium">Jane Smith</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">Top Performer</p>
+                            <p className="font-medium text-sm sm:text-base">Jane Smith</p>
                             <p className="text-xs text-muted-foreground">32% of total revenue</p>
                           </div>
                           <div>
-                            <p className="text-sm text-muted-foreground">Most Bookings</p>
-                            <p className="font-medium">John Doe</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">Most Bookings</p>
+                            <p className="font-medium text-sm sm:text-base">John Doe</p>
                             <p className="text-xs text-muted-foreground">42 this month</p>
                           </div>
                         </div>
