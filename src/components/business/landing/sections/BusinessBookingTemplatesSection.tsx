@@ -120,11 +120,11 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
             </DialogDescription>
           </DialogHeader>
           
-          {selectedTemplateId && (
+          {selectedTemplate && (
             <BookingModalContent 
-              templateId={selectedTemplateId} 
+              template={selectedTemplate} 
               businessId={businessId}
-              onSuccess={() => setShowBookingModal(false)}
+              onClose={() => setShowBookingModal(false)}
             />
           )}
         </DialogContent>
