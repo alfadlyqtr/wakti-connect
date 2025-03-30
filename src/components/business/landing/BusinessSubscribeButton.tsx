@@ -2,64 +2,61 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
-import { Loader2, Heart } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+import { Loader2, Bell, BellOff } from "lucide-react";
 
 interface BusinessSubscribeButtonProps {
   businessId: string;
   customText?: string;
 }
 
-const BusinessSubscribeButton = ({ businessId, customText }: BusinessSubscribeButtonProps) => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  
+const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
+  businessId,
+  customText = "Subscribe" // Default text for the subscribe button
+}) => {
   const { 
     isSubscribed, 
-    subscriptionId, 
-    checkingSubscription,
-    subscribe,
-    unsubscribe
+    checkingSubscription, 
+    subscribe, 
+    unsubscribe 
   } = useBusinessSubscribers(businessId);
-
-  const handleSubscriptionAction = () => {
-    if (!user) {
-      navigate("/auth", { state: { from: window.location.pathname } });
-      return;
-    }
-
-    if (isSubscribed && subscriptionId) {
-      unsubscribe.mutate(subscriptionId);
+  
+  const handleClick = () => {
+    if (isSubscribed) {
+      unsubscribe.mutate();
     } else {
-      subscribe.mutate(businessId);
+      subscribe.mutate();
     }
   };
-
+  
   if (checkingSubscription) {
     return (
-      <Button disabled>
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Checking...
+      <Button variant="outline" disabled className="min-w-[120px]">
+        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+        Loading...
       </Button>
     );
   }
-
+  
   return (
-    <Button 
-      onClick={handleSubscriptionAction}
+    <Button
       variant={isSubscribed ? "outline" : "default"}
+      className={isSubscribed ? "bg-muted/20" : ""}
+      onClick={handleClick}
       disabled={subscribe.isPending || unsubscribe.isPending}
     >
-      {(subscribe.isPending || unsubscribe.isPending) ? (
+      {subscribe.isPending || unsubscribe.isPending ? (
         <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Loader2 className="h-4 w-4 animate-spin mr-2" />
           {isSubscribed ? "Unsubscribing..." : "Subscribing..."}
         </>
       ) : (
         <>
-          <Heart className={`mr-2 h-4 w-4 ${isSubscribed ? "fill-primary" : ""}`} />
-          {isSubscribed ? "Unsubscribe" : (customText || "Subscribe")}
+          {isSubscribed ? (
+            <BellOff className="h-4 w-4 mr-2" />
+          ) : (
+            <Bell className="h-4 w-4 mr-2" />
+          )}
+          {isSubscribed ? "Unsubscribe" : customText}
         </>
       )}
     </Button>

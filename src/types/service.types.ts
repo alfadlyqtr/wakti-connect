@@ -2,25 +2,26 @@
 export interface Service {
   id: string;
   name: string;
-  description: string | null;
-  price: number | null;
+  description?: string;
+  price: number;
   duration: number;
-  created_at: string;
-  updated_at: string;
-  business_id?: string;
+  business_id: string;
+  created_at?: string;
+  updated_at?: string;
   assigned_staff?: StaffMember[];
-}
-
-export interface StaffMember {
-  id: string;
-  name: string;
-  role: string;
 }
 
 export interface ServiceFormValues {
   name: string;
   description: string;
-  price: string; // String for form handling, will be converted to number
-  duration: string; // String for form handling, will be converted to number
-  staff_ids?: string[]; // Optional array of staff IDs
+  price: string;
+  duration: string;
+  assignedStaff?: string;
+}
+
+export interface StaffMember {
+  id: string;
+  name: string;
+  email?: string;
+  role?: string;
 }

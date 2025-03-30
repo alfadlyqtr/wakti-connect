@@ -5,13 +5,15 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ServiceFormFieldsProps {
   control: Control<any>;
   formatCurrency: (amount: number) => string;
+  staffMembers?: { id: string; name: string }[];
 }
 
-const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({ control, formatCurrency }) => {
+const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({ control, formatCurrency, staffMembers = [] }) => {
   const isMobile = useIsMobile();
   
   // Get currency symbol from the first formatted value
@@ -102,6 +104,36 @@ const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({ control, formatCu
           )}
         />
       </div>
+
+      {staffMembers.length > 0 && (
+        <FormField
+          control={control}
+          name="assignedStaff"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel className="text-base font-medium">Assign Staff (Optional)</FormLabel>
+              <FormControl>
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger className="h-12 text-base">
+                    <SelectValue placeholder="Select staff member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {staffMembers.map(staff => (
+                      <SelectItem key={staff.id} value={staff.id}>
+                        {staff.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage className="text-xs" />
+            </FormItem>
+          )}
+        />
+      )}
     </>
   );
 };

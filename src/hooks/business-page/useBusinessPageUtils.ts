@@ -1,47 +1,45 @@
 
-import { useMutation } from "@tanstack/react-query";
-import { BusinessPage } from "@/types/business.types";
 import { useCallback } from "react";
+import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
+import { BusinessPage } from "@/types/business.types";
 
+// Auto-save utilities
 export const useAutoSavePageSettings = (
-  updatePageMutation: ReturnType<typeof useMutation<BusinessPage, Error, any>>,
-  businessPageId?: string
+  updatePage: any,
+  pageId?: string
 ) => {
-  // Method 1: Accept a partial BusinessPage object (for bulk updates)
-  const autoSavePage = useCallback((data: Partial<BusinessPage>) => {
-    if (!businessPageId) return;
-    
-    updatePageMutation.mutate(data, {
-      // Quiet mode - no toast notifications
-      onError: (error) => {
-        console.error("Error auto-saving page settings:", error);
-      }
-    });
-  }, [updatePageMutation, businessPageId]);
+  // Debounced auto-save function
+  const debouncedSave = useDebouncedCallback((data: Partial<BusinessPage>) => {
+    if (pageId) {
+      updatePage.mutate({ id: pageId, ...data });
+    }
+  }, 1000);
   
-  // Method 2: Accept a name and value (for individual field updates)
-  const autoSaveField = useCallback((name: string, value: any) => {
-    if (!businessPageId) return;
-    
-    updatePageMutation.mutate({ [name]: value }, {
-      // Quiet mode - no toast notifications
-      onError: (error) => {
-        console.error("Error auto-saving page settings:", error);
-      }
-    });
-  }, [updatePageMutation, businessPageId]);
+  // Function to auto-save a specific field
+  const autoSaveField = useCallback((fieldName: string, value: any) => {
+    if (pageId) {
+      debouncedSave({ [fieldName]: value });
+    }
+  }, [pageId, debouncedSave]);
+  
+  // Function to auto-save the entire page data
+  const autoSavePage = useCallback((pageData: Partial<BusinessPage>) => {
+    if (pageId) {
+      debouncedSave({ ...pageData });
+    }
+  }, [pageId, debouncedSave]);
   
   return { autoSavePage, autoSaveField };
 };
 
+// Get public page URL
 export const usePublicPageUrl = (pageSlug?: string) => {
-  const getPublicPageUrl = useCallback(() => {
-    if (!pageSlug) return "#";
+  return useCallback(() => {
+    if (!pageSlug) return '';
     
-    // Get the base URL of the application
+    // Determine base URL based on environment
     const baseUrl = window.location.origin;
+    
     return `${baseUrl}/business/${pageSlug}`;
   }, [pageSlug]);
-  
-  return getPublicPageUrl;
 };

@@ -145,7 +145,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           )}
           
           <div className="flex flex-wrap gap-2 mt-4">
-            {service.price !== null && (
+            {service.price !== null && service.price !== undefined && (
               <Badge variant="outline" className="bg-primary/10">
                 {formatCurrency(service.price)}
               </Badge>

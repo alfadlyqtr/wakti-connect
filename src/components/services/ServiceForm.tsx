@@ -24,7 +24,8 @@ const serviceFormSchema = z.object({
     .min(1, "Duration is required")
     .refine(val => !isNaN(Number(val)) && Number(val) > 0, {
       message: "Duration must be a positive number"
-    })
+    }),
+  assignedStaff: z.string().optional()
 });
 
 type ServiceFormSchemaType = z.infer<typeof serviceFormSchema>;
@@ -34,13 +35,15 @@ interface ServiceFormProps {
   onCancel: () => void;
   editingService: Service | null;
   isPending: boolean;
+  staffMembers?: { id: string; name: string }[];
 }
 
 const ServiceForm: React.FC<ServiceFormProps> = ({ 
   onSubmit, 
   onCancel, 
   editingService, 
-  isPending 
+  isPending,
+  staffMembers = []
 }) => {
   const isMobile = useIsMobile();
   const { formatCurrency } = useCurrencyFormat();
@@ -53,6 +56,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
       description: editingService?.description || "",
       price: editingService?.price?.toString() || "",
       duration: editingService?.duration?.toString() || "60",
+      assignedStaff: editingService?.assigned_staff?.[0]?.id || undefined
     },
     mode: "onChange"
   });
@@ -62,7 +66,8 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
       name: values.name,
       description: values.description || "",
       price: values.price || "",
-      duration: values.duration
+      duration: values.duration,
+      assignedStaff: values.assignedStaff
     };
     onSubmit(formValues);
   };
@@ -82,7 +87,11 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
         </DialogHeader>
         
         <div className="grid gap-6 py-2 max-h-[60vh] overflow-y-auto">
-          <ServiceFormFields control={form.control} formatCurrency={formatCurrency} />
+          <ServiceFormFields 
+            control={form.control} 
+            formatCurrency={formatCurrency} 
+            staffMembers={staffMembers}
+          />
         </div>
         
         <DialogFooter className="gap-3 mt-4 flex flex-col sm:flex-row w-full">
