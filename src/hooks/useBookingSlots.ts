@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { format, addDays } from 'date-fns';
+import { format } from 'date-fns';
+import { fetchAvailableTimeSlots } from '@/services/booking/templates/timeSlots';
 
 /**
  * Hook to fetch available booking slots for a template
@@ -18,16 +19,24 @@ export const useBookingSlots = (templateId: string, date?: Date) => {
 
     const fetchAvailableSlots = async () => {
       setIsLoading(true);
-      setError(null);
-      
       try {
-        // For now, just create dummy slots
-        // In production, this would fetch from the backend
-        const dummySlots = ['9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:00 PM'];
-        setSlots(dummySlots);
+        // Format date for API request
+        const formattedDate = format(date, 'yyyy-MM-dd');
+        
+        // Fetch available time slots
+        const availableSlots = await fetchAvailableTimeSlots(templateId, formattedDate);
+        
+        // Extract just the start times and format them
+        const timeSlots = availableSlots.map(slot => 
+          format(new Date(`${formattedDate}T${slot.start_time}`), 'h:mm a')
+        );
+        
+        setSlots(timeSlots);
+        setError(null);
       } catch (err) {
         console.error('Error fetching booking slots:', err);
-        setError(err instanceof Error ? err : new Error('Failed to fetch booking slots'));
+        setError(err instanceof Error ? err : new Error('Failed to load booking slots'));
+        setSlots([]);
       } finally {
         setIsLoading(false);
       }

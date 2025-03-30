@@ -1,6 +1,33 @@
 
-import React from "react";
-import { generateMapEmbedUrl } from "@/config/maps";
+import React, { useState } from "react";
+import { generateMapEmbedUrl, generateGoogleMapsUrl } from "@/config/maps";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
+import { sendMessage } from "@/services/messages";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2, MapPin, Navigation } from "lucide-react";
+
+// Form validation schema
+const contactFormSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  message: z.string().min(10, { message: "Message must be at least 10 characters" })
+});
+
+type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 interface BusinessContactSectionProps {
   content: Record<string, any>;
@@ -11,6 +38,20 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
   content, 
   businessId
 }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [gettingLocation, setGettingLocation] = useState(false);
+
+  // Check if user is authenticated
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session?.user);
+    };
+    
+    checkAuth();
+  }, []);
+
   const { 
     title = "Contact Us",
     description = "Get in touch with us for any inquiries",
@@ -22,8 +63,119 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
     contactButtonLabel = "Send Message"
   } = content;
   
+  // Form definition
+  const form = useForm<ContactFormValues>({
+    resolver: zodResolver(contactFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      message: ""
+    }
+  });
+
   // Generate embed URL for Google Maps using the address
   const mapEmbedUrl = address ? generateMapEmbedUrl(address) : mapUrl;
+  
+  // Generate directions URL for Google Maps
+  const directionsUrl = address ? generateGoogleMapsUrl(address) : "";
+
+  // Get current location
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Error",
+        description: "Geolocation is not supported by your browser",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setGettingLocation(true);
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        // Create a Google Maps URL with directions from current location to business
+        if (address) {
+          const encodedAddress = encodeURIComponent(address);
+          const directionUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}&origin=${latitude},${longitude}`;
+          window.open(directionUrl, '_blank');
+        }
+        
+        setGettingLocation(false);
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        
+        let errorMessage = "Failed to get your location";
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "Location permission denied. Please allow location access.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Location information is unavailable.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "Location request timed out.";
+            break;
+        }
+        
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        
+        setGettingLocation(false);
+      },
+      { 
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
+
+  // Form submission handler
+  const onSubmit = async (data: ContactFormValues) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to send a message",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Format message for inbox
+      const messageContent = `Contact Form: ${data.name} (${data.email}): ${data.message}`;
+      
+      // Send message to business inbox
+      await sendMessage(businessId, messageContent);
+      
+      // Reset form
+      form.reset();
+      
+      toast({
+        title: "Message Sent",
+        description: "Your message has been sent to the business",
+      });
+    } catch (error) {
+      console.error("Error sending message:", error);
+      
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to send message",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <section className="py-12 md:py-16">
@@ -36,7 +188,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
         <div className="flex flex-col md:flex-row gap-8">
           {/* Contact Information */}
           <div className="md:w-1/2 space-y-6">
-            <div className="space-y-2">
+            <div className="space-y-4">
               {email && (
                 <div className="flex items-center space-x-2">
                   <span className="text-primary">✉</span>
@@ -59,8 +211,33 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
               )}
             </div>
             
+            {/* Location Actions */}
+            {address && (
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2"
+                  onClick={() => window.open(directionsUrl, '_blank')}
+                >
+                  <MapPin className="h-4 w-4" />
+                  Get Directions
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2"
+                  onClick={getCurrentLocation}
+                  disabled={gettingLocation}
+                >
+                  <Navigation className="h-4 w-4" />
+                  {gettingLocation ? 'Getting Location...' : 'Navigate from Here'}
+                </Button>
+              </div>
+            )}
+            
+            {/* Map */}
             {showMap && address && (
-              <div className="w-full aspect-video rounded-lg overflow-hidden border shadow-sm">
+              <div className="w-full aspect-video rounded-lg overflow-hidden border shadow-sm mt-4">
                 <iframe
                   src={mapEmbedUrl}
                   style={{ border: 0 }}
@@ -79,48 +256,75 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
           <div className="md:w-1/2 mt-8 md:mt-0">
             <div className="bg-muted/20 p-6 rounded-lg shadow-sm border">
               <h3 className="text-xl font-semibold mb-4">Send us a message</h3>
-              <form className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium mb-1">Name</label>
-                  <input
-                    type="text"
-                    id="name"
-                    className="w-full p-2 border rounded-md bg-background"
-                    placeholder="Your name"
+              
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Your name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
-                  <input
-                    type="email"
-                    id="email"
-                    className="w-full p-2 border rounded-md bg-background"
-                    placeholder="Your email"
+                  
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Your email" type="email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium mb-1">Message</label>
-                  <textarea
-                    id="message"
-                    rows={4}
-                    className="w-full p-2 border rounded-md bg-background"
-                    placeholder="Your message"
-                  ></textarea>
-                </div>
-                
-                <button
-                  type="button"
-                  className="w-full py-2 px-4 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                >
-                  {contactButtonLabel}
-                </button>
-                
-                <p className="text-xs text-muted-foreground text-center mt-4">
-                  We'll get back to you as soon as possible
-                </p>
-              </form>
+                  
+                  <FormField
+                    control={form.control}
+                    name="message"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Message</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Your message" 
+                            rows={4} 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : contactButtonLabel}
+                  </Button>
+                  
+                  {!isAuthenticated && (
+                    <p className="text-xs text-muted-foreground text-center mt-2">
+                      You need to be signed in to send a message
+                    </p>
+                  )}
+                </form>
+              </Form>
             </div>
           </div>
         </div>

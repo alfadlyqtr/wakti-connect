@@ -16,3 +16,15 @@ export const generateGoogleMapsUrl = (address: string): string => {
   const encodedAddress = encodeURIComponent(address);
   return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
 };
+
+// Generate directions URL from current position to destination
+export const generateDirectionsUrl = (destinationAddress: string, originLat?: number, originLng?: number): string => {
+  const encodedDestination = encodeURIComponent(destinationAddress);
+  
+  if (originLat && originLng) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodedDestination}&origin=${originLat},${originLng}`;
+  }
+  
+  // If no origin is specified, Google Maps will use the user's current location
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodedDestination}`;
+};
