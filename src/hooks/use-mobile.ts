@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
  * Custom hook to check if viewport is mobile-sized
  * @returns boolean indicating if viewport is mobile sized
  */
-const useIsMobile = (): boolean => {
+export const useIsMobile = (): boolean => {
   const [isMobile, setIsMobile] = useState(false);
   
   useEffect(() => {
@@ -29,4 +29,5 @@ const useIsMobile = (): boolean => {
   return isMobile;
 };
 
+// For backward compatibility with default imports
 export default useIsMobile;
