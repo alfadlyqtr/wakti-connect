@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, Edit, Trash2 } from "lucide-react";
 import { Service } from "@/types/service.types";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 
 interface ServiceCardProps {
   service: Service;
@@ -21,6 +22,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   isDeleting
 }) => {
   const isMobile = useIsMobile();
+  const { formatCurrency } = useCurrencyFormat({ businessId: service.business_id });
   
   return (
     <Card className="h-full flex flex-col transition-all hover:shadow-md">
@@ -29,7 +31,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           <CardTitle className="text-lg md:text-xl">{service.name}</CardTitle>
           {service.price && (
             <Badge variant="secondary" className="ml-2 font-semibold text-base md:text-sm whitespace-nowrap">
-              QAR {service.price.toFixed(2)}
+              {formatCurrency(service.price)}
             </Badge>
           )}
         </div>

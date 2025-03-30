@@ -26,7 +26,7 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
   } = content;
 
   const { templates, isLoading, error } = useBookingTemplates(businessId);
-  const { formatCurrency } = useCurrencyFormat();
+  const { formatCurrency } = useCurrencyFormat({ businessId });
   
   // State for booking modal
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);

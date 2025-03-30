@@ -8,6 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/auth";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 type Currency = "USD" | "QAR" | "AED" | "SAR" | "KWD" | "BHD" | "OMR";
 
@@ -33,6 +34,7 @@ const CurrencyTab = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
   const { data: profileData, updateProfile, isUpdating } = useProfileSettings();
+  const { setCurrency: setGlobalCurrency } = useCurrency();
 
   // Use the currency from profile data
   useEffect(() => {
@@ -44,9 +46,22 @@ const CurrencyTab = () => {
   const handleSaveCurrency = async () => {
     if (!user?.id) return;
     
+    console.log("Saving currency preference:", currency);
+    
     // Use the updateProfile function from useProfileSettings hook
     updateProfile({
       currency_preference: currency
+    }, {
+      onSuccess: () => {
+        // Update the global currency context as well
+        setGlobalCurrency(currency);
+        
+        toast({
+          title: "Currency updated",
+          description: `Your currency has been set to ${currency}`,
+          variant: "success",
+        });
+      }
     });
   };
 

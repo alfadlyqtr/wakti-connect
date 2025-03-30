@@ -33,6 +33,7 @@ import { BookingTemplate } from "@/types/booking.types";
 import { toast } from "@/components/ui/use-toast";
 import { createBooking } from "@/services/booking";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 
 const bookingFormSchema = z.object({
   customerName: z.string().min(2, { message: "Please enter your name" }),
@@ -224,6 +225,8 @@ const BookingPage = () => {
     );
   }
 
+  const { formatCurrency } = useCurrencyFormat();
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <Card>
@@ -387,6 +390,7 @@ const BookingPage = () => {
               </Form>
             </div>
 
+            {/* Booking Summary Card */}
             <div>
               <Card>
                 <CardHeader className="pb-2">
@@ -407,7 +411,7 @@ const BookingPage = () => {
                     <div>
                       <Label className="text-muted-foreground text-sm">Price</Label>
                       <p className="font-bold text-primary">
-                        {template?.price ? `$${template.price.toFixed(2)}` : "Free"}
+                        {template?.price ? formatCurrency(template.price) : "Free"}
                       </p>
                     </div>
                     

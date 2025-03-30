@@ -15,6 +15,7 @@ import { Loader2, Clock, Calendar as CalendarIcon, ArrowLeft, User, Mail, Phone 
 import { Service } from "@/types/service.types";
 import { BookingFormData, BookingStatus } from "@/types/booking.types";
 import { format } from "date-fns";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 
 const BookServicePage = () => {
   const { serviceId } = useParams<{ serviceId: string }>();
@@ -29,6 +30,7 @@ const BookServicePage = () => {
   const [customerPhone, setCustomerPhone] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authUser, setAuthUser] = useState<any>(null);
+  const { formatCurrency } = useCurrencyFormat();
 
   useEffect(() => {
     const getUser = async () => {
@@ -255,7 +257,7 @@ const BookServicePage = () => {
               
               {service.price !== null && (
                 <div className="font-semibold">
-                  QAR {service.price.toFixed(2)}
+                  {formatCurrency(service.price)}
                 </div>
               )}
             </CardContent>

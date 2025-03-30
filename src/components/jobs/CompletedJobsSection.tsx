@@ -6,6 +6,7 @@ import { FilterPeriod, filterJobCards, getJobCountByDate, getTotalDuration, getT
 import JobsFilterPeriod from "./JobsFilterPeriod";
 import JobStatsBadges from "./JobStatsBadges";
 import CompletedJobsTable from "./CompletedJobsTable";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 
 interface CompletedJobsSectionProps {
   completedJobs: JobCard[];
@@ -18,6 +19,8 @@ const CompletedJobsSection: React.FC<CompletedJobsSectionProps> = ({
   filterPeriod,
   setFilterPeriod
 }) => {
+  const { formatCurrency } = useCurrencyFormat();
+  
   // If there are no completed jobs at all, return null
   if (!completedJobs.length) {
     return null;
@@ -49,11 +52,13 @@ const CompletedJobsSection: React.FC<CompletedJobsSectionProps> = ({
           totalDuration={totalDuration}
           totalEarnings={totalEarnings}
           filterPeriod={filterPeriod}
+          formatCurrency={formatCurrency}
         />
         
         <CompletedJobsTable 
           completedJobs={filteredCompletedJobs}
           jobCountByDate={jobCountByDate}
+          formatCurrency={formatCurrency}
         />
       </CardContent>
     </Card>
