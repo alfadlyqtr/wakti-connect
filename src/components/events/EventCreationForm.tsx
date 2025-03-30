@@ -8,6 +8,7 @@ import FormHeader from "./creation/FormHeader";
 import FormTabs from "./creation/FormTabs";
 import { useEditEventEffect } from "./hooks/useEditEventEffect";
 import { EventFormTab, ShareTab } from "@/types/form.types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface EventCreationFormProps {
   editEvent?: Event | null;
@@ -20,6 +21,8 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
   onCancel,
   onSuccess
 }) => {
+  const isMobile = useIsMobile();
+  
   const {
     register,
     handleSubmit,
@@ -80,43 +83,45 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <Card className="w-full">
+      <Card className="w-full overflow-hidden">
         <FormHeader isEdit={!!editEvent} onCancel={onCancel} />
         
-        <FormTabs
-          activeTab={activeTab as EventFormTab}
-          setActiveTab={setActiveTab}
-          register={register}
-          errors={errors}
-          selectedDate={selectedDate}
-          setSelectedDate={setSelectedDate}
-          startTime={startTime}
-          setStartTime={setStartTime}
-          endTime={endTime}
-          setEndTime={setEndTime}
-          isAllDay={isAllDay}
-          setIsAllDay={setIsAllDay}
-          location={location}
-          locationType={locationType}
-          mapsUrl={mapsUrl}
-          handleLocationChange={handleLocationChange}
-          handleNextTab={handleNextTab}
-          handlePrevTab={handlePrevTab}
-          customization={customization}
-          setCustomization={setCustomization}
-          shareTab={shareTab as ShareTab}
-          setShareTab={setShareTab}
-          recipients={recipients}
-          addRecipient={addRecipient}
-          removeRecipient={removeRecipient}
-          handleSendEmail={handleSendEmail}
-          isSubmitting={isSubmitting}
-          title={title}
-          description={description}
-          setTitle={setTitle}
-          setDescription={setDescription}
-          isEdit={!!editEvent}
-        />
+        <div className={isMobile ? "px-2 py-2" : "px-4 py-4"}>
+          <FormTabs
+            activeTab={activeTab as EventFormTab}
+            setActiveTab={setActiveTab}
+            register={register}
+            errors={errors}
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+            startTime={startTime}
+            setStartTime={setStartTime}
+            endTime={endTime}
+            setEndTime={setEndTime}
+            isAllDay={isAllDay}
+            setIsAllDay={setIsAllDay}
+            location={location}
+            locationType={locationType}
+            mapsUrl={mapsUrl}
+            handleLocationChange={handleLocationChange}
+            handleNextTab={handleNextTab}
+            handlePrevTab={handlePrevTab}
+            customization={customization}
+            setCustomization={setCustomization}
+            shareTab={shareTab as ShareTab}
+            setShareTab={setShareTab}
+            recipients={recipients}
+            addRecipient={addRecipient}
+            removeRecipient={removeRecipient}
+            handleSendEmail={handleSendEmail}
+            isSubmitting={isSubmitting}
+            title={title}
+            description={description}
+            setTitle={setTitle}
+            setDescription={setDescription}
+            isEdit={!!editEvent}
+          />
+        </div>
       </Card>
     </form>
   );

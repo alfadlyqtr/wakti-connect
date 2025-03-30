@@ -2,6 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FormActionsProps {
   onPrev: () => void;
@@ -18,13 +19,17 @@ const FormActions: React.FC<FormActionsProps> = ({
   showSubmit = false,
   submitLabel = "Save"
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
-    <div className="flex justify-between items-center pt-4 px-4">
+    <div className="flex justify-between items-center pt-2 sm:pt-4 px-2 sm:px-4">
       <Button 
         type="button" 
         variant="outline" 
         onClick={onPrev}
         disabled={isSubmitting}
+        size={isMobile ? "sm" : "default"}
+        className="text-xs sm:text-sm"
       >
         Previous
       </Button>
@@ -35,6 +40,8 @@ const FormActions: React.FC<FormActionsProps> = ({
             type="button" 
             onClick={onNext}
             disabled={isSubmitting}
+            size={isMobile ? "sm" : "default"}
+            className="text-xs sm:text-sm"
           >
             Next
           </Button>
@@ -44,10 +51,12 @@ const FormActions: React.FC<FormActionsProps> = ({
           <Button 
             type="submit"
             disabled={isSubmitting}
+            size={isMobile ? "sm" : "default"}
+            className="text-xs sm:text-sm"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
                 Processing
               </>
             ) : (

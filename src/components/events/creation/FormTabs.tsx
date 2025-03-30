@@ -8,6 +8,7 @@ import DetailsTab from "./DetailsTab";
 import CustomizeTab from "../customize/CustomizeTab";
 import ShareTabContent from "./ShareTabContent";
 import FormActions from "./FormActions";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FormTabsProps {
   activeTab: EventFormTab;
@@ -78,6 +79,7 @@ const FormTabs: React.FC<FormTabsProps> = ({
   setDescription,
   isEdit = false
 }) => {
+  const isMobile = useIsMobile();
   const tabs = [
     { id: 'details', label: 'Details' },
     { id: 'customize', label: 'Design' },
@@ -87,21 +89,22 @@ const FormTabs: React.FC<FormTabsProps> = ({
   return (
     <div>
       {/* The entire component should be wrapped in a single Tabs component */}
-      <Tabs value={activeTab} className="space-y-4">
-        <TabsList className="w-full grid grid-cols-3 mb-4">
+      <Tabs value={activeTab} className="space-y-3 sm:space-y-4">
+        <TabsList className="w-full grid grid-cols-3 mb-3 sm:mb-4">
           {tabs.map((tab) => (
             <TabsTrigger
               key={tab.id}
               value={tab.id}
               onClick={() => setActiveTab(tab.id as EventFormTab)}
               disabled={tab.id === 'share' && !title.trim()}
+              className="text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2"
             >
               {tab.label}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        <TabsContent value="details" className="space-y-4">
+        <TabsContent value="details" className="space-y-3 sm:space-y-4">
           <DetailsTab
             register={register}
             errors={errors}
@@ -126,7 +129,7 @@ const FormTabs: React.FC<FormTabsProps> = ({
           />
         </TabsContent>
 
-        <TabsContent value="customize" className="space-y-4">
+        <TabsContent value="customize" className="space-y-3 sm:space-y-4">
           <CustomizeTab
             customization={customization}
             onCustomizationChange={setCustomization}
@@ -144,7 +147,7 @@ const FormTabs: React.FC<FormTabsProps> = ({
           />
         </TabsContent>
 
-        <TabsContent value="share" className="space-y-4">
+        <TabsContent value="share" className="space-y-3 sm:space-y-4">
           <ShareTabContent
             activeTab={shareTab}
             setActiveTab={setShareTab}

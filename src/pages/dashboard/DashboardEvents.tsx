@@ -141,18 +141,18 @@ const DashboardEvents: React.FC = () => {
 
   return (
     <DashboardShell>
-      <div className="flex flex-col space-y-4">
+      <div className="flex flex-col space-y-3 sm:space-y-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-xl sm:text-2xl font-bold">Events</h1>
+          <h1 className="text-lg sm:text-xl font-bold truncate">Events</h1>
           {!showCreateForm && (
-            <Button onClick={handleCreateOrEditEvent} size={isMobile ? "sm" : "default"}>
-              <Plus className="h-4 w-4 mr-1 sm:mr-2" /> {isMobile ? "Create" : "Create Event"}
+            <Button onClick={handleCreateOrEditEvent} size={isMobile ? "sm" : "default"} className="text-xs sm:text-sm">
+              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> {isMobile ? "Create" : "Create Event"}
             </Button>
           )}
         </div>
 
         {showCreateForm ? (
-          <div className="mb-6">
+          <div className="mb-4">
             <EventCreationForm 
               editEvent={editingEvent}
               onCancel={handleCancelEdit}
@@ -162,26 +162,26 @@ const DashboardEvents: React.FC = () => {
         ) : (
           <>
             <Tabs value={activeTab} onValueChange={(value) => handleTabChange(value as EventTab)}>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-3">
                 {/* Responsive TabsList */}
-                <TabsList className="flex w-full sm:w-auto">
+                <TabsList className="flex w-full sm:w-auto px-0.5 py-0.5">
                   <TabsTrigger 
                     value="my-events" 
-                    className="flex-1 sm:flex-initial px-2 sm:px-3 py-1.5 text-xs sm:text-sm flex items-center"
+                    className="flex-1 sm:flex-initial px-1.5 sm:px-3 py-1 sm:py-1.5 text-xs flex items-center"
                   >
                     <Send className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" /> 
                     <span className="truncate">My Events</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="invited-events" 
-                    className="flex-1 sm:flex-initial px-2 sm:px-3 py-1.5 text-xs sm:text-sm flex items-center"
+                    className="flex-1 sm:flex-initial px-1.5 sm:px-3 py-1 sm:py-1.5 text-xs flex items-center"
                   >
                     <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" /> 
-                    <span className="truncate">Invitations</span>
+                    <span className="truncate">Invites</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="draft-events" 
-                    className="flex-1 sm:flex-initial px-2 sm:px-3 py-1.5 text-xs sm:text-sm flex items-center"
+                    className="flex-1 sm:flex-initial px-1.5 sm:px-3 py-1 sm:py-1.5 text-xs flex items-center"
                   >
                     <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" /> 
                     <span className="truncate">Drafts</span>
@@ -194,6 +194,7 @@ const DashboardEvents: React.FC = () => {
                     variant={viewType === 'grid' ? "default" : "outline"} 
                     size="icon"
                     onClick={() => setViewType('grid')}
+                    className="h-9 w-9"
                   >
                     <Grid3X3 className="h-4 w-4" />
                   </Button>
@@ -201,6 +202,7 @@ const DashboardEvents: React.FC = () => {
                     variant={viewType === 'list' ? "default" : "outline"} 
                     size="icon"
                     onClick={() => setViewType('list')}
+                    className="h-9 w-9"
                   >
                     <List className="h-4 w-4" />
                   </Button>
@@ -208,7 +210,7 @@ const DashboardEvents: React.FC = () => {
               </div>
 
               {/* Responsive Filter Section */}
-              <div className="my-3 sm:my-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <div className="my-2 sm:my-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <div className="flex-1">
                   <Label htmlFor="search" className="sr-only">Search</Label>
                   <Input
@@ -216,18 +218,18 @@ const DashboardEvents: React.FC = () => {
                     placeholder="Search events..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full"
+                    className="w-full text-xs sm:text-sm h-8 sm:h-9"
                   />
                 </div>
                 
-                <div className="flex gap-2 mt-2 sm:mt-0">
+                <div className="flex gap-2 mt-0 sm:mt-0">
                   {/* View type toggle on mobile only */}
                   {isMobile && (
                     <div className="flex gap-1 mr-1">
                       <Button 
                         variant={viewType === 'grid' ? "default" : "outline"} 
                         size="icon"
-                        className="h-9 w-9"
+                        className="h-8 w-8"
                         onClick={() => setViewType('grid')}
                       >
                         <Grid3X3 className="h-3 w-3" />
@@ -235,7 +237,7 @@ const DashboardEvents: React.FC = () => {
                       <Button 
                         variant={viewType === 'list' ? "default" : "outline"} 
                         size="icon"
-                        className="h-9 w-9"
+                        className="h-8 w-8"
                         onClick={() => setViewType('list')}
                       >
                         <List className="h-3 w-3" />
@@ -243,24 +245,24 @@ const DashboardEvents: React.FC = () => {
                     </div>
                   )}
                   
-                  <div className={isMobile ? "flex-1 min-w-[100px]" : "w-[150px]"}>
+                  <div className={isMobile ? "flex-1 min-w-[80px]" : "w-[150px]"}>
                     <Label htmlFor="status" className="sr-only">Status</Label>
                     <Select value={filterStatus} onValueChange={setFilterStatus}>
-                      <SelectTrigger id="status" className="h-9">
+                      <SelectTrigger id="status" className="h-8 sm:h-9 text-xs sm:text-sm">
                         <SelectValue placeholder="Status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="sent">Sent</SelectItem>
-                        <SelectItem value="accepted">Accepted</SelectItem>
-                        <SelectItem value="declined">Declined</SelectItem>
-                        <SelectItem value="recalled">Recalled</SelectItem>
+                        <SelectItem value="all" className="text-xs sm:text-sm">All</SelectItem>
+                        <SelectItem value="draft" className="text-xs sm:text-sm">Draft</SelectItem>
+                        <SelectItem value="sent" className="text-xs sm:text-sm">Sent</SelectItem>
+                        <SelectItem value="accepted" className="text-xs sm:text-sm">Accepted</SelectItem>
+                        <SelectItem value="declined" className="text-xs sm:text-sm">Declined</SelectItem>
+                        <SelectItem value="recalled" className="text-xs sm:text-sm">Recalled</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   
-                  <div className={isMobile ? "flex-1 min-w-[100px]" : "w-[150px]"}>
+                  <div className={isMobile ? "flex-1 min-w-[80px]" : "w-[150px]"}>
                     <DatePicker
                       date={filterDate}
                       setDate={setFilterDate}
