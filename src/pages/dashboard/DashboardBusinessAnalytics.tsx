@@ -70,7 +70,7 @@ const DashboardBusinessAnalytics = () => {
   if (!data && !error && !isLoading) {
     return (
       <div className="container py-6 space-y-8">
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-xl md:text-3xl font-bold tracking-tight">
           {t("dashboard.analytics")}
         </h1>
         <div className="flex items-center justify-center h-[50vh]">
@@ -82,8 +82,8 @@ const DashboardBusinessAnalytics = () => {
   }
 
   return (
-    <div className="container py-6 space-y-8">
-      <h1 className="text-3xl font-bold tracking-tight">
+    <div className="container py-4 md:py-6 space-y-4 md:space-y-8">
+      <h1 className="text-xl md:text-3xl font-bold tracking-tight">
         {t("dashboard.analytics")}
       </h1>
 
@@ -98,13 +98,13 @@ const DashboardBusinessAnalytics = () => {
       )}
 
       <Tabs defaultValue="overview" value={tab} onValueChange={setTab}>
-        <TabsList className="w-full flex space-x-1">
-          <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>
-          <TabsTrigger value="services" className="flex-1">Services</TabsTrigger>
-          <TabsTrigger value="staff" className="flex-1">Staff</TabsTrigger>
+        <TabsList className="w-full grid grid-cols-3 h-auto">
+          <TabsTrigger value="overview" className="text-xs md:text-sm">Overview</TabsTrigger>
+          <TabsTrigger value="services" className="text-xs md:text-sm">Services</TabsTrigger>
+          <TabsTrigger value="staff" className="text-xs md:text-sm">Staff</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6 mt-6">
+        <TabsContent value="overview" className="space-y-4 md:space-y-6 mt-4 md:mt-6">
           <AnalyticsSummaryCards 
             isLoading={isLoading} 
             data={data || { 
@@ -117,10 +117,10 @@ const DashboardBusinessAnalytics = () => {
             }} 
           />
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:gap-6 md:grid-cols-2">
             <Card className="w-full">
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-medium mb-4">Growth Trends</h3>
+              <CardContent className="pt-4 md:pt-6">
+                <h3 className="text-base md:text-lg font-medium mb-2 md:mb-4">Growth Trends</h3>
                 <GrowthChart 
                   isLoading={isLoading} 
                   data={data?.growth || []} 
@@ -130,12 +130,12 @@ const DashboardBusinessAnalytics = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="services" className="space-y-6 mt-6">
-          <SectionContainer>
-            <div className="grid gap-6 md:grid-cols-2">
+        <TabsContent value="services" className="space-y-4 md:space-y-6 mt-4 md:mt-6">
+          <SectionContainer noPadding>
+            <div className="grid gap-4 md:gap-6 md:grid-cols-2">
               <Card className="w-full">
-                <CardContent className="pt-6">
-                  <h3 className="text-lg font-medium mb-4">Service Distribution</h3>
+                <CardContent className="pt-4 md:pt-6">
+                  <h3 className="text-base md:text-lg font-medium mb-2 md:mb-4">Service Distribution</h3>
                   <ServiceDistributionChart 
                     isLoading={isLoading} 
                     data={data?.serviceDistribution || []} 
@@ -146,35 +146,35 @@ const DashboardBusinessAnalytics = () => {
           </SectionContainer>
         </TabsContent>
         
-        <TabsContent value="staff" className="space-y-6 mt-6">
-          <SectionContainer>
-            <div className="grid gap-6 md:grid-cols-1">
+        <TabsContent value="staff" className="space-y-4 md:space-y-6 mt-4 md:mt-6">
+          <SectionContainer noPadding>
+            <div className="grid gap-4 md:gap-6 md:grid-cols-1">
               <Card className="w-full">
-                <CardContent className="pt-6">
-                  <h3 className="text-lg font-medium mb-4">Staff Activity</h3>
-                  <div className="h-[400px]">
+                <CardContent className="pt-4 md:pt-6">
+                  <h3 className="text-base md:text-lg font-medium mb-2 md:mb-4">Staff Activity</h3>
+                  <div className="h-[300px] md:h-[400px]">
                     <TeamActivityChart />
                   </div>
                 </CardContent>
               </Card>
               
               <Card className="w-full">
-                <CardContent className="pt-6">
-                  <h3 className="text-lg font-medium mb-4">Staff Performance Metrics</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-muted p-4 rounded-md">
-                      <p className="text-sm text-muted-foreground mb-1">Average Hours</p>
-                      <h4 className="text-2xl font-bold">32.5</h4>
+                <CardContent className="pt-4 md:pt-6">
+                  <h3 className="text-base md:text-lg font-medium mb-2 md:mb-4">Staff Performance Metrics</h3>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-4">
+                    <div className="bg-muted p-3 md:p-4 rounded-md">
+                      <p className="text-xs md:text-sm text-muted-foreground mb-1">Average Hours</p>
+                      <h4 className="text-xl md:text-2xl font-bold">32.5</h4>
                       <p className="text-xs text-muted-foreground">hrs/week</p>
                     </div>
-                    <div className="bg-muted p-4 rounded-md">
-                      <p className="text-sm text-muted-foreground mb-1">Task Completion</p>
-                      <h4 className="text-2xl font-bold">87%</h4>
+                    <div className="bg-muted p-3 md:p-4 rounded-md">
+                      <p className="text-xs md:text-sm text-muted-foreground mb-1">Task Completion</p>
+                      <h4 className="text-xl md:text-2xl font-bold">87%</h4>
                       <p className="text-xs text-muted-foreground">on time</p>
                     </div>
-                    <div className="bg-muted p-4 rounded-md">
-                      <p className="text-sm text-muted-foreground mb-1">Avg. Services</p>
-                      <h4 className="text-2xl font-bold">5.2</h4>
+                    <div className="bg-muted p-3 md:p-4 rounded-md">
+                      <p className="text-xs md:text-sm text-muted-foreground mb-1">Avg. Services</p>
+                      <h4 className="text-xl md:text-2xl font-bold">5.2</h4>
                       <p className="text-xs text-muted-foreground">per day</p>
                     </div>
                   </div>

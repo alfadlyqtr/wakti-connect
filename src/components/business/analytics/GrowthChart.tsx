@@ -68,7 +68,8 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
           font: {
             size: isMobile ? 9 : 12
           },
-          maxRotation: isMobile ? 45 : 0,
+          maxRotation: isMobile ? 30 : 0,
+          minRotation: isMobile ? 30 : 0,
         }
       },
       y: {
@@ -80,6 +81,8 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
           font: {
             size: isMobile ? 9 : 12
           },
+          // Limit number of ticks on mobile
+          maxTicksLimit: isMobile ? 5 : 10
         }
       }
     }
@@ -87,14 +90,14 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
 
   if (isLoading || !chartData) {
     return (
-      <div className="h-[250px] md:h-[300px] w-full flex items-center justify-center">
+      <div className="h-[200px] md:h-[300px] w-full flex items-center justify-center">
         <p>Loading growth data...</p>
       </div>
     );
   }
 
   return (
-    <div className="h-[250px] md:h-[300px] w-full">
+    <div className="h-[200px] md:h-[300px] w-full">
       <LineChart 
         data={chartData} 
         options={chartOptions} 

@@ -15,21 +15,28 @@ export const TeamActivityChart: React.FC = () => {
   }));
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={chartData} margin={{ 
-        top: 5, 
-        right: isMobile ? 10 : 30, 
-        left: isMobile ? 0 : 20, 
-        bottom: isMobile ? 25 : 5 
-      }}>
+    <ResponsiveContainer width="100%" height={isMobile ? 250 : "100%"}>
+      <BarChart 
+        data={chartData} 
+        margin={{ 
+          top: 5, 
+          right: isMobile ? 5 : 30, 
+          left: isMobile ? 0 : 20, 
+          bottom: isMobile ? 60 : 5 
+        }}
+      >
         <XAxis 
           dataKey="name" 
           tick={{ fontSize: isMobile ? 10 : 12 }}
-          tickMargin={isMobile ? 10 : 5}
+          tickMargin={isMobile ? 5 : 5}
           angle={isMobile ? -45 : 0}
+          textAnchor={isMobile ? "end" : "middle"}
           height={isMobile ? 60 : 30}
         />
-        <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
+        <YAxis 
+          tick={{ fontSize: isMobile ? 10 : 12 }}
+          width={isMobile ? 30 : 40}
+        />
         <Tooltip 
           contentStyle={{ fontSize: isMobile ? 10 : 12 }}
           labelStyle={{ fontSize: isMobile ? 11 : 14 }}
@@ -37,7 +44,8 @@ export const TeamActivityChart: React.FC = () => {
         <Legend 
           wrapperStyle={{ 
             fontSize: isMobile ? 10 : 12,
-            marginTop: isMobile ? 10 : 0
+            marginTop: isMobile ? 10 : 0,
+            paddingTop: isMobile ? 15 : 0
           }} 
         />
         <Bar dataKey="Hours Worked" fill="#3b82f6" />
