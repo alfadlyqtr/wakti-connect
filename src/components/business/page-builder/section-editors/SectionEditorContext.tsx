@@ -68,9 +68,21 @@ export const SectionEditorProvider: React.FC<{
     setIsDirty(true);
     
     // For style changes, we update both content and the section's styling fields
-    const sectionUpdates: Partial<BusinessPageSection> = {
-      [name as keyof BusinessPageSection]: value
-    };
+    // Create a properly typed object for section updates
+    const sectionUpdates: Partial<BusinessPageSection> = {};
+    
+    // Only add the property if it's a valid key of BusinessPageSection
+    // This is the safer approach that prevents the "Type 'any' is not assignable to type 'never'" error
+    if (
+      name === 'background_color' || 
+      name === 'text_color' || 
+      name === 'padding' || 
+      name === 'border_radius' || 
+      name === 'background_image_url'
+    ) {
+      // Type assertion to let TypeScript know this is a valid key
+      sectionUpdates[name as keyof BusinessPageSection] = value as any;
+    }
     
     // Auto-save after typing stops
     debouncedSave(newContentData, sectionUpdates);
