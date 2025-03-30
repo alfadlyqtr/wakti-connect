@@ -6,6 +6,7 @@ import SectionEditorHeader from "./SectionEditorHeader";
 import SectionEditorFields from "./SectionEditorFields";
 import SectionEditorControls from "./SectionEditorControls";
 import SectionTemplateDialog from "./SectionTemplateDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SectionEditorProps {
   section: BusinessPageSection;
@@ -13,10 +14,11 @@ interface SectionEditorProps {
 
 const SectionEditor: React.FC<SectionEditorProps> = ({ section }) => {
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const isMobile = useIsMobile();
   
   return (
     <SectionEditorProvider section={section}>
-      <div className="space-y-4">
+      <div className={`space-y-${isMobile ? '3' : '4'}`}>
         <SectionEditorHeader 
           onTemplateClick={() => setTemplateDialogOpen(true)} 
         />

@@ -7,6 +7,7 @@ import { GripVertical, Loader2 } from "lucide-react";
 import SectionEditor from "../section-editors/SectionEditor";
 import SectionActions from "../sections/SectionActions";
 import { useDragDrop } from "./DragDropContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DraggableSectionListProps {
   onToggleVisibility: (sectionId: string, currentVisibility: boolean) => void;
@@ -18,6 +19,7 @@ const DraggableSectionList: React.FC<DraggableSectionListProps> = ({
   onDeleteSection
 }) => {
   const { sections, updateSectionOrder, isUpdating } = useDragDrop();
+  const isMobile = useIsMobile();
 
   const handleDragEnd = (result: any) => {
     // Dropped outside the list
@@ -44,7 +46,7 @@ const DraggableSectionList: React.FC<DraggableSectionListProps> = ({
 
   if (!sections.length) {
     return (
-      <div className="text-center p-8 border rounded-lg">
+      <div className="text-center p-4 sm:p-8 border rounded-lg">
         <p className="text-muted-foreground">No sections to display. Add a section to get started.</p>
       </div>
     );
@@ -74,12 +76,12 @@ const DraggableSectionList: React.FC<DraggableSectionListProps> = ({
                       {...provided.draggableProps}
                       className="relative"
                     >
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
+                      <CardHeader className={isMobile ? "p-3" : "pb-2"}>
+                        <div className={`flex ${isMobile ? "flex-col gap-2" : "items-center justify-between"}`}>
                           <div className="flex items-center">
                             <div 
                               {...provided.dragHandleProps}
-                              className="cursor-grab active:cursor-grabbing p-1 mr-2 hover:bg-muted rounded"
+                              className="cursor-grab active:cursor-grabbing p-1 mr-2 hover:bg-muted rounded touch-target"
                             >
                               <GripVertical className="h-5 w-5 text-muted-foreground" />
                             </div>
@@ -103,7 +105,7 @@ const DraggableSectionList: React.FC<DraggableSectionListProps> = ({
                           />
                         </div>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className={isMobile ? "p-3" : undefined}>
                         <SectionEditor section={section} />
                       </CardContent>
                     </Card>

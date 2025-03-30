@@ -10,6 +10,7 @@ import { fromTable } from "@/integrations/supabase/helper";
 import { toast } from "@/components/ui/use-toast";
 import { DragDropProvider } from "../drag-drop/DragDropContext";
 import DraggableSectionList from "../drag-drop/DraggableSectionList";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface PageSectionsTabProps {
   pageSections?: BusinessPageSection[];
@@ -23,6 +24,7 @@ const PageSectionsTab: React.FC<PageSectionsTabProps> = ({
   getPublicPageUrl 
 }) => {
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   // Section creation mutation
   const createSection = useMutation({
@@ -148,13 +150,15 @@ const PageSectionsTab: React.FC<PageSectionsTabProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="space-y-4 sm:space-y-6">
+      <div className={`flex ${isMobile ? 'flex-col' : 'flex-wrap items-center'} gap-2`}>
         <h2 className="text-xl font-medium">Available Sections</h2>
-        <div className="ml-auto flex flex-wrap gap-2">  
+        <div className={`${isMobile ? 'w-full' : 'ml-auto'} flex flex-wrap gap-2`}>  
           <Button 
             variant="outline" 
             asChild
+            size={isMobile ? "sm" : "default"}
+            className="w-full sm:w-auto"
           >
             <a href={getPublicPageUrl()} target="_blank" rel="noopener noreferrer">
               <Globe className="h-4 w-4 mr-2" />
@@ -169,8 +173,8 @@ const PageSectionsTab: React.FC<PageSectionsTabProps> = ({
         isCreating={createSection.isPending} 
       />
       
-      <div className="mt-8">
-        <h2 className="text-xl font-medium mb-4">Current Page Sections</h2>
+      <div className="mt-6 sm:mt-8">
+        <h2 className="text-xl font-medium mb-3 sm:mb-4">Current Page Sections</h2>
         {pageSections && pageSections.length > 0 ? (
           <DragDropProvider sections={pageSections} pageId={businessPageId || ""}>
             <DraggableSectionList

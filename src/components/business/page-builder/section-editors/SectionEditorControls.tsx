@@ -26,7 +26,7 @@ const SectionEditorControls: React.FC<SectionEditorControlsProps> = ({ onTemplat
           variant="outline"
           onClick={onTemplateClick}
           title="Choose a template"
-          className="w-full sm:w-auto"
+          className="w-full sm:w-auto touch-target"
           size={isMobile ? "sm" : "default"}
         >
           <LayoutTemplate className="h-4 w-4 mr-2" />
@@ -36,7 +36,7 @@ const SectionEditorControls: React.FC<SectionEditorControlsProps> = ({ onTemplat
         <Button 
           onClick={handleSaveSection}
           disabled={updateSection.isPending}
-          className="w-full sm:w-auto"
+          className="w-full sm:w-auto touch-target"
           size={isMobile ? "sm" : "default"}
         >
           {updateSection.isPending ? (
