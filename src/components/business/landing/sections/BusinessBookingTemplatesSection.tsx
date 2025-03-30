@@ -20,7 +20,7 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
   const {
     title = "Book an Appointment",
     subtitle = "Schedule a time to meet with us",
-    layout = "grid", // grid, list, or carousel
+    layout = "cards", // grid, list, carousel, or cards
     buttonText = "Book Now", // Default button text
     showBookButton = true, // Control if book buttons are shown
   } = content;
@@ -84,12 +84,61 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
       <h2 className="text-2xl font-bold mb-2">{title}</h2>
       {subtitle && <p className="text-muted-foreground mb-6">{subtitle}</p>}
 
-      <Tabs defaultValue={layout || "grid"} className="w-full">
+      <Tabs defaultValue={layout || "cards"} className="w-full">
         <TabsList className="hidden">
           <TabsTrigger value="grid">Grid</TabsTrigger>
           <TabsTrigger value="list">List</TabsTrigger>
           <TabsTrigger value="carousel">Carousel</TabsTrigger>
+          <TabsTrigger value="cards">Cards</TabsTrigger>
         </TabsList>
+
+        {/* Cards Layout (New) */}
+        <TabsContent value="cards" className="w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {templates.map((template) => (
+              <Card key={template.id} className="overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-300 h-full">
+                <CardHeader className="bg-gradient-to-br from-primary/20 to-primary/5 p-6">
+                  <h3 className="text-xl font-semibold">{template.name}</h3>
+                  {template.description && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {template.description}
+                    </p>
+                  )}
+                </CardHeader>
+                <CardContent className="p-6 space-y-4 flex-grow">
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <div className="flex items-center">
+                      <Calendar className="h-5 w-5 mr-2 text-muted-foreground" />
+                      <span className="font-medium">{template.duration} minutes</span>
+                    </div>
+                    <div className="text-xl font-bold text-primary">
+                      {template.price ? formatCurrency(template.price) : "Free"}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {template.details && (
+                      <div className="text-sm text-muted-foreground">
+                        {template.details}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+                {showBookButton && (
+                  <CardFooter className="p-6 pt-0">
+                    <Button 
+                      className="w-full" 
+                      onClick={() => handleBookNow(template)}
+                      size="lg"
+                    >
+                      <Calendar className="mr-2 h-4 w-4" /> {buttonText}
+                    </Button>
+                  </CardFooter>
+                )}
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
 
         {/* Grid Layout */}
         <TabsContent value="grid" className="w-full">

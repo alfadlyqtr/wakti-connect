@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
 import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
@@ -25,7 +26,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
   isPreviewMode = false 
 }) => {
   const { businessPage, pageSections, socialLinks, isLoading } = useBusinessPage(slug);
-  const { isSubscribed, subscriptionId, checkingSubscription } = useBusinessSubscribers(businessPage?.business_id);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [showAuthAlert, setShowAuthAlert] = useState(false);
   const chatbotScriptRef = useTMWChatbot(businessPage?.chatbot_enabled, businessPage?.chatbot_code);
@@ -92,21 +92,58 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
   
   const primaryColor = businessPage.primary_color || '#7C3AED';
   const secondaryColor = businessPage.secondary_color || '#8B5CF6';
+  const textColor = businessPage.text_color || '#ffffff';
+  const fontFamily = businessPage.font_family || 'sans-serif';
+  const borderRadius = businessPage.border_radius || 'medium';
+  const borderRadiusValue = 
+    borderRadius === 'none' ? '0px' :
+    borderRadius === 'small' ? '4px' :
+    borderRadius === 'medium' ? '8px' :
+    borderRadius === 'large' ? '12px' :
+    borderRadius === 'full' ? '9999px' : '8px';
+  
+  // Generate background pattern
+  const backgroundPattern = businessPage.page_pattern 
+    ? businessPage.page_pattern === 'dots' 
+      ? 'radial-gradient(#00000022 1px, transparent 1px)'
+      : businessPage.page_pattern === 'grid' 
+        ? 'linear-gradient(to right, #00000011 1px, transparent 1px), linear-gradient(to bottom, #00000011 1px, transparent 1px)'
+        : businessPage.page_pattern === 'waves' 
+          ? 'url("data:image/svg+xml,%3Csvg width="100" height="20" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 10 C 30 0, 70 0, 100 10 L 100 20 L 0 20 Z" fill="%2300000011"/%3E%3C/svg%3E")'
+          : businessPage.page_pattern === 'diagonal' 
+            ? 'repeating-linear-gradient(45deg, #00000011, #00000011 1px, transparent 1px, transparent 10px)'
+            : 'none'
+    : 'none';
+  
+  const backgroundSize = 
+    businessPage.page_pattern === 'dots' ? '20px 20px' :
+    businessPage.page_pattern === 'grid' ? '20px 20px' :
+    businessPage.page_pattern === 'waves' ? '100px 20px' :
+    businessPage.page_pattern === 'diagonal' ? '14px 14px' : 'auto';
   
   const subscribeButtonStyle = {
     background: `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`,
+    color: textColor,
+    borderRadius: borderRadiusValue,
     boxShadow: '0 4px 14px 0 rgba(0, 0, 0, 0.2)',
     transition: 'all 0.3s ease',
   };
   
   return (
-    <div className="flex flex-col min-h-screen">
+    <div 
+      className={`flex flex-col min-h-screen font-${fontFamily}`}
+      style={{ 
+        backgroundImage: backgroundPattern,
+        backgroundSize: backgroundSize
+      }}
+    >
       <PoweredByWAKTI position="top" />
       
       <div 
         style={{
           '--primary-color': primaryColor,
-          '--secondary-color': secondaryColor
+          '--secondary-color': secondaryColor,
+          '--text-color': textColor,
         } as React.CSSProperties}
         className="flex-1"
       >
@@ -125,7 +162,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
                   buttonStyle={subscribeButtonStyle}
                   size={isMobile ? "default" : "lg"}
                   className={cn(
-                    "font-semibold text-white hover:opacity-90 rounded-full px-6 shadow-md transition-all",
+                    "font-semibold text-white hover:opacity-90 shadow-md transition-all",
                     "animate-fade-in flex items-center gap-2"
                   )}
                 />
@@ -136,7 +173,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
                   buttonStyle={subscribeButtonStyle}
                   size={isMobile ? "default" : "lg"}
                   className={cn(
-                    "font-semibold text-white hover:opacity-90 rounded-full px-6 shadow-md transition-all",
+                    "font-semibold text-white hover:opacity-90 shadow-md transition-all",
                     "animate-fade-in flex items-center gap-2"
                   )}
                   onAuthRequired={handleTrySubscribe}

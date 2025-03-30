@@ -35,10 +35,8 @@ const GeneralSettingsTab = ({
   getPublicPageUrl,
   uploadingLogo
 }: GeneralSettingsTabProps) => {
-  // In a real application, we would validate the slug to ensure it's URL-safe
   const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
-    // Create a safe slug - lowercase, remove special chars, replace spaces with hyphens
     const safeSlug = value
       .toLowerCase()
       .replace(/[^\w\s-]/g, '')
@@ -59,7 +57,6 @@ const GeneralSettingsTab = ({
   const copyPageUrl = () => {
     const url = getPublicPageUrl();
     navigator.clipboard.writeText(url);
-    // Could add a toast here
   };
   
   const visitPage = () => {
@@ -67,7 +64,6 @@ const GeneralSettingsTab = ({
     window.open(url, '_blank');
   };
 
-  // This now passes the event directly to the handleLogoUpload function
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleLogoUpload(e);
   };
