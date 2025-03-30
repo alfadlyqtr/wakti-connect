@@ -6,7 +6,7 @@ import './App.css'
 import { AuthProvider } from './hooks/auth'
 import { CurrencyProvider } from './contexts/CurrencyContext'
 import { ErrorBoundary } from 'react-error-boundary'
-import ErrorFallback from './components/ui/ErrorBoundary'
+import ErrorFallback from './components/ui/ErrorFallback'
 
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary FallbackComponent={ErrorFallback}>
