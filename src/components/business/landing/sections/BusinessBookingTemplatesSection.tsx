@@ -1,46 +1,43 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { useBookingTemplates } from "@/hooks/useBookingTemplates";
-import { Loader2, Calendar } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
+import { Loader2, Clock, Calendar, Info } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { toast } from "@/components/ui/use-toast";
-import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
-import BookingModalContent from "@/components/business/landing/booking/BookingModalContent";
+import { formatCurrency } from "@/utils/formatUtils";
+import BookingModalContent from "../booking";
+
+// Function to format duration from minutes to hours and minutes
+const formatDuration = (minutes: number) => {
+  if (minutes < 60) return `${minutes} minutes`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (remainingMinutes === 0) return `${hours} hour${hours > 1 ? 's' : ''}`;
+  return `${hours} hour${hours > 1 ? 's' : ''} ${remainingMinutes} min`;
+};
 
 interface BusinessBookingTemplatesSectionProps {
   content: Record<string, any>;
   businessId: string;
 }
 
-const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionProps> = ({ content, businessId }) => {
-  const {
-    title = "Book an Appointment",
-    subtitle = "Schedule a time to meet with us",
-    layout = "cards", // grid, list, carousel, or cards
-    buttonText = "Book Now", // Default button text
-    showBookButton = true, // Control if book buttons are shown
-  } = content;
-
+const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionProps> = ({ 
+  content, 
+  businessId 
+}) => {
   const { templates, isLoading, error } = useBookingTemplates(businessId);
-  const { formatCurrency } = useCurrencyFormat({ businessId });
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [showBookingModal, setShowBookingModal] = useState(false);
   
-  // State for booking modal
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
-
-  // For debugging
-  React.useEffect(() => {
-    console.log("BusinessBookingTemplatesSection mounted");
-    console.log("Content:", content);
-    console.log("BusinessId:", businessId);
-    console.log("Templates:", templates);
-    console.log("IsLoading:", isLoading);
-    console.log("Error:", error);
-  }, [content, businessId, templates, isLoading, error]);
-
+  const {
+    title = "Our Services",
+    subtitle = "Book your appointment today",
+    description = "Browse our services and book your appointment online"
+  } = content;
+  
+  const selectedTemplate = templates?.find(t => t.id === selectedTemplateId);
+  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -48,233 +45,91 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
       </div>
     );
   }
-
+  
   if (error || !templates || templates.length === 0) {
     return (
-      <div className="py-8">
+      <div className="text-center py-8">
         <h2 className="text-2xl font-bold mb-2">{title}</h2>
-        {subtitle && <p className="text-muted-foreground mb-6">{subtitle}</p>}
-        <div className="text-center py-6 border border-dashed rounded-lg">
-          <p className="text-muted-foreground">No booking templates available.</p>
-        </div>
+        {subtitle && <p className="text-lg mb-2">{subtitle}</p>}
+        <p className="text-muted-foreground">No services available for booking at this time.</p>
       </div>
     );
   }
-
-  const handleBookNow = (template: any) => {
-    // Validate template before opening modal
-    if (!template || !template.id) {
-      console.error("Invalid template selected for booking", template);
-      toast({
-        title: "Error",
-        description: "Unable to process booking request. Please try again.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    console.log(`Opening booking modal for template: ${template.id}: ${template.name}`);
-    setSelectedTemplate(template);
-    setIsBookingModalOpen(true);
-  };
-
+  
   return (
-    <div className="py-8">
-      <h2 className="text-2xl font-bold mb-2">{title}</h2>
-      {subtitle && <p className="text-muted-foreground mb-6">{subtitle}</p>}
-
-      <Tabs defaultValue={layout || "cards"} className="w-full">
-        <TabsList className="hidden">
-          <TabsTrigger value="grid">Grid</TabsTrigger>
-          <TabsTrigger value="list">List</TabsTrigger>
-          <TabsTrigger value="carousel">Carousel</TabsTrigger>
-          <TabsTrigger value="cards">Cards</TabsTrigger>
-        </TabsList>
-
-        {/* Cards Layout (New) */}
-        <TabsContent value="cards" className="w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {templates.map((template) => (
-              <Card key={template.id} className="overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-300 h-full">
-                <CardHeader className="bg-gradient-to-br from-primary/20 to-primary/5 p-6">
-                  <h3 className="text-xl font-semibold">{template.name}</h3>
-                  {template.description && (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {template.description}
-                    </p>
-                  )}
-                </CardHeader>
-                <CardContent className="p-6 space-y-4 flex-grow">
-                  <div className="flex justify-between items-center border-b pb-2">
-                    <div className="flex items-center">
-                      <Calendar className="h-5 w-5 mr-2 text-muted-foreground" />
-                      <span className="font-medium">{template.duration} minutes</span>
-                    </div>
-                    <div className="text-xl font-bold text-primary">
-                      {template.price ? formatCurrency(template.price) : "Free"}
-                    </div>
+    <section className="py-8">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold mb-2">{title}</h2>
+        {subtitle && <p className="text-xl mb-2">{subtitle}</p>}
+        {description && <p className="text-muted-foreground">{description}</p>}
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {templates.map((template) => (
+          <Card key={template.id} className="overflow-hidden transition-all hover:shadow-md">
+            <CardHeader className="pb-2">
+              <h3 className="text-xl font-bold">{template.name}</h3>
+            </CardHeader>
+            
+            <CardContent className="pb-2">
+              <div className="space-y-4">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <Clock className="mr-2 h-4 w-4" />
+                    {formatDuration(template.duration)}
                   </div>
                   
-                  <div className="space-y-2">
-                    {template.description && (
-                      <div className="text-sm text-muted-foreground">
-                        {template.description}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-                {showBookButton && (
-                  <CardFooter className="p-6 pt-0">
-                    <Button 
-                      className="w-full" 
-                      onClick={() => handleBookNow(template)}
-                      size="lg"
-                    >
-                      <Calendar className="mr-2 h-4 w-4" /> {buttonText}
-                    </Button>
-                  </CardFooter>
-                )}
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        {/* Grid Layout */}
-        <TabsContent value="grid" className="w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {templates.map((template) => (
-              <Card key={template.id} className="overflow-hidden flex flex-col">
-                <CardHeader className="bg-primary/5 p-4">
-                  <h3 className="text-lg font-medium">{template.name}</h3>
-                </CardHeader>
-                <CardContent className="p-4 flex-grow">
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      {template.description || "No description available"}
-                    </p>
-                    <div className="flex justify-between items-center pt-2">
-                      <span className="text-sm font-medium">
-                        {template.duration} minutes
-                      </span>
-                      <span className="text-primary font-bold">
-                        {template.price ? formatCurrency(template.price) : "Free"}
-                      </span>
+                  {template.price && (
+                    <div className="text-lg font-semibold">
+                      {formatCurrency(template.price)}
                     </div>
-                  </div>
-                </CardContent>
-                {showBookButton && (
-                  <CardFooter className="p-4 pt-0">
-                    <Button 
-                      className="w-full" 
-                      onClick={() => handleBookNow(template)}
-                    >
-                      <Calendar className="mr-2 h-4 w-4" /> {buttonText}
-                    </Button>
-                  </CardFooter>
-                )}
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        {/* List Layout */}
-        <TabsContent value="list" className="w-full">
-          <div className="space-y-3">
-            {templates.map((template) => (
-              <Card key={template.id} className="overflow-hidden">
-                <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-medium">{template.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {template.description || "No description available"}
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between sm:flex-col sm:items-end space-y-1">
-                    <span className="text-sm">{template.duration} minutes</span>
-                    <span className="text-primary font-bold">
-                      {template.price ? formatCurrency(template.price) : "Free"}
-                    </span>
-                    {showBookButton && (
-                      <Button 
-                        size="sm" 
-                        className="mt-2"
-                        onClick={() => handleBookNow(template)}
-                      >
-                        <Calendar className="mr-2 h-4 w-4" /> {buttonText}
-                      </Button>
-                    )}
-                  </div>
+                  )}
                 </div>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        {/* Carousel Layout */}
-        <TabsContent value="carousel" className="w-full">
-          <Carousel className="w-full">
-            <CarouselContent>
-              {templates.map((template) => (
-                <CarouselItem key={template.id} className="sm:basis-1/2 lg:basis-1/3">
-                  <Card className="h-full flex flex-col">
-                    <CardHeader className="bg-primary/5 p-4">
-                      <h3 className="text-lg font-medium">{template.name}</h3>
-                    </CardHeader>
-                    <CardContent className="p-4 flex-grow">
-                      <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">
-                          {template.description || "No description available"}
-                        </p>
-                        <div className="flex justify-between items-center pt-2">
-                          <span className="text-sm font-medium">
-                            {template.duration} minutes
-                          </span>
-                          <span className="text-primary font-bold">
-                            {template.price ? formatCurrency(template.price) : "Free"}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                    {showBookButton && (
-                      <CardFooter className="p-4 pt-0">
-                        <Button 
-                          className="w-full" 
-                          onClick={() => handleBookNow(template)}
-                        >
-                          <Calendar className="mr-2 h-4 w-4" /> {buttonText}
-                        </Button>
-                      </CardFooter>
-                    )}
-                  </Card>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="hidden sm:flex" />
-            <CarouselNext className="hidden sm:flex" />
-          </Carousel>
-        </TabsContent>
-      </Tabs>
-
-      {/* Booking Modal */}
-      <Dialog open={isBookingModalOpen} onOpenChange={setIsBookingModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                
+                <div className="space-y-2">
+                  {template.description && (
+                    <div className="text-sm text-muted-foreground">
+                      {template.description}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+            
+            <CardFooter className="pt-2">
+              <Button 
+                className="w-full" 
+                onClick={() => {
+                  setSelectedTemplateId(template.id);
+                  setShowBookingModal(true);
+                }}
+              >
+                Book Now
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+      
+      <Dialog open={showBookingModal} onOpenChange={setShowBookingModal}>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Book {selectedTemplate?.name}</DialogTitle>
+            <DialogTitle>{selectedTemplate?.name}</DialogTitle>
             <DialogDescription>
-              Fill out the details to book your appointment
+              {selectedTemplate?.description || "Book your appointment"}
             </DialogDescription>
           </DialogHeader>
           
-          {selectedTemplate && (
+          {selectedTemplateId && (
             <BookingModalContent 
+              templateId={selectedTemplateId} 
               businessId={businessId}
-              template={selectedTemplate}
-              onClose={() => setIsBookingModalOpen(false)}
+              onSuccess={() => setShowBookingModal(false)}
             />
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </section>
   );
 };
 

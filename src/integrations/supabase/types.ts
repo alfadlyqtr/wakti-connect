@@ -527,53 +527,65 @@ export type Database = {
       business_pages: {
         Row: {
           banner_url: string | null
+          border_radius: string | null
           business_id: string
           chatbot_code: string | null
           chatbot_enabled: boolean | null
           created_at: string
           description: string | null
+          font_family: string | null
           id: string
           is_featured: boolean | null
           is_published: boolean | null
           logo_url: string | null
+          page_pattern: string | null
           page_slug: string | null
           page_title: string | null
           primary_color: string | null
           secondary_color: string | null
+          text_color: string | null
           updated_at: string
         }
         Insert: {
           banner_url?: string | null
+          border_radius?: string | null
           business_id: string
           chatbot_code?: string | null
           chatbot_enabled?: boolean | null
           created_at?: string
           description?: string | null
+          font_family?: string | null
           id?: string
           is_featured?: boolean | null
           is_published?: boolean | null
           logo_url?: string | null
+          page_pattern?: string | null
           page_slug?: string | null
           page_title?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          text_color?: string | null
           updated_at?: string
         }
         Update: {
           banner_url?: string | null
+          border_radius?: string | null
           business_id?: string
           chatbot_code?: string | null
           chatbot_enabled?: boolean | null
           created_at?: string
           description?: string | null
+          font_family?: string | null
           id?: string
           is_featured?: boolean | null
           is_published?: boolean | null
           logo_url?: string | null
+          page_pattern?: string | null
           page_slug?: string | null
           page_title?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          text_color?: string | null
           updated_at?: string
         }
         Relationships: []
