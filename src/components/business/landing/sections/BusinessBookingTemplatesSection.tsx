@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Clock, Calendar, Info } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { formatCurrency } from "@/utils/formatUtils";
-import BookingModalContent from "../booking";
+import { BookingModalContent } from "../booking";
 
 // Function to format duration from minutes to hours and minutes
 const formatDuration = (minutes: number) => {
