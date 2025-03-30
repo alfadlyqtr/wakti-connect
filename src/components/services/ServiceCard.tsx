@@ -25,15 +25,15 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   return (
     <Card className="h-full flex flex-col transition-all hover:shadow-md">
       <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start gap-2">
           <CardTitle className="text-lg md:text-xl">{service.name}</CardTitle>
           {service.price && (
-            <Badge variant="secondary" className="ml-2 font-semibold">
+            <Badge variant="secondary" className="ml-2 font-semibold text-base md:text-sm">
               QAR {service.price.toFixed(2)}
             </Badge>
           )}
         </div>
-        <CardDescription className="line-clamp-2 text-sm md:text-base">
+        <CardDescription className="line-clamp-2 text-base md:text-sm mt-1">
           {service.description || "No description provided"}
         </CardDescription>
       </CardHeader>
@@ -41,16 +41,16 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       <CardContent className="pb-2 flex-grow space-y-4">
         <div className="flex items-center text-muted-foreground">
           <Clock className="h-4 w-4 mr-2" />
-          <span className="text-sm md:text-base">{service.duration} minutes</span>
+          <span className="text-base md:text-sm">{service.duration} minutes</span>
         </div>
       </CardContent>
       
-      <CardFooter className={`flex ${isMobile ? "flex-col" : "justify-between"} pt-4 border-t gap-2`}>
+      <CardFooter className={`flex ${isMobile ? "flex-col" : "justify-between"} pt-4 border-t gap-3 md:gap-2`}>
         <Button 
           variant="outline" 
           size={isMobile ? "default" : "sm"} 
           onClick={() => onEdit(service)}
-          className={isMobile ? "w-full" : ""}
+          className={isMobile ? "w-full h-12 text-base" : ""}
         >
           <Edit className="h-4 w-4 mr-2" />
           Edit
@@ -60,7 +60,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           size={isMobile ? "default" : "sm"} 
           onClick={() => onDelete(service)}
           disabled={isDeleting}
-          className={isMobile ? "w-full" : ""}
+          className={isMobile ? "w-full h-12 text-base" : ""}
         >
           <Trash2 className="h-4 w-4 mr-2" />
           Delete

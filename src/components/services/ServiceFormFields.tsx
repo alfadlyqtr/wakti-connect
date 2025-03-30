@@ -4,6 +4,7 @@ import { Control } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ServiceFormFieldsProps {
   control: Control<any>;
@@ -18,13 +19,12 @@ const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({ control }) => {
         control={control}
         name="name"
         render={({ field }) => (
-          <FormItem>
-            <FormLabel className="text-base">Service Name <span className="text-destructive">*</span></FormLabel>
+          <FormItem className="space-y-3">
+            <FormLabel className="text-base font-medium">Service Name <span className="text-destructive">*</span></FormLabel>
             <FormControl>
               <Input 
                 placeholder="Enter service name" 
                 {...field} 
-                className="h-12 text-base"
               />
             </FormControl>
             <FormMessage />
@@ -36,11 +36,11 @@ const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({ control }) => {
         control={control}
         name="description"
         render={({ field }) => (
-          <FormItem>
-            <FormLabel className="text-base">Description</FormLabel>
+          <FormItem className="space-y-3">
+            <FormLabel className="text-base font-medium">Description</FormLabel>
             <FormControl>
-              <textarea
-                className="min-h-[100px] flex w-full rounded-md border border-input bg-background px-3 py-2 text-base resize-y"
+              <Textarea
+                className="min-h-[120px] text-base md:min-h-[100px]"
                 placeholder="Describe your service..."
                 {...field}
               />
@@ -50,20 +50,20 @@ const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({ control }) => {
         )}
       />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-4">
         <FormField
           control={control}
           name="price"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-base">Price (QAR)</FormLabel>
+            <FormItem className="space-y-3">
+              <FormLabel className="text-base font-medium">Price (QAR)</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <span className="absolute left-3 top-3 text-base">QAR</span>
+                  <span className="absolute left-3 top-4 md:top-3 text-base md:text-sm">QAR</span>
                   <Input 
                     type="text" 
                     inputMode="decimal"
-                    className="pl-12 h-12 text-base" 
+                    className="pl-12" 
                     placeholder="0.00" 
                     {...field}
                   />
@@ -78,18 +78,18 @@ const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({ control }) => {
           control={control}
           name="duration"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-base">Duration (min) <span className="text-destructive">*</span></FormLabel>
+            <FormItem className="space-y-3">
+              <FormLabel className="text-base font-medium">Duration (min) <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input 
                     type="number" 
                     placeholder="60" 
                     min="1"
-                    className="h-12 text-base pr-12"
+                    className="pr-12"
                     {...field} 
                   />
-                  <span className="absolute right-3 top-3 text-muted-foreground text-base">min</span>
+                  <span className="absolute right-3 top-4 md:top-3 text-muted-foreground text-base md:text-sm">min</span>
                 </div>
               </FormControl>
               <FormMessage />

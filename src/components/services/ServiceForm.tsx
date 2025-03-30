@@ -67,28 +67,35 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <DialogHeader className={isMobile ? "text-center space-y-2" : ""}>
-          <DialogTitle>{editingService ? "Edit Service" : "Add New Service"}</DialogTitle>
-          <DialogDescription>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <DialogHeader className={isMobile ? "text-center space-y-3" : ""}>
+          <DialogTitle className="text-xl md:text-lg">
+            {editingService ? "Edit Service" : "Add New Service"}
+          </DialogTitle>
+          <DialogDescription className="text-base md:text-sm">
             {editingService 
               ? "Edit the details of your existing service." 
               : "Create a new service for your business. You can assign staff members to this service later."}
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid gap-4 py-2">
+        <div className="grid gap-6 py-2">
           <ServiceFormFields control={form.control} />
         </div>
         
-        <DialogFooter className={isMobile ? "flex-col gap-2 mt-6" : "mt-6"}>
-          <Button type="button" variant="outline" onClick={onCancel} className={isMobile ? "w-full" : ""}>
+        <DialogFooter className={isMobile ? "flex-col gap-3 mt-6" : "mt-6"}>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel} 
+            className={isMobile ? "w-full h-12 text-base" : ""}
+          >
             Cancel
           </Button>
           <Button 
             type="submit" 
             disabled={isPending || !form.formState.isValid}
-            className={isMobile ? "w-full" : ""}
+            className={isMobile ? "w-full h-12 text-base" : ""}
           >
             {isPending ? "Saving..." : (editingService ? "Update Service" : "Add Service")}
           </Button>
