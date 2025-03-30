@@ -14,14 +14,28 @@ import { useBookingTemplates } from "@/hooks/useBookingTemplates";
 import { Button } from "@/components/ui/button";
 import { BookingTemplateWithRelations } from "@/types/booking.types";
 import { useAuth } from "@/hooks/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const BookingTemplateSection: React.FC = () => {
   const { contentData, handleInputChange, setContentData, setIsDirty } = useSectionEditor();
   const { user } = useAuth();
-  const { templates, isLoading } = useBookingTemplates(user?.id);
+  const [userId, setUserId] = React.useState<string | null>(null);
+  const { templates, isLoading } = useBookingTemplates(userId);
   const [selectedTemplates, setSelectedTemplates] = React.useState<string[]>(
     contentData.selectedTemplates || []
   );
+
+  // Get the current user's ID on component mount
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        setUserId(session.user.id);
+      }
+    };
+    
+    fetchCurrentUser();
+  }, []);
 
   // Update the content data when templates are loaded
   useEffect(() => {
