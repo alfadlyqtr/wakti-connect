@@ -37,7 +37,7 @@ const NotificationListener = () => {
             title: "Booking Acknowledged",
             description: notification.content,
             duration: 5000,
-            variant: "info"
+            variant: "default" // Changed from "info" to "default" to match available variants
           });
         }
       };

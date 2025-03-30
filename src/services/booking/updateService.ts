@@ -75,7 +75,7 @@ export const acknowledgeBooking = async (bookingId: string): Promise<boolean> =>
         is_acknowledged: true,
         acknowledged_at: now,
         updated_at: now,
-        status: 'in_progress' // Add a new status for acknowledged bookings
+        status: 'in_progress' // This status now exists in our type
       })
       .eq('id', bookingId);
       
