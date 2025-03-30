@@ -10,9 +10,11 @@ import TemplateAvailabilityManager from "./TemplateAvailabilityManager";
 import { BookingTemplateWithRelations, BookingTemplateFormData } from "@/types/booking.types";
 import { useBookingTemplates } from "@/hooks/useBookingTemplates";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const BookingTemplatesTab: React.FC = () => {
   const [businessId, setBusinessId] = useState<string | null>(null);
+  const isMobile = useIsMobile();
   
   // Get the current user's ID on component mount
   useEffect(() => {
@@ -107,41 +109,41 @@ const BookingTemplatesTab: React.FC = () => {
   // Display loading state if we're still fetching the business ID
   if (!businessId) {
     return (
-      <div className="flex justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex justify-center p-4 sm:p-8">
+        <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="flex justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex justify-center p-4 sm:p-8">
+        <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-8 text-center">
-        <p className="text-destructive">Error loading templates. Please try again.</p>
+      <div className="p-4 sm:p-8 text-center">
+        <p className="text-destructive text-sm sm:text-base">Error loading templates. Please try again.</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between">
         <div className="w-full sm:max-w-xs">
           <Input
             placeholder="Search templates..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
+            className="w-full h-9 sm:h-10 text-sm"
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 items-center">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-center">
           <ToggleGroup 
             type="single" 
             value={filterPublished === null ? "all" : filterPublished ? "published" : "drafts"}
@@ -150,10 +152,11 @@ const BookingTemplatesTab: React.FC = () => {
               else if (value === "published") setFilterPublished(true);
               else if (value === "drafts") setFilterPublished(false);
             }}
+            className="h-8 sm:h-9 text-xs sm:text-sm"
           >
-            <ToggleGroupItem value="all">All</ToggleGroupItem>
-            <ToggleGroupItem value="published">Published</ToggleGroupItem>
-            <ToggleGroupItem value="drafts">Drafts</ToggleGroupItem>
+            <ToggleGroupItem value="all" className="px-2 sm:px-3">All</ToggleGroupItem>
+            <ToggleGroupItem value="published" className="px-2 sm:px-3">Published</ToggleGroupItem>
+            <ToggleGroupItem value="drafts" className="px-2 sm:px-3">Drafts</ToggleGroupItem>
           </ToggleGroup>
 
           <CreateTemplateButton

@@ -26,11 +26,11 @@ import { Badge } from "@/components/ui/badge";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { BookingWithRelations, BookingStatus } from "@/types/booking.types";
 import { formatCurrency } from "@/utils/formatUtils";
-import { useMobileBreakpoint } from "@/hooks/useBreakpoint";
 import { useStaffStatus } from "@/hooks/useStaffStatus";
 import { useJobCards } from "@/hooks/useJobCards";
 import { toast } from "@/components/ui/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BookingsListProps {
   bookings: BookingWithRelations[];
@@ -64,6 +64,7 @@ const BookingsList: React.FC<BookingsListProps> = ({
   const { isStaff, staffRelationId } = useStaffStatus();
   const { createJobCard } = useJobCards(staffRelationId);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     const interval = setInterval(() => {
@@ -142,10 +143,18 @@ const BookingsList: React.FC<BookingsListProps> = ({
     );
   }
 
-  console.log("Rendering BookingsList with bookings:", bookings);
+  // Format time based on device type
+  const formatTime = (time: string) => {
+    return format(parseISO(time), isMobile ? 'h:mm a' : 'p');
+  };
+
+  // Format date based on device type
+  const formatDate = (date: string) => {
+    return format(parseISO(date), isMobile ? 'MMM d' : 'PPP');
+  };
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-3 sm:gap-4">
       {bookings.map((booking) => {
         const isTemplate = (booking as any).is_template;
         const isAcknowledged = booking.is_acknowledged === true;
@@ -158,32 +167,32 @@ const BookingsList: React.FC<BookingsListProps> = ({
             key={booking.id} 
             className={`overflow-hidden ${isNoShow ? 'border-red-300' : isAcknowledged ? 'border-blue-300' : ''}`}
           >
-            <CardHeader className="bg-muted pb-2">
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  {isTemplate && <Bookmark className="h-4 w-4 text-primary" />}
-                  {isNoShow && <UserX className="h-4 w-4 text-destructive" />}
-                  {booking.title}
+            <CardHeader className="bg-muted pb-2 pt-3 px-3 sm:px-4 sm:pt-4 sm:pb-3">
+              <div className="flex justify-between items-start gap-2">
+                <CardTitle className="text-sm sm:text-lg flex items-center gap-1 sm:gap-2 line-clamp-1">
+                  {isTemplate && <Bookmark className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />}
+                  {isNoShow && <UserX className="h-3 w-3 sm:h-4 sm:w-4 text-destructive" />}
+                  <span className="truncate">{booking.title}</span>
                 </CardTitle>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-end">
                   {isAcknowledged && (
-                    <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                      Staff Acknowledged
+                    <span className="px-1.5 py-0.5 text-[10px] sm:text-xs rounded-full bg-blue-100 text-blue-800 whitespace-nowrap">
+                      Staff Ack
                     </span>
                   )}
                   
                   {isPendingNoShowApproval && (
-                    <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-800">
+                    <span className="px-1.5 py-0.5 text-[10px] sm:text-xs rounded-full bg-amber-100 text-amber-800 whitespace-nowrap">
                       No-Show Pending
                     </span>
                   )}
                   
-                  <span className={`px-2 py-1 text-xs rounded-full ${
+                  <span className={`px-1.5 py-0.5 text-[10px] sm:text-xs rounded-full whitespace-nowrap ${
                     isTemplate ? 'bg-purple-100 text-purple-800' :
                     getStatusBadgeStyle(booking)
                   }`}>
-                    {isTemplate ? 'Pre-Booking Template' : 
+                    {isTemplate ? 'Template' : 
                       booking.status === 'no_show' ? 'No-Show' :
                       booking.status === 'in_progress' ? 'In Progress' :
                       booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
@@ -191,126 +200,124 @@ const BookingsList: React.FC<BookingsListProps> = ({
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="pt-4">
+            <CardContent className="pt-2 pb-3 px-3 sm:px-4 sm:pt-3 sm:pb-4 text-xs sm:text-sm">
               {isTemplate ? (
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
                   <div>
                     {booking.description && (
-                      <p className="text-sm mb-2">{booking.description}</p>
+                      <p className="text-xs sm:text-sm mb-2 line-clamp-2">{booking.description}</p>
                     )}
-                    <div className="flex items-center mb-2">
-                      <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span className="text-sm">{(booking as any).duration} minutes</span>
+                    <div className="flex items-center mb-1 sm:mb-2">
+                      <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-muted-foreground flex-shrink-0" />
+                      <span>{(booking as any).duration} minutes</span>
                     </div>
                     {(booking as any).price !== null && (
-                      <div className="flex items-center mb-2">
-                        <span className="text-sm font-medium">Price:</span>
-                        <span className="text-sm ml-2">QAR {Number((booking as any).price).toFixed(2)}</span>
+                      <div className="flex items-center mb-1 sm:mb-2">
+                        <span className="font-medium">Price:</span>
+                        <span className="ml-1 sm:ml-2">QAR {Number((booking as any).price).toFixed(2)}</span>
                       </div>
                     )}
                   </div>
                   <div>
                     {booking.service && (
-                      <div className="mb-2">
-                        <span className="text-sm font-medium">Service:</span>
-                        <span className="text-sm ml-2">{booking.service.name}</span>
+                      <div className="mb-1 sm:mb-2">
+                        <span className="font-medium">Service:</span>
+                        <span className="ml-1 sm:ml-2">{booking.service.name}</span>
                       </div>
                     )}
-                    <div className="mb-2">
-                      <span className="text-sm font-medium">Provider:</span>
-                      <span className="text-sm ml-2">
+                    <div className="mb-1 sm:mb-2">
+                      <span className="font-medium">Provider:</span>
+                      <span className="ml-1 sm:ml-2 line-clamp-1">
                         {booking.staff?.name || booking.staff_name || 'Not assigned'}
                       </span>
                     </div>
-                    <div className="flex space-x-2 mt-4">
+                    <div className="flex space-x-2 mt-2 sm:mt-4">
                       <Link to="/dashboard/bookings?tab=templates">
                         <Button 
                           size="sm" 
                           variant="outline"
-                          className="flex items-center"
+                          className="flex items-center h-7 sm:h-8 text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5"
                         >
-                          <Settings className="h-4 w-4 mr-1" />
-                          Manage Template
+                          <Settings className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          Manage
                         </Button>
                       </Link>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
                   <div>
-                    <div className="flex items-center justify-between mb-3 bg-primary/5 p-2 rounded-md">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3 bg-primary/5 p-1.5 sm:p-2 rounded-md">
                       <div className="flex items-center">
-                        <span className="text-xs font-medium mr-2">Ref:</span>
-                        <code className="text-xs font-mono">{formatBookingId(booking.id)}</code>
+                        <span className="text-[10px] sm:text-xs font-medium mr-1 sm:mr-2">Ref:</span>
+                        <code className="text-[10px] sm:text-xs font-mono">{formatBookingId(booking.id)}</code>
                       </div>
                       <Button 
                         variant="ghost" 
                         size="sm" 
                         onClick={() => copyToClipboard(booking.id)}
-                        className="h-6 w-6 p-0"
+                        className="h-5 w-5 sm:h-6 sm:w-6 p-0"
                       >
                         <span className="sr-only">Copy</span>
-                        <Copy className="h-3 w-3" />
+                        <Copy className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                       </Button>
                     </div>
                     
-                    <div className="flex items-center mb-2">
-                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span className="text-sm">
-                        {format(parseISO(booking.start_time), 'PPP')}
+                    <div className="flex items-center mb-1 sm:mb-2">
+                      <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-muted-foreground flex-shrink-0" />
+                      <span>{formatDate(booking.start_time)}</span>
+                    </div>
+                    <div className="flex items-center mb-1 sm:mb-2">
+                      <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-muted-foreground flex-shrink-0" />
+                      <span>
+                        {formatTime(booking.start_time)} - 
+                        {formatTime(booking.end_time)}
                       </span>
                     </div>
-                    <div className="flex items-center mb-2">
-                      <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span className="text-sm">
-                        {format(parseISO(booking.start_time), 'p')} - 
-                        {format(parseISO(booking.end_time), 'p')}
-                      </span>
-                    </div>
-                    <div className="flex items-center mb-2">
-                      <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span className="text-sm">{booking.customer_name || 'No name provided'}</span>
+                    <div className="flex items-center mb-1 sm:mb-2">
+                      <User className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-muted-foreground flex-shrink-0" />
+                      <span className="truncate">{booking.customer_name || 'No name provided'}</span>
                     </div>
                     {booking.customer_email && (
                       <div className="flex items-center">
-                        <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span className="text-sm">{booking.customer_email}</span>
+                        <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-muted-foreground flex-shrink-0" />
+                        <span className="truncate">{booking.customer_email}</span>
                       </div>
                     )}
                   </div>
                   
                   <div>
                     {booking.service && (
-                      <div className="mb-2">
-                        <span className="text-sm font-medium">Service:</span>
-                        <span className="text-sm ml-2">{booking.service.name}</span>
+                      <div className="mb-1 sm:mb-2">
+                        <span className="font-medium">Service:</span>
+                        <span className="ml-1 sm:ml-2">{booking.service.name}</span>
                         {booking.service.price !== null && (
-                          <div className="text-sm mt-1">
+                          <div className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs">
                             Price: QAR {booking.service.price.toFixed(2)}
                           </div>
                         )}
                       </div>
                     )}
                     
-                    <div className="mb-2">
-                      <span className="text-sm font-medium">Provider:</span>
-                      <span className="text-sm ml-2">
+                    <div className="mb-1 sm:mb-2">
+                      <span className="font-medium">Provider:</span>
+                      <span className="ml-1 sm:ml-2 truncate">
                         {booking.staff?.name || booking.staff_name || 'Not assigned'}
                       </span>
                     </div>
                     
-                    <div className="flex flex-wrap space-x-2 mt-4">
+                    <div className="flex flex-wrap gap-1 sm:gap-2 mt-2 sm:mt-4">
                       {isStaff && !isAcknowledged && booking.status !== 'cancelled' && booking.status !== 'no_show' && booking.status !== 'completed' && onAcknowledgeBooking && (
                         <Button 
                           size="sm" 
                           variant="outline"
-                          className="flex items-center mb-2"
+                          className="h-7 sm:h-8 text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5"
                           onClick={() => onAcknowledgeBooking(booking.id)}
                           disabled={isAcknowledging}
                         >
-                          <ThumbsUp className="h-4 w-4 mr-1" />
-                          Acknowledge
+                          <ThumbsUp className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          {isMobile ? "Ack" : "Acknowledge"}
                         </Button>
                       )}
                       
@@ -321,16 +328,16 @@ const BookingsList: React.FC<BookingsListProps> = ({
                               <Button 
                                 size="sm" 
                                 variant="destructive"
-                                className="flex items-center mb-2"
+                                className="h-7 sm:h-8 text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5"
                                 onClick={() => onMarkNoShow && onMarkNoShow(booking.id)}
                                 disabled={isMarkingNoShow}
                               >
-                                <UserX className="h-4 w-4 mr-1" />
-                                Mark No-Show
+                                <UserX className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                                {isMobile ? "No-Show" : "Mark No-Show"}
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>Mark customer as no-show (10+ min late)</p>
+                              <p className="text-xs">Mark customer as no-show (10+ min late)</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -341,22 +348,22 @@ const BookingsList: React.FC<BookingsListProps> = ({
                           <Button 
                             size="sm" 
                             variant="default"
-                            className="flex items-center mb-2"
+                            className="h-7 sm:h-8 text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5"
                             onClick={() => onApproveNoShow(booking.id)}
                             disabled={isApproving}
                           >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Approve No-Show
+                            <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                            {isMobile ? "Approve" : "Approve No-Show"}
                           </Button>
                           <Button 
                             size="sm" 
                             variant="outline"
-                            className="flex items-center mb-2"
+                            className="h-7 sm:h-8 text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5"
                             onClick={() => onRejectNoShow(booking.id)}
                             disabled={isRejecting}
                           >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Reject No-Show
+                            <XCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                            {isMobile ? "Reject" : "Reject No-Show"}
                           </Button>
                         </>
                       )}
@@ -364,12 +371,12 @@ const BookingsList: React.FC<BookingsListProps> = ({
                       {isStaff && isAcknowledged && booking.status !== 'cancelled' && booking.status !== 'completed' && booking.status !== 'no_show' && !booking.is_no_show && (
                         <Button 
                           size="sm" 
-                          className="flex items-center mb-2"
+                          className="h-7 sm:h-8 text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5"
                           onClick={() => handleStartJob(booking)}
                           disabled={createJobCard.isPending}
                         >
-                          <PlayCircle className="h-4 w-4 mr-1" />
-                          Start Job
+                          <PlayCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          {isMobile ? "Start" : "Start Job"}
                         </Button>
                       )}
                       
@@ -377,22 +384,22 @@ const BookingsList: React.FC<BookingsListProps> = ({
                         <>
                           <Button 
                             size="sm" 
-                            className="flex items-center mb-2"
+                            className="h-7 sm:h-8 text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5"
                             onClick={() => onUpdateStatus(booking.id, 'confirmed')}
                             disabled={isUpdating}
                           >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Confirm
+                            <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                            {isMobile ? "Confirm" : "Confirm"}
                           </Button>
                           <Button 
                             size="sm" 
                             variant="outline" 
-                            className="flex items-center mb-2"
+                            className="h-7 sm:h-8 text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5"
                             onClick={() => onUpdateStatus(booking.id, 'cancelled')}
                             disabled={isUpdating}
                           >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Cancel
+                            <XCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                            {isMobile ? "Cancel" : "Cancel"}
                           </Button>
                         </>
                       )}
@@ -402,22 +409,22 @@ const BookingsList: React.FC<BookingsListProps> = ({
                         <>
                           <Button 
                             size="sm" 
-                            className="flex items-center mb-2"
+                            className="h-7 sm:h-8 text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5"
                             onClick={() => onUpdateStatus(booking.id, 'completed')}
                             disabled={isUpdating}
                           >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Mark Completed
+                            <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                            {isMobile ? "Complete" : "Mark Completed"}
                           </Button>
                           <Button 
                             size="sm" 
                             variant="outline" 
-                            className="flex items-center mb-2"
+                            className="h-7 sm:h-8 text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5"
                             onClick={() => onUpdateStatus(booking.id, 'cancelled')}
                             disabled={isUpdating}
                           >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Cancel
+                            <XCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                            {isMobile ? "Cancel" : "Cancel"}
                           </Button>
                         </>
                       )}

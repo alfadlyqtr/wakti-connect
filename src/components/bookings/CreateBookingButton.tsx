@@ -8,10 +8,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createBooking } from "@/services/booking";
 import { BookingFormData } from "@/types/booking.types";
 import BookingForm from "./BookingForm";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const CreateBookingButton = () => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   
   // Mutation for creating a booking
   const createBookingMutation = useMutation({
@@ -43,12 +45,16 @@ const CreateBookingButton = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button id="create-booking-button">
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Enter Manual Booking
+        <Button 
+          id="create-booking-button"
+          size={isMobile ? "sm" : "default"}
+          className={isMobile ? "h-8 px-2 py-1 text-xs" : ""}
+        >
+          <PlusCircle className="h-4 w-4 mr-1 sm:mr-2" />
+          {isMobile ? "Add Booking" : "Enter Manual Booking"}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Pre-Booking</DialogTitle>
         </DialogHeader>

@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { BookingWithRelations, BookingStatus } from "@/types/booking.types";
 import BookingsList from "./BookingsList";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BookingsTabContentProps {
   bookings: BookingWithRelations[];
@@ -39,6 +40,7 @@ const BookingsTabContent: React.FC<BookingsTabContentProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStaff, setFilterStaff] = useState<string>("all");
+  const isMobile = useIsMobile();
   
   // Get unique staff members for filter
   const staffMembers = React.useMemo(() => {
@@ -81,25 +83,25 @@ const BookingsTabContent: React.FC<BookingsTabContentProps> = ({
   console.log(`Found ${templates.length} template bookings:`, templates);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Filters section */}
       <div className="flex flex-col sm:flex-row gap-2">
         <Input
           placeholder="Search bookings..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="flex-1"
+          className="flex-1 h-9 sm:h-10 text-sm"
         />
         
         {isStaffTab && staffMembers.length > 0 && (
           <Select value={filterStaff} onValueChange={setFilterStaff}>
-            <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectTrigger className="w-full sm:w-[200px] h-9 sm:h-10 text-sm">
               <SelectValue placeholder="Filter by staff" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Staff</SelectItem>
+              <SelectItem value="all" className="text-sm">All Staff</SelectItem>
               {staffMembers.map(staff => (
-                <SelectItem key={staff} value={staff.toLowerCase()}>
+                <SelectItem key={staff} value={staff.toLowerCase()} className="text-sm">
                   {staff}
                 </SelectItem>
               ))}
@@ -112,7 +114,7 @@ const BookingsTabContent: React.FC<BookingsTabContentProps> = ({
       {filteredBookings.length === 0 ? (
         <Card>
           <CardContent className="pt-6 text-center">
-            <p className="text-muted-foreground">{emptyMessage}</p>
+            <p className="text-muted-foreground text-sm">{emptyMessage}</p>
           </CardContent>
         </Card>
       ) : (

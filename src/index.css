@@ -2,7 +2,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -11,7 +11,7 @@
     --card-foreground: 224 71.4% 4.1%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71.4% 4.1%;
-    --primary: 211 100% 45%; /* WAKTI primary blue */
+    --primary: 262.1 83.3% 57.8%;
     --primary-foreground: 210 20% 98%;
     --secondary: 220 14.3% 95.9%;
     --secondary-foreground: 220.9 39.3% 11%;
@@ -23,15 +23,10 @@
     --destructive-foreground: 210 20% 98%;
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 211 100% 45%;
+    --ring: 262.1 83.3% 57.8%;
     --radius: 0.5rem;
-    
-    /* WAKTI-specific colors */
-    --wakti-blue: 211 100% 45%;
-    --wakti-blue-dark: 211 100% 35%;
-    --wakti-accent: 25 100% 60%;
   }
- 
+
   .dark {
     --background: 224 71.4% 4.1%;
     --foreground: 210 20% 98%;
@@ -39,7 +34,7 @@
     --card-foreground: 210 20% 98%;
     --popover: 224 71.4% 4.1%;
     --popover-foreground: 210 20% 98%;
-    --primary: 211 100% 55%; /* WAKTI primary blue (slightly lighter in dark mode) */
+    --primary: 263.4 70% 50.4%;
     --primary-foreground: 210 20% 98%;
     --secondary: 215 27.9% 16.9%;
     --secondary-foreground: 210 20% 98%;
@@ -51,15 +46,10 @@
     --destructive-foreground: 210 20% 98%;
     --border: 215 27.9% 16.9%;
     --input: 215 27.9% 16.9%;
-    --ring: 211 100% 55%;
-    
-    /* WAKTI-specific colors */
-    --wakti-blue: 211 100% 55%;
-    --wakti-blue-dark: 211 100% 45%;
-    --wakti-accent: 25 100% 65%;
+    --ring: 263.4 70% 50.4%;
   }
 }
- 
+
 @layer base {
   * {
     @apply border-border;
@@ -70,26 +60,12 @@
 }
 
 @layer utilities {
-  .thin-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
   }
-
-  .thin-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  .thin-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .thin-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgba(156, 163, 175, 0.5);
-    border-radius: 3px;
-  }
-
-  .thin-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(156, 163, 175, 0.7);
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
   }
 }

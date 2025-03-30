@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import { BookingTab, BookingStatus } from "@/types/booking.types";
 import { useBookings } from "@/hooks/useBookings";
 import { useBookingsTabState } from "@/hooks/useBookingsTabState";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Import refactored components
 import BookingsHeader from "@/components/bookings/BookingsHeader";
@@ -20,6 +21,7 @@ const DashboardBookings = () => {
   const { activeTab, setActiveTab } = useBookingsTabState();
   const queryClient = useQueryClient();
   const isStaff = localStorage.getItem('isStaff') === 'true';
+  const isMobile = useIsMobile();
   
   // Fetch bookings based on the selected tab
   const { 
@@ -143,7 +145,7 @@ const DashboardBookings = () => {
 
   if (isLoading) {
     return (
-      <div className="container py-8 flex justify-center">
+      <div className="container py-4 sm:py-8 flex justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -156,10 +158,10 @@ const DashboardBookings = () => {
   // For staff users, we show a simplified view with just their bookings
   if (isStaff) {
     return (
-      <div className="container py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">My Bookings</h1>
-          <p className="text-muted-foreground">
+      <div className="container py-4 sm:py-8">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">My Bookings</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
             View and manage bookings assigned to you
           </p>
         </div>
@@ -180,16 +182,41 @@ const DashboardBookings = () => {
 
   // For business users, show the full tabbed interface
   return (
-    <div className="container py-8">
+    <div className="container py-4 sm:py-8">
       <BookingsHeader setActiveTab={setActiveTab} />
       
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as BookingTab)}>
-        <TabsList className="mb-6">
-          <TabsTrigger value="all-bookings">All Bookings</TabsTrigger>
-          <TabsTrigger value="pending-bookings">Pending</TabsTrigger>
-          <TabsTrigger value="staff-bookings">Staff Assigned</TabsTrigger>
-          <TabsTrigger value="no-show-bookings">No Shows</TabsTrigger>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
+        <TabsList className="mb-4 sm:mb-6 overflow-x-auto flex w-full no-scrollbar pb-1 justify-start">
+          <TabsTrigger 
+            value="all-bookings" 
+            className={isMobile ? "px-2 py-1 text-xs" : ""}
+          >
+            All Bookings
+          </TabsTrigger>
+          <TabsTrigger 
+            value="pending-bookings" 
+            className={isMobile ? "px-2 py-1 text-xs" : ""}
+          >
+            Pending
+          </TabsTrigger>
+          <TabsTrigger 
+            value="staff-bookings" 
+            className={isMobile ? "px-2 py-1 text-xs" : ""}
+          >
+            Staff Assigned
+          </TabsTrigger>
+          <TabsTrigger 
+            value="no-show-bookings" 
+            className={isMobile ? "px-2 py-1 text-xs" : ""}
+          >
+            No Shows
+          </TabsTrigger>
+          <TabsTrigger 
+            value="templates" 
+            className={isMobile ? "px-2 py-1 text-xs" : ""}
+          >
+            Templates
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="all-bookings">
