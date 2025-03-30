@@ -41,37 +41,48 @@ export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> =
     }
   }, [data, defaultServiceData]);
 
-  // Configure options based on device size
+  // Mobile-optimized chart options
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: isMobile ? 'bottom' : 'right' as 'bottom' | 'right',
+        position: 'bottom' as const,
         labels: {
-          boxWidth: isMobile ? 10 : 15,
+          boxWidth: isMobile ? 8 : 12,
+          padding: isMobile ? 8 : 10,
           font: {
-            size: isMobile ? 10 : 12
+            size: isMobile ? 8 : 12
           }
         }
       },
       tooltip: {
-        enabled: true,
+        bodyFont: {
+          size: isMobile ? 10 : 12,
+        },
+        titleFont: {
+          size: isMobile ? 11 : 14,
+        }
+      }
+    },
+    layout: {
+      padding: {
+        bottom: isMobile ? 10 : 0
       }
     }
   };
 
   if (isLoading || !chartData) {
     return (
-      <div className="h-[300px] w-full flex items-center justify-center">
+      <div className="h-[250px] md:h-[300px] w-full flex items-center justify-center">
         <p>Loading service data...</p>
       </div>
     );
   }
 
   return (
-    <div className="h-[300px] w-full flex justify-center">
-      <div className="h-full w-full max-w-[500px]">
+    <div className="h-[250px] md:h-[300px] w-full flex justify-center">
+      <div className="h-full w-full max-w-[400px]">
         <PieChart 
           data={chartData} 
           options={chartOptions} 

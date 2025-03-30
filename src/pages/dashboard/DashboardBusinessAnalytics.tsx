@@ -98,10 +98,10 @@ const DashboardBusinessAnalytics = () => {
       )}
 
       <Tabs defaultValue="overview" value={tab} onValueChange={setTab}>
-        <TabsList className={`grid w-full ${isMobile ? "grid-cols-1 gap-2" : "max-w-md grid-cols-3"}`}>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="services">Services</TabsTrigger>
-          <TabsTrigger value="staff">Staff</TabsTrigger>
+        <TabsList className="w-full flex space-x-1">
+          <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>
+          <TabsTrigger value="services" className="flex-1">Services</TabsTrigger>
+          <TabsTrigger value="staff" className="flex-1">Staff</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6 mt-6">

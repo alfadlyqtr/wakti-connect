@@ -41,15 +41,23 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
     }
   }, [data, defaultGrowthData]);
 
-  // Adjust chart options for mobile
+  // Mobile-optimized chart options
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: true,
+        display: !isMobile,
         position: 'top' as const,
       },
+      tooltip: {
+        bodyFont: {
+          size: isMobile ? 10 : 12,
+        },
+        titleFont: {
+          size: isMobile ? 11 : 14,
+        }
+      }
     },
     scales: {
       x: {
@@ -57,9 +65,10 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
           display: !isMobile,
         },
         ticks: {
-          display: !isMobile || window.innerWidth > 400,
-          maxRotation: 90,
-          minRotation: 45,
+          font: {
+            size: isMobile ? 9 : 12
+          },
+          maxRotation: isMobile ? 45 : 0,
         }
       },
       y: {
@@ -67,20 +76,25 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
         grid: {
           display: true,
         },
+        ticks: {
+          font: {
+            size: isMobile ? 9 : 12
+          },
+        }
       }
     }
   };
 
   if (isLoading || !chartData) {
     return (
-      <div className="h-[300px] w-full flex items-center justify-center">
+      <div className="h-[250px] md:h-[300px] w-full flex items-center justify-center">
         <p>Loading growth data...</p>
       </div>
     );
   }
 
   return (
-    <div className="h-[300px] w-full">
+    <div className="h-[250px] md:h-[300px] w-full">
       <LineChart 
         data={chartData} 
         options={chartOptions} 
