@@ -8,8 +8,11 @@ import ServiceForm from "@/components/services/ServiceForm";
 import ServiceList from "@/components/services/ServiceList";
 import { useServices } from "@/hooks/useServices";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const DashboardServiceManagement = () => {
+  const isMobile = useIsMobile();
+  
   const { 
     services,
     isLoading,
@@ -53,18 +56,18 @@ const DashboardServiceManagement = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Service Management</h1>
-          <p className="text-muted-foreground">Create and manage your business services.</p>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">Service Management</h1>
+          <p className="text-muted-foreground text-sm md:text-base">Create and manage your business services.</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={openAddService} onOpenChange={setOpenAddService}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className={isMobile ? "flex-1 h-10" : ""}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Service
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className={isMobile ? "w-[95vw] max-w-md p-4 rounded-lg" : ""}>
               <ServiceForm 
                 onSubmit={handleSubmit}
                 onCancel={handleCancelDialog}
@@ -73,7 +76,7 @@ const DashboardServiceManagement = () => {
               />
             </DialogContent>
           </Dialog>
-          <Button variant="outline" onClick={() => refetch()}>
+          <Button variant="outline" onClick={() => refetch()} className={isMobile ? "flex-1 h-10" : ""}>
             Refresh
           </Button>
         </div>
@@ -84,7 +87,7 @@ const DashboardServiceManagement = () => {
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input 
             placeholder="Search services..." 
-            className="pl-10"
+            className="pl-10 h-12 md:h-10"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />

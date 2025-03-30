@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Edit, Trash2 } from "lucide-react";
 import { Service } from "@/types/service.types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ServiceCardProps {
   service: Service;
@@ -19,18 +20,20 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   onDelete,
   isDeleting
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <Card className="h-full flex flex-col transition-all hover:shadow-md">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <CardTitle className="text-xl">{service.name}</CardTitle>
+          <CardTitle className="text-lg md:text-xl">{service.name}</CardTitle>
           {service.price && (
             <Badge variant="secondary" className="ml-2 font-semibold">
               QAR {service.price.toFixed(2)}
             </Badge>
           )}
         </div>
-        <CardDescription className="line-clamp-2">
+        <CardDescription className="line-clamp-2 text-sm md:text-base">
           {service.description || "No description provided"}
         </CardDescription>
       </CardHeader>
@@ -38,20 +41,26 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       <CardContent className="pb-2 flex-grow space-y-4">
         <div className="flex items-center text-muted-foreground">
           <Clock className="h-4 w-4 mr-2" />
-          <span>{service.duration} minutes</span>
+          <span className="text-sm md:text-base">{service.duration} minutes</span>
         </div>
       </CardContent>
       
-      <CardFooter className="flex justify-between pt-4 border-t">
-        <Button variant="outline" size="sm" onClick={() => onEdit(service)}>
+      <CardFooter className={`flex ${isMobile ? "flex-col" : "justify-between"} pt-4 border-t gap-2`}>
+        <Button 
+          variant="outline" 
+          size={isMobile ? "default" : "sm"} 
+          onClick={() => onEdit(service)}
+          className={isMobile ? "w-full" : ""}
+        >
           <Edit className="h-4 w-4 mr-2" />
           Edit
         </Button>
         <Button 
           variant="destructive" 
-          size="sm" 
+          size={isMobile ? "default" : "sm"} 
           onClick={() => onDelete(service)}
           disabled={isDeleting}
+          className={isMobile ? "w-full" : ""}
         >
           <Trash2 className="h-4 w-4 mr-2" />
           Delete
