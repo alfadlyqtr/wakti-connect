@@ -164,6 +164,17 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
     }
   };
   
+  // Handle subscribe/unsubscribe events with proper wrapper functions
+  const handleSubscribe = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    subscribe.mutate();
+  };
+
+  const handleUnsubscribe = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    unsubscribe.mutate();
+  };
+  
   // Find the header section in the pageSections array
   const headerSection = pageSections?.find(s => s.section_type === 'header');
   const headerContent = headerSection?.section_content || {};
@@ -234,7 +245,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
                     "font-semibold text-white hover:opacity-90 rounded-full px-6 shadow-md transition-all",
                     "animate-fade-in flex items-center gap-2"
                   )}
-                  onClick={isSubscribed ? unsubscribe.mutate : subscribe.mutate}
+                  onClick={isSubscribed ? handleUnsubscribe : handleSubscribe}
                   disabled={subscribe.isPending || unsubscribe.isPending || checkingSubscription}
                 >
                   {checkingSubscription ? (
@@ -290,7 +301,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
               size="sm"
               style={subscribeButtonStyle}
               className="rounded-full shadow-lg text-white hover:scale-105 transition-transform"
-              onClick={isSubscribed ? unsubscribe.mutate : subscribe.mutate}
+              onClick={isSubscribed ? handleUnsubscribe : handleSubscribe}
               disabled={subscribe.isPending || unsubscribe.isPending || checkingSubscription}
             >
               {checkingSubscription ? (
