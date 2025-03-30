@@ -1,8 +1,17 @@
 
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useBusinessCurrency } from './useBusinessCurrency';
 
-export const useCurrencyFormat = () => {
-  const { currency } = useCurrency();
+interface UseCurrencyFormatProps {
+  businessId?: string;
+}
+
+export const useCurrencyFormat = (props?: UseCurrencyFormatProps) => {
+  const { currency: globalCurrency } = useCurrency();
+  const { currency: businessCurrency } = useBusinessCurrency(props?.businessId);
+  
+  // Use business currency if available, otherwise fall back to global
+  const currency = businessCurrency || globalCurrency;
   
   const formatCurrency = (amount: number | null | undefined): string => {
     if (amount === null || amount === undefined) {

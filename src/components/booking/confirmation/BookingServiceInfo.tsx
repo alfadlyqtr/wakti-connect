@@ -12,7 +12,7 @@ const BookingServiceInfo: React.FC<BookingServiceInfoProps> = ({
   booking, 
   serviceName 
 }) => {
-  const { formatCurrency } = useCurrencyFormat();
+  const { formatCurrency } = useCurrencyFormat({ businessId: booking.business_id });
   
   // Get the price, checking both service and the booking itself
   const price = booking.service?.price || booking.price || null;

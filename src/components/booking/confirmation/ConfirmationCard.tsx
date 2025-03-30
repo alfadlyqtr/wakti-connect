@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { BookingWithRelations } from "@/types/booking.types";
-import { format } from "date-fns";
 import { Calendar, Clock, MapPin, Heart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import BookingServiceInfo from "./BookingServiceInfo";
@@ -16,6 +14,8 @@ import BookingDetailsCard from "./BookingDetailsCard";
 import { supabase } from "@/integrations/supabase/client";
 import { BusinessProfile } from "@/types/business.types";
 import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
+import PoweredByWAKTI from "@/components/common/PoweredByWAKTI";
+import { useBusinessStyling } from "@/hooks/useBusinessStyling";
 
 interface ConfirmationCardProps {
   booking: BookingWithRelations;
@@ -31,14 +31,27 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null);
   const { isSubscribed, subscribe } = useBusinessSubscribers(booking.business_id);
   const [businessLocation, setBusinessLocation] = useState<string | null>(null);
+  const { styling, isLoading: stylingLoading } = useBusinessStyling(booking.business_id);
   
   useEffect(() => {
-    // Fetch business profile and logo
+    if (styling.primaryColor) {
+      document.documentElement.style.setProperty('--primary', styling.primaryColor);
+    }
+    if (styling.secondaryColor) {
+      document.documentElement.style.setProperty('--secondary', styling.secondaryColor);
+    }
+    
+    return () => {
+      document.documentElement.style.removeProperty('--primary');
+      document.documentElement.style.removeProperty('--secondary');
+    };
+  }, [styling]);
+  
+  useEffect(() => {
     const fetchBusinessDetails = async () => {
       if (!booking.business_id) return;
 
       try {
-        // Get business profile
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('business_name, avatar_url, id, street_address, city, state_province, country')
@@ -55,9 +68,8 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
             account_type: "business"
           });
           
-          setBusinessLogo(profileData.avatar_url);
+          setBusinessLogo(profileData.avatar_url || styling.logoUrl || null);
           
-          // Construct location string if available
           if (profileData.street_address || profileData.city) {
             const locationParts = [
               profileData.street_address,
@@ -77,19 +89,16 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
     };
 
     fetchBusinessDetails();
-  }, [booking.business_id]);
+  }, [booking.business_id, styling]);
   
   useEffect(() => {
-    // If user is not authenticated, show the account promotion
     if (!isAuthenticated) {
       const timer = setTimeout(() => {
         setShowPromotion(true);
-      }, 1500); // Show after animation completes
+      }, 1500);
       
       return () => clearTimeout(timer);
     } else {
-      // For authenticated users, auto-integrate with WAKTI calendar
-      // This would normally involve saving to user's calendar in the database
       console.log("Auto-adding booking to WAKTI user calendar");
       setShowCalendarOptions(true);
     }
@@ -102,10 +111,8 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
   
   const handleDone = () => {
     if (isAuthenticated) {
-      // Redirect authenticated users to dashboard
       navigate("/dashboard");
     } else {
-      // Redirect non-authenticated users to homepage
       navigate("/");
     }
   };
@@ -114,7 +121,6 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
     if (isAuthenticated && businessProfile) {
       subscribe.mutate(booking.business_id);
     } else {
-      // Redirect to login first
       navigate("/login", { 
         state: { from: window.location.pathname, subscribeAfter: booking.business_id } 
       });
@@ -164,14 +170,12 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
           </div>
         )}
         
-        {/* Calendar Export Options - always visible */}
         <CalendarExportOptions booking={booking} serviceName={serviceName} />
         
         {showPromotion && !isAuthenticated && (
           <AccountPromotionCard onCalendarExport={handleCalendarExport} />
         )}
         
-        {/* Subscribe to Business Button */}
         {!isSubscribed && isAuthenticated && businessProfile && (
           <div className="mt-4 text-center">
             <Button 
@@ -198,6 +202,8 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
           {isAuthenticated ? "Go to Dashboard" : "Return to Home"}
         </Button>
       </CardFooter>
+      
+      <PoweredByWAKTI variant="colored" />
     </Card>
   );
 };

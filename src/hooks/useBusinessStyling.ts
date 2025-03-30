@@ -1,0 +1,62 @@
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface BusinessStyling {
+  primaryColor?: string;
+  secondaryColor?: string;
+  logoUrl?: string;
+}
+
+export const useBusinessStyling = (businessId?: string) => {
+  const [styling, setStyling] = useState<BusinessStyling>({});
+  const [isLoading, setIsLoading] = useState(false);
+  
+  useEffect(() => {
+    if (!businessId) return;
+    
+    const fetchBusinessStyling = async () => {
+      setIsLoading(true);
+      try {
+        // First check if business has a page with styling
+        const { data: pageData, error: pageError } = await supabase
+          .from('business_pages')
+          .select('primary_color, secondary_color, logo_url')
+          .eq('business_id', businessId)
+          .single();
+          
+        if (!pageError && pageData) {
+          setStyling({
+            primaryColor: pageData.primary_color,
+            secondaryColor: pageData.secondary_color,
+            logoUrl: pageData.logo_url
+          });
+        } else {
+          // Fallback to profile
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('avatar_url')
+            .eq('id', businessId)
+            .single();
+            
+          if (!profileError && profileData) {
+            setStyling({
+              logoUrl: profileData.avatar_url
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching business styling:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchBusinessStyling();
+  }, [businessId]);
+  
+  return {
+    styling,
+    isLoading
+  };
+};
