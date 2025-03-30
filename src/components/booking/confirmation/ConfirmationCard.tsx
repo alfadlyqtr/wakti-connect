@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
   const [showCalendarOptions, setShowCalendarOptions] = useState(false);
   const [businessLogo, setBusinessLogo] = useState<string | null>(null);
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null);
+  // Changed how we call useBusinessSubscribers - passing the business_id directly to fix the type error
   const { isSubscribed, subscribe } = useBusinessSubscribers(booking.business_id);
   const [businessLocation, setBusinessLocation] = useState<string | null>(null);
   const { styling, isLoading: stylingLoading } = useBusinessStyling(booking.business_id);
@@ -119,7 +121,8 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
 
   const handleSubscribe = () => {
     if (isAuthenticated && businessProfile) {
-      subscribe.mutate(booking.business_id);
+      // Fixed: No need to pass business_id as an argument to subscribe.mutate()
+      subscribe.mutate();
     } else {
       navigate("/login", { 
         state: { from: window.location.pathname, subscribeAfter: booking.business_id } 
@@ -159,7 +162,7 @@ const ConfirmationCard: React.FC<ConfirmationCardProps> = ({ booking, serviceNam
         {businessLocation && (
           <div className="mt-4 border rounded-md p-3 bg-muted/20">
             <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <div className="flex items-start space-x-2 text-sm text-muted-foreground">
                 <MapPin className="h-4 w-4" />
                 <span className="truncate max-w-[200px]">{businessLocation}</span>
               </div>
