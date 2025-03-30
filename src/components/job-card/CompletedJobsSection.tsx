@@ -2,12 +2,13 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency, formatTime } from '@/utils/formatUtils';
+import { formatTime } from '@/utils/formatUtils';
 import { JobCard } from '@/types/jobs.types';
 import { format, isToday, isThisWeek, isThisMonth, parseISO } from 'date-fns';
 import { Check, Clock, Download, ArrowDownUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { exportToCSV } from '@/utils/exportUtils';
+import { useCurrencyFormat } from '@/hooks/useCurrencyFormat';
 
 interface CompletedJobsSectionProps {
   completedJobs: JobCard[];
@@ -24,6 +25,8 @@ const CompletedJobsSection: React.FC<CompletedJobsSectionProps> = ({
   sortOption,
   isBusinessView = false
 }) => {
+  const { formatCurrency } = useCurrencyFormat();
+  
   const filteredAndSortedJobs = useMemo(() => {
     // First apply time filter
     let filtered = completedJobs;

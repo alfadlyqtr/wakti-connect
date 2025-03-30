@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle } from "lucide-react";
-import { formatCurrency } from "@/utils/formatUtils";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 import { JobCard } from "@/types/jobs.types";
 import { format, intervalToDuration } from "date-fns";
 
@@ -21,6 +21,7 @@ const ActiveJobCard: React.FC<ActiveJobCardProps> = ({
   const [duration, setDuration] = useState<string>("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef<boolean>(true);
+  const { formatCurrency } = useCurrencyFormat();
   
   // Safe cleanup and timer management
   const cleanupTimer = () => {
