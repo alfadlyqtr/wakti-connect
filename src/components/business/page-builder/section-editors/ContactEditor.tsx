@@ -5,10 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { EditorProps } from "./types";
+import { Button } from "@/components/ui/button";
+import { Navigation } from "lucide-react";
 import LocationPicker from "@/components/events/location/LocationPicker";
+import { toast } from "@/components/ui/toast";
 
 const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) => {
   const [useMapAddress, setUseMapAddress] = useState(true);
+  const [isLocating, setIsLocating] = useState(false);
   
   const handleLocationChange = (value: string) => {
     // Create a synthetic event object that matches the expected type
@@ -32,6 +36,85 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
     } as React.ChangeEvent<HTMLInputElement>;
     
     handleInputChange(syntheticEvent);
+  };
+  
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Error",
+        description: "Geolocation is not supported by your browser",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsLocating(true);
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        // Try to get a reverse geocoded address (in a real app)
+        // For now, we'll just use the coordinates
+        const locationStr = `Business Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
+        
+        // Create a synthetic event object
+        const syntheticEvent = {
+          target: {
+            name: 'address',
+            value: locationStr
+          }
+        } as React.ChangeEvent<HTMLInputElement>;
+        
+        handleInputChange(syntheticEvent);
+        
+        // Also store coordinates for future reference
+        const coordsEvent = {
+          target: {
+            name: 'coordinates',
+            value: JSON.stringify({ lat: latitude, lng: longitude })
+          }
+        } as React.ChangeEvent<HTMLInputElement>;
+        
+        handleInputChange(coordsEvent);
+        
+        toast({
+          title: "Location Found",
+          description: "Your current location has been added"
+        });
+        
+        setIsLocating(false);
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        
+        let errorMessage = "Failed to get your location";
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "Location permission denied. Please allow location access in your browser settings.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Location information is unavailable.";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "Location request timed out.";
+            break;
+        }
+        
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        
+        setIsLocating(false);
+      },
+      { 
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   };
 
   return (
@@ -61,12 +144,26 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
       
       <div className="space-y-2">
         <Label htmlFor="address">Business Address</Label>
-        <LocationPicker
-          value={contentData.address || ""}
-          onChange={handleLocationChange}
-          placeholder="123 Business Street, City, Country"
-          className="w-full"
-        />
+        <div className="space-y-2">
+          <LocationPicker
+            value={contentData.address || ""}
+            onChange={handleLocationChange}
+            placeholder="123 Business Street, City, Country"
+            className="w-full"
+          />
+          
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-full justify-start"
+            onClick={getCurrentLocation}
+            disabled={isLocating}
+          >
+            <Navigation className="mr-2 h-4 w-4" />
+            {isLocating ? "Getting your location..." : "Use Current Location"}
+          </Button>
+        </div>
       </div>
       
       <div className="space-y-2">
