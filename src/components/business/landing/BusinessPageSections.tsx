@@ -71,7 +71,11 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
           return <BusinessAboutSection content={content} />;
           
         case 'contact':
-          return <BusinessContactSection content={content} businessId={businessPage.business_id} />;
+          return <BusinessContactSection 
+            content={content} 
+            businessId={businessPage.business_id} 
+            pageId={businessPage.id} 
+          />;
           
         case 'hours':
           return <BusinessHoursSection content={content} />;
