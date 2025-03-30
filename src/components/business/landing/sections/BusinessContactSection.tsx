@@ -60,7 +60,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
             </div>
             
             {showMap && address && (
-              <div className="w-full aspect-video rounded-lg overflow-hidden border">
+              <div className="w-full aspect-video rounded-lg overflow-hidden border shadow-sm">
                 <iframe
                   src={mapEmbedUrl}
                   style={{ border: 0 }}
@@ -69,6 +69,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
                   referrerPolicy="no-referrer-when-downgrade"
                   className="w-full h-full"
                   title="Google Maps"
+                  aria-label={`Location of ${title}`}
                 ></iframe>
               </div>
             )}
@@ -76,7 +77,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
           
           {/* Contact Form */}
           <div className="md:w-1/2 mt-8 md:mt-0">
-            <div className="bg-muted p-6 rounded-lg shadow-sm">
+            <div className="bg-muted/20 p-6 rounded-lg shadow-sm border">
               <h3 className="text-xl font-semibold mb-4">Send us a message</h3>
               <form className="space-y-4">
                 <div>
@@ -84,7 +85,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
                   <input
                     type="text"
                     id="name"
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border rounded-md bg-background"
                     placeholder="Your name"
                   />
                 </div>
@@ -94,7 +95,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
                   <input
                     type="email"
                     id="email"
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border rounded-md bg-background"
                     placeholder="Your email"
                   />
                 </div>
@@ -104,7 +105,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
                   <textarea
                     id="message"
                     rows={4}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border rounded-md bg-background"
                     placeholder="Your message"
                   ></textarea>
                 </div>

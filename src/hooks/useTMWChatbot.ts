@@ -1,79 +1,46 @@
 
 import { useEffect, useRef } from "react";
 
-export const useTMWChatbot = (chatbotEnabled: boolean | undefined, chatbotCode: string | undefined) => {
-  const chatbotScriptRef = useRef<HTMLScriptElement | null>(null);
-  
+/**
+ * Hook to inject and manage TMW Chatbot script
+ */
+export const useTMWChatbot = (
+  enabled?: boolean,
+  chatbotCode?: string
+): React.RefObject<HTMLDivElement> => {
+  const chatbotRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    // Clear any previously added chatbot scripts
-    if (chatbotScriptRef.current) {
-      try {
-        document.body.removeChild(chatbotScriptRef.current);
-        chatbotScriptRef.current = null;
-      } catch (error) {
-        console.error("Error removing previous chatbot script:", error);
-      }
+    if (!enabled || !chatbotCode || !chatbotRef.current) {
+      return;
     }
-    
-    const existingScripts = document.querySelectorAll('[id^="tmw-chatbot"]');
-    existingScripts.forEach(script => {
-      try {
-        script.parentNode?.removeChild(script);
-      } catch (err) {
-        console.error("Error removing existing chatbot script:", err);
+
+    try {
+      // Safety check to ensure we're not injecting empty or invalid code
+      if (chatbotCode.trim().length < 20) {
+        console.warn("Chatbot code appears too short or invalid");
+        return;
       }
-    });
-    
-    if (chatbotEnabled && chatbotCode) {
-      try {
-        console.log("TMW AI Chatbot is enabled with code:", chatbotCode);
-        
-        // Create a script element
-        const script = document.createElement('script');
-        script.id = 'tmw-chatbot-script-' + Date.now(); // Unique ID to avoid conflicts
-        chatbotScriptRef.current = script;
-        
-        // Clean the chatbot code
-        let cleanCode = chatbotCode.trim();
-        
-        // Set the script content
-        if (cleanCode.startsWith('<script>') && cleanCode.endsWith('</script>')) {
-          // Extract code from within script tags
-          cleanCode = cleanCode.substring(8, cleanCode.length - 9);
+
+      // Create a script element
+      const script = document.createElement("script");
+      script.innerHTML = chatbotCode;
+      script.async = true;
+      script.defer = true;
+      
+      // Add the script to the chatbot container
+      chatbotRef.current.appendChild(script);
+      
+      // Clean up on unmount
+      return () => {
+        if (chatbotRef.current && chatbotRef.current.contains(script)) {
+          chatbotRef.current.removeChild(script);
         }
-        
-        // Add the script content directly to the script tag
-        script.textContent = cleanCode;
-        
-        // Append to document body for better visibility
-        document.body.appendChild(script);
-        
-        console.log('TMW AI Chatbot script has been injected', {
-          id: script.id,
-          content: cleanCode.substring(0, 50) + '...' // Log just the beginning for debugging
-        });
-      } catch (error) {
-        console.error('Error injecting TMW AI Chatbot script:', error);
-      }
-    } else {
-      console.log("TMW AI Chatbot is disabled or has no code", {
-        enabled: chatbotEnabled,
-        hasCode: !!chatbotCode
-      });
+      };
+    } catch (error) {
+      console.error("Error loading TMW chatbot script:", error);
     }
-    
-    // Cleanup function
-    return () => {
-      if (chatbotScriptRef.current) {
-        try {
-          document.body.removeChild(chatbotScriptRef.current);
-          chatbotScriptRef.current = null;
-        } catch (error) {
-          console.error('Error removing TMW chatbot script on unmount:', error);
-        }
-      }
-    };
-  }, [chatbotEnabled, chatbotCode]);
-  
-  return chatbotScriptRef;
+  }, [enabled, chatbotCode]);
+
+  return chatbotRef;
 };

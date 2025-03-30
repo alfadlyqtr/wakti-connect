@@ -1,22 +1,12 @@
 
-export const GOOGLE_MAPS_API_KEY = 'AIzaSyA4j92W_YgT4LdU5pzw6a0kzHNAtdz3i2E';
+/**
+ * Utility functions for Google Maps integration
+ */
 
-// Helper to generate a Google Maps URL from coordinates or place name
-export const generateGoogleMapsUrl = (query: string): string => {
-  if (!query) return '';
-  
-  // Check if query is coordinates (lat,lng format)
-  const isCoordinates = /^-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?$/.test(query);
-  
-  if (isCoordinates) {
-    return `https://www.google.com/maps?q=${query}`;
-  } else {
-    // It's a place name, encode it for URL
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-  }
-};
-
-// Generate embed URL for Google Maps iframes
 export const generateMapEmbedUrl = (address: string): string => {
-  return `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${encodeURIComponent(address)}`;
+  // Encode the address for use in a URL
+  const encodedAddress = encodeURIComponent(address);
+  
+  // Return a Google Maps embed URL with the encoded address
+  return `https://www.google.com/maps/embed/v1/place?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&q=${encodedAddress}`;
 };

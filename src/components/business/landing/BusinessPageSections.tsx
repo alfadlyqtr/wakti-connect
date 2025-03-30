@@ -30,6 +30,7 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
   const getSectionStyles = (section: BusinessPageSection) => {
     const defaultBorderRadius = businessPage.border_radius || 'medium';
     
+    // Convert border radius settings to actual CSS values
     const borderRadiusValue = 
       (section.border_radius || defaultBorderRadius) === 'none' ? '0px' :
       (section.border_radius || defaultBorderRadius) === 'small' ? '4px' :
@@ -37,15 +38,24 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
       (section.border_radius || defaultBorderRadius) === 'large' ? '12px' :
       (section.border_radius || defaultBorderRadius) === 'full' ? '9999px' : '8px';
     
+    // Convert padding settings to actual CSS values
+    const paddingValue = 
+      (section.padding) === 'none' ? '0' :
+      (section.padding) === 'sm' ? '0.5rem' :
+      (section.padding) === 'md' ? '1rem' :
+      (section.padding) === 'lg' ? '1.5rem' :
+      (section.padding) === 'xl' ? '2rem' : '0';
+    
     return {
       backgroundColor: section.background_color || 'transparent',
       color: section.text_color || 'inherit',
-      padding: section.padding || '0',
+      padding: paddingValue,
       borderRadius: borderRadiusValue,
       ...(section.background_image_url && {
         backgroundImage: `url(${section.background_image_url})`,
         backgroundSize: 'cover',
-        backgroundPosition: 'center'
+        backgroundPosition: 'center',
+        position: 'relative'
       })
     };
   };
@@ -56,11 +66,17 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
     const content = section.section_content || {};
     const sectionStyles = getSectionStyles(section);
     
+    // Only add padding classes when background color or image is set
+    const hasBgOrPadding = section.background_color || section.background_image_url || section.padding;
+    
     const sectionClasses = cn(
-      "section-wrapper",
-      section.background_color || section.background_image_url ? "p-6 sm:p-8 md:p-10" : "",
-      section.background_color ? "rounded-lg" : ""
+      "section-wrapper mb-8 relative",
+      hasBgOrPadding ? "rounded-lg overflow-hidden" : "",
+      section.background_image_url ? "text-white" : ""
     );
+    
+    // Add overlay for text readability when using background image
+    const hasOverlay = section.background_image_url && !section.background_color;
     
     const SectionComponent = () => {
       switch (section.section_type) {
@@ -102,7 +118,18 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
     
     return (
       <div key={section.id} className={sectionClasses} style={sectionStyles}>
-        <SectionComponent />
+        {/* Add semi-transparent overlay for background images to improve text readability */}
+        {hasOverlay && (
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50" 
+            style={{ zIndex: 0 }}
+          />
+        )}
+        
+        {/* Wrap content in relative container to appear above overlay */}
+        <div className={cn("relative", hasOverlay ? "z-10" : "")}>
+          <SectionComponent />
+        </div>
       </div>
     );
   };

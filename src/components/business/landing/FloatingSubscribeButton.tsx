@@ -1,7 +1,8 @@
 
-import React from "react";
-import BusinessSubscribeButton from "./BusinessSubscribeButton";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { HeartIcon } from 'lucide-react';
+import BusinessSubscribeButton from './BusinessSubscribeButton';
+import { cn } from '@/lib/utils';
 
 interface FloatingSubscribeButtonProps {
   businessId: string;
@@ -10,7 +11,7 @@ interface FloatingSubscribeButtonProps {
   isAuthenticated: boolean | null;
   onAuthRequired: () => boolean;
   buttonStyle?: React.CSSProperties;
-  size?: "sm" | "default" | "lg";
+  size?: "default" | "sm" | "lg";
 }
 
 const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
@@ -20,21 +21,24 @@ const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
   isAuthenticated,
   onAuthRequired,
   buttonStyle,
-  size = "default"
+  size
 }) => {
   if (!showButton) return null;
-
+  
   return (
     <div className={cn(
-      "fixed bottom-6 right-6 z-50 transition-all duration-300 transform",
-      visible ? "translate-y-0 opacity-100" : "translate-y-16 opacity-0 pointer-events-none"
+      "fixed bottom-6 right-6 z-50 transition-all duration-300",
+      visible ? "translate-y-0 opacity-100" : "translate-y-16 opacity-0"
     )}>
-      <BusinessSubscribeButton 
+      <BusinessSubscribeButton
         businessId={businessId}
         customText="Subscribe"
-        buttonStyle={buttonStyle}
+        buttonStyle={{
+          ...buttonStyle,
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+        }}
         size={size}
-        className="shadow-lg hover:scale-105 transition-transform"
+        className="rounded-full px-6"
         onAuthRequired={onAuthRequired}
       />
     </div>

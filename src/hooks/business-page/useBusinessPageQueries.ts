@@ -1,99 +1,101 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { BusinessPage, BusinessPageSection, BusinessSocialLink } from "@/types/business.types";
-import { fromTable } from "@/integrations/supabase/helper";
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { BusinessPage, BusinessPageSection, BusinessSocialLink } from '@/types/business.types';
+import { useAuth } from '@/hooks/auth';
 
-// Fetch business page by slug (for public viewing)
-export const useBusinessPageQuery = (pageSlug?: string) => {
+/**
+ * Query to fetch a public business page by slug
+ */
+export const useBusinessPageQuery = (slug?: string) => {
   return useQuery({
-    queryKey: ['businessPage', pageSlug],
+    queryKey: ['business-page', slug],
     queryFn: async () => {
-      if (!pageSlug) return null;
+      if (!slug) return null;
       
-      const { data, error } = await fromTable('business_pages')
-        .select()
-        .eq('page_slug', pageSlug)
+      const { data, error } = await supabase
+        .from('business_pages')
+        .select('*')
+        .eq('page_slug', slug)
         .eq('is_published', true)
         .single();
-      
+        
       if (error) {
-        console.error("Error fetching business page:", error);
+        if (error.code === 'PGRST116') return null; // Not found
         throw error;
       }
       
       return data as BusinessPage;
     },
-    enabled: !!pageSlug
+    enabled: !!slug
   });
 };
 
-// Fetch business page by business ID (for owners)
+/**
+ * Query to fetch the business page owned by the current authenticated user
+ */
 export const useOwnerBusinessPageQuery = () => {
+  const { user } = useAuth();
+  
   return useQuery({
-    queryKey: ['ownerBusinessPage'],
+    queryKey: ['business-page-owner'],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      if (!user) return null;
       
-      if (!session?.user) {
-        throw new Error("No active session");
-      }
+      const { data, error } = await supabase
+        .from('business_pages')
+        .select('*')
+        .eq('business_id', user.id)
+        .maybeSingle();
+        
+      if (error) throw error;
       
-      const { data, error } = await fromTable('business_pages')
-        .select()
-        .eq('business_id', session.user.id)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') { // Not found is okay
-        console.error("Error fetching owner's business page:", error);
-        throw error;
-      }
-      
-      return data as BusinessPage || null;
-    }
+      return data as BusinessPage | null;
+    },
+    enabled: !!user
   });
 };
 
-// Fetch page sections
+/**
+ * Query to fetch sections for a business page
+ */
 export const usePageSectionsQuery = (pageId?: string) => {
   return useQuery({
-    queryKey: ['businessPageSections', pageId],
+    queryKey: ['page-sections', pageId],
     queryFn: async () => {
       if (!pageId) return [];
       
-      const { data, error } = await fromTable('business_page_sections')
-        .select()
+      const { data, error } = await supabase
+        .from('business_page_sections')
+        .select('*')
         .eq('page_id', pageId)
         .order('section_order', { ascending: true });
+        
+      if (error) throw error;
       
-      if (error) {
-        console.error("Error fetching page sections:", error);
-        throw error;
-      }
-      
-      return data as BusinessPageSection[] || [];
+      return data as BusinessPageSection[];
     },
     enabled: !!pageId
   });
 };
 
-// Fetch social links
+/**
+ * Query to fetch social links for a business
+ */
 export const useSocialLinksQuery = (businessId?: string) => {
   return useQuery({
-    queryKey: ['businessSocialLinks', businessId],
+    queryKey: ['social-links', businessId],
     queryFn: async () => {
       if (!businessId) return [];
       
-      const { data, error } = await fromTable('business_social_links')
-        .select()
+      const { data, error } = await supabase
+        .from('business_social_links')
+        .select('*')
         .eq('business_id', businessId);
+        
+      if (error) throw error;
       
-      if (error) {
-        console.error("Error fetching social links:", error);
-        throw error;
-      }
-      
-      return data as BusinessSocialLink[] || [];
+      return data as BusinessSocialLink[];
     },
     enabled: !!businessId
   });
