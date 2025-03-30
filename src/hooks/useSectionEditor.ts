@@ -7,5 +7,12 @@ export const useSectionEditor = () => {
   if (context === undefined) {
     throw new Error("useSectionEditor must be used within a SectionEditorProvider");
   }
-  return context;
+  
+  return {
+    ...context,
+    // Helper function to update section styling
+    updateSectionStyle: (styleName: string, value: string) => {
+      context.handleStyleChange(styleName, value);
+    }
+  };
 };

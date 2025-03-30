@@ -48,7 +48,9 @@ export const useCreatePageMutation = () => {
           social_icons_size: pageData.social_icons_size || "default",
           social_icons_position: pageData.social_icons_position || "footer",
           content_max_width: pageData.content_max_width || "1200px",
-          section_spacing: pageData.section_spacing || "default"
+          section_spacing: pageData.section_spacing || "default",
+          show_subscribe_button: pageData.show_subscribe_button !== undefined ? pageData.show_subscribe_button : true,
+          subscribe_button_text: pageData.subscribe_button_text || "Subscribe"
         })
         .select()
         .single();
@@ -168,6 +170,47 @@ export const useUpdateSectionMutation = () => {
       toast({
         variant: "destructive",
         title: "Failed to update section",
+        description: error.message,
+      });
+    }
+  });
+};
+
+// Submit contact form
+export const useSubmitContactFormMutation = () => {
+  return useMutation({
+    mutationFn: async ({ 
+      businessId, 
+      pageId, 
+      formData 
+    }: { 
+      businessId: string; 
+      pageId: string; 
+      formData: { name: string; email: string; message: string } 
+    }) => {
+      // Submit the contact form
+      const { data, error } = await fromTable('business_contact_submissions')
+        .insert({
+          business_id: businessId,
+          page_id: pageId,
+          name: formData.name,
+          email: formData.email,
+          message: formData.message
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error("Error submitting contact form:", error);
+        throw error;
+      }
+      
+      return data;
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to submit form",
         description: error.message,
       });
     }

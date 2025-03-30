@@ -38,6 +38,18 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
     handleInputChange(syntheticEvent);
   };
   
+  const handleEnableContactFormChange = (checked: boolean) => {
+    // Create a synthetic event object that matches the expected type
+    const syntheticEvent = {
+      target: {
+        name: 'enableContactForm',
+        value: checked.toString() // Convert boolean to string
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    handleInputChange(syntheticEvent);
+  };
+  
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
       toast({
@@ -197,6 +209,62 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
         />
         <Label htmlFor="showMap">Show Google Map</Label>
       </div>
+      
+      <div className="flex items-center space-x-2 pt-2">
+        <Switch 
+          id="enableContactForm" 
+          checked={contentData.enableContactForm !== false}
+          onCheckedChange={handleEnableContactFormChange}
+        />
+        <Label htmlFor="enableContactForm">Enable Contact Form</Label>
+      </div>
+      
+      {contentData.enableContactForm && (
+        <div className="space-y-2 border rounded p-3 mt-2">
+          <div className="text-sm font-medium">Contact Form Settings</div>
+          <div className="space-y-2">
+            <Label htmlFor="contactFormTitle">Form Title</Label>
+            <Input
+              id="contactFormTitle"
+              name="contactFormTitle"
+              value={contentData.contactFormTitle || "Send us a message"}
+              onChange={handleInputChange}
+              placeholder="Send us a message"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="contactButtonLabel">Submit Button Label</Label>
+            <Input
+              id="contactButtonLabel"
+              name="contactButtonLabel"
+              value={contentData.contactButtonLabel || "Send Message"}
+              onChange={handleInputChange}
+              placeholder="Send Message"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="contactButtonColor">Button Color</Label>
+            <Input
+              id="contactButtonColor"
+              name="contactButtonColor"
+              type="color"
+              value={contentData.contactButtonColor || "#3B82F6"}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="contactSuccessMessage">Success Message</Label>
+            <Textarea
+              id="contactSuccessMessage"
+              name="contactSuccessMessage"
+              value={contentData.contactSuccessMessage || "Thank you for your message. We'll get back to you soon!"}
+              onChange={handleInputChange}
+              placeholder="Thank you for your message. We'll get back to you soon!"
+              rows={2}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 };

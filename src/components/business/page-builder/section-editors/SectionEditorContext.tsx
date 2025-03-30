@@ -29,7 +29,18 @@ export const SectionEditorProvider: React.FC<{
   
   // Update local state from fetched data
   useEffect(() => {
-    setContentData(section.section_content || {});
+    // Make sure we have all styling properties in contentData
+    const mergedContent = {
+      ...contentData,
+      // Include section styling from the section object if not in contentData
+      background_color: section.background_color || contentData.background_color,
+      text_color: section.text_color || contentData.text_color,
+      padding: section.padding || contentData.padding,
+      border_radius: section.border_radius || contentData.border_radius,
+      background_image_url: section.background_image_url || contentData.background_image_url
+    };
+    
+    setContentData(section.section_content || mergedContent);
     setIsDirty(false);
   }, [section]);
   
@@ -72,7 +83,6 @@ export const SectionEditorProvider: React.FC<{
     const sectionUpdates: Partial<BusinessPageSection> = {};
     
     // Only add the property if it's a valid key of BusinessPageSection
-    // This is the safer approach that prevents the "Type 'any' is not assignable to type 'never'" error
     if (name === 'background_color') {
       sectionUpdates.background_color = value;
     } else if (name === 'text_color') {

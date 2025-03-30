@@ -453,6 +453,47 @@ export type Database = {
         }
         Relationships: []
       }
+      business_contact_submissions: {
+        Row: {
+          business_id: string
+          created_at: string | null
+          email: string
+          id: string
+          is_read: boolean | null
+          message: string
+          name: string
+          page_id: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string | null
+          email: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          name: string
+          page_id: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          name?: string
+          page_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_business_id"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_growth_data: {
         Row: {
           business_id: string
@@ -482,36 +523,51 @@ export type Database = {
       }
       business_page_sections: {
         Row: {
+          background_color: string | null
+          background_image_url: string | null
+          border_radius: string | null
           created_at: string
           id: string
           is_visible: boolean | null
+          padding: string | null
           page_id: string
           section_content: Json | null
           section_order: number
           section_title: string | null
           section_type: string
+          text_color: string | null
           updated_at: string
         }
         Insert: {
+          background_color?: string | null
+          background_image_url?: string | null
+          border_radius?: string | null
           created_at?: string
           id?: string
           is_visible?: boolean | null
+          padding?: string | null
           page_id: string
           section_content?: Json | null
           section_order: number
           section_title?: string | null
           section_type: string
+          text_color?: string | null
           updated_at?: string
         }
         Update: {
+          background_color?: string | null
+          background_image_url?: string | null
+          border_radius?: string | null
           created_at?: string
           id?: string
           is_visible?: boolean | null
+          padding?: string | null
           page_id?: string
           section_content?: Json | null
           section_order?: number
           section_title?: string | null
           section_type?: string
+          text_color?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -526,11 +582,13 @@ export type Database = {
       }
       business_pages: {
         Row: {
+          background_color: string | null
           banner_url: string | null
           border_radius: string | null
           business_id: string
           chatbot_code: string | null
           chatbot_enabled: boolean | null
+          content_max_width: string | null
           created_at: string
           description: string | null
           font_family: string | null
@@ -543,15 +601,26 @@ export type Database = {
           page_title: string | null
           primary_color: string | null
           secondary_color: string | null
+          section_spacing: string | null
+          show_subscribe_button: boolean | null
+          social_icons_position: string | null
+          social_icons_size: string | null
+          social_icons_style: string | null
+          subscribe_button_position: string | null
+          subscribe_button_size: string | null
+          subscribe_button_style: string | null
+          subscribe_button_text: string | null
           text_color: string | null
           updated_at: string
         }
         Insert: {
+          background_color?: string | null
           banner_url?: string | null
           border_radius?: string | null
           business_id: string
           chatbot_code?: string | null
           chatbot_enabled?: boolean | null
+          content_max_width?: string | null
           created_at?: string
           description?: string | null
           font_family?: string | null
@@ -564,15 +633,26 @@ export type Database = {
           page_title?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          section_spacing?: string | null
+          show_subscribe_button?: boolean | null
+          social_icons_position?: string | null
+          social_icons_size?: string | null
+          social_icons_style?: string | null
+          subscribe_button_position?: string | null
+          subscribe_button_size?: string | null
+          subscribe_button_style?: string | null
+          subscribe_button_text?: string | null
           text_color?: string | null
           updated_at?: string
         }
         Update: {
+          background_color?: string | null
           banner_url?: string | null
           border_radius?: string | null
           business_id?: string
           chatbot_code?: string | null
           chatbot_enabled?: boolean | null
+          content_max_width?: string | null
           created_at?: string
           description?: string | null
           font_family?: string | null
@@ -585,6 +665,15 @@ export type Database = {
           page_title?: string | null
           primary_color?: string | null
           secondary_color?: string | null
+          section_spacing?: string | null
+          show_subscribe_button?: boolean | null
+          social_icons_position?: string | null
+          social_icons_size?: string | null
+          social_icons_style?: string | null
+          subscribe_button_position?: string | null
+          subscribe_button_size?: string | null
+          subscribe_button_style?: string | null
+          subscribe_button_text?: string | null
           text_color?: string | null
           updated_at?: string
         }
