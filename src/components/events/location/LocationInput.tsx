@@ -4,24 +4,49 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { MapPin } from 'lucide-react';
 import LocationPicker from './LocationPicker';
-import { generateGoogleMapsUrl } from '@/config/maps';
 
 interface LocationInputProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  locationType?: "manual" | "google_maps";
+  mapsUrl?: string;
+  onLocationChange?: (value: string, type: "manual" | "google_maps", mapsUrl?: string) => void;
 }
 
 const LocationInput: React.FC<LocationInputProps> = ({
   value,
   onChange,
-  placeholder = 'Enter a location...'
+  placeholder = 'Enter a location...',
+  locationType = "manual",
+  mapsUrl,
+  onLocationChange
 }) => {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   const handleSelectLocation = (location: string) => {
-    onChange(location);
+    if (onLocationChange) {
+      onLocationChange(location, "google_maps", `https://maps.google.com/maps?q=${encodeURIComponent(location)}`);
+    } else {
+      onChange(location);
+    }
     setIsPickerOpen(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    if (onLocationChange) {
+      onLocationChange(newValue, "manual");
+    } else {
+      onChange(newValue);
+    }
+  };
+
+  const openMaps = () => {
+    if (value) {
+      const url = mapsUrl || `https://maps.google.com/maps?q=${encodeURIComponent(value)}`;
+      window.open(url, '_blank');
+    }
   };
 
   return (
@@ -29,7 +54,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
       <div className="flex">
         <Input
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={handleInputChange}
           placeholder={placeholder}
           className="rounded-r-none"
         />
@@ -48,7 +73,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
           type="button"
           variant="link"
           className="h-auto p-0 text-xs"
-          onClick={() => window.open(generateGoogleMapsUrl(value), '_blank')}
+          onClick={openMaps}
         >
           View on Maps
         </Button>

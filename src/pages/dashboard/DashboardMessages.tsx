@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Routes, Route, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
@@ -13,6 +13,7 @@ import { useMessaging } from "@/hooks/useMessaging";
 const DashboardMessagesHome = () => {
   const navigate = useNavigate();
   const { conversations } = useMessaging();
+  const [inputValue, setInputValue] = useState("");
   
   const { data: userProfile } = useQuery({
     queryKey: ['currentUserProfile'],
@@ -29,6 +30,11 @@ const DashboardMessagesHome = () => {
       return data;
     },
   });
+  
+  const handleSendMessage = (message: string) => {
+    console.log("Sending message:", message);
+    // Implementation will go here
+  };
   
   const canSendMessages = userProfile?.account_type !== 'free';
   
@@ -73,14 +79,13 @@ const DashboardMessagesHome = () => {
         
         <div className="md:col-span-2 overflow-hidden flex flex-col">
           {conversations?.length > 0 ? (
-            <div className="text-center text-muted-foreground flex items-center justify-center h-full">
-              <p>Select a conversation to view messages</p>
-            </div>
-          ) : (
-            <EmptyMessagesState 
-              canSendMessages={canSendMessages} 
-              userType={userProfile?.account_type || 'free'}
+            <ChatInterface 
+              onSendMessage={handleSendMessage}
+              inputValue={inputValue}
+              setInputValue={setInputValue}
             />
+          ) : (
+            <EmptyMessagesState />
           )}
         </div>
       </div>
@@ -88,59 +93,4 @@ const DashboardMessagesHome = () => {
   );
 };
 
-const DashboardMessageChat = () => {
-  const { userId } = useParams<{ userId: string }>();
-  const { conversations } = useMessaging();
-  
-  const navigate = useNavigate();
-  
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Messages</h1>
-          <p className="text-muted-foreground">
-            Messages expire after 24 hours and are limited to 20 characters.
-          </p>
-        </div>
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/dashboard/messages')}
-          className="md:hidden"
-        >
-          Back to Conversations
-        </Button>
-      </div>
-      
-      <div className="grid h-[calc(100vh-220px)] grid-cols-1 md:grid-cols-3 gap-4 rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
-        <div className="hidden md:flex border-r md:col-span-1 overflow-hidden flex-col">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold">Conversations</h2>
-          </div>
-          <div className="overflow-y-auto flex-1">
-            <ConversationsList />
-          </div>
-        </div>
-        
-        <div className="col-span-1 md:col-span-2 overflow-hidden flex flex-col">
-          <ChatInterface />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const DashboardMessages = () => {
-  const { userId } = useParams<{ userId: string }>();
-  const location = useLocation();
-  
-  const isAtChatRoute = location.pathname.match(/\/dashboard\/messages\/[^\/]+$/);
-  
-  if (isAtChatRoute && userId) {
-    return <DashboardMessageChat />;
-  }
-  
-  return <DashboardMessagesHome />;
-};
-
-export default DashboardMessages;
+export default DashboardMessagesHome;

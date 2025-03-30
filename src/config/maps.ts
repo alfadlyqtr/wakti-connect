@@ -1,9 +1,5 @@
 
-/**
- * Utility functions for Google Maps integration
- */
-
-// Google Maps API key (use environment variable in production)
+// Google Maps API key (would use environment variable in production)
 export const GOOGLE_MAPS_API_KEY = 'AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY';
 
 // Generate embed URL for Google Maps

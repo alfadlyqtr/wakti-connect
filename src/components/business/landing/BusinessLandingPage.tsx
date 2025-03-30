@@ -204,8 +204,9 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
           
           <div className={sectionGap}>
             <BusinessPageSections 
-              pageSections={pageSections} 
-              businessPage={businessPage} 
+              sections={pageSections}
+              businessId={businessPage.business_id}
+              isPreviewMode={isPreviewMode}
             />
           </div>
           

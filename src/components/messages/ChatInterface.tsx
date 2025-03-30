@@ -2,7 +2,7 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Share, MapPin, PaperClip, Send, Smile } from 'lucide-react';
+import { Share, MapPin, Paperclip, Send, Smile } from 'lucide-react';
 import { generateGoogleMapsUrl } from '@/config/maps';
 
 interface ChatInterfaceProps {
@@ -44,7 +44,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             size="icon"
             className="h-8 w-8 rounded-full"
           >
-            <PaperClip className="h-5 w-5" />
+            <Paperclip className="h-5 w-5" />
           </Button>
           <Button
             type="button"

@@ -66,16 +66,15 @@ const renderSection = (
     color: content.textColor || 'inherit',
     padding: content.padding || '2rem 0',
     borderRadius: content.borderRadius || '0',
+    position: content.pattern ? 'relative' : undefined,
+    backgroundImage: '',
+    backgroundSize: content.pattern ? '20px 20px' : undefined,
+    backgroundPosition: content.pattern ? 'center' : undefined,
   };
 
   // Add pattern if specified
   if (content.pattern && content.pattern !== 'none') {
-    Object.assign(sectionStyle, {
-      backgroundImage: '', // Will be set via className
-      backgroundSize: '20px 20px',
-      backgroundPosition: 'center',
-      position: 'relative' as 'relative', // Type assertion to fix position type error
-    });
+    // Pattern class will handle the backgroundImage
   }
 
   // Add custom class for patterns
@@ -84,31 +83,31 @@ const renderSection = (
   let sectionComponent;
   switch (section.section_type) {
     case 'header':
-      return <BusinessHeader key={section.id} section={section} businessId={businessId} />;
+      return <BusinessHeader key={section.id} section={section} />;
     case 'about':
-      sectionComponent = <BusinessAboutSection section={section} />;
+      sectionComponent = <BusinessAboutSection content={section.section_content} />;
       break;
     case 'gallery':
-      sectionComponent = <BusinessGallerySection section={section} />;
+      sectionComponent = <BusinessGallerySection content={section.section_content} />;
       break;
     case 'contact':
-      sectionComponent = <BusinessContactSection section={section} />;
+      sectionComponent = <BusinessContactSection content={section.section_content} />;
       break;
     case 'hours':
-      sectionComponent = <BusinessHoursSection section={section} />;
+      sectionComponent = <BusinessHoursSection content={section.section_content} />;
       break;
     case 'testimonials':
-      sectionComponent = <BusinessTestimonialsSection section={section} />;
+      sectionComponent = <BusinessTestimonialsSection content={section.section_content} />;
       break;
     case 'booking':
       sectionComponent = <BusinessBookingSection 
-        section={section} 
+        content={section.section_content || {}} 
         businessId={businessId} 
         isPreviewMode={isPreviewMode} 
       />;
       break;
     case 'instagram':
-      sectionComponent = <BusinessInstagramSection section={section} />;
+      sectionComponent = <BusinessInstagramSection content={section.section_content} />;
       break;
     default:
       return null;
@@ -139,22 +138,24 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
   
   return (
     <div className="business-page-sections">
-      <style jsx global>{`
-        .pattern-dots {
-          background-image: radial-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px);
-        }
-        .pattern-lines {
-          background-image: linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px);
-        }
-        .pattern-grid {
-          background-image: 
-            linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
-        }
-        .pattern-waves {
-          background-image: repeating-radial-gradient(rgba(0, 0, 0, 0.1) 2px, transparent 3px, transparent 6px);
-        }
-      `}</style>
+      <style>
+        {`
+          .pattern-dots {
+            background-image: radial-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+          }
+          .pattern-lines {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+          }
+          .pattern-grid {
+            background-image: 
+              linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+          }
+          .pattern-waves {
+            background-image: repeating-radial-gradient(rgba(0, 0, 0, 0.1) 2px, transparent 3px, transparent 6px);
+          }
+        `}
+      </style>
       {sortedSections.map(section => renderSection(section, businessId, isPreviewMode))}
     </div>
   );

@@ -66,8 +66,8 @@ export const useBookingTemplates = (businessId?: string) => {
   });
 
   // Create template mutation
-  const createTemplate = useMutation({
-    mutationFn: async (data: BookingTemplateFormData) => {
+  const createTemplateMutation = useMutation({
+    mutationFn: async (data: BookingTemplateFormData & { business_id: string }) => {
       const { data: template, error } = await supabase
         .from('booking_templates')
         .insert(data)
@@ -94,7 +94,7 @@ export const useBookingTemplates = (businessId?: string) => {
   });
 
   // Update template mutation
-  const updateTemplate = useMutation({
+  const updateTemplateMutation = useMutation({
     mutationFn: async ({ templateId, data }: { templateId: string, data: Partial<BookingTemplateFormData> }) => {
       const { data: template, error } = await supabase
         .from('booking_templates')
@@ -123,7 +123,7 @@ export const useBookingTemplates = (businessId?: string) => {
   });
 
   // Delete template mutation
-  const deleteTemplate = useMutation({
+  const deleteTemplateMutation = useMutation({
     mutationFn: async (templateId: string) => {
       const { error } = await supabase
         .from('booking_templates')
@@ -150,7 +150,7 @@ export const useBookingTemplates = (businessId?: string) => {
   });
 
   // Publish/unpublish template mutation
-  const publishTemplate = useMutation({
+  const publishTemplateMutation = useMutation({
     mutationFn: async ({ templateId, isPublished }: { templateId: string, isPublished: boolean }) => {
       const { data: template, error } = await supabase
         .from('booking_templates')
@@ -197,7 +197,7 @@ export const useBookingTemplates = (businessId?: string) => {
   };
 
   // Add availability mutation
-  const addAvailability = useMutation({
+  const addAvailabilityMutation = useMutation({
     mutationFn: (availabilityData: Omit<BookingTemplateAvailability, 'id' | 'created_at' | 'updated_at'>) => 
       addTemplateAvailability(availabilityData),
     onSuccess: () => {
@@ -217,7 +217,7 @@ export const useBookingTemplates = (businessId?: string) => {
   });
 
   // Delete availability mutation
-  const deleteAvailability = useMutation({
+  const deleteAvailabilityMutation = useMutation({
     mutationFn: (availabilityId: string) => deleteTemplateAvailability(availabilityId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['template-availability'] });
@@ -236,7 +236,7 @@ export const useBookingTemplates = (businessId?: string) => {
   });
 
   // Add exception mutation
-  const addException = useMutation({
+  const addExceptionMutation = useMutation({
     mutationFn: (exceptionData: Omit<BookingTemplateException, 'id' | 'created_at' | 'updated_at'>) => 
       addTemplateException(exceptionData),
     onSuccess: () => {
@@ -256,7 +256,7 @@ export const useBookingTemplates = (businessId?: string) => {
   });
 
   // Delete exception mutation
-  const deleteException = useMutation({
+  const deleteExceptionMutation = useMutation({
     mutationFn: (exceptionId: string) => deleteTemplateException(exceptionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['template-exceptions'] });
@@ -274,6 +274,45 @@ export const useBookingTemplates = (businessId?: string) => {
     }
   });
 
+  // Wrapper functions for mutations
+  const createTemplate = async (data: BookingTemplateFormData) => {
+    if (!businessId) {
+      throw new Error("Business ID is required");
+    }
+    return createTemplateMutation.mutateAsync({
+      ...data,
+      business_id: businessId
+    });
+  };
+
+  const updateTemplate = async ({ templateId, data }: { templateId: string, data: Partial<BookingTemplateFormData> }) => {
+    return updateTemplateMutation.mutateAsync({ templateId, data });
+  };
+
+  const deleteTemplate = async (templateId: string) => {
+    return deleteTemplateMutation.mutateAsync(templateId);
+  };
+
+  const publishTemplate = async ({ templateId, isPublished }: { templateId: string, isPublished: boolean }) => {
+    return publishTemplateMutation.mutateAsync({ templateId, isPublished });
+  };
+
+  const addAvailability = async (data: Omit<BookingTemplateAvailability, 'id' | 'created_at' | 'updated_at'>) => {
+    return addAvailabilityMutation.mutateAsync(data);
+  };
+
+  const deleteAvailability = async (availabilityId: string) => {
+    return deleteAvailabilityMutation.mutateAsync(availabilityId);
+  };
+
+  const addException = async (data: Omit<BookingTemplateException, 'id' | 'created_at' | 'updated_at'>) => {
+    return addExceptionMutation.mutateAsync(data);
+  };
+
+  const deleteException = async (exceptionId: string) => {
+    return deleteExceptionMutation.mutateAsync(exceptionId);
+  };
+
   return {
     templates,
     filteredTemplates,
@@ -284,22 +323,22 @@ export const useBookingTemplates = (businessId?: string) => {
     filterPublished,
     setFilterPublished,
     createTemplate,
-    isCreating: createTemplate.isPending,
+    isCreating: createTemplateMutation.isPending,
     updateTemplate,
-    isUpdating: updateTemplate.isPending,
+    isUpdating: updateTemplateMutation.isPending,
     deleteTemplate,
-    isDeleting: deleteTemplate.isPending,
+    isDeleting: deleteTemplateMutation.isPending,
     publishTemplate,
-    isPublishing: publishTemplate.isPending,
+    isPublishing: publishTemplateMutation.isPending,
     useTemplateAvailability,
     useTemplateExceptions,
     addAvailability,
-    isAddingAvailability: addAvailability.isPending,
+    isAddingAvailability: addAvailabilityMutation.isPending,
     deleteAvailability,
-    isDeletingAvailability: deleteAvailability.isPending,
+    isDeletingAvailability: deleteAvailabilityMutation.isPending,
     addException,
-    isAddingException: addException.isPending,
+    isAddingException: addExceptionMutation.isPending,
     deleteException,
-    isDeletingException: deleteException.isPending
+    isDeletingException: deleteExceptionMutation.isPending
   };
 };

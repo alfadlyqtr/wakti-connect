@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { GOOGLE_MAPS_API_KEY } from '@/config/maps';
 import { Search } from 'lucide-react';
 
 interface LocationPickerProps {
