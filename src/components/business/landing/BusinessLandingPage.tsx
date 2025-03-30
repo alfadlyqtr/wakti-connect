@@ -206,6 +206,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
             <BusinessPageSections 
               sections={pageSections}
               businessId={businessPage.business_id}
+              businessPage={businessPage}
               isPreviewMode={isPreviewMode}
             />
           </div>
@@ -255,3 +256,4 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
 };
 
 export default BusinessLandingPageComponent;
+
