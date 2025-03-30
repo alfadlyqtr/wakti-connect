@@ -73,15 +73,16 @@ export const SectionEditorProvider: React.FC<{
     
     // Only add the property if it's a valid key of BusinessPageSection
     // This is the safer approach that prevents the "Type 'any' is not assignable to type 'never'" error
-    if (
-      name === 'background_color' || 
-      name === 'text_color' || 
-      name === 'padding' || 
-      name === 'border_radius' || 
-      name === 'background_image_url'
-    ) {
-      // Type assertion to let TypeScript know this is a valid key
-      sectionUpdates[name as keyof BusinessPageSection] = value as any;
+    if (name === 'background_color') {
+      sectionUpdates.background_color = value;
+    } else if (name === 'text_color') {
+      sectionUpdates.text_color = value;
+    } else if (name === 'padding') {
+      sectionUpdates.padding = value;
+    } else if (name === 'border_radius') {
+      sectionUpdates.border_radius = value;
+    } else if (name === 'background_image_url') {
+      sectionUpdates.background_image_url = value;
     }
     
     // Auto-save after typing stops
@@ -93,11 +94,25 @@ export const SectionEditorProvider: React.FC<{
     const sectionUpdates: Partial<BusinessPageSection> = {};
     
     // Extract styling properties from content to also update on section
-    ['background_color', 'text_color', 'padding', 'border_radius', 'background_image_url'].forEach(prop => {
-      if (contentData[prop] !== undefined) {
-        sectionUpdates[prop as keyof BusinessPageSection] = contentData[prop];
-      }
-    });
+    if (contentData.background_color !== undefined) {
+      sectionUpdates.background_color = contentData.background_color;
+    }
+    
+    if (contentData.text_color !== undefined) {
+      sectionUpdates.text_color = contentData.text_color;
+    }
+    
+    if (contentData.padding !== undefined) {
+      sectionUpdates.padding = contentData.padding;
+    }
+    
+    if (contentData.border_radius !== undefined) {
+      sectionUpdates.border_radius = contentData.border_radius;
+    }
+    
+    if (contentData.background_image_url !== undefined) {
+      sectionUpdates.background_image_url = contentData.background_image_url;
+    }
     
     updateSection.mutate({
       sectionId: section.id,
