@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { 
@@ -72,7 +73,8 @@ const BookingPage = () => {
       const foundTemplate = templates.find(t => t.id === templateId);
       if (foundTemplate) {
         console.log("Found template:", foundTemplate);
-        setTemplate(foundTemplate);
+        // Use updater function to properly set state with complex objects
+        setTemplate(() => foundTemplate);
         
         const times = [];
         for (let hour = 9; hour <= 17; hour++) {

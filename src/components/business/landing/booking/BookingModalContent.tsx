@@ -26,11 +26,11 @@ interface BookingModalContentProps {
   onClose: () => void;
 }
 
-export const BookingModalContent = ({ template, businessId, onClose }: BookingModalContentProps) => {
+const BookingModalContent = ({ template, businessId, onClose }: BookingModalContentProps) => {
   const { user } = useAuth();
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [slot, setSlot] = useState<string | null>(null);
-  const [name, setName] = useState(user?.display_name || '');
+  const [name, setName] = useState(user?.displayName || '');
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -150,3 +150,5 @@ export const BookingModalContent = ({ template, businessId, onClose }: BookingMo
     </form>
   );
 };
+
+export default BookingModalContent;
