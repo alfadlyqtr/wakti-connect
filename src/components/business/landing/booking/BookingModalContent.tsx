@@ -33,7 +33,7 @@ interface BookingModalContentProps {
 const bookingFormSchema = z.object({
   customerName: z.string().min(2, { message: "Please enter your name" }),
   customerEmail: z.string().email({ message: "Please enter a valid email" }),
-  customerPhone: z.string().optional(),
+  customerPhone: z.string().min(1, { message: "Please enter your phone number" }),
   bookingDate: z.date({ required_error: "Please select a date" }),
   bookingTime: z.string({ required_error: "Please select a time" }),
   notes: z.string().optional(),
@@ -333,7 +333,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
               name="customerPhone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone (optional)</FormLabel>
+                  <FormLabel>Phone Number</FormLabel>
                   <FormControl>
                     <Input placeholder="Your phone number" {...field} />
                   </FormControl>

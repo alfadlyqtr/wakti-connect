@@ -18,16 +18,24 @@ export const useBusinessCurrency = (businessId?: string) => {
     const fetchBusinessCurrency = async () => {
       setIsLoading(true);
       try {
+        console.log('Fetching currency for business:', businessId);
         const { data, error } = await supabase
           .from('profiles')
           .select('currency_preference')
           .eq('id', businessId)
           .single();
           
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching business currency:', error);
+          throw error;
+        }
+        
+        console.log('Business currency data:', data);
         
         if (data?.currency_preference) {
           setBusinessCurrency(data.currency_preference as Currency);
+        } else {
+          console.log('No currency preference found for business');
         }
       } catch (error) {
         console.error('Error fetching business currency:', error);

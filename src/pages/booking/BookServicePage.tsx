@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -12,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Clock, Calendar as CalendarIcon, ArrowLeft, User, Mail } from "lucide-react";
+import { Loader2, Clock, Calendar as CalendarIcon, ArrowLeft, User, Mail, Phone } from "lucide-react";
 import { Service } from "@/types/service.types";
 import { BookingFormData, BookingStatus } from "@/types/booking.types";
 import { format } from "date-fns";
@@ -27,6 +26,7 @@ const BookServicePage = () => {
   const [selectedStaffId, setSelectedStaffId] = useState<string>("");
   const [customerName, setCustomerName] = useState<string>("");
   const [customerEmail, setCustomerEmail] = useState<string>("");
+  const [customerPhone, setCustomerPhone] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authUser, setAuthUser] = useState<any>(null);
 
@@ -114,7 +114,7 @@ const BookServicePage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!serviceId || !date || !startTime || !selectedStaffId || !customerName || !customerEmail) {
+    if (!serviceId || !date || !startTime || !selectedStaffId || !customerName || !customerEmail || !customerPhone) {
       toast({
         title: "Missing information",
         description: "Please fill in all required fields",
@@ -359,6 +359,20 @@ const BookServicePage = () => {
                         type="email"
                         value={customerEmail}
                         onChange={(e) => setCustomerEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="customerPhone" className="flex items-center">
+                        <Phone className="h-4 w-4 mr-1" />
+                        Phone Number
+                      </Label>
+                      <Input
+                        id="customerPhone"
+                        type="tel"
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value)}
                         required
                       />
                     </div>

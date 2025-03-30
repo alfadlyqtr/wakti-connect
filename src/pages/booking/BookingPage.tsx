@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { 
@@ -38,7 +37,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 const bookingFormSchema = z.object({
   customerName: z.string().min(2, { message: "Please enter your name" }),
   customerEmail: z.string().email({ message: "Please enter a valid email" }),
-  customerPhone: z.string().optional(),
+  customerPhone: z.string().min(1, { message: "Please enter your phone number" }),
   bookingDate: z.date({ required_error: "Please select a date" }),
   bookingTime: z.string({ required_error: "Please select a time" }),
   notes: z.string().optional(),
@@ -281,7 +280,7 @@ const BookingPage = () => {
                     name="customerPhone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone (optional)</FormLabel>
+                        <FormLabel>Phone Number</FormLabel>
                         <FormControl>
                           <Input placeholder="Your phone number" {...field} />
                         </FormControl>

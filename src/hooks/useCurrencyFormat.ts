@@ -8,7 +8,7 @@ interface UseCurrencyFormatProps {
 
 export const useCurrencyFormat = (props?: UseCurrencyFormatProps) => {
   const { currency: globalCurrency } = useCurrency();
-  const { currency: businessCurrency } = useBusinessCurrency(props?.businessId);
+  const { currency: businessCurrency, isLoading } = useBusinessCurrency(props?.businessId);
   
   // Use business currency if available, otherwise fall back to global
   const currency = businessCurrency || globalCurrency;
@@ -35,5 +35,5 @@ export const useCurrencyFormat = (props?: UseCurrencyFormatProps) => {
     return new Intl.NumberFormat('en-US', options).format(amount);
   };
   
-  return { formatCurrency, currency };
+  return { formatCurrency, currency, isLoading };
 };
