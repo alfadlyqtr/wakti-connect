@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
-import { Loader2, Heart, BellOff, Bell } from "lucide-react";
+import { Loader2, Heart, BellOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BusinessSubscribeButtonProps {
@@ -13,6 +13,7 @@ interface BusinessSubscribeButtonProps {
   variant?: "default" | "outline" | "gradient";
   iconOnly?: boolean;
   className?: string;
+  onAuthRequired?: () => void;
 }
 
 const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
@@ -22,7 +23,8 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
   size = "default",
   variant = "default",
   iconOnly = false,
-  className
+  className,
+  onAuthRequired
 }) => {
   const { 
     isSubscribed, 
@@ -31,7 +33,13 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
     unsubscribe 
   } = useBusinessSubscribers(businessId);
   
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    
+    if (onAuthRequired && !onAuthRequired()) {
+      return;
+    }
+    
     if (isSubscribed) {
       unsubscribe.mutate();
     } else {
