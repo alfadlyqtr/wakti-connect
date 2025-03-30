@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import LocationInput from "@/components/events/location/LocationInput";
 import { TimePicker } from "@/components/ui/time-picker";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DetailsTabProps {
   register: any;
@@ -55,6 +56,8 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
   setDescription,
   isEdit = false
 }) => {
+  const isMobile = useIsMobile();
+  
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
   };
@@ -103,7 +106,8 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
         <div className="mt-2 space-y-4">
           <DatePicker 
             date={selectedDate} 
-            setDate={setSelectedDate} 
+            setDate={setSelectedDate}
+            placeholder={isMobile ? "Select date" : "Select event date"}
           />
           
           <div className="flex items-center gap-2">
@@ -116,7 +120,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
           </div>
           
           {!isAllDay && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="start-time" className="text-sm">Start Time</Label>
                 <TimePicker

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DashboardShell from "@/components/dashboard/DashboardShell";
-import { Plus, Send, Edit, Clock, Grid3X3, List, Users } from "lucide-react";
+import { Plus, Send, Edit, Clock, Grid3X3, List, Users, CalendarIcon } from "lucide-react";
 import { EventTab, Event } from "@/types/event.types";
 import { useEvents } from "@/hooks/useEvents";
 import EventCreationForm from "@/components/events/EventCreationForm";
@@ -245,7 +245,7 @@ const DashboardEvents: React.FC = () => {
                     </div>
                   )}
                   
-                  <div className={isMobile ? "flex-1 min-w-[80px]" : "w-[150px]"}>
+                  <div className={isMobile ? "flex-1 min-w-[85px]" : "w-[150px]"}>
                     <Label htmlFor="status" className="sr-only">Status</Label>
                     <Select value={filterStatus} onValueChange={setFilterStatus}>
                       <SelectTrigger id="status" className="h-8 sm:h-9 text-xs sm:text-sm">
@@ -262,10 +262,11 @@ const DashboardEvents: React.FC = () => {
                     </Select>
                   </div>
                   
-                  <div className={isMobile ? "flex-1 min-w-[80px]" : "w-[150px]"}>
+                  <div className={isMobile ? "flex-1 min-w-[100px]" : "w-[150px]"}>
                     <DatePicker
                       date={filterDate}
                       setDate={setFilterDate}
+                      placeholder={isMobile ? "Date" : "Pick a date"}
                     />
                   </div>
                 </div>
