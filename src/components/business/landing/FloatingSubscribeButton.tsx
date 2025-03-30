@@ -1,16 +1,16 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Loader2, Heart, BellOff } from "lucide-react";
-import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
+import BusinessSubscribeButton from "./BusinessSubscribeButton";
+import { cn } from "@/lib/utils";
 
 interface FloatingSubscribeButtonProps {
   businessId: string;
   visible: boolean;
   showButton: boolean;
   isAuthenticated: boolean | null;
-  onAuthRequired: () => void;
+  onAuthRequired: () => boolean;
   buttonStyle?: React.CSSProperties;
+  size?: "sm" | "default" | "lg";
 }
 
 const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
@@ -19,49 +19,24 @@ const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
   showButton,
   isAuthenticated,
   onAuthRequired,
-  buttonStyle
+  buttonStyle,
+  size = "default"
 }) => {
-  const { 
-    isSubscribed, 
-    checkingSubscription, 
-    subscribe, 
-    unsubscribe 
-  } = useBusinessSubscribers(businessId);
-  
-  if (!visible || !showButton) return null;
-  
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    
-    if (!isAuthenticated) {
-      onAuthRequired();
-      return;
-    }
-    
-    if (isSubscribed) {
-      unsubscribe.mutate();
-    } else {
-      subscribe.mutate();
-    }
-  };
-  
+  if (!showButton) return null;
+
   return (
-    <div className="fixed bottom-6 right-6 z-50 animate-slide-in-right">
-      <Button 
-        size="sm"
-        style={buttonStyle}
-        className="rounded-full shadow-lg text-white hover:scale-105 transition-transform"
-        onClick={handleClick}
-        disabled={subscribe.isPending || unsubscribe.isPending || checkingSubscription}
-      >
-        {checkingSubscription ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : isSubscribed ? (
-          <BellOff className="h-4 w-4" />
-        ) : (
-          <Heart className="h-4 w-4" />
-        )}
-      </Button>
+    <div className={cn(
+      "fixed bottom-6 right-6 z-50 transition-all duration-300 transform",
+      visible ? "translate-y-0 opacity-100" : "translate-y-16 opacity-0 pointer-events-none"
+    )}>
+      <BusinessSubscribeButton 
+        businessId={businessId}
+        customText="Subscribe"
+        buttonStyle={buttonStyle}
+        size={size}
+        className="shadow-lg hover:scale-105 transition-transform"
+        onAuthRequired={onAuthRequired}
+      />
     </div>
   );
 };

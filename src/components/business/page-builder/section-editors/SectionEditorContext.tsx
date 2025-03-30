@@ -11,6 +11,7 @@ interface SectionEditorContextProps {
   isDirty: boolean;
   setIsDirty: React.Dispatch<React.SetStateAction<boolean>>;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleStyleChange: (name: string, value: string) => void;
   handleSaveSection: () => void;
   updateSection: any;
   isNewSection: () => boolean;
@@ -33,10 +34,11 @@ export const SectionEditorProvider: React.FC<{
   }, [section]);
   
   // Debounced auto-save function
-  const debouncedSave = useDebouncedCallback((content: any) => {
+  const debouncedSave = useDebouncedCallback((content: any, sectionUpdates?: Partial<BusinessPageSection>) => {
     updateSection.mutate({
       sectionId: section.id,
-      content
+      content,
+      sectionUpdates
     });
     setIsDirty(false);
   }, 2000);
@@ -55,10 +57,40 @@ export const SectionEditorProvider: React.FC<{
     debouncedSave(newContentData);
   };
   
+  // Handle section-specific styling changes
+  const handleStyleChange = (name: string, value: string) => {
+    const newContentData = {
+      ...contentData,
+      [name]: value
+    };
+    
+    setContentData(newContentData);
+    setIsDirty(true);
+    
+    // For style changes, we update both content and the section's styling fields
+    const sectionUpdates: Partial<BusinessPageSection> = {
+      [name]: value
+    };
+    
+    // Auto-save after typing stops
+    debouncedSave(newContentData, sectionUpdates);
+  };
+  
   const handleSaveSection = () => {
+    // For manual save, we also want to update the section-specific styling fields
+    const sectionUpdates: Partial<BusinessPageSection> = {};
+    
+    // Extract styling properties from content to also update on section
+    ['background_color', 'text_color', 'padding', 'border_radius', 'background_image_url'].forEach(prop => {
+      if (contentData[prop] !== undefined) {
+        sectionUpdates[prop as keyof BusinessPageSection] = contentData[prop];
+      }
+    });
+    
     updateSection.mutate({
       sectionId: section.id,
-      content: contentData
+      content: contentData,
+      sectionUpdates
     });
     setIsDirty(false);
   };
@@ -78,6 +110,7 @@ export const SectionEditorProvider: React.FC<{
         isDirty,
         setIsDirty,
         handleInputChange,
+        handleStyleChange,
         handleSaveSection,
         updateSection,
         isNewSection

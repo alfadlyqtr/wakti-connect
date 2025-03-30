@@ -4,8 +4,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EditorProps } from "./types";
+import SectionStyleEditor from "./SectionStyleEditor";
+import { useSectionEditor } from "@/hooks/useSectionEditor";
 
 const HeaderEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) => {
+  const { handleStyleChange } = useSectionEditor();
+  
   return (
     <>
       <div className="space-y-2">
@@ -39,6 +43,12 @@ const HeaderEditor: React.FC<EditorProps> = ({ contentData, handleInputChange })
           rows={3}
         />
       </div>
+      
+      <SectionStyleEditor 
+        contentData={contentData}
+        handleInputChange={handleInputChange}
+        handleStyleChange={handleStyleChange}
+      />
     </>
   );
 };

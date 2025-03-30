@@ -47,11 +47,22 @@ export interface BusinessPage {
   created_at?: string;
   updated_at?: string;
   
-  // Added new fields for styling
+  // Styling fields
   text_color?: string;
   font_family?: string;
   border_radius?: string;
   page_pattern?: string;
+  
+  // Enhanced customization
+  background_color?: string;
+  subscribe_button_position?: 'top' | 'floating' | 'both';
+  subscribe_button_style?: 'default' | 'gradient' | 'outline' | 'minimal';
+  subscribe_button_size?: 'small' | 'default' | 'large';
+  social_icons_style?: 'default' | 'colored' | 'rounded' | 'outlined';
+  social_icons_size?: 'small' | 'default' | 'large';
+  social_icons_position?: 'footer' | 'header' | 'sidebar';
+  content_max_width?: string;
+  section_spacing?: 'compact' | 'default' | 'spacious';
 }
 
 export interface BusinessPageSection {
@@ -63,6 +74,13 @@ export interface BusinessPageSection {
   is_visible: boolean;
   created_at?: string;
   updated_at?: string;
+  
+  // Section-specific styling
+  background_color?: string;
+  text_color?: string;
+  padding?: string;
+  border_radius?: string;
+  background_image_url?: string;
 }
 
 export type SectionType = 
@@ -92,3 +110,12 @@ export type SocialPlatform =
   | 'tiktok'
   | 'pinterest'
   | 'website';
+
+// Section styling options
+export interface SectionStyles {
+  background_color?: string;
+  text_color?: string;
+  padding?: string;
+  border_radius?: string;
+  background_image_url?: string;
+}

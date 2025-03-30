@@ -36,7 +36,19 @@ export const useCreatePageMutation = () => {
           description: pageData.description || "",
           is_published: pageData.is_published || false,
           primary_color: pageData.primary_color || "#3B82F6",
-          secondary_color: pageData.secondary_color || "#10B981"
+          secondary_color: pageData.secondary_color || "#10B981",
+          text_color: pageData.text_color || "#ffffff",
+          font_family: pageData.font_family || "sans-serif",
+          border_radius: pageData.border_radius || "medium",
+          background_color: pageData.background_color || "#ffffff",
+          subscribe_button_position: pageData.subscribe_button_position || "both",
+          subscribe_button_style: pageData.subscribe_button_style || "gradient",
+          subscribe_button_size: pageData.subscribe_button_size || "default",
+          social_icons_style: pageData.social_icons_style || "default",
+          social_icons_size: pageData.social_icons_size || "default",
+          social_icons_position: pageData.social_icons_position || "footer",
+          content_max_width: pageData.content_max_width || "1200px",
+          section_spacing: pageData.section_spacing || "default"
         })
         .select()
         .single();
@@ -121,17 +133,23 @@ export const useUpdateSectionMutation = () => {
   return useMutation({
     mutationFn: async ({ 
       sectionId, 
-      content 
+      content,
+      sectionUpdates = {}
     }: { 
       sectionId: string; 
-      content: any 
+      content: any;
+      sectionUpdates?: Partial<BusinessPageSection>;
     }) => {
+      // Prepare update data
+      const updateData: Partial<BusinessPageSection> = {
+        section_content: content,
+        updated_at: new Date().toISOString(),
+        ...sectionUpdates
+      };
+      
       // Update the section
       const { data, error } = await fromTable('business_page_sections')
-        .update({ 
-          section_content: content,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', sectionId)
         .select()
         .single();
