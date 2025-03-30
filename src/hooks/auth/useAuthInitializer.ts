@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "./types";
 import { useProfileOperations } from "./useProfileOperations";
-import { toast } from "@/components/ui/use-toast";
 
 export function useAuthInitializer() {
   // Initialize state with default values
@@ -72,45 +71,36 @@ export function useAuthInitializer() {
           
           console.log("Auth state changed:", event, session?.user?.id);
           
-          try {
-            if (session?.user) {
-              // Process user data outside the main auth callback to avoid deadlocks
-              setTimeout(async () => {
-                if (!mounted) return;
-                try {
-                  const userData = await processUserProfile(
-                    session.user.id, 
-                    session.user.email || ""
-                  );
-                  
-                  if (mounted) {
-                    setUser(userData);
-                    setIsLoading(false);
-                    setAuthInitialized(true);
-                    clearTimeout(authTimeout);
-                  }
-                } catch (error) {
-                  console.error("Error processing user profile:", error);
-                  if (mounted) {
-                    setUser(createBasicUser(session.user.id, session.user.email || ""));
-                    setIsLoading(false);
-                    setAuthInitialized(true);
-                    clearTimeout(authTimeout);
-                  }
+          if (session?.user) {
+            // Process user data outside the main auth callback to avoid deadlocks
+            setTimeout(async () => {
+              if (!mounted) return;
+              try {
+                const userData = await processUserProfile(
+                  session.user.id, 
+                  session.user.email || ""
+                );
+                
+                if (mounted) {
+                  setUser(userData);
+                  setIsLoading(false);
+                  setAuthInitialized(true);
+                  clearTimeout(authTimeout);
                 }
-              }, 0);
-            } else {
-              // No user authenticated
-              if (mounted) {
-                setUser(null);
-                setIsLoading(false);
-                setAuthInitialized(true);
-                clearTimeout(authTimeout);
+              } catch (error) {
+                console.error("Error processing user profile:", error);
+                if (mounted) {
+                  setUser(createBasicUser(session.user.id, session.user.email || ""));
+                  setIsLoading(false);
+                  setAuthInitialized(true);
+                  clearTimeout(authTimeout);
+                }
               }
-            }
-          } catch (error) {
-            console.error("Error in auth state change:", error);
+            }, 0);
+          } else {
+            // No user authenticated
             if (mounted) {
+              setUser(null);
               setIsLoading(false);
               setAuthInitialized(true);
               clearTimeout(authTimeout);

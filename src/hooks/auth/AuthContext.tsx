@@ -17,50 +17,45 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  try {
-    // Use the auth initializer hook to handle session and user state
-    const {
-      user,
-      setUser,
-      isLoading,
-      setIsLoading,
-      authInitialized,
-      authError,
-    } = useAuthInitializer();
-    
-    // Use the auth operations hook for login, logout, register functions
-    const { login, logout, register } = useAuthOperations(setUser, setIsLoading);
+  // Use the auth initializer hook to handle session and user state
+  const {
+    user,
+    setUser,
+    isLoading,
+    setIsLoading,
+    authInitialized,
+    authError,
+  } = useAuthInitializer();
+  
+  // Use the auth operations hook for login, logout, register functions
+  const { login, logout, register } = useAuthOperations(setUser, setIsLoading);
 
-    // Provide the auth context value
-    const contextValue: AuthContextType = {
-      user,
-      isAuthenticated: !!user,
-      isLoading,
-      login,
-      logout,
-      register,
-    };
+  // Provide the auth context value
+  const contextValue: AuthContextType = {
+    user,
+    isAuthenticated: !!user,
+    isLoading,
+    login,
+    logout,
+    register,
+  };
 
-    // Show a loading state until auth is fully initialized
-    if (!authInitialized) {
-      return <AuthLoadingState authError={authError} />;
-    }
-
-    // If we have an auth error but initialization is complete, show a recovery UI
-    if (authError) {
-      return <AuthErrorState authError={authError} />;
-    }
-
-    return (
-      <AuthContext.Provider value={contextValue}>
-        {children}
-      </AuthContext.Provider>
-    );
-  } catch (error) {
-    console.error("Error in AuthProvider:", error);
-    return <AuthErrorState authError={error instanceof Error ? error.message : "Unknown authentication error"} />;
+  // Show a loading state until auth is fully initialized
+  if (!authInitialized) {
+    return <AuthLoadingState authError={authError} />;
   }
-}
+
+  // If we have an auth error but initialization is complete, show a recovery UI
+  if (authError) {
+    return <AuthErrorState authError={authError} />;
+  }
+
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
 
 // Custom hook to use the auth context
 export const useAuth = () => {
