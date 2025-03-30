@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import SocialMediaLinks from "../SocialMediaLinks";
-import { BusinessSocialLink } from "@/types/business.types";
+import { BusinessSocialLink, SocialPlatform } from "@/types/business.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fromTable } from "@/integrations/supabase/helper";
 import { toast } from "@/components/ui/use-toast";
@@ -35,7 +35,7 @@ const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
   });
 
   // Add social link mutation
-  const addSocialLink = useMutation({
+  const addSocialLinkMutation = useMutation({
     mutationFn: async (linkData: Omit<BusinessSocialLink, 'id' | 'created_at'>) => {
       const { data, error } = await fromTable('business_social_links')
         .insert({ ...linkData, business_id: businessId })
@@ -63,7 +63,7 @@ const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
   });
 
   // Update social link mutation
-  const updateSocialLink = useMutation({
+  const updateSocialLinkMutation = useMutation({
     mutationFn: async (linkData: Partial<BusinessSocialLink> & { id: string }) => {
       const { id, ...updates } = linkData;
       const { data, error } = await fromTable('business_social_links')
@@ -93,7 +93,7 @@ const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
   });
 
   // Delete social link mutation
-  const deleteSocialLink = useMutation({
+  const deleteSocialLinkMutation = useMutation({
     mutationFn: async (linkId: string) => {
       const { error } = await fromTable('business_social_links')
         .delete()
@@ -118,6 +118,26 @@ const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
       });
     }
   });
+
+  // Wrapper functions to match the expected function signatures
+  const handleAddSocialLink = (data: { platform: SocialPlatform, url: string }) => {
+    addSocialLinkMutation.mutate({
+      platform: data.platform,
+      url: data.url,
+      business_id: businessId
+    });
+  };
+
+  const handleUpdateSocialLink = (data: { id: string, url: string }) => {
+    updateSocialLinkMutation.mutate({
+      id: data.id,
+      url: data.url
+    });
+  };
+
+  const handleDeleteSocialLink = (id: string) => {
+    deleteSocialLinkMutation.mutate(id);
+  };
   
   return (
     <Card>
@@ -130,9 +150,9 @@ const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
       <CardContent>
         <SocialMediaLinks 
           socialLinks={socialLinks || []} 
-          onAdd={addSocialLink}
-          onUpdate={updateSocialLink}
-          onDelete={deleteSocialLink}
+          onAdd={handleAddSocialLink}
+          onUpdate={handleUpdateSocialLink}
+          onDelete={handleDeleteSocialLink}
         />
       </CardContent>
     </Card>
