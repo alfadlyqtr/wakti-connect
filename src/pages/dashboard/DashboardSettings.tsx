@@ -8,12 +8,14 @@ import { useAuth } from "@/hooks/auth";
 import CurrencyTab from "@/components/settings/CurrencyTab";
 import BillingTab from "@/components/settings/BillingTab";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 const DashboardSettings = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
   const { data: profileData } = useProfileSettings();
+  const isMobile = useMediaQuery("(max-width: 640px)");
   
   // Get the user role from localStorage
   useEffect(() => {
@@ -38,30 +40,40 @@ const DashboardSettings = () => {
   }
   
   return (
-    <div className="mx-auto max-w-7xl py-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Settings</h1>
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold">Settings</h1>
         <p className="text-muted-foreground">
           Manage your account settings and preferences
         </p>
       </div>
       
       <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className={`grid w-full grid-cols-${getTabsCount()} gap-4 h-auto`}>
-          <TabsTrigger value="profile">
-            {isBusinessAccount ? "Business & Account" : "Profile"}
-          </TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          {!isStaff && (
-            <>
-              <TabsTrigger value="billing">Billing</TabsTrigger>
-              {isBusinessAccount && (
-                <TabsTrigger value="currency">Currency</TabsTrigger>
-              )}
-              <TabsTrigger value="ai-assistant">AI Assistant</TabsTrigger>
-            </>
-          )}
-        </TabsList>
+        <div className="w-full overflow-x-auto pb-2 no-scrollbar">
+          <TabsList className="flex min-w-max space-x-2 h-auto p-1">
+            <TabsTrigger value="profile" className="px-3 py-1.5 whitespace-nowrap">
+              {isBusinessAccount ? "Business & Account" : "Profile"}
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="px-3 py-1.5 whitespace-nowrap">
+              Notifications
+            </TabsTrigger>
+            {!isStaff && (
+              <>
+                <TabsTrigger value="billing" className="px-3 py-1.5 whitespace-nowrap">
+                  Billing
+                </TabsTrigger>
+                {isBusinessAccount && (
+                  <TabsTrigger value="currency" className="px-3 py-1.5 whitespace-nowrap">
+                    Currency
+                  </TabsTrigger>
+                )}
+                <TabsTrigger value="ai-assistant" className="px-3 py-1.5 whitespace-nowrap">
+                  AI Assistant
+                </TabsTrigger>
+              </>
+            )}
+          </TabsList>
+        </div>
         
         <TabsContent value="profile" className="space-y-4">
           <ProfileTab />

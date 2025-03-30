@@ -42,8 +42,8 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ profile }) => {
   };
 
   return (
-    <>
-      <Avatar className="w-20 h-20">
+    <div className="flex flex-col sm:flex-row items-center gap-4">
+      <Avatar className="w-16 h-16 sm:w-20 sm:h-20">
         <AvatarImage src={avatarUrl || profile?.avatar_url || ''} />
         <AvatarFallback>
           {profile?.display_name?.charAt(0) || profile?.full_name?.charAt(0) || 'U'}
@@ -60,7 +60,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ profile }) => {
         <label htmlFor="avatar">
           <Button 
             variant="outline" 
-            className="mt-2 sm:mt-0" 
+            className="w-full sm:w-auto"
             disabled={isUploading}
             onClick={(e) => {
               e.preventDefault();
@@ -71,7 +71,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ profile }) => {
           </Button>
         </label>
       </div>
-    </>
+    </div>
   );
 };
 
