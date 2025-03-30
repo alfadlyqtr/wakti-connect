@@ -158,7 +158,7 @@ const ShareTabContent: React.FC<ShareTabProps> = ({
         </AlertDescription>
       </Alert>
 
-      <Tabs value={activeTab} onValueChange={setShareTab} className="space-y-4">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ShareTab)} className="space-y-4">
         <TabsList className="flex justify-between bg-muted/40 w-full">
           <TabsTrigger value={SHARE_TABS.RECIPIENTS} className="text-xs flex gap-1 items-center px-2 py-1.5 sm:px-3 sm:py-2">
             <MailIcon className="h-3 w-3 sm:h-4 sm:w-4" />
