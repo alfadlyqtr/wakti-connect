@@ -123,7 +123,7 @@ const renderSection = (
     <section 
       key={section.id} 
       style={sectionStyle}
-      className={cn("w-full", patternClass)}
+      className={cn("w-full section-container", patternClass)}
       data-section-id={section.id}
       data-section-type={section.section_type}
     >
@@ -164,6 +164,25 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
           .pattern-waves {
             background-image: repeating-radial-gradient(rgba(0, 0, 0, 0.1) 2px, transparent 3px, transparent 6px);
             background-size: 20px 20px;
+          }
+          
+          /* Add spacing between sections */
+          .section-container + .section-container {
+            margin-top: 1rem;
+          }
+          
+          /* Enhanced pattern styling */
+          .pattern-dots.section-container {
+            background-blend-mode: overlay;
+          }
+          .pattern-lines.section-container {
+            background-blend-mode: overlay;
+          }
+          .pattern-grid.section-container {
+            background-blend-mode: overlay;
+          }
+          .pattern-waves.section-container {
+            background-blend-mode: overlay;
           }
         `}
       </style>

@@ -70,7 +70,7 @@ export const BookingModalContent: React.FC<BookingModalContentProps> = ({
         .single();
       
       // Format date and time for booking
-      const bookingUrl = `/booking/${businessId}/${template.id}`;
+      const bookingUrl = `/booking/${businessId}/${template.id}?date=${format(selectedDate, 'yyyy-MM-dd')}&time=${encodeURIComponent(selectedSlot)}`;
       
       // Navigate to the full booking page
       navigate(bookingUrl);

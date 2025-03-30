@@ -1,33 +1,11 @@
-
 import React, { useState } from "react";
-import { generateMapEmbedUrl, generateGoogleMapsUrl } from "@/config/maps";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage
-} from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
-import { sendMessage } from "@/services/messages";
+import { Calendar, Mail, MapPin, Phone } from "lucide-react";
+import { generateMapEmbedUrl, generateDirectionsUrl } from "@/config/maps";
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, MapPin, Navigation } from "lucide-react";
-
-// Form validation schema
-const contactFormSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  message: z.string().min(10, { message: "Message must be at least 10 characters" })
-});
-
-type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 interface BusinessContactSectionProps {
   content: Record<string, any>;
@@ -35,115 +13,34 @@ interface BusinessContactSectionProps {
 }
 
 const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({ 
-  content, 
-  businessId
+  content,
+  businessId  
 }) => {
+  const { toast } = useToast();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [gettingLocation, setGettingLocation] = useState(false);
-
-  // Check if user is authenticated
-  React.useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session?.user);
-    };
-    
-    checkAuth();
-  }, []);
-
-  const { 
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  
+  const {
     title = "Contact Us",
-    description = "Get in touch with us for any inquiries",
-    email = "contact@example.com",
-    phone = "+1 (555) 123-4567",
-    address = "123 Business Street, City, State",
+    phone = "",
+    email: contactEmail = "",
+    address = "",
     showMap = true,
-    mapUrl = "",
-    contactButtonLabel = "Send Message"
+    showContactForm = true,
+    showLocationPin = true
   } = content;
-  
-  // Form definition
-  const form = useForm<ContactFormValues>({
-    resolver: zodResolver(contactFormSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      message: ""
-    }
-  });
 
-  // Generate embed URL for Google Maps using the address
-  const mapEmbedUrl = address ? generateMapEmbedUrl(address) : mapUrl;
-  
-  // Generate directions URL for Google Maps
-  const directionsUrl = address ? generateGoogleMapsUrl(address) : "";
-
-  // Get current location
-  const getCurrentLocation = () => {
-    if (!navigator.geolocation) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!name || !email || !message) {
       toast({
+        variant: "destructive",
         title: "Error",
-        description: "Geolocation is not supported by your browser",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setGettingLocation(true);
-    
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        
-        // Create a Google Maps URL with directions from current location to business
-        if (address) {
-          const encodedAddress = encodeURIComponent(address);
-          const directionUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}&origin=${latitude},${longitude}`;
-          window.open(directionUrl, '_blank');
-        }
-        
-        setGettingLocation(false);
-      },
-      (error) => {
-        console.error('Error getting location:', error);
-        
-        let errorMessage = "Failed to get your location";
-        switch(error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = "Location permission denied. Please allow location access.";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = "Location information is unavailable.";
-            break;
-          case error.TIMEOUT:
-            errorMessage = "Location request timed out.";
-            break;
-        }
-        
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive"
-        });
-        
-        setGettingLocation(false);
-      },
-      { 
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    );
-  };
-
-  // Form submission handler
-  const onSubmit = async (data: ContactFormValues) => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to send a message",
-        variant: "destructive"
+        description: "Please fill in all fields."
       });
       return;
     }
@@ -151,185 +48,221 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Format message for inbox
-      const messageContent = `Contact Form: ${data.name} (${data.email}): ${data.message}`;
+      // Send message to business
+      const { error } = await supabase.from("messages").insert({
+        sender_id: null, // Guest user
+        recipient_id: businessId,
+        content: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`
+      });
       
-      // Send message to business inbox
-      await sendMessage(businessId, messageContent);
-      
-      // Reset form
-      form.reset();
+      if (error) throw error;
       
       toast({
         title: "Message Sent",
-        description: "Your message has been sent to the business",
+        description: "Your message has been sent successfully."
       });
+      
+      // Reset form
+      setName("");
+      setEmail("");
+      setMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
-      
       toast({
+        variant: "destructive",
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to send message",
-        variant: "destructive"
+        description: "Failed to send message. Please try again."
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+  
+  const handleGetDirections = () => {
+    if (!address) return;
+    
+    // If we have user location, use it for directions
+    if (userLocation) {
+      const directionsUrl = generateDirectionsUrl(address, userLocation.lat, userLocation.lng);
+      window.open(directionsUrl, '_blank');
+    } else {
+      // Otherwise just open Google Maps with the destination
+      const directionsUrl = generateDirectionsUrl(address);
+      window.open(directionsUrl, '_blank');
+    }
+  };
+  
+  const handleGetCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+          toast({
+            title: "Location Found",
+            description: "Your current location has been detected."
+          });
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          toast({
+            variant: "destructive",
+            title: "Location Error",
+            description: "Could not get your current location."
+          });
+        }
+      );
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Not Supported",
+        description: "Geolocation is not supported by your browser."
+      });
+    }
+  };
 
   return (
-    <section className="py-12 md:py-16">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold mb-4">{title}</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{description}</p>
-        </div>
-        
-        <div className="flex flex-col md:flex-row gap-8">
+    <div className="py-8">
+      <h2 className="text-3xl font-bold text-center mb-8">{title}</h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
           {/* Contact Information */}
-          <div className="md:w-1/2 space-y-6">
-            <div className="space-y-4">
-              {email && (
-                <div className="flex items-center space-x-2">
-                  <span className="text-primary">✉</span>
-                  <a href={`mailto:${email}`} className="hover:text-primary hover:underline">{email}</a>
+          <div className="space-y-6">
+            {phone && (
+              <div className="flex items-center">
+                <div className="bg-primary/10 rounded-full p-3 mr-4">
+                  <Phone className="h-6 w-6 text-primary" />
                 </div>
-              )}
-              
-              {phone && (
-                <div className="flex items-center space-x-2">
-                  <span className="text-primary">☎</span>
-                  <a href={`tel:${phone}`} className="hover:text-primary hover:underline">{phone}</a>
+                <div>
+                  <h3 className="font-medium">Phone</h3>
+                  <a href={`tel:${phone}`} className="text-muted-foreground hover:text-primary transition-colors">
+                    {phone}
+                  </a>
                 </div>
-              )}
-              
-              {address && (
-                <div className="flex items-start space-x-2">
-                  <span className="text-primary mt-1">📍</span>
-                  <span>{address}</span>
-                </div>
-              )}
-            </div>
-            
-            {/* Location Actions */}
-            {address && (
-              <div className="flex flex-wrap gap-2">
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2"
-                  onClick={() => window.open(directionsUrl, '_blank')}
-                >
-                  <MapPin className="h-4 w-4" />
-                  Get Directions
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  className="flex items-center gap-2"
-                  onClick={getCurrentLocation}
-                  disabled={gettingLocation}
-                >
-                  <Navigation className="h-4 w-4" />
-                  {gettingLocation ? 'Getting Location...' : 'Navigate from Here'}
-                </Button>
               </div>
             )}
             
-            {/* Map */}
-            {showMap && address && (
-              <div className="w-full aspect-video rounded-lg overflow-hidden border shadow-sm mt-4">
-                <iframe
-                  src={mapEmbedUrl}
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  className="w-full h-full"
-                  title="Google Maps"
-                  aria-label={`Location of ${title}`}
-                ></iframe>
+            {contactEmail && (
+              <div className="flex items-center">
+                <div className="bg-primary/10 rounded-full p-3 mr-4">
+                  <Mail className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Email</h3>
+                  <a href={`mailto:${contactEmail}`} className="text-muted-foreground hover:text-primary transition-colors">
+                    {contactEmail}
+                  </a>
+                </div>
+              </div>
+            )}
+            
+            {address && (
+              <div className="flex items-center">
+                <div className="bg-primary/10 rounded-full p-3 mr-4">
+                  <MapPin className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium">Address</h3>
+                  <p className="text-muted-foreground">{address}</p>
+                  <div className="flex mt-2 gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleGetDirections}
+                    >
+                      Get Directions
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleGetCurrentLocation}
+                    >
+                      Use My Location
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
           
-          {/* Contact Form */}
-          <div className="md:w-1/2 mt-8 md:mt-0">
-            <div className="bg-muted/20 p-6 rounded-lg shadow-sm border">
-              <h3 className="text-xl font-semibold mb-4">Send us a message</h3>
-              
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Your name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Your email" type="email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="message"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Message</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Your message" 
-                            rows={4} 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Sending...
-                      </>
-                    ) : contactButtonLabel}
-                  </Button>
-                  
-                  {!isAuthenticated && (
-                    <p className="text-xs text-muted-foreground text-center mt-2">
-                      You need to be signed in to send a message
-                    </p>
-                  )}
-                </form>
-              </Form>
+          {/* Map */}
+          {showMap && address && (
+            <div className="mt-8">
+              <iframe
+                title="Business Location"
+                width="100%"
+                height="300"
+                frameBorder="0"
+                style={{ border: 0, borderRadius: '0.5rem' }}
+                src={generateMapEmbedUrl(address)}
+                allowFullScreen
+              ></iframe>
             </div>
-          </div>
+          )}
         </div>
+        
+        {/* Contact Form */}
+        {showContactForm && (
+          <div>
+            <h3 className="text-xl font-semibold mb-4">Send Us a Message</h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Name
+                </label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your name"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Your email"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                  Message
+                </label>
+                <Textarea
+                  id="message"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Your message"
+                  rows={5}
+                  required
+                />
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Sending..." : "Send Message"}
+              </Button>
+            </form>
+          </div>
+        )}
       </div>
-    </section>
+    </div>
   );
 };
 

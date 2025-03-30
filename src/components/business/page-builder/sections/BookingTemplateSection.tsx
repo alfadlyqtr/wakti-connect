@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,13 +13,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useBookingTemplates } from "@/hooks/useBookingTemplates";
 import { Button } from "@/components/ui/button";
 import { BookingTemplateWithRelations } from "@/types/booking.types";
+import { useAuth } from "@/hooks/auth";
 
 const BookingTemplateSection: React.FC = () => {
   const { contentData, handleInputChange, setContentData, setIsDirty } = useSectionEditor();
-  const { templates, isLoading } = useBookingTemplates();
+  const { user } = useAuth();
+  const { templates, isLoading } = useBookingTemplates(user?.id);
   const [selectedTemplates, setSelectedTemplates] = React.useState<string[]>(
     contentData.selectedTemplates || []
   );
+
+  // Update the content data when templates are loaded
+  useEffect(() => {
+    if (templates?.length > 0 && selectedTemplates.length === 0 && contentData.selectedTemplates?.length === 0) {
+      // Auto-select published templates if none are selected
+      const publishedTemplateIds = templates
+        .filter(t => t.is_published)
+        .map(t => t.id);
+      
+      if (publishedTemplateIds.length > 0) {
+        setSelectedTemplates(publishedTemplateIds);
+        setContentData({
+          ...contentData,
+          selectedTemplates: publishedTemplateIds
+        });
+        setIsDirty(true);
+      }
+    }
+  }, [templates, contentData, selectedTemplates.length, setContentData, setIsDirty]);
 
   const handleTemplateToggle = (templateId: string) => {
     setSelectedTemplates(prev => {
@@ -62,7 +83,7 @@ const BookingTemplateSection: React.FC = () => {
   }
 
   // Filter to show only published templates
-  const publishedTemplates = (templates as BookingTemplateWithRelations[]).filter(t => t.is_published);
+  const publishedTemplates = (templates as BookingTemplateWithRelations[])?.filter(t => t.is_published) || [];
 
   return (
     <Tabs defaultValue="content">
@@ -124,6 +145,13 @@ const BookingTemplateSection: React.FC = () => {
                 No published booking templates found. Create and publish templates 
                 in the Booking section first.
               </p>
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => window.location.href = '/dashboard/bookings?tab=templates'}
+              >
+                Go to Booking Templates
+              </Button>
             </div>
           ) : (
             <div className="space-y-4">

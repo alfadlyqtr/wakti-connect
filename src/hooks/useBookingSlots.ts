@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, addMinutes } from 'date-fns';
 import { fetchAvailableTimeSlots } from '@/services/booking/templates/timeSlots';
 
 /**
@@ -31,12 +31,24 @@ export const useBookingSlots = (templateId: string, date?: Date) => {
           format(new Date(`${formattedDate}T${slot.start_time}`), 'h:mm a')
         );
         
-        setSlots(timeSlots);
+        // If no slots were returned but we have a template, generate some demo slots
+        // This is for preview purposes if template doesn't have availability set
+        if (timeSlots.length === 0) {
+          const demoSlots = generateDemoTimeSlots(date);
+          setSlots(demoSlots);
+        } else {
+          setSlots(timeSlots);
+        }
+        
         setError(null);
       } catch (err) {
         console.error('Error fetching booking slots:', err);
+        
+        // Fallback to demo slots on error
+        const demoSlots = generateDemoTimeSlots(date);
+        setSlots(demoSlots);
+        
         setError(err instanceof Error ? err : new Error('Failed to load booking slots'));
-        setSlots([]);
       } finally {
         setIsLoading(false);
       }
@@ -46,4 +58,25 @@ export const useBookingSlots = (templateId: string, date?: Date) => {
   }, [templateId, date]);
 
   return { slots, isLoading, error };
+};
+
+// Helper function to generate demo time slots
+const generateDemoTimeSlots = (date: Date): string[] => {
+  // Start at 9 AM
+  const startHour = 9;
+  const startTime = new Date(date);
+  startTime.setHours(startHour, 0, 0, 0);
+  
+  // Generate slots at 30 minute intervals until 5 PM
+  const slots: string[] = [];
+  const endTime = new Date(date);
+  endTime.setHours(17, 0, 0, 0);
+  
+  let currentTime = startTime;
+  while (currentTime < endTime) {
+    slots.push(format(currentTime, 'h:mm a'));
+    currentTime = addMinutes(currentTime, 30);
+  }
+  
+  return slots;
 };

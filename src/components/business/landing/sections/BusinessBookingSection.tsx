@@ -70,7 +70,9 @@ const BusinessBookingSection: React.FC<BusinessBookingSectionProps> = ({
       }
     };
     
-    loadTemplates();
+    if (businessId) {
+      loadTemplates();
+    }
   }, [businessId, selectedTemplates]);
   
   const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
