@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Service, ServiceFormValues } from "@/types/service.types";
 import ServiceFormFields from "./ServiceFormFields";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 
 // Define service form schema without requiring staff assignments
 const serviceFormSchema = z.object({
@@ -42,6 +43,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
   isPending 
 }) => {
   const isMobile = useIsMobile();
+  const { formatCurrency } = useCurrencyFormat();
   
   // Setup form
   const form = useForm<ServiceFormSchemaType>({
@@ -80,7 +82,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
         </DialogHeader>
         
         <div className="grid gap-6 py-2 max-h-[60vh] overflow-y-auto">
-          <ServiceFormFields control={form.control} />
+          <ServiceFormFields control={form.control} formatCurrency={formatCurrency} />
         </div>
         
         <DialogFooter className="gap-3 mt-4 flex flex-col sm:flex-row w-full">

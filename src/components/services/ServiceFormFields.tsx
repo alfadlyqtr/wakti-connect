@@ -8,10 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 
 interface ServiceFormFieldsProps {
   control: Control<any>;
+  formatCurrency: (amount: number) => string;
 }
 
-const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({ control }) => {
+const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({ control, formatCurrency }) => {
   const isMobile = useIsMobile();
+  
+  // Get currency symbol from the first formatted value
+  const currencySymbol = formatCurrency(0).replace(/[\d.,\s]/g, '');
   
   return (
     <>
@@ -57,10 +61,10 @@ const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({ control }) => {
           name="price"
           render={({ field }) => (
             <FormItem className="space-y-2">
-              <FormLabel className="text-base font-medium">Price (QAR)</FormLabel>
+              <FormLabel className="text-base font-medium">Price</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <span className="absolute left-3 top-[14px] text-base">QAR</span>
+                  <span className="absolute left-3 top-[14px] text-base">{currencySymbol}</span>
                   <Input 
                     type="text" 
                     inputMode="decimal"
