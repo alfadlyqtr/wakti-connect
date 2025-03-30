@@ -55,7 +55,7 @@ export const useBusinessSubscribers = (businessId?: string) => {
   }, [businessId]);
   
   // Get business subscribers
-  const { data: subscribers, isLoading, error } = useQuery({
+  const { data: subscribers = [], isLoading, error } = useQuery({
     queryKey: ['businessSubscribers', businessId],
     queryFn: async () => {
       if (!businessId) return [];
@@ -77,6 +77,9 @@ export const useBusinessSubscribers = (businessId?: string) => {
     },
     enabled: !!businessId
   });
+  
+  // Calculate subscriber count from the subscribers array
+  const subscriberCount = subscribers?.length || 0;
   
   // Subscribe mutation
   const subscribe = useMutation({
@@ -175,6 +178,7 @@ export const useBusinessSubscribers = (businessId?: string) => {
     isLoading,
     error,
     subscribe,
-    unsubscribe
+    unsubscribe,
+    subscriberCount // Add this to the returned object
   };
 };

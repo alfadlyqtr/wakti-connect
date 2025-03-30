@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus, TaskPriority, TaskTab } from '@/types/task.types';
@@ -34,7 +33,6 @@ interface UseTasksPageStateReturn {
 }
 
 export const useTasksPageState = (): UseTasksPageStateReturn => {
-  // State for task management
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,15 +45,16 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
   const [activeTab, setActiveTab] = useState<TaskTab>("my-tasks");
   const [fetchTimestamp, setFetchTimestamp] = useState<number>(0);
   
-  // Ref to track operations in progress to prevent concurrent operations
   const operationInProgressRef = useRef(false);
 
   const isPaidAccount = userRole === "individual" || userRole === "business";
 
-  // Setup debounced fetch to prevent UI freezing
-  const debouncedFetch = useDebouncedCallback(async () => {
-    await fetchTasks();
-  }, 500);
+  const debouncedFetch = useCallback(async (): Promise<void> => {
+    return new Promise<void>(async (resolve) => {
+      await fetchTasks();
+      resolve();
+    });
+  }, []);
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -104,7 +103,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
   }, []);
 
   const fetchTasks = useCallback(async (): Promise<void> => {
-    // Only allow one fetch at a time
     if (operationInProgressRef.current) {
       console.log("Fetch already in progress, skipping");
       return;
@@ -148,7 +146,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         
       if (error) throw error;
       
-      // Only update state if this is still the most recent fetch
       if (currentTimestamp === fetchTimestamp) {
         console.log(`Fetched ${data.length} tasks for ${activeTab} tab`);
         
@@ -184,7 +181,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "destructive"
       });
     } finally {
-      // Only update loading state if this is still the most recent fetch
       if (currentTimestamp === fetchTimestamp) {
         setIsLoading(false);
       }
@@ -197,7 +193,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
   }, [fetchTasks, activeTab]);
 
   const handleCreateTask = async (taskData: any) => {
-    // Prevent concurrent operations
     if (operationInProgressRef.current) {
       toast({
         title: "Operation in progress",
@@ -267,7 +262,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
       
       console.log("Creating task with data:", taskToCreate);
       
-      // Add to local state immediately for optimistic update
       const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       const optimisticTask: Task = {
         ...taskToCreate,
@@ -280,7 +274,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         priority: (taskData.priority || "normal") as TaskPriority
       };
       
-      // Don't add optimistic update if we're in archived view
       if (activeTab === "my-tasks") {
         setTasks(prev => [optimisticTask, ...prev]);
       }
@@ -315,13 +308,11 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      // Background refresh after successful creation
       await debouncedFetch();
       
     } catch (err) {
       console.error("Error creating task:", err);
       
-      // Remove optimistic task on error
       if (activeTab === "my-tasks") {
         setTasks(prev => prev.filter(task => !task.id.startsWith('temp-')));
       }
@@ -332,7 +323,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "destructive"
       });
       
-      // Refresh to ensure UI is in sync with server
       await debouncedFetch();
     } finally {
       operationInProgressRef.current = false;
@@ -340,7 +330,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
   };
 
   const handleUpdateTask = async (taskId: string, taskData: any) => {
-    // Prevent concurrent operations
     if (operationInProgressRef.current) return;
     operationInProgressRef.current = true;
     
@@ -367,7 +356,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
       
       console.log("Updating task with data:", updateData);
       
-      // Optimistic UI update
       setTasks(prev => 
         prev.map(task => 
           task.id === taskId ? { ...task, ...updateData } : task
@@ -387,7 +375,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      // Background refresh after successful update
       await debouncedFetch();
       
     } catch (error) {
@@ -398,7 +385,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "destructive"
       });
       
-      // Refresh to ensure UI is in sync with server
       await debouncedFetch();
     } finally {
       operationInProgressRef.current = false;
@@ -406,7 +392,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
   };
 
   const handleArchiveTask = async (taskId: string, reason: "deleted" | "canceled") => {
-    // Prevent concurrent operations
     if (operationInProgressRef.current) return;
     operationInProgressRef.current = true;
     
@@ -422,17 +407,14 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
       
       console.log(`Archiving task ${taskId} with reason: ${reason}`);
       
-      // Check if task exists before attempting to archive
       const task = tasks.find(t => t.id === taskId);
       if (!task) {
         console.error(`Task ${taskId} not found in local state, skipping archive operation`);
         throw new Error("Task not found");
       }
       
-      // For completed tasks, skip animation
       const skipAnimation = task.status === "completed";
       
-      // Optimistic UI update - remove from view immediately
       setTasks(prev => prev.filter(task => task.id !== taskId));
       
       const updates = {
@@ -465,10 +447,8 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "destructive"
       });
       
-      // Refresh to ensure UI is in sync with server
       await debouncedFetch();
     } finally {
-      // Short delay before releasing lock to prevent rapid successive operations
       setTimeout(() => {
         operationInProgressRef.current = false;
       }, 500);
@@ -476,7 +456,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
   };
 
   const handleRestoreTask = async (taskId: string) => {
-    // Prevent concurrent operations
     if (operationInProgressRef.current) return;
     operationInProgressRef.current = true;
     
@@ -492,7 +471,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
       
       console.log(`Restoring task ${taskId} from archive`);
       
-      // Optimistic UI update - remove from current view immediately
       setTasks(prev => prev.filter(task => task.id !== taskId));
       
       const { data: task } = await supabase
@@ -529,10 +507,8 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "destructive"
       });
       
-      // Refresh to ensure UI is in sync with server
       await debouncedFetch();
     } finally {
-      // Release the operation lock
       operationInProgressRef.current = false;
     }
   };
