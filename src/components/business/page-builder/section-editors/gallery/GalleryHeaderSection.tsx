@@ -25,12 +25,13 @@ const GalleryHeaderSection: React.FC<EditorProps> = ({
   // Helper function to handle toggle changes
   const handleToggleChange = (name: string, checked: boolean) => {
     // Create a synthetic event to update the contentData
+    // Using as unknown first to avoid type errors
     handleInputChange({
       target: {
         name,
         value: checked
       }
-    } as React.ChangeEvent<HTMLInputElement>);
+    } as unknown as React.ChangeEvent<HTMLInputElement>);
   };
   
   return (

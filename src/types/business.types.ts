@@ -46,6 +46,12 @@ export interface BusinessPage {
   subscribe_button_text?: string; 
   created_at?: string;
   updated_at?: string;
+  
+  // Added new fields for styling
+  text_color?: string;
+  font_family?: string;
+  border_radius?: string;
+  page_pattern?: string;
 }
 
 export interface BusinessPageSection {

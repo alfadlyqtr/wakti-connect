@@ -13,7 +13,7 @@ interface BusinessSubscribeButtonProps {
   variant?: "default" | "outline" | "gradient";
   iconOnly?: boolean;
   className?: string;
-  onAuthRequired?: () => void;
+  onAuthRequired?: () => boolean;
 }
 
 const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
@@ -36,6 +36,7 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     
+    // Check if authentication is required and the function returns false
     if (onAuthRequired && !onAuthRequired()) {
       return;
     }

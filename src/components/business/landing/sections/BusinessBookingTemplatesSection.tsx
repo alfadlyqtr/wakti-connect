@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { useBookingTemplates } from "@/hooks/useBookingTemplates";
@@ -117,9 +116,9 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
                   </div>
                   
                   <div className="space-y-2">
-                    {template.details && (
+                    {template.description && (
                       <div className="text-sm text-muted-foreground">
-                        {template.details}
+                        {template.description}
                       </div>
                     )}
                   </div>
