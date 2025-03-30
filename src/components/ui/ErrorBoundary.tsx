@@ -27,14 +27,14 @@ class ErrorBoundary extends Component<Props, State> {
 
   public render(): ReactNode {
     if (this.state.hasError) {
-      // Return the fallback UI if provided, otherwise a default error UI
+      // You can render any custom fallback UI
       return this.props.fallback || (
         <div className="min-h-screen flex flex-col items-center justify-center p-4">
           <h2 className="text-2xl font-bold text-destructive mb-4">Something went wrong</h2>
           <p className="text-muted-foreground mb-4">
             The application encountered an error. Please try refreshing the page.
           </p>
-          <pre className="bg-muted p-4 rounded-md overflow-auto max-w-full text-sm">
+          <pre className="bg-muted p-4 rounded-md overflow-auto max-w-full">
             {this.state.error?.toString()}
           </pre>
           <button

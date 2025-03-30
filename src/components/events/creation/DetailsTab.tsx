@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import LocationInput from "@/components/events/location/LocationInput";
 import { TimePicker } from "@/components/ui/time-picker";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DetailsTabProps {
   register: any;
@@ -145,9 +145,8 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
         <Label htmlFor="location" className="text-base">Location</Label>
         <div className="mt-2">
           <LocationInput
-            value={location}
-            onChange={(value) => handleLocationChange(value, locationType)}
             locationType={locationType}
+            location={location}
             mapsUrl={mapsUrl}
             onLocationChange={handleLocationChange}
           />

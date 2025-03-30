@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { User, AuthContextType } from "./types";
 import { useAuthOperations } from "./useAuthOperations";
 import { useAuthInitializer } from "./useAuthInitializer";
@@ -55,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 // Custom hook to use the auth context
 export const useAuth = () => {

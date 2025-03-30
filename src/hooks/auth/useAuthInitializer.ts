@@ -3,15 +3,14 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "./types";
 import { useProfileOperations } from "./useProfileOperations";
+import { toast } from "@/components/ui/use-toast";
 
 export function useAuthInitializer() {
-  // Initialize state with default values
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authInitialized, setAuthInitialized] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Use the profile operations hook
   const { createUserFromProfile, createBasicUser, createProfile } = useProfileOperations();
 
   useEffect(() => {
@@ -63,14 +62,14 @@ export function useAuthInitializer() {
       }
     };
     
-    try {
-      // Set up auth state listener
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          if (!mounted) return;
-          
-          console.log("Auth state changed:", event, session?.user?.id);
-          
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted) return;
+        
+        console.log("Auth state changed:", event, session?.user?.id);
+        
+        try {
           if (session?.user) {
             // Process user data outside the main auth callback to avoid deadlocks
             setTimeout(async () => {
@@ -106,94 +105,90 @@ export function useAuthInitializer() {
               clearTimeout(authTimeout);
             }
           }
-        }
-      );
-
-      // Check for existing session once on mount
-      const checkInitialSession = async () => {
-        try {
-          const { data: { session }, error } = await supabase.auth.getSession();
-          
-          if (error) {
-            console.error("Error getting initial session:", error);
-            if (mounted) {
-              setAuthError("Unable to verify your authentication status.");
-              setIsLoading(false);
-              setAuthInitialized(true);
-              clearTimeout(authTimeout);
-            }
-            return;
-          }
-          
-          if (!session) {
-            console.log("No session found");
-            if (mounted) {
-              setUser(null);
-              setIsLoading(false);
-              setAuthInitialized(true);
-              clearTimeout(authTimeout);
-            }
-            return;
-          }
-          
-          // Process authentication outside the main auth callback
-          setTimeout(async () => {
-            if (!mounted) return;
-            try {
-              const userData = await processUserProfile(
-                session.user.id, 
-                session.user.email || ""
-              );
-              
-              if (mounted) {
-                setUser(userData);
-                setIsLoading(false);
-                setAuthInitialized(true);
-                clearTimeout(authTimeout);
-              }
-            } catch (error) {
-              console.error("Error processing initial session:", error);
-              if (mounted) {
-                // Set basic user data even in case of error
-                setUser(createBasicUser(session.user.id, session.user.email || ""));
-                setIsLoading(false);
-                setAuthInitialized(true);
-                clearTimeout(authTimeout);
-              }
-            }
-          }, 0);
         } catch (error) {
-          console.error("Error checking initial session:", error);
+          console.error("Error in auth state change:", error);
           if (mounted) {
-            setAuthError(error instanceof Error ? error.message : "Error checking authentication");
             setIsLoading(false);
             setAuthInitialized(true);
             clearTimeout(authTimeout);
           }
         }
-      };
-      
-      // Run initial session check
-      checkInitialSession();
+      }
+    );
 
-      // Clean up on unmount
-      return () => {
-        mounted = false;
-        clearTimeout(authTimeout);
-        subscription.unsubscribe();
-      };
-    } catch (error) {
-      console.error("Fatal error in auth initialization:", error);
-      setAuthError("Authentication system failed to initialize");
-      setIsLoading(false);
-      setAuthInitialized(true);
+    // Check for existing session once on mount
+    const checkInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error getting initial session:", error);
+          if (mounted) {
+            setAuthError("Unable to verify your authentication status.");
+            setIsLoading(false);
+            setAuthInitialized(true);
+            clearTimeout(authTimeout);
+          }
+          return;
+        }
+        
+        if (!session) {
+          console.log("No session found");
+          if (mounted) {
+            setUser(null);
+            setIsLoading(false);
+            setAuthInitialized(true);
+            clearTimeout(authTimeout);
+          }
+          return;
+        }
+        
+        // Process authentication outside the main auth callback
+        setTimeout(async () => {
+          if (!mounted) return;
+          try {
+            const userData = await processUserProfile(
+              session.user.id, 
+              session.user.email || ""
+            );
+            
+            if (mounted) {
+              setUser(userData);
+              setIsLoading(false);
+              setAuthInitialized(true);
+              clearTimeout(authTimeout);
+            }
+          } catch (error) {
+            console.error("Error processing initial session:", error);
+            if (mounted) {
+              // Set basic user data even in case of error
+              setUser(createBasicUser(session.user.id, session.user.email || ""));
+              setIsLoading(false);
+              setAuthInitialized(true);
+              clearTimeout(authTimeout);
+            }
+          }
+        }, 0);
+      } catch (error) {
+        console.error("Error checking initial session:", error);
+        if (mounted) {
+          setAuthError(error instanceof Error ? error.message : "Error checking authentication");
+          setIsLoading(false);
+          setAuthInitialized(true);
+          clearTimeout(authTimeout);
+        }
+      }
+    };
+    
+    // Run initial session check
+    checkInitialSession();
+
+    // Clean up on unmount
+    return () => {
+      mounted = false;
       clearTimeout(authTimeout);
-      
-      return () => {
-        mounted = false;
-        clearTimeout(authTimeout);
-      };
-    }
+      subscription.unsubscribe();
+    };
   }, []);
 
   return {

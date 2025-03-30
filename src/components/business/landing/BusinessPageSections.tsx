@@ -1,193 +1,118 @@
 
-import React from 'react';
-import { BusinessPageSection, BusinessPage } from '@/types/business.types';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { BusinessPageSection, BusinessPage } from "@/types/business.types";
 
-// Define section components
-import BusinessAboutSection from './sections/BusinessAboutSection';
-import BusinessGallerySection from './sections/BusinessGallerySection';
-import BusinessContactSection from './sections/BusinessContactSection';
-import BusinessHoursSection from './sections/BusinessHoursSection';
-import BusinessTestimonialsSection from './sections/BusinessTestimonialsSection';
-import BusinessBookingSection from './sections/BusinessBookingSection';
-import BusinessInstagramSection from './sections/BusinessInstagramSection';
-import BusinessHeader from './BusinessHeader';
+// Import section renderers
+import BusinessPageHeader from "./sections/BusinessPageHeader";
+import BusinessAboutSection from "./sections/BusinessAboutSection";
+import BusinessContactSection from "./sections/BusinessContactSection";
+import BusinessHoursSection from "./sections/BusinessHoursSection";
+import BusinessGallerySection from "./sections/BusinessGallerySection";
+import BusinessTestimonialsSection from "./sections/BusinessTestimonialsSection";
+import BusinessBookingTemplatesSection from "./sections/BusinessBookingTemplatesSection";
+import BusinessInstagramSection from "./sections/BusinessInstagramSection";
+import { cn } from "@/lib/utils";
 
 interface BusinessPageSectionsProps {
-  sections: BusinessPageSection[];
-  businessId: string;
+  pageSections: BusinessPageSection[];
   businessPage: BusinessPage;
-  isPreviewMode?: boolean;
 }
 
-// Helper to render section based on type
-const renderSection = (
-  section: BusinessPageSection, 
-  businessId: string,
-  businessPage: BusinessPage,
-  isPreviewMode?: boolean
-) => {
-  if (!section.is_visible) {
-    return null;
-  }
-
-  // Apply section content styling
-  const content = section.section_content || {};
-  
-  // Get section-specific styling values, falling back to the section.section_content, 
-  // then to section field directly, and finally to default values
-  const backgroundColor = section.background_color || content.backgroundColor || 'transparent';
-  const textColor = section.text_color || content.textColor || 'inherit';
-  const padding = section.padding || content.padding || '2rem 0';
-  const borderRadius = section.border_radius || content.borderRadius || '0';
-  const backgroundImageUrl = section.background_image_url || content.backgroundImageUrl || '';
-  
-  // Convert padding shorthand to actual value
-  const paddingValue = (() => {
-    switch (padding) {
-      case 'none': return '0';
-      case 'sm': return '1rem 0';
-      case 'md': return '2rem 0';
-      case 'lg': return '3rem 0';
-      case 'xl': return '4rem 0';
-      default: return padding;
-    }
-  })();
-  
-  // Convert borderRadius shorthand to actual value
-  const borderRadiusValue = (() => {
-    switch (borderRadius) {
-      case 'none': return '0px';
-      case 'small': return '4px';
-      case 'medium': return '8px';
-      case 'large': return '12px';
-      case 'full': return '9999px';
-      default: return borderRadius;
-    }
-  })();
-  
-  const sectionStyle: React.CSSProperties = {
-    backgroundColor,
-    color: textColor,
-    padding: paddingValue,
-    borderRadius: borderRadiusValue,
-    position: 'relative',
-  };
-  
-  // Add background image if provided
-  if (backgroundImageUrl) {
-    sectionStyle.backgroundImage = `url(${backgroundImageUrl})`;
-    sectionStyle.backgroundSize = 'cover';
-    sectionStyle.backgroundPosition = 'center';
-  }
-
-  // Add custom class for patterns
-  const patternClass = content.pattern ? `pattern-${content.pattern}` : '';
-
-  let sectionComponent;
-  switch (section.section_type) {
-    case 'header':
-      return <BusinessHeader key={section.id} section={section} businessPage={businessPage} />;
-    case 'about':
-      sectionComponent = <BusinessAboutSection content={section.section_content} />;
-      break;
-    case 'gallery':
-      sectionComponent = <BusinessGallerySection content={section.section_content} />;
-      break;
-    case 'contact':
-      sectionComponent = <BusinessContactSection 
-        content={section.section_content} 
-        businessId={businessId}
-      />;
-      break;
-    case 'hours':
-      sectionComponent = <BusinessHoursSection content={section.section_content} />;
-      break;
-    case 'testimonials':
-      sectionComponent = <BusinessTestimonialsSection content={section.section_content} />;
-      break;
-    case 'booking':
-      sectionComponent = <BusinessBookingSection 
-        content={section.section_content || {}} 
-        businessId={businessId}
-      />;
-      break;
-    case 'instagram':
-      sectionComponent = <BusinessInstagramSection content={section.section_content} />;
-      break;
-    default:
-      return null;
-  }
-
-  return (
-    <section 
-      key={section.id} 
-      style={sectionStyle}
-      className={cn("w-full section-container", patternClass)}
-      data-section-id={section.id}
-      data-section-type={section.section_type}
-    >
-      <div className="container mx-auto px-4">
-        {sectionComponent}
+const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectionsProps) => {
+  if (!pageSections || pageSections.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">No content sections available.</p>
       </div>
-    </section>
-  );
-};
-
-const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({ 
-  sections, 
-  businessId,
-  businessPage,
-  isPreviewMode
-}) => {
-  // Sort sections by their order
-  const sortedSections = [...sections].sort((a, b) => a.section_order - b.section_order);
+    );
+  }
   
+  const getSectionStyles = (section: BusinessPageSection) => {
+    const defaultBorderRadius = businessPage.border_radius || 'medium';
+    
+    const borderRadiusValue = 
+      (section.border_radius || defaultBorderRadius) === 'none' ? '0px' :
+      (section.border_radius || defaultBorderRadius) === 'small' ? '4px' :
+      (section.border_radius || defaultBorderRadius) === 'medium' ? '8px' :
+      (section.border_radius || defaultBorderRadius) === 'large' ? '12px' :
+      (section.border_radius || defaultBorderRadius) === 'full' ? '9999px' : '8px';
+    
+    return {
+      backgroundColor: section.background_color || 'transparent',
+      color: section.text_color || 'inherit',
+      padding: section.padding || '0',
+      borderRadius: borderRadiusValue,
+      ...(section.background_image_url && {
+        backgroundImage: `url(${section.background_image_url})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      })
+    };
+  };
+
+  const renderSection = (section: BusinessPageSection) => {
+    if (!section.is_visible) return null;
+    
+    const content = section.section_content || {};
+    const sectionStyles = getSectionStyles(section);
+    
+    const sectionClasses = cn(
+      "section-wrapper",
+      section.background_color || section.background_image_url ? "p-6 sm:p-8 md:p-10" : "",
+      section.background_color ? "rounded-lg" : ""
+    );
+    
+    const SectionComponent = () => {
+      switch (section.section_type) {
+        case 'header':
+          return <BusinessPageHeader content={content} />;
+          
+        case 'about':
+          return <BusinessAboutSection content={content} />;
+          
+        case 'contact':
+          return <BusinessContactSection content={content} businessId={businessPage.business_id} />;
+          
+        case 'hours':
+          return <BusinessHoursSection content={content} />;
+          
+        case 'gallery':
+          return <BusinessGallerySection content={content} />;
+          
+        case 'testimonials':
+          return <BusinessTestimonialsSection content={content} />;
+  
+        case 'booking':
+          return <BusinessBookingTemplatesSection content={content} businessId={businessPage.business_id} />;
+          
+        case 'instagram':
+          return <BusinessInstagramSection content={content} />;
+          
+        default:
+          return (
+            <div className="py-8">
+              <h2 className="text-2xl font-bold mb-4 capitalize">{section.section_type}</h2>
+              <p className="text-muted-foreground">
+                This section type is not yet supported for display.
+              </p>
+            </div>
+          );
+      }
+    };
+    
+    return (
+      <div key={section.id} className={sectionClasses} style={sectionStyles}>
+        <SectionComponent />
+      </div>
+    );
+  };
+
   return (
-    <div className="business-page-sections">
-      <style>
-        {`
-          .pattern-dots {
-            background-image: radial-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px);
-            background-size: 20px 20px;
-          }
-          .pattern-lines {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px);
-            background-size: 20px 20px;
-          }
-          .pattern-grid {
-            background-image: 
-              linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
-            background-size: 20px 20px;
-          }
-          .pattern-waves {
-            background-image: repeating-radial-gradient(rgba(0, 0, 0, 0.1) 2px, transparent 3px, transparent 6px);
-            background-size: 20px 20px;
-          }
-          
-          /* Add spacing between sections */
-          .section-container + .section-container {
-            margin-top: 1rem;
-          }
-          
-          /* Enhanced pattern styling */
-          .pattern-dots.section-container {
-            background-blend-mode: overlay;
-          }
-          .pattern-lines.section-container {
-            background-blend-mode: overlay;
-          }
-          .pattern-grid.section-container {
-            background-blend-mode: overlay;
-          }
-          .pattern-waves.section-container {
-            background-blend-mode: overlay;
-          }
-        `}
-      </style>
-      {sortedSections.map(section => renderSection(section, businessId, businessPage, isPreviewMode))}
-    </div>
+    <>
+      {pageSections
+        .sort((a, b) => a.section_order - b.section_order)
+        .map(renderSection)}
+    </>
   );
 };
 

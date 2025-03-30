@@ -1,40 +1,63 @@
 
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
-import { 
-  BookingTemplate, 
-  BookingTemplateFormData, 
+import { useCallback, useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { fromTable } from "@/integrations/supabase/helper";
+import { toast } from "@/components/ui/use-toast";
+import {
+  BookingTemplateFormData,
   BookingTemplateWithRelations,
   BookingTemplateAvailability,
   BookingTemplateException
-} from '@/types/booking.types';
+} from "@/types/booking.types";
 import {
+  createBookingTemplate,
+  updateBookingTemplate,
+  deleteBookingTemplate,
+  publishTemplate,
   fetchTemplateAvailability,
+  fetchTemplateExceptions,
   addTemplateAvailability,
   deleteTemplateAvailability,
-  fetchTemplateExceptions,
   addTemplateException,
   deleteTemplateException
-} from '@/services/booking/templates';
+} from "@/services/booking/templates";
 
-/**
- * Enhanced hook to manage booking templates with filter and CRUD operations
- */
-export const useBookingTemplates = (businessId?: string) => {
+export const useBookingTemplates = (businessId?: string | null) => {
   const queryClient = useQueryClient();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [filterPublished, setFilterPublished] = useState<boolean | null>(null);
+  const [currentBusinessId, setCurrentBusinessId] = useState<string | null>(null);
 
-  // Fetch templates
-  const { data: templates = [], isLoading, error } = useQuery({
-    queryKey: ['booking-templates', businessId],
+  // If businessId is not provided, try to get it from the current user
+  useEffect(() => {
+    if (businessId) {
+      setCurrentBusinessId(businessId);
+      return;
+    }
+
+    const fetchCurrentUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        setCurrentBusinessId(session.user.id);
+      }
+    };
+    
+    fetchCurrentUser();
+  }, [businessId]);
+
+  // Fetch booking templates
+  const templatesQuery = useQuery({
+    queryKey: ['bookingTemplates', currentBusinessId],
     queryFn: async () => {
-      if (!businessId) return [];
+      if (!currentBusinessId) {
+        console.log("No business ID available for template fetch");
+        return [];
+      }
       
-      const { data, error } = await supabase
-        .from('booking_templates')
+      console.log("Fetching templates for business ID:", currentBusinessId);
+      
+      const { data, error } = await fromTable('booking_templates')
         .select(`
           *,
           service:service_id (
@@ -46,299 +69,288 @@ export const useBookingTemplates = (businessId?: string) => {
             name
           )
         `)
-        .eq('business_id', businessId)
+        .eq('business_id', currentBusinessId)
         .order('created_at', { ascending: false });
-        
-      if (error) throw error;
+      
+      if (error) {
+        console.error("Error fetching booking templates:", error);
+        throw error;
+      }
+      
+      console.log(`Found ${data?.length || 0} templates for business ${currentBusinessId}`);
       return data as BookingTemplateWithRelations[];
     },
-    enabled: !!businessId
+    enabled: !!currentBusinessId
   });
-  
+
   // Filter templates based on search query and published filter
-  const filteredTemplates = templates.filter(template => {
-    const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      (template.description && template.description.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredTemplates = useCallback(() => {
+    const templates = templatesQuery.data || [];
+    console.log(`Filtering ${templates.length} templates`);
     
-    const matchesPublishedFilter = filterPublished === null || template.is_published === filterPublished;
-    
-    return matchesSearch && matchesPublishedFilter;
-  });
+    return templates.filter(template => {
+      // Apply search filter
+      const matchesSearch = !searchQuery || 
+        template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (template.description && template.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      // Apply published filter
+      const matchesPublished = filterPublished === null || template.is_published === filterPublished;
+      
+      return matchesSearch && matchesPublished;
+    });
+  }, [templatesQuery.data, searchQuery, filterPublished]);
 
   // Create template mutation
   const createTemplateMutation = useMutation({
-    mutationFn: async (data: BookingTemplateFormData & { business_id: string }) => {
-      const { data: template, error } = await supabase
-        .from('booking_templates')
-        .insert(data)
-        .select()
-        .single();
-        
-      if (error) throw error;
-      return template;
+    mutationFn: async (data: BookingTemplateFormData) => {
+      console.log("Creating template with data:", data);
+      if (!data.business_id && currentBusinessId) {
+        data.business_id = currentBusinessId;
+      }
+      return await createBookingTemplate(data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['booking-templates'] });
-      toast({ 
-        title: "Template created", 
-        description: "Booking template created successfully." 
+      queryClient.invalidateQueries({ queryKey: ['bookingTemplates'] });
+      // Also invalidate regular bookings as templates may be shown there
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      toast({
+        title: "Template created",
+        description: "Booking template has been created successfully.",
+        variant: "success",
       });
     },
-    onError: (error) => {
-      toast({ 
-        variant: "destructive", 
-        title: "Error creating template", 
-        description: error.message 
+    onError: (error: any) => {
+      console.error("Error creating template:", error);
+      toast({
+        title: "Failed to create template",
+        description: error.message || "An error occurred while creating the template.",
+        variant: "destructive",
       });
-    }
+    },
   });
 
   // Update template mutation
   const updateTemplateMutation = useMutation({
-    mutationFn: async ({ templateId, data }: { templateId: string, data: Partial<BookingTemplateFormData> }) => {
-      const { data: template, error } = await supabase
-        .from('booking_templates')
-        .update(data)
-        .eq('id', templateId)
-        .select()
-        .single();
-        
-      if (error) throw error;
-      return template;
+    mutationFn: async ({ templateId, data }: { templateId: string; data: Partial<BookingTemplateFormData> }) => {
+      return await updateBookingTemplate(templateId, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['booking-templates'] });
-      toast({ 
-        title: "Template updated", 
-        description: "Booking template updated successfully." 
+      queryClient.invalidateQueries({ queryKey: ['bookingTemplates'] });
+      // Also invalidate regular bookings as templates may be shown there
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      toast({
+        title: "Template updated",
+        description: "Booking template has been updated successfully.",
+        variant: "success",
       });
     },
-    onError: (error) => {
-      toast({ 
-        variant: "destructive", 
-        title: "Error updating template", 
-        description: error.message 
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update template",
+        description: error.message || "An error occurred while updating the template.",
+        variant: "destructive",
       });
-    }
+    },
   });
 
   // Delete template mutation
   const deleteTemplateMutation = useMutation({
     mutationFn: async (templateId: string) => {
-      const { error } = await supabase
-        .from('booking_templates')
-        .delete()
-        .eq('id', templateId);
-        
-      if (error) throw error;
-      return true;
+      return await deleteBookingTemplate(templateId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['booking-templates'] });
-      toast({ 
-        title: "Template deleted", 
-        description: "Booking template deleted successfully." 
+      queryClient.invalidateQueries({ queryKey: ['bookingTemplates'] });
+      // Also invalidate regular bookings as templates may be shown there
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      toast({
+        title: "Template deleted",
+        description: "Booking template has been deleted successfully.",
+        variant: "success",
       });
     },
-    onError: (error) => {
-      toast({ 
-        variant: "destructive", 
-        title: "Error deleting template", 
-        description: error.message 
+    onError: (error: any) => {
+      toast({
+        title: "Failed to delete template",
+        description: error.message || "An error occurred while deleting the template.",
+        variant: "destructive",
       });
-    }
+    },
   });
 
-  // Publish/unpublish template mutation
+  // Publish template mutation
   const publishTemplateMutation = useMutation({
-    mutationFn: async ({ templateId, isPublished }: { templateId: string, isPublished: boolean }) => {
-      const { data: template, error } = await supabase
-        .from('booking_templates')
-        .update({ is_published: isPublished })
-        .eq('id', templateId)
-        .select()
-        .single();
-        
-      if (error) throw error;
-      return template;
+    mutationFn: async ({ templateId, isPublished }: { templateId: string; isPublished: boolean }) => {
+      return await publishTemplate(templateId, isPublished);
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['booking-templates'] });
-      toast({ 
-        title: variables.isPublished ? "Template published" : "Template unpublished", 
-        description: `Template is now ${variables.isPublished ? "visible" : "hidden"} on your business page.` 
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookingTemplates'] });
+      // Also invalidate regular bookings as templates may be shown there
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      toast({
+        title: "Template status updated",
+        description: "Booking template status has been updated successfully.",
+        variant: "success",
       });
     },
-    onError: (error) => {
-      toast({ 
-        variant: "destructive", 
-        title: "Error updating template", 
-        description: error.message 
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update template status",
+        description: error.message || "An error occurred while updating the template status.",
+        variant: "destructive",
       });
-    }
+    },
   });
 
-  // Hook to fetch availability for a template
+  // Template availability query hook
   const useTemplateAvailability = (templateId: string) => {
     return useQuery({
-      queryKey: ['template-availability', templateId],
-      queryFn: () => fetchTemplateAvailability(templateId),
-      enabled: !!templateId
+      queryKey: ['templateAvailability', templateId],
+      queryFn: async () => {
+        if (!templateId) return [];
+        return await fetchTemplateAvailability(templateId);
+      },
+      enabled: !!templateId,
     });
   };
 
-  // Hook to fetch exceptions for a template
+  // Template exceptions query hook
   const useTemplateExceptions = (templateId: string) => {
     return useQuery({
-      queryKey: ['template-exceptions', templateId],
-      queryFn: () => fetchTemplateExceptions(templateId),
-      enabled: !!templateId
+      queryKey: ['templateExceptions', templateId],
+      queryFn: async () => {
+        if (!templateId) return [];
+        return await fetchTemplateExceptions(templateId);
+      },
+      enabled: !!templateId,
     });
   };
 
   // Add availability mutation
   const addAvailabilityMutation = useMutation({
-    mutationFn: (availabilityData: Omit<BookingTemplateAvailability, 'id' | 'created_at' | 'updated_at'>) => 
-      addTemplateAvailability(availabilityData),
+    mutationFn: async (data: Omit<BookingTemplateAvailability, "id" | "created_at" | "updated_at">) => {
+      return await addTemplateAvailability(data);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['template-availability'] });
-      toast({ 
-        title: "Availability added", 
-        description: "Template availability has been added." 
+      queryClient.invalidateQueries({ queryKey: ['templateAvailability'] });
+      toast({
+        title: "Availability added",
+        description: "Template availability has been added successfully.",
+        variant: "success",
       });
     },
-    onError: (error) => {
-      toast({ 
-        variant: "destructive", 
-        title: "Error adding availability", 
-        description: error.message 
+    onError: (error: any) => {
+      toast({
+        title: "Failed to add availability",
+        description: error.message || "An error occurred while adding availability.",
+        variant: "destructive",
       });
-    }
+    },
   });
 
   // Delete availability mutation
   const deleteAvailabilityMutation = useMutation({
-    mutationFn: (availabilityId: string) => deleteTemplateAvailability(availabilityId),
+    mutationFn: async (availabilityId: string) => {
+      return await deleteTemplateAvailability(availabilityId);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['template-availability'] });
-      toast({ 
-        title: "Availability removed", 
-        description: "Template availability has been removed." 
+      queryClient.invalidateQueries({ queryKey: ['templateAvailability'] });
+      toast({
+        title: "Availability deleted",
+        description: "Template availability has been deleted successfully.",
+        variant: "success",
       });
     },
-    onError: (error) => {
-      toast({ 
-        variant: "destructive", 
-        title: "Error removing availability", 
-        description: error.message 
+    onError: (error: any) => {
+      toast({
+        title: "Failed to delete availability",
+        description: error.message || "An error occurred while deleting availability.",
+        variant: "destructive",
       });
-    }
+    },
   });
 
   // Add exception mutation
   const addExceptionMutation = useMutation({
-    mutationFn: (exceptionData: Omit<BookingTemplateException, 'id' | 'created_at' | 'updated_at'>) => 
-      addTemplateException(exceptionData),
+    mutationFn: async (data: Omit<BookingTemplateException, "id" | "created_at" | "updated_at">) => {
+      return await addTemplateException(data);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['template-exceptions'] });
-      toast({ 
-        title: "Exception added", 
-        description: "Template exception has been added." 
+      queryClient.invalidateQueries({ queryKey: ['templateExceptions'] });
+      toast({
+        title: "Exception added",
+        description: "Template exception has been added successfully.",
+        variant: "success",
       });
     },
-    onError: (error) => {
-      toast({ 
-        variant: "destructive", 
-        title: "Error adding exception", 
-        description: error.message 
+    onError: (error: any) => {
+      toast({
+        title: "Failed to add exception",
+        description: error.message || "An error occurred while adding exception.",
+        variant: "destructive",
       });
-    }
+    },
   });
 
   // Delete exception mutation
   const deleteExceptionMutation = useMutation({
-    mutationFn: (exceptionId: string) => deleteTemplateException(exceptionId),
+    mutationFn: async (exceptionId: string) => {
+      return await deleteTemplateException(exceptionId);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['template-exceptions'] });
-      toast({ 
-        title: "Exception removed", 
-        description: "Template exception has been removed." 
+      queryClient.invalidateQueries({ queryKey: ['templateExceptions'] });
+      toast({
+        title: "Exception deleted",
+        description: "Template exception has been deleted successfully.",
+        variant: "success",
       });
     },
-    onError: (error) => {
-      toast({ 
-        variant: "destructive", 
-        title: "Error removing exception", 
-        description: error.message 
+    onError: (error: any) => {
+      toast({
+        title: "Failed to delete exception",
+        description: error.message || "An error occurred while deleting exception.",
+        variant: "destructive",
       });
-    }
+    },
   });
 
-  // Wrapper functions for mutations
-  const createTemplate = async (data: BookingTemplateFormData) => {
-    if (!businessId) {
-      throw new Error("Business ID is required");
-    }
-    return createTemplateMutation.mutateAsync({
-      ...data,
-      business_id: businessId
-    });
-  };
-
-  const updateTemplate = async ({ templateId, data }: { templateId: string, data: Partial<BookingTemplateFormData> }) => {
-    return updateTemplateMutation.mutateAsync({ templateId, data });
-  };
-
-  const deleteTemplate = async (templateId: string) => {
-    return deleteTemplateMutation.mutateAsync(templateId);
-  };
-
-  const publishTemplate = async ({ templateId, isPublished }: { templateId: string, isPublished: boolean }) => {
-    return publishTemplateMutation.mutateAsync({ templateId, isPublished });
-  };
-
-  const addAvailability = async (data: Omit<BookingTemplateAvailability, 'id' | 'created_at' | 'updated_at'>) => {
-    return addAvailabilityMutation.mutateAsync(data);
-  };
-
-  const deleteAvailability = async (availabilityId: string) => {
-    return deleteAvailabilityMutation.mutateAsync(availabilityId);
-  };
-
-  const addException = async (data: Omit<BookingTemplateException, 'id' | 'created_at' | 'updated_at'>) => {
-    return addExceptionMutation.mutateAsync(data);
-  };
-
-  const deleteException = async (exceptionId: string) => {
-    return deleteExceptionMutation.mutateAsync(exceptionId);
-  };
-
   return {
-    templates,
-    filteredTemplates,
-    isLoading,
-    error,
+    // Query results
+    templates: templatesQuery.data || [],
+    filteredTemplates: filteredTemplates(),
+    isLoading: templatesQuery.isLoading,
+    error: templatesQuery.error,
+    
+    // Search and filter state
     searchQuery,
     setSearchQuery,
     filterPublished,
     setFilterPublished,
-    createTemplate,
+    
+    // Template mutations
+    createTemplate: createTemplateMutation.mutate,
     isCreating: createTemplateMutation.isPending,
-    updateTemplate,
+    updateTemplate: updateTemplateMutation.mutate,
     isUpdating: updateTemplateMutation.isPending,
-    deleteTemplate,
+    deleteTemplate: deleteTemplateMutation.mutate,
     isDeleting: deleteTemplateMutation.isPending,
-    publishTemplate,
+    publishTemplate: publishTemplateMutation.mutate,
     isPublishing: publishTemplateMutation.isPending,
+    
+    // Availability and exceptions hooks
     useTemplateAvailability,
     useTemplateExceptions,
-    addAvailability,
+    
+    // Availability mutations
+    addAvailability: addAvailabilityMutation.mutate,
     isAddingAvailability: addAvailabilityMutation.isPending,
-    deleteAvailability,
+    deleteAvailability: deleteAvailabilityMutation.mutate,
     isDeletingAvailability: deleteAvailabilityMutation.isPending,
-    addException,
+    
+    // Exception mutations
+    addException: addExceptionMutation.mutate,
     isAddingException: addExceptionMutation.isPending,
-    deleteException,
-    isDeletingException: deleteExceptionMutation.isPending
+    deleteException: deleteExceptionMutation.mutate,
+    isDeletingException: deleteExceptionMutation.isPending,
   };
 };

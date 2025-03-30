@@ -1,69 +1,45 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
-import { BusinessPage } from '@/types/business.types';
+import { useCallback } from "react";
+import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
+import { BusinessPage } from "@/types/business.types";
 
-/**
- * Utility hook for auto-saving page settings
- */
+// Auto-save utilities
 export const useAutoSavePageSettings = (
   updatePage: any,
   pageId?: string
 ) => {
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  
   // Debounced auto-save function
-  const autoSavePage = useDebouncedCallback((pageData: Partial<BusinessPage>) => {
-    if (!pageId) return;
-    
-    setSaveStatus('saving');
-    updatePage.mutate({
-      ...pageData,
-      id: pageId
-    }, {
-      onSuccess: () => {
-        setSaveStatus('saved');
-        setTimeout(() => setSaveStatus('idle'), 2000);
-      },
-      onError: () => {
-        setSaveStatus('error');
-      }
-    });
+  const debouncedSave = useDebouncedCallback((data: Partial<BusinessPage>) => {
+    if (pageId) {
+      updatePage.mutate({ id: pageId, ...data });
+    }
   }, 1000);
   
-  // Function to handle auto-saving a single field
-  const autoSaveField = useCallback((name: string, value: any) => {
-    if (!pageId) return;
-    
-    setSaveStatus('saving');
-    autoSavePage({
-      id: pageId,
-      [name]: value
-    });
-  }, [pageId, autoSavePage]);
+  // Function to auto-save a specific field
+  const autoSaveField = useCallback((fieldName: string, value: any) => {
+    if (pageId) {
+      debouncedSave({ [fieldName]: value });
+    }
+  }, [pageId, debouncedSave]);
   
-  // Reset save status when page ID changes
-  useEffect(() => {
-    setSaveStatus('idle');
-  }, [pageId]);
+  // Function to auto-save the entire page data
+  const autoSavePage = useCallback((pageData: Partial<BusinessPage>) => {
+    if (pageId) {
+      debouncedSave({ ...pageData });
+    }
+  }, [pageId, debouncedSave]);
   
-  return {
-    saveStatus,
-    autoSavePage,
-    autoSaveField
-  };
+  return { autoSavePage, autoSaveField };
 };
 
-/**
- * Utility hook to get the public URL for a business page
- */
+// Get public page URL
 export const usePublicPageUrl = (pageSlug?: string) => {
-  const getPublicPageUrl = useCallback(() => {
-    if (!pageSlug) return '#';
+  return useCallback(() => {
+    if (!pageSlug) return '';
     
-    // Return URL to the public business page
-    return `/business/${pageSlug}`;
+    // Determine base URL based on environment
+    const baseUrl = window.location.origin;
+    
+    return `${baseUrl}/business/${pageSlug}`;
   }, [pageSlug]);
-  
-  return getPublicPageUrl;
 };

@@ -1,12 +1,8 @@
 
-import React from 'react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { useIsMobile } from "@/hooks/useIsMobile";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import AccountDetailsCard from '@/components/dashboard/profile/AccountDetailsCard';
+import React from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
+import useIsMobile from "@/hooks/use-mobile";
 import ProfileAvatar from "./profile/ProfileAvatar";
 import ProfileForm from "./profile/ProfileForm";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
@@ -27,6 +23,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
   const { data: fetchedProfile, isLoading } = useProfileSettings();
   const { isStaff } = useStaffPermissions();
   
+  // Use either the provided profile or the fetched one
   const profile = propProfile || fetchedProfile;
   
   if (isLoading) {
@@ -58,6 +55,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
   
   return (
     <div className="space-y-6">
+      {/* Account Information Section - First card */}
       <Card className="border-gray-200 shadow-sm overflow-hidden">
         <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
           <div className="flex items-center gap-2">
@@ -78,6 +76,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
         </CardContent>
       </Card>
       
+      {/* Business Profile Information Section - Second card */}
       <Card className="border-gray-200 shadow-sm overflow-hidden">
         <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
           <div className="flex items-center justify-between">
@@ -106,6 +105,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
         </CardContent>
       </Card>
       
+      {/* Theme Toggle Section - Third card */}
       <Card className="border-gray-200 shadow-sm overflow-hidden">
         <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">
           <div className="flex items-center gap-2">
@@ -121,6 +121,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile: propProfile }) => {
         </CardContent>
       </Card>
       
+      {/* Feedback Section - Last card - Hide for staff users */}
       {!isStaff && (
         <Card className="border-gray-200 shadow-sm overflow-hidden">
           <CardHeader className="px-4 sm:px-6 pb-4 bg-gradient-to-r from-wakti-blue/5 to-wakti-blue/10">

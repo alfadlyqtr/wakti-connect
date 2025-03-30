@@ -1,93 +1,142 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
+import { Search, MapPin } from 'lucide-react';
+import { GOOGLE_MAPS_API_KEY } from '@/config/maps';
+
+// Add TypeScript types for Google Maps
+declare global {
+  interface Window {
+    google: {
+      maps: {
+        places: {
+          Autocomplete: new (
+            input: HTMLInputElement,
+            options?: any
+          ) => google.maps.places.Autocomplete;
+        };
+        Map: any;
+      };
+    };
+  }
+}
+
+// Define the minimal Google Maps types we need
+namespace google.maps.places {
+  export interface Autocomplete {
+    addListener: (event: string, callback: () => void) => void;
+    getPlace: () => {
+      formatted_address?: string;
+      geometry?: {
+        location?: {
+          lat: () => number;
+          lng: () => number;
+        };
+      };
+      name?: string;
+    };
+  }
+}
 
 interface LocationPickerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelect: (location: string) => void;
+  value: string;
+  onChange: (value: string, lat?: number, lng?: number) => void;
+  className?: string;
+  placeholder?: string;
 }
 
 const LocationPicker: React.FC<LocationPickerProps> = ({
-  isOpen,
-  onClose,
-  onSelect
+  value,
+  onChange,
+  className = '',
+  placeholder = 'Enter a location'
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [inputValue, setInputValue] = useState(value || '');
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
 
-  const handleSearch = () => {
-    if (!searchTerm.trim()) return;
-    
-    setIsSearching(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      // Generate dummy suggestions based on search term
-      const dummySuggestions = [
-        `${searchTerm}, Main Street`,
-        `${searchTerm}, Downtown`,
-        `${searchTerm} Plaza`,
-        `${searchTerm} Business Center`,
-        `${searchTerm} Mall`
-      ];
+  // Load Google Maps script
+  useEffect(() => {
+    if (!window.google) {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => setScriptLoaded(true);
+      document.body.appendChild(script);
       
-      setSuggestions(dummySuggestions);
-      setIsSearching(false);
-    }, 1000);
+      return () => {
+        document.body.removeChild(script);
+      };
+    } else {
+      setScriptLoaded(true);
+    }
+  }, []);
+
+  // Initialize autocomplete
+  useEffect(() => {
+    if (scriptLoaded && inputRef.current && window.google) {
+      try {
+        autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+          fields: ['formatted_address', 'geometry', 'name'],
+          types: ['establishment', 'geocode']
+        });
+        
+        autocompleteRef.current.addListener('place_changed', () => {
+          const place = autocompleteRef.current?.getPlace();
+          if (place?.formatted_address) {
+            setInputValue(place.formatted_address);
+            
+            // Pass back the location and coordinates if available
+            onChange(
+              place.formatted_address,
+              place.geometry?.location?.lat(),
+              place.geometry?.location?.lng()
+            );
+          }
+        });
+      } catch (error) {
+        console.error('Error initializing Google Maps Autocomplete:', error);
+      }
+    }
+  }, [scriptLoaded, onChange]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    if (e.target.value === '') {
+      onChange('');
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Choose Location</DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4 py-4">
-          <div className="flex gap-2">
-            <Input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search for a location..."
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <Button type="button" onClick={handleSearch} disabled={isSearching}>
-              <Search className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          <div className="mt-4 space-y-2">
-            {suggestions.map((suggestion, index) => (
-              <Button
-                key={index}
-                variant="outline"
-                className="w-full justify-start text-left"
-                onClick={() => onSelect(suggestion)}
-              >
-                {suggestion}
-              </Button>
-            ))}
-            
-            {suggestions.length === 0 && !isSearching && (
-              <p className="text-sm text-muted-foreground">
-                Search for a location to see suggestions
-              </p>
-            )}
-            
-            {isSearching && (
-              <p className="text-sm text-muted-foreground">
-                Searching...
-              </p>
-            )}
-          </div>
+    <div className={`relative ${className}`}>
+      <div className="flex">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            placeholder={placeholder}
+            className="pl-8"
+          />
         </div>
-      </DialogContent>
-    </Dialog>
+        {inputValue && (
+          <Button 
+            type="button" 
+            variant="outline" 
+            size="icon"
+            className="ml-2"
+            onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(inputValue)}`, '_blank')}
+          >
+            <MapPin className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+    </div>
   );
 };
 

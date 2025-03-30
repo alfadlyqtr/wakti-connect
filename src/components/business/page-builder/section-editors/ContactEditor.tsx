@@ -7,8 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { EditorProps } from "./types";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "lucide-react";
-import LocationInput from "@/components/events/location/LocationInput";
-import { toast } from "@/components/ui/use-toast";
+import LocationPicker from "@/components/events/location/LocationPicker";
+import { toast } from "@/components/ui/toast";
 
 const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) => {
   const [useMapAddress, setUseMapAddress] = useState(true);
@@ -145,11 +145,9 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
       <div className="space-y-2">
         <Label htmlFor="address">Business Address</Label>
         <div className="space-y-2">
-          <Input
-            id="address"
-            name="address"
+          <LocationPicker
             value={contentData.address || ""}
-            onChange={handleInputChange}
+            onChange={handleLocationChange}
             placeholder="123 Business Street, City, Country"
             className="w-full"
           />

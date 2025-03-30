@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
+import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import BusinessSocialLinks from "./BusinessSocialLinks";
@@ -115,10 +116,24 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
     borderRadius === 'large' ? '12px' :
     borderRadius === 'full' ? '9999px' : '8px';
   
-  // Generate CSS classes for background pattern
-  const patternClass = businessPage.page_pattern
-    ? `pattern-${businessPage.page_pattern}`
-    : '';
+  // Generate background pattern
+  const backgroundPattern = businessPage.page_pattern 
+    ? businessPage.page_pattern === 'dots' 
+      ? 'radial-gradient(#00000022 1px, transparent 1px)'
+      : businessPage.page_pattern === 'grid' 
+        ? 'linear-gradient(to right, #00000011 1px, transparent 1px), linear-gradient(to bottom, #00000011 1px, transparent 1px)'
+        : businessPage.page_pattern === 'waves' 
+          ? 'url("data:image/svg+xml,%3Csvg width="100" height="20" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 10 C 30 0, 70 0, 100 10 L 100 20 L 0 20 Z" fill="%2300000011"/%3E%3C/svg%3E")'
+          : businessPage.page_pattern === 'diagonal' 
+            ? 'repeating-linear-gradient(45deg, #00000011, #00000011 1px, transparent 1px, transparent 10px)'
+            : 'none'
+    : 'none';
+  
+  const backgroundSize = 
+    businessPage.page_pattern === 'dots' ? '20px 20px' :
+    businessPage.page_pattern === 'grid' ? '20px 20px' :
+    businessPage.page_pattern === 'waves' ? '100px 20px' :
+    businessPage.page_pattern === 'diagonal' ? '14px 14px' : 'auto';
   
   // Button styling based on settings
   const subscribeButtonSize = businessPage.subscribe_button_size || 'default';
@@ -146,17 +161,15 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
   
   return (
     <div 
-      className={cn(
-        `flex flex-col min-h-screen font-${fontFamily}`,
-        patternClass
-      )}
+      className={`flex flex-col min-h-screen font-${fontFamily}`}
       style={{ 
+        backgroundImage: backgroundPattern,
+        backgroundSize: backgroundSize,
         backgroundColor: backgroundColor,
       }}
     >
       <PoweredByWAKTI position="top" />
       
-      {/* Social icons in header position if selected */}
       {socialIconsPosition === 'header' && socialLinks && socialLinks.length > 0 && (
         <div className="py-4 border-b">
           <div className="container mx-auto px-4">
@@ -204,14 +217,11 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
           
           <div className={sectionGap}>
             <BusinessPageSections 
-              sections={pageSections}
-              businessId={businessPage.business_id}
-              businessPage={businessPage}
-              isPreviewMode={isPreviewMode}
+              pageSections={pageSections} 
+              businessPage={businessPage} 
             />
           </div>
           
-          {/* Social icons in footer position if selected */}
           {socialLinks && socialLinks.length > 0 && socialIconsPosition === 'footer' && (
             <div className="mt-12 pt-6 border-t">
               <BusinessSocialLinks 
@@ -224,7 +234,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
         </div>
       </div>
       
-      {/* Social icons in sidebar position if selected */}
       {socialIconsPosition === 'sidebar' && socialLinks && socialLinks.length > 0 && (
         <div className="fixed left-4 top-1/2 transform -translate-y-1/2 hidden md:flex flex-col gap-3">
           <BusinessSocialLinks 
@@ -236,7 +245,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
         </div>
       )}
       
-      {/* Floating subscribe button */}
       <FloatingSubscribeButton 
         businessId={businessPage.business_id}
         visible={showFloatingSubscribe && enableFloatingBtn}
@@ -247,13 +255,9 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
         size={subscribeButtonSize === 'small' ? "sm" : subscribeButtonSize === 'large' ? "lg" : "default"}
       />
       
-      {/* Chatbot container */}
-      <div ref={chatbotScriptRef} />
-      
       <PoweredByWAKTI position="bottom" />
     </div>
   );
 };
 
 export default BusinessLandingPageComponent;
-
