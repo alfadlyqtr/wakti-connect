@@ -143,7 +143,7 @@ const BookServicePage = () => {
         staff_assigned_id: selectedStaffId,
         start_time: startDate.toISOString(),
         end_time: endDate.toISOString(),
-        status: 'pending'
+        status: 'pending' as BookingStatus
       };
       
       const { data, error } = await supabase

@@ -1685,6 +1685,7 @@ export type Database = {
         | "cancelled"
         | "completed"
         | "no_show"
+        | "in_progress"
       event_status: "draft" | "sent" | "accepted" | "declined" | "recalled"
       invitation_status: "pending" | "accepted" | "declined"
     }
