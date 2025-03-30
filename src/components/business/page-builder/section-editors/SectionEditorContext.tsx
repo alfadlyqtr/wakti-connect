@@ -13,7 +13,7 @@ interface SectionEditorContextProps {
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleStyleChange: (name: string, value: string) => void;
   handleSaveSection: () => void;
-  updateSection: any;
+  updateSection: ReturnType<typeof useBusinessPage>['updateSection'];
   isNewSection: () => boolean;
 }
 
@@ -69,7 +69,7 @@ export const SectionEditorProvider: React.FC<{
     
     // For style changes, we update both content and the section's styling fields
     const sectionUpdates: Partial<BusinessPageSection> = {
-      [name]: value
+      [name as keyof BusinessPageSection]: value
     };
     
     // Auto-save after typing stops
