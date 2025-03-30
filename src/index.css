@@ -57,6 +57,12 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Improve mobile input focus */
+  input, textarea, select {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/50;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
 }
 
 @layer utilities {
@@ -67,5 +73,29 @@
   
   .no-scrollbar::-webkit-scrollbar {
     display: none;  /* Chrome, Safari, Opera */
+  }
+  
+  /* Improve touch targets for mobile */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px]; /* Apple's recommended minimum touch target size */
+  }
+  
+  /* Add mobile-friendly spacing utilities */
+  .mobile-p {
+    @apply p-2 sm:p-4;
+  }
+  
+  .mobile-px {
+    @apply px-2 sm:px-4;
+  }
+  
+  .mobile-py {
+    @apply py-2 sm:py-4;
+  }
+  
+  /* Fix for iOS overscroll */
+  .overscroll-fix {
+    @apply overscroll-none;
+    -webkit-overflow-scrolling: touch;
   }
 }

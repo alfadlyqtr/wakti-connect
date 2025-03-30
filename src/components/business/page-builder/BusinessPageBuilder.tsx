@@ -7,6 +7,7 @@ import CreateBusinessPageForm from "./CreateBusinessPageForm";
 import { PageSectionsTab } from "./sections";
 import PageSettingsTab from "./PageSettingsTab";
 import PagePreviewTab from "./PagePreviewTab";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const BusinessPageBuilder = () => {
   const { 
@@ -19,6 +20,8 @@ const BusinessPageBuilder = () => {
     autoSavePageSettings,
     getPublicPageUrl
   } = useBusinessPage();
+  
+  const isMobile = useIsMobile();
   
   // Create state for editable page data
   const [pageData, setPageData] = React.useState({
@@ -87,11 +90,11 @@ const BusinessPageBuilder = () => {
   }
   
   return (
-    <div className="container mx-auto px-4 py-6">
-      <h1 className="text-3xl font-bold mb-6">Business Landing Page Builder</h1>
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Business Landing Page Builder</h1>
       
       <Tabs defaultValue="sections">
-        <TabsList className="mb-6">
+        <TabsList className="mb-4 sm:mb-6">
           <TabsTrigger value="sections">Page Sections</TabsTrigger>
           <TabsTrigger value="settings">Page Settings</TabsTrigger>
           <TabsTrigger value="preview">Preview</TabsTrigger>
