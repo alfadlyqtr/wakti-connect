@@ -10,18 +10,20 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { formatDuration, formatCurrency } from "@/utils/formatUtils";
+import { formatDuration } from "@/utils/formatUtils";
 import { JobCard } from "@/types/jobs.types";
 import { CheckCircle } from "lucide-react";
 
 interface CompletedJobsTableProps {
   completedJobs: JobCard[];
   jobCountByDate: Record<string, number>;
+  formatCurrency: (amount: number | null | undefined) => string;
 }
 
 const CompletedJobsTable: React.FC<CompletedJobsTableProps> = ({ 
   completedJobs,
-  jobCountByDate 
+  jobCountByDate,
+  formatCurrency
 }) => {
   if (completedJobs.length === 0) {
     return (

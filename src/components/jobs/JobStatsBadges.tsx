@@ -3,20 +3,22 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { CheckSquare, Clock, Calendar, DollarSign } from "lucide-react";
 import { format } from "date-fns";
-import { formatCurrency } from "@/utils/formatUtils";
+import { FilterPeriod } from "./jobCardUtils";
 
 interface JobStatsBadgesProps {
   jobCount: number;
   totalDuration: string;
   totalEarnings: number;
-  filterPeriod: string;
+  filterPeriod: FilterPeriod;
+  formatCurrency: (amount: number | null | undefined) => string;
 }
 
 const JobStatsBadges: React.FC<JobStatsBadgesProps> = ({ 
   jobCount, 
   totalDuration, 
   totalEarnings,
-  filterPeriod 
+  filterPeriod,
+  formatCurrency
 }) => {
   return (
     <div className="flex flex-wrap gap-2 mb-4">
