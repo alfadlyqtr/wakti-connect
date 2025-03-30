@@ -86,7 +86,7 @@ const BillingTab: React.FC<BillingTabProps> = ({ profile }) => {
               <Badge variant="outline" className="capitalize w-fit">{profile?.account_type || 'Free'}</Badge>
             </div>
           </div>
-          <p className="text-muted-foreground mb-2">
+          <p className="text-muted-foreground mb-2 text-sm sm:text-base">
             {planInfo.description}
           </p>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4">
@@ -121,7 +121,7 @@ const BillingTab: React.FC<BillingTabProps> = ({ profile }) => {
               value={paymentMethod}
               onValueChange={(value) => setPaymentMethod(value as "creditcard" | "paypal")}
             >
-              <div className="flex items-center justify-between space-x-2 border p-3 rounded-md">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 border p-3 rounded-md">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="creditcard" id="creditcard" />
                   <Label htmlFor="creditcard" className="flex items-center gap-2">
@@ -129,10 +129,10 @@ const BillingTab: React.FC<BillingTabProps> = ({ profile }) => {
                     <span>Credit Card</span>
                   </Label>
                 </div>
-                <span>•••• •••• •••• 4242</span>
+                <span className="ml-7 sm:ml-0">•••• •••• •••• 4242</span>
               </div>
 
-              <div className="flex items-center justify-between space-x-2 border p-3 rounded-md">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0 border p-3 rounded-md">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="paypal" id="paypal" />
                   <Label htmlFor="paypal" className="flex items-center gap-2">
@@ -148,15 +148,16 @@ const BillingTab: React.FC<BillingTabProps> = ({ profile }) => {
                     <span>PayPal</span>
                   </Label>
                 </div>
-                <span>paypal@example.com</span>
+                <span className="ml-7 sm:ml-0">paypal@example.com</span>
               </div>
             </RadioGroup>
             
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 flex justify-center sm:justify-end">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={handleChangePayment}
+                className="w-full sm:w-auto"
               >
                 Change Payment Method
               </Button>

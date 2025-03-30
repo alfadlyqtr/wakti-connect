@@ -48,7 +48,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
 
   return (
     <Card className="w-full h-[calc(80vh)] flex flex-col">
-      <CardHeader className="py-3 px-4 border-b flex-row justify-between items-center">
+      <CardHeader className="py-2 px-3 sm:py-3 sm:px-4 border-b flex-row justify-between items-center">
         <div className="flex items-center">
           <Bot className="w-5 h-5 mr-2 text-wakti-blue" />
           <h3 className="font-medium text-sm md:text-base">Chat with {assistantName}</h3>
@@ -59,7 +59,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
               variant="ghost" 
               size="icon" 
               onClick={clearMessages}
-              className="h-8 w-8"
+              className="h-7 w-7 sm:h-8 sm:w-8"
               aria-label="Clear chat"
               title="Clear chat"
             >
@@ -69,7 +69,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
         </div>
       </CardHeader>
       <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4">
           {messages.length === 0 && showSuggestions ? (
             <EmptyStateView onPromptClick={handlePromptClick} />
           ) : (

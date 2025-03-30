@@ -39,27 +39,33 @@ const PaymentMethods = ({ billingInfo }: PaymentMethodsProps) => {
               onValueChange={(value) => setSelectedPaymentMethod(value as "card" | "paypal")} 
               className="space-y-3"
             >
-              <div className="border rounded-md p-4 flex items-center space-x-3">
-                <RadioGroupItem value="card" id="card" />
-                <Label htmlFor="card" className="flex items-center gap-3 cursor-pointer flex-1">
-                  <CreditCard className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">Credit/Debit Card</p>
-                    <p className="text-sm text-muted-foreground">Visa ending in 4242</p>
-                  </div>
-                </Label>
-                <Badge>Default</Badge>
+              <div className="border rounded-md p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-center gap-3">
+                  <RadioGroupItem value="card" id="card" />
+                  <Label htmlFor="card" className="flex items-center gap-3 cursor-pointer">
+                    <CreditCard className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">Credit/Debit Card</p>
+                      <p className="text-sm text-muted-foreground">Visa ending in 4242</p>
+                    </div>
+                  </Label>
+                </div>
+                <div className="ml-auto">
+                  <Badge>Default</Badge>
+                </div>
               </div>
               
-              <div className="border rounded-md p-4 flex items-center space-x-3">
-                <RadioGroupItem value="paypal" id="paypal" />
-                <Label htmlFor="paypal" className="flex items-center gap-3 cursor-pointer">
-                  <Wallet className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">PayPal</p>
-                    <p className="text-sm text-muted-foreground">Connected to your PayPal account</p>
-                  </div>
-                </Label>
+              <div className="border rounded-md p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-center gap-3">
+                  <RadioGroupItem value="paypal" id="paypal" />
+                  <Label htmlFor="paypal" className="flex items-center gap-3 cursor-pointer">
+                    <Wallet className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">PayPal</p>
+                      <p className="text-sm text-muted-foreground">Connected to your PayPal account</p>
+                    </div>
+                  </Label>
+                </div>
               </div>
             </RadioGroup>
           </div>
@@ -67,7 +73,7 @@ const PaymentMethods = ({ billingInfo }: PaymentMethodsProps) => {
       </CardContent>
       {billingInfo?.plan !== "free" && (
         <CardFooter>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">
             Update Payment Method
           </Button>
         </CardFooter>

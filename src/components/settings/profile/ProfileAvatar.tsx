@@ -49,7 +49,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ profile }) => {
           {profile?.display_name?.charAt(0) || profile?.full_name?.charAt(0) || 'U'}
         </AvatarFallback>
       </Avatar>
-      <div>
+      <div className="mt-3 sm:mt-0 w-full sm:w-auto">
         <input
           type="file"
           id="avatar"

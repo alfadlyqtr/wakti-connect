@@ -9,6 +9,8 @@ import CurrencyTab from "@/components/settings/CurrencyTab";
 import BillingTab from "@/components/settings/BillingTab";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const DashboardSettings = () => {
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -16,6 +18,8 @@ const DashboardSettings = () => {
   const { user } = useAuth();
   const { data: profileData } = useProfileSettings();
   const isMobile = useMediaQuery("(max-width: 640px)");
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const tabsListRef = React.useRef<HTMLDivElement>(null);
   
   // Get the user role from localStorage
   useEffect(() => {
@@ -35,6 +39,22 @@ const DashboardSettings = () => {
     return 4; // No Currency tab for non-business accounts
   };
   
+  // Scroll tabs horizontally
+  const scrollTabs = (direction: 'left' | 'right') => {
+    if (!tabsListRef.current) return;
+    
+    const container = tabsListRef.current;
+    const scrollAmount = 150; // Adjust scroll amount as needed
+    
+    if (direction === 'left') {
+      container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+      setScrollPosition(Math.max(0, scrollPosition - scrollAmount));
+    } else {
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      setScrollPosition(scrollPosition + scrollAmount);
+    }
+  };
+  
   if (isLoading) {
     return <div className="mx-auto max-w-7xl py-6">Loading settings...</div>;
   }
@@ -49,30 +69,58 @@ const DashboardSettings = () => {
       </div>
       
       <Tabs defaultValue="profile" className="space-y-6">
-        <div className="w-full overflow-x-auto pb-2 no-scrollbar">
-          <TabsList className="flex min-w-max space-x-2 h-auto p-1">
-            <TabsTrigger value="profile" className="px-3 py-1.5 whitespace-nowrap">
-              {isBusinessAccount ? "Business & Account" : "Profile"}
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="px-3 py-1.5 whitespace-nowrap">
-              Notifications
-            </TabsTrigger>
-            {!isStaff && (
-              <>
-                <TabsTrigger value="billing" className="px-3 py-1.5 whitespace-nowrap">
-                  Billing
-                </TabsTrigger>
-                {isBusinessAccount && (
-                  <TabsTrigger value="currency" className="px-3 py-1.5 whitespace-nowrap">
-                    Currency
+        <div className="relative w-full">
+          {isMobile && (
+            <>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 p-0"
+                onClick={() => scrollTabs('left')}
+                disabled={scrollPosition <= 0}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 p-0"
+                onClick={() => scrollTabs('right')}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+          
+          <div className="mx-auto px-8 sm:px-0">
+            <TabsList 
+              ref={tabsListRef} 
+              className="flex min-w-max space-x-2 h-auto p-1"
+            >
+              <TabsTrigger value="profile" className="px-3 py-1.5 whitespace-nowrap">
+                {isBusinessAccount ? "Business & Account" : "Profile"}
+              </TabsTrigger>
+              <TabsTrigger value="notifications" className="px-3 py-1.5 whitespace-nowrap">
+                Notifications
+              </TabsTrigger>
+              {!isStaff && (
+                <>
+                  <TabsTrigger value="billing" className="px-3 py-1.5 whitespace-nowrap">
+                    Billing
                   </TabsTrigger>
-                )}
-                <TabsTrigger value="ai-assistant" className="px-3 py-1.5 whitespace-nowrap">
-                  AI Assistant
-                </TabsTrigger>
-              </>
-            )}
-          </TabsList>
+                  {isBusinessAccount && (
+                    <TabsTrigger value="currency" className="px-3 py-1.5 whitespace-nowrap">
+                      Currency
+                    </TabsTrigger>
+                  )}
+                  <TabsTrigger value="ai-assistant" className="px-3 py-1.5 whitespace-nowrap">
+                    AI Assistant
+                  </TabsTrigger>
+                </>
+              )}
+            </TabsList>
+          </div>
         </div>
         
         <TabsContent value="profile" className="space-y-4">
