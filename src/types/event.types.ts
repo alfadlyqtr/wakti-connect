@@ -6,6 +6,10 @@ export interface Event {
   location: string | null;
   location_type?: 'manual' | 'google_maps';
   maps_url?: string;
+  location_coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
   start_time: string;
   end_time: string;
   is_all_day: boolean;
@@ -27,6 +31,10 @@ export interface EventFormData {
   location?: string;
   location_type?: 'manual' | 'google_maps';
   maps_url?: string;
+  location_coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
   status?: EventStatus;
   start_time?: string;
   end_time?: string;
@@ -184,6 +192,7 @@ export interface EventCustomization {
   
   // Map display preferences
   mapDisplay?: 'button' | 'qrcode' | 'both';
+  showMapPreview?: boolean;
 }
 
 export interface ShareOptions {

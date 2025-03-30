@@ -6,6 +6,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { MapPin, Link as LinkIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import LocationPicker from './LocationPicker';
+import { generateGoogleMapsUrl } from '@/config/maps';
 
 interface LocationInputProps {
   locationType: 'manual' | 'google_maps';
@@ -22,7 +24,7 @@ function isValidGoogleMapsUrl(url: string): boolean {
     // Standard google.com/maps format
     /^https?:\/\/(www\.)?google\.com\/maps/,
     // Short URL format (goo.gl)
-    /^https?:\/\/goo\.gl\/maps/,
+    /^https?:\/\/goo\.gl\/maps\//,
     // Mobile app URL format
     /^https?:\/\/maps\.app\.goo\.gl\//,
     // Coordinate-based format
@@ -40,6 +42,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
 }) => {
   const [urlError, setUrlError] = useState<string | null>(null);
   const [mapUrl, setMapUrl] = useState<string>(mapsUrl || '');
+  const [mapCoordinates, setMapCoordinates] = useState<{lat?: number, lng?: number}>({});
   
   const handleMapUrlChange = (url: string) => {
     setMapUrl(url);
@@ -55,6 +58,21 @@ const LocationInput: React.FC<LocationInputProps> = ({
   const handlePreviewMap = () => {
     if (mapUrl && isValidGoogleMapsUrl(mapUrl)) {
       window.open(mapUrl, '_blank');
+    }
+  };
+
+  const handleLocationPickerChange = (value: string, lat?: number, lng?: number) => {
+    setMapCoordinates({ lat, lng });
+    if (locationType === 'manual') {
+      onLocationChange(value, 'manual');
+    } else {
+      // For Google Maps type, generate a maps URL if we have coordinates
+      const newMapsUrl = lat && lng 
+        ? generateGoogleMapsUrl(`${lat},${lng}`) 
+        : generateGoogleMapsUrl(value);
+      
+      setMapUrl(newMapsUrl);
+      onLocationChange(value, 'google_maps', newMapsUrl);
     }
   };
 
@@ -74,10 +92,9 @@ const LocationInput: React.FC<LocationInputProps> = ({
             <p className="text-sm text-muted-foreground mb-2">
               Enter a physical address or location name
             </p>
-            <Input
-              disabled={locationType !== 'manual'}
+            <LocationPicker
               value={locationType === 'manual' ? location : ''}
-              onChange={(e) => onLocationChange(e.target.value, 'manual')}
+              onChange={(value) => handleLocationPickerChange(value)}
               placeholder="123 Main St, City, Country"
               className="w-full"
             />
@@ -91,11 +108,18 @@ const LocationInput: React.FC<LocationInputProps> = ({
               Google Maps Link
             </Label>
             <p className="text-sm text-muted-foreground mb-2">
-              Paste a Google Maps location link
+              Select a location or paste a Google Maps link
             </p>
             <div className="space-y-3">
+              {locationType === 'google_maps' && (
+                <LocationPicker
+                  value={location}
+                  onChange={(value, lat, lng) => handleLocationPickerChange(value, lat, lng)}
+                  placeholder="Search for a location"
+                  className="w-full mb-2"
+                />
+              )}
               <Input
-                disabled={locationType !== 'google_maps'}
                 value={mapUrl}
                 onChange={(e) => handleMapUrlChange(e.target.value)}
                 placeholder="https://maps.google.com/..."

@@ -1,11 +1,23 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { EditorProps } from "./types";
+import LocationPicker from "@/components/events/location/LocationPicker";
 
 const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) => {
+  const [useMapAddress, setUseMapAddress] = useState(true);
+  
+  const handleLocationChange = (value: string) => {
+    handleInputChange({ target: { name: 'address', value } });
+  };
+  
+  const handleShowMapChange = (checked: boolean) => {
+    handleInputChange({ target: { name: 'showMap', value: checked } });
+  };
+
   return (
     <>
       <div className="space-y-2">
@@ -18,17 +30,29 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
           placeholder="Contact Information"
         />
       </div>
+      
       <div className="space-y-2">
-        <Label htmlFor="address">Address</Label>
+        <Label htmlFor="description">Section Description</Label>
         <Textarea
-          id="address"
-          name="address"
-          value={contentData.address || ""}
+          id="description"
+          name="description"
+          value={contentData.description || ""}
           onChange={handleInputChange}
-          placeholder="123 Business Street, City, Country"
+          placeholder="Get in touch with us for any inquiries"
           rows={2}
         />
       </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="address">Business Address</Label>
+        <LocationPicker
+          value={contentData.address || ""}
+          onChange={handleLocationChange}
+          placeholder="123 Business Street, City, Country"
+          className="w-full"
+        />
+      </div>
+      
       <div className="space-y-2">
         <Label htmlFor="phone">Phone Number</Label>
         <Input
@@ -39,6 +63,7 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
           placeholder="+123 456 7890"
         />
       </div>
+      
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
@@ -49,6 +74,15 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
           placeholder="contact@yourbusiness.com"
           type="email"
         />
+      </div>
+      
+      <div className="flex items-center space-x-2 pt-2">
+        <Switch 
+          id="showMap" 
+          checked={contentData.showMap !== false}
+          onCheckedChange={handleShowMapChange}
+        />
+        <Label htmlFor="showMap">Show Google Map</Label>
       </div>
     </>
   );

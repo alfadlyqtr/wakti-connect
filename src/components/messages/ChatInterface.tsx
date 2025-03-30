@@ -4,14 +4,19 @@ import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, AlertTriangle } from "lucide-react";
+import { Send, AlertTriangle, MapPin } from "lucide-react";
 import { useMessaging } from "@/hooks/useMessaging";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import LocationPicker from "@/components/events/location/LocationPicker";
+import { generateGoogleMapsUrl } from "@/config/maps";
 
 const ChatInterface = () => {
   const { userId } = useParams<{ userId: string }>();
   const [messageContent, setMessageContent] = useState("");
+  const [sendingLocation, setSendingLocation] = useState(false);
+  const [locationValue, setLocationValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { 
@@ -38,7 +43,7 @@ const ChatInterface = () => {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('display_name, full_name, avatar_url')
+        .select('display_name, full_name, avatar_url, account_type')
         .eq('id', userId)
         .maybeSingle();
         
@@ -48,6 +53,23 @@ const ChatInterface = () => {
     enabled: !!userId
   });
   
+  const { data: userProfile } = useQuery({
+    queryKey: ['currentUserProfile'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('account_type')
+        .eq('id', session.user.id)
+        .single();
+        
+      return data;
+    },
+  });
+  
+  const canShareLocation = userProfile?.account_type !== 'free';
   const displayName = otherUserProfile?.display_name || otherUserProfile?.full_name || 'User';
   
   useEffect(() => {
@@ -69,6 +91,54 @@ const ChatInterface = () => {
     } catch (error) {
       console.error("Failed to send message:", error);
     }
+  };
+
+  const handleSendLocation = async () => {
+    if (!userId || !locationValue || isSending || !canShareLocation) return;
+    
+    try {
+      const mapsUrl = generateGoogleMapsUrl(locationValue);
+      const locationMessage = `📍 ${locationValue}\n${mapsUrl}`;
+      
+      await sendMessage({
+        recipientId: userId,
+        content: locationMessage
+      });
+      
+      setLocationValue("");
+      setSendingLocation(false);
+    } catch (error) {
+      console.error("Failed to send location:", error);
+    }
+  };
+  
+  const isLocationMessage = (message: string) => {
+    return message.startsWith('📍') && message.includes('maps.google.com');
+  };
+  
+  const formatLocationMessage = (message: string) => {
+    const lines = message.split('\n');
+    if (lines.length !== 2) return message;
+    
+    const locationName = lines[0].replace('📍 ', '');
+    const mapsUrl = lines[1];
+    
+    return (
+      <div>
+        <div className="flex items-center mb-1">
+          <MapPin className="h-3 w-3 mr-1" />
+          <span>{locationName}</span>
+        </div>
+        <a 
+          href={mapsUrl} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-xs text-blue-500 hover:underline"
+        >
+          Open in Google Maps
+        </a>
+      </div>
+    );
   };
   
   if (isLoadingMessages || isCheckingPermission) {
@@ -106,7 +176,9 @@ const ChatInterface = () => {
                       : 'bg-muted'
                   }`}
                 >
-                  <p>{message.content}</p>
+                  {isLocationMessage(message.content) 
+                    ? formatLocationMessage(message.content) 
+                    : <p>{message.content}</p>}
                 </div>
               </div>
             );
@@ -131,6 +203,42 @@ const ChatInterface = () => {
             maxLength={20}
             className="flex-1"
           />
+          
+          {canShareLocation && (
+            <Popover open={sendingLocation} onOpenChange={setSendingLocation}>
+              <PopoverTrigger asChild>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="icon"
+                >
+                  <MapPin className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-4">
+                  <h3 className="font-medium">Share Location</h3>
+                  <LocationPicker
+                    value={locationValue}
+                    onChange={(value) => setLocationValue(value)}
+                    placeholder="Search for a location"
+                  />
+                  <div className="flex justify-end">
+                    <Button 
+                      type="button" 
+                      onClick={handleSendLocation}
+                      disabled={!locationValue.trim()}
+                      size="sm"
+                    >
+                      <MapPin className="mr-2 h-4 w-4" />
+                      Send Location
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+          
           <Button 
             type="submit" 
             disabled={!messageContent.trim() || isSending}
