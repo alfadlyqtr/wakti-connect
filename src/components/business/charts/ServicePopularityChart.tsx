@@ -1,11 +1,57 @@
 
 import React from "react";
 import { Card, CardHeader, CardContent, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { PieChart as RechartsPieChart, Pie as RechartsPie, Cell, Tooltip as RechartsTooltip } from "recharts";
-import { ResponsiveContainer } from "recharts";
+import { PieChart } from "@/components/ui/chart";
 import { servicePopularityData, COLORS } from "@/utils/businessReportsUtils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const ServicePopularityChart = () => {
+  const isMobile = useIsMobile();
+  
+  // Prepare data for Chart.js format
+  const chartData = {
+    labels: servicePopularityData.map(item => item.name),
+    datasets: [
+      {
+        data: servicePopularityData.map(item => item.value),
+        backgroundColor: COLORS,
+        borderColor: COLORS.map(color => color),
+        borderWidth: 1,
+      }
+    ]
+  };
+  
+  // Mobile-optimized chart options
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: isMobile ? 'bottom' as const : 'right' as const,
+        align: 'center' as const,
+        labels: {
+          boxWidth: isMobile ? 10 : 12,
+          padding: isMobile ? 8 : 10,
+          font: {
+            size: isMobile ? 11 : 12
+          }
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context: any) {
+            const value = context.raw;
+            const total = context.dataset.data.reduce((acc: number, val: number) => acc + val, 0);
+            const percentage = Math.round((value / total) * 100);
+            return `${context.label}: ${value} bookings (${percentage}%)`;
+          }
+        }
+      }
+    },
+    // Adjust the radius for mobile
+    radius: isMobile ? '80%' : '90%',
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -14,26 +60,13 @@ export const ServicePopularityChart = () => {
           Distribution of bookings by service type
         </CardDescription>
       </CardHeader>
-      <CardContent className="h-80 flex justify-center">
-        <ResponsiveContainer width="80%" height="100%">
-          <RechartsPieChart>
-            <RechartsPie
-              data={servicePopularityData}
-              cx="50%"
-              cy="50%"
-              labelLine={true}
-              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-              outerRadius={120}
-              fill="#8884d8"
-              dataKey="value"
-            >
-              {servicePopularityData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </RechartsPie>
-            <RechartsTooltip formatter={(value) => [`${value} bookings`, 'Bookings']} />
-          </RechartsPieChart>
-        </ResponsiveContainer>
+      <CardContent className={`${isMobile ? 'h-[260px]' : 'h-[300px]'} flex justify-center`}>
+        <div className={`${isMobile ? 'w-full h-[220px]' : 'w-[85%] h-full'}`}>
+          <PieChart 
+            data={chartData}
+            options={chartOptions}
+          />
+        </div>
       </CardContent>
       <CardFooter>
         <p className="text-sm text-muted-foreground">

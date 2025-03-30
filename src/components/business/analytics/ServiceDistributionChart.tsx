@@ -47,7 +47,7 @@ export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> =
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'bottom' as const,
+        position: isMobile ? 'bottom' as const : 'right' as const,
         align: 'center' as const,
         labels: {
           boxWidth: isMobile ? 10 : 12,
@@ -64,12 +64,20 @@ export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> =
         titleFont: {
           size: isMobile ? 12 : 14,
         }
+      },
+      // Disable displaying labels on the pie slices for mobile
+      datalabels: {
+        display: false
       }
     },
+    // Adjust the radius for mobile
+    radius: isMobile ? '80%' : '90%',
     layout: {
       padding: {
-        top: isMobile ? 5 : 10,
-        bottom: isMobile ? 15 : 5
+        top: 5,
+        bottom: isMobile ? 30 : 5,
+        left: 5,
+        right: 5
       }
     }
   };
@@ -83,8 +91,8 @@ export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> =
   }
 
   return (
-    <div className="h-[250px] md:h-[300px] w-full flex justify-center">
-      <div className={`h-full ${isMobile ? 'w-full' : 'w-full max-w-[400px]'}`}>
+    <div className="w-full flex justify-center">
+      <div className={`${isMobile ? 'h-[220px] w-full' : 'h-[280px] w-[85%]'}`}>
         <PieChart 
           data={chartData} 
           options={chartOptions} 
