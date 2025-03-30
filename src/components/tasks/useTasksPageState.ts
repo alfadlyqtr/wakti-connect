@@ -1,9 +1,10 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus, TaskPriority, TaskTab } from '@/types/task.types';
 import { toast } from "@/components/ui/use-toast";
 import { UserRole } from "@/types/user";
+import { useDebouncedCallback } from '@/hooks/useDebouncedCallback';
 
 interface UseTasksPageStateReturn {
   tasks: Task[];
@@ -33,6 +34,7 @@ interface UseTasksPageStateReturn {
 }
 
 export const useTasksPageState = (): UseTasksPageStateReturn => {
+  // State for task management
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,9 +45,17 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
   const [editTaskDialogOpen, setEditTaskDialogOpen] = useState(false);
   const [currentEditTask, setCurrentEditTask] = useState<Task | null>(null);
   const [activeTab, setActiveTab] = useState<TaskTab>("my-tasks");
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [fetchTimestamp, setFetchTimestamp] = useState<number>(0);
+  
+  // Ref to track operations in progress to prevent concurrent operations
+  const operationInProgressRef = useRef(false);
 
   const isPaidAccount = userRole === "individual" || userRole === "business";
+
+  // Setup debounced fetch to prevent UI freezing
+  const debouncedFetch = useDebouncedCallback(async () => {
+    await fetchTasks();
+  }, 500);
 
   useEffect(() => {
     const fetchUserRole = async () => {
@@ -93,7 +103,16 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     fetchUserRole();
   }, []);
 
-  const fetchTasks = useCallback(async () => {
+  const fetchTasks = useCallback(async (): Promise<void> => {
+    // Only allow one fetch at a time
+    if (operationInProgressRef.current) {
+      console.log("Fetch already in progress, skipping");
+      return;
+    }
+    
+    operationInProgressRef.current = true;
+    const currentTimestamp = Date.now();
+    setFetchTimestamp(currentTimestamp);
     setIsLoading(true);
     
     try {
@@ -103,12 +122,14 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
       if (!session) {
         setTasks([]);
         setIsLoading(false);
+        operationInProgressRef.current = false;
         return;
       }
       
       if (userRole === "staff") {
         setTasks([]);
         setIsLoading(false);
+        operationInProgressRef.current = false;
         return;
       }
       
@@ -127,31 +148,34 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         
       if (error) throw error;
       
-      console.log(`Fetched ${data.length} tasks for ${activeTab} tab`);
-      
-      const typedTasks: Task[] = data.map((task: any) => ({
-        id: task.id,
-        title: task.title,
-        description: task.description,
-        status: task.status as TaskStatus,
-        priority: task.priority as TaskPriority,
-        due_date: task.due_date,
-        due_time: task.due_time,
-        user_id: task.user_id,
-        created_at: task.created_at,
-        updated_at: task.updated_at,
-        completed_at: task.completed_at,
-        is_recurring: task.is_recurring,
-        is_recurring_instance: task.is_recurring_instance,
-        parent_recurring_id: task.parent_recurring_id,
-        snooze_count: task.snooze_count,
-        snoozed_until: task.snoozed_until,
-        subtasks: task.subtasks || [],
-        archived_at: task.archived_at,
-        archive_reason: task.archive_reason
-      }));
-      
-      setTasks(typedTasks);
+      // Only update state if this is still the most recent fetch
+      if (currentTimestamp === fetchTimestamp) {
+        console.log(`Fetched ${data.length} tasks for ${activeTab} tab`);
+        
+        const typedTasks: Task[] = data.map((task: any) => ({
+          id: task.id,
+          title: task.title,
+          description: task.description,
+          status: task.status as TaskStatus,
+          priority: task.priority as TaskPriority,
+          due_date: task.due_date,
+          due_time: task.due_time,
+          user_id: task.user_id,
+          created_at: task.created_at,
+          updated_at: task.updated_at,
+          completed_at: task.completed_at,
+          is_recurring: task.is_recurring,
+          is_recurring_instance: task.is_recurring_instance,
+          parent_recurring_id: task.parent_recurring_id,
+          snooze_count: task.snooze_count,
+          snoozed_until: task.snoozed_until,
+          subtasks: task.subtasks || [],
+          archived_at: task.archived_at,
+          archive_reason: task.archive_reason
+        }));
+        
+        setTasks(typedTasks);
+      }
     } catch (error) {
       console.error("Error fetching tasks:", error);
       toast({
@@ -160,117 +184,175 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
+      // Only update loading state if this is still the most recent fetch
+      if (currentTimestamp === fetchTimestamp) {
+        setIsLoading(false);
+      }
+      operationInProgressRef.current = false;
     }
-  }, [activeTab, userRole]);
+  }, [activeTab, userRole, fetchTimestamp]);
 
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks, activeTab]);
 
   const handleCreateTask = async (taskData: any) => {
-    if (userRole === "staff") {
+    // Prevent concurrent operations
+    if (operationInProgressRef.current) {
       toast({
-        title: "Access denied",
-        description: "Staff accounts cannot create tasks",
+        title: "Operation in progress",
+        description: "Please wait for the current operation to complete",
         variant: "destructive"
       });
       return;
     }
     
-    if (userRole === "free") {
+    operationInProgressRef.current = true;
+    
+    try {
+      if (userRole === "staff") {
+        toast({
+          title: "Access denied",
+          description: "Staff accounts cannot create tasks",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (userRole === "free") {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          throw new Error("You must be logged in to create tasks");
+        }
+        
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        
+        const { data: existingTasks, error: countError } = await supabase
+          .from('tasks')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .gte('created_at', startOfMonth.toISOString());
+          
+        if (countError) throw countError;
+        
+        if (existingTasks && existingTasks.length >= 1) {
+          toast({
+            title: "Task limit reached",
+            description: "Free accounts are limited to 1 task per month. Please upgrade to create more tasks.",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+      
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
         throw new Error("You must be logged in to create tasks");
       }
       
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
+      const taskToCreate = {
+        title: taskData.title,
+        description: taskData.description || null,
+        status: "in-progress",
+        priority: taskData.priority || "normal",
+        due_date: taskData.due_date,
+        due_time: taskData.due_time,
+        is_recurring: taskData.is_recurring || false,
+        user_id: session.user.id
+      };
       
-      const { data: existingTasks, error: countError } = await supabase
+      console.log("Creating task with data:", taskToCreate);
+      
+      // Add to local state immediately for optimistic update
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      const optimisticTask: Task = {
+        ...taskToCreate,
+        id: tempId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        subtasks: [],
+        user_id: session.user.id,
+        status: "in-progress" as TaskStatus,
+        priority: (taskData.priority || "normal") as TaskPriority
+      };
+      
+      // Don't add optimistic update if we're in archived view
+      if (activeTab === "my-tasks") {
+        setTasks(prev => [optimisticTask, ...prev]);
+      }
+      
+      const { data, error } = await supabase
         .from('tasks')
-        .select('id')
-        .eq('user_id', session.user.id)
-        .gte('created_at', startOfMonth.toISOString());
+        .insert(taskToCreate)
+        .select()
+        .single();
         
-      if (countError) throw countError;
+      if (error) throw error;
       
-      if (existingTasks && existingTasks.length >= 1) {
+      if (taskData.subtasks && taskData.subtasks.length > 0) {
+        const subtasksToInsert = taskData.subtasks.map((subtask: any) => ({
+          task_id: data.id,
+          content: subtask.content,
+          is_completed: subtask.is_completed || false,
+          due_date: subtask.due_date || null,
+          due_time: subtask.due_time || null
+        }));
+        
+        const { error: subtaskError } = await supabase
+          .from('todo_items')
+          .insert(subtasksToInsert);
+          
+        if (subtaskError) throw subtaskError;
+      }
+      
+      toast({
+        title: "Task created",
+        description: "Your task has been created successfully",
+        variant: "success"
+      });
+      
+      // Background refresh after successful creation
+      await debouncedFetch();
+      
+    } catch (err) {
+      console.error("Error creating task:", err);
+      
+      // Remove optimistic task on error
+      if (activeTab === "my-tasks") {
+        setTasks(prev => prev.filter(task => !task.id.startsWith('temp-')));
+      }
+      
+      toast({
+        title: "Failed to create task",
+        description: err instanceof Error ? err.message : "An unknown error occurred",
+        variant: "destructive"
+      });
+      
+      // Refresh to ensure UI is in sync with server
+      await debouncedFetch();
+    } finally {
+      operationInProgressRef.current = false;
+    }
+  };
+
+  const handleUpdateTask = async (taskId: string, taskData: any) => {
+    // Prevent concurrent operations
+    if (operationInProgressRef.current) return;
+    operationInProgressRef.current = true;
+    
+    try {
+      if (userRole === "staff") {
         toast({
-          title: "Task limit reached",
-          description: "Free accounts are limited to 1 task per month. Please upgrade to create more tasks.",
+          title: "Access denied",
+          description: "Staff accounts cannot modify tasks",
           variant: "destructive"
         });
         return;
       }
-    }
-    
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      throw new Error("You must be logged in to create tasks");
-    }
-    
-    const taskToCreate = {
-      title: taskData.title,
-      description: taskData.description || null,
-      status: "in-progress",
-      priority: taskData.priority || "normal",
-      due_date: taskData.due_date,
-      due_time: taskData.due_time,
-      is_recurring: taskData.is_recurring || false,
-      user_id: session.user.id
-    };
-    
-    console.log("Creating task with data:", taskToCreate);
-    
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert(taskToCreate)
-      .select()
-      .single();
-      
-    if (error) throw error;
-    
-    if (taskData.subtasks && taskData.subtasks.length > 0) {
-      const subtasksToInsert = taskData.subtasks.map((subtask: any) => ({
-        task_id: data.id,
-        content: subtask.content,
-        is_completed: subtask.is_completed || false,
-        due_date: subtask.due_date || null,
-        due_time: subtask.due_time || null
-      }));
-      
-      const { error: subtaskError } = await supabase
-        .from('todo_items')
-        .insert(subtasksToInsert);
-        
-      if (subtaskError) throw subtaskError;
-    }
-    
-    toast({
-      title: "Task created",
-      description: "Your task has been created successfully",
-      variant: "success"
-    });
-    
-    await fetchTasks();
-  };
-
-  const handleUpdateTask = async (taskId: string, taskData: any) => {
-    if (userRole === "staff") {
-      toast({
-        title: "Access denied",
-        description: "Staff accounts cannot modify tasks",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      setIsUpdating(true);
       
       const updateData = {
         title: taskData.title,
@@ -285,6 +367,13 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
       
       console.log("Updating task with data:", updateData);
       
+      // Optimistic UI update
+      setTasks(prev => 
+        prev.map(task => 
+          task.id === taskId ? { ...task, ...updateData } : task
+        )
+      );
+      
       const { error } = await supabase
         .from('tasks')
         .update(updateData)
@@ -298,7 +387,9 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      await fetchTasks();
+      // Background refresh after successful update
+      await debouncedFetch();
+      
     } catch (error) {
       console.error("Error updating task:", error);
       toast({
@@ -306,23 +397,43 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         description: error instanceof Error ? error.message : "An unexpected error occurred",
         variant: "destructive"
       });
+      
+      // Refresh to ensure UI is in sync with server
+      await debouncedFetch();
     } finally {
-      setIsUpdating(false);
+      operationInProgressRef.current = false;
     }
   };
 
   const handleArchiveTask = async (taskId: string, reason: "deleted" | "canceled") => {
-    if (userRole === "staff") {
-      toast({
-        title: "Access denied",
-        description: "Staff accounts cannot modify tasks",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Prevent concurrent operations
+    if (operationInProgressRef.current) return;
+    operationInProgressRef.current = true;
     
     try {
+      if (userRole === "staff") {
+        toast({
+          title: "Access denied",
+          description: "Staff accounts cannot modify tasks",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       console.log(`Archiving task ${taskId} with reason: ${reason}`);
+      
+      // Check if task exists before attempting to archive
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) {
+        console.error(`Task ${taskId} not found in local state, skipping archive operation`);
+        throw new Error("Task not found");
+      }
+      
+      // For completed tasks, skip animation
+      const skipAnimation = task.status === "completed";
+      
+      // Optimistic UI update - remove from view immediately
+      setTasks(prev => prev.filter(task => task.id !== taskId));
       
       const updates = {
         status: "archived" as TaskStatus,
@@ -338,17 +449,13 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         
       if (error) throw error;
       
-      toast({
-        title: reason === "deleted" ? "Task deleted" : "Task canceled",
-        description: `Task moved to archive. It will be permanently removed in 7 days.`,
-        variant: "success"
-      });
-      
-      setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
-      
-      setTimeout(() => {
-        fetchTasks();
-      }, 500);
+      if (!skipAnimation) {
+        toast({
+          title: reason === "deleted" ? "Task deleted" : "Task canceled",
+          description: `Task moved to archive. It will be permanently removed in 7 days.`,
+          variant: "success"
+        });
+      }
       
     } catch (error) {
       console.error("Error archiving task:", error);
@@ -357,21 +464,36 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         description: error instanceof Error ? error.message : "An unexpected error occurred",
         variant: "destructive"
       });
+      
+      // Refresh to ensure UI is in sync with server
+      await debouncedFetch();
+    } finally {
+      // Short delay before releasing lock to prevent rapid successive operations
+      setTimeout(() => {
+        operationInProgressRef.current = false;
+      }, 500);
     }
   };
 
   const handleRestoreTask = async (taskId: string) => {
-    if (userRole === "staff") {
-      toast({
-        title: "Access denied",
-        description: "Staff accounts cannot modify tasks",
-        variant: "destructive"
-      });
-      return;
-    }
+    // Prevent concurrent operations
+    if (operationInProgressRef.current) return;
+    operationInProgressRef.current = true;
     
     try {
+      if (userRole === "staff") {
+        toast({
+          title: "Access denied",
+          description: "Staff accounts cannot modify tasks",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       console.log(`Restoring task ${taskId} from archive`);
+      
+      // Optimistic UI update - remove from current view immediately
+      setTasks(prev => prev.filter(task => task.id !== taskId));
       
       const { data: task } = await supabase
         .from('tasks')
@@ -399,12 +521,6 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         variant: "success"
       });
       
-      setTasks(currentTasks => currentTasks.filter(task => task.id !== taskId));
-      
-      setTimeout(() => {
-        fetchTasks();
-      }, 500);
-      
     } catch (error) {
       console.error("Error restoring task:", error);
       toast({
@@ -412,6 +528,12 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
         description: error instanceof Error ? error.message : "An unexpected error occurred",
         variant: "destructive"
       });
+      
+      // Refresh to ensure UI is in sync with server
+      await debouncedFetch();
+    } finally {
+      // Release the operation lock
+      operationInProgressRef.current = false;
     }
   };
 
@@ -448,7 +570,7 @@ export const useTasksPageState = (): UseTasksPageStateReturn => {
     handleUpdateTask,
     handleArchiveTask,
     handleRestoreTask,
-    refetchTasks: fetchTasks,
+    refetchTasks: debouncedFetch,
     filteredTasks,
     isPaidAccount,
     activeTab,

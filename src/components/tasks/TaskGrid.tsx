@@ -1,11 +1,10 @@
 
-import React, { useState, useCallback } from "react";
-import { Task, TaskStatus, SubTask } from "@/types/task.types";
+import React, { useState, useCallback, useRef } from "react";
+import { Task, TaskStatus } from "@/types/task.types";
 import TaskCard from "@/components/ui/TaskCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
-import { TaskCardCompletionAnimation } from "@/components/ui/task-card/TaskCardCompletionAnimation";
 import { useDebouncedRefresh } from "@/hooks/useDebouncedRefresh";
 
 interface TaskGridProps {
@@ -31,7 +30,9 @@ const TaskGrid: React.FC<TaskGridProps> = ({
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
   const [deleteReason, setDeleteReason] = useState<"deleted" | "canceled">("deleted");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [operationInProgress, setOperationInProgress] = useState(false);
+  
+  // Operation lock ref to prevent concurrent operations
+  const operationLockRef = useRef(false);
   
   // Local task state for optimistic updates
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks);
@@ -41,51 +42,86 @@ const TaskGrid: React.FC<TaskGridProps> = ({
     setLocalTasks(tasks);
   }, [tasks]);
   
-  // Debounced refresh to prevent UI freezing
-  const { refresh: debouncedRefetch, isRefreshing } = useDebouncedRefresh(refetch);
+  // Debounced refresh with error handling
+  const { refresh: debouncedRefetch, isRefreshing } = useDebouncedRefresh(
+    async () => {
+      try {
+        await refetch();
+        return true;
+      } catch (error) {
+        console.error("Error in debounced refresh:", error);
+        return false;
+      }
+    }, 
+    500
+  );
+  
+  // Operation lock utility functions
+  const acquireLock = useCallback(() => {
+    if (operationLockRef.current) {
+      return false;
+    }
+    operationLockRef.current = true;
+    return true;
+  }, []);
+  
+  const releaseLock = useCallback(() => {
+    operationLockRef.current = false;
+  }, []);
   
   // Handler for editing a task
-  const handleEditTask = (taskId: string) => {
-    if (operationInProgress) return;
+  const handleEditTask = useCallback((taskId: string) => {
+    if (!acquireLock()) return;
     
-    const taskToEdit = localTasks.find(task => task.id === taskId);
-    if (taskToEdit) {
-      onEdit(taskToEdit);
+    try {
+      const taskToEdit = localTasks.find(task => task.id === taskId);
+      if (taskToEdit) {
+        onEdit(taskToEdit);
+      }
+    } finally {
+      releaseLock();
     }
-  };
+  }, [localTasks, onEdit, acquireLock, releaseLock]);
 
   // Handler for deleting/canceling a task
-  const handleDeleteTask = (taskId: string) => {
-    if (operationInProgress) return;
+  const handleDeleteTask = useCallback((taskId: string) => {
+    if (!acquireLock()) return;
     
-    setTaskToDelete(taskId);
-    setDeleteReason("deleted");
-    setShowDeleteDialog(true);
-  };
+    try {
+      setTaskToDelete(taskId);
+      setDeleteReason("deleted");
+      setShowDeleteDialog(true);
+    } finally {
+      releaseLock();
+    }
+  }, [acquireLock, releaseLock]);
   
   // Handler for canceling a task
-  const handleCancelTask = (taskId: string) => {
-    if (operationInProgress) return;
+  const handleCancelTask = useCallback((taskId: string) => {
+    if (!acquireLock()) return;
     
-    setTaskToDelete(taskId);
-    setDeleteReason("canceled");
-    setShowDeleteDialog(true);
-  };
+    try {
+      setTaskToDelete(taskId);
+      setDeleteReason("canceled");
+      setShowDeleteDialog(true);
+    } finally {
+      releaseLock();
+    }
+  }, [acquireLock, releaseLock]);
 
   // Confirming task deletion/cancellation with optimistic UI update
-  const confirmDeleteTask = async () => {
-    if (!taskToDelete || operationInProgress) return;
+  const confirmDeleteTask = useCallback(async () => {
+    if (!taskToDelete || !acquireLock()) return;
     
     try {
       setIsDeleting(true);
-      setOperationInProgress(true);
       console.log(`Confirming deletion of task ${taskToDelete} with reason ${deleteReason}`);
-      
-      // Optimistic UI update - remove the task from local state immediately
-      setLocalTasks(prevTasks => prevTasks.filter(task => task.id !== taskToDelete));
       
       // Close the dialog early for better UX
       setShowDeleteDialog(false);
+      
+      // Optimistic UI update - remove the task from local state immediately
+      setLocalTasks(prevTasks => prevTasks.filter(task => task.id !== taskToDelete));
       
       if (isArchiveView) {
         // Permanently delete from archive
@@ -125,20 +161,22 @@ const TaskGrid: React.FC<TaskGridProps> = ({
     } finally {
       setIsDeleting(false);
       setTaskToDelete(null);
-      setOperationInProgress(false);
+      releaseLock();
     }
-  };
+  }, [taskToDelete, deleteReason, isArchiveView, onArchive, debouncedRefetch, acquireLock, releaseLock]);
 
   // Handler for changing task status with optimistic UI update
-  const handleStatusChange = async (taskId: string, newStatus: string) => {
-    if (operationInProgress) return;
+  const handleStatusChange = useCallback(async (taskId: string, newStatus: string) => {
+    if (!acquireLock()) return;
     
     try {
-      setOperationInProgress(true);
       console.log(`Changing status of task ${taskId} to ${newStatus}`);
       
       // Validate the new status is a valid TaskStatus before updating
       const validatedStatus = newStatus as TaskStatus;
+      
+      // Skip animation for completed tasks if they're being archived
+      const skipAnimation = validatedStatus === 'archived' && localTasks.find(task => task.id === taskId)?.status === 'completed';
       
       // Optimistic UI update
       setLocalTasks(prev => 
@@ -179,11 +217,13 @@ const TaskGrid: React.FC<TaskGridProps> = ({
         'pending': 'Task marked as pending',
       };
       
-      toast({
-        title: "Status updated",
-        description: statusMessages[newStatus as keyof typeof statusMessages] || `Task marked as ${newStatus}`,
-        variant: "success",
-      });
+      if (!skipAnimation) {
+        toast({
+          title: "Status updated",
+          description: statusMessages[newStatus as keyof typeof statusMessages] || `Task marked as ${newStatus}`,
+          variant: "success",
+        });
+      }
       
       // Refresh in the background without freezing the UI
       await debouncedRefetch();
@@ -200,16 +240,15 @@ const TaskGrid: React.FC<TaskGridProps> = ({
         variant: "destructive",
       });
     } finally {
-      setOperationInProgress(false);
+      releaseLock();
     }
-  };
+  }, [localTasks, debouncedRefetch, acquireLock, releaseLock]);
 
   // Handler for snoozing a task with optimistic UI update
-  const handleSnoozeTask = async (taskId: string, days: number) => {
-    if (operationInProgress) return;
+  const handleSnoozeTask = useCallback(async (taskId: string, days: number) => {
+    if (!acquireLock()) return;
     
     try {
-      setOperationInProgress(true);
       console.log(`Snoozing task ${taskId} for ${days} days`);
       
       // Calculate the snooze date
@@ -271,16 +310,15 @@ const TaskGrid: React.FC<TaskGridProps> = ({
         variant: "destructive",
       });
     } finally {
-      setOperationInProgress(false);
+      releaseLock();
     }
-  };
+  }, [localTasks, debouncedRefetch, acquireLock, releaseLock]);
 
   // Handler for toggling a subtask with optimistic UI update
-  const handleSubtaskToggle = async (taskId: string, subtaskIndex: number, isCompleted: boolean) => {
-    if (operationInProgress) return;
+  const handleSubtaskToggle = useCallback(async (taskId: string, subtaskIndex: number, isCompleted: boolean) => {
+    if (!acquireLock()) return;
     
     try {
-      setOperationInProgress(true);
       console.log(`Toggling subtask ${subtaskIndex} of task ${taskId} to ${isCompleted}`);
       
       const subtask = localTasks.find(t => t.id === taskId)?.subtasks?.[subtaskIndex];
@@ -334,16 +372,15 @@ const TaskGrid: React.FC<TaskGridProps> = ({
         variant: "destructive",
       });
     } finally {
-      setOperationInProgress(false);
+      releaseLock();
     }
-  };
+  }, [localTasks, debouncedRefetch, acquireLock, releaseLock]);
   
   // Handle restoring a task from archive with optimistic UI update
-  const handleRestoreTask = async (taskId: string) => {
-    if (operationInProgress || !onRestore) return;
+  const handleRestoreTask = useCallback(async (taskId: string) => {
+    if (!onRestore || !acquireLock()) return;
     
     try {
-      setOperationInProgress(true);
       console.log(`Restoring task ${taskId} from archive`);
       
       // Optimistic UI update - remove from local display immediately
@@ -372,9 +409,9 @@ const TaskGrid: React.FC<TaskGridProps> = ({
         variant: "destructive",
       });
     } finally {
-      setOperationInProgress(false);
+      releaseLock();
     }
-  };
+  }, [onRestore, debouncedRefetch, acquireLock, releaseLock]);
   
   return (
     <>

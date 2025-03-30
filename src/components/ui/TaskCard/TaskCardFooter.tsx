@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, ThumbsUp, Loader2 } from "lucide-react";
 import { format, isPast, isToday } from "date-fns";
@@ -25,27 +25,35 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
 }) => {
   const [showAnimation, setShowAnimation] = useState(false);
   const [isAheadOfTime, setIsAheadOfTime] = useState(false);
+  const operationInProgressRef = useRef(false);
   
   // Check if task is completed
   const isCompleted = status === "completed";
   const isArchived = status === "archived";
   
-  // Handle completing a task
+  // Handle completing a task with debounce
   const handleComplete = () => {
+    // Prevent multiple rapid clicks
+    if (operationInProgressRef.current) return;
+    operationInProgressRef.current = true;
+    
     // Determine if task is being completed ahead of time
     const isEarly = !isPast(dueDate) && !isToday(dueDate);
     setIsAheadOfTime(isEarly);
     
     // Show animation and then update task status
     setShowAnimation(true);
-    
-    // Status will be updated after animation completes
   };
   
   // Update task status after animation completes
   const handleAnimationComplete = () => {
     setShowAnimation(false);
     onStatusChange(id, "completed");
+    
+    // Reset operation flag after a delay to prevent rapid clicks
+    setTimeout(() => {
+      operationInProgressRef.current = false;
+    }, 500);
   };
   
   // Don't show controls for archived tasks
@@ -73,6 +81,7 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
             size="sm"
             className="h-8 bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
             onClick={handleComplete}
+            disabled={operationInProgressRef.current}
           >
             <Check className="mr-1 h-4 w-4" />
             Complete

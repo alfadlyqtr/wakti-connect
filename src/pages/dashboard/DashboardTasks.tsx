@@ -5,12 +5,13 @@ import TasksLoading from "@/components/tasks/TasksLoading";
 import TaskGrid from "@/components/tasks/TaskGrid";
 import { CreateTaskDialog } from "@/components/tasks/CreateTaskDialog";
 import { EditTaskDialog } from "@/components/tasks/EditTaskDialog";
-import { useTasksPageState } from "@/components/tasks/useTasksPageState";
+import { useTasksPageState } from "@/hooks/tasks/useTasksPageState";
 import { TaskStatusFilter, TaskPriorityFilter } from "@/components/tasks/types";
 import TaskTabs from "@/components/tasks/TaskTabs";
 import { Archive } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { UserRole } from "@/types/user";
+import TasksContainer from "@/components/tasks/TasksContainer";
 
 const DashboardTasks = () => {
   const {
@@ -108,37 +109,17 @@ const DashboardTasks = () => {
         showCreateButton={activeTab === "my-tasks"}
       />
       
-      {filteredTasks.length > 0 ? (
-        <TaskGrid
-          tasks={filteredTasks}
-          userRole={userRole}
-          refetch={refetchTasks}
-          isArchiveView={activeTab === "archived"}
-          onEdit={handleEditTask}
-          onArchive={handleArchiveTask}
-          onRestore={handleRestoreTask}
-        />
-      ) : (
-        <div className="text-center py-12 border rounded-lg bg-background">
-          <h3 className="text-lg font-medium mb-2">
-            {activeTab === "archived" ? "No archived tasks" : "No tasks found"}
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            {activeTab === "archived" 
-              ? "Tasks that you delete or cancel will appear here" 
-              : "Get started by creating your first task"}
-          </p>
-          
-          {activeTab === "my-tasks" && userRole !== "staff" && (
-            <button
-              onClick={() => setCreateTaskDialogOpen(true)}
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              Create Task
-            </button>
-          )}
-        </div>
-      )}
+      <TasksContainer
+        tasks={filteredTasks}
+        userRole={userRole}
+        refetch={refetchTasks}
+        isPaidAccount={isPaidAccount}
+        onCreateTask={() => setCreateTaskDialogOpen(true)}
+        isArchiveView={activeTab === "archived"}
+        onEdit={handleEditTask}
+        onArchive={handleArchiveTask}
+        onRestore={handleRestoreTask}
+      />
       
       <CreateTaskDialog
         open={createTaskDialogOpen}
