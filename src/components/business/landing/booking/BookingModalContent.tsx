@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Label } from '@/components/ui/label';
@@ -29,6 +29,17 @@ export const BookingModalContent: React.FC<BookingModalContentProps> = ({
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+  
+  // Check if user is logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsUserLoggedIn(!!session);
+    };
+    
+    checkSession();
+  }, []);
   
   const handleBooking = async () => {
     if (!selectedDate || !selectedSlot) {
@@ -43,32 +54,6 @@ export const BookingModalContent: React.FC<BookingModalContentProps> = ({
     setIsSubmitting(true);
     
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast({
-          variant: "destructive",
-          title: "Authentication Required",
-          description: "Please sign in to book this appointment."
-        });
-        // Redirect to login
-        navigate('/login', { 
-          state: { 
-            redirectAfterLogin: `/booking/${businessId}/${template.id}` 
-          } 
-        });
-        return;
-      }
-
-      const user = session.user;
-      
-      // Get user profile to get their name
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, email')
-        .eq('id', user.id)
-        .single();
-      
       // Format date and time for booking
       const bookingUrl = `/booking/${businessId}/${template.id}?date=${format(selectedDate, 'yyyy-MM-dd')}&time=${encodeURIComponent(selectedSlot)}`;
       
@@ -89,6 +74,16 @@ export const BookingModalContent: React.FC<BookingModalContentProps> = ({
   
   return (
     <div className="space-y-6">
+      <div className="mb-4">
+        <Label className="text-base font-semibold">Service: {template.name}</Label>
+        {template.price && (
+          <p className="text-sm mt-1">Price: ${template.price}</p>
+        )}
+        {template.duration && (
+          <p className="text-sm">Duration: {template.duration} minutes</p>
+        )}
+      </div>
+      
       <div>
         <Label className="text-base">Select Date</Label>
         <div className="mt-2">
@@ -140,13 +135,14 @@ export const BookingModalContent: React.FC<BookingModalContentProps> = ({
         <Button 
           onClick={handleBooking} 
           disabled={!selectedDate || !selectedSlot || isSubmitting}
+          className="w-full"
         >
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Processing...
             </>
-          ) : "Continue Booking"}
+          ) : "Continue to Book"}
         </Button>
       </div>
     </div>
