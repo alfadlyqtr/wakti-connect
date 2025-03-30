@@ -58,16 +58,43 @@ export const updateBooking = async (
 export const acknowledgeBooking = async (bookingId: string): Promise<boolean> => {
   try {
     const now = new Date().toISOString();
+    
+    // First get the business_id for notification
+    const { data: bookingData, error: fetchError } = await supabase
+      .from('bookings')
+      .select('business_id, title, staff_name, staff_assigned_id')
+      .eq('id', bookingId)
+      .single();
+      
+    if (fetchError) throw fetchError;
+    
+    // Update the booking
     const { error } = await supabase
       .from('bookings')
       .update({ 
         is_acknowledged: true,
         acknowledged_at: now,
-        updated_at: now
+        updated_at: now,
+        status: 'in_progress' // Add a new status for acknowledged bookings
       })
       .eq('id', bookingId);
       
     if (error) throw error;
+    
+    // Send notification to the business owner
+    if (bookingData?.business_id) {
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: bookingData.business_id,
+          title: "Booking Acknowledged",
+          content: `Staff ${bookingData.staff_name || 'member'} has acknowledged the booking: ${bookingData.title}`,
+          type: "booking_acknowledgment",
+          related_entity_id: bookingId,
+          related_entity_type: "booking"
+        });
+    }
+    
     return true;
   } catch (error) {
     console.error("Error acknowledging booking:", error);

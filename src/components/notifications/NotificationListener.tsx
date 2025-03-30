@@ -28,6 +28,18 @@ const NotificationListener = () => {
             variant: "success"
           });
         }
+        
+        // Handle booking acknowledgment notifications
+        if (notification.type === 'booking_acknowledgment') {
+          queryClient.invalidateQueries({ queryKey: ['bookings'] });
+          
+          toast({
+            title: "Booking Acknowledged",
+            description: notification.content,
+            duration: 5000,
+            variant: "info"
+          });
+        }
       };
 
       // Subscribe to notifications

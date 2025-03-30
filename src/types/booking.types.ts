@@ -1,3 +1,4 @@
+
 export interface Booking {
   id: string;
   business_id: string;
@@ -43,7 +44,7 @@ export interface BookingWithRelations extends Booking {
   is_published?: boolean;
 }
 
-export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
+export type BookingStatus = "pending" | "in_progress" | "confirmed" | "cancelled" | "completed" | "no_show";
 
 export type BookingDisplayStatus = BookingStatus | "template";
 

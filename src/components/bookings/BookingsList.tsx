@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { format, parseISO, differenceInMinutes } from "date-fns";
@@ -121,6 +122,16 @@ const BookingsList: React.FC<BookingsListProps> = ({
     });
   };
 
+  // Helper to get badge styling based on booking status
+  const getStatusBadgeStyle = (booking: BookingWithRelations) => {
+    if (booking.status === 'pending') return 'bg-yellow-100 text-yellow-800';
+    if (booking.status === 'in_progress') return 'bg-blue-100 text-blue-800';
+    if (booking.status === 'confirmed') return 'bg-green-100 text-green-800';
+    if (booking.status === 'completed') return 'bg-green-500 text-white';
+    if (booking.status === 'cancelled' || booking.status === 'no_show') return 'bg-red-100 text-red-800';
+    return 'bg-blue-100 text-blue-800';
+  };
+
   if (bookings.length === 0) {
     return (
       <Card>
@@ -145,7 +156,7 @@ const BookingsList: React.FC<BookingsListProps> = ({
         return (
           <Card 
             key={booking.id} 
-            className={`overflow-hidden ${isNoShow ? 'border-red-300' : ''}`}
+            className={`overflow-hidden ${isNoShow ? 'border-red-300' : isAcknowledged ? 'border-blue-300' : ''}`}
           >
             <CardHeader className="bg-muted pb-2">
               <div className="flex justify-between items-start">
@@ -156,9 +167,9 @@ const BookingsList: React.FC<BookingsListProps> = ({
                 </CardTitle>
                 
                 <div className="flex items-center gap-2">
-                  {isAcknowledged && isStaff && (
+                  {isAcknowledged && (
                     <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                      Acknowledged
+                      Staff Acknowledged
                     </span>
                   )}
                   
@@ -170,14 +181,11 @@ const BookingsList: React.FC<BookingsListProps> = ({
                   
                   <span className={`px-2 py-1 text-xs rounded-full ${
                     isTemplate ? 'bg-purple-100 text-purple-800' :
-                    booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                    booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                    booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                    booking.status === 'no_show' ? 'bg-red-100 text-red-800' :
-                    'bg-blue-100 text-blue-800'
+                    getStatusBadgeStyle(booking)
                   }`}>
                     {isTemplate ? 'Pre-Booking Template' : 
                       booking.status === 'no_show' ? 'No-Show' :
+                      booking.status === 'in_progress' ? 'In Progress' :
                       booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                   </span>
                 </div>
@@ -293,7 +301,7 @@ const BookingsList: React.FC<BookingsListProps> = ({
                     </div>
                     
                     <div className="flex flex-wrap space-x-2 mt-4">
-                      {isStaff && !isAcknowledged && booking.status !== 'cancelled' && booking.status !== 'no_show' && onAcknowledgeBooking && (
+                      {isStaff && !isAcknowledged && booking.status !== 'cancelled' && booking.status !== 'no_show' && booking.status !== 'completed' && onAcknowledgeBooking && (
                         <Button 
                           size="sm" 
                           variant="outline"
@@ -389,7 +397,8 @@ const BookingsList: React.FC<BookingsListProps> = ({
                         </>
                       )}
                       
-                      {booking.status === 'confirmed' && !isStaff && !booking.is_no_show && !isNoShowTab && (
+                      {/* Only show Complete button to business owners for in_progress or confirmed bookings */}
+                      {(booking.status === 'in_progress' || booking.status === 'confirmed') && !isStaff && !booking.is_no_show && !isNoShowTab && (
                         <>
                           <Button 
                             size="sm" 
