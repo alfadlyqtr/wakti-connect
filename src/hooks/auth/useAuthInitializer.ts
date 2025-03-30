@@ -11,6 +11,7 @@ export function useAuthInitializer() {
   const [authInitialized, setAuthInitialized] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
+  // Use the profile operations hook
   const { createUserFromProfile, createBasicUser, createProfile } = useProfileOperations();
 
   useEffect(() => {
