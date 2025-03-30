@@ -136,33 +136,17 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
   };
 
   return (
-    <section className="py-12 md:py-16" style={{
-      backgroundColor: content.background_color,
-      color: content.text_color,
-      padding: content.padding === 'none' ? '0' : 
-              content.padding === 'sm' ? '1rem' : 
-              content.padding === 'md' ? '2rem' : 
-              content.padding === 'lg' ? '3rem' : 
-              content.padding === 'xl' ? '4rem' : '2rem',
-      borderRadius: content.border_radius === 'none' ? '0' : 
-                    content.border_radius === 'small' ? '0.25rem' : 
-                    content.border_radius === 'medium' ? '0.5rem' : 
-                    content.border_radius === 'large' ? '0.75rem' : 
-                    content.border_radius === 'full' ? '9999px' : '0.5rem',
-      backgroundImage: content.background_image_url ? `url(${content.background_image_url})` : 'none',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center'
-    }}>
+    <section className="py-8">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold mb-4">{title}</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{description}</p>
+          <p className="text-lg max-w-2xl mx-auto opacity-75">{description}</p>
         </div>
         
         <div className="flex flex-col md:flex-row gap-8">
           {/* Contact Information */}
           <div className="md:w-1/2 space-y-6">
-            <div className="space-y-2">
+            <div className="space-y-4">
               {email && (
                 <div className="flex items-center space-x-2">
                   <span className="text-primary">✉</span>

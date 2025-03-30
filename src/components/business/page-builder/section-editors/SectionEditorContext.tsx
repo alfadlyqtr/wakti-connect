@@ -31,16 +31,16 @@ export const SectionEditorProvider: React.FC<{
   useEffect(() => {
     // Make sure we have all styling properties in contentData
     const mergedContent = {
-      ...contentData,
+      ...section.section_content || {},
       // Include section styling from the section object if not in contentData
-      background_color: section.background_color || contentData.background_color,
-      text_color: section.text_color || contentData.text_color,
-      padding: section.padding || contentData.padding,
-      border_radius: section.border_radius || contentData.border_radius,
-      background_image_url: section.background_image_url || contentData.background_image_url
+      background_color: section.background_color,
+      text_color: section.text_color,
+      padding: section.padding,
+      border_radius: section.border_radius,
+      background_image_url: section.background_image_url
     };
     
-    setContentData(section.section_content || mergedContent);
+    setContentData(mergedContent);
     setIsDirty(false);
   }, [section]);
   
@@ -70,6 +70,7 @@ export const SectionEditorProvider: React.FC<{
   
   // Handle section-specific styling changes
   const handleStyleChange = (name: string, value: string) => {
+    // Update contentData with the style property
     const newContentData = {
       ...contentData,
       [name]: value
@@ -101,28 +102,13 @@ export const SectionEditorProvider: React.FC<{
   
   const handleSaveSection = () => {
     // For manual save, we also want to update the section-specific styling fields
-    const sectionUpdates: Partial<BusinessPageSection> = {};
-    
-    // Extract styling properties from content to also update on section
-    if (contentData.background_color !== undefined) {
-      sectionUpdates.background_color = contentData.background_color;
-    }
-    
-    if (contentData.text_color !== undefined) {
-      sectionUpdates.text_color = contentData.text_color;
-    }
-    
-    if (contentData.padding !== undefined) {
-      sectionUpdates.padding = contentData.padding;
-    }
-    
-    if (contentData.border_radius !== undefined) {
-      sectionUpdates.border_radius = contentData.border_radius;
-    }
-    
-    if (contentData.background_image_url !== undefined) {
-      sectionUpdates.background_image_url = contentData.background_image_url;
-    }
+    const sectionUpdates: Partial<BusinessPageSection> = {
+      background_color: contentData.background_color,
+      text_color: contentData.text_color,
+      padding: contentData.padding,
+      border_radius: contentData.border_radius,
+      background_image_url: contentData.background_image_url
+    };
     
     updateSection.mutate({
       sectionId: section.id,

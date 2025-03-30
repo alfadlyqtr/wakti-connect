@@ -8,7 +8,7 @@ import {
   Linkedin, 
   Youtube,
   Globe, 
-  LucideIcon 
+  TikTok
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -19,24 +19,6 @@ interface BusinessSocialLinksProps {
   size?: 'small' | 'default' | 'large';
   vertical?: boolean;
 }
-
-// Custom TikTok icon component since it's not in lucide-react
-const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
-  </svg>
-);
 
 // Custom Pinterest icon component since it's not in lucide-react
 const PinterestIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -64,7 +46,7 @@ const BusinessSocialLinks = ({
   size = 'default',
   vertical = false
 }: BusinessSocialLinksProps) => {
-  const getSocialIcon = (platform: string): React.ComponentType<any> => {
+  const getSocialIcon = (platform: string): any => {
     switch (platform) {
       case 'facebook':
         return Facebook;
@@ -77,7 +59,7 @@ const BusinessSocialLinks = ({
       case 'youtube':
         return Youtube;
       case 'tiktok':
-        return TikTokIcon;
+        return TikTok;
       case 'pinterest':
         return PinterestIcon;
       case 'website':

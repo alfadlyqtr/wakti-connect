@@ -37,11 +37,20 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
       (section.border_radius || defaultBorderRadius) === 'large' ? '12px' :
       (section.border_radius || defaultBorderRadius) === 'full' ? '9999px' : '8px';
     
+    // Calculate padding based on section settings
+    const paddingValue = 
+      section.padding === 'none' ? '0' :
+      section.padding === 'sm' ? '1rem' :
+      section.padding === 'md' ? '2rem' :
+      section.padding === 'lg' ? '3rem' :
+      section.padding === 'xl' ? '4rem' : '1rem';
+    
     return {
       backgroundColor: section.background_color || 'transparent',
       color: section.text_color || 'inherit',
-      padding: section.padding || '0',
+      padding: paddingValue,
       borderRadius: borderRadiusValue,
+      boxShadow: section.background_color ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
       ...(section.background_image_url && {
         backgroundImage: `url(${section.background_image_url})`,
         backgroundSize: 'cover',
@@ -57,9 +66,8 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
     const sectionStyles = getSectionStyles(section);
     
     const sectionClasses = cn(
-      "section-wrapper",
-      section.background_color || section.background_image_url ? "p-6 sm:p-8 md:p-10" : "",
-      section.background_color ? "rounded-lg" : ""
+      "section-wrapper mb-8",
+      section.background_color || section.background_image_url ? "rounded overflow-hidden" : ""
     );
     
     const SectionComponent = () => {

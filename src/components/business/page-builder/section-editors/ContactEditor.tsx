@@ -6,12 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { EditorProps } from "./types";
 import { Button } from "@/components/ui/button";
-import { Navigation } from "lucide-react";
+import { MapPin, Navigation } from "lucide-react";
 import LocationPicker from "@/components/events/location/LocationPicker";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@/components/ui/use-toast";
 
 const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }) => {
-  const [useMapAddress, setUseMapAddress] = useState(true);
   const [isLocating, setIsLocating] = useState(false);
   
   const handleLocationChange = (value: string) => {
@@ -154,8 +153,22 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
         />
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="address">Business Address</Label>
+      <div className="space-y-2 mt-4 border-t pt-4">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="address" className="font-medium">Business Address</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={getCurrentLocation}
+            disabled={isLocating}
+            className="flex items-center"
+          >
+            <Navigation className="mr-2 h-4 w-4" />
+            {isLocating ? "Getting location..." : "Use Current Location"}
+          </Button>
+        </div>
+        
         <div className="space-y-2">
           <LocationPicker
             value={contentData.address || ""}
@@ -164,21 +177,16 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
             className="w-full"
           />
           
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="w-full justify-start"
-            onClick={getCurrentLocation}
-            disabled={isLocating}
-          >
-            <Navigation className="mr-2 h-4 w-4" />
-            {isLocating ? "Getting your location..." : "Use Current Location"}
-          </Button>
+          {contentData.coordinates && (
+            <div className="text-xs text-muted-foreground">
+              <MapPin className="inline h-3 w-3 mr-1" />
+              Location coordinates saved
+            </div>
+          )}
         </div>
       </div>
       
-      <div className="space-y-2">
+      <div className="space-y-2 mt-4">
         <Label htmlFor="phone">Phone Number</Label>
         <Input
           id="phone"
@@ -201,7 +209,7 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
         />
       </div>
       
-      <div className="flex items-center space-x-2 pt-2">
+      <div className="flex items-center space-x-2 pt-4 mt-2 border-t">
         <Switch 
           id="showMap" 
           checked={contentData.showMap !== false}
@@ -219,9 +227,9 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
         <Label htmlFor="enableContactForm">Enable Contact Form</Label>
       </div>
       
-      {contentData.enableContactForm && (
-        <div className="space-y-2 border rounded p-3 mt-2">
-          <div className="text-sm font-medium">Contact Form Settings</div>
+      {contentData.enableContactForm !== false && (
+        <div className="space-y-4 border rounded p-4 mt-4">
+          <div className="font-medium">Contact Form Settings</div>
           <div className="space-y-2">
             <Label htmlFor="contactFormTitle">Form Title</Label>
             <Input
@@ -244,13 +252,30 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
           </div>
           <div className="space-y-2">
             <Label htmlFor="contactButtonColor">Button Color</Label>
-            <Input
-              id="contactButtonColor"
-              name="contactButtonColor"
-              type="color"
-              value={contentData.contactButtonColor || "#3B82F6"}
-              onChange={handleInputChange}
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                id="contactButtonColor"
+                name="contactButtonColor"
+                type="color"
+                value={contentData.contactButtonColor || "#3B82F6"}
+                onChange={handleInputChange}
+                className="w-12 h-9 p-1"
+              />
+              <Input
+                type="text"
+                value={contentData.contactButtonColor || "#3B82F6"}
+                onChange={(e) => {
+                  const syntheticEvent = {
+                    target: {
+                      name: 'contactButtonColor',
+                      value: e.target.value
+                    }
+                  } as React.ChangeEvent<HTMLInputElement>;
+                  handleInputChange(syntheticEvent);
+                }}
+                placeholder="#3B82F6"
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="contactSuccessMessage">Success Message</Label>
