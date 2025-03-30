@@ -23,9 +23,10 @@ interface SidebarProps {
   isOpen: boolean;
   userRole: "free" | "individual" | "business" | "staff";
   onCollapseChange?: (collapsed: boolean) => void;
+  closeSidebar?: () => void;
 }
 
-const Sidebar = ({ isOpen, userRole, onCollapseChange }: SidebarProps) => {
+const Sidebar = ({ isOpen, userRole, onCollapseChange, closeSidebar }: SidebarProps) => {
   const [collapsed, setCollapsed] = useState(true); // Default to collapsed
   
   // Check local storage for saved sidebar state
@@ -76,6 +77,13 @@ const Sidebar = ({ isOpen, userRole, onCollapseChange }: SidebarProps) => {
     },
   });
 
+  // Handle navigation click to close sidebar on mobile
+  const handleNavClick = () => {
+    if (closeSidebar) {
+      closeSidebar();
+    }
+  };
+
   return (
     <SidebarContainer 
       isOpen={isOpen} 
@@ -90,7 +98,7 @@ const Sidebar = ({ isOpen, userRole, onCollapseChange }: SidebarProps) => {
       
       {/* Navigation Items */}
       <div className="flex-grow overflow-y-auto">
-        <SidebarNavItems onNavClick={() => {}} isCollapsed={collapsed} />
+        <SidebarNavItems onNavClick={handleNavClick} isCollapsed={collapsed} />
       </div>
       
       {/* Upgrade Banner - Only show for free users and when not collapsed */}

@@ -32,9 +32,14 @@ export function useSidebarToggle() {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const closeSidebar = () => {
+    setIsSidebarOpen(false);
+  };
+
   return {
     isSidebarOpen,
     toggleSidebar,
+    closeSidebar,
     isMobile
   };
 }

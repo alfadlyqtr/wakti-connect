@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -15,7 +16,7 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutProps) => {
   // Get sidebar toggle state and mobile detection
-  const { isSidebarOpen, toggleSidebar, isMobile } = useSidebarToggle();
+  const { isSidebarOpen, toggleSidebar, closeSidebar, isMobile } = useSidebarToggle();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
@@ -74,14 +75,24 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   }, [profileLoading, location.pathname, userRoleValue, isStaff, navigate, location.state, profileData?.account_type, accountType]);
 
   return (
-    <div className="min-h-screen flex flex-col overflow-hidden">
+    <div className={`min-h-screen flex flex-col overflow-hidden ${isSidebarOpen && isMobile ? 'sidebar-open-body' : ''}`}>
       <Navbar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
       
       <div className="flex flex-1 relative overflow-hidden">
+        {/* Backdrop overlay - only visible on mobile when sidebar is open */}
+        {isMobile && isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+            onClick={closeSidebar}
+            aria-hidden="true"
+          />
+        )}
+        
         <Sidebar 
           isOpen={isSidebarOpen} 
           userRole={userRoleValue}
           onCollapseChange={handleCollapseChange}
+          closeSidebar={closeSidebar}
         />
         
         <DashboardContent

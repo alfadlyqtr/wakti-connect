@@ -65,6 +65,10 @@ const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
     return location.pathname.startsWith(path);
   };
 
+  const handleNavItemClick = (path: string) => {
+    onNavClick(path);
+  };
+
   return (
     <div className="flex flex-col gap-1.5 px-2.5">
       {filteredNavItems.map((item) => (
@@ -74,7 +78,7 @@ const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
           isActive={isActive(item)}
           isMobile={isMobile}
           isCollapsed={isCollapsed}
-          onClick={onNavClick}
+          onClick={handleNavItemClick}
         />
       ))}
     </div>

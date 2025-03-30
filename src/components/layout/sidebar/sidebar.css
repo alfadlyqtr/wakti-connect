@@ -37,6 +37,12 @@
 #sidebar {
   @apply bg-card/95 backdrop-blur-sm border-r border-border/50;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 50;
+}
+
+/* Body class when sidebar is open on mobile */
+.sidebar-open-body {
+  @apply overflow-hidden;
 }
 
 /* Make sure mobile sidebar has a higher z-index and clear background */
