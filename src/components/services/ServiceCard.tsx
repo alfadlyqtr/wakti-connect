@@ -28,7 +28,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         <div className="flex justify-between items-start gap-2">
           <CardTitle className="text-lg md:text-xl">{service.name}</CardTitle>
           {service.price && (
-            <Badge variant="secondary" className="ml-2 font-semibold text-base md:text-sm">
+            <Badge variant="secondary" className="ml-2 font-semibold text-base md:text-sm whitespace-nowrap">
               QAR {service.price.toFixed(2)}
             </Badge>
           )}
@@ -45,22 +45,20 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         </div>
       </CardContent>
       
-      <CardFooter className={`flex ${isMobile ? "flex-col" : "justify-between"} pt-4 border-t gap-3 md:gap-2`}>
+      <CardFooter className="flex flex-col sm:flex-row sm:justify-between pt-4 border-t gap-3 sm:gap-2">
         <Button 
           variant="outline" 
-          size={isMobile ? "default" : "sm"} 
           onClick={() => onEdit(service)}
-          className={isMobile ? "w-full h-12 text-base" : ""}
+          className="w-full h-12 text-base sm:h-10 sm:text-sm"
         >
           <Edit className="h-4 w-4 mr-2" />
           Edit
         </Button>
         <Button 
           variant="destructive" 
-          size={isMobile ? "default" : "sm"} 
           onClick={() => onDelete(service)}
           disabled={isDeleting}
-          className={isMobile ? "w-full h-12 text-base" : ""}
+          className="w-full h-12 text-base sm:h-10 sm:text-sm"
         >
           <Trash2 className="h-4 w-4 mr-2" />
           Delete

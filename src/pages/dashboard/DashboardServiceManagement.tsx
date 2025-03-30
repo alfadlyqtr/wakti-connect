@@ -53,7 +53,7 @@ const DashboardServiceManagement = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-1 sm:px-0">
       <div className="flex flex-col md:flex-row justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold mb-2">Service Management</h1>
@@ -62,12 +62,12 @@ const DashboardServiceManagement = () => {
         <div className="flex gap-2">
           <Dialog open={openAddService} onOpenChange={setOpenAddService}>
             <DialogTrigger asChild>
-              <Button className={isMobile ? "flex-1 h-12" : ""}>
+              <Button className="flex-1 h-12 text-base">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Service
               </Button>
             </DialogTrigger>
-            <DialogContent className={isMobile ? "w-[95vw] max-w-md p-6 rounded-lg" : ""}>
+            <DialogContent className="w-[95vw] sm:w-auto max-w-md">
               <ServiceForm 
                 onSubmit={handleSubmit}
                 onCancel={handleCancelDialog}
@@ -76,7 +76,7 @@ const DashboardServiceManagement = () => {
               />
             </DialogContent>
           </Dialog>
-          <Button variant="outline" onClick={() => refetch()} className={isMobile ? "flex-1 h-12" : ""}>
+          <Button variant="outline" onClick={() => refetch()} className="flex-1 h-12 text-base">
             Refresh
           </Button>
         </div>
@@ -84,10 +84,10 @@ const DashboardServiceManagement = () => {
 
       <div className="flex flex-col md:flex-row gap-4 items-center">
         <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-4 md:top-3 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-4 h-4 w-4 text-muted-foreground" />
           <Input 
             placeholder="Search services..." 
-            className="pl-10"
+            className="pl-10 h-12 text-base"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />

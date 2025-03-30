@@ -19,15 +19,16 @@ const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({ control }) => {
         control={control}
         name="name"
         render={({ field }) => (
-          <FormItem className="space-y-3">
+          <FormItem className="space-y-2">
             <FormLabel className="text-base font-medium">Service Name <span className="text-destructive">*</span></FormLabel>
             <FormControl>
               <Input 
                 placeholder="Enter service name" 
+                className="h-12 text-base"
                 {...field} 
               />
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-xs" />
           </FormItem>
         )}
       />
@@ -36,40 +37,40 @@ const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({ control }) => {
         control={control}
         name="description"
         render={({ field }) => (
-          <FormItem className="space-y-3">
+          <FormItem className="space-y-2">
             <FormLabel className="text-base font-medium">Description</FormLabel>
             <FormControl>
               <Textarea
-                className="min-h-[120px] text-base md:min-h-[100px]"
+                className="min-h-[100px] text-base"
                 placeholder="Describe your service..."
                 {...field}
               />
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-xs" />
           </FormItem>
         )}
       />
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-4">
         <FormField
           control={control}
           name="price"
           render={({ field }) => (
-            <FormItem className="space-y-3">
+            <FormItem className="space-y-2">
               <FormLabel className="text-base font-medium">Price (QAR)</FormLabel>
               <FormControl>
                 <div className="relative">
-                  <span className="absolute left-3 top-4 md:top-3 text-base md:text-sm">QAR</span>
+                  <span className="absolute left-3 top-[14px] text-base">QAR</span>
                   <Input 
                     type="text" 
                     inputMode="decimal"
-                    className="pl-12" 
+                    className="pl-12 h-12 text-base" 
                     placeholder="0.00" 
                     {...field}
                   />
                 </div>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
@@ -78,7 +79,7 @@ const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({ control }) => {
           control={control}
           name="duration"
           render={({ field }) => (
-            <FormItem className="space-y-3">
+            <FormItem className="space-y-2">
               <FormLabel className="text-base font-medium">Duration (min) <span className="text-destructive">*</span></FormLabel>
               <FormControl>
                 <div className="relative">
@@ -86,13 +87,13 @@ const ServiceFormFields: React.FC<ServiceFormFieldsProps> = ({ control }) => {
                     type="number" 
                     placeholder="60" 
                     min="1"
-                    className="pr-12"
+                    className="pr-12 h-12 text-base"
                     {...field} 
                   />
-                  <span className="absolute right-3 top-4 md:top-3 text-muted-foreground text-base md:text-sm">min</span>
+                  <span className="absolute right-3 top-[14px] text-muted-foreground text-base">min</span>
                 </div>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
