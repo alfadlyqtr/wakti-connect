@@ -11,11 +11,27 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
   const [useMapAddress, setUseMapAddress] = useState(true);
   
   const handleLocationChange = (value: string) => {
-    handleInputChange({ target: { name: 'address', value } });
+    // Create a synthetic event object that matches the expected type
+    const syntheticEvent = {
+      target: {
+        name: 'address',
+        value
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    handleInputChange(syntheticEvent);
   };
   
   const handleShowMapChange = (checked: boolean) => {
-    handleInputChange({ target: { name: 'showMap', value: checked } });
+    // Create a synthetic event object that matches the expected type
+    const syntheticEvent = {
+      target: {
+        name: 'showMap',
+        value: checked.toString() // Convert boolean to string
+      }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    handleInputChange(syntheticEvent);
   };
 
   return (

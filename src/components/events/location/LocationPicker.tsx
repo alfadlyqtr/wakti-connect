@@ -2,9 +2,42 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Search, MapPin } from 'lucide-react';
 import { GOOGLE_MAPS_API_KEY } from '@/config/maps';
+
+// Add TypeScript types for Google Maps
+declare global {
+  interface Window {
+    google: {
+      maps: {
+        places: {
+          Autocomplete: new (
+            input: HTMLInputElement,
+            options?: any
+          ) => google.maps.places.Autocomplete;
+        };
+        Map: any;
+      };
+    };
+  }
+}
+
+// Define the minimal Google Maps types we need
+namespace google.maps.places {
+  export interface Autocomplete {
+    addListener: (event: string, callback: () => void) => void;
+    getPlace: () => {
+      formatted_address?: string;
+      geometry?: {
+        location?: {
+          lat: () => number;
+          lng: () => number;
+        };
+      };
+      name?: string;
+    };
+  }
+}
 
 interface LocationPickerProps {
   value: string;
@@ -44,25 +77,29 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
 
   // Initialize autocomplete
   useEffect(() => {
-    if (scriptLoaded && inputRef.current) {
-      autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
-        fields: ['formatted_address', 'geometry', 'name'],
-        types: ['establishment', 'geocode']
-      });
-      
-      autocompleteRef.current.addListener('place_changed', () => {
-        const place = autocompleteRef.current?.getPlace();
-        if (place?.formatted_address) {
-          setInputValue(place.formatted_address);
-          
-          // Pass back the location and coordinates if available
-          onChange(
-            place.formatted_address,
-            place.geometry?.location?.lat(),
-            place.geometry?.location?.lng()
-          );
-        }
-      });
+    if (scriptLoaded && inputRef.current && window.google) {
+      try {
+        autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+          fields: ['formatted_address', 'geometry', 'name'],
+          types: ['establishment', 'geocode']
+        });
+        
+        autocompleteRef.current.addListener('place_changed', () => {
+          const place = autocompleteRef.current?.getPlace();
+          if (place?.formatted_address) {
+            setInputValue(place.formatted_address);
+            
+            // Pass back the location and coordinates if available
+            onChange(
+              place.formatted_address,
+              place.geometry?.location?.lat(),
+              place.geometry?.location?.lng()
+            );
+          }
+        });
+      } catch (error) {
+        console.error('Error initializing Google Maps Autocomplete:', error);
+      }
     }
   }, [scriptLoaded, onChange]);
 
