@@ -24,14 +24,6 @@ const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({ isPreview: is
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
   
-  // Log the current path for debugging
-  React.useEffect(() => {
-    console.log("BusinessLandingPage mounted");
-    console.log("Current path:", location.pathname);
-    console.log("Is preview mode:", isPreviewMode);
-    console.log("Slug:", slug);
-  }, [location.pathname, isPreviewMode, slug]);
-  
   if (!slug) {
     return (
       <div className="text-center py-12">
@@ -47,8 +39,7 @@ const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({ isPreview: is
         <title>{businessName ? `${businessName} | WAKTI` : 'Business Page | WAKTI'}</title>
       </Helmet>
       
-      {/* We're removing the Header component and letting the BusinessLandingPageComponent 
-          handle all WAKTI attribution with PoweredByWAKTI */}
+      {/* BusinessLandingPageComponent now handles PoweredByWAKTI */}
       <BusinessLandingPageComponent slug={slug} isPreviewMode={isPreviewMode} />
     </>
   );

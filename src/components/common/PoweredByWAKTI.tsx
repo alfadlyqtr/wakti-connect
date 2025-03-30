@@ -1,31 +1,40 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 interface PoweredByWAKTIProps {
-  position?: "top" | "bottom";
-  variant?: "light" | "dark" | "colored";
+  variant?: "default" | "colored" | "minimal";
   className?: string;
 }
 
 const PoweredByWAKTI: React.FC<PoweredByWAKTIProps> = ({ 
-  position = "bottom",
-  variant = "dark",
-  className = ""
+  variant = "default",
+  className
 }) => {
   return (
-    <div className={`w-full text-center py-2 ${position === "top" ? "border-b" : "border-t mt-4"} border-border ${className}`}>
-      <Link 
-        to="/" 
-        className={`text-xs ${variant === "light" 
-          ? "text-white/70 hover:text-white" 
-          : variant === "colored" 
-            ? "text-wakti-blue hover:text-wakti-blue/80" 
-            : "text-muted-foreground hover:text-wakti-blue"
-        } transition-colors inline-flex items-center`}
-      >
-        Powered by <span className="font-bold ml-1">WAKTI</span>
-      </Link>
+    <div 
+      className={cn(
+        "w-full py-2 px-4 text-center text-xs",
+        variant === "colored" ? "bg-primary/10" : "bg-black/5 backdrop-blur-sm",
+        variant === "minimal" ? "border-t border-gray-200/50" : "border-t border-gray-200",
+        className
+      )}
+    >
+      <span className={cn(
+        variant === "colored" ? "text-primary" : "text-gray-600"
+      )}>
+        Powered by{" "}
+        <Link 
+          to="/"
+          className={cn(
+            "font-semibold hover:underline inline-flex items-center",
+            variant === "colored" ? "text-primary" : "text-primary"
+          )}
+        >
+          WAKTI
+        </Link>
+      </span>
     </div>
   );
 };

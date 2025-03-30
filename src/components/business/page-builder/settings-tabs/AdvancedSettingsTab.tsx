@@ -2,14 +2,13 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 
 interface AdvancedSettingsTabProps {
   pageData: {
-    chatbot_enabled: boolean;
+    chatbot_enabled?: boolean;
     chatbot_code?: string;
     show_subscribe_button?: boolean;
     subscribe_button_text?: string;
@@ -21,85 +20,96 @@ interface AdvancedSettingsTabProps {
 const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
   pageData,
   handleInputChangeWithAutoSave,
-  handleToggleWithAutoSave
+  handleToggleWithAutoSave,
 }) => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Advanced Settings</CardTitle>
-        <CardDescription>
-          Configure additional settings for your business page
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Subscribe Button Settings */}
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
+    <div className="space-y-6">
+      {/* Subscribe Button Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Subscribe Button</CardTitle>
+          <CardDescription>
+            Configure your page's subscribe button to gain more followers
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="show_subscribe_button">Show Subscribe Button</Label>
+              <p className="text-sm text-muted-foreground">
+                When enabled, visitors can subscribe to your business updates
+              </p>
+            </div>
             <Switch
               id="show_subscribe_button"
               checked={pageData.show_subscribe_button !== false} // Default to true if undefined
               onCheckedChange={(checked) => handleToggleWithAutoSave('show_subscribe_button', checked)}
             />
-            <Label htmlFor="show_subscribe_button" className="font-medium">
-              Show Subscribe Button
-            </Label>
           </div>
           
           {pageData.show_subscribe_button !== false && (
-            <div className="ml-7 space-y-2 border-l-2 pl-4 border-primary/20">
-              <Label htmlFor="subscribe_button_text">Subscribe Button Text</Label>
-              <Input
-                id="subscribe_button_text"
-                name="subscribe_button_text"
-                value={pageData.subscribe_button_text || "Subscribe"}
-                onChange={handleInputChangeWithAutoSave}
-                placeholder="Subscribe"
-              />
+            <div className="space-y-2 mt-4 border-l-2 border-primary/20 pl-4">
+              <div>
+                <Label htmlFor="subscribe_button_text">Button Text</Label>
+                <Input
+                  id="subscribe_button_text"
+                  name="subscribe_button_text"
+                  value={pageData.subscribe_button_text || "Subscribe"}
+                  onChange={handleInputChangeWithAutoSave}
+                  placeholder="Subscribe"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Customize what text appears on the subscribe button
+                </p>
+              </div>
             </div>
           )}
-        </div>
+        </CardContent>
+      </Card>
 
-        <Separator className="my-4" />
-
-        {/* TMW AI Chatbot Settings */}
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
+      {/* TMW AI Chatbot Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>TMW AI Chatbot</CardTitle>
+          <CardDescription>
+            Integrate the TMW AI Chatbot with your business page
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="chatbot_enabled">Enable Chatbot</Label>
+              <p className="text-sm text-muted-foreground">
+                When enabled, the TMW AI Chatbot will be displayed on your page
+              </p>
+            </div>
             <Switch
               id="chatbot_enabled"
-              checked={pageData.chatbot_enabled}
+              checked={!!pageData.chatbot_enabled}
               onCheckedChange={(checked) => handleToggleWithAutoSave('chatbot_enabled', checked)}
             />
-            <Label htmlFor="chatbot_enabled" className="font-medium">
-              Enable TMW AI Chatbot
-            </Label>
           </div>
           
           {pageData.chatbot_enabled && (
-            <div className="ml-7 space-y-2 border-l-2 pl-4 border-primary/20">
-              <Label htmlFor="chatbot_code">TMW AI Chatbot Installation Code</Label>
+            <div className="space-y-2 mt-4">
+              <Label htmlFor="chatbot_code">Chatbot Embed Code</Label>
               <Textarea
                 id="chatbot_code"
                 name="chatbot_code"
                 value={pageData.chatbot_code || ""}
                 onChange={handleInputChangeWithAutoSave}
-                placeholder="Paste your TMW AI Chatbot installation code here"
-                rows={4}
+                placeholder="Paste your TMW AI Chatbot embed code here"
+                rows={6}
+                className="font-mono text-sm"
               />
-              <p className="text-sm text-muted-foreground">
-                Don't have a TMW AI Chatbot yet? <a 
-                  href="https://tmw.qa/ai-chat-bot/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  Get one here
-                </a> to enhance your business with AI-powered customer service.
+              <p className="text-xs text-muted-foreground mt-1">
+                Paste the embed code provided by TMW AI Chatbot platform
               </p>
             </div>
           )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
