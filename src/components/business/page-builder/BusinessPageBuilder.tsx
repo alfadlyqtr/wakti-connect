@@ -13,11 +13,11 @@ const BusinessPageBuilder = () => {
   const { 
     ownerBusinessPage, 
     pageSections, 
-    socialLinks, 
     updatePage,
     createPage,
     isLoading,
-    autoSavePageSettings,
+    autoSavePage,
+    autoSaveField,
     getPublicPageUrl
   } = useBusinessPage();
   
@@ -69,6 +69,19 @@ const BusinessPageBuilder = () => {
       createPage.mutate(pageData);
     }
   };
+
+  // Create a function that handles input changes and auto-saves
+  const handleInputChangeWithAutoSave = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setPageData(prev => ({ ...prev, [name]: value }));
+    autoSaveField(name, value);
+  };
+
+  // Create a function that handles toggle changes and auto-saves
+  const handleToggleWithAutoSave = (name: string, checked: boolean) => {
+    setPageData(prev => ({ ...prev, [name]: checked }));
+    autoSaveField(name, checked);
+  };
   
   if (isLoading) {
     return (
@@ -114,12 +127,10 @@ const BusinessPageBuilder = () => {
           <PageSettingsTab
             pageData={pageData}
             businessId={ownerBusinessPage.business_id}
-            handlePageDataChange={handlePageDataChange}
-            handleToggleChange={handleToggleChange}
-            handleSavePageSettings={handleSavePageSettings}
-            updatePage={updatePage}
-            autoSavePageSettings={autoSavePageSettings}
+            handleInputChangeWithAutoSave={handleInputChangeWithAutoSave}
+            handleToggleWithAutoSave={handleToggleWithAutoSave}
             getPublicPageUrl={getPublicPageUrl}
+            updatePage={updatePage}
           />
         </TabsContent>
         

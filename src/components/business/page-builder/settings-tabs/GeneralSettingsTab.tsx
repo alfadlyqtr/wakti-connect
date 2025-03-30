@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +20,6 @@ interface GeneralSettingsTabProps {
     show_subscribe_button?: boolean;
     subscribe_button_text?: string;
   };
-  businessId?: string;
   handleInputChangeWithAutoSave: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleToggleWithAutoSave: (name: string, checked: boolean) => void;
   handleLogoUpload: (fileOrEvent: File | React.ChangeEvent<HTMLInputElement>) => void;
@@ -31,7 +29,6 @@ interface GeneralSettingsTabProps {
 
 const GeneralSettingsTab = ({ 
   pageData, 
-  businessId, 
   handleInputChangeWithAutoSave, 
   handleToggleWithAutoSave,
   handleLogoUpload,

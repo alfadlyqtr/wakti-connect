@@ -10,25 +10,30 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface PageSettingsTabProps {
   pageData: any;
   businessId: string;
-  handlePageDataChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  handleToggleChange: (name: string, checked: boolean) => void;
-  handleSavePageSettings: () => void;
-  updatePage: any;
-  autoSavePageSettings: (name: string, value: any) => void;
+  handleInputChangeWithAutoSave: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleToggleWithAutoSave: (name: string, checked: boolean) => void;
   getPublicPageUrl: () => string;
+  updatePage: any;
 }
 
 const PageSettingsTab = ({ 
   pageData, 
   businessId,
-  handlePageDataChange, 
-  handleToggleChange,
-  handleSavePageSettings,
-  updatePage,
-  autoSavePageSettings,
-  getPublicPageUrl
+  handleInputChangeWithAutoSave,
+  handleToggleWithAutoSave,
+  getPublicPageUrl,
+  updatePage
 }: PageSettingsTabProps) => {
   const isMobile = useIsMobile();
+  const [uploadingLogo, setUploadingLogo] = React.useState(false);
+  
+  const handleLogoUpload = (fileOrEvent: File | React.ChangeEvent<HTMLInputElement>) => {
+    // Placeholder for logo upload functionality
+    setUploadingLogo(true);
+    setTimeout(() => {
+      setUploadingLogo(false);
+    }, 1000);
+  };
   
   return (
     <div>
@@ -43,17 +48,18 @@ const PageSettingsTab = ({
         <TabsContent value="general">
           <GeneralSettingsTab 
             pageData={pageData} 
-            handlePageDataChange={handlePageDataChange}
+            handleInputChangeWithAutoSave={handleInputChangeWithAutoSave}
+            handleToggleWithAutoSave={handleToggleWithAutoSave}
+            handleLogoUpload={handleLogoUpload}
             getPublicPageUrl={getPublicPageUrl}
-            autoSavePageSettings={autoSavePageSettings}
+            uploadingLogo={uploadingLogo}
           />
         </TabsContent>
         
         <TabsContent value="appearance">
           <AppearanceSettingsTab 
             pageData={pageData} 
-            handlePageDataChange={handlePageDataChange}
-            autoSavePageSettings={autoSavePageSettings}
+            handleInputChangeWithAutoSave={handleInputChangeWithAutoSave}
           />
         </TabsContent>
         
@@ -66,9 +72,8 @@ const PageSettingsTab = ({
         <TabsContent value="advanced">
           <AdvancedSettingsTab 
             pageData={pageData}
-            handlePageDataChange={handlePageDataChange}
-            handleToggleChange={handleToggleChange}
-            autoSavePageSettings={autoSavePageSettings}
+            handleInputChangeWithAutoSave={handleInputChangeWithAutoSave}
+            handleToggleWithAutoSave={handleToggleWithAutoSave}
           />
         </TabsContent>
       </Tabs>

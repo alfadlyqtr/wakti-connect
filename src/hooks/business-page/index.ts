@@ -35,7 +35,7 @@ export const useBusinessPage = (pageSlug?: string) => {
   const updateSection = useUpdateSectionMutation();
   
   // Utilities
-  const autoSavePageSettings = useAutoSavePageSettings(
+  const { autoSavePage, autoSaveField } = useAutoSavePageSettings(
     updatePage, 
     ownerBusinessPage?.id
   );
@@ -65,7 +65,8 @@ export const useBusinessPage = (pageSlug?: string) => {
     updateSection,
     
     // Helper functions
-    autoSavePageSettings,
+    autoSavePage,
+    autoSaveField,
     getPublicPageUrl,
     
     // Loading state
