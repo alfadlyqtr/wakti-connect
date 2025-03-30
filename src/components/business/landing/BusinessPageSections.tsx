@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BusinessPageSection } from '@/types/business.types';
+import { BusinessPageSection, BusinessPage } from '@/types/business.types';
 import { cn } from '@/lib/utils';
 
 // Define section components
@@ -16,6 +16,7 @@ import BusinessHeader from './BusinessHeader';
 interface BusinessPageSectionsProps {
   sections: BusinessPageSection[];
   businessId: string;
+  businessPage: BusinessPage;
   isPreviewMode?: boolean;
 }
 
@@ -52,7 +53,8 @@ const getPatternStyle = (pattern: string) => {
 // Helper to render section based on type
 const renderSection = (
   section: BusinessPageSection, 
-  businessId: string, 
+  businessId: string,
+  businessPage: BusinessPage,
   isPreviewMode?: boolean
 ) => {
   if (!section.is_visible) {
@@ -66,7 +68,7 @@ const renderSection = (
     color: content.textColor || 'inherit',
     padding: content.padding || '2rem 0',
     borderRadius: content.borderRadius || '0',
-    position: content.pattern ? 'relative' : undefined,
+    position: 'relative',
     backgroundImage: '',
     backgroundSize: content.pattern ? '20px 20px' : undefined,
     backgroundPosition: content.pattern ? 'center' : undefined,
@@ -83,7 +85,7 @@ const renderSection = (
   let sectionComponent;
   switch (section.section_type) {
     case 'header':
-      return <BusinessHeader key={section.id} section={section} />;
+      return <BusinessHeader key={section.id} section={section} businessPage={businessPage} />;
     case 'about':
       sectionComponent = <BusinessAboutSection content={section.section_content} />;
       break;
@@ -91,7 +93,10 @@ const renderSection = (
       sectionComponent = <BusinessGallerySection content={section.section_content} />;
       break;
     case 'contact':
-      sectionComponent = <BusinessContactSection content={section.section_content} />;
+      sectionComponent = <BusinessContactSection 
+        content={section.section_content} 
+        businessId={businessId}
+      />;
       break;
     case 'hours':
       sectionComponent = <BusinessHoursSection content={section.section_content} />;
@@ -102,8 +107,7 @@ const renderSection = (
     case 'booking':
       sectionComponent = <BusinessBookingSection 
         content={section.section_content || {}} 
-        businessId={businessId} 
-        isPreviewMode={isPreviewMode} 
+        businessId={businessId}
       />;
       break;
     case 'instagram':
@@ -131,6 +135,7 @@ const renderSection = (
 const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({ 
   sections, 
   businessId,
+  businessPage,
   isPreviewMode
 }) => {
   // Sort sections by their order
@@ -156,7 +161,7 @@ const BusinessPageSections: React.FC<BusinessPageSectionsProps> = ({
           }
         `}
       </style>
-      {sortedSections.map(section => renderSection(section, businessId, isPreviewMode))}
+      {sortedSections.map(section => renderSection(section, businessId, businessPage, isPreviewMode))}
     </div>
   );
 };
