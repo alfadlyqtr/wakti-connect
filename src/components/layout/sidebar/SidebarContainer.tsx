@@ -40,11 +40,11 @@ const SidebarContainer: React.FC<SidebarContainerProps> = ({
   return (
     <aside 
       id="sidebar"
-      className={`fixed top-[70px] left-0 z-40 h-[calc(100vh-70px)] bg-card border-r shadow-sm pt-5 transition-all duration-300 lg:translate-x-0 ${
-        isOpen ? 'sidebar-open' : 'sidebar-closed'
+      className={`fixed top-[70px] left-0 z-50 h-[calc(100vh-70px)] bg-card/95 backdrop-blur-sm border-r shadow-sm pt-5 transition-all duration-300 lg:translate-x-0 ${
+        isOpen ? 'sidebar-open shadow-lg' : 'sidebar-closed'
       } ${collapsed ? 'w-[70px]' : 'w-52'}`}
     >
-      <div className="h-full flex flex-col relative">
+      <div className="h-full flex flex-col relative overflow-y-auto">
         {children}
       </div>
     </aside>

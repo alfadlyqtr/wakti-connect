@@ -24,8 +24,8 @@
 
 /* Mobile sidebar open/closed classes */
 .sidebar-open {
-  @apply translate-x-0 shadow-md;
-  width: 180px;
+  @apply translate-x-0 shadow-lg;
+  width: 220px;
 }
 
 .sidebar-closed {
@@ -37,6 +37,17 @@
 #sidebar {
   @apply bg-card/95 backdrop-blur-sm border-r border-border/50;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Make sure mobile sidebar has a higher z-index and clear background */
+@media (max-width: 1023px) {
+  #sidebar {
+    @apply z-50 bg-card shadow-lg;
+  }
+  
+  .sidebar-open {
+    @apply shadow-xl;
+  }
 }
 
 @media (min-width: 1024px) {

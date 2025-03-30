@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
@@ -75,10 +74,10 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   }, [profileLoading, location.pathname, userRoleValue, isStaff, navigate, location.state, profileData?.account_type, accountType]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-hidden">
       <Navbar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
       
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 relative overflow-hidden">
         <Sidebar 
           isOpen={isSidebarOpen} 
           userRole={userRoleValue}

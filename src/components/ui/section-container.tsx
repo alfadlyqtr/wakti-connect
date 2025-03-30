@@ -7,6 +7,7 @@ interface SectionContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   as?: React.ElementType;
   fullWidth?: boolean;
+  noPadding?: boolean;
 }
 
 const SectionContainer = ({
@@ -14,11 +15,15 @@ const SectionContainer = ({
   className,
   as: Component = "section",
   fullWidth = false,
+  noPadding = false,
   ...props
 }: SectionContainerProps) => {
   return (
     <Component 
-      className={cn("py-16 md:py-24 px-4", className)} 
+      className={cn(
+        noPadding ? "" : "py-8 sm:py-12 md:py-16 px-4", 
+        className
+      )} 
       {...props}
     >
       <div className={cn(

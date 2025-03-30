@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -199,8 +200,8 @@ const BookServicePage = () => {
 
   if (isLoadingService || isLoadingStaff) {
     return (
-      <div className="container max-w-4xl mx-auto py-12 flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+      <div className="container max-w-4xl mx-auto py-6 md:py-12 flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-10 w-10 md:h-12 md:w-12 animate-spin text-primary mb-4" />
         <p className="text-muted-foreground">Loading service details...</p>
       </div>
     );
@@ -208,8 +209,8 @@ const BookServicePage = () => {
 
   if (!service) {
     return (
-      <div className="container max-w-4xl mx-auto py-12">
-        <h1 className="text-2xl font-bold mb-4">Service Not Found</h1>
+      <div className="container max-w-4xl mx-auto py-6 md:py-12 px-4">
+        <h1 className="text-xl md:text-2xl font-bold mb-4">Service Not Found</h1>
         <p className="text-muted-foreground mb-6">The service you are looking for could not be found.</p>
         <Button onClick={() => navigate(-1)}>Go Back</Button>
       </div>
@@ -219,23 +220,23 @@ const BookServicePage = () => {
   const isStaffAvailable = staffMembers && staffMembers.length > 0;
 
   return (
-    <div className="container max-w-4xl mx-auto py-12">
+    <div className="container max-w-4xl mx-auto py-6 md:py-12 px-4">
       <Button 
         variant="ghost" 
-        className="mb-6 flex items-center" 
+        className="mb-4 md:mb-6 flex items-center" 
         onClick={() => navigate(-1)}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Services
       </Button>
       
-      <h1 className="text-3xl font-bold mb-2">Book Service</h1>
-      <p className="text-muted-foreground mb-8">Complete the form below to book this service.</p>
+      <h1 className="text-2xl md:text-3xl font-bold mb-2">Book Service</h1>
+      <p className="text-muted-foreground mb-6 md:mb-8">Complete the form below to book this service.</p>
       
-      <div className="grid md:grid-cols-3 gap-8">
+      <div className="grid md:grid-cols-3 gap-4 md:gap-8">
         <div className="md:col-span-1">
           <Card>
-            <CardHeader>
+            <CardHeader className="md:py-6">
               <CardTitle>Service Details</CardTitle>
               <CardDescription>Information about the service</CardDescription>
             </CardHeader>
@@ -263,22 +264,22 @@ const BookServicePage = () => {
         
         <div className="md:col-span-2">
           <Card>
-            <CardHeader>
+            <CardHeader className="py-4 md:py-6">
               <CardTitle>Booking Information</CardTitle>
               <CardDescription>Select date, time and provider</CardDescription>
             </CardHeader>
             <CardContent>
               <form id="booking-form" onSubmit={handleSubmit}>
-                <div className="space-y-6">
+                <div className="space-y-4 md:space-y-6">
                   <div className="space-y-2">
                     <Label>Select Date</Label>
-                    <div className="border rounded-md p-4">
+                    <div className="border rounded-md p-2 md:p-4 overflow-hidden">
                       <Calendar
                         mode="single"
                         selected={date}
                         onSelect={setDate}
                         disabled={(date) => date < new Date()} 
-                        className="mx-auto"
+                        className="mx-auto max-w-full"
                       />
                     </div>
                   </div>
@@ -365,7 +366,7 @@ const BookServicePage = () => {
                 </div>
               </form>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="py-4 px-4 md:px-6">
               <Button 
                 type="submit" 
                 form="booking-form" 

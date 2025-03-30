@@ -47,13 +47,13 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   
   // Calculate main content padding based on sidebar state
   const mainContentClass = isMobile 
-    ? "transition-all duration-300" 
+    ? "pt-2 pb-16 transition-all duration-300" 
     : sidebarCollapsed 
-      ? "lg:pl-[70px] transition-all duration-300" 
-      : "lg:pl-52 transition-all duration-300";
+      ? "lg:pl-[70px] pt-4 pb-12 transition-all duration-300" 
+      : "lg:pl-52 pt-4 pb-12 transition-all duration-300";
 
   return (
-    <main className={`flex-1 overflow-y-auto pt-4 px-4 pb-12 ${mainContentClass}`}>
+    <main className={`flex-1 overflow-y-auto px-3 sm:px-4 ${mainContentClass}`}>
       <div className="container mx-auto animate-in">
         {isLoading ? (
           <DashboardLoading />

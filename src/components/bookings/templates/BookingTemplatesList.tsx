@@ -74,7 +74,7 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-2">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-lg font-semibold">{template.name}</h3>
                   <Badge variant={template.is_published ? "success" : "secondary"}>
                     {template.is_published ? "Published" : "Draft"}
@@ -114,11 +114,12 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
                 </div>
               </div>
               
-              <div className={`flex ${isMobile ? 'flex-row justify-end' : 'flex-col'} gap-2`}>
+              <div className={`flex ${isMobile ? 'flex-row flex-wrap justify-end gap-2 mt-3' : 'sm:flex-col gap-2'}`}>
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={() => onEdit(template)}
+                  className="w-auto sm:w-full"
                 >
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
@@ -128,6 +129,7 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
                   variant="outline" 
                   size="sm"
                   onClick={() => onManageAvailability(template)}
+                  className="w-auto sm:w-full"
                 >
                   <CalendarClock className="h-4 w-4 mr-2" />
                   Availability
@@ -138,6 +140,7 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
                   size="sm"
                   onClick={() => handlePublishClick(template.id, !template.is_published)}
                   disabled={isPublishing}
+                  className="w-auto sm:w-full"
                 >
                   {template.is_published ? (
                     <>
@@ -157,6 +160,7 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
                   size="sm"
                   onClick={() => handleDeleteClick(template.id)}
                   disabled={isDeleting}
+                  className="w-auto sm:w-full"
                 >
                   <Trash className="h-4 w-4 mr-2" />
                   Delete
