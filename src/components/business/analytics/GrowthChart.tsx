@@ -52,10 +52,10 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
       },
       tooltip: {
         bodyFont: {
-          size: isMobile ? 10 : 12,
+          size: isMobile ? 11 : 12,
         },
         titleFont: {
-          size: isMobile ? 11 : 14,
+          size: isMobile ? 12 : 14,
         }
       }
     },
@@ -66,7 +66,7 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
         },
         ticks: {
           font: {
-            size: isMobile ? 9 : 12
+            size: isMobile ? 10 : 12
           },
           maxRotation: isMobile ? 30 : 0,
           minRotation: isMobile ? 30 : 0,
@@ -79,7 +79,7 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
         },
         ticks: {
           font: {
-            size: isMobile ? 9 : 12
+            size: isMobile ? 10 : 12
           },
           // Limit number of ticks on mobile
           maxTicksLimit: isMobile ? 5 : 10
@@ -97,7 +97,7 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
   }
 
   return (
-    <div className="h-[200px] md:h-[300px] w-full">
+    <div className="h-[250px] md:h-[300px] w-full">
       <LineChart 
         data={chartData} 
         options={chartOptions} 

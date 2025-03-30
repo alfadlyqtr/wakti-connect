@@ -15,37 +15,39 @@ export const TeamActivityChart: React.FC = () => {
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={isMobile ? 250 : "100%"}>
+    <ResponsiveContainer width="100%" height={isMobile ? 300 : "100%"}>
       <BarChart 
         data={chartData} 
         margin={{ 
-          top: 5, 
-          right: isMobile ? 5 : 30, 
-          left: isMobile ? 0 : 20, 
-          bottom: isMobile ? 60 : 5 
+          top: 10, 
+          right: isMobile ? 10 : 30, 
+          left: isMobile ? 5 : 20, 
+          bottom: isMobile ? 70 : 5 
         }}
+        barSize={isMobile ? 20 : 40}
       >
         <XAxis 
           dataKey="name" 
-          tick={{ fontSize: isMobile ? 10 : 12 }}
-          tickMargin={isMobile ? 5 : 5}
+          tick={{ fontSize: isMobile ? 11 : 12 }}
+          tickMargin={isMobile ? 10 : 5}
           angle={isMobile ? -45 : 0}
           textAnchor={isMobile ? "end" : "middle"}
-          height={isMobile ? 60 : 30}
+          height={isMobile ? 70 : 30}
+          interval={0}
         />
         <YAxis 
-          tick={{ fontSize: isMobile ? 10 : 12 }}
-          width={isMobile ? 30 : 40}
+          tick={{ fontSize: isMobile ? 11 : 12 }}
+          width={isMobile ? 35 : 40}
         />
         <Tooltip 
-          contentStyle={{ fontSize: isMobile ? 10 : 12 }}
-          labelStyle={{ fontSize: isMobile ? 11 : 14 }}
+          contentStyle={{ fontSize: isMobile ? 12 : 12 }}
+          labelStyle={{ fontSize: isMobile ? 12 : 14 }}
         />
         <Legend 
           wrapperStyle={{ 
-            fontSize: isMobile ? 10 : 12,
-            marginTop: isMobile ? 10 : 0,
-            paddingTop: isMobile ? 15 : 0
+            fontSize: isMobile ? 12 : 12,
+            marginTop: isMobile ? 5 : 0,
+            paddingTop: isMobile ? 10 : 0
           }} 
         />
         <Bar dataKey="Hours Worked" fill="#3b82f6" />

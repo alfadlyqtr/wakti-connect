@@ -152,7 +152,7 @@ const DashboardBusinessAnalytics = () => {
               <Card className="w-full">
                 <CardContent className="pt-4 md:pt-6">
                   <h3 className="text-base md:text-lg font-medium mb-2 md:mb-4">Staff Activity</h3>
-                  <div className="h-[300px] md:h-[400px]">
+                  <div className={`h-[350px] md:h-[400px] ${isMobile ? 'px-0' : 'px-4'}`}>
                     <TeamActivityChart />
                   </div>
                 </CardContent>
@@ -161,18 +161,18 @@ const DashboardBusinessAnalytics = () => {
               <Card className="w-full">
                 <CardContent className="pt-4 md:pt-6">
                   <h3 className="text-base md:text-lg font-medium mb-2 md:mb-4">Staff Performance Metrics</h3>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-4">
-                    <div className="bg-muted p-3 md:p-4 rounded-md">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+                    <div className="bg-muted p-4 rounded-md">
                       <p className="text-xs md:text-sm text-muted-foreground mb-1">Average Hours</p>
                       <h4 className="text-xl md:text-2xl font-bold">32.5</h4>
                       <p className="text-xs text-muted-foreground">hrs/week</p>
                     </div>
-                    <div className="bg-muted p-3 md:p-4 rounded-md">
+                    <div className="bg-muted p-4 rounded-md">
                       <p className="text-xs md:text-sm text-muted-foreground mb-1">Task Completion</p>
                       <h4 className="text-xl md:text-2xl font-bold">87%</h4>
                       <p className="text-xs text-muted-foreground">on time</p>
                     </div>
-                    <div className="bg-muted p-3 md:p-4 rounded-md">
+                    <div className="bg-muted p-4 rounded-md">
                       <p className="text-xs md:text-sm text-muted-foreground mb-1">Avg. Services</p>
                       <h4 className="text-xl md:text-2xl font-bold">5.2</h4>
                       <p className="text-xs text-muted-foreground">per day</p>

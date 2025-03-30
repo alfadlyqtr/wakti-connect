@@ -47,29 +47,29 @@ export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> =
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: isMobile ? 'right' : 'bottom' as const,
-        align: isMobile ? 'center' as const : 'center' as const,
+        position: isMobile ? 'bottom' as const : 'bottom' as const,
+        align: 'center' as const,
         labels: {
-          boxWidth: isMobile ? 8 : 12,
-          padding: isMobile ? 3 : 10,
+          boxWidth: isMobile ? 10 : 12,
+          padding: isMobile ? 8 : 10,
           font: {
-            size: isMobile ? 8 : 12
+            size: isMobile ? 11 : 12
           }
         }
       },
       tooltip: {
         bodyFont: {
-          size: isMobile ? 10 : 12,
+          size: isMobile ? 11 : 12,
         },
         titleFont: {
-          size: isMobile ? 11 : 14,
+          size: isMobile ? 12 : 14,
         }
       }
     },
     layout: {
       padding: {
-        right: isMobile ? 0 : 0,
-        bottom: isMobile ? 0 : 0
+        top: isMobile ? 5 : 0,
+        bottom: isMobile ? 10 : 0
       }
     }
   };
@@ -83,7 +83,7 @@ export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> =
   }
 
   return (
-    <div className="h-[200px] md:h-[300px] w-full flex justify-center">
+    <div className="h-[250px] md:h-[300px] w-full flex justify-center">
       <div className={`h-full ${isMobile ? 'w-full' : 'w-full max-w-[400px]'}`}>
         <PieChart 
           data={chartData} 
