@@ -91,6 +91,11 @@ const ContactSubmissions: React.FC<ContactSubmissionsProps> = ({ submissions, is
                   <div className="flex items-center mt-1 text-sm text-muted-foreground">
                     <Phone className="h-3 w-3 mr-1" /> {submission.phone}
                   </div>
+                  {submission.email && (
+                    <div className="mt-1 text-sm text-muted-foreground">
+                      <Mail className="h-3 w-3 mr-1 inline-block" /> {submission.email}
+                    </div>
+                  )}
                 </div>
               </div>
               <span className="text-xs text-muted-foreground">

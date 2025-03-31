@@ -81,8 +81,6 @@ serve(async (req) => {
 
     console.log("Submission stored successfully:", data.id);
 
-    // Removed notification creation to simplify the process
-
     return new Response(
       JSON.stringify({ success: true, data }),
       {
