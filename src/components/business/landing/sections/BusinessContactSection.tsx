@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { generateMapEmbedUrl } from "@/config/maps";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,7 +48,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
     try {
       const coords = JSON.parse(coordinates);
       if (coords.lat && coords.lng) {
-        mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyC2jZm5YJNa0zIYTydPB6qGXjLLrQiW_GI&q=${coords.lat},${coords.lng}&zoom=15`;
+        mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${coords.lat},${coords.lng}&zoom=15`;
       }
     } catch (e) {
       console.error("Error parsing coordinates:", e);
