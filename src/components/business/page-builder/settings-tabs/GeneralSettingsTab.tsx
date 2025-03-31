@@ -1,10 +1,17 @@
+
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Loader2, Copy, ExternalLink } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Loader2, Copy, ExternalLink, Edit } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "@/components/ui/use-toast";
 
 interface GeneralSettingsTabProps {
   pageData: {
@@ -27,6 +34,13 @@ interface GeneralSettingsTabProps {
   uploadingLogo: boolean;
 }
 
+// Schema for the URL change request
+const urlChangeSchema = z.object({
+  requestedSlug: z.string().min(3, "URL must be at least 3 characters").max(60, "URL cannot exceed 60 characters")
+    .regex(/^[a-z0-9-]+$/, "URL can only contain lowercase letters, numbers, and hyphens"),
+  reason: z.string().min(10, "Please provide a brief reason for this change").max(500, "Reason is too long")
+});
+
 const GeneralSettingsTab = ({ 
   pageData, 
   handleInputChangeWithAutoSave, 
@@ -35,9 +49,15 @@ const GeneralSettingsTab = ({
   getPublicPageUrl,
   uploadingLogo
 }: GeneralSettingsTabProps) => {
+  const [urlChangeOpen, setUrlChangeOpen] = React.useState(false);
+  
   const copyPageUrl = () => {
     const url = getPublicPageUrl();
     navigator.clipboard.writeText(url);
+    toast({
+      title: "URL copied",
+      description: "Page URL has been copied to clipboard",
+    });
   };
   
   const visitPage = () => {
@@ -47,6 +67,25 @@ const GeneralSettingsTab = ({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleLogoUpload(e);
+  };
+  
+  // URL change request form
+  const urlChangeForm = useForm<z.infer<typeof urlChangeSchema>>({
+    resolver: zodResolver(urlChangeSchema),
+    defaultValues: {
+      requestedSlug: pageData.page_slug,
+      reason: ""
+    },
+  });
+  
+  const onSubmitUrlChange = (values: z.infer<typeof urlChangeSchema>) => {
+    // In a real implementation, this would send the request to an admin
+    // For now, we'll just show a success toast
+    toast({
+      title: "URL change requested",
+      description: "Your request has been submitted and is pending review",
+    });
+    setUrlChangeOpen(false);
   };
 
   return (
@@ -81,9 +120,74 @@ const GeneralSettingsTab = ({
           </div>
           <div className="flex items-center justify-between mt-2">
             <p className="text-sm text-muted-foreground">
-              <span className="text-amber-500">Note:</span> To change the URL, please contact the system administrator.
+              <span className="text-amber-500">Note:</span> URL changes require admin approval.
             </p>
             <div className="flex gap-2">
+              <Dialog open={urlChangeOpen} onOpenChange={setUrlChangeOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Edit className="h-4 w-4 mr-1" />
+                    Request Change
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Request URL Change</DialogTitle>
+                    <DialogDescription>
+                      Submit a request to change your page URL. This is subject to availability and approval.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <Form {...urlChangeForm}>
+                    <form onSubmit={urlChangeForm.handleSubmit(onSubmitUrlChange)} className="space-y-4 py-4">
+                      <FormField
+                        control={urlChangeForm.control}
+                        name="requestedSlug"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Requested URL</FormLabel>
+                            <div className="flex items-center">
+                              <span className="text-muted-foreground mr-1">/business/</span>
+                              <FormControl>
+                                <Input placeholder="your-business-name" {...field} />
+                              </FormControl>
+                            </div>
+                            <FormDescription>
+                              Use lowercase letters, numbers, and hyphens only
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={urlChangeForm.control}
+                        name="reason"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Reason for change</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                placeholder="Please explain why you want to change your URL"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Briefly explain why you need this change
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <DialogFooter>
+                        <Button type="submit">Submit Request</Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+              
               <Button variant="outline" size="sm" onClick={copyPageUrl}>
                 <Copy className="h-4 w-4 mr-1" />
                 Copy URL

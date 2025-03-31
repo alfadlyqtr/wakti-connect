@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, Trash2, Wand2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useSectionEditor } from "@/hooks/useSectionEditor";
-import SectionStyleEditor from "./SectionStyleEditor";
 
 interface SectionEditorControlsProps {
   onTemplateClick: () => void;
@@ -13,9 +12,6 @@ interface SectionEditorControlsProps {
 const SectionEditorControls: React.FC<SectionEditorControlsProps> = ({ onTemplateClick }) => {
   const { 
     section, 
-    contentData,
-    handleStyleChange,
-    handleInputChange,
     moveUp, 
     moveDown, 
     duplicate, 
@@ -25,12 +21,6 @@ const SectionEditorControls: React.FC<SectionEditorControlsProps> = ({ onTemplat
   
   return (
     <div className="space-y-4">
-      <SectionStyleEditor 
-        contentData={contentData} 
-        handleInputChange={handleInputChange}
-        handleStyleChange={handleStyleChange}
-      />
-      
       <div className="flex flex-wrap gap-2">
         <Button 
           type="button" 

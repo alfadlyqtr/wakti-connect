@@ -1,25 +1,31 @@
 
 import React from "react";
-import { ColorPicker } from "@/components/ui/color-picker";
+import { Input } from "@/components/ui/input";
 
 interface ColorInputProps {
   id?: string;
-  name?: string; // Add optional name property
   value: string;
-  onChange: (value: string) => void;
+  onChange: (color: string) => void;
   className?: string;
 }
 
-export const ColorInput: React.FC<ColorInputProps> = ({ 
-  id, 
-  name,
-  value, 
-  onChange,
-  className
-}) => {
+export const ColorInput = ({ id, value, onChange, className }: ColorInputProps) => {
   return (
-    <div className={className}>
-      <ColorPicker value={value} onChange={onChange} />
+    <div className="flex items-center space-x-2">
+      <Input
+        id={id ? `${id}-color-picker` : undefined}
+        type="color"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-12 h-9 p-1"
+      />
+      <Input
+        id={id}
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={className}
+      />
     </div>
   );
 };

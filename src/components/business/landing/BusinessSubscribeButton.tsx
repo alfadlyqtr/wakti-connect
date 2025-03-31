@@ -14,13 +14,20 @@ interface BusinessSubscribeButtonProps {
   iconOnly?: boolean;
   className?: string;
   onAuthRequired?: () => boolean;
-  // Additional customization options
+  // Detailed customization options
   backgroundColor?: string;
   textColor?: string;
   borderRadius?: string;
   borderColor?: string;
   borderWidth?: string;
   hoverColor?: string;
+  hoverTextColor?: string;
+  hoverBorderColor?: string;
+  fontWeight?: "normal" | "medium" | "semibold" | "bold";
+  boxShadow?: "none" | "sm" | "md" | "lg";
+  iconPosition?: "left" | "right";
+  paddingX?: string;
+  paddingY?: string;
 }
 
 const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
@@ -32,12 +39,20 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
   iconOnly = false,
   className,
   onAuthRequired,
+  // Detailed customization options
   backgroundColor,
   textColor,
   borderRadius,
   borderColor,
   borderWidth,
-  hoverColor
+  hoverColor,
+  hoverTextColor,
+  hoverBorderColor,
+  fontWeight = "medium",
+  boxShadow = "none",
+  iconPosition = "left",
+  paddingX,
+  paddingY
 }) => {
   const { 
     isSubscribed, 
@@ -69,16 +84,33 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
     ...(borderRadius ? { borderRadius } : {}),
     ...(borderColor ? { borderColor } : {}),
     ...(borderWidth ? { borderWidth } : {}),
+    ...(fontWeight ? { fontWeight } : {}),
+    ...(paddingX || paddingY ? { padding: `${paddingY || '8px'} ${paddingX || '16px'}` } : {}),
     transition: 'all 0.2s ease'
   };
   
-  // Custom hover styles
-  const getHoverStyles = () => {
-    if (hoverColor) {
-      return `hover:bg-opacity-90 ${isSubscribed ? '' : 'hover:shadow-md'}`;
+  // Build CSS variables for hover effects that will be used in a custom class
+  const customVarsClass = React.useMemo(() => {
+    const randomId = Math.random().toString(36).substring(2, 10);
+    const className = `custom-btn-${randomId}`;
+    
+    // Create a style element for the hover styles
+    if (typeof document !== 'undefined' && (hoverColor || hoverTextColor || hoverBorderColor)) {
+      const styleEl = document.createElement('style');
+      styleEl.innerHTML = `
+        .${className}:hover {
+          ${hoverColor ? `background-color: ${hoverColor} !important;` : ''}
+          ${hoverTextColor ? `color: ${hoverTextColor} !important;` : ''}
+          ${hoverBorderColor ? `border-color: ${hoverBorderColor} !important;` : ''}
+          transform: translateY(-1px);
+          ${boxShadow !== 'none' ? `box-shadow: var(--shadow-${boxShadow});` : ''}
+        }
+      `;
+      document.head.appendChild(styleEl);
     }
-    return isSubscribed ? '' : 'hover:shadow-md';
-  };
+    
+    return className;
+  }, [hoverColor, hoverTextColor, hoverBorderColor, boxShadow]);
   
   if (checkingSubscription) {
     return (
@@ -102,7 +134,7 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
       className={cn(
         isSubscribed ? "bg-muted/20" : "",
         "transition-all",
-        getHoverStyles(),
+        customVarsClass,
         className
       )}
       style={customButtonStyle}
@@ -118,13 +150,21 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
         <>
           {isSubscribed ? (
             <>
-              {iconOnly ? <BellOff className="h-4 w-4" /> : <BellOff className="h-4 w-4 mr-2" />}
+              {iconOnly ? 
+                <BellOff className="h-4 w-4" /> : 
+                (iconPosition === "left" ? <BellOff className="h-4 w-4 mr-2" /> : null)
+              }
               {!iconOnly && "Unsubscribe"}
+              {!iconOnly && iconPosition === "right" && <BellOff className="h-4 w-4 ml-2" />}
             </>
           ) : (
             <>
-              {iconOnly ? <Heart className="h-4 w-4" /> : <Heart className="h-4 w-4 mr-2" />}
+              {iconOnly ? 
+                <Heart className="h-4 w-4" /> : 
+                (iconPosition === "left" ? <Heart className="h-4 w-4 mr-2" /> : null)
+              }
               {!iconOnly && customText}
+              {!iconOnly && iconPosition === "right" && <Heart className="h-4 w-4 ml-2" />}
             </>
           )}
         </>
