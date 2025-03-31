@@ -18,26 +18,34 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section }) => {
   
   return (
     <SectionEditorProvider section={section}>
-      <div className={`space-y-${isMobile ? '3' : '4'}`}>
-        <SectionEditorHeader 
-          onTemplateClick={() => setTemplateDialogOpen(true)} 
-        />
-        
-        <SectionEditorFields />
-        
-        <SectionEditorControls 
-          onTemplateClick={() => setTemplateDialogOpen(true)} 
-        />
-        
-        <SectionTemplateDialog 
-          isOpen={templateDialogOpen}
-          onOpenChange={setTemplateDialogOpen}
-          sectionType={section.section_type}
-          onSelect={(templateContent) => {
-            setTemplateDialogOpen(false);
-          }}
-        />
-      </div>
+      {(context) => (
+        <div className={`space-y-${isMobile ? '3' : '4'}`}>
+          <SectionEditorHeader 
+            onTemplateClick={() => setTemplateDialogOpen(true)} 
+          />
+          
+          <SectionEditorFields />
+          
+          <SectionEditorControls 
+            onTemplateClick={() => setTemplateDialogOpen(true)} 
+          />
+          
+          <SectionTemplateDialog 
+            isOpen={templateDialogOpen}
+            onOpenChange={setTemplateDialogOpen}
+            sectionType={section.section_type}
+            onSelect={(templateContent) => {
+              context.setContentData({
+                ...context.contentData,
+                ...templateContent
+              });
+              context.setIsDirty(true);
+              context.handleSaveSection();
+              setTemplateDialogOpen(false);
+            }}
+          />
+        </div>
+      )}
     </SectionEditorProvider>
   );
 };

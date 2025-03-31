@@ -463,6 +463,7 @@ export type Database = {
           message: string
           name: string
           page_id: string
+          phone: string
         }
         Insert: {
           business_id: string
@@ -473,6 +474,7 @@ export type Database = {
           message: string
           name: string
           page_id: string
+          phone: string
         }
         Update: {
           business_id?: string
@@ -483,6 +485,7 @@ export type Database = {
           message?: string
           name?: string
           page_id?: string
+          phone?: string
         }
         Relationships: [
           {

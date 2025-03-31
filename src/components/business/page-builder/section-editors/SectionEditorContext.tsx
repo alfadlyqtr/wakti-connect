@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
 import { BusinessPageSection } from "@/types/business.types";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
@@ -24,8 +24,16 @@ interface SectionEditorContextProps {
 
 export const SectionEditorContext = createContext<SectionEditorContextProps | undefined>(undefined);
 
+export const useSectionEditor = () => {
+  const context = useContext(SectionEditorContext);
+  if (!context) {
+    throw new Error("useSectionEditor must be used within a SectionEditorProvider");
+  }
+  return context;
+};
+
 export const SectionEditorProvider: React.FC<{
-  children: React.ReactNode;
+  children: React.ReactNode | ((context: SectionEditorContextProps) => React.ReactNode);
   section: BusinessPageSection;
 }> = ({ children, section }) => {
   const { updateSection } = useBusinessPage();
@@ -151,27 +159,27 @@ export const SectionEditorProvider: React.FC<{
     console.log("Deleting section", section.id);
   };
   
+  const contextValue: SectionEditorContextProps = {
+    section,
+    contentData,
+    setContentData,
+    isDirty,
+    setIsDirty,
+    handleInputChange,
+    handleStyleChange,
+    handleSaveSection,
+    updateSection,
+    isNewSection,
+    moveUp,
+    moveDown,
+    duplicate,
+    toggleVisibility,
+    deleteSection
+  };
+  
   return (
-    <SectionEditorContext.Provider
-      value={{
-        section,
-        contentData,
-        setContentData,
-        isDirty,
-        setIsDirty,
-        handleInputChange,
-        handleStyleChange,
-        handleSaveSection,
-        updateSection,
-        isNewSection,
-        moveUp,
-        moveDown,
-        duplicate,
-        toggleVisibility,
-        deleteSection
-      }}
-    >
-      {children}
+    <SectionEditorContext.Provider value={contextValue}>
+      {typeof children === "function" ? children(contextValue) : children}
     </SectionEditorContext.Provider>
   );
 };
