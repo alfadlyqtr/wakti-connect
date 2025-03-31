@@ -11,6 +11,7 @@ interface ContactSectionProps {
   pageId: string;
   submitContactForm: any;
   primaryColor?: string;
+  textColor?: string;
 }
 
 const ContactSection: React.FC<ContactSectionProps> = ({
@@ -18,7 +19,8 @@ const ContactSection: React.FC<ContactSectionProps> = ({
   businessId,
   pageId,
   submitContactForm,
-  primaryColor = "#3B82F6"
+  primaryColor = "#3B82F6",
+  textColor = "#FFFFFF"
 }) => {
   const content = section.section_content || {};
   const styles = {
@@ -74,6 +76,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({
                   pageId={pageId}
                   submitContactForm={submitContactForm}
                   primaryColor={primaryColor}
+                  textColor={textColor}
                 />
               </CardContent>
             </Card>

@@ -109,7 +109,10 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
       
       // Send message to business inbox
       try {
-        await sendMessage(businessId, `Contact from: ${formData.name} (${formData.phone})`);
+        // Prepare message content that includes contact details
+        const messageContent = `Contact from: ${formData.name} (${formData.phone})`;
+        
+        await sendMessage(businessId, messageContent);
       } catch (error) {
         console.log("Error sending message to business inbox:", error);
         // We continue even if sending the message fails
