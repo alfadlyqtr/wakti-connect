@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { generateMapEmbedUrl, GOOGLE_MAPS_API_KEY } from "@/config/maps";
+import { generateMapEmbedUrl, GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from "@/config/maps";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -40,7 +40,17 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
     contactButtonLabel = "Send Message",
     contactButtonColor = "#3B82F6",
     contactSuccessMessage = "Thank you for your message. We'll get back to you soon!",
-    coordinates = ""
+    coordinates = "",
+    // Form styling options
+    formBackground = "#f5f5f5",
+    formBorderRadius = "8px",
+    formPadding = "20px",
+    inputBorderColor = "#e2e2e2",
+    inputBorderRadius = "4px",
+    inputBackground = "#ffffff",
+    labelColor = "#333333",
+    // New layout options
+    layout = "sideBySide", // sideBySide, formTop, formBottom
   } = content;
   
   // Generate embed URL for Google Maps using the address
@@ -132,7 +142,188 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
     }
     
     // Fallback to address
-    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+    return generateGoogleMapsUrl(address);
+  };
+
+  // Define section layout based on user selection
+  const renderSectionContent = () => {
+    const contactInfo = (
+      <div className="space-y-6">
+        <div className="space-y-4">
+          {email && (
+            <div className="flex items-center space-x-2">
+              <span className="text-primary">✉</span>
+              <a href={`mailto:${email}`} className="hover:text-primary hover:underline">{email}</a>
+            </div>
+          )}
+          
+          {phone && (
+            <div className="flex items-center space-x-2">
+              <span className="text-primary">☎</span>
+              <a href={`tel:${phone}`} className="hover:text-primary hover:underline">{phone}</a>
+            </div>
+          )}
+          
+          {address && (
+            <div className="flex items-start space-x-2">
+              <span className="text-primary mt-1">📍</span>
+              <span>{address}</span>
+            </div>
+          )}
+          
+          {(address || coordinates) && (
+            <div className="mt-2">
+              <a 
+                href={getDirectionsUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-sm text-primary hover:underline"
+              >
+                <span className="mr-1">📍</span> Get Directions
+              </a>
+            </div>
+          )}
+        </div>
+        
+        {showMap && (address || coordinates) && (
+          <div className="w-full aspect-video rounded-lg overflow-hidden border">
+            <iframe
+              src={mapEmbedUrl}
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="w-full h-full"
+              title="Google Maps"
+            ></iframe>
+          </div>
+        )}
+      </div>
+    );
+    
+    const contactForm = enableContactForm && (
+      <div 
+        style={{ 
+          backgroundColor: formBackground,
+          borderRadius: formBorderRadius,
+          padding: formPadding
+        }}
+        className="shadow-sm"
+      >
+        <h3 className="text-xl font-semibold mb-4" style={{ color: labelColor }}>
+          {contactFormTitle || "Send us a message"}
+        </h3>
+        
+        {showSuccessMessage ? (
+          <div className="p-4 bg-green-100 text-green-800 rounded-md">
+            {contactSuccessMessage || "Thank you for your message. We'll get back to you soon!"}
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium mb-1" style={{ color: labelColor }}>
+                Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-primary focus:outline-none"
+                style={{ 
+                  borderColor: inputBorderColor, 
+                  borderRadius: inputBorderRadius,
+                  backgroundColor: inputBackground 
+                }}
+                placeholder="Your name"
+                required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium mb-1" style={{ color: labelColor }}>
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-primary focus:outline-none"
+                style={{ 
+                  borderColor: inputBorderColor, 
+                  borderRadius: inputBorderRadius,
+                  backgroundColor: inputBackground 
+                }}
+                placeholder="Your email"
+                required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="message" className="block text-sm font-medium mb-1" style={{ color: labelColor }}>
+                Message
+              </label>
+              <textarea
+                id="message"
+                name="message"
+                rows={4}
+                value={formData.message}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-primary focus:outline-none"
+                style={{ 
+                  borderColor: inputBorderColor, 
+                  borderRadius: inputBorderRadius,
+                  backgroundColor: inputBackground 
+                }}
+                placeholder="Your message"
+                required
+              ></textarea>
+            </div>
+            
+            <Button
+              type="submit"
+              className="w-full py-2 px-4 rounded-md hover:opacity-90 transition-colors"
+              style={{ backgroundColor: contactButtonColor || '#3B82F6', color: '#ffffff' }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Sending..." : (contactButtonLabel || "Send Message")}
+            </Button>
+            
+            <p className="text-xs text-muted-foreground text-center mt-4">
+              We'll get back to you as soon as possible
+            </p>
+          </form>
+        )}
+      </div>
+    );
+    
+    // Determine layout
+    if (layout === "formTop") {
+      return (
+        <div className="space-y-8">
+          {enableContactForm && contactForm}
+          {contactInfo}
+        </div>
+      );
+    } else if (layout === "formBottom") {
+      return (
+        <div className="space-y-8">
+          {contactInfo}
+          {enableContactForm && contactForm}
+        </div>
+      );
+    } else {
+      // Default: side by side
+      return (
+        <div className="flex flex-col md:flex-row gap-8">
+          <div className="md:w-1/2">{contactInfo}</div>
+          {enableContactForm && <div className="md:w-1/2">{contactForm}</div>}
+        </div>
+      );
+    }
   };
 
   return (
@@ -143,132 +334,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
           <p className="text-lg max-w-2xl mx-auto opacity-75">{description}</p>
         </div>
         
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Contact Information */}
-          <div className="md:w-1/2 space-y-6">
-            <div className="space-y-4">
-              {email && (
-                <div className="flex items-center space-x-2">
-                  <span className="text-primary">✉</span>
-                  <a href={`mailto:${email}`} className="hover:text-primary hover:underline">{email}</a>
-                </div>
-              )}
-              
-              {phone && (
-                <div className="flex items-center space-x-2">
-                  <span className="text-primary">☎</span>
-                  <a href={`tel:${phone}`} className="hover:text-primary hover:underline">{phone}</a>
-                </div>
-              )}
-              
-              {address && (
-                <div className="flex items-start space-x-2">
-                  <span className="text-primary mt-1">📍</span>
-                  <span>{address}</span>
-                </div>
-              )}
-              
-              {(address || coordinates) && (
-                <div className="mt-2">
-                  <a 
-                    href={getDirectionsUrl()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-sm text-primary hover:underline"
-                  >
-                    <span className="mr-1">📍</span> Get Directions
-                  </a>
-                </div>
-              )}
-            </div>
-            
-            {showMap && (address || coordinates) && (
-              <div className="w-full aspect-video rounded-lg overflow-hidden border">
-                <iframe
-                  src={mapEmbedUrl}
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  className="w-full h-full"
-                  title="Google Maps"
-                ></iframe>
-              </div>
-            )}
-          </div>
-          
-          {/* Contact Form */}
-          {enableContactForm && (
-            <div className="md:w-1/2 mt-8 md:mt-0">
-              <div className="bg-muted p-6 rounded-lg shadow-sm">
-                <h3 className="text-xl font-semibold mb-4">{contactFormTitle || "Send us a message"}</h3>
-                
-                {showSuccessMessage ? (
-                  <div className="p-4 bg-green-100 text-green-800 rounded-md">
-                    {contactSuccessMessage || "Thank you for your message. We'll get back to you soon!"}
-                  </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-medium mb-1">Name</label>
-                      <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border rounded-md"
-                        placeholder="Your name"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
-                      <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border rounded-md"
-                        placeholder="Your email"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="message" className="block text-sm font-medium mb-1">Message</label>
-                      <textarea
-                        id="message"
-                        name="message"
-                        rows={4}
-                        value={formData.message}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border rounded-md"
-                        placeholder="Your message"
-                        required
-                      ></textarea>
-                    </div>
-                    
-                    <Button
-                      type="submit"
-                      className="w-full py-2 px-4 rounded-md hover:opacity-90 transition-colors"
-                      style={{ backgroundColor: contactButtonColor || '#3B82F6', color: '#ffffff' }}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? "Sending..." : (contactButtonLabel || "Send Message")}
-                    </Button>
-                    
-                    <p className="text-xs text-muted-foreground text-center mt-4">
-                      We'll get back to you as soon as possible
-                    </p>
-                  </form>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+        {renderSectionContent()}
       </div>
     </section>
   );

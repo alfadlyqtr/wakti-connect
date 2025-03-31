@@ -1,56 +1,127 @@
 
 import React from "react";
-import { useSectionEditor } from "@/hooks/useSectionEditor";
 import { Button } from "@/components/ui/button";
-import { Save, Loader2, LayoutTemplate } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, Trash2, Wand2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useSectionEditor } from "@/hooks/useSectionEditor";
+import SectionStyleEditor from "./SectionStyleEditor";
 
 interface SectionEditorControlsProps {
   onTemplateClick: () => void;
 }
 
 const SectionEditorControls: React.FC<SectionEditorControlsProps> = ({ onTemplateClick }) => {
-  const { isDirty, handleSaveSection, updateSection } = useSectionEditor();
-  const isMobile = useIsMobile();
+  const { 
+    section, 
+    contentData,
+    handleStyleChange,
+    handleInputChange,
+    moveUp, 
+    moveDown, 
+    duplicate, 
+    toggleVisibility, 
+    deleteSection 
+  } = useSectionEditor();
   
   return (
-    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
-      {isDirty && (
-        <p className="text-xs text-muted-foreground order-last sm:order-first">
-          Auto-saving changes...
-        </p>
-      )}
+    <div className="space-y-4">
+      <SectionStyleEditor 
+        contentData={contentData} 
+        handleInputChange={handleInputChange}
+        handleStyleChange={handleStyleChange}
+      />
       
-      <div className="w-full sm:w-auto sm:ml-auto flex flex-col sm:flex-row gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button 
-          variant="outline"
-          onClick={onTemplateClick}
-          title="Choose a template"
-          className="w-full sm:w-auto touch-target"
-          size={isMobile ? "sm" : "default"}
+          type="button" 
+          size="sm" 
+          variant="outline" 
+          onClick={moveUp}
+          className="flex-1"
         >
-          <LayoutTemplate className="h-4 w-4 mr-2" />
-          Templates
+          <ArrowUp className="w-4 h-4 mr-2" />
+          <span>Up</span>
         </Button>
         
         <Button 
-          onClick={handleSaveSection}
-          disabled={updateSection.isPending}
-          className="w-full sm:w-auto touch-target"
-          size={isMobile ? "sm" : "default"}
+          type="button" 
+          size="sm" 
+          variant="outline" 
+          onClick={moveDown}
+          className="flex-1"
         >
-          {updateSection.isPending ? (
+          <ArrowDown className="w-4 h-4 mr-2" />
+          <span>Down</span>
+        </Button>
+        
+        <Button 
+          type="button" 
+          size="sm" 
+          variant="outline" 
+          onClick={onTemplateClick}
+          className="flex-1"
+        >
+          <Wand2 className="w-4 h-4 mr-2" />
+          <span>Template</span>
+        </Button>
+        
+        <Button 
+          type="button" 
+          size="sm" 
+          variant="outline" 
+          onClick={duplicate}
+          className="flex-1"
+        >
+          <Copy className="w-4 h-4 mr-2" />
+          <span>Duplicate</span>
+        </Button>
+        
+        <Button 
+          type="button" 
+          size="sm" 
+          variant={section.is_visible ? "outline" : "secondary"}
+          onClick={toggleVisibility}
+          className="flex-1"
+        >
+          {section.is_visible ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
+              <EyeOff className="w-4 h-4 mr-2" />
+              <span>Hide</span>
             </>
           ) : (
             <>
-              <Save className="mr-2 h-4 w-4" />
-              Save Section
+              <Eye className="w-4 h-4 mr-2" />
+              <span>Show</span>
             </>
           )}
         </Button>
+        
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button 
+              type="button" 
+              size="sm" 
+              variant="destructive"
+              className="flex-1"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              <span>Delete</span>
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Section</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this {section.section_type} section? 
+                This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={deleteSection}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

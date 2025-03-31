@@ -15,7 +15,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ColorPicker } from "@/components/inputs/ColorPicker";
 import { ColorInput } from "@/components/inputs/ColorInput";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
