@@ -4,6 +4,7 @@ import { generateMapEmbedUrl, GOOGLE_MAPS_API_KEY } from "@/config/maps";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { useSubmitContactFormMutation } from "@/hooks/business-page/useBusinessPageMutations";
 
 interface BusinessContactSectionProps {
   content: Record<string, any>;
@@ -17,6 +18,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
   pageId
 }) => {
   const { toast } = useToast();
+  const submitContactMutation = useSubmitContactFormMutation();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -79,18 +81,16 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Submit the contact form data to Supabase
-      const { error } = await supabase.from('business_contact_submissions').insert({
-        business_id: businessId,
-        page_id: pageId,
-        name: formData.name,
-        email: formData.email,
-        message: formData.message
+      // Use the mutation to submit the form
+      await submitContactMutation.mutateAsync({
+        businessId,
+        pageId,
+        formData: {
+          name: formData.name,
+          email: formData.email,
+          message: formData.message
+        }
       });
-      
-      if (error) {
-        throw error;
-      }
       
       // Show success message
       setShowSuccessMessage(true);

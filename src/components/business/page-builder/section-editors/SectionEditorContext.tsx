@@ -37,7 +37,13 @@ export const SectionEditorProvider: React.FC<{
       text_color: section.text_color,
       padding: section.padding,
       border_radius: section.border_radius,
-      background_image_url: section.background_image_url
+      background_image_url: section.background_image_url,
+      // Include additional styling options
+      shadow_effect: section.section_content?.shadow_effect || 'none',
+      border_style: section.section_content?.border_style || 'none',
+      border_width: section.section_content?.border_width || '1px',
+      border_color: section.section_content?.border_color || '#000000',
+      section_style: section.section_content?.section_style || 'default'
     };
     
     setContentData(mergedContent);

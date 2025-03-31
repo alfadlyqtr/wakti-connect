@@ -45,18 +45,54 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
       section.padding === 'lg' ? '3rem' :
       section.padding === 'xl' ? '4rem' : '1rem';
     
-    return {
+    // Calculate shadow based on section settings
+    const shadowValue = 
+      section.section_content?.shadow_effect === 'none' ? 'none' :
+      section.section_content?.shadow_effect === 'sm' ? '0 1px 2px rgba(0,0,0,0.1)' :
+      section.section_content?.shadow_effect === 'md' ? '0 4px 6px rgba(0,0,0,0.1)' :
+      section.section_content?.shadow_effect === 'lg' ? '0 10px 15px rgba(0,0,0,0.1)' :
+      section.section_content?.shadow_effect === 'xl' ? '0 20px 25px rgba(0,0,0,0.1)' : 'none';
+    
+    // Calculate border style, width and color
+    const borderStyle = section.section_content?.border_style || 'none';
+    const borderWidth = section.section_content?.border_width || '1px';
+    const borderColor = section.section_content?.border_color || '#000000';
+    
+    // Calculate section style (outlined, solid, default)
+    const sectionStyle = section.section_content?.section_style || 'default';
+    
+    // Build the style object
+    const styles: React.CSSProperties = {
       backgroundColor: section.background_color || 'transparent',
       color: section.text_color || 'inherit',
       padding: paddingValue,
       borderRadius: borderRadiusValue,
-      boxShadow: section.background_color ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+      boxShadow: section.section_content?.shadow_effect !== 'none' ? shadowValue : 'none',
       ...(section.background_image_url && {
         backgroundImage: `url(${section.background_image_url})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center'
       })
     };
+    
+    // Add border if it's not "none"
+    if (borderStyle !== 'none') {
+      styles.borderStyle = borderStyle;
+      styles.borderWidth = borderWidth;
+      styles.borderColor = borderColor;
+    }
+    
+    // Handle section style
+    if (sectionStyle === 'outlined') {
+      styles.backgroundColor = 'transparent';
+      styles.borderStyle = 'solid';
+      styles.borderWidth = '1px';
+      styles.borderColor = section.background_color || '#000000';
+    } else if (sectionStyle === 'solid') {
+      styles.backgroundColor = section.background_color || '#ffffff';
+    }
+    
+    return styles;
   };
 
   const renderSection = (section: BusinessPageSection) => {
