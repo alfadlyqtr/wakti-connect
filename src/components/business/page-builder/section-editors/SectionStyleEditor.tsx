@@ -50,7 +50,6 @@ const SectionStyleEditor: React.FC<SectionStyleEditorProps> = ({
               <Label htmlFor="background_color">Background Color</Label>
               <ColorInput
                 id="background_color"
-                name="background_color"
                 value={contentData.background_color || "#ffffff"}
                 onChange={(color) => handleStyleChange("background_color", color)}
               />
@@ -61,7 +60,6 @@ const SectionStyleEditor: React.FC<SectionStyleEditorProps> = ({
               <Label htmlFor="text_color">Text Color</Label>
               <ColorInput
                 id="text_color"
-                name="text_color"
                 value={contentData.text_color || "#000000"}
                 onChange={(color) => handleStyleChange("text_color", color)}
               />
@@ -172,7 +170,6 @@ const SectionStyleEditor: React.FC<SectionStyleEditorProps> = ({
               <Label htmlFor="border_color">Border Color</Label>
               <ColorInput
                 id="border_color"
-                name="border_color"
                 value={contentData.border_color || "#000000"}
                 onChange={(color) => handleStyleChange("border_color", color)}
               />

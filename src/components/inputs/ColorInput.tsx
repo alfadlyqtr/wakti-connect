@@ -4,6 +4,7 @@ import { ColorPicker } from "@/components/ui/color-picker";
 
 interface ColorInputProps {
   id?: string;
+  name?: string; // Add optional name property
   value: string;
   onChange: (value: string) => void;
   className?: string;
@@ -11,6 +12,7 @@ interface ColorInputProps {
 
 export const ColorInput: React.FC<ColorInputProps> = ({ 
   id, 
+  name,
   value, 
   onChange,
   className

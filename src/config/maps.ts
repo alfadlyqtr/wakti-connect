@@ -6,3 +6,8 @@ export const GOOGLE_MAPS_API_KEY = "AIzaSyA4j92W_YgT4LdU5pzw6a0kzHNAtdz3i2E";
 export const generateMapEmbedUrl = (address: string): string => {
   return `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${encodeURIComponent(address)}&zoom=15`;
 };
+
+// Function to generate Google Maps URL for navigation/sharing
+export const generateGoogleMapsUrl = (address: string): string => {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+};
