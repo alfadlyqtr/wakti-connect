@@ -4,6 +4,7 @@ import { BusinessPageSection } from "@/types/business.types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import BusinessContactForm from "../BusinessContactForm";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
+import { submitContactForm } from "@/services/contact";
 
 interface ContactSectionProps {
   section: BusinessPageSection;

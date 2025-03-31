@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BusinessPage, BusinessPageSection } from "@/types/business.types";
 import { fromTable } from "@/integrations/supabase/helper";
 import { toast } from "@/components/ui/use-toast";
+import { useSubmitContactFormMutation } from "./useContactSubmissionMutation";
 
 // Create a new business page
 export const useCreatePageMutation = () => {
@@ -176,44 +177,5 @@ export const useUpdateSectionMutation = () => {
   });
 };
 
-// Submit contact form
-export const useSubmitContactFormMutation = () => {
-  return useMutation({
-    mutationFn: async ({ 
-      businessId, 
-      pageId, 
-      formData 
-    }: { 
-      businessId: string; 
-      pageId: string; 
-      formData: { name: string; email: string | null; phone: string; message: string | null } 
-    }) => {
-      // Submit the contact form
-      const { data, error } = await fromTable('business_contact_submissions')
-        .insert({
-          business_id: businessId,
-          page_id: pageId,
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          message: formData.message
-        })
-        .select()
-        .single();
-      
-      if (error) {
-        console.error("Error submitting contact form:", error);
-        throw error;
-      }
-      
-      return data;
-    },
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Failed to submit form",
-        description: error.message,
-      });
-    }
-  });
-};
+// Re-export the contact form submission mutation
+export { useSubmitContactFormMutation };
