@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useSubmitContactFormMutation } from "@/hooks/business-page/useBusinessPageMutations";
+import { sendMessage } from "@/services/messages";
 
 interface BusinessContactSectionProps {
   content: Record<string, any>;
@@ -81,10 +82,11 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.email || !formData.message) {
+    // Check required fields: name and phone
+    if (!formData.name || !formData.phone) {
       toast({
         title: "Error",
-        description: "Please fill in all the required fields",
+        description: "Please fill in your name and phone number",
         variant: "destructive"
       });
       return;
@@ -93,17 +95,25 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Use the mutation to submit the form
+      // Save to database
       await submitContactMutation.mutateAsync({
         businessId,
         pageId,
         formData: {
           name: formData.name,
-          email: formData.email,
+          email: formData.email || null,
           phone: formData.phone,
-          message: formData.message
+          message: formData.message || null
         }
       });
+      
+      // Send message to business inbox
+      try {
+        await sendMessage(businessId, `Contact from: ${formData.name} (${formData.phone})`);
+      } catch (error) {
+        console.log("Error sending message to business inbox:", error);
+        // We continue even if sending the message fails
+      }
       
       // Show success message
       setShowSuccessMessage(true);
@@ -247,30 +257,8 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
             </div>
             
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1" style={{ color: labelColor }}>
-                Email *
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-primary focus:outline-none"
-                style={{ 
-                  borderColor: inputBorderColor, 
-                  borderRadius: inputBorderRadius,
-                  backgroundColor: inputBackground,
-                  color: inputTextColor || "#333333"
-                }}
-                placeholder="Your email"
-                required
-              />
-            </div>
-            
-            <div>
               <label htmlFor="phone" className="block text-sm font-medium mb-1" style={{ color: labelColor }}>
-                Phone Number
+                Phone Number *
               </label>
               <input
                 type="tel"
@@ -286,12 +274,34 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
                   color: inputTextColor || "#333333"
                 }}
                 placeholder="Your phone number"
+                required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium mb-1" style={{ color: labelColor }}>
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-primary focus:outline-none"
+                style={{ 
+                  borderColor: inputBorderColor, 
+                  borderRadius: inputBorderRadius,
+                  backgroundColor: inputBackground,
+                  color: inputTextColor || "#333333"
+                }}
+                placeholder="Your email"
               />
             </div>
             
             <div>
               <label htmlFor="message" className="block text-sm font-medium mb-1" style={{ color: labelColor }}>
-                Message *
+                Message
               </label>
               <textarea
                 id="message"
@@ -307,7 +317,6 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
                   color: inputTextColor || "#333333"
                 }}
                 placeholder="Your message"
-                required
               ></textarea>
             </div>
             

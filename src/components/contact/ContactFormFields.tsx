@@ -1,7 +1,7 @@
 
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
-import { MailIcon, Loader2 } from "lucide-react";
+import { MailIcon, Loader2, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -75,34 +75,55 @@ const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
           />
         </div>
         
-        <FormField
-          control={form.control}
-          name="subject"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Subject</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                disabled={isSubmitting}
-              >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a subject" />
-                  </SelectTrigger>
+                  <Input 
+                    type="tel" 
+                    placeholder="+1 (555) 123-4567" 
+                    {...field} 
+                    disabled={isSubmitting}
+                  />
                 </FormControl>
-                <SelectContent>
-                  <SelectItem value="general">General Inquiry</SelectItem>
-                  <SelectItem value="support">Technical Support</SelectItem>
-                  <SelectItem value="billing">Billing Question</SelectItem>
-                  <SelectItem value="feedback">Feedback</SelectItem>
-                  <SelectItem value="partnership">Partnership</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="subject"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Subject</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  disabled={isSubmitting}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a subject" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="general">General Inquiry</SelectItem>
+                    <SelectItem value="support">Technical Support</SelectItem>
+                    <SelectItem value="billing">Billing Question</SelectItem>
+                    <SelectItem value="feedback">Feedback</SelectItem>
+                    <SelectItem value="partnership">Partnership</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         
         <FormField
           control={form.control}

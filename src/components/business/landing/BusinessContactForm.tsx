@@ -12,9 +12,9 @@ import { toast } from "@/components/ui/use-toast";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  phone: z.string().optional(),
-  message: z.string().min(10, "Message must be at least 10 characters"),
+  email: z.string().email("Please enter a valid email address").optional().or(z.literal('')),
+  phone: z.string().min(1, "Phone number is required"),
+  message: z.string().optional().or(z.literal('')),
 });
 
 type ContactFormValues = z.infer<typeof formSchema>;
@@ -55,7 +55,12 @@ export function BusinessContactForm({
       await submitContactForm({
         businessId,
         pageId,
-        formData: values
+        formData: {
+          name: values.name,
+          email: values.email || null,
+          phone: values.phone,
+          message: values.message || null
+        }
       });
       
       form.reset();
@@ -87,9 +92,23 @@ export function BusinessContactForm({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>Name *</FormLabel>
               <FormControl>
                 <Input placeholder="Your name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone *</FormLabel>
+              <FormControl>
+                <Input placeholder="+1 (555) 123-4567" type="tel" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -104,20 +123,6 @@ export function BusinessContactForm({
               <FormLabel>Email</FormLabel>
               <FormControl>
                 <Input placeholder="email@example.com" type="email" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone (Optional)</FormLabel>
-              <FormControl>
-                <Input placeholder="+1 (555) 123-4567" type="tel" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

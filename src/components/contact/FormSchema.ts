@@ -9,6 +9,9 @@ export const contactFormSchema = z.object({
   email: z.string().email({
     message: "Please enter a valid email address.",
   }),
+  phone: z.string().min(1, {
+    message: "Please enter your phone number.",
+  }),
   subject: z.string().min(1, {
     message: "Please select a subject.",
   }),
