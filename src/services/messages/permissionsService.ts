@@ -1,8 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { fromTable } from "@/integrations/supabase/helper";
-import { canStaffMessageUser } from "../staff/accessControl";
-import { isUserStaff } from "@/utils/staffUtils";
 
 /**
  * Checks if the current user can message a given user
@@ -20,14 +18,6 @@ export const canMessageUser = async (userId: string): Promise<boolean> => {
     if (userId === session.user.id) {
       console.log("User can message themselves");
       return true;
-    }
-    
-    // Check if current user is staff
-    const isStaff = await isUserStaff();
-    if (isStaff) {
-      const canMessage = await canStaffMessageUser(userId);
-      console.log("Staff user can message:", canMessage);
-      return canMessage;
     }
     
     // Get the current user's profile

@@ -8,6 +8,7 @@ import {
   canMessageUser,
   getUnreadMessagesCount
 } from "@/services/messages";
+import { Message, Conversation } from "@/types/message.types";
 
 export const useMessaging = (otherUserId?: string) => {
   const queryClient = useQueryClient();
@@ -18,7 +19,7 @@ export const useMessaging = (otherUserId?: string) => {
     isLoading: isLoadingMessages,
     error: messagesError,
     refetch: refetchMessages
-  } = useQuery({
+  } = useQuery<Message[]>({
     queryKey: ['messages', otherUserId],
     queryFn: () => otherUserId ? fetchMessages(otherUserId) : Promise.resolve([]),
     enabled: !!otherUserId,
@@ -50,7 +51,7 @@ export const useMessaging = (otherUserId?: string) => {
     data: conversations = [],
     isLoading: isLoadingConversations,
     error: conversationsError
-  } = useQuery({
+  } = useQuery<Conversation[]>({
     queryKey: ['conversations'],
     queryFn: fetchConversations,
     refetchInterval: 10000 // Auto-refresh every 10 seconds
@@ -60,7 +61,7 @@ export const useMessaging = (otherUserId?: string) => {
   const { 
     data: canMessage = false,
     isLoading: isCheckingPermission 
-  } = useQuery({
+  } = useQuery<boolean>({
     queryKey: ['canMessage', otherUserId],
     queryFn: () => otherUserId ? canMessageUser(otherUserId) : Promise.resolve(false),
     enabled: !!otherUserId
@@ -70,9 +71,9 @@ export const useMessaging = (otherUserId?: string) => {
   const { 
     data: unreadCount = 0,
     isLoading: isLoadingUnreadCount
-  } = useQuery({
+  } = useQuery<number>({
     queryKey: ['unreadMessages'],
-    queryFn: () => getUnreadMessagesCount(),
+    queryFn: getUnreadMessagesCount,
     refetchInterval: 15000 // Auto-refresh every 15 seconds
   });
 

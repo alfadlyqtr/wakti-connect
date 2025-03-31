@@ -61,7 +61,7 @@ const DashboardMessagesHome = () => {
             <h2 className="font-semibold">Conversations</h2>
           </div>
           <div className="overflow-y-auto flex-1">
-            {conversations?.length > 0 ? (
+            {conversations && conversations.length > 0 ? (
               <ConversationsList />
             ) : (
               <div className="p-6 text-center">
@@ -72,7 +72,7 @@ const DashboardMessagesHome = () => {
         </div>
         
         <div className="md:col-span-2 overflow-hidden flex flex-col">
-          {conversations?.length > 0 ? (
+          {conversations && conversations.length > 0 ? (
             <div className="text-center text-muted-foreground flex items-center justify-center h-full">
               <p>Select a conversation to view messages</p>
             </div>
