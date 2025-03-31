@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect } from "react";
 import { BusinessPageSection } from "@/types/business.types";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
@@ -138,8 +139,10 @@ export const SectionEditorProvider: React.FC<{
       is_visible: !section.is_visible
     };
     
+    // Fix: Include the content parameter
     updateSection.mutate({
       sectionId: section.id,
+      content: contentData, // Include the current content data
       sectionUpdates: updatedSection
     });
   };
