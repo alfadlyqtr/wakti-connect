@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const useContactSubmissionsQuery = (businessId?: string) => {
+export const useContactSubmissionsQuery = (businessId?: string | null) => {
   return useQuery({
     queryKey: ['contactSubmissions', businessId],
     queryFn: async () => {

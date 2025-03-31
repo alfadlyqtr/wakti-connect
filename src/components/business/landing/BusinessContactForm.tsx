@@ -4,16 +4,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Send } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
-// Updated schema to make only name and phone mandatory
+// Simple schema with only name and phone required
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address").optional().or(z.literal('')),
   phone: z.string().min(1, "Phone number is required"),
   message: z.string().optional().or(z.literal('')),
 });
@@ -43,7 +42,6 @@ export function BusinessContactForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      email: "",
       phone: "",
       message: "",
     },
@@ -58,9 +56,9 @@ export function BusinessContactForm({
         pageId,
         formData: {
           name: values.name,
-          email: values.email || null,
           phone: values.phone,
-          message: values.message || null
+          message: values.message || null,
+          email: null // Set email to null as it's no longer in the form
         }
       });
       
@@ -110,20 +108,6 @@ export function BusinessContactForm({
               <FormLabel>Phone *</FormLabel>
               <FormControl>
                 <Input placeholder="+1 (555) 123-4567" type="tel" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input placeholder="email@example.com" type="email" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

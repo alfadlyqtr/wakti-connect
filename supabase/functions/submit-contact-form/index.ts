@@ -44,7 +44,7 @@ serve(async (req) => {
       )
     }
 
-    // Validate form data
+    // Validate form data - only require name and phone
     if (!formData.name || !formData.phone) {
       return new Response(
         JSON.stringify({
@@ -66,9 +66,9 @@ serve(async (req) => {
         business_id: businessId,
         page_id: pageId,
         name: formData.name,
-        email: formData.email,
+        email: formData.email || null,
         phone: formData.phone,
-        message: formData.message,
+        message: formData.message || null,
         is_read: false
       })
       .select()
@@ -81,18 +81,7 @@ serve(async (req) => {
 
     console.log("Submission stored successfully:", data.id);
 
-    // Create a notification for the business owner using admin client
-    await supabaseAdmin
-      .from('notifications')
-      .insert({
-        user_id: businessId,
-        type: 'contact_form',
-        title: 'New Contact Form Submission',
-        content: `${formData.name} has submitted a contact form on your business page.`,
-        related_entity_id: data.id,
-        related_entity_type: 'contact_submission',
-        is_read: false
-      })
+    // Removed notification creation to simplify the process
 
     return new Response(
       JSON.stringify({ success: true, data }),
