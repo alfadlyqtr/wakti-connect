@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 import { 
-  fetchMessages, 
+  getMessages, 
   sendMessage, 
   fetchConversations,
   canMessageUser,
@@ -21,7 +21,7 @@ export const useMessaging = (otherUserId?: string) => {
     refetch: refetchMessages
   } = useQuery<Message[]>({
     queryKey: ['messages', otherUserId],
-    queryFn: () => otherUserId ? fetchMessages(otherUserId) : Promise.resolve([]),
+    queryFn: () => otherUserId ? getMessages(otherUserId) : Promise.resolve([]),
     enabled: !!otherUserId,
     refetchInterval: 5000 // Auto-refresh every 5 seconds
   });

@@ -1,6 +1,6 @@
 
 // Re-export all message service functions from a single entry point
-export { getMessages as fetchMessages } from '../messages';
+export { getMessages } from '../messages';
 export { sendMessage } from '../messages';
 export { markMessageAsRead } from '../messages';
 
