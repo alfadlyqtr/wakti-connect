@@ -1,13 +1,14 @@
 
 import React from "react";
+import { SocialIconStyle, SocialIconSize } from "@/types/business.types";
 import { useSocialIconStyles } from "@/hooks/useSocialIconStyles";
 import { Facebook, Instagram, Twitter, Linkedin, Youtube, Globe } from "lucide-react";
 
 interface SocialIconProps {
   platform: string;
   url: string;
-  style?: "default" | "colored" | "rounded" | "outlined";
-  size?: "small" | "default" | "large";
+  style?: SocialIconStyle;
+  size?: SocialIconSize;
 }
 
 const SocialIcon: React.FC<SocialIconProps> = ({

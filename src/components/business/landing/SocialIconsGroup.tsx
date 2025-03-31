@@ -1,12 +1,12 @@
 
 import React from "react";
 import SocialIcon from "./SocialIcon";
-import { BusinessSocialLink } from "@/types/business.types";
+import { BusinessSocialLink, SocialIconStyle, SocialIconSize } from "@/types/business.types";
 
 interface SocialIconsGroupProps {
   socialLinks: BusinessSocialLink[];
-  style?: "default" | "colored" | "rounded" | "outlined";
-  size?: "small" | "default" | "large";
+  style?: SocialIconStyle;
+  size?: SocialIconSize;
   className?: string;
 }
 

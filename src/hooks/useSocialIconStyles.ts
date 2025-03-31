@@ -1,9 +1,10 @@
 
 import { useMemo } from "react";
+import { SocialIconStyle, SocialIconSize } from "@/types/business.types";
 
 export interface SocialIconStyleProps {
-  style?: "default" | "colored" | "rounded" | "outlined";
-  size?: "small" | "default" | "large";
+  style?: SocialIconStyle;
+  size?: SocialIconSize;
   platform: string;
 }
 

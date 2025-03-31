@@ -1,5 +1,6 @@
+
 import React from "react";
-import { BusinessSocialLink } from "@/types/business.types";
+import { BusinessSocialLink, SocialIconStyle, SocialIconSize } from "@/types/business.types";
 import { 
   Facebook, 
   Instagram, 
@@ -13,8 +14,8 @@ import { cn } from "@/lib/utils";
 
 interface BusinessSocialLinksProps {
   socialLinks: BusinessSocialLink[];
-  iconsStyle?: 'default' | 'colored' | 'rounded' | 'outlined';
-  size?: 'small' | 'default' | 'large';
+  iconsStyle?: SocialIconStyle;
+  size?: SocialIconSize;
   vertical?: boolean;
 }
 

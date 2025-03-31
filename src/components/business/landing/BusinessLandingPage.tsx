@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import BusinessSocialLinks from "./BusinessSocialLinks";
 import BusinessPageSections from "./BusinessPageSections";
 import BusinessPageNotFound from "./BusinessPageNotFound";
-import { BusinessProfile } from "@/types/business.types";
+import { BusinessProfile, SocialIconStyle, SocialIconSize } from "@/types/business.types";
 import PoweredByWAKTI from "./PoweredByWAKTI";
 import BusinessSubscribeButton from "./BusinessSubscribeButton";
 import AuthenticationAlert from "./AuthenticationAlert";
@@ -155,8 +155,8 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
   };
   
   // Social media styling
-  const socialIconsStyle = businessPage.social_icons_style || 'default';
-  const socialIconsSize = businessPage.social_icons_size || 'default';
+  const socialIconsStyle = businessPage.social_icons_style as SocialIconStyle || 'default';
+  const socialIconsSize = businessPage.social_icons_size as SocialIconSize || 'default';
   const socialIconsPosition = businessPage.social_icons_position || 'footer';
   
   return (

@@ -119,3 +119,8 @@ export interface SectionStyles {
   border_radius?: string;
   background_image_url?: string;
 }
+
+// Define allowed icon styles
+export type SocialIconStyle = 'default' | 'colored' | 'rounded' | 'outlined';
+export type SocialIconSize = 'small' | 'default' | 'large';
+export type SocialIconPosition = 'footer' | 'header' | 'sidebar';
