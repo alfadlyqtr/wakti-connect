@@ -55,14 +55,14 @@ export interface BusinessPage {
   
   // Enhanced customization
   background_color?: string;
-  subscribe_button_position?: 'top' | 'floating' | 'both';
-  subscribe_button_style?: 'default' | 'gradient' | 'outline' | 'minimal';
-  subscribe_button_size?: 'small' | 'default' | 'large';
-  social_icons_style?: 'default' | 'colored' | 'rounded' | 'outlined';
-  social_icons_size?: 'small' | 'default' | 'large';
-  social_icons_position?: 'footer' | 'header' | 'sidebar';
+  subscribe_button_position?: 'top' | 'floating' | 'both' | string;
+  subscribe_button_style?: 'default' | 'gradient' | 'outline' | 'minimal' | string;
+  subscribe_button_size?: 'small' | 'default' | 'large' | string;
+  social_icons_style?: 'default' | 'colored' | 'rounded' | 'outlined' | string;
+  social_icons_size?: 'small' | 'default' | 'large' | string;
+  social_icons_position?: 'footer' | 'header' | 'sidebar' | string;
   content_max_width?: string;
-  section_spacing?: 'compact' | 'default' | 'spacious';
+  section_spacing?: 'compact' | 'default' | 'spacious' | string;
 }
 
 export interface BusinessPageSection {
