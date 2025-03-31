@@ -75,7 +75,7 @@ serve(async (req) => {
     }
     
     // Insert into business_contact_submissions using service role to bypass RLS
-    const { data, error } = await supabaseAdmin
+    const { data: submissionData, error: submissionError } = await supabaseAdmin
       .from('business_contact_submissions')
       .insert({
         business_id: businessId,
@@ -83,15 +83,16 @@ serve(async (req) => {
         name: formData.name,
         email: formData.email || null,
         phone: formData.phone,
-        message: formData.message || null
+        message: formData.message || null,
+        is_read: false
       })
       .select()
       .single();
     
-    if (error) {
-      console.error("Error submitting contact form:", error);
+    if (submissionError) {
+      console.error("Error submitting contact form:", submissionError);
       return new Response(
-        JSON.stringify({ error: error.message }),
+        JSON.stringify({ error: submissionError.message }),
         { 
           status: 500, 
           headers: { 
@@ -102,10 +103,10 @@ serve(async (req) => {
       );
     }
     
-    // Optional: Send notification to business owner (placeholder for future enhancement)
+    // Optional: Send notification or email to business owner (placeholder for future enhancement)
     
     return new Response(
-      JSON.stringify({ success: true, data }),
+      JSON.stringify({ success: true, data: submissionData }),
       { 
         status: 200, 
         headers: { 

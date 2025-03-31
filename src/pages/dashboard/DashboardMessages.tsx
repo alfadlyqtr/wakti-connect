@@ -1,18 +1,21 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { Routes, Route, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Mail, Inbox } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import ConversationsList from "@/components/messages/ConversationsList";
 import ChatInterface from "@/components/messages/ChatInterface";
 import EmptyMessagesState from "@/components/messages/EmptyMessagesState";
 import { useMessaging } from "@/hooks/useMessaging";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import ContactSubmissions from "@/components/messages/ContactSubmissions";
+import { useContactSubmissionsQuery } from "@/hooks/business-page/useContactSubmissionsQuery";
 
 const DashboardMessagesHome = () => {
   const navigate = useNavigate();
   const { conversations } = useMessaging();
+  const [activeTab, setActiveTab] = useState<string>("messages");
   
   const { data: userProfile } = useQuery({
     queryKey: ['currentUserProfile'],
@@ -30,7 +33,10 @@ const DashboardMessagesHome = () => {
     },
   });
   
+  const { data: contactSubmissions = [], isLoading: submissionsLoading } = useContactSubmissionsQuery();
+  
   const canSendMessages = userProfile?.account_type !== 'free';
+  const isBusinessAccount = userProfile?.account_type === 'business';
   
   return (
     <div className="space-y-6">
@@ -55,35 +61,101 @@ const DashboardMessagesHome = () => {
         )}
       </div>
       
-      <div className="grid h-[calc(100vh-220px)] grid-cols-1 md:grid-cols-3 gap-4 rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
-        <div className="border-r md:col-span-1 overflow-hidden flex flex-col">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold">Conversations</h2>
-          </div>
-          <div className="overflow-y-auto flex-1">
-            {conversations && conversations.length > 0 ? (
-              <ConversationsList />
-            ) : (
-              <div className="p-6 text-center">
-                <p className="text-muted-foreground text-sm">No conversations yet</p>
+      {isBusinessAccount && (
+        <Tabs 
+          defaultValue="messages" 
+          value={activeTab} 
+          onValueChange={setActiveTab}
+          className="w-full"
+        >
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="messages" className="flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              <span>Messages</span>
+            </TabsTrigger>
+            <TabsTrigger value="submissions" className="flex items-center gap-2">
+              <Inbox className="h-4 w-4" />
+              <span>Contact Submissions</span>
+              {contactSubmissions.filter(s => !s.is_read).length > 0 && (
+                <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-xs text-white">
+                  {contactSubmissions.filter(s => !s.is_read).length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="messages" className="mt-0">
+            <div className="grid h-[calc(100vh-300px)] grid-cols-1 md:grid-cols-3 gap-4 rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
+              <div className="border-r md:col-span-1 overflow-hidden flex flex-col">
+                <div className="p-4 border-b">
+                  <h2 className="font-semibold">Conversations</h2>
+                </div>
+                <div className="overflow-y-auto flex-1">
+                  {conversations && conversations.length > 0 ? (
+                    <ConversationsList />
+                  ) : (
+                    <div className="p-6 text-center">
+                      <p className="text-muted-foreground text-sm">No conversations yet</p>
+                    </div>
+                  )}
+                </div>
               </div>
+              
+              <div className="md:col-span-2 overflow-hidden flex flex-col">
+                {conversations && conversations.length > 0 ? (
+                  <div className="text-center text-muted-foreground flex items-center justify-center h-full">
+                    <p>Select a conversation to view messages</p>
+                  </div>
+                ) : (
+                  <EmptyMessagesState 
+                    canSendMessages={canSendMessages} 
+                    userType={userProfile?.account_type || 'free'}
+                  />
+                )}
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="submissions" className="mt-0">
+            <ContactSubmissions 
+              submissions={contactSubmissions} 
+              isLoading={submissionsLoading} 
+            />
+          </TabsContent>
+        </Tabs>
+      )}
+      
+      {!isBusinessAccount && (
+        <div className="grid h-[calc(100vh-220px)] grid-cols-1 md:grid-cols-3 gap-4 rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
+          <div className="border-r md:col-span-1 overflow-hidden flex flex-col">
+            <div className="p-4 border-b">
+              <h2 className="font-semibold">Conversations</h2>
+            </div>
+            <div className="overflow-y-auto flex-1">
+              {conversations && conversations.length > 0 ? (
+                <ConversationsList />
+              ) : (
+                <div className="p-6 text-center">
+                  <p className="text-muted-foreground text-sm">No conversations yet</p>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="md:col-span-2 overflow-hidden flex flex-col">
+            {conversations && conversations.length > 0 ? (
+              <div className="text-center text-muted-foreground flex items-center justify-center h-full">
+                <p>Select a conversation to view messages</p>
+              </div>
+            ) : (
+              <EmptyMessagesState 
+                canSendMessages={canSendMessages} 
+                userType={userProfile?.account_type || 'free'}
+              />
             )}
           </div>
         </div>
-        
-        <div className="md:col-span-2 overflow-hidden flex flex-col">
-          {conversations && conversations.length > 0 ? (
-            <div className="text-center text-muted-foreground flex items-center justify-center h-full">
-              <p>Select a conversation to view messages</p>
-            </div>
-          ) : (
-            <EmptyMessagesState 
-              canSendMessages={canSendMessages} 
-              userType={userProfile?.account_type || 'free'}
-            />
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 };
