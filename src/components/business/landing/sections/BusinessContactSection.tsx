@@ -22,6 +22,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
     message: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,6 +49,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
     inputBorderColor = "#e2e2e2",
     inputBorderRadius = "4px",
     inputBackground = "#ffffff",
+    inputTextColor = "#333333",
     labelColor = "#333333",
     // New layout options
     layout = "sideBySide", // sideBySide, formTop, formBottom
@@ -82,7 +84,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
     if (!formData.name || !formData.email || !formData.message) {
       toast({
         title: "Error",
-        description: "Please fill in all the fields",
+        description: "Please fill in all the required fields",
         variant: "destructive"
       });
       return;
@@ -98,6 +100,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
         formData: {
           name: formData.name,
           email: formData.email,
+          phone: formData.phone,
           message: formData.message
         }
       });
@@ -108,6 +111,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
       setFormData({
         name: "",
         email: "",
+        phone: "",
         message: ""
       });
       
@@ -222,7 +226,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium mb-1" style={{ color: labelColor }}>
-                Name
+                Name *
               </label>
               <input
                 type="text"
@@ -234,7 +238,8 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
                 style={{ 
                   borderColor: inputBorderColor, 
                   borderRadius: inputBorderRadius,
-                  backgroundColor: inputBackground 
+                  backgroundColor: inputBackground,
+                  color: inputTextColor || "#333333"
                 }}
                 placeholder="Your name"
                 required
@@ -243,7 +248,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
             
             <div>
               <label htmlFor="email" className="block text-sm font-medium mb-1" style={{ color: labelColor }}>
-                Email
+                Email *
               </label>
               <input
                 type="email"
@@ -255,7 +260,8 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
                 style={{ 
                   borderColor: inputBorderColor, 
                   borderRadius: inputBorderRadius,
-                  backgroundColor: inputBackground 
+                  backgroundColor: inputBackground,
+                  color: inputTextColor || "#333333"
                 }}
                 placeholder="Your email"
                 required
@@ -263,8 +269,29 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
             </div>
             
             <div>
+              <label htmlFor="phone" className="block text-sm font-medium mb-1" style={{ color: labelColor }}>
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded-md focus:ring-2 focus:ring-primary focus:outline-none"
+                style={{ 
+                  borderColor: inputBorderColor, 
+                  borderRadius: inputBorderRadius,
+                  backgroundColor: inputBackground,
+                  color: inputTextColor || "#333333"
+                }}
+                placeholder="Your phone number"
+              />
+            </div>
+            
+            <div>
               <label htmlFor="message" className="block text-sm font-medium mb-1" style={{ color: labelColor }}>
-                Message
+                Message *
               </label>
               <textarea
                 id="message"
@@ -276,7 +303,8 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
                 style={{ 
                   borderColor: inputBorderColor, 
                   borderRadius: inputBorderRadius,
-                  backgroundColor: inputBackground 
+                  backgroundColor: inputBackground,
+                  color: inputTextColor || "#333333"
                 }}
                 placeholder="Your message"
                 required

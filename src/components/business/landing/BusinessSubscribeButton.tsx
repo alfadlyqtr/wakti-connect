@@ -14,6 +14,13 @@ interface BusinessSubscribeButtonProps {
   iconOnly?: boolean;
   className?: string;
   onAuthRequired?: () => boolean;
+  // Additional customization options
+  backgroundColor?: string;
+  textColor?: string;
+  borderRadius?: string;
+  borderColor?: string;
+  borderWidth?: string;
+  hoverColor?: string;
 }
 
 const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
@@ -24,7 +31,13 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
   variant = "default",
   iconOnly = false,
   className,
-  onAuthRequired
+  onAuthRequired,
+  backgroundColor,
+  textColor,
+  borderRadius,
+  borderColor,
+  borderWidth,
+  hoverColor
 }) => {
   const { 
     isSubscribed, 
@@ -48,6 +61,25 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
     }
   };
   
+  // Custom styles based on props
+  const customButtonStyle: React.CSSProperties = {
+    ...(buttonStyle || {}),
+    ...(backgroundColor ? { backgroundColor } : {}),
+    ...(textColor ? { color: textColor } : {}),
+    ...(borderRadius ? { borderRadius } : {}),
+    ...(borderColor ? { borderColor } : {}),
+    ...(borderWidth ? { borderWidth } : {}),
+    transition: 'all 0.2s ease'
+  };
+  
+  // Custom hover styles
+  const getHoverStyles = () => {
+    if (hoverColor) {
+      return `hover:bg-opacity-90 ${isSubscribed ? '' : 'hover:shadow-md'}`;
+    }
+    return isSubscribed ? '' : 'hover:shadow-md';
+  };
+  
   if (checkingSubscription) {
     return (
       <Button 
@@ -55,6 +87,7 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
         size={size}
         disabled 
         className={cn("min-w-[120px]", className)}
+        style={customButtonStyle}
       >
         <Loader2 className="h-4 w-4 animate-spin mr-2" />
         {!iconOnly && "Loading..."}
@@ -68,10 +101,11 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
       size={size}
       className={cn(
         isSubscribed ? "bg-muted/20" : "",
-        "transition-all hover:shadow-md",
+        "transition-all",
+        getHoverStyles(),
         className
       )}
-      style={buttonStyle}
+      style={customButtonStyle}
       onClick={handleClick}
       disabled={subscribe.isPending || unsubscribe.isPending}
     >

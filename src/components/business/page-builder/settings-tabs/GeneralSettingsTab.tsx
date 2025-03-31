@@ -35,25 +35,6 @@ const GeneralSettingsTab = ({
   getPublicPageUrl,
   uploadingLogo
 }: GeneralSettingsTabProps) => {
-  const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    const safeSlug = value
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-');
-    
-    const event = {
-      ...e,
-      target: {
-        ...e.target,
-        name: 'page_slug',
-        value: safeSlug
-      }
-    };
-    
-    handleInputChangeWithAutoSave(event);
-  };
-
   const copyPageUrl = () => {
     const url = getPublicPageUrl();
     navigator.clipboard.writeText(url);
@@ -93,14 +74,14 @@ const GeneralSettingsTab = ({
               id="page_slug"
               name="page_slug"
               value={pageData.page_slug || ''}
-              onChange={handleSlugChange}
+              readOnly
               placeholder="your-business-name"
-              className="flex-1"
+              className="flex-1 bg-muted cursor-not-allowed"
             />
           </div>
           <div className="flex items-center justify-between mt-2">
             <p className="text-sm text-muted-foreground">
-              This will be the URL of your business page.
+              <span className="text-amber-500">Note:</span> To change the URL, please contact the system administrator.
             </p>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={copyPageUrl}>

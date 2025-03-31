@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -23,7 +22,6 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
   const [isLocating, setIsLocating] = useState(false);
   
   const handleLocationChange = (value: string) => {
-    // Create a synthetic event object that matches the expected type
     const syntheticEvent = {
       target: {
         name: 'address',
@@ -35,11 +33,10 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
   };
   
   const handleShowMapChange = (checked: boolean) => {
-    // Create a synthetic event object that matches the expected type
     const syntheticEvent = {
       target: {
         name: 'showMap',
-        value: checked.toString() // Convert boolean to string
+        value: checked.toString()
       }
     } as React.ChangeEvent<HTMLInputElement>;
     
@@ -47,11 +44,10 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
   };
   
   const handleEnableContactFormChange = (checked: boolean) => {
-    // Create a synthetic event object that matches the expected type
     const syntheticEvent = {
       target: {
         name: 'enableContactForm',
-        value: checked.toString() // Convert boolean to string
+        value: checked.toString()
       }
     } as React.ChangeEvent<HTMLInputElement>;
     
@@ -85,11 +81,8 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
       (position) => {
         const { latitude, longitude } = position.coords;
         
-        // Try to get a reverse geocoded address (in a real app)
-        // For now, we'll just use the coordinates
         const locationStr = `Business Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
         
-        // Create a synthetic event object
         const syntheticEvent = {
           target: {
             name: 'address',
@@ -99,7 +92,6 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
         
         handleInputChange(syntheticEvent);
         
-        // Also store coordinates for future reference
         const coordsEvent = {
           target: {
             name: 'coordinates',
@@ -149,7 +141,6 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
   };
   
   const handleSectionTemplateSelect = (templateId: string) => {
-    // Different predefined templates for contact sections
     const templates: Record<string, Record<string, any>> = {
       "simple": {
         title: "Contact Us",
@@ -221,7 +212,6 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
       }
     };
     
-    // Apply the selected template
     if (templates[templateId]) {
       Object.entries(templates[templateId]).forEach(([key, value]) => {
         const event = {
@@ -479,6 +469,15 @@ const ContactEditor: React.FC<EditorProps> = ({ contentData, handleInputChange }
                   id="inputBackground"
                   value={contentData.inputBackground || "#ffffff"}
                   onChange={(color) => handleColorChange("inputBackground", color)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="inputTextColor">Input Text Color</Label>
+                <ColorInput
+                  id="inputTextColor"
+                  value={contentData.inputTextColor || "#333333"}
+                  onChange={(color) => handleColorChange("inputTextColor", color)}
                 />
               </div>
               

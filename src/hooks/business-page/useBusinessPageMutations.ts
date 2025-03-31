@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BusinessPage, BusinessPageSection } from "@/types/business.types";
@@ -186,7 +185,7 @@ export const useSubmitContactFormMutation = () => {
     }: { 
       businessId: string; 
       pageId: string; 
-      formData: { name: string; email: string; message: string } 
+      formData: { name: string; email: string; phone?: string; message: string } 
     }) => {
       // Submit the contact form
       const { data, error } = await fromTable('business_contact_submissions')
@@ -195,6 +194,7 @@ export const useSubmitContactFormMutation = () => {
           page_id: pageId,
           name: formData.name,
           email: formData.email,
+          phone: formData.phone || null,
           message: formData.message
         })
         .select()
