@@ -1,185 +1,137 @@
 
-import React, { createContext, useState, useEffect, useContext } from "react";
-import { BusinessPageSection } from "@/types/business.types";
-import { useBusinessPage } from "@/hooks/useBusinessPage";
-import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
+import React, { createContext, useContext, useState } from "react";
+import { useUpdateSectionMutation } from "@/hooks/business-page/useBusinessPageMutations";
+import { toast } from "@/components/ui/use-toast";
 
-interface SectionEditorContextProps {
-  section: BusinessPageSection;
-  contentData: Record<string, any>;
-  setContentData: React.Dispatch<React.SetStateAction<Record<string, any>>>;
-  isDirty: boolean;
-  setIsDirty: React.Dispatch<React.SetStateAction<boolean>>;
+interface SectionEditorContextType {
+  isSubmitting: boolean;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  handleStyleChange: (name: string, value: string) => void;
-  handleSaveSection: () => void;
-  updateSection: ReturnType<typeof useBusinessPage>['updateSection'];
-  isNewSection: () => boolean;
-  moveUp: () => void;
-  moveDown: () => void;
-  duplicate: () => void;
-  toggleVisibility: () => void;
-  deleteSection: () => void;
+  handleToggleChange: (name: string, checked: boolean) => void;
+  handleSubmit: () => Promise<void>;
+  handleColorChange: (name: string, value: string) => void;
+  handleSelectChange: (name: string, value: string) => void;
+  handleListChange: (name: string, list: any[]) => void;
+  handleNestedUpdate: (name: string, value: any) => void;
+  contentData: Record<string, any>;
+  resetChanges: () => void;
 }
 
-export const SectionEditorContext = createContext<SectionEditorContextProps | undefined>(undefined);
+const SectionEditorContext = createContext<SectionEditorContextType | undefined>(undefined);
 
 export const useSectionEditor = () => {
   const context = useContext(SectionEditorContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useSectionEditor must be used within a SectionEditorProvider");
   }
   return context;
 };
 
-export const SectionEditorProvider: React.FC<{
-  children: React.ReactNode | ((context: SectionEditorContextProps) => React.ReactNode);
-  section: BusinessPageSection;
-}> = ({ children, section }) => {
-  const { updateSection } = useBusinessPage();
-  const [contentData, setContentData] = useState(section.section_content || {});
-  const [isDirty, setIsDirty] = useState(false);
+interface SectionEditorProviderProps {
+  children: React.ReactNode;
+  sectionId: string;
+  initialContent: Record<string, any>;
+}
+
+export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({ 
+  children, 
+  sectionId,
+  initialContent = {}
+}) => {
+  // State to track form values
+  const [contentData, setContentData] = useState<Record<string, any>>(initialContent);
+  const updateSectionMutation = useUpdateSectionMutation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  useEffect(() => {
-    const mergedContent = {
-      ...section.section_content || {},
-      background_color: section.background_color,
-      text_color: section.text_color,
-      padding: section.padding,
-      border_radius: section.border_radius,
-      background_image_url: section.background_image_url,
-      shadow_effect: section.section_content?.shadow_effect || 'none',
-      border_style: section.section_content?.border_style || 'none',
-      border_width: section.section_content?.border_width || '1px',
-      border_color: section.section_content?.border_color || '#000000',
-      section_style: section.section_content?.section_style || 'default'
-    };
-    
-    setContentData(mergedContent);
-    setIsDirty(false);
-  }, [section]);
+  const isDirty = JSON.stringify(contentData) !== JSON.stringify(initialContent);
   
-  const debouncedSave = useDebouncedCallback((content: any, sectionUpdates?: Partial<BusinessPageSection>) => {
-    updateSection.mutate({
-      sectionId: section.id,
-      content,
-      sectionUpdates
-    });
-    setIsDirty(false);
-  }, 2000);
+  // Reset changes
+  const resetChanges = () => {
+    setContentData(initialContent);
+  };
   
+  // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    const newContentData = {
-      ...contentData,
-      [name]: value
-    };
-    
-    setContentData(newContentData);
-    setIsDirty(true);
-    
-    debouncedSave(newContentData);
+    setContentData(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleStyleChange = (name: string, value: string) => {
-    const newContentData = {
-      ...contentData,
-      [name]: value
-    };
-    
-    setContentData(newContentData);
-    setIsDirty(true);
-    
-    const sectionUpdates: Partial<BusinessPageSection> = {};
-    
-    if (name === 'background_color') {
-      sectionUpdates.background_color = value;
-    } else if (name === 'text_color') {
-      sectionUpdates.text_color = value;
-    } else if (name === 'padding') {
-      sectionUpdates.padding = value;
-    } else if (name === 'border_radius') {
-      sectionUpdates.border_radius = value;
-    } else if (name === 'background_image_url') {
-      sectionUpdates.background_image_url = value;
+  // Handle toggle changes
+  const handleToggleChange = (name: string, checked: boolean) => {
+    setContentData(prev => ({ ...prev, [name]: checked }));
+  };
+  
+  // Handle color picker changes
+  const handleColorChange = (name: string, value: string) => {
+    setContentData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  // Handle select changes
+  const handleSelectChange = (name: string, value: string) => {
+    setContentData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  // Handle list changes
+  const handleListChange = (name: string, list: any[]) => {
+    setContentData(prev => ({ ...prev, [name]: list }));
+  };
+  
+  // Handle nested updates
+  const handleNestedUpdate = (name: string, value: any) => {
+    setContentData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  // Submit form
+  const handleSubmit = async () => {
+    if (!isDirty) {
+      toast({
+        title: "No Changes to Save",
+        description: "No changes were made to the section.",
+      });
+      return;
     }
     
-    debouncedSave(newContentData, sectionUpdates);
-  };
-  
-  const handleSaveSection = () => {
-    const sectionUpdates: Partial<BusinessPageSection> = {
-      background_color: contentData.background_color,
-      text_color: contentData.text_color,
-      padding: contentData.padding,
-      border_radius: contentData.border_radius,
-      background_image_url: contentData.background_image_url
-    };
+    setIsSubmitting(true);
     
-    updateSection.mutate({
-      sectionId: section.id,
-      content: contentData,
-      sectionUpdates
-    });
-    setIsDirty(false);
+    try {
+      await updateSectionMutation.mutateAsync({ 
+        sectionId, 
+        data: { 
+          section_content: contentData 
+        } 
+      });
+      
+      toast({
+        title: "Section Updated",
+        description: "Your changes have been saved.",
+      });
+    } catch (error) {
+      console.error("Error updating section:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update section. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
-  const isNewSection = () => {
-    const keys = Object.keys(contentData).filter(key => key !== 'title');
-    return keys.length === 0 || (keys.length === 1 && !contentData[keys[0]]);
-  };
-  
-  const moveUp = () => {
-    console.log("Moving section up", section.id);
-  };
-  
-  const moveDown = () => {
-    console.log("Moving section down", section.id);
-  };
-  
-  const duplicate = () => {
-    console.log("Duplicating section", section.id);
-  };
-  
-  const toggleVisibility = () => {
-    console.log("Toggling visibility for section", section.id);
-    const updatedSection: Partial<BusinessPageSection> = {
-      is_visible: !section.is_visible
-    };
-    
-    // Fix: Include the content parameter
-    updateSection.mutate({
-      sectionId: section.id,
-      content: contentData, // Include the current content data
-      sectionUpdates: updatedSection
-    });
-  };
-  
-  const deleteSection = () => {
-    console.log("Deleting section", section.id);
-  };
-  
-  const contextValue: SectionEditorContextProps = {
-    section,
+  const value = {
     contentData,
-    setContentData,
-    isDirty,
-    setIsDirty,
+    isSubmitting,
     handleInputChange,
-    handleStyleChange,
-    handleSaveSection,
-    updateSection,
-    isNewSection,
-    moveUp,
-    moveDown,
-    duplicate,
-    toggleVisibility,
-    deleteSection
+    handleToggleChange,
+    handleSubmit,
+    handleColorChange,
+    handleSelectChange,
+    handleListChange,
+    handleNestedUpdate,
+    resetChanges
   };
   
   return (
-    <SectionEditorContext.Provider value={contextValue}>
-      {typeof children === "function" ? children(contextValue) : children}
+    <SectionEditorContext.Provider value={value}>
+      {children}
     </SectionEditorContext.Provider>
   );
 };

@@ -64,7 +64,10 @@ const BusinessPageBuilder = () => {
   
   const handleSavePageSettings = () => {
     if (ownerBusinessPage) {
-      updatePage.mutate(pageData);
+      updatePage.mutate({ 
+        pageId: ownerBusinessPage.id,
+        data: pageData
+      });
     } else {
       createPage.mutate(pageData);
     }
