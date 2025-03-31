@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { TemplateIcon } from "lucide-react";
+import { BookTemplate } from "lucide-react"; // Changed from TemplateIcon to BookTemplate
 import { SectionType } from "@/types/business.types";
 import { cn } from "@/lib/utils";
 
@@ -384,7 +384,7 @@ const SectionTemplateDialog: React.FC<SectionTemplateDialogProps> = ({
               }}
             >
               <div className="flex items-center gap-2 mb-2">
-                <TemplateIcon className="h-5 w-5 text-primary" />
+                <BookTemplate className="h-5 w-5 text-primary" /> {/* Changed from TemplateIcon to BookTemplate */}
                 <h3 className="font-medium capitalize">{id}</h3>
               </div>
               
