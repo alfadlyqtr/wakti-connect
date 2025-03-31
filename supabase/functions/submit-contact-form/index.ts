@@ -18,14 +18,14 @@ serve(async (req) => {
   }
 
   try {
-    // Create a Supabase client with the Auth context of the function
-    const supabaseClient = createClient(
+    // Create a Supabase client with the service role key to bypass RLS
+    const supabaseAdmin = createClient(
       // Supabase API URL - env var exposed by default.
       Deno.env.get('SUPABASE_URL') ?? '',
-      // Supabase API ANON KEY - env var exposed by default.
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      // Create client with Auth context of the user that called the function.
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+      // Supabase SERVICE ROLE KEY - env var exposed by default.
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      // Don't use auth context for admin operations
+      { global: { headers: { } } }
     )
 
     // Get request data
@@ -57,8 +57,10 @@ serve(async (req) => {
       )
     }
 
-    // Insert contact submission into database
-    const { data, error } = await supabaseClient
+    console.log("Processing submission for business:", businessId, "page:", pageId);
+
+    // Insert contact submission into database using admin client
+    const { data, error } = await supabaseAdmin
       .from('business_contact_submissions')
       .insert({
         business_id: businessId,
@@ -77,8 +79,10 @@ serve(async (req) => {
       throw error
     }
 
-    // Create a notification for the business owner
-    await supabaseClient
+    console.log("Submission stored successfully:", data.id);
+
+    // Create a notification for the business owner using admin client
+    await supabaseAdmin
       .from('notifications')
       .insert({
         user_id: businessId,

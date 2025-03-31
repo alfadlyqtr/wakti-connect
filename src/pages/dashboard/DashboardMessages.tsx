@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Routes, Route, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Mail, Inbox } from "lucide-react";
@@ -16,12 +17,16 @@ const DashboardMessagesHome = () => {
   const navigate = useNavigate();
   const { conversations } = useMessaging();
   const [activeTab, setActiveTab] = useState<string>("messages");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
+  // Get current user ID and profile
   const { data: userProfile } = useQuery({
     queryKey: ['currentUserProfile'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return null;
+      
+      setCurrentUserId(session.user.id);
       
       const { data } = await supabase
         .from('profiles')
@@ -33,10 +38,23 @@ const DashboardMessagesHome = () => {
     },
   });
   
-  const { data: contactSubmissions = [], isLoading: submissionsLoading } = useContactSubmissionsQuery();
+  // Pass the current user ID to the contact submissions query
+  const { data: contactSubmissions = [], isLoading: submissionsLoading } = useContactSubmissionsQuery(currentUserId);
   
   const canSendMessages = userProfile?.account_type !== 'free';
   const isBusinessAccount = userProfile?.account_type === 'business';
+  
+  useEffect(() => {
+    // Get current user ID on mount
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setCurrentUserId(session.user.id);
+      }
+    };
+    
+    getSession();
+  }, []);
   
   return (
     <div className="space-y-6">
