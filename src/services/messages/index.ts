@@ -4,7 +4,7 @@ export { getMessages } from '../messages';
 export { sendMessage } from '../messages';
 export { markMessageAsRead } from '../messages';
 
-// Export these functions from their respective files
+// These functions are in their own files
 export { fetchConversations } from './fetchConversations';
 export { canMessageUser } from './permissionsService';
 export { getUnreadMessagesCount } from './notificationsService';

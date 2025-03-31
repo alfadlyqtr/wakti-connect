@@ -4,10 +4,11 @@ import { toast } from "@/components/ui/use-toast";
 import { 
   getMessages, 
   sendMessage, 
-  fetchConversations,
-  canMessageUser,
-  getUnreadMessagesCount
+  markMessageAsRead 
 } from "@/services/messages";
+import { fetchConversations } from "@/services/messages/fetchConversations";
+import { canMessageUser } from "@/services/messages/permissionsService";
+import { getUnreadMessagesCount } from "@/services/messages/notificationsService";
 import { Message, Conversation } from "@/types/message.types";
 
 export const useMessaging = (otherUserId?: string) => {
