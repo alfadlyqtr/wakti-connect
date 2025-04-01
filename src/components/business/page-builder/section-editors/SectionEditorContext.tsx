@@ -108,7 +108,7 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
     setIsDirty(true);
   };
 
-  // Apply template content - NEW FUNCTION to handle template application properly
+  // Apply template content - ENHANCED to properly apply styling to both content and section level
   const applyTemplateContent = (templateContent: Record<string, any>) => {
     // Extract styling properties that need to be applied at section level
     const sectionLevelStyles: Record<string, any> = {};
@@ -132,16 +132,26 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
     
     // Update content data with template content
     setContentData({...templateContent});
+    setIsDirty(true);
+    
+    console.log('Applying template content:', templateContent);
+    console.log('Section level styles to apply:', sectionLevelStyles);
     
     // Apply section level styles directly to the section
     if (Object.keys(sectionLevelStyles).length > 0) {
       updateSectionMutation.mutateAsync({ 
         sectionId: section.id, 
         data: sectionLevelStyles
+      }).then(() => {
+        // After successful update, notify user
+        toast({
+          title: "Styling Applied",
+          description: "Section styling has been updated successfully",
+        });
+      }).catch(error => {
+        console.error('Error applying section styles:', error);
       });
     }
-    
-    setIsDirty(true);
   };
   
   // Submit form

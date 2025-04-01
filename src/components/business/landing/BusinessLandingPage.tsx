@@ -161,7 +161,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
   const socialIconsPosition = businessPage.social_icons_position || 'footer';
   
   return (
-    <CurrencyProvider>
+    <CurrencyProvider initialCurrency={businessPage.business_id}>
       <div 
         className={`flex flex-col min-h-screen font-${fontFamily}`}
         style={{ 

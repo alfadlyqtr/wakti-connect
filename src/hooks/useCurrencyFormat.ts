@@ -18,6 +18,8 @@ export const useCurrencyFormat = (props?: UseCurrencyFormatProps) => {
       return '-';
     }
     
+    console.log('Formatting currency with:', currency, 'for amount:', amount);
+    
     // Currency formatting options for each supported currency
     const currencyFormatOptions: Record<string, Intl.NumberFormatOptions> = {
       USD: { style: 'currency', currency: 'USD', minimumFractionDigits: 2 },
@@ -33,6 +35,7 @@ export const useCurrencyFormat = (props?: UseCurrencyFormatProps) => {
     const options = currencyFormatOptions[currency] || currencyFormatOptions.USD;
     
     const formatted = new Intl.NumberFormat('en-US', options).format(amount);
+    console.log('Formatted result:', formatted);
     return formatted;
   };
   

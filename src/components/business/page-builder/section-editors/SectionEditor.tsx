@@ -34,9 +34,8 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section }) => {
             isOpen={templateDialogOpen}
             onOpenChange={setTemplateDialogOpen}
             sectionType={section.section_type}
-            onSelect={(templateContent) => {
-              // The actual template application is now handled in SectionTemplateDialog
-              // via the new applyTemplateContent function
+            onSelect={() => {
+              // The template application is now handled in context via applyTemplateContent
               setTemplateDialogOpen(false);
             }}
           />

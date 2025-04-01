@@ -7,6 +7,7 @@ import { Loader2, Clock, Calendar, Info } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { formatCurrency } from "@/utils/formatUtils";
 import { BookingModalContent } from "../booking";
+import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
 
 // Function to format duration from minutes to hours and minutes
 const formatDuration = (minutes: number) => {
@@ -29,6 +30,7 @@ const BusinessBookingTemplatesSection: React.FC<BusinessBookingTemplatesSectionP
   const { templates, isLoading, error } = useBookingTemplates(businessId);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const { formatCurrency } = useCurrencyFormat({ businessId });
   
   const {
     title = "Our Services",
