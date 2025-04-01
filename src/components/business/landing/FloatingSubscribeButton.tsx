@@ -37,6 +37,7 @@ const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
   visible,
   showButton,
   onAuthRequired,
+  isAuthenticated,
   buttonStyle,
   size = "default",
   // Enhanced customization props
@@ -59,7 +60,13 @@ const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
   paddingY,
   gradientDirection
 }) => {
-  if (!showButton) return null;
+  // If showButton is false, don't render anything
+  if (!showButton) {
+    console.log("FloatingSubscribeButton: showButton is false, not rendering");
+    return null;
+  }
+
+  console.log("FloatingSubscribeButton rendering:", { visible, showButton, customText });
 
   return (
     <div className={cn(
@@ -90,6 +97,7 @@ const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
         paddingX={paddingX}
         paddingY={paddingY}
         gradientDirection={gradientDirection}
+        isAuthenticated={isAuthenticated}
       />
     </div>
   );

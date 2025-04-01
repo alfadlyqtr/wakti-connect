@@ -33,6 +33,8 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
 
   console.log("BusinessLandingPage - businessPage:", businessPage);
   console.log("BusinessLandingPage - socialLinks:", socialLinks?.length || 0);
+  console.log("BusinessLandingPage - social icons position:", businessPage?.social_icons_position);
+  console.log("BusinessLandingPage - show subscribe button:", businessPage?.show_subscribe_button);
 
   // Hide PoweredByWAKTI after scrolling
   useEffect(() => {
@@ -59,14 +61,14 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
       if (businessPage.primary_color) {
         // Set primary color as CSS variable
         document.documentElement.style.setProperty('--primary', businessPage.primary_color);
-        // Also set the HSL version for Tailwind compatibility
+        // Also set the RGB version for Tailwind compatibility
         document.documentElement.style.setProperty('--primary-rgb', hexToRGB(businessPage.primary_color));
       }
       
       if (businessPage.secondary_color) {
         // Set secondary color as CSS variable
         document.documentElement.style.setProperty('--secondary', businessPage.secondary_color);
-        // Also set the HSL version for Tailwind compatibility
+        // Also set the RGB version for Tailwind compatibility
         document.documentElement.style.setProperty('--secondary-rgb', hexToRGB(businessPage.secondary_color));
       }
     }
@@ -81,6 +83,8 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
 
   // Helper function to convert HEX to RGB for CSS variables
   function hexToRGB(hex: string): string {
+    if (!hex || !hex.startsWith('#')) return '0, 0, 0';
+    
     // Remove # if present
     hex = hex.replace('#', '');
     
@@ -138,26 +142,43 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     backgroundPosition: "center",
   };
 
-  // Check if subscribe button should be shown
+  // Check if auth required for subscription
   const handleAuthRequired = () => {
     // Open login modal or redirect to login page
     console.log("Auth required for subscription");
   };
 
-  // Check if social links should be shown in the header
+  // Fixed: Check if social links should be shown in their respective positions
   const showHeaderSocialLinks = socialLinks && socialLinks.length > 0 && 
     ['header', 'both'].includes(social_icons_position || '');
   
-  // Check if social links should be shown in the footer
   const showFooterSocialLinks = socialLinks && socialLinks.length > 0 && 
     ['footer', 'both'].includes(social_icons_position || '');
+    
+  const showSidebarSocialLinks = socialLinks && socialLinks.length > 0 && 
+    ['sidebar'].includes(social_icons_position || '');
 
   console.log("Show header social links:", showHeaderSocialLinks, "Position:", social_icons_position);
   console.log("Show footer social links:", showFooterSocialLinks, "Position:", social_icons_position);
+  console.log("Show sidebar social links:", showSidebarSocialLinks, "Position:", social_icons_position);
 
   return (
     <CurrencyProvider initialCurrency={businessPage.business_id}>
       <div style={pageStyle} className="min-h-screen relative pb-10">
+        {/* Sidebar Social Icons */}
+        {showSidebarSocialLinks && (
+          <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-30">
+            <SocialIconsGroup 
+              socialLinks={socialLinks || []}
+              style={(social_icons_style as any) || "default"}
+              size={(social_icons_size as any) || "default"}
+              position="sidebar"
+              vertical={true}
+              className="flex-col"
+            />
+          </div>
+        )}
+        
         <div
           style={{ maxWidth: content_max_width }}
           className="mx-auto px-4 sm:px-6"
@@ -183,6 +204,8 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
               account_type: "business",
               avatar_url: logo_url  // Pass logo URL to header
             }} 
+            isPreviewMode={isPreviewMode}
+            isAuthenticated={isAuthenticated}
           />
           
           <BusinessPageSections 
@@ -204,12 +227,12 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
           )}
         </div>
 
-        {/* Floating Subscribe Button */}
-        {show_subscribe_button && subscribe_button_position === "floating" && (
+        {/* Floating Subscribe Button - Fixed to ensure it appears when show_subscribe_button is true */}
+        {show_subscribe_button && (
           <FloatingSubscribeButton 
             businessId={businessPage.business_id}
             visible={showSubscribeButton}
-            showButton={show_subscribe_button}
+            showButton={true}
             isAuthenticated={isAuthenticated}
             onAuthRequired={handleAuthRequired}
             backgroundColor={primary_color}

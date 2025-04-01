@@ -17,6 +17,7 @@ interface BusinessSubscribeButtonProps {
   iconOnly?: boolean;
   className?: string;
   onAuthRequired?: () => void;
+  isAuthenticated?: boolean | null;
   // Detailed customization options
   backgroundColor?: string;
   textColor?: string;
@@ -46,6 +47,7 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
   iconOnly = false,
   className,
   onAuthRequired,
+  isAuthenticated: propIsAuthenticated,
   // Detailed customization options
   backgroundColor,
   textColor,
@@ -72,8 +74,11 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
     unsubscribe
   } = useBusinessSubscribers(businessId);
   
-  // Check authentication using the custom hook
-  const isAuthenticated = useAuthentication();
+  // Check authentication using the custom hook if not provided as prop
+  const hookIsAuthenticated = useAuthentication();
+  const isAuthenticated = propIsAuthenticated !== undefined ? propIsAuthenticated : hookIsAuthenticated;
+  
+  console.log("BusinessSubscribeButton:", { businessId, isAuthenticated, isSubscribed, customText });
   
   // Get custom button styles
   const { customButtonStyle, customVarsClass } = useCustomButtonStyle({

@@ -26,6 +26,23 @@ const SectionActions: React.FC<SectionActionsProps> = ({
   const isMobile = useIsMobile();
   const buttonSize = isMobile ? "sm" : "icon";
   
+  // Fix for move section buttons - ensure the click handlers work correctly
+  const handleMoveUp = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isFirstSection) {
+      onMoveSection(sectionId, 'up');
+    }
+  };
+
+  const handleMoveDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isLastSection) {
+      onMoveSection(sectionId, 'down');
+    }
+  };
+  
   return (
     <div className="flex items-center gap-1 flex-wrap justify-end">
       <Button 
@@ -43,7 +60,7 @@ const SectionActions: React.FC<SectionActionsProps> = ({
       <Button 
         variant="ghost" 
         size={buttonSize}
-        onClick={() => onMoveSection(sectionId, 'up')}
+        onClick={handleMoveUp}
         disabled={isFirstSection}
         className="touch-target"
       >
@@ -53,7 +70,7 @@ const SectionActions: React.FC<SectionActionsProps> = ({
       <Button 
         variant="ghost" 
         size={buttonSize}
-        onClick={() => onMoveSection(sectionId, 'down')}
+        onClick={handleMoveDown}
         disabled={isLastSection}
         className="touch-target"
       >

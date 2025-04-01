@@ -22,6 +22,7 @@ const SectionList: React.FC<SectionListProps> = ({
   // Section handling mutations
   const updateSectionOrder = useMutation({
     mutationFn: async ({ sectionId, newOrder }: { sectionId: string, newOrder: number }) => {
+      console.log(`Updating section order: section ${sectionId} to order ${newOrder}`);
       const { data, error } = await fromTable('business_page_sections')
         .update({ section_order: newOrder })
         .eq('id', sectionId)
@@ -109,18 +110,24 @@ const SectionList: React.FC<SectionListProps> = ({
     const currentSection = pageSections.find(s => s.id === sectionId);
     if (!currentSection) return;
     
-    const currentIndex = pageSections.findIndex(s => s.id === sectionId);
+    const orderedSections = [...pageSections].sort((a, b) => a.section_order - b.section_order);
+    const currentIndex = orderedSections.findIndex(s => s.id === sectionId);
     let targetIndex;
+    
+    console.log(`Moving section ${sectionId} ${direction} from index ${currentIndex}`);
     
     if (direction === 'up' && currentIndex > 0) {
       targetIndex = currentIndex - 1;
-    } else if (direction === 'down' && currentIndex < pageSections.length - 1) {
+    } else if (direction === 'down' && currentIndex < orderedSections.length - 1) {
       targetIndex = currentIndex + 1;
     } else {
+      console.log("Can't move further in this direction");
       return; // Can't move further
     }
     
-    const targetSection = pageSections[targetIndex];
+    const targetSection = orderedSections[targetIndex];
+    
+    console.log(`Swapping with section at index ${targetIndex}:`, targetSection.id);
     
     // Swap orders
     updateSectionOrder.mutate({ 

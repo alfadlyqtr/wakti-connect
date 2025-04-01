@@ -46,7 +46,7 @@ const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
     return null;
   }
 
-  console.log("SocialIconsGroup rendering with position:", position, "and links:", socialLinks.length);
+  console.log("SocialIconsGroup rendering with position:", position, "and links:", socialLinks.length, "vertical:", vertical);
 
   // Determine spacing class based on the spacing prop
   const getSpacingClass = () => {
@@ -62,7 +62,7 @@ const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
     switch (position) {
       case 'header': return 'justify-end';
       case 'footer': return 'justify-center';
-      case 'sidebar': return 'justify-start';
+      case 'sidebar': return 'justify-start items-center';
       case 'top': return 'justify-center mt-4';
       case 'bottom': return 'justify-center mb-4';
       case 'left': return 'justify-start';
