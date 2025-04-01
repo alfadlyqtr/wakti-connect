@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { toast } from "@/components/ui/use-toast";
 
@@ -99,14 +100,4 @@ export const usePublicPageUrl = (pageSlug?: string) => {
   }, [pageSlug]);
   
   return getPublicPageUrl;
-};
-
-// Export the combined utility hooks
-export const useBusinessPageUtils = () => {
-  // Get the getPublicPageUrl function
-  const getPublicPageUrl = usePublicPageUrl();
-  
-  return {
-    getPublicPageUrl,
-  };
 };

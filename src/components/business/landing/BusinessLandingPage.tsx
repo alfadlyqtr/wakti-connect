@@ -33,7 +33,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
 
   console.log("BusinessLandingPage - businessPage:", businessPage);
   console.log("BusinessLandingPage - socialLinks:", socialLinks);
-  console.log("BusinessLandingPage - social icons position:", businessPage?.social_icons_position);
+  console.log("BusinessLandingPage - social_icons_position:", businessPage?.social_icons_position);
 
   // Hide PoweredByWAKTI after scrolling
   useEffect(() => {
@@ -51,20 +51,11 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
 
   // Apply theme colors from business page settings
   useEffect(() => {
-    if (businessPage) {
-      console.log("Applying business page styles:", {
-        primary: businessPage.primary_color,
-        secondary: businessPage.secondary_color,
-        background: businessPage.background_color,
-        text: businessPage.text_color
-      });
-      
-      if (businessPage.primary_color) {
-        document.documentElement.style.setProperty('--primary', businessPage.primary_color);
-      }
-      if (businessPage.secondary_color) {
-        document.documentElement.style.setProperty('--secondary', businessPage.secondary_color);
-      }
+    if (businessPage?.primary_color) {
+      document.documentElement.style.setProperty('--primary', businessPage.primary_color);
+    }
+    if (businessPage?.secondary_color) {
+      document.documentElement.style.setProperty('--secondary', businessPage.secondary_color);
     }
     
     return () => {
@@ -134,8 +125,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
 
   console.log("Show header social links:", showHeaderSocialLinks);
   console.log("Show footer social links:", showFooterSocialLinks);
-  console.log("Social links position:", social_icons_position);
-  console.log("Social links count:", socialLinks?.length);
 
   return (
     <CurrencyProvider initialCurrency={businessPage.business_id}>

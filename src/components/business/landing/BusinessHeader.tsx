@@ -21,12 +21,7 @@ const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
     showButton = true
   } = content;
 
-  console.log("BusinessHeader rendering with: ", {
-    logoUrl: businessPage.logo_url,
-    primaryColor: businessPage.primary_color,
-    title: title,
-    pageTitle: businessPage.page_title
-  });
+  console.log("BusinessHeader rendering with logo:", businessPage.logo_url);
   
   const handleBookNow = () => {
     navigate(`/business/${businessPage.page_slug}/book`);
@@ -40,31 +35,19 @@ const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
             src={businessPage.logo_url} 
             alt={businessPage.page_title || "Business"} 
             className="h-24 w-24 rounded-full object-cover border-2 border-primary/20 mb-4"
-            onError={(e) => {
-              console.error("Error loading logo image:", e);
-              const imgElement = e.target as HTMLImageElement;
-              imgElement.style.display = 'none';
-            }}
           />
         </div>
       )}
       
-      <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4" style={{ color: section.text_color }}>{title}</h1>
-      <p className="text-lg md:text-xl text-muted-foreground mb-4" style={{ color: section.text_color ? `${section.text_color}99` : undefined }}>{subtitle}</p>
+      <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{title}</h1>
+      <p className="text-lg md:text-xl text-muted-foreground mb-4">{subtitle}</p>
       
       {description && (
-        <p className="text-muted-foreground mb-8 max-w-2xl mx-auto" style={{ color: section.text_color ? `${section.text_color}99` : undefined }}>{description}</p>
+        <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">{description}</p>
       )}
       
       {showButton && (
-        <Button 
-          size="lg" 
-          onClick={handleBookNow}
-          style={{
-            backgroundColor: businessPage.primary_color || undefined,
-            color: '#ffffff'
-          }}
-        >
+        <Button size="lg" onClick={handleBookNow}>
           {buttonText}
         </Button>
       )}

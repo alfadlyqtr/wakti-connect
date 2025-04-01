@@ -6,9 +6,6 @@ interface BusinessStyling {
   primaryColor?: string;
   secondaryColor?: string;
   logoUrl?: string;
-  textColor?: string;
-  backgroundColor?: string;
-  fontFamily?: string;
 }
 
 export const useBusinessStyling = (businessId?: string) => {
@@ -26,7 +23,7 @@ export const useBusinessStyling = (businessId?: string) => {
         // First check if business has a page with styling
         const { data: pageData, error: pageError } = await supabase
           .from('business_pages')
-          .select('primary_color, secondary_color, logo_url, text_color, background_color, font_family')
+          .select('primary_color, secondary_color, logo_url')
           .eq('business_id', businessId)
           .single();
           
@@ -36,28 +33,14 @@ export const useBusinessStyling = (businessId?: string) => {
           setStyling({
             primaryColor: pageData.primary_color,
             secondaryColor: pageData.secondary_color,
-            logoUrl: pageData.logo_url,
-            textColor: pageData.text_color,
-            backgroundColor: pageData.background_color,
-            fontFamily: pageData.font_family
+            logoUrl: pageData.logo_url
           });
           
           console.log("Setting styling from business page:", {
             primaryColor: pageData.primary_color,
             secondaryColor: pageData.secondary_color,
-            logoUrl: pageData.logo_url,
-            textColor: pageData.text_color,
-            backgroundColor: pageData.background_color,
-            fontFamily: pageData.font_family
+            logoUrl: pageData.logo_url
           });
-          
-          // Apply CSS variables immediately
-          if (pageData.primary_color) {
-            document.documentElement.style.setProperty('--primary', pageData.primary_color);
-          }
-          if (pageData.secondary_color) {
-            document.documentElement.style.setProperty('--secondary', pageData.secondary_color);
-          }
         } else {
           // Fallback to profile
           const { data: profileData, error: profileError } = await supabase
@@ -86,12 +69,6 @@ export const useBusinessStyling = (businessId?: string) => {
     };
     
     fetchBusinessStyling();
-    
-    // Cleanup function to reset CSS variables
-    return () => {
-      document.documentElement.style.removeProperty('--primary');
-      document.documentElement.style.removeProperty('--secondary');
-    };
   }, [businessId]);
   
   return {

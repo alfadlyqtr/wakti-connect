@@ -37,12 +37,6 @@ const PageSettingsTab = ({
           value: logoUrl
         }
       } as React.ChangeEvent<HTMLInputElement>);
-      
-      // Show success toast
-      toast({
-        title: "Logo uploaded successfully",
-        description: "Your logo has been updated and will be displayed on your page."
-      });
     }
   );
   
