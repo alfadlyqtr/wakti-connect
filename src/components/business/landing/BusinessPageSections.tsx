@@ -13,6 +13,7 @@ import BusinessBookingTemplatesSection from "./sections/BusinessBookingTemplates
 import BusinessInstagramSection from "./sections/BusinessInstagramSection";
 import BusinessChatbotSection from "./sections/BusinessChatbotSection";
 import { cn } from "@/lib/utils";
+import { getBackgroundPattern } from "./PageBackground";
 
 export interface BusinessPageSectionsProps {
   pageSections: BusinessPageSection[];
@@ -69,6 +70,10 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
     // Calculate section style (outlined, solid, default)
     const sectionStyle = section.section_content?.section_style || 'default';
     
+    // Handle background pattern
+    const backgroundPattern = section.section_content?.background_pattern;
+    const backgroundPatternValue = backgroundPattern ? getBackgroundPattern(backgroundPattern) : 'none';
+    
     // Build the style object
     const styles: React.CSSProperties = {
       backgroundColor: section.background_color || 'transparent',
@@ -76,12 +81,20 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
       padding: paddingValue,
       borderRadius: borderRadiusValue,
       boxShadow: section.section_content?.shadow_effect !== 'none' ? shadowValue : 'none',
-      ...(section.background_image_url && {
-        backgroundImage: `url(${section.background_image_url})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      })
     };
+    
+    // Apply background image if provided
+    if (section.background_image_url) {
+      styles.backgroundImage = `url(${section.background_image_url})`;
+      styles.backgroundSize = 'cover';
+      styles.backgroundPosition = 'center';
+    }
+    // Apply background pattern if provided and no background image
+    else if (backgroundPattern && backgroundPatternValue !== 'none') {
+      styles.backgroundImage = backgroundPatternValue;
+      styles.backgroundSize = 'auto';
+      styles.backgroundRepeat = 'repeat';
+    }
     
     // Add border if it's not "none"
     if (borderStyle !== 'none') {

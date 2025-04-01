@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -23,6 +23,21 @@ const ChatbotSettings: React.FC = () => {
           This gives you more flexibility to place it anywhere on your page.
         </AlertDescription>
       </Alert>
+      
+      <div className="bg-slate-50 p-4 rounded-lg border">
+        <h3 className="font-medium mb-2">Need an AI Chatbot for your business?</h3>
+        <p className="text-muted-foreground mb-3">
+          Get a powerful AI chatbot from TMW that can answer customer questions, assist with bookings, and provide 24/7 support.
+        </p>
+        <a 
+          href="https://tmw.qa/ai-chat-bot/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center text-primary hover:underline font-medium"
+        >
+          Learn more about TMW AI Chatbots <ExternalLink className="ml-1 h-4 w-4" />
+        </a>
+      </div>
       
       <Button onClick={handleAddChatbotSection} className="w-full">
         Go to Sections Tab to Add Chatbot

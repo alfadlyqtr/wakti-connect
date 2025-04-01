@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { useTMWChatbot } from "@/hooks/tmw-chatbot";
+import { ExternalLink } from "lucide-react";
 
 interface BusinessChatbotSectionProps {
   content: {
@@ -79,6 +80,18 @@ const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content
           </div>
         )}
         {/* The chatbot will be injected here by the hook */}
+      </div>
+      
+      {/* Add the "Powered by TMW AI" attribution */}
+      <div className="mt-3 text-center text-sm text-muted-foreground">
+        <a 
+          href="https://tmw.qa/ai-chat-bot/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center hover:underline"
+        >
+          Powered by TMW AI <ExternalLink className="ml-1 h-3 w-3" />
+        </a>
       </div>
     </div>
   );

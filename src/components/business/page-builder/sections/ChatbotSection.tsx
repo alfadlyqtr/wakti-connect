@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useSectionEditor } from "@/hooks/useSectionEditor";
 import { useTMWChatbot } from "@/hooks/tmw-chatbot";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const ChatbotSection: React.FC = () => {
   const { section, contentData, updateContentField } = useSectionEditor();
@@ -27,6 +28,10 @@ const ChatbotSection: React.FC = () => {
     }
     if (!contentData?.chatbot_size) {
       updateContentField('chatbot_size', 'medium');
+    }
+    // Set default background pattern if not set
+    if (!contentData?.background_pattern) {
+      updateContentField('background_pattern', 'none');
     }
   }, [contentData, updateContentField]);
   
@@ -127,6 +132,32 @@ const ChatbotSection: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="space-y-2 mt-4">
+                <Label htmlFor="background_pattern">Background Pattern</Label>
+                <Select 
+                  value={contentData?.background_pattern || "none"}
+                  onValueChange={(value) => handleSelectChange('background_pattern', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select background pattern" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="dots">Dots</SelectItem>
+                    <SelectItem value="grid">Grid</SelectItem>
+                    <SelectItem value="waves">Waves</SelectItem>
+                    <SelectItem value="diagonal">Diagonal Lines</SelectItem>
+                    <SelectItem value="circles">Circles</SelectItem>
+                    <SelectItem value="triangles">Triangles</SelectItem>
+                    <SelectItem value="hexagons">Hexagons</SelectItem>
+                    <SelectItem value="stripes">Stripes</SelectItem>
+                    <SelectItem value="zigzag">Zigzag</SelectItem>
+                    <SelectItem value="confetti">Confetti</SelectItem>
+                    <SelectItem value="bubbles">Bubbles</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               
               <Alert className="mt-4">
                 <InfoIcon className="h-4 w-4" />
@@ -161,6 +192,21 @@ const ChatbotSection: React.FC = () => {
                     </p>
                   )}
                 </div>
+              </div>
+              
+              <div className="bg-slate-50 p-4 rounded-lg border mt-6">
+                <h3 className="font-medium mb-2">Need an AI Chatbot?</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Get a powerful AI chatbot from TMW that can answer customer questions, assist with bookings, and provide 24/7 support.
+                </p>
+                <a 
+                  href="https://tmw.qa/ai-chat-bot/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center text-primary hover:underline text-sm font-medium"
+                >
+                  Learn more about TMW AI Chatbots <ExternalLink className="ml-1 h-3 w-3" />
+                </a>
               </div>
             </>
           )}
