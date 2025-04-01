@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -7,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Copy, ExternalLink, Edit } from "lucide-react";
+import { Loader2, Copy, ExternalLink, Edit, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +14,7 @@ import { toast } from "@/components/ui/use-toast";
 
 interface GeneralSettingsTabProps {
   pageData: {
+    id?: string;
     page_title: string;
     page_slug: string;
     description: string;
@@ -32,6 +32,7 @@ interface GeneralSettingsTabProps {
   handleLogoUpload: (fileOrEvent: File | React.ChangeEvent<HTMLInputElement>) => void;
   getPublicPageUrl: () => string;
   uploadingLogo: boolean;
+  updatePage: any;
 }
 
 // Schema for the URL change request
@@ -47,9 +48,66 @@ const GeneralSettingsTab = ({
   handleToggleWithAutoSave,
   handleLogoUpload,
   getPublicPageUrl,
-  uploadingLogo
+  uploadingLogo,
+  updatePage
 }: GeneralSettingsTabProps) => {
   const [urlChangeOpen, setUrlChangeOpen] = React.useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [localChanges, setLocalChanges] = useState<Partial<GeneralSettingsTabProps['pageData']>>({});
+  const [isDirty, setIsDirty] = useState(false);
+  
+  // For handling local changes
+  const handleLocalInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setLocalChanges(prev => ({ ...prev, [name]: value }));
+    setIsDirty(true);
+    
+    // Also trigger auto-save
+    handleInputChangeWithAutoSave(e);
+  };
+  
+  const handleLocalToggleChange = (name: string, checked: boolean) => {
+    setLocalChanges(prev => ({ ...prev, [name]: checked }));
+    setIsDirty(true);
+    
+    // Also trigger auto-save
+    handleToggleWithAutoSave(name, checked);
+  };
+  
+  const handleSaveChanges = async () => {
+    if (!pageData.id || !isDirty) {
+      toast({
+        title: "No changes to save",
+        description: "No changes were detected in the general settings."
+      });
+      return;
+    }
+    
+    setIsSaving(true);
+    
+    try {
+      await updatePage.mutateAsync({
+        pageId: pageData.id,
+        data: localChanges
+      });
+      
+      toast({
+        title: "General settings saved",
+        description: "Your changes have been successfully saved."
+      });
+      
+      setIsDirty(false);
+    } catch (error) {
+      console.error("Error saving general settings:", error);
+      toast({
+        variant: "destructive",
+        title: "Error saving settings",
+        description: "There was a problem saving your changes. Please try again."
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
   
   const copyPageUrl = () => {
     const url = getPublicPageUrl();
@@ -97,7 +155,7 @@ const GeneralSettingsTab = ({
             id="page_title"
             name="page_title"
             value={pageData.page_title || ''}
-            onChange={handleInputChangeWithAutoSave}
+            onChange={handleLocalInputChange}
             placeholder="Your Business Name"
           />
           <p className="text-sm text-muted-foreground mt-1">
@@ -206,7 +264,7 @@ const GeneralSettingsTab = ({
             id="description"
             name="description"
             value={pageData.description || ''}
-            onChange={handleInputChangeWithAutoSave}
+            onChange={handleLocalInputChange}
             placeholder="Brief description of your business"
             rows={3}
           />
@@ -269,7 +327,7 @@ const GeneralSettingsTab = ({
           <Switch
             id="is_published"
             checked={pageData.is_published}
-            onCheckedChange={(checked) => handleToggleWithAutoSave('is_published', checked)}
+            onCheckedChange={(checked) => handleLocalToggleChange('is_published', checked)}
           />
         </div>
 
@@ -283,7 +341,7 @@ const GeneralSettingsTab = ({
           <Switch
             id="show_subscribe_button"
             checked={pageData.show_subscribe_button !== false} // Default to true if undefined
-            onCheckedChange={(checked) => handleToggleWithAutoSave('show_subscribe_button', checked)}
+            onCheckedChange={(checked) => handleLocalToggleChange('show_subscribe_button', checked)}
           />
         </div>
 
@@ -294,12 +352,30 @@ const GeneralSettingsTab = ({
               id="subscribe_button_text"
               name="subscribe_button_text"
               value={pageData.subscribe_button_text || 'Subscribe'}
-              onChange={handleInputChangeWithAutoSave}
+              onChange={handleLocalInputChange}
               placeholder="Subscribe"
             />
           </div>
         )}
       </div>
+      
+      <Button
+        type="button"
+        onClick={handleSaveChanges}
+        disabled={isSaving || !isDirty}
+      >
+        {isSaving ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Saving...
+          </>
+        ) : (
+          <>
+            <Save className="w-4 h-4 mr-2" />
+            Save General Settings
+          </>
+        )}
+      </Button>
     </div>
   );
 };

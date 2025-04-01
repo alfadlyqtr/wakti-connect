@@ -53,6 +53,7 @@ const PageSettingsTab = ({
             handleLogoUpload={handleLogoUpload}
             getPublicPageUrl={getPublicPageUrl}
             uploadingLogo={uploadingLogo}
+            updatePage={updatePage}
           />
         </TabsContent>
         
@@ -60,6 +61,7 @@ const PageSettingsTab = ({
           <AppearanceSettingsTab 
             pageData={pageData} 
             handleInputChangeWithAutoSave={handleInputChangeWithAutoSave}
+            updatePage={updatePage}
           />
         </TabsContent>
         
@@ -74,6 +76,7 @@ const PageSettingsTab = ({
             pageData={pageData}
             handleInputChangeWithAutoSave={handleInputChangeWithAutoSave}
             handleToggleWithAutoSave={handleToggleWithAutoSave}
+            updatePage={updatePage}
           />
         </TabsContent>
       </Tabs>

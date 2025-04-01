@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -8,9 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ColorInput } from "@/components/inputs/ColorInput";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Save, Loader2 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 interface AdvancedSettingsTabProps {
   pageData: {
+    id?: string;
     chatbot_enabled?: boolean;
     chatbot_code?: string;
     show_subscribe_button?: boolean;
@@ -23,16 +26,38 @@ interface AdvancedSettingsTabProps {
   };
   handleInputChangeWithAutoSave: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleToggleWithAutoSave: (name: string, checked: boolean) => void;
+  updatePage: any;
 }
 
 const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
   pageData,
   handleInputChangeWithAutoSave,
   handleToggleWithAutoSave,
+  updatePage
 }) => {
-  // Helper function to handle select changes
-  const handleSelectChange = (name: string, value: string) => {
-    // Create a synthetic event to update the property
+  const [isSaving, setIsSaving] = useState(false);
+  const [localChanges, setLocalChanges] = useState<Partial<AdvancedSettingsTabProps['pageData']>>({});
+  const [isDirty, setIsDirty] = useState(false);
+  
+  const handleLocalInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setLocalChanges(prev => ({ ...prev, [name]: value }));
+    setIsDirty(true);
+    
+    handleInputChangeWithAutoSave(e);
+  };
+  
+  const handleLocalToggleChange = (name: string, checked: boolean) => {
+    setLocalChanges(prev => ({ ...prev, [name]: checked }));
+    setIsDirty(true);
+    
+    handleToggleWithAutoSave(name, checked);
+  };
+
+  const handleLocalSelectChange = (name: string, value: string) => {
+    setLocalChanges(prev => ({ ...prev, [name]: value }));
+    setIsDirty(true);
+    
     handleInputChangeWithAutoSave({
       target: {
         name,
@@ -40,8 +65,42 @@ const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
       }
     } as React.ChangeEvent<HTMLInputElement>);
   };
+  
+  const handleSaveChanges = async () => {
+    if (!pageData.id || !isDirty) {
+      toast({
+        title: "No changes to save",
+        description: "No changes were detected in the advanced settings."
+      });
+      return;
+    }
+    
+    setIsSaving(true);
+    
+    try {
+      await updatePage.mutateAsync({
+        pageId: pageData.id,
+        data: localChanges
+      });
+      
+      toast({
+        title: "Advanced settings saved",
+        description: "Your changes have been successfully saved."
+      });
+      
+      setIsDirty(false);
+    } catch (error) {
+      console.error("Error saving advanced settings:", error);
+      toast({
+        variant: "destructive",
+        title: "Error saving settings",
+        description: "There was a problem saving your changes. Please try again."
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-  // Preview styles for the subscribe button
   const getButtonPreviewStyles = () => {
     const style: React.CSSProperties = {
       backgroundColor: 
@@ -75,7 +134,6 @@ const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Subscribe Button Settings */}
       <Card>
         <CardHeader>
           <CardTitle>Subscribe Button</CardTitle>
@@ -103,7 +161,7 @@ const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
                   <Switch
                     id="show_subscribe_button"
                     checked={pageData.show_subscribe_button !== false}
-                    onCheckedChange={(checked) => handleToggleWithAutoSave('show_subscribe_button', checked)}
+                    onCheckedChange={(checked) => handleLocalToggleChange('show_subscribe_button', checked)}
                   />
                 </div>
                 
@@ -115,7 +173,7 @@ const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
                         id="subscribe_button_text"
                         name="subscribe_button_text"
                         value={pageData.subscribe_button_text || "Subscribe"}
-                        onChange={handleInputChangeWithAutoSave}
+                        onChange={handleLocalInputChange}
                         placeholder="Subscribe"
                       />
                       <p className="text-xs text-muted-foreground">
@@ -127,7 +185,7 @@ const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
                       <Label htmlFor="subscribe_button_position">Button Position</Label>
                       <Select 
                         value={pageData.subscribe_button_position || 'both'} 
-                        onValueChange={(value) => handleSelectChange('subscribe_button_position', value)}
+                        onValueChange={(value) => handleLocalSelectChange('subscribe_button_position', value)}
                       >
                         <SelectTrigger id="subscribe_button_position">
                           <SelectValue placeholder="Select position" />
@@ -153,7 +211,7 @@ const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
                   <Label htmlFor="subscribe_button_style">Button Style</Label>
                   <Select 
                     value={pageData.subscribe_button_style || 'gradient'} 
-                    onValueChange={(value) => handleSelectChange('subscribe_button_style', value)}
+                    onValueChange={(value) => handleLocalSelectChange('subscribe_button_style', value)}
                   >
                     <SelectTrigger id="subscribe_button_style">
                       <SelectValue placeholder="Select style" />
@@ -171,7 +229,7 @@ const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
                   <Label htmlFor="subscribe_button_size">Button Size</Label>
                   <Select 
                     value={pageData.subscribe_button_size || 'default'} 
-                    onValueChange={(value) => handleSelectChange('subscribe_button_size', value)}
+                    onValueChange={(value) => handleLocalSelectChange('subscribe_button_size', value)}
                   >
                     <SelectTrigger id="subscribe_button_size">
                       <SelectValue placeholder="Select size" />
@@ -203,7 +261,7 @@ const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
                   <ColorInput
                     id="button_background_color"
                     value={pageData.primary_color || "#3B82F6"}
-                    onChange={(color) => handleSelectChange("primary_color", color)}
+                    onChange={(color) => handleLocalSelectChange("primary_color", color)}
                   />
                   <p className="text-xs text-muted-foreground">
                     For gradient buttons, this is the start color
@@ -215,7 +273,7 @@ const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
                   <ColorInput
                     id="button_gradient_end"
                     value={pageData.secondary_color || "#10B981"}
-                    onChange={(color) => handleSelectChange("secondary_color", color)}
+                    onChange={(color) => handleLocalSelectChange("secondary_color", color)}
                   />
                   <p className="text-xs text-muted-foreground">
                     Only used for gradient style buttons
@@ -227,7 +285,6 @@ const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
         </CardContent>
       </Card>
 
-      {/* TMW AI Chatbot Settings */}
       <Card>
         <CardHeader>
           <CardTitle>TMW AI Chatbot</CardTitle>
@@ -246,7 +303,7 @@ const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
             <Switch
               id="chatbot_enabled"
               checked={!!pageData.chatbot_enabled}
-              onCheckedChange={(checked) => handleToggleWithAutoSave('chatbot_enabled', checked)}
+              onCheckedChange={(checked) => handleLocalToggleChange('chatbot_enabled', checked)}
             />
           </div>
           
@@ -257,7 +314,7 @@ const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
                 id="chatbot_code"
                 name="chatbot_code"
                 value={pageData.chatbot_code || ""}
-                onChange={handleInputChangeWithAutoSave}
+                onChange={handleLocalInputChange}
                 placeholder="Paste your TMW AI Chatbot embed code here"
                 rows={6}
                 className="font-mono text-sm"
@@ -269,6 +326,24 @@ const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
           )}
         </CardContent>
       </Card>
+
+      <Button
+        type="button"
+        onClick={handleSaveChanges}
+        disabled={isSaving || !isDirty}
+      >
+        {isSaving ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Saving...
+          </>
+        ) : (
+          <>
+            <Save className="w-4 h-4 mr-2" />
+            Save Advanced Settings
+          </>
+        )}
+      </Button>
     </div>
   );
 };

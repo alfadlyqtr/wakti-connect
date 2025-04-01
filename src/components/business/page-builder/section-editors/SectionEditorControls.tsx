@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, Trash2, Wand2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, Trash2, Wand2, Save } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useSectionEditor } from "@/hooks/useSectionEditor";
 
@@ -16,7 +16,10 @@ const SectionEditorControls: React.FC<SectionEditorControlsProps> = ({ onTemplat
     moveDown, 
     duplicate, 
     toggleVisibility, 
-    deleteSection 
+    deleteSection,
+    handleSaveSection,
+    isSubmitting,
+    isDirty
   } = useSectionEditor();
   
   return (
@@ -113,6 +116,19 @@ const SectionEditorControls: React.FC<SectionEditorControlsProps> = ({ onTemplat
           </AlertDialogContent>
         </AlertDialog>
       </div>
+      
+      {/* Add save button at the bottom */}
+      <Button 
+        type="button" 
+        size="sm" 
+        variant="default"
+        onClick={handleSaveSection}
+        disabled={isSubmitting || !isDirty}
+        className="w-full"
+      >
+        <Save className="w-4 h-4 mr-2" />
+        <span>{isSubmitting ? 'Saving...' : 'Save Changes'}</span>
+      </Button>
     </div>
   );
 };
