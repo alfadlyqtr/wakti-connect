@@ -85,6 +85,9 @@ const PageSettingsTab = ({
         <TabsContent value="social">
           <SocialMediaSettingsTab 
             businessId={businessId}
+            pageData={pageData}
+            updatePage={updatePage}
+            handleInputChangeWithAutoSave={handleInputChangeWithAutoSave}
           />
         </TabsContent>
         

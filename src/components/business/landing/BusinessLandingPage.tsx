@@ -95,6 +95,11 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     console.log("Auth required for subscription");
   };
 
+  // Check if social links should be shown in the header
+  const showHeaderSocialLinks = socialLinks && socialLinks.length > 0 && social_icons_position === 'header';
+  // Check if social links should be shown in the footer
+  const showFooterSocialLinks = socialLinks && socialLinks.length > 0 && (social_icons_position === 'footer' || social_icons_position === 'both');
+
   return (
     <CurrencyProvider initialCurrency={businessPage.business_id}>
       <div style={pageStyle} className="min-h-screen relative pb-10">
@@ -102,6 +107,19 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
           style={{ maxWidth: content_max_width }}
           className="mx-auto px-4 sm:px-6"
         >
+          {/* Add social media icons in header if position is set to "header" or "both" */}
+          {showHeaderSocialLinks && (
+            <div className="pt-4 pb-2">
+              <SocialIconsGroup 
+                socialLinks={socialLinks}
+                style={social_icons_style as any}
+                size={social_icons_size as any}
+                position="header"
+                className="justify-end"
+              />
+            </div>
+          )}
+          
           <BusinessPageHeader 
             business={{
               id: businessPage.business_id,
@@ -110,19 +128,20 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
               account_type: "business"
             }} 
           />
+          
           <BusinessPageSections 
             pageSections={pageSections || []} 
             businessPage={businessPage} 
           />
 
-          {/* Social Media Icons */}
-          {socialLinks && socialLinks.length > 0 && (
+          {/* Social Media Icons in footer */}
+          {showFooterSocialLinks && (
             <div className="mt-8 mb-4">
               <SocialIconsGroup 
                 socialLinks={socialLinks}
                 style={social_icons_style as any}
                 size={social_icons_size as any}
-                position={social_icons_position as any}
+                position="footer"
                 className="pb-6"
               />
             </div>

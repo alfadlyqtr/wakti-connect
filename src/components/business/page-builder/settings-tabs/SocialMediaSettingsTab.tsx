@@ -1,18 +1,26 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import SocialMediaLinks from "../SocialMediaLinks";
 import { BusinessSocialLink, SocialPlatform } from "@/types/business.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fromTable } from "@/integrations/supabase/helper";
 import { toast } from "@/components/ui/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface SocialMediaSettingsTabProps {
   businessId: string;
+  updatePage?: any;
+  pageData?: any;
+  handleInputChangeWithAutoSave?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }
 
 const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
-  businessId
+  businessId,
+  updatePage,
+  pageData,
+  handleInputChangeWithAutoSave
 }) => {
   const queryClient = useQueryClient();
 
@@ -152,6 +160,46 @@ const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
   const handleDeleteSocialLink = (id: string) => {
     deleteSocialLinkMutation.mutate(id);
   };
+
+  // Handle icon style, size and position changes
+  const handleIconStyleChange = (value: string) => {
+    if (updatePage && pageData) {
+      updatePage.mutate({
+        pageId: pageData.id,
+        data: { social_icons_style: value }
+      }, {
+        onSuccess: () => {
+          toast({ title: "Icon style updated" });
+        }
+      });
+    }
+  };
+
+  const handleIconSizeChange = (value: string) => {
+    if (updatePage && pageData) {
+      updatePage.mutate({
+        pageId: pageData.id,
+        data: { social_icons_size: value }
+      }, {
+        onSuccess: () => {
+          toast({ title: "Icon size updated" });
+        }
+      });
+    }
+  };
+
+  const handleIconPositionChange = (value: string) => {
+    if (updatePage && pageData) {
+      updatePage.mutate({
+        pageId: pageData.id,
+        data: { social_icons_position: value }
+      }, {
+        onSuccess: () => {
+          toast({ title: "Icon position updated" });
+        }
+      });
+    }
+  };
   
   return (
     <Card>
@@ -161,7 +209,63 @@ const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
           Add your social media profiles to display on your business page
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
+        {/* Icon style settings */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div>
+            <Label htmlFor="icon-style">Icon Style</Label>
+            <Select 
+              defaultValue={pageData?.social_icons_style || "default"}
+              onValueChange={handleIconStyleChange}
+            >
+              <SelectTrigger id="icon-style">
+                <SelectValue placeholder="Choose icon style" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Default</SelectItem>
+                <SelectItem value="colored">Colored</SelectItem>
+                <SelectItem value="rounded">Rounded</SelectItem>
+                <SelectItem value="outlined">Outlined</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="icon-size">Icon Size</Label>
+            <Select 
+              defaultValue={pageData?.social_icons_size || "default"}
+              onValueChange={handleIconSizeChange}
+            >
+              <SelectTrigger id="icon-size">
+                <SelectValue placeholder="Choose icon size" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="small">Small</SelectItem>
+                <SelectItem value="default">Default</SelectItem>
+                <SelectItem value="large">Large</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="icon-position">Icon Position</Label>
+            <Select 
+              defaultValue={pageData?.social_icons_position || "footer"}
+              onValueChange={handleIconPositionChange}
+            >
+              <SelectTrigger id="icon-position">
+                <SelectValue placeholder="Choose icon position" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="header">Header</SelectItem>
+                <SelectItem value="footer">Footer</SelectItem>
+                <SelectItem value="both">Both Header & Footer</SelectItem>
+                <SelectItem value="sidebar">Sidebar</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
         <SocialMediaLinks 
           socialLinks={socialLinks || []} 
           onAdd={handleAddSocialLink}

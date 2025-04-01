@@ -1,94 +1,103 @@
 
-import { useCallback } from "react";
-import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
-import { BusinessPage } from "@/types/business.types";
+import { useState, useCallback } from "react";
 import { toast } from "@/components/ui/use-toast";
 
-// Auto-save utilities
-export const useAutoSavePageSettings = (
-  updatePage: any,
-  pageId?: string
-) => {
+// This hook provides automatic saving functionality for page settings
+export const useAutoSavePageSettings = (updatePageMutation: any, pageId?: string) => {
+  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [pendingChanges, setPendingChanges] = useState<Record<string, any>>({});
+  
   // Debounced auto-save function
-  const debouncedSave = useDebouncedCallback((data: Partial<BusinessPage>) => {
+  const autoSavePage = useCallback((data: Record<string, any>) => {
     if (!pageId) {
-      console.error("Cannot auto-save: No page ID available");
+      console.warn("Cannot auto-save: No page ID");
       return;
     }
     
-    console.log("Auto-saving page data:", { pageId, ...data });
-    
-    // Filter out null or undefined values to prevent errors
-    const cleanedData = Object.entries(data).reduce((acc, [key, value]) => {
-      if (value !== null && value !== undefined) {
-        acc[key] = value;
+    console.log("Auto-saving page settings:", data);
+    updatePageMutation.mutate(
+      { pageId, data },
+      {
+        onSuccess: () => {
+          console.log("Auto-save successful");
+        },
+        onError: (error: any) => {
+          console.error("Auto-save failed:", error);
+          toast({
+            variant: "destructive",
+            title: "Auto-save failed",
+            description: "Your changes could not be saved. Please try again."
+          });
+        }
       }
-      return acc;
-    }, {} as Record<string, any>);
-    
-    // Only save if there's actual data to save
-    if (Object.keys(cleanedData).length === 0) {
-      console.log("No valid data to save, skipping auto-save");
-      return;
-    }
-    
-    updatePage.mutate({ 
-      pageId, 
-      data: cleanedData 
-    }, {
-      onSuccess: () => {
-        console.log("Auto-save successful");
-      },
-      onError: (error: any) => {
-        console.error("Auto-save failed:", error);
-        toast({
-          variant: "destructive",
-          title: "Auto-save failed",
-          description: "Your changes could not be saved automatically. Please try saving manually."
-        });
-      }
-    });
-  }, 1000);
+    );
+  }, [pageId, updatePageMutation]);
   
-  // Function to auto-save a specific field
-  const autoSaveField = useCallback((fieldName: string, value: any) => {
+  // Auto-save a single field with debouncing
+  const autoSaveField = useCallback((field: string, value: any) => {
     if (!pageId) {
-      console.error("Cannot auto-save field: No page ID available");
+      console.warn("Cannot auto-save field: No page ID");
       return;
     }
     
-    // Skip saving if value is null or undefined
-    if (value === null || value === undefined) {
-      console.log(`Skipping auto-save for field "${fieldName}" due to null/undefined value`);
-      return;
+    // Add this change to pending changes
+    setPendingChanges(prev => ({ ...prev, [field]: value }));
+    
+    // Clear existing timeout
+    if (autoSaveTimeout) {
+      clearTimeout(autoSaveTimeout);
     }
     
-    console.log(`Auto-saving field "${fieldName}":`, value);
-    debouncedSave({ [fieldName]: value });
-  }, [pageId, debouncedSave]);
-  
-  // Function to auto-save the entire page data
-  const autoSavePage = useCallback((pageData: Partial<BusinessPage>) => {
-    if (!pageId) {
-      console.error("Cannot auto-save page: No page ID available");
-      return;
-    }
+    // Set new timeout
+    const timeoutId = setTimeout(() => {
+      console.log(`Auto-saving field ${field}:`, value);
+      const updatedPendingChanges = { ...pendingChanges, [field]: value };
+      
+      updatePageMutation.mutate(
+        { pageId, data: updatedPendingChanges },
+        {
+          onSuccess: () => {
+            console.log("Field auto-save successful");
+            // Clear the pending changes that were saved
+            setPendingChanges({});
+            toast({
+              title: "Changes saved",
+              description: "Your page settings have been updated."
+            });
+          },
+          onError: (error: any) => {
+            console.error("Field auto-save failed:", error);
+            toast({
+              variant: "destructive",
+              title: "Save failed",
+              description: "Your changes could not be saved. Please try again."
+            });
+          }
+        }
+      );
+    }, 1000); // 1 second delay
     
-    console.log("Auto-saving entire page:", pageData);
-    debouncedSave(pageData);
-  }, [pageId, debouncedSave]);
+    setAutoSaveTimeout(timeoutId);
+  }, [pageId, updatePageMutation, autoSaveTimeout, pendingChanges]);
   
   return { autoSavePage, autoSaveField };
 };
 
-// Get public page URL
+// This hook provides a function to get the public URL for a business page
 export const usePublicPageUrl = (pageSlug?: string) => {
-  return useCallback(() => {
-    if (!pageSlug) return '';
+  const getPublicPageUrl = useCallback(() => {
+    if (!pageSlug) {
+      return '#';
+    }
     
-    // Determine base URL based on environment
-    const baseUrl = window.location.origin;
+    // Check the environment
+    const isLocalhost = window.location.hostname === 'localhost';
+    const baseUrl = isLocalhost 
+      ? `${window.location.origin}` 
+      : window.location.origin;
     
     return `${baseUrl}/business/${pageSlug}`;
   }, [pageSlug]);
+  
+  return getPublicPageUrl;
 };
