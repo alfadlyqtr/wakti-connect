@@ -85,8 +85,8 @@ export const DragDropProvider: React.FC<{
   const moveSectionUpDown = (sectionId: string, direction: 'up' | 'down') => {
     console.log(`Moving section ${sectionId} ${direction}`);
     
-    // Get a sorted copy of the current sections
-    const sortedSections = [...orderedSections].sort((a, b) => a.section_order - b.section_order);
+    // Create a fresh sorted copy of the sections to avoid mutation issues
+    const sortedSections = [...sections].sort((a, b) => a.section_order - b.section_order);
     
     const currentIndex = sortedSections.findIndex(s => s.id === sectionId);
     if (currentIndex === -1) {
@@ -104,25 +104,28 @@ export const DragDropProvider: React.FC<{
     // Determine target index
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
     
-    // Create a new array with swapped elements
-    const newSections = [...sortedSections];
+    // Create a completely new array with swapped elements to avoid mutation issues
+    const newSections = sortedSections.map(section => ({...section}));
     
-    // Swap the positions
-    [newSections[currentIndex], newSections[targetIndex]] = 
-      [newSections[targetIndex], newSections[currentIndex]];
+    // Store the current and target sections
+    const currentSection = {...newSections[currentIndex]};
+    const targetSection = {...newSections[targetIndex]};
     
-    // Update section_order property 
-    newSections.forEach((section, index) => {
-      section.section_order = index;
-    });
+    // Swap the order values
+    const tempOrder = currentSection.section_order;
+    currentSection.section_order = targetSection.section_order;
+    targetSection.section_order = tempOrder;
+    
+    // Replace the sections in the array
+    newSections[currentIndex] = currentSection;
+    newSections[targetIndex] = targetSection;
     
     console.log('Manually updating section order:', 
       newSections.map(s => ({ id: s.id, type: s.section_type, order: s.section_order }))
     );
     
     // Update the state and trigger the mutation
-    setOrderedSections(newSections);
-    updateSectionOrderMutation.mutate(newSections);
+    updateSectionOrder(newSections);
   };
 
   return (

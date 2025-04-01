@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, ArrowDown, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SectionActionsProps {
@@ -17,34 +17,13 @@ interface SectionActionsProps {
 const SectionActions: React.FC<SectionActionsProps> = ({
   sectionId,
   isVisible,
-  isFirstSection,
-  isLastSection,
   onToggleVisibility,
-  onMoveSection,
   onDeleteSection
 }) => {
   const isMobile = useIsMobile();
   const buttonSize = isMobile ? "sm" : "icon";
   
   // Explicitly define event handler functions to prevent event bubbling
-  const handleMoveUp = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isFirstSection) {
-      console.log('Moving section up:', sectionId);
-      onMoveSection(sectionId, 'up');
-    }
-  };
-
-  const handleMoveDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isLastSection) {
-      console.log('Moving section down:', sectionId);
-      onMoveSection(sectionId, 'down');
-    }
-  };
-
   const handleToggleVisibility = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -73,28 +52,6 @@ const SectionActions: React.FC<SectionActionsProps> = ({
           <EyeOff className="h-4 w-4" />
         }
         {isMobile && <span className="ml-2 text-xs">{isVisible ? "Hide" : "Show"}</span>}
-      </Button>
-      <Button 
-        variant="ghost" 
-        size={buttonSize}
-        onClick={handleMoveUp}
-        disabled={isFirstSection}
-        className="touch-target"
-        type="button"
-      >
-        <ArrowUp className="h-4 w-4" />
-        {isMobile && <span className="ml-2 text-xs">Up</span>}
-      </Button>
-      <Button 
-        variant="ghost" 
-        size={buttonSize}
-        onClick={handleMoveDown}
-        disabled={isLastSection}
-        className="touch-target"
-        type="button"
-      >
-        <ArrowDown className="h-4 w-4" />
-        {isMobile && <span className="ml-2 text-xs">Down</span>}
       </Button>
       <Button 
         variant="ghost" 

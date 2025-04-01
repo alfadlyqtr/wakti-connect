@@ -27,25 +27,25 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
   
   return (
     <div className="business-page-header py-8">
-      {business.avatar_url && (
-        <div className="flex justify-center mb-4">
-          <img 
-            src={business.avatar_url} 
-            alt={business.business_name || "Business"} 
-            className="h-24 w-24 rounded-full object-cover border-2 border-primary/20 mb-4"
-            onError={(e) => {
-              console.error("Error loading avatar image:", e);
-              // Don't hide the image container, just log the error
-            }}
-          />
-        </div>
-      )}
-      
-      <h1 className="text-3xl md:text-4xl font-bold text-center">{business.business_name || "Business Name"}</h1>
-      
-      {/* Subscribe button placed directly under the business name */}
-      {!isPreviewMode && isAuthenticated && (
-        <div className="flex justify-center mt-4">
+      <div className="flex flex-col items-center">
+        {business.avatar_url && (
+          <div className="mb-4">
+            <img 
+              src={business.avatar_url} 
+              alt={business.business_name || "Business"} 
+              className="h-24 w-24 rounded-full object-cover border-2 border-primary/20"
+              onError={(e) => {
+                console.error("Error loading avatar image:", e);
+                // Don't hide the image container, just log the error
+              }}
+            />
+          </div>
+        )}
+        
+        <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">{business.business_name || "Business Name"}</h1>
+        
+        {/* Subscribe button placed directly under the business name */}
+        {!isPreviewMode && isAuthenticated && (
           <BusinessSubscribeButton 
             businessId={business.id}
             isAuthenticated={isAuthenticated}
@@ -57,10 +57,10 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
             variant="gradient"
             borderRadius="0.5rem"
             boxShadow="md"
-            className="px-6 py-2"
+            className="px-6 py-2 mt-2"
           />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
