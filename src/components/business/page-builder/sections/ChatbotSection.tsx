@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -8,12 +8,27 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSectionEditor } from "@/hooks/useSectionEditor";
 import { useTMWChatbot } from "@/hooks/tmw-chatbot";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 const ChatbotSection: React.FC = () => {
   const { section, contentData, updateContentField } = useSectionEditor();
   
   // Set up local state for the preview
   const [previewEnabled, setPreviewEnabled] = useState(contentData?.enabled || false);
+  
+  // Ensure default content values are set
+  useEffect(() => {
+    if (contentData?.enabled === undefined) {
+      updateContentField('enabled', true);
+    }
+    if (!contentData?.section_title) {
+      updateContentField('section_title', 'Chat with Us');
+    }
+    if (!contentData?.chatbot_size) {
+      updateContentField('chatbot_size', 'medium');
+    }
+  }, [contentData, updateContentField]);
   
   // Create unique container ID for this section
   const chatbotContainerId = `tmw-chatbot-container-section-${section.id}`;
@@ -37,6 +52,13 @@ const ChatbotSection: React.FC = () => {
   
   const handleSelectChange = (field: string, value: string) => {
     updateContentField(field, value);
+  };
+  
+  // Sample chatbot code for easy testing
+  const sampleChatbotCode = '<script src="https://cdn.example.com/tmw-chatbot.js"></script>';
+  
+  const addSampleCode = () => {
+    updateContentField('chatbot_code', sampleChatbotCode);
   };
   
   return (
@@ -106,6 +128,14 @@ const ChatbotSection: React.FC = () => {
                 </Select>
               </div>
               
+              <Alert className="mt-4">
+                <InfoIcon className="h-4 w-4" />
+                <AlertDescription>
+                  Paste the embed code provided by TMW AI Chatbot platform. 
+                  This could be either a script tag or an iframe.
+                </AlertDescription>
+              </Alert>
+              
               <div className="space-y-2 mt-4">
                 <Label htmlFor="chatbot_code">Chatbot Embed Code</Label>
                 <Textarea
@@ -117,9 +147,6 @@ const ChatbotSection: React.FC = () => {
                   rows={6}
                   className="font-mono text-sm"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Paste the embed code provided by TMW AI Chatbot platform
-                </p>
               </div>
               
               <div className="space-y-2 mt-6">

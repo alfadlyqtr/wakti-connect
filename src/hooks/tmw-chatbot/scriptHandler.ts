@@ -14,6 +14,11 @@ export const injectScriptChatbot = (
     return null;
   }
   
+  // Ensure the container has sufficient height to display the chatbot
+  if (targetContainer.clientHeight < 300) {
+    targetContainer.style.minHeight = '300px';
+  }
+  
   // Check if the chatbot code contains a script tag
   const isFullScriptTag = chatbotCode.trim().startsWith('<script') && chatbotCode.trim().endsWith('</script>');
   
@@ -35,73 +40,37 @@ export const injectScriptChatbot = (
     hasScriptTag: isFullScriptTag, 
     hasSrc: !!scriptSrc, 
     hasContent: !!scriptContent.length,
-    targetElementId
+    targetElementId,
+    containerHeight: targetContainer.clientHeight
   });
   
   // Clear previous content
   targetContainer.innerHTML = '';
   
-  // Create a div to hold script-created content
-  const contentDiv = document.createElement('div');
-  contentDiv.id = 'tmw-chatbot-content-' + Date.now();
-  targetContainer.appendChild(contentDiv);
-  
-  // Create a new script element
-  const script = document.createElement('script');
-  script.id = 'tmw-chatbot-script-' + Date.now(); // Unique ID to avoid conflicts
-  
-  // Copy any other attributes from the original script tag
-  const idMatch = chatbotCode.match(/id=["']([^"']+)["']/);
-  if (idMatch && idMatch[1]) script.id = idMatch[1];
-  
-  const asyncAttr = chatbotCode.includes('async');
-  if (asyncAttr) script.async = true;
-  
-  const deferAttr = chatbotCode.includes('defer');
-  if (deferAttr) script.defer = true;
-
-  // Handle different script scenarios
-  if (scriptSrc && scriptContent.length > 0) {
-    // Case 1: Both src and content - create src script first, then content script
-    console.log("Creating TWO scripts - one with src and one with content");
+  try {
+    // Create a new script element
+    const script = document.createElement('script');
+    script.id = 'tmw-chatbot-script-' + Date.now(); // Unique ID to avoid conflicts
     
-    // First create and append the src script
-    const srcScript = document.createElement('script');
-    srcScript.id = 'tmw-chatbot-src-script-' + Date.now();
-    srcScript.src = scriptSrc;
-    if (asyncAttr) srcScript.async = true;
-    if (deferAttr) srcScript.defer = true;
-    document.head.appendChild(srcScript);
-    
-    // Then create and append the content script with reference to the container
-    const contentScript = document.createElement('script');
-    contentScript.id = 'tmw-chatbot-content-script-' + Date.now();
-    // Modify the script content to target our container if needed
-    contentScript.textContent = scriptContent;
-    
-    // Add a small delay to ensure the src script loads first
-    setTimeout(() => {
-      document.head.appendChild(contentScript);
-    }, 100);
-    
-    console.log('TMW AI Chatbot hybrid scripts have been injected with target:', targetElementId);
-    
-    return contentScript;
-  } else if (scriptSrc) {
-    // Case 2: Only src attribute
-    script.src = scriptSrc;
-    document.head.appendChild(script);
-    
-    console.log('TMW AI Chatbot external script has been injected with target:', targetElementId);
-    
-    return script;
-  } else {
-    // Case 3: Only inline content
-    script.textContent = scriptContent;
-    document.head.appendChild(script);
-    
-    console.log('TMW AI Chatbot inline script has been injected with target:', targetElementId);
-    
-    return script;
+    // Handle different script scenarios
+    if (scriptSrc) {
+      // Case 1: External script with src attribute
+      script.src = scriptSrc;
+      console.log('TMW AI Chatbot: Adding external script with src:', scriptSrc);
+      document.head.appendChild(script);
+      return script;
+    } else if (scriptContent) {
+      // Case 2: Only inline content
+      script.textContent = scriptContent;
+      console.log('TMW AI Chatbot: Adding inline script with content length:', scriptContent.length);
+      document.head.appendChild(script);
+      return script;
+    } else {
+      console.error('TMW AI Chatbot: No valid script content or src found in:', chatbotCode);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error injecting TMW AI Chatbot script:', error);
+    return null;
   }
 };

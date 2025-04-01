@@ -19,56 +19,63 @@ export const useTMWChatbot = (
 ) => {
   const chatbotScriptRef = useRef<HTMLScriptElement | HTMLIFrameElement | null>(null);
   const isMobile = useIsMobile();
+  const initializedRef = useRef(false);
   
   useEffect(() => {
-    // Clear any previously added chatbot elements
-    if (chatbotScriptRef.current) {
-      try {
-        if (chatbotScriptRef.current.parentNode) {
+    // Skip if no code or disabled
+    if (!chatbotEnabled || !chatbotCode || chatbotCode.trim() === '') {
+      console.log("TMW AI Chatbot is disabled or has no code");
+      return;
+    }
+    
+    console.log(`Initializing TMW AI Chatbot (${initializedRef.current ? 'reinit' : 'first init'})`, {
+      containerId,
+      codeLength: chatbotCode.length,
+      isScriptTag: chatbotCode.includes('<script'),
+      isIframeTag: chatbotCode.includes('<iframe')
+    });
+    
+    // Cleanup previous instance if needed
+    if (initializedRef.current) {
+      console.log("Cleaning up previous TMW chatbot instance");
+      cleanupExistingChatbotElements();
+      
+      if (chatbotScriptRef.current && chatbotScriptRef.current.parentNode) {
+        try {
           chatbotScriptRef.current.parentNode.removeChild(chatbotScriptRef.current);
+        } catch (error) {
+          console.error("Error removing previous chatbot element:", error);
         }
-        chatbotScriptRef.current = null;
-      } catch (error) {
-        console.error("Error removing previous chatbot element:", error);
       }
+      chatbotScriptRef.current = null;
     }
     
-    // Remove any existing chatbot elements from DOM
-    cleanupExistingChatbotElements();
-    
-    // Create or find the container element
-    let container = document.getElementById(containerId);
-    if (!container) {
-      console.log(`Creating new TMW chatbot container with ID: ${containerId}`);
-      container = document.createElement('div');
-      container.id = containerId;
-      document.body.appendChild(container);
-    }
-    
-    if (chatbotEnabled && chatbotCode) {
+    // Set a small timeout to ensure DOM is ready
+    const timer = setTimeout(() => {
       try {
-        console.log("TMW AI Chatbot is enabled");
-        
         // Check if the code contains an iframe tag
         const isIframeEmbed = chatbotCode.trim().toLowerCase().includes('<iframe');
         
         if (isIframeEmbed) {
           // Handle iframe embed
+          console.log("Detected iframe-based TMW chatbot, injecting...");
           chatbotScriptRef.current = injectIframeChatbot(chatbotCode, containerId);
         } else {
           // Handle script-based embed
+          console.log("Detected script-based TMW chatbot, injecting...");
           chatbotScriptRef.current = injectScriptChatbot(chatbotCode, containerId);
         }
+        
+        initializedRef.current = true;
       } catch (error) {
         console.error('Error injecting TMW AI Chatbot code:', error);
       }
-    } else if (container) {
-      // Clear the container if chatbot is disabled
-      container.innerHTML = '';
-    }
+    }, 300);
     
     // Cleanup function
     return () => {
+      clearTimeout(timer);
+      
       if (chatbotScriptRef.current && chatbotScriptRef.current.parentNode) {
         try {
           chatbotScriptRef.current.parentNode.removeChild(chatbotScriptRef.current);
@@ -76,15 +83,6 @@ export const useTMWChatbot = (
         } catch (error) {
           console.error('Error removing TMW chatbot element on unmount:', error);
         }
-      }
-      
-      // Clean up any other elements that might have been created
-      cleanupExistingChatbotElements();
-      
-      // Clean up the container too
-      const chatbotContainer = document.getElementById(containerId);
-      if (chatbotContainer && chatbotContainer.parentNode) {
-        chatbotContainer.parentNode.removeChild(chatbotContainer);
       }
     };
   }, [chatbotEnabled, chatbotCode, containerId, isMobile]);

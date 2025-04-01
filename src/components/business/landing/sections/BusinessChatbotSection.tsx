@@ -25,7 +25,21 @@ const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content
   const containerId = `tmw-chatbot-section-${Math.floor(Math.random() * 10000)}`;
   
   // Use the TMW chatbot hook
-  useTMWChatbot(enabled, chatbot_code, containerId);
+  const chatbotRef = useTMWChatbot(enabled, chatbot_code, containerId);
+  
+  // Log the chatbot setup for debugging
+  useEffect(() => {
+    console.log("BusinessChatbotSection mounting with:", {
+      enabled,
+      containerId,
+      codeLength: chatbot_code?.length || 0,
+      size: chatbot_size
+    });
+    
+    return () => {
+      console.log("BusinessChatbotSection unmounting:", containerId);
+    };
+  }, [enabled, chatbot_code, containerId, chatbot_size]);
   
   const getSizeClasses = () => {
     switch (chatbot_size) {
@@ -42,7 +56,7 @@ const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content
     }
   };
   
-  if (!enabled || !chatbot_code) {
+  if (!enabled) {
     return null;
   }
   
@@ -59,6 +73,11 @@ const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content
         id={containerId}
         className={`relative border border-border rounded-md overflow-hidden ${getSizeClasses()}`}
       >
+        {!chatbot_code && (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-muted-foreground">Add your TMW AI Chatbot code to enable the chatbot</p>
+          </div>
+        )}
         {/* The chatbot will be injected here by the hook */}
       </div>
     </div>
