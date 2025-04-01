@@ -11,6 +11,8 @@ export const useBusinessPageQuery = (pageSlug?: string, isPreviewMode?: boolean)
     queryFn: async () => {
       if (!pageSlug) return null;
       
+      console.log("Fetching business page with slug:", pageSlug, "Preview mode:", isPreviewMode);
+      
       let query = fromTable('business_pages')
         .select()
         .eq('page_slug', pageSlug);
@@ -27,6 +29,7 @@ export const useBusinessPageQuery = (pageSlug?: string, isPreviewMode?: boolean)
         throw error;
       }
       
+      console.log("Business page data retrieved:", data);
       return data as BusinessPage;
     },
     enabled: !!pageSlug

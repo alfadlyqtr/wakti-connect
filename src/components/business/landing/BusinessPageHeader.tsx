@@ -13,7 +13,6 @@ export interface BusinessPageHeaderProps {
   unsubscribe?: any;
 }
 
-// Create a simple component to avoid type errors
 const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
   business,
   isPreviewMode,
@@ -23,9 +22,26 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
   subscribe,
   unsubscribe
 }) => {
+  console.log("BusinessPageHeader component rendering with:", business);
+  
   return (
     <div className="business-page-header py-8">
+      {business.avatar_url && (
+        <div className="flex justify-center mb-4">
+          <img 
+            src={business.avatar_url} 
+            alt={business.business_name || "Business"} 
+            className="h-24 w-24 rounded-full object-cover border-2 border-primary/20 mb-4"
+            onError={(e) => {
+              console.error("Error loading avatar image:", e);
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        </div>
+      )}
+      
       <h1 className="text-3xl md:text-4xl font-bold text-center">{business.business_name || "Business Name"}</h1>
+      
       {!isPreviewMode && isAuthenticated && !isSubscribed && !checkingSubscription && (
         <div className="flex justify-center mt-4">
           <button 
@@ -36,6 +52,7 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
           </button>
         </div>
       )}
+      
       {!isPreviewMode && isAuthenticated && isSubscribed && !checkingSubscription && (
         <div className="flex justify-center mt-4">
           <button 

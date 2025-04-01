@@ -11,6 +11,20 @@ interface BusinessStyling {
   fontFamily?: string;
 }
 
+// Helper function to convert HEX to RGB
+function hexToRGB(hex: string): string {
+  // Remove # if present
+  hex = hex.replace('#', '');
+  
+  // Parse the hex values to get r, g, b
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  
+  // Return RGB value as comma-separated string
+  return `${r}, ${g}, ${b}`;
+}
+
 export const useBusinessStyling = (businessId?: string) => {
   const [styling, setStyling] = useState<BusinessStyling>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -54,9 +68,11 @@ export const useBusinessStyling = (businessId?: string) => {
           // Apply CSS variables
           if (pageData.primary_color) {
             document.documentElement.style.setProperty('--primary', pageData.primary_color);
+            document.documentElement.style.setProperty('--primary-rgb', hexToRGB(pageData.primary_color));
           }
           if (pageData.secondary_color) {
             document.documentElement.style.setProperty('--secondary', pageData.secondary_color);
+            document.documentElement.style.setProperty('--secondary-rgb', hexToRGB(pageData.secondary_color));
           }
           
         } else {
@@ -91,7 +107,9 @@ export const useBusinessStyling = (businessId?: string) => {
     return () => {
       // Clean up CSS variables
       document.documentElement.style.removeProperty('--primary');
+      document.documentElement.style.removeProperty('--primary-rgb');
       document.documentElement.style.removeProperty('--secondary');
+      document.documentElement.style.removeProperty('--secondary-rgb');
     };
   }, [businessId]);
   

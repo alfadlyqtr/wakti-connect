@@ -113,6 +113,8 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
       section.background_color || section.background_image_url ? "rounded overflow-hidden" : ""
     );
     
+    console.log(`Rendering section ${section.section_type} with content:`, content);
+    
     const SectionComponent = () => {
       switch (section.section_type) {
         case 'header':
@@ -133,8 +135,6 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
             content={content} 
             businessId={businessPage.business_id} 
             pageId={businessPage.id} 
-            primaryColor={businessPage.primary_color}
-            textColor={businessPage.text_color}
           />;
           
         case 'hours':
@@ -150,8 +150,6 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
           return <BusinessBookingTemplatesSection 
             content={content} 
             businessId={businessPage.business_id}
-            primaryColor={businessPage.primary_color}
-            secondaryColor={businessPage.secondary_color}
           />;
           
         case 'instagram':

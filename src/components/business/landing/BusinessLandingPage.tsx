@@ -25,14 +25,14 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     isLoading, 
     pageSections,
     socialLinks
-  } = useBusinessPage(slug);
+  } = useBusinessPage(slug, isPreviewMode);
   
   const [showPoweredBy, setShowPoweredBy] = useState(true);
   const [showSubscribeButton, setShowSubscribeButton] = useState(true);
   const isAuthenticated = useAuthentication();
 
   console.log("BusinessLandingPage - businessPage:", businessPage);
-  console.log("BusinessLandingPage - socialLinks:", socialLinks);
+  console.log("BusinessLandingPage - socialLinks:", socialLinks?.length || 0);
 
   // Hide PoweredByWAKTI after scrolling
   useEffect(() => {
@@ -57,23 +57,41 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
       });
       
       if (businessPage.primary_color) {
-        // Convert hex to HSL for CSS variables
-        const primaryHex = businessPage.primary_color;
-        document.documentElement.style.setProperty('--primary', primaryHex);
+        // Set primary color as CSS variable
+        document.documentElement.style.setProperty('--primary', businessPage.primary_color);
+        // Also set the HSL version for Tailwind compatibility
+        document.documentElement.style.setProperty('--primary-rgb', hexToRGB(businessPage.primary_color));
       }
       
       if (businessPage.secondary_color) {
-        // Convert hex to HSL for CSS variables
-        const secondaryHex = businessPage.secondary_color;
-        document.documentElement.style.setProperty('--secondary', secondaryHex);
+        // Set secondary color as CSS variable
+        document.documentElement.style.setProperty('--secondary', businessPage.secondary_color);
+        // Also set the HSL version for Tailwind compatibility
+        document.documentElement.style.setProperty('--secondary-rgb', hexToRGB(businessPage.secondary_color));
       }
     }
     
     return () => {
       document.documentElement.style.removeProperty('--primary');
+      document.documentElement.style.removeProperty('--primary-rgb');
       document.documentElement.style.removeProperty('--secondary');
+      document.documentElement.style.removeProperty('--secondary-rgb');
     };
   }, [businessPage]);
+
+  // Helper function to convert HEX to RGB for CSS variables
+  function hexToRGB(hex: string): string {
+    // Remove # if present
+    hex = hex.replace('#', '');
+    
+    // Parse the hex values to get r, g, b
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    
+    // Return RGB value as comma-separated string
+    return `${r}, ${g}, ${b}`;
+  }
 
   if (isLoading) {
     return (
@@ -128,11 +146,11 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
 
   // Check if social links should be shown in the header
   const showHeaderSocialLinks = socialLinks && socialLinks.length > 0 && 
-    ['header', 'both'].includes(social_icons_position);
+    ['header', 'both'].includes(social_icons_position || '');
   
   // Check if social links should be shown in the footer
   const showFooterSocialLinks = socialLinks && socialLinks.length > 0 && 
-    ['footer', 'both'].includes(social_icons_position);
+    ['footer', 'both'].includes(social_icons_position || '');
 
   console.log("Show header social links:", showHeaderSocialLinks, "Position:", social_icons_position);
   console.log("Show footer social links:", showFooterSocialLinks, "Position:", social_icons_position);
@@ -148,9 +166,9 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
           {showHeaderSocialLinks && (
             <div className="pt-4 pb-2">
               <SocialIconsGroup 
-                socialLinks={socialLinks}
-                style={social_icons_style as any}
-                size={social_icons_size as any}
+                socialLinks={socialLinks || []}
+                style={(social_icons_style as any) || "default"}
+                size={(social_icons_size as any) || "default"}
                 position="header"
                 className="justify-end"
               />
@@ -176,9 +194,9 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
           {showFooterSocialLinks && (
             <div className="mt-8 mb-4">
               <SocialIconsGroup 
-                socialLinks={socialLinks}
-                style={social_icons_style as any}
-                size={social_icons_size as any}
+                socialLinks={socialLinks || []}
+                style={(social_icons_style as any) || "default"}
+                size={(social_icons_size as any) || "default"}
                 position="footer"
                 className="pb-6"
               />

@@ -68,8 +68,8 @@ const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
       case 'left': return 'justify-start';
       case 'right': return 'justify-end';
       case 'both': 
-        // Display based on the context in the parent component
-        return 'justify-end'; // When used in header it's justify-end
+        // For "both" position, the parent container should apply appropriate positioning
+        return className.includes('justify-end') ? 'justify-end' : 'justify-center';
       default: return 'justify-center';
     }
   };
