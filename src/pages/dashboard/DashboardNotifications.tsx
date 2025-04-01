@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Bell, Trash2, Check, Clock, Loader2 } from "lucide-react";
+import { Bell, Trash2, Check, Clock, Loader2, MessageSquare, User, Calendar, PhoneCall } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 // Define Notification type based on our database schema
 interface Notification {
@@ -24,6 +25,8 @@ interface Notification {
 }
 
 const DashboardNotifications = () => {
+  const navigate = useNavigate();
+  
   // Fetch notifications with React Query
   const {
     data: notificationsData,
@@ -64,7 +67,8 @@ const DashboardNotifications = () => {
         userRole: profileData?.account_type || "free"
       };
     },
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   // Show error toast if query fails
@@ -135,6 +139,37 @@ const DashboardNotifications = () => {
     }
   };
 
+  // Handle notification click to navigate to related entity
+  const handleNotificationClick = (notification: Notification) => {
+    if (!notification.is_read) {
+      markAsRead(notification.id);
+    }
+    
+    // Navigate based on notification type and related entity
+    if (notification.related_entity_id && notification.related_entity_type) {
+      switch (notification.type) {
+        case "message":
+          navigate(`/dashboard/messages`);
+          break;
+        case "booking":
+          navigate(`/dashboard/bookings`);
+          break;
+        case "contact_form":
+          navigate(`/dashboard/business-page`);
+          break;
+        case "task":
+          navigate(`/dashboard/tasks`);
+          break;
+        case "event":
+          navigate(`/dashboard/events`);
+          break;
+        default:
+          // Default to notifications page
+          break;
+      }
+    }
+  };
+
   // Format notification date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -146,12 +181,34 @@ const DashboardNotifications = () => {
     }).format(date);
   };
 
+  // Get icon based on notification type
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "message":
+        return <MessageSquare className="h-4 w-4 mr-2 text-blue-500" />;
+      case "booking":
+        return <Calendar className="h-4 w-4 mr-2 text-green-500" />;
+      case "contact_form":
+        return <PhoneCall className="h-4 w-4 mr-2 text-purple-500" />;
+      case "task":
+        return <Check className="h-4 w-4 mr-2 text-orange-500" />;
+      case "event":
+        return <Calendar className="h-4 w-4 mr-2 text-red-500" />;
+      default:
+        return <Bell className="h-4 w-4 mr-2 text-gray-500" />;
+    }
+  };
+
   // Notification card component
   const NotificationCard = ({ notification }: { notification: Notification }) => (
-    <Card key={notification.id} className={cn(
-      "mb-3 transition-all",
-      notification.is_read ? "opacity-75" : ""
-    )}>
+    <Card 
+      key={notification.id} 
+      className={cn(
+        "mb-3 transition-all hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer",
+        notification.is_read ? "opacity-75" : ""
+      )}
+      onClick={() => handleNotificationClick(notification)}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -160,7 +217,10 @@ const DashboardNotifications = () => {
                 "inline-block w-2 h-2 rounded-full",
                 notification.is_read ? "bg-muted" : "bg-wakti-blue"
               )}></span>
-              <h4 className="font-medium text-base">{notification.title}</h4>
+              <div className="flex items-center">
+                {getNotificationIcon(notification.type)}
+                <h4 className="font-medium text-base">{notification.title}</h4>
+              </div>
               {!notification.is_read && (
                 <Badge variant="outline" className="bg-wakti-blue/10 text-wakti-blue text-xs">
                   New
@@ -176,7 +236,10 @@ const DashboardNotifications = () => {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => markAsRead(notification.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  markAsRead(notification.id);
+                }}
               >
                 <Check className="h-4 w-4" />
                 <span className="sr-only">Mark as read</span>
@@ -187,7 +250,10 @@ const DashboardNotifications = () => {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-red-500 hover:text-red-700"
-                onClick={() => deleteNotification(notification.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteNotification(notification.id);
+                }}
               >
                 <Trash2 className="h-4 w-4" />
                 <span className="sr-only">Delete</span>

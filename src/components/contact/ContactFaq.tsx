@@ -1,48 +1,53 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const ContactFaq = () => {
+  const faqItems = [
+    {
+      question: "What is WAKTI?",
+      answer: "WAKTI is an all-in-one productivity and business management platform that includes task management, appointment booking, messaging, business dashboard, and more. It helps individuals and businesses streamline their workflow and improve efficiency."
+    },
+    {
+      question: "How much does WAKTI cost?",
+      answer: "WAKTI offers a free plan with limited features, an Individual Plan (QAR 20/month or QAR 200/year), and a Business Plan (QAR 45/month or QAR 400/year). Each plan offers different features tailored to different user needs."
+    },
+    {
+      question: "Can I try WAKTI before subscribing?",
+      answer: "Yes, you can sign up for our free plan to explore the basic features of WAKTI. This gives you the opportunity to experience the platform before upgrading to a paid subscription."
+    },
+    {
+      question: "How can I upgrade my subscription?",
+      answer: "You can upgrade your subscription at any time by going to your account settings and selecting the 'Subscription' tab. From there, you can choose the plan that best suits your needs."
+    },
+    {
+      question: "Is my data secure with WAKTI?",
+      answer: "Yes, at WAKTI, we take security seriously. We implement industry-standard security measures to protect your data. All data is encrypted both in transit and at rest."
+    }
+  ];
+
   return (
-    <section className="mb-16">
+    <div className="max-w-3xl mx-auto">
       <h2 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        <div className="p-6 rounded-lg border">
-          <h3 className="text-lg font-semibold mb-2">How do I upgrade my plan?</h3>
-          <p className="text-muted-foreground">
-            You can upgrade your plan at any time from your account settings. Visit the Billing section to view available plans and make changes.
-          </p>
-        </div>
-        
-        <div className="p-6 rounded-lg border">
-          <h3 className="text-lg font-semibold mb-2">Do you offer refunds?</h3>
-          <p className="text-muted-foreground">
-            Yes, we offer a 14-day money-back guarantee if you're not satisfied with your paid plan. Contact our support team to process your refund.
-          </p>
-        </div>
-        
-        <div className="p-6 rounded-lg border">
-          <h3 className="text-lg font-semibold mb-2">Can I change my plan later?</h3>
-          <p className="text-muted-foreground">
-            Absolutely! You can upgrade, downgrade, or cancel your plan at any time through your account settings.
-          </p>
-        </div>
-        
-        <div className="p-6 rounded-lg border">
-          <h3 className="text-lg font-semibold mb-2">How do I get support?</h3>
-          <p className="text-muted-foreground">
-            You can reach our support team via email at support@wakti.app or through the in-app chat feature available to all users.
-          </p>
-        </div>
-      </div>
-      
-      <div className="text-center mt-8">
-        <Button variant="outline" asChild>
-          <a href="/faq">View All FAQs</a>
-        </Button>
-      </div>
-    </section>
+      <Accordion type="single" collapsible className="w-full">
+        {faqItems.map((item, index) => (
+          <AccordionItem key={index} value={`item-${index}`}>
+            <AccordionTrigger className="text-left">
+              {item.question}
+            </AccordionTrigger>
+            <AccordionContent>
+              {item.answer}
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </div>
   );
 };
 

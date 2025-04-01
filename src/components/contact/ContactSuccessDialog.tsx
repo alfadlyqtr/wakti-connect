@@ -1,15 +1,15 @@
 
 import React from "react";
-import { CheckCircle } from "lucide-react";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { CheckCircle } from "lucide-react";
 
 interface ContactSuccessDialogProps {
   open: boolean;
@@ -21,22 +21,22 @@ const ContactSuccessDialog: React.FC<ContactSuccessDialogProps> = ({
   onOpenChange,
 }) => {
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center">
-            <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-            Message Sent Successfully
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            Thank you for contacting us! Our team will review your message and get back to you as soon as possible.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogAction>Close</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <div className="flex justify-center mb-4">
+            <CheckCircle className="h-16 w-16 text-green-500" />
+          </div>
+          <DialogTitle className="text-center">Message Sent Successfully!</DialogTitle>
+          <DialogDescription className="text-center">
+            Thank you for reaching out. We've received your message and will get back to you as soon as possible.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="sm:justify-center">
+          <Button onClick={() => onOpenChange(false)}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

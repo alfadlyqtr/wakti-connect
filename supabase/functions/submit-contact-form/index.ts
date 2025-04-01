@@ -80,6 +80,26 @@ serve(async (req) => {
     }
 
     console.log("Submission stored successfully:", data.id);
+    
+    // Create a notification for the business owner
+    try {
+      await supabaseAdmin
+        .from('notifications')
+        .insert({
+          user_id: businessId,
+          title: "New Contact Form Submission",
+          content: `${formData.name} has submitted a contact form`,
+          type: "contact_form",
+          related_entity_id: data.id,
+          related_entity_type: "business_contact_submissions",
+          is_read: false
+        });
+      
+      console.log("Contact form notification created for business:", businessId);
+    } catch (notificationError) {
+      console.error("Error creating notification:", notificationError);
+      // Continue execution even if notification creation fails
+    }
 
     return new Response(
       JSON.stringify({ success: true, data }),

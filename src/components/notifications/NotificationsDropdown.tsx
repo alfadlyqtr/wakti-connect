@@ -7,7 +7,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Bell, Check, ChevronRight } from "lucide-react";
+import { Bell, Check, ChevronRight, MessageSquare, Calendar, PhoneCall } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNotifications } from "@/hooks/useNotifications";
 import { format } from "date-fns";
@@ -33,6 +33,57 @@ const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({ className
   };
 
   const recentNotifications = notifications.slice(0, 5);
+
+  // Get icon based on notification type
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "message":
+        return <MessageSquare className="h-4 w-4 text-blue-500" />;
+      case "booking":
+        return <Calendar className="h-4 w-4 text-green-500" />;
+      case "contact_form":
+        return <PhoneCall className="h-4 w-4 text-purple-500" />;
+      case "task":
+        return <Check className="h-4 w-4 text-orange-500" />;
+      case "event":
+        return <Calendar className="h-4 w-4 text-red-500" />;
+      default:
+        return <Bell className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  // Handle notification click to navigate to related entity
+  const handleNotificationClick = (notification: any) => {
+    if (!notification.is_read) {
+      markAsRead(notification.id);
+    }
+    
+    // Navigate based on notification type and related entity
+    if (notification.related_entity_id && notification.related_entity_type) {
+      switch (notification.type) {
+        case "message":
+          navigate(`/dashboard/messages`);
+          break;
+        case "booking":
+          navigate(`/dashboard/bookings`);
+          break;
+        case "contact_form":
+          navigate(`/dashboard/business-page`);
+          break;
+        case "task":
+          navigate(`/dashboard/tasks`);
+          break;
+        case "event":
+          navigate(`/dashboard/events`);
+          break;
+        default:
+          navigate('/dashboard/notifications');
+          break;
+      }
+    } else {
+      navigate('/dashboard/notifications');
+    }
+  };
 
   return (
     <Popover>
@@ -77,32 +128,10 @@ const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({ className
                   className={`p-3 flex gap-2 items-start hover:bg-muted/50 cursor-pointer ${
                     !notification.is_read ? 'bg-muted/30' : ''
                   }`}
-                  onClick={() => {
-                    if (!notification.is_read) {
-                      markAsRead(notification.id);
-                    }
-                    
-                    // If the notification has a related entity, navigate to it
-                    if (notification.related_entity_id && notification.related_entity_type) {
-                      // Add navigation logic based on entity type
-                      switch (notification.related_entity_type) {
-                        case 'task':
-                          // navigate(`/dashboard/tasks/${notification.related_entity_id}`);
-                          break;
-                        case 'message':
-                          navigate(`/dashboard/messages/${notification.related_entity_id}`);
-                          break;
-                        default:
-                          // Default to notifications page
-                          navigate('/dashboard/notifications');
-                      }
-                    } else {
-                      navigate('/dashboard/notifications');
-                    }
-                  }}
+                  onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex-shrink-0 mt-1">
-                    <div className={`w-2 h-2 rounded-full ${!notification.is_read ? 'bg-wakti-blue' : 'bg-muted'}`} />
+                    {getNotificationIcon(notification.type)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col">
@@ -110,6 +139,9 @@ const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({ className
                       <span className="text-xs text-muted-foreground mt-1">{notification.content}</span>
                       <span className="text-xs text-muted-foreground mt-1">{formatDate(notification.created_at)}</span>
                     </div>
+                  </div>
+                  <div className="flex-shrink-0 mt-1">
+                    <div className={`w-2 h-2 rounded-full ${!notification.is_read ? 'bg-wakti-blue' : 'bg-muted'}`} />
                   </div>
                 </div>
               ))}
