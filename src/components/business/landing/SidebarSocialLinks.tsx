@@ -27,7 +27,7 @@ const SidebarSocialLinks: React.FC<SidebarSocialLinksProps> = ({
           socialLinks={socialLinks}
           style={style || "default"}
           size={size || "default"}
-          position={position}
+          position={position as SocialIconPosition}
           vertical={true}
         />
       </div>
@@ -37,7 +37,7 @@ const SidebarSocialLinks: React.FC<SidebarSocialLinksProps> = ({
           socialLinks={socialLinks}
           style={style || "default"}
           size="small"
-          position={position}
+          position={position as SocialIconPosition}
           vertical={true}
           scale={0.8}
         />

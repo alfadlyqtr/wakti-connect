@@ -1,4 +1,3 @@
-
 export interface BusinessProfile {
   id: string;
   business_name: string;
