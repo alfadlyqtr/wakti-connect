@@ -13,7 +13,7 @@ import BusinessBookingTemplatesSection from "./sections/BusinessBookingTemplates
 import BusinessInstagramSection from "./sections/BusinessInstagramSection";
 import { cn } from "@/lib/utils";
 
-interface BusinessPageSectionsProps {
+export interface BusinessPageSectionsProps {
   pageSections: BusinessPageSection[];
   businessPage: BusinessPage;
 }

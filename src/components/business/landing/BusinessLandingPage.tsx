@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
 import BusinessPageHeader from "./BusinessPageHeader";
 import BusinessPageSections from "./BusinessPageSections";
-import PoweredByWAKTI from "../../../components/common/PoweredByWAKTI";
+import PoweredByWAKTI from "@/components/common/PoweredByWAKTI";
 import BusinessPageNotFound from "./BusinessPageNotFound";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 
@@ -16,7 +16,13 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   slug,
   isPreviewMode = false,
 }) => {
-  const { businessPage, isLoading, error } = useBusinessPage(slug, isPreviewMode);
+  // Updated to match the new useBusinessPage API
+  const { 
+    businessPage, 
+    isLoading, 
+    pageSections 
+  } = useBusinessPage(slug);
+  
   const [showPoweredBy, setShowPoweredBy] = useState(true);
 
   // Hide PoweredByWAKTI after scrolling
@@ -41,8 +47,8 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     );
   }
 
-  if (error || !businessPage) {
-    return <BusinessPageNotFound slug={slug} />;
+  if (!businessPage) {
+    return <BusinessPageNotFound />;
   }
 
   // Get the business's style preferences
@@ -79,8 +85,18 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
           style={{ maxWidth: content_max_width }}
           className="mx-auto px-4 sm:px-6"
         >
-          <BusinessPageHeader businessPage={businessPage} />
-          <BusinessPageSections businessPage={businessPage} />
+          <BusinessPageHeader 
+            business={{
+              id: businessPage.business_id,
+              business_name: businessPage.page_title,
+              display_name: businessPage.page_title,
+              account_type: "business"
+            }} 
+          />
+          <BusinessPageSections 
+            pageSections={pageSections || []} 
+            businessPage={businessPage} 
+          />
         </div>
 
         {showPoweredBy && <PoweredByWAKTI />}

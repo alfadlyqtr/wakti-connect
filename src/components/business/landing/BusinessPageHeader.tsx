@@ -24,23 +24,27 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
   unsubscribe
 }) => {
   return (
-    <div className="business-page-header">
-      <h1>{business.business_name || "Business Name"}</h1>
+    <div className="business-page-header py-8">
+      <h1 className="text-3xl md:text-4xl font-bold text-center">{business.business_name || "Business Name"}</h1>
       {!isPreviewMode && isAuthenticated && !isSubscribed && !checkingSubscription && (
-        <button 
-          onClick={() => subscribe?.mutate(business.id)} 
-          className="bg-primary text-white px-4 py-2 rounded-md"
-        >
-          Subscribe
-        </button>
+        <div className="flex justify-center mt-4">
+          <button 
+            onClick={() => subscribe?.mutate(business.id)} 
+            className="bg-primary text-white px-4 py-2 rounded-md"
+          >
+            Subscribe
+          </button>
+        </div>
       )}
       {!isPreviewMode && isAuthenticated && isSubscribed && !checkingSubscription && (
-        <button 
-          onClick={() => unsubscribe?.mutate()} 
-          className="bg-red-500 text-white px-4 py-2 rounded-md"
-        >
-          Unsubscribe
-        </button>
+        <div className="flex justify-center mt-4">
+          <button 
+            onClick={() => unsubscribe?.mutate()} 
+            className="bg-red-500 text-white px-4 py-2 rounded-md"
+          >
+            Unsubscribe
+          </button>
+        </div>
       )}
     </div>
   );

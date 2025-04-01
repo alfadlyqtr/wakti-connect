@@ -3,15 +3,15 @@ import { useBusinessPageQuery, useOwnerBusinessPageQuery, usePageSectionsQuery, 
 import { useCreatePageMutation, useUpdatePageMutation, useUpdateSectionMutation, useSubmitContactFormMutation } from "./useBusinessPageMutations";
 import { useAutoSavePageSettings, usePublicPageUrl } from "./useBusinessPageUtils";
 import { useContactSubmissionsQuery, useMarkSubmissionAsReadMutation } from "./useContactSubmissionsQuery";
-import { BusinessPage } from "@/types/business.types";
+import { BusinessPage, BusinessPageSection } from "@/types/business.types";
 import { useCallback } from "react";
 
-export const useBusinessPage = (pageSlug?: string) => {
+export const useBusinessPage = (pageSlug?: string, isPreviewMode?: boolean) => {
   // Public view queries
   const { 
     data: businessPage, 
     isLoading: pageLoading 
-  } = useBusinessPageQuery(pageSlug);
+  } = useBusinessPageQuery(pageSlug, isPreviewMode);
   
   // Owner queries
   const { 

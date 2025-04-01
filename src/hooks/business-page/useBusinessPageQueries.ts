@@ -5,17 +5,22 @@ import { BusinessPage, BusinessPageSection, BusinessSocialLink } from "@/types/b
 import { fromTable } from "@/integrations/supabase/helper";
 
 // Fetch business page by slug (for public viewing)
-export const useBusinessPageQuery = (pageSlug?: string) => {
+export const useBusinessPageQuery = (pageSlug?: string, isPreviewMode?: boolean) => {
   return useQuery({
-    queryKey: ['businessPage', pageSlug],
+    queryKey: ['businessPage', pageSlug, isPreviewMode],
     queryFn: async () => {
       if (!pageSlug) return null;
       
-      const { data, error } = await fromTable('business_pages')
+      let query = fromTable('business_pages')
         .select()
-        .eq('page_slug', pageSlug)
-        .eq('is_published', true)
-        .single();
+        .eq('page_slug', pageSlug);
+      
+      // Only check for published pages when not in preview mode
+      if (!isPreviewMode) {
+        query = query.eq('is_published', true);
+      }
+      
+      const { data, error } = await query.single();
       
       if (error) {
         console.error("Error fetching business page:", error);
