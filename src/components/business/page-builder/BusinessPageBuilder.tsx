@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
 import { Loader2 } from "lucide-react";
@@ -9,6 +8,7 @@ import PageSettingsTab from "./PageSettingsTab";
 import PagePreviewTab from "./PagePreviewTab";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/components/ui/use-toast";
+import { BusinessPage } from "@/types/business.types";
 
 const BusinessPageBuilder = () => {
   const { 
@@ -24,8 +24,17 @@ const BusinessPageBuilder = () => {
   
   const isMobile = useIsMobile();
   
-  // Create state for editable page data
-  const [pageData, setPageData] = useState({
+  type PageDataState = Pick<BusinessPage, 
+    'page_title' | 'page_slug' | 'description' | 'is_published' | 
+    'chatbot_enabled' | 'chatbot_code' | 'primary_color' | 'secondary_color' | 
+    'logo_url' | 'text_color' | 'font_family' | 'border_radius' | 'page_pattern' |
+    'background_color' | 'subscribe_button_position' | 'subscribe_button_style' | 
+    'subscribe_button_size' | 'social_icons_style' | 'social_icons_size' | 
+    'social_icons_position' | 'content_max_width' | 'section_spacing' |
+    'show_subscribe_button' | 'subscribe_button_text'
+  >;
+  
+  const [pageData, setPageData] = useState<PageDataState>({
     page_title: "",
     page_slug: "",
     description: "",
@@ -34,10 +43,24 @@ const BusinessPageBuilder = () => {
     chatbot_code: "",
     primary_color: "#3B82F6",
     secondary_color: "#10B981",
-    logo_url: ""
+    logo_url: "",
+    text_color: "",
+    font_family: "",
+    border_radius: "",
+    page_pattern: "",
+    background_color: "",
+    subscribe_button_position: "both",
+    subscribe_button_style: "default",
+    subscribe_button_size: "default",
+    social_icons_style: "default",
+    social_icons_size: "default",
+    social_icons_position: "footer",
+    content_max_width: "1200px",
+    section_spacing: "default",
+    show_subscribe_button: true,
+    subscribe_button_text: "Subscribe"
   });
   
-  // Update local state from fetched data
   useEffect(() => {
     if (ownerBusinessPage) {
       console.log("Updating page data from owner business page:", ownerBusinessPage);
@@ -52,7 +75,6 @@ const BusinessPageBuilder = () => {
         primary_color: ownerBusinessPage.primary_color || "#3B82F6",
         secondary_color: ownerBusinessPage.secondary_color || "#10B981",
         logo_url: ownerBusinessPage.logo_url || "",
-        // Add any additional fields that need to be handled
         text_color: ownerBusinessPage.text_color || "",
         font_family: ownerBusinessPage.font_family || "",
         border_radius: ownerBusinessPage.border_radius || "",
@@ -66,7 +88,7 @@ const BusinessPageBuilder = () => {
         social_icons_position: ownerBusinessPage.social_icons_position || "footer",
         content_max_width: ownerBusinessPage.content_max_width || "1200px",
         section_spacing: ownerBusinessPage.section_spacing || "default",
-        show_subscribe_button: ownerBusinessPage.show_subscribe_button !== false, // Default to true
+        show_subscribe_button: ownerBusinessPage.show_subscribe_button !== false,
         subscribe_button_text: ownerBusinessPage.subscribe_button_text || "Subscribe"
       });
     }
@@ -83,7 +105,6 @@ const BusinessPageBuilder = () => {
   
   const handleSavePageSettings = () => {
     if (ownerBusinessPage) {
-      // Log what we're saving
       console.log("Saving page settings:", pageData);
       
       updatePage.mutate({ 
@@ -125,7 +146,6 @@ const BusinessPageBuilder = () => {
     }
   };
 
-  // Create a function that handles input changes and auto-saves
   const handleInputChangeWithAutoSave = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
@@ -133,7 +153,6 @@ const BusinessPageBuilder = () => {
     
     setPageData(prev => ({ ...prev, [name]: value }));
     
-    // Wrap in try-catch to prevent any errors from breaking functionality
     try {
       autoSaveField(name, value);
     } catch (error) {
@@ -141,13 +160,11 @@ const BusinessPageBuilder = () => {
     }
   };
 
-  // Create a function that handles toggle changes and auto-saves
   const handleToggleWithAutoSave = (name: string, checked: boolean) => {
     console.log(`Handling toggle change with auto-save for ${name}:`, checked);
     
     setPageData(prev => ({ ...prev, [name]: checked }));
     
-    // Wrap in try-catch to prevent any errors from breaking functionality
     try {
       autoSaveField(name, checked);
     } catch (error) {
@@ -185,7 +202,6 @@ const BusinessPageBuilder = () => {
           <TabsTrigger value="preview">Preview</TabsTrigger>
         </TabsList>
         
-        {/* Page Sections Tab */}
         <TabsContent value="sections">
           <PageSectionsTab 
             pageSections={pageSections} 
@@ -194,7 +210,6 @@ const BusinessPageBuilder = () => {
           />
         </TabsContent>
         
-        {/* Page Settings Tab */}
         <TabsContent value="settings">
           <PageSettingsTab
             pageData={pageData}
@@ -206,7 +221,6 @@ const BusinessPageBuilder = () => {
           />
         </TabsContent>
         
-        {/* Preview Tab */}
         <TabsContent value="preview">
           <PagePreviewTab getPublicPageUrl={getPublicPageUrl} />
         </TabsContent>

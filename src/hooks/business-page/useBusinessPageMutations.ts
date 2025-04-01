@@ -1,16 +1,21 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { submitContactForm } from "@/services/contact";
+import { BusinessPage } from "@/types/business.types";
 
 // Create a new page
 export const useCreatePageMutation = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: Partial<BusinessPage>) => {
       console.log("Creating new business page with data:", data);
+      
+      // Validate that business_id is present
+      if (!data.business_id) {
+        throw new Error("business_id is required when creating a page");
+      }
       
       // Clean data to ensure valid JSON
       const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
@@ -57,11 +62,11 @@ export const useUpdatePageMutation = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ pageId, data }: { pageId: string; data: any }) => {
+    mutationFn: async ({ pageId, data }: { pageId: string; data: Partial<BusinessPage> }) => {
       console.log("Updating business page with ID:", pageId);
       console.log("Update data:", data);
       
-      // Clean data to ensure valid JSON
+      // Clean data to ensure valid JSON and remove any null/undefined values
       const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
         if (value !== null && value !== undefined) {
           acc[key] = value;
@@ -74,6 +79,7 @@ export const useUpdatePageMutation = () => {
         throw new Error("No valid data to update");
       }
       
+      // For update operations, business_id is not required as it's already set for existing records
       const { data: response, error } = await supabase
         .from('business_pages')
         .update(cleanData)
