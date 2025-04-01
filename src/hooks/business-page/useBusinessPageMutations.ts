@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +18,7 @@ export const useCreatePageMutation = () => {
         throw new Error("business_id is required when creating a page");
       }
       
-      // Clean data to ensure valid JSON
+      // Clean data to ensure valid JSON and required fields
       const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
         if (value !== null && value !== undefined) {
           acc[key] = value;
@@ -25,9 +26,17 @@ export const useCreatePageMutation = () => {
         return acc;
       }, {} as Record<string, any>);
       
+      // Ensure business_id is set
+      if (!cleanData.business_id) {
+        throw new Error("business_id is required");
+      }
+      
       const { data: response, error } = await supabase
         .from('business_pages')
-        .insert(cleanData)
+        .insert({
+          ...cleanData,
+          business_id: cleanData.business_id
+        })
         .select()
         .single();
         

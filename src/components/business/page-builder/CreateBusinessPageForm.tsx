@@ -24,7 +24,7 @@ const CreateBusinessPageForm: React.FC<CreateBusinessPageFormProps> = ({
   createPage,
   handleSavePageSettings
 }) => {
-  const { session } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [isCreating, setIsCreating] = useState(false);
   
@@ -45,7 +45,7 @@ const CreateBusinessPageForm: React.FC<CreateBusinessPageFormProps> = ({
     // Generate a slug if none exists
     const dataToSave = {
       ...pageData,
-      business_id: session?.user.id,
+      business_id: user?.id,
       page_slug: pageData.page_slug || generateSlug(pageData.page_title)
     };
     
