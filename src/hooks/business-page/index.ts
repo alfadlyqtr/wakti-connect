@@ -1,92 +1,216 @@
 
-import { useBusinessPageQuery, useOwnerBusinessPageQuery, usePageSectionsQuery, useSocialLinksQuery } from "./useBusinessPageQueries";
-import { useCreatePageMutation, useUpdatePageMutation, useUpdateSectionMutation, useSubmitContactFormMutation } from "./useBusinessPageMutations";
-import { useAutoSavePageSettings, usePublicPageUrl } from "./useBusinessPageUtils";
-import { useContactSubmissionsQuery, useMarkSubmissionAsReadMutation } from "./useContactSubmissionsQuery";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from 'react';
+import { toast } from "@/components/ui/use-toast";
+import { useBusinessPageUtils } from "./useBusinessPageUtils";
+import { useBusinessPageQueries } from "./useBusinessPageQueries";
+import { useBusinessPageMutations } from "./useBusinessPageMutations";
 import { BusinessPage, BusinessPageSection } from "@/types/business.types";
 
-export const useBusinessPage = (pageSlug?: string, isPreviewMode?: boolean) => {
-  // Public view queries
-  const { 
-    data: businessPage, 
-    isLoading: pageLoading 
-  } = useBusinessPageQuery(pageSlug, isPreviewMode);
+export const useBusinessPage = (slug?: string) => {
+  const [socialLinks, setSocialLinks] = useState([]);
+  const queryClient = useQueryClient();
+  const { getPublicPageUrl } = useBusinessPageUtils();
   
-  // Owner queries
-  const { 
-    data: ownerBusinessPage, 
-    isLoading: ownerPageLoading 
-  } = useOwnerBusinessPageQuery();
-  
-  // Shared queries
-  const { 
-    data: pageSections, 
-    isLoading: sectionsLoading 
-  } = usePageSectionsQuery(businessPage?.id || ownerBusinessPage?.id);
-  
-  const { 
-    data: socialLinks, 
-    isLoading: linksLoading 
-  } = useSocialLinksQuery(businessPage?.business_id || ownerBusinessPage?.business_id);
-  
-  // Contact submissions 
+  // Queries
   const {
-    data: contactSubmissions,
-    isLoading: submissionsLoading,
-    refetch: refetchSubmissions
-  } = useContactSubmissionsQuery(businessPage?.business_id || ownerBusinessPage?.business_id);
+    data: businessPage,
+    isLoading: isBusinessPageLoading,
+    error: businessPageError,
+  } = useQuery({
+    queryKey: ['businessPage', slug],
+    queryFn: async () => {
+      if (!slug) return null;
+      
+      const { data, error } = await supabase
+        .from('business_pages')
+        .select('*')
+        .eq('page_slug', slug)
+        .single();
+        
+      if (error) {
+        console.error("Error fetching business page:", error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!slug,
+  });
   
-  const markSubmissionAsRead = useMarkSubmissionAsReadMutation();
+  const {
+    data: pageSections,
+    isLoading: isSectionsLoading,
+  } = useQuery({
+    queryKey: ['businessPageSections', businessPage?.id],
+    queryFn: async () => {
+      if (!businessPage?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('business_page_sections')
+        .select('*')
+        .eq('page_id', businessPage.id)
+        .order('section_order', { ascending: true });
+        
+      if (error) {
+        console.error("Error fetching page sections:", error);
+        return [];
+      }
+      
+      return data || [];
+    },
+    enabled: !!businessPage?.id,
+  });
+  
+  // Fetch owner's business page (for dashboard)
+  const {
+    data: ownerBusinessPage,
+    isLoading: isOwnerLoading,
+  } = useQuery({
+    queryKey: ['ownerBusinessPage'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        return null;
+      }
+      
+      const { data, error } = await supabase
+        .from('business_pages')
+        .select('*')
+        .eq('business_id', session.user.id)
+        .maybeSingle();
+        
+      if (error) {
+        console.error("Error fetching owner's business page:", error);
+        return null;
+      }
+      
+      return data;
+    },
+  });
   
   // Mutations
-  const createPage = useCreatePageMutation();
-  const updatePage = useUpdatePageMutation();
-  const updateSection = useUpdateSectionMutation();
-  const submitContactForm = useSubmitContactFormMutation();
-  
-  // Utilities
-  const { autoSavePage, autoSaveField } = useAutoSavePageSettings(
-    updatePage, 
-    ownerBusinessPage?.id
-  );
-  
-  const getPublicPageUrl = usePublicPageUrl(
-    ownerBusinessPage?.page_slug || businessPage?.page_slug
-  );
-  
-  return {
-    // Public view data
-    businessPage,
-    pageLoading,
-    
-    // Owner data
-    ownerBusinessPage,
-    ownerPageLoading,
-    
-    // Shared data
-    pageSections,
-    sectionsLoading,
-    socialLinks,
-    linksLoading,
-    
-    // Contact submissions
-    contactSubmissions,
-    submissionsLoading,
-    refetchSubmissions,
-    markSubmissionAsRead,
-    
-    // Mutations
+  const {
     createPage,
     updatePage,
+    createSection,
     updateSection,
-    submitContactForm,
+    deleteSection,
+    reorderSection,
+  } = useBusinessPageMutations(queryClient);
+  
+  // Fetch social links
+  useEffect(() => {
+    const fetchSocialLinks = async (businessId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('business_social_links')
+          .select('*')
+          .eq('business_id', businessId);
+          
+        if (error) {
+          console.error("Error fetching social links:", error);
+          return;
+        }
+        
+        console.log("Fetched social links:", data);
+        setSocialLinks(data || []);
+      } catch (error) {
+        console.error("Error in fetchSocialLinks:", error);
+      }
+    };
     
-    // Helper functions
-    autoSavePage,
-    autoSaveField,
+    if (businessPage?.business_id) {
+      fetchSocialLinks(businessPage.business_id);
+    }
+  }, [businessPage?.business_id]);
+  
+  // Auto-save function for updating a single field
+  const autoSaveField = async (name: string, value: any) => {
+    if (!ownerBusinessPage?.id) {
+      console.error("Cannot auto-save: No business page found");
+      return;
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('business_pages')
+        .update({ [name]: value })
+        .eq('id', ownerBusinessPage.id);
+        
+      if (error) {
+        console.error(`Error auto-saving field ${name}:`, error);
+        return;
+      }
+      
+      // Invalidate cached page data
+      queryClient.invalidateQueries({ queryKey: ['ownerBusinessPage'] });
+      
+      // Only show toast for certain fields
+      const importantFields = ['page_title', 'page_slug', 'description', 'is_published'];
+      if (importantFields.includes(name)) {
+        toast({
+          title: "Saved",
+          description: `${name.replace('_', ' ')} has been updated.`,
+        });
+      }
+    } catch (error) {
+      console.error(`Error in autoSaveField for ${name}:`, error);
+    }
+  };
+  
+  // Auto-save function for updating multiple fields
+  const autoSavePage = async (data: Partial<BusinessPage>) => {
+    if (!ownerBusinessPage?.id) {
+      console.error("Cannot auto-save page: No business page found");
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('business_pages')
+        .update(data)
+        .eq('id', ownerBusinessPage.id);
+        
+      if (error) {
+        console.error("Error auto-saving page:", error);
+        toast({
+          variant: "destructive",
+          title: "Save failed",
+          description: "Failed to save changes. Please try again.",
+        });
+        return;
+      }
+      
+      // Invalidate cached page data
+      queryClient.invalidateQueries({ queryKey: ['ownerBusinessPage'] });
+      
+      toast({
+        title: "Changes saved",
+        description: "Your page has been updated.",
+      });
+    } catch (error) {
+      console.error("Error in autoSavePage:", error);
+    }
+  };
+  
+  return {
+    businessPage,
+    ownerBusinessPage,
+    pageSections,
+    socialLinks,
+    isLoading: isBusinessPageLoading || isSectionsLoading,
+    isOwnerLoading,
+    createPage,
+    updatePage,
+    createSection,
+    updateSection,
+    deleteSection,
+    reorderSection,
     getPublicPageUrl,
-    
-    // Loading state
-    isLoading: pageLoading || ownerPageLoading || sectionsLoading || linksLoading || submissionsLoading
+    autoSaveField,
+    autoSavePage,
   };
 };

@@ -35,19 +35,31 @@ const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
             src={businessPage.logo_url} 
             alt={businessPage.page_title || "Business"} 
             className="h-24 w-24 rounded-full object-cover border-2 border-primary/20 mb-4"
+            onError={(e) => {
+              console.error("Error loading logo image:", e);
+              const imgElement = e.target as HTMLImageElement;
+              imgElement.style.display = 'none';
+            }}
           />
         </div>
       )}
       
-      <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{title}</h1>
-      <p className="text-lg md:text-xl text-muted-foreground mb-4">{subtitle}</p>
+      <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4" style={{ color: section.text_color }}>{title}</h1>
+      <p className="text-lg md:text-xl text-muted-foreground mb-4" style={{ color: section.text_color ? `${section.text_color}99` : undefined }}>{subtitle}</p>
       
       {description && (
-        <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">{description}</p>
+        <p className="text-muted-foreground mb-8 max-w-2xl mx-auto" style={{ color: section.text_color ? `${section.text_color}99` : undefined }}>{description}</p>
       )}
       
       {showButton && (
-        <Button size="lg" onClick={handleBookNow}>
+        <Button 
+          size="lg" 
+          onClick={handleBookNow}
+          style={{
+            backgroundColor: businessPage.primary_color,
+            color: '#ffffff'
+          }}
+        >
           {buttonText}
         </Button>
       )}
