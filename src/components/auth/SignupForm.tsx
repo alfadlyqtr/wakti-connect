@@ -53,7 +53,11 @@ const SignupForm = ({ setError }: SignupFormProps) => {
       console.log("Registering with account type:", accountType);
       
       // Call the register function with all parameters
-      await register(email, password, fullName, accountType, businessName);
+      const result = await register(email, password, fullName, accountType, businessName);
+      
+      if (result.error) {
+        throw result.error;
+      }
 
       toast({
         title: "Account created!",

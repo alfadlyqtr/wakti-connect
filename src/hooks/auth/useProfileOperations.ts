@@ -14,7 +14,7 @@ export function useProfileOperations() {
         name: userEmail?.split('@')[0] || "",
         displayName: "",
         plan: "free"
-      };
+      } as User;
     }
     
     return {
@@ -23,7 +23,7 @@ export function useProfileOperations() {
       name: profile?.full_name || userEmail?.split('@')[0] || "",
       displayName: profile?.display_name || profile?.full_name || "",
       plan: profile?.account_type || "free"
-    };
+    } as User;
   };
 
   // Create a basic user when profile fetch fails or is pending
@@ -34,7 +34,7 @@ export function useProfileOperations() {
       name: userEmail?.split('@')[0] || "",
       displayName: userEmail?.split('@')[0] || "",
       plan: "free"
-    };
+    } as User;
   };
 
   // Handle profile creation with simplified approach

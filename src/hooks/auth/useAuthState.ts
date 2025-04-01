@@ -35,13 +35,14 @@ export function useAuthState() {
                   }
                 }
                 
-                setUser({
-                  id: session.user.id,
-                  email: session.user.email,
+                const userData: User = {
+                  ...session.user,
                   name: profile?.full_name || session.user.email?.split('@')[0],
                   displayName: profile?.display_name || profile?.full_name,
                   plan: profile?.account_type || "free"
-                });
+                };
+                
+                setUser(userData);
               } catch (error) {
                 console.error("Error processing sign in:", error);
               }
@@ -76,13 +77,14 @@ export function useAuthState() {
               }
             }
             
-            setUser({
-              id: session.user.id,
-              email: session.user.email,
+            const userData: User = {
+              ...session.user,
               name: profile?.full_name || session.user.email?.split('@')[0],
               displayName: profile?.display_name || profile?.full_name,
               plan: profile?.account_type || "free"
-            });
+            };
+            
+            setUser(userData);
           } catch (error) {
             console.error("Error processing existing session:", error);
           }

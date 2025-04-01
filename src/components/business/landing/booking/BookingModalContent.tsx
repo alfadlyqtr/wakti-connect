@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { BookingTemplate, BookingTemplateAvailability } from "@/types/booking.types";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
@@ -69,7 +70,7 @@ const BookingModalContent: React.FC<BookingModalContentProps> = ({ businessId, t
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      form.setValue("customerName", user.name || "");
+      form.setValue("customerName", user.name || user.email?.split('@')[0] || "");
       form.setValue("customerEmail", user.email || "");
     }
   }, [isAuthenticated, user, form]);

@@ -11,9 +11,9 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
   isLoading: true,
-  login: async () => { throw new Error("Auth context not initialized"); },
+  login: async () => { return { error: new Error("Auth context not initialized") }; },
   logout: async () => { throw new Error("Auth context not initialized"); },
-  register: async () => { throw new Error("Auth context not initialized"); },
+  register: async () => { return { error: new Error("Auth context not initialized") }; },
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

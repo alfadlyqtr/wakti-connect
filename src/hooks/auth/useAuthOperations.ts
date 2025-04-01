@@ -10,12 +10,12 @@ export function useAuthOperations(
     try {
       setIsLoading(true);
       const result = await loginOperation(email, password, setIsLoading, setUser);
-      return result; // Return the result for components that need it
-    } catch (error) {
+      return { error: null, ...result };
+    } catch (error: any) {
       // Ensure we're no longer in loading state if there's an error
       setIsLoading(false);
-      // Rethrow the error so it can be caught by callers
-      throw error;
+      // Return the error in the expected format
+      return { error };
     }
   };
 
@@ -33,17 +33,18 @@ export function useAuthOperations(
   const register = async (
     email: string, 
     password: string, 
-    name: string, 
+    name?: string, 
     accountType: string = 'free', 
     businessName?: string
   ) => {
     try {
       setIsLoading(true);
-      await registerOperation(email, password, name, accountType, businessName, setIsLoading, setUser);
-    } catch (error) {
+      const result = await registerOperation(email, password, name || "", accountType, businessName, setIsLoading, setUser);
+      return { error: null, data: result };
+    } catch (error: any) {
       // Ensure we're no longer in loading state if there's an error
       setIsLoading(false);
-      throw error;
+      return { error };
     }
   };
 
