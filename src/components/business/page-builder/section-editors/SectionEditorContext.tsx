@@ -108,7 +108,7 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
     setIsDirty(true);
   };
 
-  // Apply template content - FIXED to properly apply styling to both content and section level
+  // Apply template content - FIXED to properly apply all styles
   const applyTemplateContent = (templateContent: Record<string, any>) => {
     console.log('Applying template content:', templateContent);
     
@@ -123,19 +123,16 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
     
     // Extract section level styling properties
     const sectionLevelStyles: Record<string, any> = {};
-    const contentLevelStyles: Record<string, any> = {};
     
-    // Separate section level properties from content level properties
+    // Separate section level properties
     Object.keys(templateContent).forEach(key => {
       if (sectionLevelStyleProperties.includes(key)) {
         sectionLevelStyles[key] = templateContent[key];
-      } else {
-        contentLevelStyles[key] = templateContent[key];
       }
     });
     
     // Update content data with all template content
-    setContentData({...templateContent});
+    setContentData({...contentData, ...templateContent});
     setIsDirty(true);
     
     console.log('Section level styles to apply:', sectionLevelStyles);
@@ -153,6 +150,11 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
         });
       }).catch(error => {
         console.error('Error applying section styles:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to apply section styling",
+        });
       });
     }
   };

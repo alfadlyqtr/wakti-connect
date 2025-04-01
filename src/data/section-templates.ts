@@ -6,36 +6,55 @@ interface SectionTemplate {
   name: string;
   description: string;
   category: string;
-  previewUrl: string;
-  content: any;
+  content: Record<string, any>;
+  previewUrl?: string;
 }
 
-// Define templates for each section type
+// Default templates by section type
 const headerTemplates: SectionTemplate[] = [
   {
-    id: 'header-standard',
-    name: 'Standard Header',
-    description: 'A clean, professional header with logo and title',
-    category: 'Professional',
-    previewUrl: '/placeholder.svg',
+    id: 'header-default',
+    name: 'Default Header',
+    description: 'A clean, modern header with title and subtitle',
+    category: 'Simple',
     content: {
-      title: 'Business Name',
-      subtitle: 'Professional services',
-      alignment: 'center',
-      logo_size: 'medium'
+      title: 'Welcome to Our Business',
+      subtitle: 'Quality Services You Can Trust',
+      description: 'Book our professional services today and experience the difference.',
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'lg'
     }
   },
   {
-    id: 'header-modern',
-    name: 'Modern Header',
-    description: 'A modern header with accent colors',
-    category: 'Modern',
-    previewUrl: '/placeholder.svg',
+    id: 'header-centered',
+    name: 'Centered Header',
+    description: 'A centered header with larger text',
+    category: 'Simple',
     content: {
-      title: 'Business Name',
-      subtitle: 'Modern approach to business',
-      alignment: 'left',
-      logo_size: 'large'
+      title: 'Your Business Name',
+      subtitle: 'Your Tagline Here',
+      description: 'A brief description of your services',
+      text_alignment: 'center',
+      background_color: '#f3f4f6',
+      text_color: '#111827',
+      padding: 'xl'
+    }
+  },
+  {
+    id: 'header-gradient',
+    name: 'Gradient Background',
+    description: 'Header with a colorful gradient background',
+    category: 'Stylish',
+    content: {
+      title: 'Modern Solutions',
+      subtitle: 'For Your Business Needs',
+      description: 'We provide innovative solutions for your business requirements',
+      text_alignment: 'center',
+      background_color: '#4f46e5',
+      gradient: 'linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)',
+      text_color: '#ffffff',
+      padding: 'xl'
     }
   }
 ];
@@ -44,26 +63,29 @@ const aboutTemplates: SectionTemplate[] = [
   {
     id: 'about-simple',
     name: 'Simple About',
-    description: 'A brief, clean about section',
-    category: 'Essential',
-    previewUrl: '/placeholder.svg',
+    description: 'A clean, straightforward about section',
+    category: 'Simple',
     content: {
       title: 'About Us',
-      description: 'We are a dedicated team committed to providing the best service to our clients.',
-      layout: 'text-only'
+      description: 'We are a dedicated team of professionals committed to providing excellence in our services.',
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'md'
     }
   },
   {
     id: 'about-with-image',
     name: 'About with Image',
-    description: 'About section with an image',
-    category: 'Enhanced',
-    previewUrl: '/placeholder.svg',
+    description: 'About section with image and text side by side',
+    category: 'With Image',
     content: {
-      title: 'About Our Business',
-      description: 'Learn more about who we are and our mission to serve you better.',
-      image_url: '/placeholder.svg',
-      layout: 'image-left'
+      title: 'Our Story',
+      description: 'Learn about our journey and what makes us different from others in the industry.',
+      image_url: 'https://placehold.co/600x400',
+      image_position: 'left',
+      background_color: '#f9fafb',
+      text_color: '#111827',
+      padding: 'lg'
     }
   }
 ];
@@ -71,31 +93,38 @@ const aboutTemplates: SectionTemplate[] = [
 const contactTemplates: SectionTemplate[] = [
   {
     id: 'contact-basic',
-    name: 'Basic Contact',
+    name: 'Basic Contact Form',
     description: 'Simple contact form with essential fields',
-    category: 'Essential',
-    previewUrl: '/placeholder.svg',
+    category: 'Forms',
     content: {
       title: 'Contact Us',
-      subtitle: 'Get in touch with our team',
+      show_name: true,
       show_email: true,
       show_phone: true,
-      form_fields: ['name', 'email', 'message']
+      show_message: true,
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'md'
     }
   },
   {
-    id: 'contact-detailed',
-    name: 'Detailed Contact',
-    description: 'Comprehensive contact form with additional fields',
-    category: 'Enhanced',
-    previewUrl: '/placeholder.svg',
+    id: 'contact-with-info',
+    name: 'Contact with Info',
+    description: 'Contact form with business information',
+    category: 'Forms',
     content: {
-      title: 'Contact Our Team',
-      subtitle: 'We\'d love to hear from you',
+      title: 'Get In Touch',
+      subtitle: 'Have questions? Reach out to us directly.',
+      show_name: true,
       show_email: true,
       show_phone: true,
-      show_address: true,
-      form_fields: ['name', 'email', 'phone', 'subject', 'message']
+      show_message: true,
+      business_phone: '+1 (555) 123-4567',
+      business_email: 'contact@example.com',
+      business_address: '123 Business St, City',
+      background_color: '#f8fafc',
+      text_color: '#0f172a',
+      padding: 'lg'
     }
   }
 ];
@@ -104,77 +133,73 @@ const galleryTemplates: SectionTemplate[] = [
   {
     id: 'gallery-grid',
     name: 'Grid Gallery',
-    description: 'Display images in a clean grid layout',
-    category: 'Basic',
-    previewUrl: '/placeholder.svg',
+    description: 'A responsive grid of images',
+    category: 'Galleries',
     content: {
       title: 'Our Gallery',
       layout: 'grid',
-      columns: 3,
-      items: [
-        { image_url: '/placeholder.svg', caption: 'Image 1' },
-        { image_url: '/placeholder.svg', caption: 'Image 2' },
-        { image_url: '/placeholder.svg', caption: 'Image 3' }
-      ]
+      images_per_row: 3,
+      gap: 'md',
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'md'
     }
   },
   {
     id: 'gallery-masonry',
     name: 'Masonry Gallery',
-    description: 'Dynamic masonry layout for varied image sizes',
-    category: 'Advanced',
-    previewUrl: '/placeholder.svg',
+    description: 'An elegant masonry layout for your images',
+    category: 'Galleries',
     content: {
-      title: 'Photo Gallery',
+      title: 'Image Gallery',
       layout: 'masonry',
-      items: [
-        { image_url: '/placeholder.svg', caption: 'Image 1', size: 'medium' },
-        { image_url: '/placeholder.svg', caption: 'Image 2', size: 'large' },
-        { image_url: '/placeholder.svg', caption: 'Image 3', size: 'small' }
-      ]
+      images_per_row: 4,
+      gap: 'sm',
+      background_color: '#f8fafc',
+      text_color: '#1f2937',
+      padding: 'lg'
     }
   }
 ];
 
 const hoursTemplates: SectionTemplate[] = [
   {
-    id: 'hours-standard',
-    name: 'Standard Hours',
-    description: 'Clear display of business hours',
-    category: 'Basic',
-    previewUrl: '/placeholder.svg',
+    id: 'hours-simple',
+    name: 'Simple Hours',
+    description: 'Clean display of business hours',
+    category: 'Business Info',
     content: {
       title: 'Business Hours',
-      days: [
-        { day: 'Monday', open: '9:00 AM', close: '5:00 PM' },
-        { day: 'Tuesday', open: '9:00 AM', close: '5:00 PM' },
-        { day: 'Wednesday', open: '9:00 AM', close: '5:00 PM' },
-        { day: 'Thursday', open: '9:00 AM', close: '5:00 PM' },
-        { day: 'Friday', open: '9:00 AM', close: '5:00 PM' },
-        { day: 'Saturday', open: 'Closed', close: 'Closed' },
-        { day: 'Sunday', open: 'Closed', close: 'Closed' }
-      ]
+      monday: '9:00 AM - 5:00 PM',
+      tuesday: '9:00 AM - 5:00 PM',
+      wednesday: '9:00 AM - 5:00 PM',
+      thursday: '9:00 AM - 5:00 PM',
+      friday: '9:00 AM - 5:00 PM',
+      saturday: '10:00 AM - 2:00 PM',
+      sunday: 'Closed',
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'md'
     }
   },
   {
-    id: 'hours-with-notes',
-    name: 'Hours with Notes',
-    description: 'Business hours with additional notes or special hours',
-    category: 'Enhanced',
-    previewUrl: '/placeholder.svg',
+    id: 'hours-with-note',
+    name: 'Hours with Note',
+    description: 'Business hours with additional information',
+    category: 'Business Info',
     content: {
       title: 'When We\'re Open',
-      show_notes: true,
-      notes: 'Closed on public holidays',
-      days: [
-        { day: 'Monday', open: '9:00 AM', close: '5:00 PM' },
-        { day: 'Tuesday', open: '9:00 AM', close: '5:00 PM' },
-        { day: 'Wednesday', open: '9:00 AM', close: '5:00 PM' },
-        { day: 'Thursday', open: '9:00 AM', close: '5:00 PM' },
-        { day: 'Friday', open: '9:00 AM', close: '5:00 PM' },
-        { day: 'Saturday', open: '10:00 AM', close: '2:00 PM' },
-        { day: 'Sunday', open: 'Closed', close: 'Closed' }
-      ]
+      monday: '9:00 AM - 5:00 PM',
+      tuesday: '9:00 AM - 5:00 PM',
+      wednesday: '9:00 AM - 5:00 PM',
+      thursday: '9:00 AM - 5:00 PM',
+      friday: '9:00 AM - 5:00 PM',
+      saturday: '10:00 AM - 2:00 PM',
+      sunday: 'Closed',
+      note: 'Hours may vary on holidays. Please call ahead for special hours.',
+      background_color: '#f8fafc',
+      text_color: '#1f2937',
+      padding: 'lg'
     }
   }
 ];
@@ -183,54 +208,31 @@ const testimonialsTemplates: SectionTemplate[] = [
   {
     id: 'testimonials-simple',
     name: 'Simple Testimonials',
-    description: 'Clean testimonials display',
-    category: 'Basic',
-    previewUrl: '/placeholder.svg',
+    description: 'Clean, card-based testimonials',
+    category: 'Social Proof',
     content: {
       title: 'What Our Clients Say',
-      layout: 'list',
-      items: [
-        { 
-          name: 'John Doe', 
-          role: 'Client', 
-          text: 'Excellent service, highly recommended!',
-          rating: 5
-        },
-        { 
-          name: 'Jane Smith', 
-          role: 'Customer', 
-          text: 'Very professional and efficient.',
-          rating: 4
-        }
-      ]
+      layout: 'grid',
+      testimonials_per_row: 3,
+      show_avatar: true,
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'md'
     }
   },
   {
-    id: 'testimonials-cards',
-    name: 'Testimonial Cards',
-    description: 'Testimonials displayed as cards with images',
-    category: 'Enhanced',
-    previewUrl: '/placeholder.svg',
+    id: 'testimonials-carousel',
+    name: 'Testimonials Carousel',
+    description: 'Sliding carousel of testimonials',
+    category: 'Social Proof',
     content: {
-      title: 'Client Testimonials',
-      layout: 'cards',
-      show_images: true,
-      items: [
-        { 
-          name: 'John Doe', 
-          role: 'Client', 
-          text: 'Working with this team was a pleasure from start to finish.',
-          image_url: '/placeholder.svg',
-          rating: 5
-        },
-        { 
-          name: 'Jane Smith', 
-          role: 'Customer', 
-          text: 'Exceeded my expectations in every way.',
-          image_url: '/placeholder.svg',
-          rating: 5
-        }
-      ]
+      title: 'Customer Reviews',
+      layout: 'carousel',
+      show_avatar: true,
+      show_rating: true,
+      background_color: '#f3f4f6',
+      text_color: '#111827',
+      padding: 'lg'
     }
   }
 ];
@@ -239,28 +241,30 @@ const bookingTemplates: SectionTemplate[] = [
   {
     id: 'booking-simple',
     name: 'Simple Booking',
-    description: 'Basic booking section',
-    category: 'Basic',
-    previewUrl: '/placeholder.svg',
+    description: 'Clean, minimalist booking section',
+    category: 'Booking',
     content: {
-      title: 'Book Now',
-      subtitle: 'Schedule your appointment',
+      title: 'Book an Appointment',
+      subtitle: 'Schedule your visit today',
       show_calendar: true,
-      button_text: 'Check Availability'
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'md'
     }
   },
   {
-    id: 'booking-detailed',
-    name: 'Detailed Booking',
-    description: 'Comprehensive booking section with service selection',
-    category: 'Advanced',
-    previewUrl: '/placeholder.svg',
+    id: 'booking-with-services',
+    name: 'Booking with Services',
+    description: 'Booking section with services selection',
+    category: 'Booking',
     content: {
-      title: 'Book Your Appointment',
-      subtitle: 'Choose a service and time that works for you',
+      title: 'Reserve Your Spot',
+      subtitle: 'Choose from our popular services',
       show_calendar: true,
       show_services: true,
-      button_text: 'Book Now'
+      background_color: '#f9fafb',
+      text_color: '#111827',
+      padding: 'lg'
     }
   }
 ];
@@ -269,33 +273,36 @@ const instagramTemplates: SectionTemplate[] = [
   {
     id: 'instagram-feed',
     name: 'Instagram Feed',
-    description: 'Display your Instagram feed',
-    category: 'Social',
-    previewUrl: '/placeholder.svg',
+    description: 'Display your latest Instagram posts',
+    category: 'Social Media',
     content: {
       title: 'Follow Us on Instagram',
-      username: '@yourbusiness',
-      post_count: 6,
-      layout: 'grid'
+      posts_count: 6,
+      show_caption: true,
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'md'
     }
   },
   {
     id: 'instagram-carousel',
     name: 'Instagram Carousel',
-    description: 'Carousel of Instagram posts',
-    category: 'Social',
-    previewUrl: '/placeholder.svg',
+    description: 'Sliding carousel of Instagram posts',
+    category: 'Social Media',
     content: {
-      title: 'Instagram Highlights',
-      username: '@yourbusiness',
-      post_count: 8,
-      layout: 'carousel'
+      title: 'Latest from Our Instagram',
+      layout: 'carousel',
+      posts_count: 8,
+      show_caption: false,
+      background_color: '#f3f4f6',
+      text_color: '#111827',
+      padding: 'lg'
     }
   }
 ];
 
-// Map section types to their templates
-const templateMap: Record<SectionType, SectionTemplate[]> = {
+// Map all templates by section type
+const allTemplates: Record<SectionType, SectionTemplate[]> = {
   header: headerTemplates,
   about: aboutTemplates,
   contact: contactTemplates,
@@ -306,11 +313,7 @@ const templateMap: Record<SectionType, SectionTemplate[]> = {
   instagram: instagramTemplates
 };
 
-// Function to get templates for a specific section type
+// Get templates by section type
 export const getTemplates = (sectionType: SectionType): SectionTemplate[] => {
-  return templateMap[sectionType] || [];
-};
-
-export default {
-  getTemplates
+  return allTemplates[sectionType] || [];
 };

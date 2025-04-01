@@ -19,7 +19,7 @@ interface SocialIconProps {
   scale?: number;
 }
 
-// Custom WhatsApp icon component - fixed to properly display WhatsApp icon
+// Custom WhatsApp icon component - proper SVG for WhatsApp
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

@@ -66,9 +66,32 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
     isSubscribed, 
     checkingSubscription, 
     subscribe, 
-    unsubscribe,
-    isAuthenticated
+    unsubscribe
   } = useBusinessSubscribers(businessId);
+  
+  // Check authentication using the session from supabase
+  const [isAuthenticated, setIsAuthenticated] = React.useState<boolean | null>(null);
+  
+  // Check authentication status on mount
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await import('@/integrations/supabase/client').then(m => m.supabase.auth.getSession());
+      setIsAuthenticated(!!session?.user);
+    };
+    
+    checkAuth();
+    
+    // Set up auth state listener
+    const { data: { subscription } } = import('@/integrations/supabase/client').then(m => m.supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setIsAuthenticated(!!session?.user);
+      }
+    ));
+    
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
   
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
