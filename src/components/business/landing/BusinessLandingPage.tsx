@@ -12,6 +12,7 @@ import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
 import FloatingSubscribeButton from "./FloatingSubscribeButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import { useTMWChatbot } from "@/hooks/useTMWChatbot";
 
 interface BusinessLandingPageProps {
   slug: string;
@@ -39,6 +40,9 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   const { isSubscribed, checkingSubscription, subscribe, unsubscribe } = 
     useBusinessSubscribers(businessPage?.business_id);
 
+  // Initialize the TMW Chatbot hook
+  useTMWChatbot(businessPage?.chatbot_enabled, businessPage?.chatbot_code);
+
   // Debug logs to identify issues
   console.log("BusinessLandingPage - authentication status:", isAuthenticated);
   console.log("BusinessLandingPage - businessPage:", businessPage);
@@ -49,6 +53,10 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     show: businessPage?.show_subscribe_button,
     position: businessPage?.subscribe_button_position,
     text: businessPage?.subscribe_button_text
+  });
+  console.log("BusinessLandingPage - TMW chatbot settings:", {
+    enabled: businessPage?.chatbot_enabled,
+    hasCode: !!businessPage?.chatbot_code
   });
 
   // Handle scroll to show/hide the floating button and PoweredByWAKTI component

@@ -39,7 +39,6 @@ const BusinessLandingPage: React.FC<BusinessLandingPageProps> = ({ isPreview: is
         <title>{businessName ? `${businessName} | WAKTI` : 'Business Page | WAKTI'}</title>
       </Helmet>
       
-      {/* BusinessLandingPageComponent now handles PoweredByWAKTI */}
       <BusinessLandingPageComponent slug={slug} isPreviewMode={isPreviewMode} />
     </>
   );
