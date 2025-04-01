@@ -20,6 +20,8 @@ const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
     buttonText = "Book Now",
     showButton = true
   } = content;
+
+  console.log("BusinessHeader rendering with logo:", businessPage.logo_url);
   
   const handleBookNow = () => {
     navigate(`/business/${businessPage.page_slug}/book`);
@@ -27,6 +29,16 @@ const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
   
   return (
     <div className="text-center py-8 md:py-16">
+      {businessPage.logo_url && (
+        <div className="flex justify-center mb-4">
+          <img 
+            src={businessPage.logo_url} 
+            alt={businessPage.page_title || "Business"} 
+            className="h-24 w-24 rounded-full object-cover border-2 border-primary/20 mb-4"
+          />
+        </div>
+      )}
+      
       <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{title}</h1>
       <p className="text-lg md:text-xl text-muted-foreground mb-4">{subtitle}</p>
       

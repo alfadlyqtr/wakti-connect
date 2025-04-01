@@ -17,6 +17,8 @@ export const useBusinessStyling = (businessId?: string) => {
     
     const fetchBusinessStyling = async () => {
       setIsLoading(true);
+      console.log("Fetching business styling for:", businessId);
+      
       try {
         // First check if business has a page with styling
         const { data: pageData, error: pageError } = await supabase
@@ -25,8 +27,16 @@ export const useBusinessStyling = (businessId?: string) => {
           .eq('business_id', businessId)
           .single();
           
+        console.log("Business page data:", pageData, "Error:", pageError);
+        
         if (!pageError && pageData) {
           setStyling({
+            primaryColor: pageData.primary_color,
+            secondaryColor: pageData.secondary_color,
+            logoUrl: pageData.logo_url
+          });
+          
+          console.log("Setting styling from business page:", {
             primaryColor: pageData.primary_color,
             secondaryColor: pageData.secondary_color,
             logoUrl: pageData.logo_url
@@ -38,9 +48,15 @@ export const useBusinessStyling = (businessId?: string) => {
             .select('avatar_url')
             .eq('id', businessId)
             .single();
+          
+          console.log("Profile data:", profileData, "Error:", profileError);
             
           if (!profileError && profileData) {
             setStyling({
+              logoUrl: profileData.avatar_url
+            });
+            
+            console.log("Setting styling from profile:", {
               logoUrl: profileData.avatar_url
             });
           }

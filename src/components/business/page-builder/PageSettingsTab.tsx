@@ -7,6 +7,7 @@ import SocialMediaSettingsTab from "./settings-tabs/SocialMediaSettingsTab";
 import AdvancedSettingsTab from "./settings-tabs/AdvancedSettingsTab";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/components/ui/use-toast";
+import { useLogoUpload } from "@/hooks/useLogoUpload";
 
 interface PageSettingsTabProps {
   pageData: any;
@@ -26,31 +27,18 @@ const PageSettingsTab = ({
   updatePage
 }: PageSettingsTabProps) => {
   const isMobile = useIsMobile();
-  const [uploadingLogo, setUploadingLogo] = useState(false);
-  
-  const handleLogoUpload = (fileOrEvent: File | React.ChangeEvent<HTMLInputElement>) => {
-    // Placeholder for logo upload functionality
-    setUploadingLogo(true);
-    console.log("Logo upload initiated:", fileOrEvent);
-    
-    // Simulate file upload - replace with actual upload logic
-    setTimeout(() => {
-      setUploadingLogo(false);
-      // After upload success, update the logo URL
-      const fakeLogoUrl = "https://example.com/logo.png";
+  const { uploadingLogo, handleLogoUpload } = useLogoUpload(
+    businessId, 
+    (logoUrl) => {
+      console.log("Logo uploaded successfully:", logoUrl);
       handleInputChangeWithAutoSave({
         target: {
           name: 'logo_url',
-          value: fakeLogoUrl
+          value: logoUrl
         }
       } as React.ChangeEvent<HTMLInputElement>);
-      
-      toast({
-        title: "Logo upload successful",
-        description: "Your logo has been updated.",
-      });
-    }, 1000);
-  };
+    }
+  );
   
   return (
     <div>

@@ -31,6 +31,10 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   const [showSubscribeButton, setShowSubscribeButton] = useState(true);
   const isAuthenticated = useAuthentication();
 
+  console.log("BusinessLandingPage - businessPage:", businessPage);
+  console.log("BusinessLandingPage - socialLinks:", socialLinks);
+  console.log("BusinessLandingPage - social_icons_position:", businessPage?.social_icons_position);
+
   // Hide PoweredByWAKTI after scrolling
   useEffect(() => {
     const handleScroll = () => {
@@ -44,6 +48,21 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Apply theme colors from business page settings
+  useEffect(() => {
+    if (businessPage?.primary_color) {
+      document.documentElement.style.setProperty('--primary', businessPage.primary_color);
+    }
+    if (businessPage?.secondary_color) {
+      document.documentElement.style.setProperty('--secondary', businessPage.secondary_color);
+    }
+    
+    return () => {
+      document.documentElement.style.removeProperty('--primary');
+      document.documentElement.style.removeProperty('--secondary');
+    };
+  }, [businessPage]);
 
   if (isLoading) {
     return (
@@ -71,6 +90,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     social_icons_position = "footer",
     show_subscribe_button = true,
     subscribe_button_position = "floating",
+    logo_url
   } = businessPage;
 
   // Set default background to white if not specified
@@ -96,9 +116,15 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   };
 
   // Check if social links should be shown in the header
-  const showHeaderSocialLinks = socialLinks && socialLinks.length > 0 && social_icons_position === 'header';
+  const showHeaderSocialLinks = socialLinks && socialLinks.length > 0 && 
+    (social_icons_position === 'header' || social_icons_position === 'both');
+  
   // Check if social links should be shown in the footer
-  const showFooterSocialLinks = socialLinks && socialLinks.length > 0 && (social_icons_position === 'footer' || social_icons_position === 'both');
+  const showFooterSocialLinks = socialLinks && socialLinks.length > 0 && 
+    (social_icons_position === 'footer' || social_icons_position === 'both');
+
+  console.log("Show header social links:", showHeaderSocialLinks);
+  console.log("Show footer social links:", showFooterSocialLinks);
 
   return (
     <CurrencyProvider initialCurrency={businessPage.business_id}>
@@ -125,7 +151,8 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
               id: businessPage.business_id,
               business_name: businessPage.page_title,
               display_name: businessPage.page_title,
-              account_type: "business"
+              account_type: "business",
+              avatar_url: logo_url  // Pass logo URL to header
             }} 
           />
           
