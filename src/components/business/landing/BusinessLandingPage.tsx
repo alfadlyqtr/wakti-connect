@@ -33,7 +33,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
 
   console.log("BusinessLandingPage - businessPage:", businessPage);
   console.log("BusinessLandingPage - socialLinks:", socialLinks);
-  console.log("BusinessLandingPage - social_icons_position:", businessPage?.social_icons_position);
 
   // Hide PoweredByWAKTI after scrolling
   useEffect(() => {
@@ -51,11 +50,23 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
 
   // Apply theme colors from business page settings
   useEffect(() => {
-    if (businessPage?.primary_color) {
-      document.documentElement.style.setProperty('--primary', businessPage.primary_color);
-    }
-    if (businessPage?.secondary_color) {
-      document.documentElement.style.setProperty('--secondary', businessPage.secondary_color);
+    if (businessPage) {
+      console.log("Applying theme colors:", {
+        primary: businessPage.primary_color,
+        secondary: businessPage.secondary_color
+      });
+      
+      if (businessPage.primary_color) {
+        // Convert hex to HSL for CSS variables
+        const primaryHex = businessPage.primary_color;
+        document.documentElement.style.setProperty('--primary', primaryHex);
+      }
+      
+      if (businessPage.secondary_color) {
+        // Convert hex to HSL for CSS variables
+        const secondaryHex = businessPage.secondary_color;
+        document.documentElement.style.setProperty('--secondary', secondaryHex);
+      }
     }
     
     return () => {
@@ -117,14 +128,14 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
 
   // Check if social links should be shown in the header
   const showHeaderSocialLinks = socialLinks && socialLinks.length > 0 && 
-    (social_icons_position === 'header' || social_icons_position === 'both');
+    ['header', 'both'].includes(social_icons_position);
   
   // Check if social links should be shown in the footer
   const showFooterSocialLinks = socialLinks && socialLinks.length > 0 && 
-    (social_icons_position === 'footer' || social_icons_position === 'both');
+    ['footer', 'both'].includes(social_icons_position);
 
-  console.log("Show header social links:", showHeaderSocialLinks);
-  console.log("Show footer social links:", showFooterSocialLinks);
+  console.log("Show header social links:", showHeaderSocialLinks, "Position:", social_icons_position);
+  console.log("Show footer social links:", showFooterSocialLinks, "Position:", social_icons_position);
 
   return (
     <CurrencyProvider initialCurrency={businessPage.business_id}>

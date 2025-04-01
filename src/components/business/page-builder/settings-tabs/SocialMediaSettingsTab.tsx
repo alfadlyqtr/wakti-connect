@@ -163,40 +163,31 @@ const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
 
   // Handle icon style, size and position changes
   const handleIconStyleChange = (value: string) => {
+    console.log("Changing icon style to:", value);
     if (updatePage && pageData) {
-      updatePage.mutate({
+      updatePage({
         pageId: pageData.id,
         data: { social_icons_style: value }
-      }, {
-        onSuccess: () => {
-          toast({ title: "Icon style updated" });
-        }
       });
     }
   };
 
   const handleIconSizeChange = (value: string) => {
+    console.log("Changing icon size to:", value);
     if (updatePage && pageData) {
-      updatePage.mutate({
+      updatePage({
         pageId: pageData.id,
         data: { social_icons_size: value }
-      }, {
-        onSuccess: () => {
-          toast({ title: "Icon size updated" });
-        }
       });
     }
   };
 
   const handleIconPositionChange = (value: string) => {
+    console.log("Changing icon position to:", value);
     if (updatePage && pageData) {
-      updatePage.mutate({
+      updatePage({
         pageId: pageData.id,
         data: { social_icons_position: value }
-      }, {
-        onSuccess: () => {
-          toast({ title: "Icon position updated" });
-        }
       });
     }
   };

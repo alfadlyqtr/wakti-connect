@@ -1,5 +1,5 @@
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BusinessPage, BusinessPageSection, BusinessSocialLink } from "@/types/business.types";
 import { fromTable } from "@/integrations/supabase/helper";
@@ -87,7 +87,12 @@ export const useSocialLinksQuery = (businessId?: string) => {
   return useQuery({
     queryKey: ['businessSocialLinks', businessId],
     queryFn: async () => {
-      if (!businessId) return [];
+      if (!businessId) {
+        console.log("No business ID for social links query");
+        return [];
+      }
+      
+      console.log("Fetching social links for business:", businessId);
       
       const { data, error } = await fromTable('business_social_links')
         .select()
@@ -98,8 +103,52 @@ export const useSocialLinksQuery = (businessId?: string) => {
         throw error;
       }
       
+      console.log("Retrieved social links:", data);
       return data as BusinessSocialLink[] || [];
     },
     enabled: !!businessId
+  });
+};
+
+// Fetch contact submissions
+export const useContactSubmissionsQuery = (businessId?: string) => {
+  return useQuery({
+    queryKey: ['contactSubmissions', businessId],
+    queryFn: async () => {
+      if (!businessId) return [];
+      
+      const { data, error } = await fromTable('business_contact_submissions')
+        .select()
+        .eq('business_id', businessId)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error("Error fetching contact submissions:", error);
+        throw error;
+      }
+      
+      return data || [];
+    },
+    enabled: !!businessId
+  });
+};
+
+// Mark submission as read
+export const useMarkSubmissionAsReadMutation = () => {
+  return useMutation({
+    mutationFn: async (submissionId: string) => {
+      const { data, error } = await fromTable('business_contact_submissions')
+        .update({ is_read: true })
+        .eq('id', submissionId)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error("Error marking submission as read:", error);
+        throw error;
+      }
+      
+      return data;
+    }
   });
 };

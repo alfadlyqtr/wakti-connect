@@ -42,8 +42,11 @@ const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
   scale = 1
 }) => {
   if (!socialLinks || socialLinks.length === 0) {
+    console.log("No social links to display");
     return null;
   }
+
+  console.log("SocialIconsGroup rendering with position:", position, "and links:", socialLinks.length);
 
   // Determine spacing class based on the spacing prop
   const getSpacingClass = () => {
@@ -65,9 +68,8 @@ const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
       case 'left': return 'justify-start';
       case 'right': return 'justify-end';
       case 'both': 
-        // Display based on the current position context, defaulting to justify-center
-        // if we're in the 'both' position, we need context to determine header or footer positioning
-        return 'justify-end'; // When used in header with 'both', it defaults to header styling (justify-end)
+        // Display based on the context in the parent component
+        return 'justify-end'; // When used in header it's justify-end
       default: return 'justify-center';
     }
   };

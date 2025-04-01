@@ -19,6 +19,13 @@ export interface BusinessPageSectionsProps {
 }
 
 const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectionsProps) => {
+  // Log the primary and secondary colors to verify they're properly passed
+  console.log("BusinessPageSections received colors:", {
+    primary: businessPage.primary_color,
+    secondary: businessPage.secondary_color,
+    sections: pageSections.length
+  });
+
   if (!pageSections || pageSections.length === 0) {
     return (
       <div className="text-center py-8">
@@ -64,7 +71,7 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
     // Build the style object
     const styles: React.CSSProperties = {
       backgroundColor: section.background_color || 'transparent',
-      color: section.text_color || 'inherit',
+      color: section.text_color || businessPage.text_color || 'inherit',
       padding: paddingValue,
       borderRadius: borderRadiusValue,
       boxShadow: section.section_content?.shadow_effect !== 'none' ? shadowValue : 'none',
@@ -109,7 +116,14 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
     const SectionComponent = () => {
       switch (section.section_type) {
         case 'header':
-          return <BusinessPageHeader content={content} />;
+          return <BusinessPageHeader 
+            content={{ 
+              ...content, 
+              primary_color: businessPage.primary_color, 
+              secondary_color: businessPage.secondary_color,
+              logo_url: businessPage.logo_url
+            }} 
+          />;
           
         case 'about':
           return <BusinessAboutSection content={content} />;
@@ -119,6 +133,8 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
             content={content} 
             businessId={businessPage.business_id} 
             pageId={businessPage.id} 
+            primaryColor={businessPage.primary_color}
+            textColor={businessPage.text_color}
           />;
           
         case 'hours':
@@ -131,7 +147,12 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
           return <BusinessTestimonialsSection content={content} />;
   
         case 'booking':
-          return <BusinessBookingTemplatesSection content={content} businessId={businessPage.business_id} />;
+          return <BusinessBookingTemplatesSection 
+            content={content} 
+            businessId={businessPage.business_id}
+            primaryColor={businessPage.primary_color}
+            secondaryColor={businessPage.secondary_color}
+          />;
           
         case 'instagram':
           return <BusinessInstagramSection content={content} />;
@@ -147,6 +168,8 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
           );
       }
     };
+    
+    console.log(`Rendering section: ${section.section_type} with styles:`, sectionStyles);
     
     return (
       <div key={section.id} className={sectionClasses} style={sectionStyles}>

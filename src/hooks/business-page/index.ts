@@ -2,7 +2,7 @@
 import { useBusinessPageQuery, useOwnerBusinessPageQuery, usePageSectionsQuery, useSocialLinksQuery } from "./useBusinessPageQueries";
 import { useCreatePageMutation, useUpdatePageMutation, useUpdateSectionMutation, useSubmitContactFormMutation } from "./useBusinessPageMutations";
 import { useAutoSavePageSettings, usePublicPageUrl } from "./useBusinessPageUtils";
-import { useContactSubmissionsQuery, useMarkSubmissionAsReadMutation } from "./useContactSubmissionsQuery";
+import { useContactSubmissionsQuery, useMarkSubmissionAsReadMutation } from "./useBusinessPageQueries";
 import { BusinessPage, BusinessPageSection } from "@/types/business.types";
 
 export const useBusinessPage = (pageSlug?: string, isPreviewMode?: boolean) => {

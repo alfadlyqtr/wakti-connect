@@ -15,8 +15,17 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({ content }) => {
     backgroundImage,
     alignment = "center",
     overlayOpacity = 80,
-    textColor = "dark"
+    textColor = "dark",
+    primary_color,
+    secondary_color,
+    logo_url
   } = content;
+
+  console.log("BusinessPageHeader rendering with:", {
+    primary_color,
+    secondary_color,
+    logo_url
+  });
 
   const containerClasses = {
     left: "text-left items-start",
@@ -34,6 +43,12 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({ content }) => {
 
   // Calculate overlay opacity (0-100 scale to 0-1)
   const opacity = Math.max(0, Math.min(100, overlayOpacity)) / 100;
+
+  // Style for the button using primary color
+  const buttonStyle = primary_color ? {
+    backgroundColor: primary_color,
+    color: "#ffffff"
+  } : {};
 
   return (
     <section className="relative">
@@ -58,6 +73,21 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({ content }) => {
       {/* Content */}
       <div className="relative z-20 container mx-auto px-4 py-20 md:py-32">
         <div className={`flex flex-col ${alignmentClass} max-w-3xl mx-auto space-y-6 ${textColorClass}`}>
+          {/* Logo display */}
+          {logo_url && (
+            <div className="mb-6 animate-fade-in">
+              <img 
+                src={logo_url} 
+                alt={title} 
+                className="h-24 w-24 rounded-full object-cover mx-auto"
+                onError={(e) => {
+                  console.error("Error loading logo image:", e);
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+          
           {title && (
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold animate-fade-in">{title}</h1>
           )}
@@ -75,6 +105,7 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({ content }) => {
               <a
                 href={buttonLink}
                 className="inline-flex items-center justify-center px-6 py-3 text-base font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/70 transition-all hover:scale-105"
+                style={buttonStyle}
               >
                 {buttonText}
               </a>

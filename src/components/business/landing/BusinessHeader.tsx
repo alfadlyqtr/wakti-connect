@@ -22,10 +22,20 @@ const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
   } = content;
 
   console.log("BusinessHeader rendering with logo:", businessPage.logo_url);
+  console.log("BusinessHeader styles:", {
+    primaryColor: businessPage.primary_color,
+    secondaryColor: businessPage.secondary_color
+  });
   
   const handleBookNow = () => {
     navigate(`/business/${businessPage.page_slug}/book`);
   };
+  
+  // Custom button style based on business page colors
+  const buttonStyle = businessPage.primary_color ? {
+    backgroundColor: businessPage.primary_color,
+    color: "#ffffff"
+  } : {};
   
   return (
     <div className="text-center py-8 md:py-16">
@@ -35,6 +45,10 @@ const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
             src={businessPage.logo_url} 
             alt={businessPage.page_title || "Business"} 
             className="h-24 w-24 rounded-full object-cover border-2 border-primary/20 mb-4"
+            onError={(e) => {
+              console.error("Error loading logo image:", e);
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
           />
         </div>
       )}
@@ -47,7 +61,11 @@ const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
       )}
       
       {showButton && (
-        <Button size="lg" onClick={handleBookNow}>
+        <Button 
+          size="lg" 
+          onClick={handleBookNow}
+          style={buttonStyle}
+        >
           {buttonText}
         </Button>
       )}
