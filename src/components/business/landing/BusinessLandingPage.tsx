@@ -245,7 +245,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
           <FloatingSubscribeButton 
             businessId={businessPage.business_id}
             visible={showSubscribeButton}
-            showButton={true} /* Force to true to ensure visibility */
+            showButton={true} 
             isAuthenticated={isAuthenticated}
             onAuthRequired={handleAuthRequired}
             backgroundColor={primary_color}

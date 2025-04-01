@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 interface FloatingSubscribeButtonProps {
   businessId: string;
   visible: boolean;
-  showButton: boolean;
+  showButton?: boolean;
   isAuthenticated: boolean | null;
   onAuthRequired: () => void;
   buttonStyle?: React.CSSProperties;
@@ -35,7 +35,7 @@ interface FloatingSubscribeButtonProps {
 const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
   businessId,
   visible,
-  showButton,
+  showButton = true,
   onAuthRequired,
   isAuthenticated,
   buttonStyle,
@@ -69,14 +69,7 @@ const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
     isAuthenticated
   });
 
-  // Always display the button if explicit showButton is undefined (backward compatibility)
-  const shouldShow = showButton !== false;
-
-  if (!shouldShow) {
-    console.log("FloatingSubscribeButton: showButton is false, not rendering");
-    return null;
-  }
-
+  // Always return the button component (removed the conditional check)
   return (
     <div className={cn(
       "fixed bottom-6 right-6 z-50 transition-all duration-300 transform",

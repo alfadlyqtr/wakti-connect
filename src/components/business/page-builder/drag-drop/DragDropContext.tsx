@@ -29,6 +29,11 @@ export const DragDropProvider: React.FC<{
   // Handle reordering of sections
   const updateSectionOrderMutation = useMutation({
     mutationFn: async (updatedSections: BusinessPageSection[]) => {
+      // Log for debugging
+      console.log("Updating section order with sections:", 
+        updatedSections.map(s => ({ id: s.id, type: s.section_type, order: s.section_order }))
+      );
+
       // Create a batch of update promises
       const updatePromises = updatedSections.map((section, index) => {
         return fromTable('business_page_sections')
@@ -58,6 +63,14 @@ export const DragDropProvider: React.FC<{
   });
 
   const updateSectionOrder = (reorderedSections: BusinessPageSection[]) => {
+    // Log the reordering for debugging
+    console.log("Section order before update:", 
+      orderedSections.map(s => ({ id: s.id, type: s.section_type, order: s.section_order }))
+    );
+    console.log("Section order after update:", 
+      reorderedSections.map(s => ({ id: s.id, type: s.section_type, order: s.section_order }))
+    );
+    
     setOrderedSections(reorderedSections);
     updateSectionOrderMutation.mutate(reorderedSections);
   };

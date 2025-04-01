@@ -34,7 +34,7 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
             className="h-24 w-24 rounded-full object-cover border-2 border-primary/20 mb-4"
             onError={(e) => {
               console.error("Error loading avatar image:", e);
-              (e.target as HTMLImageElement).style.display = 'none';
+              // Don't hide the image container, just log the error
             }}
           />
         </div>
