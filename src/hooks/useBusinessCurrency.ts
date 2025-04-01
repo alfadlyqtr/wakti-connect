@@ -13,7 +13,12 @@ export const useBusinessCurrency = (businessId?: string) => {
   const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
-    if (!businessId) return;
+    if (!businessId) {
+      console.log('No business ID provided to useBusinessCurrency');
+      return;
+    }
+    
+    console.log('Fetching currency for business ID:', businessId);
     
     const fetchBusinessCurrency = async () => {
       setIsLoading(true);
@@ -30,7 +35,10 @@ export const useBusinessCurrency = (businessId?: string) => {
         }
         
         if (data?.currency_preference) {
+          console.log('Business currency found:', data.currency_preference);
           setBusinessCurrency(data.currency_preference as Currency);
+        } else {
+          console.log('No currency preference set for business');
         }
       } catch (error) {
         console.error('Error fetching business currency:', error);

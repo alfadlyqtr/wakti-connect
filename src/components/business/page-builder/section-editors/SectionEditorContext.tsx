@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState } from "react";
 import { useUpdateSectionMutation } from "@/hooks/business-page/useBusinessPageMutations";
 import { toast } from "@/components/ui/use-toast";
@@ -110,31 +109,31 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
 
   // Apply template content - ENHANCED to properly apply styling to both content and section level
   const applyTemplateContent = (templateContent: Record<string, any>) => {
-    // Extract styling properties that need to be applied at section level
+    console.log('Applying template content:', templateContent);
+    
+    // Define which fields should be applied directly to the section
+    const sectionLevelStyleProperties = [
+      'background_color',
+      'text_color',
+      'padding',
+      'border_radius',
+      'background_image_url'
+    ];
+    
+    // Extract section level styling properties
     const sectionLevelStyles: Record<string, any> = {};
     
-    // Map template content styling properties to section level properties
-    if (templateContent.background_color) {
-      sectionLevelStyles.background_color = templateContent.background_color;
-    }
-    if (templateContent.text_color) {
-      sectionLevelStyles.text_color = templateContent.text_color;
-    }
-    if (templateContent.padding) {
-      sectionLevelStyles.padding = templateContent.padding;
-    }
-    if (templateContent.border_radius) {
-      sectionLevelStyles.border_radius = templateContent.border_radius;
-    }
-    if (templateContent.background_image_url) {
-      sectionLevelStyles.background_image_url = templateContent.background_image_url;
-    }
+    // Build section level properties object
+    sectionLevelStyleProperties.forEach(prop => {
+      if (templateContent[prop] !== undefined) {
+        sectionLevelStyles[prop] = templateContent[prop];
+      }
+    });
     
-    // Update content data with template content
+    // Update content data with template content (keeps all properties including styling)
     setContentData({...templateContent});
     setIsDirty(true);
     
-    console.log('Applying template content:', templateContent);
     console.log('Section level styles to apply:', sectionLevelStyles);
     
     // Apply section level styles directly to the section
@@ -145,7 +144,7 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
       }).then(() => {
         // After successful update, notify user
         toast({
-          title: "Styling Applied",
+          title: "Template Applied",
           description: "Section styling has been updated successfully",
         });
       }).catch(error => {
