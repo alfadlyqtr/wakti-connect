@@ -82,14 +82,31 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
     checkAuth();
     
     // Set up auth state listener
-    const { data: { subscription } } = import('@/integrations/supabase/client').then(m => m.supabase.auth.onAuthStateChange(
+    const { data } = import('@/integrations/supabase/client').then(m => m.supabase.auth.onAuthStateChange(
       (event, session) => {
         setIsAuthenticated(!!session?.user);
       }
     ));
     
+    // Fix: Using proper async/await and properly accessing the subscription
+    const setupAuthListener = async () => {
+      const module = await import('@/integrations/supabase/client');
+      const { data } = module.supabase.auth.onAuthStateChange(
+        (event, session) => {
+          setIsAuthenticated(!!session?.user);
+        }
+      );
+      
+      return data.subscription;
+    };
+    
+    const subscription = setupAuthListener();
+    
     return () => {
-      subscription?.unsubscribe();
+      // Cleanup the subscription when component unmounts
+      subscription.then(sub => {
+        if (sub) sub.unsubscribe();
+      });
     };
   }, []);
   
