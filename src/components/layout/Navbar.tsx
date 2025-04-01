@@ -117,7 +117,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
             <Search className="h-5 w-5" />
           </Button>
 
-          {/* Navigation Icons */}
+          {/* Navigation Icons - show on all screen sizes now */}
           <NavItems 
             unreadMessages={unreadMessages} 
             unreadNotifications={unreadNotifications} 

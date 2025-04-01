@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -15,9 +14,16 @@ interface MobileNavItemsProps {
 }
 
 const MobileNavItems = ({ filteredNavItems }: MobileNavItemsProps) => {
+  // Don't show items that are now in the top navigation bar
+  const filteredMobileOnlyItems = filteredNavItems.filter(item => 
+    // We'll keep all items in the mobile dropdown for now
+    // This can be customized to exclude specific items if needed
+    true
+  );
+
   return (
     <>
-      {filteredNavItems.map((item, index) => (
+      {filteredMobileOnlyItems.map((item, index) => (
         <DropdownMenuItem key={`mobile-${index}`} asChild>
           <Link to={item.path} className="flex items-center justify-between w-full">
             <div className="flex items-center">

@@ -16,6 +16,7 @@ const DashboardWorkManagement = lazy(() => import("@/pages/dashboard/DashboardWo
 const DashboardSettings = lazy(() => import("@/pages/dashboard/DashboardSettings"));
 const DashboardBusinessAnalytics = lazy(() => import("@/pages/dashboard/DashboardBusinessAnalytics"));
 const DashboardMessages = lazy(() => import("@/pages/dashboard/DashboardMessages"));
+const DashboardNotifications = lazy(() => import("@/pages/dashboard/DashboardNotifications"));
 const DashboardAIAssistant = lazy(() => import("@/pages/dashboard/DashboardAIAssistant"));
 const DashboardBusinessPage = lazy(() => import("@/pages/dashboard/DashboardBusinessPage"));
 const StaffDashboard = lazy(() => import("@/pages/dashboard/StaffDashboard"));
@@ -97,6 +98,11 @@ export const dashboardRoutes: RouteObject[] = [
   {
     path: "messages",
     element: withSuspense(DashboardMessages),
+  },
+  // Added explicit route for notifications
+  {
+    path: "notifications",
+    element: withSuspense(DashboardNotifications),
   },
   {
     path: "ai-assistant",

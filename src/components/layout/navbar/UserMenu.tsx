@@ -143,11 +143,9 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         
-        {/* Mobile menu items - only visible on small screens */}
-        <div className="md:hidden">
-          <MobileNavItems filteredNavItems={filteredNavItems} />
-          <DropdownMenuSeparator />
-        </div>
+        {/* Mobile menu items in dropdown for navigation redundancy */}
+        <MobileNavItems filteredNavItems={filteredNavItems} />
+        <DropdownMenuSeparator />
         
         <AccountMenuItems isAuthenticated={isAuthenticated} />
       </DropdownMenuContent>

@@ -66,12 +66,10 @@ const NavItems = ({ unreadMessages, unreadNotifications, isMobile = false }: Nav
     return true;
   });
 
-  if (isMobile) {
-    return null; // Mobile navigation is handled in the UserMenu component
-  }
-
+  // Remove the conditional rendering that hides nav items on mobile
+  // This ensures the icons are always visible regardless of screen size
   return (
-    <div className="hidden md:flex items-center gap-2">
+    <div className="flex items-center gap-2">
       {filteredItems.map((item, index) => (
         <Button
           key={index}
