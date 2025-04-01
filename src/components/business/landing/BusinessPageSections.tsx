@@ -70,8 +70,9 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
     // Calculate section style (outlined, solid, default)
     const sectionStyle = section.section_content?.section_style || 'default';
     
-    // Handle background pattern
+    // Get background pattern from section content
     const backgroundPattern = section.section_content?.background_pattern;
+    // Generate the background pattern CSS
     const backgroundPatternValue = backgroundPattern ? getBackgroundPattern(backgroundPattern) : 'none';
     
     // Build the style object
@@ -90,7 +91,7 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
       styles.backgroundPosition = 'center';
     }
     // Apply background pattern if provided and no background image
-    else if (backgroundPattern && backgroundPatternValue !== 'none') {
+    else if (backgroundPattern && backgroundPattern !== 'none' && backgroundPatternValue !== 'none') {
       styles.backgroundImage = backgroundPatternValue;
       styles.backgroundSize = 'auto';
       styles.backgroundRepeat = 'repeat';
@@ -112,6 +113,8 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
     } else if (sectionStyle === 'solid') {
       styles.backgroundColor = section.background_color || '#ffffff';
     }
+    
+    console.log(`Applying styles for section ${section.section_type} with background pattern: ${backgroundPattern}`, styles);
     
     return styles;
   };

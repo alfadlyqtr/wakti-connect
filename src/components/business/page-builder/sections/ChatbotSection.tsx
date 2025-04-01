@@ -30,9 +30,11 @@ const ChatbotSection: React.FC = () => {
       updateContentField('chatbot_size', 'medium');
     }
     // Set default background pattern if not set
-    if (!contentData?.background_pattern) {
+    if (contentData?.background_pattern === undefined) {
       updateContentField('background_pattern', 'none');
     }
+    
+    console.log("ChatbotSection initialized with content data:", contentData);
   }, [contentData, updateContentField]);
   
   // Create unique container ID for this section
@@ -56,6 +58,7 @@ const ChatbotSection: React.FC = () => {
   };
   
   const handleSelectChange = (field: string, value: string) => {
+    console.log(`Setting ${field} to ${value}`);
     updateContentField(field, value);
   };
   
@@ -139,7 +142,7 @@ const ChatbotSection: React.FC = () => {
                   value={contentData?.background_pattern || "none"}
                   onValueChange={(value) => handleSelectChange('background_pattern', value)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="background_pattern">
                     <SelectValue placeholder="Select background pattern" />
                   </SelectTrigger>
                   <SelectContent>
@@ -194,11 +197,19 @@ const ChatbotSection: React.FC = () => {
                 </div>
               </div>
               
-              <div className="bg-slate-50 p-4 rounded-lg border mt-6">
-                <h3 className="font-medium mb-2">Need an AI Chatbot?</h3>
+              <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-4 rounded-lg border mt-6">
+                <h3 className="font-medium mb-2 text-primary flex items-center">
+                  <InfoIcon className="h-4 w-4 mr-1" />
+                  Need an AI Chatbot?
+                </h3>
                 <p className="text-sm text-muted-foreground mb-3">
                   Get a powerful AI chatbot from TMW that can answer customer questions, assist with bookings, and provide 24/7 support.
                 </p>
+                <ul className="list-disc list-inside text-xs text-muted-foreground space-y-1 mb-3">
+                  <li>Answer customer questions instantly, 24/7</li>
+                  <li>Reduce support workload by automating inquiries</li>
+                  <li>Boost conversions with real-time assistance</li>
+                </ul>
                 <a 
                   href="https://tmw.qa/ai-chat-bot/" 
                   target="_blank" 

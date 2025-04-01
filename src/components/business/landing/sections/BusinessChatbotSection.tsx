@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { useTMWChatbot } from "@/hooks/tmw-chatbot";
 import { ExternalLink } from "lucide-react";
 
@@ -10,6 +10,7 @@ interface BusinessChatbotSectionProps {
     section_description?: string;
     chatbot_code?: string;
     chatbot_size?: 'small' | 'medium' | 'large' | 'full';
+    background_pattern?: string;
   };
 }
 
@@ -19,7 +20,8 @@ const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content
     section_title = "Chat with Us",
     section_description = "",
     chatbot_code = "",
-    chatbot_size = "medium"
+    chatbot_size = "medium",
+    background_pattern = "none"
   } = content;
   
   // Create a unique ID for this chatbot container
@@ -34,13 +36,14 @@ const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content
       enabled,
       containerId,
       codeLength: chatbot_code?.length || 0,
-      size: chatbot_size
+      size: chatbot_size,
+      backgroundPattern: background_pattern
     });
     
     return () => {
       console.log("BusinessChatbotSection unmounting:", containerId);
     };
-  }, [enabled, chatbot_code, containerId, chatbot_size]);
+  }, [enabled, chatbot_code, containerId, chatbot_size, background_pattern]);
   
   const getSizeClasses = () => {
     switch (chatbot_size) {
