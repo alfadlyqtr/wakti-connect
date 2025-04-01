@@ -60,13 +60,22 @@ const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
   paddingY,
   gradientDirection
 }) => {
-  // If showButton is false, don't render anything
-  if (!showButton) {
+  // Debug logs to understand why the button might not be showing
+  console.log("FloatingSubscribeButton rendering:", {
+    visible,
+    showButton,
+    businessId,
+    customText,
+    isAuthenticated
+  });
+
+  // Always display the button if explicit showButton is undefined (backward compatibility)
+  const shouldShow = showButton !== false;
+
+  if (!shouldShow) {
     console.log("FloatingSubscribeButton: showButton is false, not rendering");
     return null;
   }
-
-  console.log("FloatingSubscribeButton rendering:", { visible, showButton, customText });
 
   return (
     <div className={cn(

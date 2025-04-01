@@ -41,12 +41,18 @@ const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
   opacity = 1,
   scale = 1
 }) => {
+  // Log details for debugging
+  console.log("SocialIconsGroup rendering with:", {
+    position, 
+    vertical, 
+    linkCount: socialLinks?.length || 0, 
+    className
+  });
+
   if (!socialLinks || socialLinks.length === 0) {
     console.log("No social links to display");
     return null;
   }
-
-  console.log("SocialIconsGroup rendering with position:", position, "and links:", socialLinks.length, "vertical:", vertical);
 
   // Determine spacing class based on the spacing prop
   const getSpacingClass = () => {
@@ -62,7 +68,7 @@ const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
     switch (position) {
       case 'header': return 'justify-end';
       case 'footer': return 'justify-center';
-      case 'sidebar': return 'justify-start items-center';
+      case 'sidebar': return vertical ? 'items-center' : 'justify-start items-center';
       case 'top': return 'justify-center mt-4';
       case 'bottom': return 'justify-center mb-4';
       case 'left': return 'justify-start';
@@ -74,15 +80,20 @@ const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
     }
   };
 
+  // If this is a sidebar position, force vertical to true
+  const isVertical = position === 'sidebar' ? true : vertical;
+
+  // Create className with appropriate flex direction
+  const containerClassName = cn(
+    "flex items-center", 
+    getSpacingClass(),
+    getPositionClass(),
+    isVertical ? "flex-col" : "flex-row flex-wrap",
+    className
+  );
+
   return (
-    <div className={cn(
-      "flex items-center", 
-      getSpacingClass(),
-      getPositionClass(),
-      vertical ? "flex-col" : "flex-row flex-wrap",
-      className
-    )}
-    style={{ opacity }}>
+    <div className={containerClassName} style={{ opacity }}>
       {socialLinks.map((link) => (
         <SocialIcon
           key={link.id}

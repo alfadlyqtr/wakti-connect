@@ -41,6 +41,37 @@ const DraggableSectionList: React.FC<DraggableSectionListProps> = ({
     reorderedSections.splice(destinationIndex, 0, removed);
 
     // Update the section orders
+    console.log('Updating section order:', reorderedSections.map(s => s.section_type));
+    updateSectionOrder(reorderedSections);
+  };
+
+  // Handle manual section movement (for when drag-drop isn't intuitive)
+  const handleMoveSection = (sectionId: string, direction: 'up' | 'down') => {
+    console.log(`Moving section ${sectionId} ${direction}`);
+    
+    const sectionIndex = sections.findIndex(s => s.id === sectionId);
+    if (sectionIndex === -1) {
+      console.error('Section not found:', sectionId);
+      return;
+    }
+    
+    // Can't move first section up or last section down
+    if ((direction === 'up' && sectionIndex === 0) || 
+        (direction === 'down' && sectionIndex === sections.length - 1)) {
+      console.log(`Cannot move section ${direction} as it's at the ${direction === 'up' ? 'top' : 'bottom'} already`);
+      return;
+    }
+    
+    // Create a new array with the reordered sections
+    const reorderedSections = [...sections];
+    const targetIndex = direction === 'up' ? sectionIndex - 1 : sectionIndex + 1;
+    
+    // Swap the sections
+    [reorderedSections[sectionIndex], reorderedSections[targetIndex]] = 
+    [reorderedSections[targetIndex], reorderedSections[sectionIndex]];
+    
+    // Update the section orders
+    console.log('Manually updating section order');
     updateSectionOrder(reorderedSections);
   };
 
@@ -100,7 +131,7 @@ const DraggableSectionList: React.FC<DraggableSectionListProps> = ({
                             isFirstSection={index === 0}
                             isLastSection={index === sections.length - 1}
                             onToggleVisibility={onToggleVisibility}
-                            onMoveSection={() => {}} // Not needed with drag-drop
+                            onMoveSection={handleMoveSection}
                             onDeleteSection={onDeleteSection}
                           />
                         </div>

@@ -26,11 +26,12 @@ const SectionActions: React.FC<SectionActionsProps> = ({
   const isMobile = useIsMobile();
   const buttonSize = isMobile ? "sm" : "icon";
   
-  // Fix for move section buttons - ensure the click handlers work correctly
+  // Explicitly define event handler functions to prevent event bubbling
   const handleMoveUp = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!isFirstSection) {
+      console.log('Moving section up:', sectionId);
       onMoveSection(sectionId, 'up');
     }
   };
@@ -39,8 +40,23 @@ const SectionActions: React.FC<SectionActionsProps> = ({
     e.preventDefault();
     e.stopPropagation();
     if (!isLastSection) {
+      console.log('Moving section down:', sectionId);
       onMoveSection(sectionId, 'down');
     }
+  };
+
+  const handleToggleVisibility = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Toggling visibility for section:', sectionId, 'Current visibility:', isVisible);
+    onToggleVisibility(sectionId, isVisible);
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Deleting section:', sectionId);
+    onDeleteSection(sectionId);
   };
   
   return (
@@ -48,8 +64,9 @@ const SectionActions: React.FC<SectionActionsProps> = ({
       <Button 
         variant="ghost" 
         size={buttonSize}
-        onClick={() => onToggleVisibility(sectionId, isVisible)}
+        onClick={handleToggleVisibility}
         className="touch-target"
+        type="button"
       >
         {isVisible ? 
           <Eye className="h-4 w-4" /> : 
@@ -63,6 +80,7 @@ const SectionActions: React.FC<SectionActionsProps> = ({
         onClick={handleMoveUp}
         disabled={isFirstSection}
         className="touch-target"
+        type="button"
       >
         <ArrowUp className="h-4 w-4" />
         {isMobile && <span className="ml-2 text-xs">Up</span>}
@@ -73,6 +91,7 @@ const SectionActions: React.FC<SectionActionsProps> = ({
         onClick={handleMoveDown}
         disabled={isLastSection}
         className="touch-target"
+        type="button"
       >
         <ArrowDown className="h-4 w-4" />
         {isMobile && <span className="ml-2 text-xs">Down</span>}
@@ -80,8 +99,9 @@ const SectionActions: React.FC<SectionActionsProps> = ({
       <Button 
         variant="ghost" 
         size={buttonSize}
-        onClick={() => onDeleteSection(sectionId)}
+        onClick={handleDelete}
         className="touch-target"
+        type="button"
       >
         <Trash2 className="h-4 w-4 text-destructive" />
         {isMobile && <span className="ml-2 text-xs text-destructive">Delete</span>}

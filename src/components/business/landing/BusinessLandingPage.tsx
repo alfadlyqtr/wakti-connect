@@ -148,7 +148,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     console.log("Auth required for subscription");
   };
 
-  // Fixed: Check if social links should be shown in their respective positions
+  // Check if social links should be shown in their respective positions
   const showHeaderSocialLinks = socialLinks && socialLinks.length > 0 && 
     ['header', 'both'].includes(social_icons_position || '');
   
@@ -158,23 +158,36 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   const showSidebarSocialLinks = socialLinks && socialLinks.length > 0 && 
     ['sidebar'].includes(social_icons_position || '');
 
-  console.log("Show header social links:", showHeaderSocialLinks, "Position:", social_icons_position);
-  console.log("Show footer social links:", showFooterSocialLinks, "Position:", social_icons_position);
-  console.log("Show sidebar social links:", showSidebarSocialLinks, "Position:", social_icons_position);
+  console.log("Show header social links:", showHeaderSocialLinks);
+  console.log("Show footer social links:", showFooterSocialLinks);
+  console.log("Show sidebar social links:", showSidebarSocialLinks);
 
   return (
     <CurrencyProvider initialCurrency={businessPage.business_id}>
       <div style={pageStyle} className="min-h-screen relative pb-10">
-        {/* Sidebar Social Icons */}
+        {/* Sidebar Social Icons - Fixed position for both mobile and desktop */}
         {showSidebarSocialLinks && (
-          <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-30">
+          <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-30 hidden md:block">
             <SocialIconsGroup 
               socialLinks={socialLinks || []}
               style={(social_icons_style as any) || "default"}
               size={(social_icons_size as any) || "default"}
               position="sidebar"
               vertical={true}
-              className="flex-col"
+            />
+          </div>
+        )}
+        
+        {/* Mobile Sidebar Social Icons - Show on smaller screens */}
+        {showSidebarSocialLinks && (
+          <div className="fixed left-2 top-1/2 transform -translate-y-1/2 z-30 block md:hidden">
+            <SocialIconsGroup 
+              socialLinks={socialLinks || []}
+              style={(social_icons_style as any) || "default"}
+              size="small" /* Smaller size for mobile */
+              position="sidebar"
+              vertical={true}
+              scale={0.8} /* Slightly smaller for mobile */
             />
           </div>
         )}
@@ -227,12 +240,12 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
           )}
         </div>
 
-        {/* Floating Subscribe Button - Fixed to ensure it appears when show_subscribe_button is true */}
+        {/* Floating Subscribe Button - Show based on page settings */}
         {show_subscribe_button && (
           <FloatingSubscribeButton 
             businessId={businessPage.business_id}
             visible={showSubscribeButton}
-            showButton={true}
+            showButton={true} /* Force to true to ensure visibility */
             isAuthenticated={isAuthenticated}
             onAuthRequired={handleAuthRequired}
             backgroundColor={primary_color}
