@@ -20,8 +20,8 @@ interface CurrencyOption {
 }
 
 const currencies: CurrencyOption[] = [
-  { value: "USD", label: "US Dollar (USD)", flag: "🇺🇸", symbol: "$" },
   { value: "QAR", label: "Qatari Riyal (QAR)", flag: "🇶🇦", symbol: "ر.ق" },
+  { value: "USD", label: "US Dollar (USD)", flag: "🇺🇸", symbol: "$" },
   { value: "AED", label: "UAE Dirham (AED)", flag: "🇦🇪", symbol: "د.إ" },
   { value: "SAR", label: "Saudi Arabian Riyal (SAR)", flag: "🇸🇦", symbol: "ر.س" },
   { value: "KWD", label: "Kuwaiti Dinar (KWD)", flag: "🇰🇼", symbol: "د.ك" },
@@ -30,7 +30,7 @@ const currencies: CurrencyOption[] = [
 ];
 
 const CurrencyTab = () => {
-  const [currency, setCurrency] = useState<Currency>("USD");
+  const [currency, setCurrency] = useState<Currency>("QAR");
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
   const { data: profileData, updateProfile, isUpdating } = useProfileSettings();
@@ -40,6 +40,9 @@ const CurrencyTab = () => {
   useEffect(() => {
     if (profileData?.currency_preference) {
       setCurrency(profileData.currency_preference as Currency);
+    } else {
+      // Default to QAR if no preference set
+      setCurrency('QAR');
     }
   }, [profileData]);
 

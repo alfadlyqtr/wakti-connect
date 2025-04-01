@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -10,7 +11,7 @@ interface CurrencyContextType {
 }
 
 const CurrencyContext = createContext<CurrencyContextType>({
-  currency: 'USD',
+  currency: 'QAR', // Changed default from USD to QAR
   setCurrency: () => {},
   isLoading: false
 });
@@ -26,7 +27,7 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({
   children, 
   initialCurrency
 }) => {
-  const [currency, setCurrency] = useState<Currency>('USD');
+  const [currency, setCurrency] = useState<Currency>('QAR'); // Changed default from USD to QAR
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
@@ -64,10 +65,18 @@ export const CurrencyProvider: React.FC<CurrencyProviderProps> = ({
           if (!error && data?.currency_preference) {
             console.info('User currency preference loaded:', data.currency_preference);
             setCurrency(data.currency_preference as Currency);
+          } else {
+            // If no preference set, default to QAR instead of USD
+            setCurrency('QAR');
           }
+        } else {
+          // Default to QAR for anonymous users
+          setCurrency('QAR');
         }
       } catch (error) {
         console.error('Error loading currency preference:', error);
+        // Set default to QAR if there's an error
+        setCurrency('QAR');
       } finally {
         setIsLoading(false);
       }

@@ -2,7 +2,7 @@
 import React from "react";
 import { SocialIconStyle, SocialIconSize } from "@/types/business.types";
 import { useSocialIconStyles } from "@/hooks/useSocialIconStyles";
-import { Facebook, Instagram, Twitter, Linkedin, Youtube, Globe, MessageCircle } from "lucide-react";
+import { Facebook, Instagram, Twitter, Linkedin, Youtube, Globe } from "lucide-react";
 
 interface SocialIconProps {
   platform: string;
@@ -13,9 +13,13 @@ interface SocialIconProps {
   textColor?: string;
   borderRadius?: string;
   hoverColor?: string;
+  borderColor?: string;
+  borderWidth?: string;
+  hoverBorderColor?: string;
+  scale?: number;
 }
 
-// Custom WhatsApp icon component
+// Custom WhatsApp icon component - fixed to properly display WhatsApp icon
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -85,7 +89,11 @@ const SocialIcon: React.FC<SocialIconProps> = ({
   backgroundColor,
   textColor,
   borderRadius,
-  hoverColor
+  hoverColor,
+  borderColor,
+  borderWidth,
+  hoverBorderColor,
+  scale
 }) => {
   const { buttonStyles, iconSize } = useSocialIconStyles({ 
     style, 
@@ -94,7 +102,11 @@ const SocialIcon: React.FC<SocialIconProps> = ({
     backgroundColor,
     textColor,
     borderRadius,
-    hoverColor
+    hoverColor,
+    borderColor,
+    borderWidth,
+    hoverBorderColor,
+    scale
   });
 
   const renderIcon = () => {

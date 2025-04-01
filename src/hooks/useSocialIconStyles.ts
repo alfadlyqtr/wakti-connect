@@ -10,6 +10,10 @@ export interface SocialIconStyleProps {
   textColor?: string;
   borderRadius?: string;
   hoverColor?: string;
+  borderColor?: string;
+  borderWidth?: string;
+  hoverBorderColor?: string;
+  scale?: number;
 }
 
 export const useSocialIconStyles = ({ 
@@ -19,7 +23,11 @@ export const useSocialIconStyles = ({
   backgroundColor,
   textColor,
   borderRadius,
-  hoverColor
+  hoverColor,
+  borderColor,
+  borderWidth = "1px",
+  hoverBorderColor,
+  scale = 1
 }: SocialIconStyleProps) => {
   const platformColors: Record<string, string> = {
     facebook: "#1877F2",
@@ -46,12 +54,19 @@ export const useSocialIconStyles = ({
     const buttonColor = backgroundColor || platformColors[platform] || "#6E6E6E";
     const customBorderRadius = borderRadius || "9999px"; // Default to rounded-full
     
-    const customStyle: Record<string, any> = {};
+    const customStyle: Record<string, any> = {
+      transform: `scale(${scale})`
+    };
     
     // Apply custom properties if provided
     if (backgroundColor) customStyle.backgroundColor = backgroundColor;
     if (textColor) customStyle.color = textColor;
     if (borderRadius) customStyle.borderRadius = borderRadius;
+    if (borderColor) {
+      customStyle.borderColor = borderColor;
+      customStyle.borderWidth = borderWidth;
+      customStyle.borderStyle = "solid";
+    }
     
     switch (style) {
       case "colored":
@@ -82,7 +97,7 @@ export const useSocialIconStyles = ({
           style: { ...customStyle }
         };
     }
-  }, [style, platform, iconSize.containerSize, backgroundColor, textColor, borderRadius, hoverColor]);
+  }, [style, platform, iconSize.containerSize, backgroundColor, textColor, borderRadius, hoverColor, borderColor, borderWidth, scale]);
 
   return {
     buttonStyles,

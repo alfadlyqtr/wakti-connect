@@ -66,14 +66,15 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
     isSubscribed, 
     checkingSubscription, 
     subscribe, 
-    unsubscribe 
+    unsubscribe,
+    isAuthenticated
   } = useBusinessSubscribers(businessId);
   
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     
     // Check if authentication is required
-    if (onAuthRequired) {
+    if (!isAuthenticated && onAuthRequired) {
       onAuthRequired();
       return;
     }

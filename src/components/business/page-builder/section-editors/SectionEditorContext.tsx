@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState } from "react";
 import { useUpdateSectionMutation } from "@/hooks/business-page/useBusinessPageMutations";
 import { toast } from "@/components/ui/use-toast";
@@ -107,7 +108,7 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
     setIsDirty(true);
   };
 
-  // Apply template content - ENHANCED to properly apply styling to both content and section level
+  // Apply template content - FIXED to properly apply styling to both content and section level
   const applyTemplateContent = (templateContent: Record<string, any>) => {
     console.log('Applying template content:', templateContent);
     
@@ -122,15 +123,18 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
     
     // Extract section level styling properties
     const sectionLevelStyles: Record<string, any> = {};
+    const contentLevelStyles: Record<string, any> = {};
     
-    // Build section level properties object
-    sectionLevelStyleProperties.forEach(prop => {
-      if (templateContent[prop] !== undefined) {
-        sectionLevelStyles[prop] = templateContent[prop];
+    // Separate section level properties from content level properties
+    Object.keys(templateContent).forEach(key => {
+      if (sectionLevelStyleProperties.includes(key)) {
+        sectionLevelStyles[key] = templateContent[key];
+      } else {
+        contentLevelStyles[key] = templateContent[key];
       }
     });
     
-    // Update content data with template content (keeps all properties including styling)
+    // Update content data with all template content
     setContentData({...templateContent});
     setIsDirty(true);
     

@@ -16,6 +16,11 @@ interface SocialIconsGroupProps {
   borderRadius?: string;
   hoverColor?: string;
   spacing?: 'tight' | 'default' | 'loose';
+  borderColor?: string;
+  borderWidth?: string;
+  hoverBorderColor?: string;
+  opacity?: number;
+  scale?: number;
 }
 
 const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
@@ -29,7 +34,12 @@ const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
   textColor,
   borderRadius,
   hoverColor,
-  spacing = "default"
+  spacing = "default",
+  borderColor,
+  borderWidth,
+  hoverBorderColor,
+  opacity = 1,
+  scale = 1
 }) => {
   if (!socialLinks || socialLinks.length === 0) {
     return null;
@@ -65,7 +75,8 @@ const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
       getPositionClass(),
       vertical ? "flex-col" : "flex-row flex-wrap",
       className
-    )}>
+    )}
+    style={{ opacity }}>
       {socialLinks.map((link) => (
         <SocialIcon
           key={link.id}
@@ -77,6 +88,10 @@ const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
           textColor={textColor}
           borderRadius={borderRadius}
           hoverColor={hoverColor}
+          borderColor={borderColor}
+          borderWidth={borderWidth}
+          hoverBorderColor={hoverBorderColor}
+          scale={scale}
         />
       ))}
     </div>

@@ -23,6 +23,13 @@ interface FloatingSubscribeButtonProps {
   variant?: "default" | "outline" | "gradient" | "minimal";
   iconPosition?: "left" | "right" | "none";
   boxShadow?: "none" | "sm" | "md" | "lg";
+  fontWeight?: "normal" | "medium" | "semibold" | "bold";
+  borderColor?: string;
+  borderWidth?: string;
+  hoverBorderColor?: string;
+  paddingX?: string;
+  paddingY?: string;
+  gradientDirection?: "to-r" | "to-l" | "to-t" | "to-b" | "to-tr" | "to-tl" | "to-br" | "to-bl";
 }
 
 const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
@@ -44,7 +51,14 @@ const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
   customText = "Subscribe",
   variant = "gradient",
   iconPosition = "left",
-  boxShadow = "md"
+  boxShadow = "md",
+  fontWeight,
+  borderColor,
+  borderWidth,
+  hoverBorderColor,
+  paddingX,
+  paddingY,
+  gradientDirection
 }) => {
   if (!showButton) return null;
 
@@ -70,6 +84,13 @@ const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
         variant={variant}
         iconPosition={iconPosition}
         boxShadow={boxShadow}
+        fontWeight={fontWeight}
+        borderColor={borderColor}
+        borderWidth={borderWidth}
+        hoverBorderColor={hoverBorderColor}
+        paddingX={paddingX}
+        paddingY={paddingY}
+        gradientDirection={gradientDirection}
       />
     </div>
   );
