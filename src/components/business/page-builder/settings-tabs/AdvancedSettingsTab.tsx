@@ -10,6 +10,7 @@ interface AdvancedSettingsTabProps {
     id?: string;
     chatbot_enabled?: boolean;
     chatbot_code?: string;
+    chatbot_position?: string;
     show_subscribe_button?: boolean;
     subscribe_button_text?: string;
     subscribe_button_position?: string;
@@ -139,8 +140,10 @@ const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
       <ChatbotCard 
         chatbotEnabled={!!pageData.chatbot_enabled}
         chatbotCode={pageData.chatbot_code || ""}
+        chatbotPosition={pageData.chatbot_position || "sidebar"}
         handleInputChange={handleLocalInputChange}
         handleToggleChange={handleLocalToggleChange}
+        handleSelectChange={handleLocalSelectChange}
       />
 
       <SaveButton 

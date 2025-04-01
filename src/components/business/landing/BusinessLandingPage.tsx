@@ -39,8 +39,17 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   const { isSubscribed, checkingSubscription, subscribe, unsubscribe } = 
     useBusinessSubscribers(businessPage?.business_id);
 
-  // Initialize TMW Chatbot
-  useTMWChatbot(businessPage?.chatbot_enabled, businessPage?.chatbot_code);
+  // Create chatbot container ID unique to this business
+  const chatbotContainerId = businessPage?.business_id 
+    ? `tmw-chatbot-container-${businessPage.business_id}`
+    : 'tmw-chatbot-container';
+
+  // Initialize TMW Chatbot with the container ID
+  useTMWChatbot(
+    businessPage?.chatbot_enabled, 
+    businessPage?.chatbot_code,
+    chatbotContainerId
+  );
 
   console.log("BusinessLandingPage - authentication status:", isAuthenticated);
   console.log("BusinessLandingPage - businessPage:", businessPage);
@@ -54,7 +63,8 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   });
   console.log("BusinessLandingPage - TMW chatbot settings:", {
     enabled: businessPage?.chatbot_enabled,
-    code: businessPage?.chatbot_code ? businessPage.chatbot_code.substring(0, 50) + '...' : null
+    code: businessPage?.chatbot_code ? businessPage.chatbot_code.substring(0, 50) + '...' : null,
+    container: chatbotContainerId
   });
 
   // Handle scroll effects for powered by and floating button
@@ -98,6 +108,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     ['sidebar'].includes(businessPage.social_icons_position || '');
   const showFloatingSubscribeBtn = businessPage.show_subscribe_button && 
     ['floating', 'both'].includes(businessPage.subscribe_button_position || '');
+  const showChatbot = businessPage.chatbot_enabled && businessPage.chatbot_code;
 
   return (
     <CurrencyProvider initialCurrency={businessPage.business_id}>
@@ -107,49 +118,64 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
         textColor={businessPage.text_color}
         fontFamily={businessPage.font_family}
       >
-        {/* Sidebar Social Links */}
-        {showSidebarSocialLinks && (
-          <SidebarSocialLinks
-            socialLinks={socialLinks || []}
-            style={(businessPage.social_icons_style as any) || "default"}
-            size={(businessPage.social_icons_size as any) || "default"}
-            position="sidebar"
-          />
-        )}
-        
-        {/* Floating Subscribe Button */}
-        {showFloatingSubscribeBtn && (
-          <FloatingSubscribeButton 
-            businessId={businessPage.business_id}
-            visible={showFloatingButton}
-            showButton={businessPage.show_subscribe_button}
-            isAuthenticated={isAuthenticated}
-            onAuthRequired={handleAuthRequired}
-            backgroundColor={businessPage.primary_color}
-            textColor="#FFFFFF"
-            borderRadius="0.5rem"
-            gradientFrom={businessPage.primary_color}
-            gradientTo={businessPage.secondary_color}
-            customText={businessPage.subscribe_button_text || "Subscribe"}
-          />
-        )}
-        
-        {/* Main Content */}
-        <BusinessPageContent 
-          businessPage={businessPage}
-          pageSections={pageSections || []}
-          socialLinks={socialLinks}
-          isPreviewMode={isPreviewMode}
-          isAuthenticated={isAuthenticated}
-          isSubscribed={isSubscribed}
-          checkingSubscription={checkingSubscription}
-          subscribe={subscribe}
-          unsubscribe={unsubscribe}
-          handleAuthRequired={handleAuthRequired}
-        />
+        <div className="flex flex-col md:flex-row relative min-h-screen">
+          {/* Main Content Area */}
+          <div className="flex-1">
+            {/* Sidebar Social Links */}
+            {showSidebarSocialLinks && (
+              <SidebarSocialLinks
+                socialLinks={socialLinks || []}
+                style={(businessPage.social_icons_style as any) || "default"}
+                size={(businessPage.social_icons_size as any) || "default"}
+                position="sidebar"
+              />
+            )}
+            
+            {/* Floating Subscribe Button */}
+            {showFloatingSubscribeBtn && (
+              <FloatingSubscribeButton 
+                businessId={businessPage.business_id}
+                visible={showFloatingButton}
+                showButton={businessPage.show_subscribe_button}
+                isAuthenticated={isAuthenticated}
+                onAuthRequired={handleAuthRequired}
+                backgroundColor={businessPage.primary_color}
+                textColor="#FFFFFF"
+                borderRadius="0.5rem"
+                gradientFrom={businessPage.primary_color}
+                gradientTo={businessPage.secondary_color}
+                customText={businessPage.subscribe_button_text || "Subscribe"}
+              />
+            )}
+            
+            {/* Main Content */}
+            <BusinessPageContent 
+              businessPage={businessPage}
+              pageSections={pageSections || []}
+              socialLinks={socialLinks}
+              isPreviewMode={isPreviewMode}
+              isAuthenticated={isAuthenticated}
+              isSubscribed={isSubscribed}
+              checkingSubscription={checkingSubscription}
+              subscribe={subscribe}
+              unsubscribe={unsubscribe}
+              handleAuthRequired={handleAuthRequired}
+            />
 
-        {/* Powered by WAKTI */}
-        {showPoweredBy && <PoweredByWAKTI />}
+            {/* Powered by WAKTI */}
+            {showPoweredBy && <PoweredByWAKTI />}
+          </div>
+          
+          {/* Chatbot Sidebar - conditionally rendered */}
+          {showChatbot && (
+            <div 
+              id={chatbotContainerId}
+              className="hidden md:block w-[350px] border-l border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 overflow-hidden"
+            >
+              {/* Chatbot will be injected here by the hook */}
+            </div>
+          )}
+        </div>
       </PageBackground>
     </CurrencyProvider>
   );

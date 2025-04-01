@@ -9,9 +9,14 @@ import { injectScriptChatbot } from "./scriptHandler";
  * Hook to integrate TMW AI Chatbot into the application
  * @param chatbotEnabled Boolean indicating if the chatbot is enabled
  * @param chatbotCode The chatbot embed code (iframe or script)
+ * @param containerId ID of the container element to place the chatbot in
  * @returns Reference to the chatbot element
  */
-export const useTMWChatbot = (chatbotEnabled: boolean | undefined, chatbotCode: string | undefined) => {
+export const useTMWChatbot = (
+  chatbotEnabled: boolean | undefined, 
+  chatbotCode: string | undefined,
+  containerId: string = 'tmw-chatbot-container'
+) => {
   const chatbotScriptRef = useRef<HTMLScriptElement | HTMLIFrameElement | null>(null);
   const isMobile = useIsMobile();
   
@@ -31,6 +36,15 @@ export const useTMWChatbot = (chatbotEnabled: boolean | undefined, chatbotCode: 
     // Remove any existing chatbot elements from DOM
     cleanupExistingChatbotElements();
     
+    // Create or find the container element
+    let container = document.getElementById(containerId);
+    if (!container) {
+      console.log(`Creating new TMW chatbot container with ID: ${containerId}`);
+      container = document.createElement('div');
+      container.id = containerId;
+      document.body.appendChild(container);
+    }
+    
     if (chatbotEnabled && chatbotCode) {
       try {
         console.log("TMW AI Chatbot is enabled");
@@ -40,14 +54,17 @@ export const useTMWChatbot = (chatbotEnabled: boolean | undefined, chatbotCode: 
         
         if (isIframeEmbed) {
           // Handle iframe embed
-          chatbotScriptRef.current = injectIframeChatbot(chatbotCode, isMobile);
+          chatbotScriptRef.current = injectIframeChatbot(chatbotCode, containerId);
         } else {
           // Handle script-based embed
-          chatbotScriptRef.current = injectScriptChatbot(chatbotCode);
+          chatbotScriptRef.current = injectScriptChatbot(chatbotCode, containerId);
         }
       } catch (error) {
         console.error('Error injecting TMW AI Chatbot code:', error);
       }
+    } else if (container) {
+      // Clear the container if chatbot is disabled
+      container.innerHTML = '';
     }
     
     // Cleanup function
@@ -63,8 +80,14 @@ export const useTMWChatbot = (chatbotEnabled: boolean | undefined, chatbotCode: 
       
       // Clean up any other elements that might have been created
       cleanupExistingChatbotElements();
+      
+      // Clean up the container too
+      const chatbotContainer = document.getElementById(containerId);
+      if (chatbotContainer && chatbotContainer.parentNode) {
+        chatbotContainer.parentNode.removeChild(chatbotContainer);
+      }
     };
-  }, [chatbotEnabled, chatbotCode, isMobile]);
+  }, [chatbotEnabled, chatbotCode, containerId, isMobile]);
   
   return chatbotScriptRef;
 };

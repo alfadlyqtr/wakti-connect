@@ -3,19 +3,24 @@ import React from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface ChatbotSettingsProps {
   chatbotEnabled: boolean;
   chatbotCode: string;
+  chatbotPosition?: 'floating' | 'sidebar' | string;
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleToggleChange: (name: string, checked: boolean) => void;
+  handleSelectChange?: (name: string, value: string) => void;
 }
 
 const ChatbotSettings: React.FC<ChatbotSettingsProps> = ({
   chatbotEnabled,
   chatbotCode,
+  chatbotPosition = 'sidebar',
   handleInputChange,
-  handleToggleChange
+  handleToggleChange,
+  handleSelectChange
 }) => {
   return (
     <div className="space-y-4">
@@ -34,21 +39,44 @@ const ChatbotSettings: React.FC<ChatbotSettingsProps> = ({
       </div>
       
       {chatbotEnabled && (
-        <div className="space-y-2 mt-4">
-          <Label htmlFor="chatbot_code">Chatbot Embed Code</Label>
-          <Textarea
-            id="chatbot_code"
-            name="chatbot_code"
-            value={chatbotCode || ""}
-            onChange={handleInputChange}
-            placeholder="Paste your TMW AI Chatbot embed code here"
-            rows={6}
-            className="font-mono text-sm"
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            Paste the embed code provided by TMW AI Chatbot platform
-          </p>
-        </div>
+        <>
+          <div className="space-y-2 mt-4">
+            <Label>Chatbot Position</Label>
+            <RadioGroup 
+              defaultValue={chatbotPosition} 
+              onValueChange={(value) => handleSelectChange && handleSelectChange('chatbot_position', value)}
+              className="grid grid-cols-2 gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="sidebar" id="chatbot-sidebar" />
+                <Label htmlFor="chatbot-sidebar">Right Sidebar</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="floating" id="chatbot-floating" />
+                <Label htmlFor="chatbot-floating">Floating Widget</Label>
+              </div>
+            </RadioGroup>
+            <p className="text-xs text-muted-foreground mt-1">
+              Choose how the chatbot appears on your page
+            </p>
+          </div>
+          
+          <div className="space-y-2 mt-4">
+            <Label htmlFor="chatbot_code">Chatbot Embed Code</Label>
+            <Textarea
+              id="chatbot_code"
+              name="chatbot_code"
+              value={chatbotCode || ""}
+              onChange={handleInputChange}
+              placeholder="Paste your TMW AI Chatbot embed code here"
+              rows={6}
+              className="font-mono text-sm"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Paste the embed code provided by TMW AI Chatbot platform
+            </p>
+          </div>
+        </>
       )}
     </div>
   );

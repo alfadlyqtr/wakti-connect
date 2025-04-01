@@ -6,15 +6,19 @@ import ChatbotSettings from "./ChatbotSettings";
 interface ChatbotCardProps {
   chatbotEnabled: boolean;
   chatbotCode: string;
+  chatbotPosition?: string;
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleToggleChange: (name: string, checked: boolean) => void;
+  handleSelectChange?: (name: string, value: string) => void;
 }
 
 const ChatbotCard: React.FC<ChatbotCardProps> = ({
   chatbotEnabled,
   chatbotCode,
+  chatbotPosition,
   handleInputChange,
-  handleToggleChange
+  handleToggleChange,
+  handleSelectChange
 }) => {
   return (
     <Card>
@@ -28,8 +32,10 @@ const ChatbotCard: React.FC<ChatbotCardProps> = ({
         <ChatbotSettings 
           chatbotEnabled={chatbotEnabled}
           chatbotCode={chatbotCode}
+          chatbotPosition={chatbotPosition}
           handleInputChange={handleInputChange}
           handleToggleChange={handleToggleChange}
+          handleSelectChange={handleSelectChange}
         />
       </CardContent>
     </Card>

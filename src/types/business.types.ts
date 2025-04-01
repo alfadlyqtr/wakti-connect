@@ -1,3 +1,4 @@
+
 export interface BusinessProfile {
   id: string;
   business_name: string;
@@ -41,6 +42,7 @@ export interface BusinessPage {
   is_published: boolean;
   chatbot_enabled?: boolean;
   chatbot_code?: string;
+  chatbot_position?: 'sidebar' | 'floating' | string;
   show_subscribe_button?: boolean;
   subscribe_button_text?: string; 
   created_at?: string;

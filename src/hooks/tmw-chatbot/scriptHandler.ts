@@ -2,7 +2,18 @@
 /**
  * Handles the injection of script-based TMW chatbots
  */
-export const injectScriptChatbot = (chatbotCode: string): HTMLScriptElement | null => {
+export const injectScriptChatbot = (
+  chatbotCode: string, 
+  targetElementId: string = 'tmw-chatbot-container'
+): HTMLScriptElement | null => {
+  // Find the target container
+  const targetContainer = document.getElementById(targetElementId);
+  
+  if (!targetContainer) {
+    console.error(`Target container #${targetElementId} not found for TMW chatbot`);
+    return null;
+  }
+  
   // Check if the chatbot code contains a script tag
   const isFullScriptTag = chatbotCode.trim().startsWith('<script') && chatbotCode.trim().endsWith('</script>');
   
@@ -23,8 +34,17 @@ export const injectScriptChatbot = (chatbotCode: string): HTMLScriptElement | nu
   console.log("Script analysis:", { 
     hasScriptTag: isFullScriptTag, 
     hasSrc: !!scriptSrc, 
-    hasContent: !!scriptContent.length
+    hasContent: !!scriptContent.length,
+    targetElementId
   });
+  
+  // Clear previous content
+  targetContainer.innerHTML = '';
+  
+  // Create a div to hold script-created content
+  const contentDiv = document.createElement('div');
+  contentDiv.id = 'tmw-chatbot-content-' + Date.now();
+  targetContainer.appendChild(contentDiv);
   
   // Create a new script element
   const script = document.createElement('script');
@@ -51,35 +71,36 @@ export const injectScriptChatbot = (chatbotCode: string): HTMLScriptElement | nu
     srcScript.src = scriptSrc;
     if (asyncAttr) srcScript.async = true;
     if (deferAttr) srcScript.defer = true;
-    document.body.appendChild(srcScript);
+    document.head.appendChild(srcScript);
     
-    // Then create and append the content script
+    // Then create and append the content script with reference to the container
     const contentScript = document.createElement('script');
     contentScript.id = 'tmw-chatbot-content-script-' + Date.now();
+    // Modify the script content to target our container if needed
     contentScript.textContent = scriptContent;
     
     // Add a small delay to ensure the src script loads first
     setTimeout(() => {
-      document.body.appendChild(contentScript);
+      document.head.appendChild(contentScript);
     }, 100);
     
-    console.log('TMW AI Chatbot hybrid scripts have been injected');
+    console.log('TMW AI Chatbot hybrid scripts have been injected with target:', targetElementId);
     
     return contentScript;
   } else if (scriptSrc) {
     // Case 2: Only src attribute
     script.src = scriptSrc;
-    document.body.appendChild(script);
+    document.head.appendChild(script);
     
-    console.log('TMW AI Chatbot external script has been injected');
+    console.log('TMW AI Chatbot external script has been injected with target:', targetElementId);
     
     return script;
   } else {
     // Case 3: Only inline content
     script.textContent = scriptContent;
-    document.body.appendChild(script);
+    document.head.appendChild(script);
     
-    console.log('TMW AI Chatbot inline script has been injected');
+    console.log('TMW AI Chatbot inline script has been injected with target:', targetElementId);
     
     return script;
   }

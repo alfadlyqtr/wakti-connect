@@ -28,12 +28,22 @@ export const cleanupExistingChatbotElements = (): void => {
   });
   
   // Remove any div elements that might have been created for the chatbot
-  const chatbotDivs = document.querySelectorAll('div[id*="tmw"]');
+  const chatbotDivs = document.querySelectorAll('div[id*="tmw-chatbot-content"]');
   chatbotDivs.forEach(div => {
     try {
       div.parentNode?.removeChild(div);
     } catch (err) {
       console.error("Error removing chatbot div:", err);
+    }
+  });
+  
+  // Don't remove containers, just clean their contents
+  const containers = document.querySelectorAll('div[id^="tmw-chatbot-container"]');
+  containers.forEach(container => {
+    try {
+      container.innerHTML = '';
+    } catch (err) {
+      console.error("Error clearing chatbot container:", err);
     }
   });
 };
