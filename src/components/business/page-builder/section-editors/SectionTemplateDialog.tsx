@@ -8,9 +8,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { BookTemplate } from "lucide-react"; // Changed from TemplateIcon to BookTemplate
+import { BookTemplate } from "lucide-react";
 import { SectionType } from "@/types/business.types";
 import { cn } from "@/lib/utils";
+import { useSectionEditor } from "@/hooks/useSectionEditor";
 
 interface SectionTemplateDialogProps {
   isOpen: boolean;
@@ -25,6 +26,8 @@ const SectionTemplateDialog: React.FC<SectionTemplateDialogProps> = ({
   sectionType,
   onSelect,
 }) => {
+  const { applyTemplateContent } = useSectionEditor();
+  
   // Predefined templates for different section types
   const templates: Record<SectionType, Record<string, Record<string, any>>> = {
     header: {
@@ -379,12 +382,14 @@ const SectionTemplateDialog: React.FC<SectionTemplateDialogProps> = ({
                 "flex flex-col"
               )}
               onClick={() => {
+                // Use the new applyTemplateContent function instead of just passing to onSelect
+                applyTemplateContent(template);
                 onSelect(template);
                 onOpenChange(false);
               }}
             >
               <div className="flex items-center gap-2 mb-2">
-                <BookTemplate className="h-5 w-5 text-primary" /> {/* Changed from TemplateIcon to BookTemplate */}
+                <BookTemplate className="h-5 w-5 text-primary" />
                 <h3 className="font-medium capitalize">{id}</h3>
               </div>
               

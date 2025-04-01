@@ -26,6 +26,7 @@ interface SectionEditorContextType {
   setIsDirty: (value: boolean) => void;
   isNewSection: () => boolean;
   handleSaveSection: () => Promise<void>;
+  applyTemplateContent: (templateContent: Record<string, any>) => void;
 }
 
 export const SectionEditorContext = createContext<SectionEditorContextType | undefined>(undefined);
@@ -106,6 +107,42 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
     setContentData(prev => ({ ...prev, [name]: value }));
     setIsDirty(true);
   };
+
+  // Apply template content - NEW FUNCTION to handle template application properly
+  const applyTemplateContent = (templateContent: Record<string, any>) => {
+    // Extract styling properties that need to be applied at section level
+    const sectionLevelStyles: Record<string, any> = {};
+    
+    // Map template content styling properties to section level properties
+    if (templateContent.background_color) {
+      sectionLevelStyles.background_color = templateContent.background_color;
+    }
+    if (templateContent.text_color) {
+      sectionLevelStyles.text_color = templateContent.text_color;
+    }
+    if (templateContent.padding) {
+      sectionLevelStyles.padding = templateContent.padding;
+    }
+    if (templateContent.border_radius) {
+      sectionLevelStyles.border_radius = templateContent.border_radius;
+    }
+    if (templateContent.background_image_url) {
+      sectionLevelStyles.background_image_url = templateContent.background_image_url;
+    }
+    
+    // Update content data with template content
+    setContentData({...templateContent});
+    
+    // Apply section level styles directly to the section
+    if (Object.keys(sectionLevelStyles).length > 0) {
+      updateSectionMutation.mutateAsync({ 
+        sectionId: section.id, 
+        data: sectionLevelStyles
+      });
+    }
+    
+    setIsDirty(true);
+  };
   
   // Submit form
   const handleSubmit = async () => {
@@ -163,7 +200,8 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
     setContentData,
     setIsDirty,
     isNewSection,
-    handleSaveSection
+    handleSaveSection,
+    applyTemplateContent
   };
   
   return (

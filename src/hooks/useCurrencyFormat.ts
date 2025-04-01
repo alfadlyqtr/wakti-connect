@@ -13,8 +13,6 @@ export const useCurrencyFormat = (props?: UseCurrencyFormatProps) => {
   // Use business currency if available, otherwise fall back to global
   const currency = businessCurrency || globalCurrency;
   
-  console.log('useCurrencyFormat using currency:', currency, 'from business:', props?.businessId);
-  
   const formatCurrency = (amount: number | null | undefined): string => {
     if (amount === null || amount === undefined) {
       return '-';
@@ -35,7 +33,6 @@ export const useCurrencyFormat = (props?: UseCurrencyFormatProps) => {
     const options = currencyFormatOptions[currency] || currencyFormatOptions.USD;
     
     const formatted = new Intl.NumberFormat('en-US', options).format(amount);
-    console.log(`Formatted ${amount} using ${currency} to: ${formatted}`);
     return formatted;
   };
   

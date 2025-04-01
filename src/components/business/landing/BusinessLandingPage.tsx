@@ -15,6 +15,7 @@ import FloatingSubscribeButton from "./FloatingSubscribeButton";
 import { useTMWChatbot } from "@/hooks/useTMWChatbot";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 
 interface BusinessLandingPageComponentProps {
   slug?: string;
@@ -160,103 +161,105 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageComponentProps> 
   const socialIconsPosition = businessPage.social_icons_position || 'footer';
   
   return (
-    <div 
-      className={`flex flex-col min-h-screen font-${fontFamily}`}
-      style={{ 
-        backgroundImage: backgroundPattern,
-        backgroundSize: backgroundSize,
-        backgroundColor: backgroundColor,
-      }}
-    >
-      <PoweredByWAKTI position="top" />
-      
-      {socialIconsPosition === 'header' && socialLinks && socialLinks.length > 0 && (
-        <div className="py-4 border-b">
-          <div className="container mx-auto px-4">
-            <BusinessSocialLinks 
-              socialLinks={socialLinks} 
-              iconsStyle={socialIconsStyle} 
-              size={socialIconsSize} 
-            />
-          </div>
-        </div>
-      )}
-      
+    <CurrencyProvider>
       <div 
-        style={{
-          '--primary-color': primaryColor,
-          '--secondary-color': secondaryColor,
-          '--text-color': textColor,
-        } as React.CSSProperties}
-        className="flex-1"
+        className={`flex flex-col min-h-screen font-${fontFamily}`}
+        style={{ 
+          backgroundImage: backgroundPattern,
+          backgroundSize: backgroundSize,
+          backgroundColor: backgroundColor,
+        }}
       >
-        <AuthenticationAlert 
-          visible={showAuthAlert} 
-          onDismiss={() => setShowAuthAlert(false)} 
-        />
+        <PoweredByWAKTI position="top" />
         
-        <div 
-          className="mx-auto px-4 py-4" 
-          style={{ maxWidth: contentMaxWidth }}
-        >
-          {showTopSubscribeBtn && (
-            <div className="mb-8 flex justify-center">
-              <BusinessSubscribeButton 
-                businessId={businessPage.business_id}
-                customText={businessPage.subscribe_button_text || "Subscribe"}
-                buttonStyle={buttonStyleConfig}
-                size={subscribeButtonSize === 'small' ? "sm" : subscribeButtonSize === 'large' ? "lg" : "default"}
-                className={cn(
-                  "font-semibold hover:opacity-90 transition-all",
-                  "animate-fade-in flex items-center gap-2"
-                )}
-                onAuthRequired={handleTrySubscribe}
-              />
-            </div>
-          )}
-          
-          <div className={sectionGap}>
-            <BusinessPageSections 
-              pageSections={pageSections} 
-              businessPage={businessPage} 
-            />
-          </div>
-          
-          {socialLinks && socialLinks.length > 0 && socialIconsPosition === 'footer' && (
-            <div className="mt-12 pt-6 border-t">
+        {socialIconsPosition === 'header' && socialLinks && socialLinks.length > 0 && (
+          <div className="py-4 border-b">
+            <div className="container mx-auto px-4">
               <BusinessSocialLinks 
                 socialLinks={socialLinks} 
                 iconsStyle={socialIconsStyle} 
-                size={socialIconsSize}
+                size={socialIconsSize} 
               />
             </div>
-          )}
-        </div>
-      </div>
-      
-      {socialIconsPosition === 'sidebar' && socialLinks && socialLinks.length > 0 && (
-        <div className="fixed left-4 top-1/2 transform -translate-y-1/2 hidden md:flex flex-col gap-3">
-          <BusinessSocialLinks 
-            socialLinks={socialLinks} 
-            iconsStyle={socialIconsStyle} 
-            size={socialIconsSize}
-            vertical={true}
+          </div>
+        )}
+        
+        <div 
+          style={{
+            '--primary-color': primaryColor,
+            '--secondary-color': secondaryColor,
+            '--text-color': textColor,
+          } as React.CSSProperties}
+          className="flex-1"
+        >
+          <AuthenticationAlert 
+            visible={showAuthAlert} 
+            onDismiss={() => setShowAuthAlert(false)} 
           />
+          
+          <div 
+            className="mx-auto px-4 py-4" 
+            style={{ maxWidth: contentMaxWidth }}
+          >
+            {showTopSubscribeBtn && (
+              <div className="mb-8 flex justify-center">
+                <BusinessSubscribeButton 
+                  businessId={businessPage.business_id}
+                  customText={businessPage.subscribe_button_text || "Subscribe"}
+                  buttonStyle={buttonStyleConfig}
+                  size={subscribeButtonSize === 'small' ? "sm" : subscribeButtonSize === 'large' ? "lg" : "default"}
+                  className={cn(
+                    "font-semibold hover:opacity-90 transition-all",
+                    "animate-fade-in flex items-center gap-2"
+                  )}
+                  onAuthRequired={handleTrySubscribe}
+                />
+              </div>
+            )}
+            
+            <div className={sectionGap}>
+              <BusinessPageSections 
+                pageSections={pageSections} 
+                businessPage={businessPage} 
+              />
+            </div>
+            
+            {socialLinks && socialLinks.length > 0 && socialIconsPosition === 'footer' && (
+              <div className="mt-12 pt-6 border-t">
+                <BusinessSocialLinks 
+                  socialLinks={socialLinks} 
+                  iconsStyle={socialIconsStyle} 
+                  size={socialIconsSize}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      )}
-      
-      <FloatingSubscribeButton 
-        businessId={businessPage.business_id}
-        visible={showFloatingSubscribe && enableFloatingBtn}
-        showButton={showSubscribeButton}
-        isAuthenticated={isAuthenticated}
-        onAuthRequired={handleTrySubscribe}
-        buttonStyle={buttonStyleConfig}
-        size={subscribeButtonSize === 'small' ? "sm" : subscribeButtonSize === 'large' ? "lg" : "default"}
-      />
-      
-      <PoweredByWAKTI position="bottom" />
-    </div>
+        
+        {socialIconsPosition === 'sidebar' && socialLinks && socialLinks.length > 0 && (
+          <div className="fixed left-4 top-1/2 transform -translate-y-1/2 hidden md:flex flex-col gap-3">
+            <BusinessSocialLinks 
+              socialLinks={socialLinks} 
+              iconsStyle={socialIconsStyle} 
+              size={socialIconsSize}
+              vertical={true}
+            />
+          </div>
+        )}
+        
+        <FloatingSubscribeButton 
+          businessId={businessPage.business_id}
+          visible={showFloatingSubscribe && enableFloatingBtn}
+          showButton={showSubscribeButton}
+          isAuthenticated={isAuthenticated}
+          onAuthRequired={handleTrySubscribe}
+          buttonStyle={buttonStyleConfig}
+          size={subscribeButtonSize === 'small' ? "sm" : subscribeButtonSize === 'large' ? "lg" : "default"}
+        />
+        
+        <PoweredByWAKTI position="bottom" />
+      </div>
+    </CurrencyProvider>
   );
 };
 
