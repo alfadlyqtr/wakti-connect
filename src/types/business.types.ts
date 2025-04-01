@@ -1,3 +1,4 @@
+
 export interface BusinessProfile {
   id: string;
   business_name: string;
@@ -123,4 +124,4 @@ export interface SectionStyles {
 // Define allowed icon styles
 export type SocialIconStyle = 'default' | 'colored' | 'rounded' | 'outlined';
 export type SocialIconSize = 'small' | 'default' | 'large';
-export type SocialIconPosition = 'footer' | 'header' | 'sidebar';
+export type SocialIconPosition = 'footer' | 'header' | 'sidebar' | 'both' | 'top' | 'bottom' | 'left' | 'right';

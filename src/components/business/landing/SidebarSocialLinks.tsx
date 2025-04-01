@@ -1,13 +1,13 @@
 
 import React from "react";
-import { BusinessSocialLink, SocialIconStyle, SocialIconSize } from "@/types/business.types";
+import { BusinessSocialLink, SocialIconStyle, SocialIconSize, SocialIconPosition } from "@/types/business.types";
 import SocialIconsGroup from "./SocialIconsGroup";
 
 interface SidebarSocialLinksProps {
   socialLinks: BusinessSocialLink[];
   style: SocialIconStyle;
   size: SocialIconSize;
-  position: string;
+  position: SocialIconPosition;
 }
 
 const SidebarSocialLinks: React.FC<SidebarSocialLinksProps> = ({
