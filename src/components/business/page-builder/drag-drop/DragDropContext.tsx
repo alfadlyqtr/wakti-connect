@@ -8,6 +8,7 @@ import { toast } from "@/components/ui/use-toast";
 interface DragDropContextProps {
   sections: BusinessPageSection[];
   updateSectionOrder: (sections: BusinessPageSection[]) => void;
+  moveSectionUpDown: (sectionId: string, direction: 'up' | 'down') => void;
   isUpdating: boolean;
 }
 
@@ -34,17 +35,22 @@ export const DragDropProvider: React.FC<{
         updatedSections.map(s => ({ id: s.id, type: s.section_type, order: s.section_order }))
       );
 
-      // Create a batch of update promises
-      const updatePromises = updatedSections.map((section, index) => {
-        return fromTable('business_page_sections')
-          .update({ section_order: index })
-          .eq('id', section.id);
-      });
-      
-      // Execute all updates
-      await Promise.all(updatePromises);
-      
-      return updatedSections;
+      try {
+        // Create a batch of update promises
+        const updatePromises = updatedSections.map((section, index) => {
+          return fromTable('business_page_sections')
+            .update({ section_order: index })
+            .eq('id', section.id);
+        });
+        
+        // Execute all updates
+        await Promise.all(updatePromises);
+        
+        return updatedSections;
+      } catch (error) {
+        console.error("Error updating section orders:", error);
+        throw error;
+      }
     },
     onSuccess: () => {
       toast({
@@ -75,11 +81,56 @@ export const DragDropProvider: React.FC<{
     updateSectionOrderMutation.mutate(reorderedSections);
   };
 
+  // New function for moving sections up or down
+  const moveSectionUpDown = (sectionId: string, direction: 'up' | 'down') => {
+    console.log(`Moving section ${sectionId} ${direction}`);
+    
+    // Get a sorted copy of the current sections
+    const sortedSections = [...orderedSections].sort((a, b) => a.section_order - b.section_order);
+    
+    const currentIndex = sortedSections.findIndex(s => s.id === sectionId);
+    if (currentIndex === -1) {
+      console.error('Section not found:', sectionId);
+      return;
+    }
+    
+    // Can't move first section up or last section down
+    if ((direction === 'up' && currentIndex === 0) || 
+        (direction === 'down' && currentIndex === sortedSections.length - 1)) {
+      console.log(`Cannot move section ${direction} as it's at the ${direction === 'up' ? 'top' : 'bottom'} already`);
+      return;
+    }
+    
+    // Determine target index
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    
+    // Create a new array with swapped elements
+    const newSections = [...sortedSections];
+    
+    // Swap the positions
+    [newSections[currentIndex], newSections[targetIndex]] = 
+      [newSections[targetIndex], newSections[currentIndex]];
+    
+    // Update section_order property 
+    newSections.forEach((section, index) => {
+      section.section_order = index;
+    });
+    
+    console.log('Manually updating section order:', 
+      newSections.map(s => ({ id: s.id, type: s.section_type, order: s.section_order }))
+    );
+    
+    // Update the state and trigger the mutation
+    setOrderedSections(newSections);
+    updateSectionOrderMutation.mutate(newSections);
+  };
+
   return (
     <DragDropContext.Provider
       value={{
         sections: orderedSections,
         updateSectionOrder,
+        moveSectionUpDown,
         isUpdating: updateSectionOrderMutation.isPending
       }}
     >

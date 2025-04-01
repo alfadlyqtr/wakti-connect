@@ -7,8 +7,8 @@ import PoweredByWAKTI from "@/components/common/PoweredByWAKTI";
 import BusinessPageNotFound from "./BusinessPageNotFound";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import SocialIconsGroup from "./SocialIconsGroup";
-import FloatingSubscribeButton from "./FloatingSubscribeButton";
 import { useAuthentication } from "@/hooks/useAuthentication";
+import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
 
 interface BusinessLandingPageProps {
   slug: string;
@@ -28,13 +28,16 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   } = useBusinessPage(slug, isPreviewMode);
   
   const [showPoweredBy, setShowPoweredBy] = useState(true);
-  const [showSubscribeButton, setShowSubscribeButton] = useState(true);
   const isAuthenticated = useAuthentication();
+  
+  // Get subscription info for the business
+  const { isSubscribed, checkingSubscription, subscribe, unsubscribe } = 
+    useBusinessSubscribers(businessPage?.business_id);
 
   console.log("BusinessLandingPage - businessPage:", businessPage);
   console.log("BusinessLandingPage - socialLinks:", socialLinks?.length || 0);
   console.log("BusinessLandingPage - social icons position:", businessPage?.social_icons_position);
-  console.log("BusinessLandingPage - show subscribe button:", businessPage?.show_subscribe_button);
+  console.log("BusinessLandingPage - subscription status:", isSubscribed);
 
   // Hide PoweredByWAKTI after scrolling
   useEffect(() => {
@@ -121,8 +124,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     social_icons_style = "default",
     social_icons_size = "default",
     social_icons_position = "footer",
-    show_subscribe_button = true,
-    subscribe_button_position = "floating",
     logo_url
   } = businessPage;
 
@@ -140,12 +141,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     backgroundSize: "cover",
     backgroundRepeat: "repeat",
     backgroundPosition: "center",
-  };
-
-  // Check if auth required for subscription
-  const handleAuthRequired = () => {
-    // Open login modal or redirect to login page
-    console.log("Auth required for subscription");
   };
 
   // Check if social links should be shown in their respective positions
@@ -219,6 +214,10 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
             }} 
             isPreviewMode={isPreviewMode}
             isAuthenticated={isAuthenticated}
+            isSubscribed={isSubscribed}
+            checkingSubscription={checkingSubscription}
+            subscribe={subscribe}
+            unsubscribe={unsubscribe}
           />
           
           <BusinessPageSections 
@@ -239,20 +238,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
             </div>
           )}
         </div>
-
-        {/* Floating Subscribe Button - Show based on page settings */}
-        {show_subscribe_button && (
-          <FloatingSubscribeButton 
-            businessId={businessPage.business_id}
-            visible={showSubscribeButton}
-            showButton={true} 
-            isAuthenticated={isAuthenticated}
-            onAuthRequired={handleAuthRequired}
-            backgroundColor={primary_color}
-            textColor="#ffffff"
-            customText={businessPage.subscribe_button_text || "Subscribe"}
-          />
-        )}
 
         {showPoweredBy && <PoweredByWAKTI />}
       </div>

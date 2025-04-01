@@ -1,6 +1,7 @@
 
 import React from "react";
 import { BusinessProfile } from "@/types/business.types";
+import BusinessSubscribeButton from "./BusinessSubscribeButton";
 
 export interface BusinessPageHeaderProps {
   business: BusinessProfile;
@@ -42,25 +43,22 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
       
       <h1 className="text-3xl md:text-4xl font-bold text-center">{business.business_name || "Business Name"}</h1>
       
-      {!isPreviewMode && isAuthenticated && !isSubscribed && !checkingSubscription && (
+      {/* Subscribe button placed directly under the business name */}
+      {!isPreviewMode && isAuthenticated && (
         <div className="flex justify-center mt-4">
-          <button 
-            onClick={() => subscribe?.mutate(business.id)} 
-            className="bg-primary text-white px-4 py-2 rounded-md"
-          >
-            Subscribe
-          </button>
-        </div>
-      )}
-      
-      {!isPreviewMode && isAuthenticated && isSubscribed && !checkingSubscription && (
-        <div className="flex justify-center mt-4">
-          <button 
-            onClick={() => unsubscribe?.mutate()} 
-            className="bg-red-500 text-white px-4 py-2 rounded-md"
-          >
-            Unsubscribe
-          </button>
+          <BusinessSubscribeButton 
+            businessId={business.id}
+            isAuthenticated={isAuthenticated}
+            backgroundColor="#0053c3"
+            textColor="#ffffff"
+            customText={isSubscribed ? "Unsubscribe" : "Subscribe"}
+            gradientFrom="#0053c3"
+            gradientTo="#3B82F6"
+            variant="gradient"
+            borderRadius="0.5rem"
+            boxShadow="md"
+            className="px-6 py-2"
+          />
         </div>
       )}
     </div>
