@@ -30,6 +30,7 @@ const PLATFORM_OPTIONS: SocialPlatformOption[] = [
   { value: 'youtube', label: 'YouTube', prefix: 'https://youtube.com/' },
   { value: 'tiktok', label: 'TikTok', prefix: 'https://tiktok.com/@' },
   { value: 'pinterest', label: 'Pinterest', prefix: 'https://pinterest.com/' },
+  { value: 'whatsapp', label: 'WhatsApp', prefix: 'https://wa.me/' },
   { value: 'website', label: 'Website', prefix: 'https://' },
 ];
 

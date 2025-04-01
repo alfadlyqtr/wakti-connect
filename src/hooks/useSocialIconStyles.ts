@@ -6,9 +6,21 @@ export interface SocialIconStyleProps {
   style?: SocialIconStyle;
   size?: SocialIconSize;
   platform: string;
+  backgroundColor?: string;
+  textColor?: string;
+  borderRadius?: string;
+  hoverColor?: string;
 }
 
-export const useSocialIconStyles = ({ style = "default", size = "default", platform }: SocialIconStyleProps) => {
+export const useSocialIconStyles = ({ 
+  style = "default", 
+  size = "default", 
+  platform,
+  backgroundColor,
+  textColor,
+  borderRadius,
+  hoverColor
+}: SocialIconStyleProps) => {
   const platformColors: Record<string, string> = {
     facebook: "#1877F2",
     instagram: "#E4405F",
@@ -17,6 +29,7 @@ export const useSocialIconStyles = ({ style = "default", size = "default", platf
     youtube: "#FF0000",
     tiktok: "#000000",
     pinterest: "#BD081C",
+    whatsapp: "#25D366",
     website: "#4285F4"
   };
 
@@ -30,31 +43,46 @@ export const useSocialIconStyles = ({ style = "default", size = "default", platf
 
   const buttonStyles = useMemo(() => {
     const baseClasses = `flex items-center justify-center transition-all duration-200 ${iconSize.containerSize}`;
-    const buttonColor = platformColors[platform] || "#6E6E6E";
+    const buttonColor = backgroundColor || platformColors[platform] || "#6E6E6E";
+    const customBorderRadius = borderRadius || "9999px"; // Default to rounded-full
+    
+    const customStyle: Record<string, any> = {};
+    
+    // Apply custom properties if provided
+    if (backgroundColor) customStyle.backgroundColor = backgroundColor;
+    if (textColor) customStyle.color = textColor;
+    if (borderRadius) customStyle.borderRadius = borderRadius;
     
     switch (style) {
       case "colored":
         return {
-          className: `${baseClasses} rounded-full text-white hover:brightness-110 hover:scale-105`,
-          style: { backgroundColor: buttonColor }
+          className: `${baseClasses} rounded-full text-white hover:brightness-110 hover:scale-105 ${hoverColor ? 'hover:brightness-110' : ''}`,
+          style: { 
+            ...customStyle,
+            backgroundColor: customStyle.backgroundColor || buttonColor 
+          }
         };
       case "rounded":
         return {
           className: `${baseClasses} rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 hover:scale-105`,
-          style: {}
+          style: { ...customStyle }
         };
       case "outlined":
         return {
           className: `${baseClasses} rounded-full border hover:bg-gray-50 hover:scale-105`,
-          style: { borderColor: buttonColor, color: buttonColor }
+          style: { 
+            ...customStyle,
+            borderColor: customStyle.borderColor || buttonColor, 
+            color: customStyle.color || buttonColor 
+          }
         };
       default:
         return {
           className: `${baseClasses} text-gray-700 hover:text-gray-900 hover:scale-105`,
-          style: {}
+          style: { ...customStyle }
         };
     }
-  }, [style, platform, iconSize.containerSize]);
+  }, [style, platform, iconSize.containerSize, backgroundColor, textColor, borderRadius, hoverColor]);
 
   return {
     buttonStyles,

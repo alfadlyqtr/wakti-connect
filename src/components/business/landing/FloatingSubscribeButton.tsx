@@ -8,9 +8,21 @@ interface FloatingSubscribeButtonProps {
   visible: boolean;
   showButton: boolean;
   isAuthenticated: boolean | null;
-  onAuthRequired: () => boolean;
+  onAuthRequired: () => void;
   buttonStyle?: React.CSSProperties;
   size?: "sm" | "default" | "lg";
+  // Enhanced customization props
+  backgroundColor?: string;
+  textColor?: string;
+  borderRadius?: string;
+  hoverColor?: string;
+  hoverTextColor?: string;
+  gradientFrom?: string;
+  gradientTo?: string;
+  customText?: string;
+  variant?: "default" | "outline" | "gradient" | "minimal";
+  iconPosition?: "left" | "right" | "none";
+  boxShadow?: "none" | "sm" | "md" | "lg";
 }
 
 const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
@@ -20,7 +32,19 @@ const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
   isAuthenticated,
   onAuthRequired,
   buttonStyle,
-  size = "default"
+  size = "default",
+  // Enhanced customization props
+  backgroundColor,
+  textColor,
+  borderRadius,
+  hoverColor,
+  hoverTextColor,
+  gradientFrom,
+  gradientTo,
+  customText = "Subscribe",
+  variant = "gradient",
+  iconPosition = "left",
+  boxShadow = "md"
 }) => {
   if (!showButton) return null;
 
@@ -31,11 +55,21 @@ const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
     )}>
       <BusinessSubscribeButton 
         businessId={businessId}
-        customText="Subscribe"
+        customText={customText}
         buttonStyle={buttonStyle}
         size={size}
         className="shadow-lg hover:scale-105 transition-transform"
         onAuthRequired={onAuthRequired}
+        backgroundColor={backgroundColor}
+        textColor={textColor}
+        borderRadius={borderRadius}
+        hoverColor={hoverColor}
+        hoverTextColor={hoverTextColor}
+        gradientFrom={gradientFrom}
+        gradientTo={gradientTo}
+        variant={variant}
+        iconPosition={iconPosition}
+        boxShadow={boxShadow}
       />
     </div>
   );

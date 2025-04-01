@@ -7,7 +7,8 @@ import {
   Twitter, 
   Linkedin, 
   Youtube,
-  Globe
+  Globe,
+  MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,13 @@ interface BusinessSocialLinksProps {
   iconsStyle?: SocialIconStyle;
   size?: SocialIconSize;
   vertical?: boolean;
+  className?: string;
+  buttonClassName?: string;
+  iconPosition?: 'top' | 'bottom' | 'left' | 'right' | 'footer' | 'header' | 'sidebar';
+  backgroundColor?: string;
+  textColor?: string;
+  hoverColor?: string;
+  borderRadius?: string;
 }
 
 // Custom Pinterest icon component since it's not in lucide-react
@@ -60,11 +68,39 @@ const TikTokIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+// Custom WhatsApp icon component
+const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21" />
+    <path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z" />
+    <path d="M14 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1Z" />
+    <path d="M8.5 13.5a5 5 0 0 0 7 0" />
+  </svg>
+);
+
 const BusinessSocialLinks = ({ 
   socialLinks, 
   iconsStyle = 'default',
   size = 'default',
-  vertical = false
+  vertical = false,
+  className = "",
+  buttonClassName = "",
+  iconPosition = 'footer',
+  backgroundColor,
+  textColor,
+  hoverColor,
+  borderRadius
 }: BusinessSocialLinksProps) => {
   const getSocialIcon = (platform: string): any => {
     switch (platform) {
@@ -82,6 +118,8 @@ const BusinessSocialLinks = ({
         return TikTokIcon;
       case 'pinterest':
         return PinterestIcon;
+      case 'whatsapp':
+        return WhatsAppIcon;
       case 'website':
       default:
         return Globe;
@@ -106,6 +144,8 @@ const BusinessSocialLinks = ({
         return '#000000';
       case 'pinterest':
         return '#E60023';
+      case 'whatsapp':
+        return '#25D366';
       default:
         return '#6B7280';
     }
@@ -141,13 +181,26 @@ const BusinessSocialLinks = ({
     <div className={cn(
       "flex gap-2 justify-center",
       vertical ? "flex-col" : "flex-wrap",
-      "animate-fade-in"
+      "animate-fade-in",
+      className
     )}>
       {socialLinks.map((link) => {
         const Icon = getSocialIcon(link.platform);
         const color = getPlatformColor(link.platform);
         const iconSize = getIconSize();
         const btnSize = getButtonSize();
+        
+        // Custom styling based on props
+        const customStyle: React.CSSProperties = {};
+        if (backgroundColor) customStyle.backgroundColor = backgroundColor;
+        if (textColor) customStyle.color = textColor;
+        if (borderRadius) customStyle.borderRadius = borderRadius;
+        
+        // Override color for colored style
+        if (iconsStyle === 'colored') {
+          customStyle.backgroundColor = color;
+          customStyle.color = '#ffffff';
+        }
         
         return (
           <Button
@@ -156,11 +209,11 @@ const BusinessSocialLinks = ({
             size={btnSize}
             className={cn(
               "rounded-full transition-transform hover:scale-110",
-              iconsStyle === 'colored' && "text-white"
+              iconsStyle === 'colored' && "text-white",
+              buttonClassName,
+              hoverColor && "hover:brightness-110"
             )}
-            style={{
-              backgroundColor: iconsStyle === 'colored' ? color : undefined
-            }}
+            style={customStyle}
             asChild
           >
             <a 

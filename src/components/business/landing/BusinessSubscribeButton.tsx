@@ -10,10 +10,10 @@ interface BusinessSubscribeButtonProps {
   customText?: string;
   buttonStyle?: React.CSSProperties;
   size?: "default" | "sm" | "lg" | "icon";
-  variant?: "default" | "outline" | "gradient";
+  variant?: "default" | "outline" | "gradient" | "minimal" | "secondary" | "link" | "destructive" | "ghost";
   iconOnly?: boolean;
   className?: string;
-  onAuthRequired?: () => boolean;
+  onAuthRequired?: () => void; // Changed to void return type for simpler usage
   // Detailed customization options
   backgroundColor?: string;
   textColor?: string;
@@ -25,9 +25,13 @@ interface BusinessSubscribeButtonProps {
   hoverBorderColor?: string;
   fontWeight?: "normal" | "medium" | "semibold" | "bold";
   boxShadow?: "none" | "sm" | "md" | "lg";
-  iconPosition?: "left" | "right";
+  iconPosition?: "left" | "right" | "none";
   paddingX?: string;
   paddingY?: string;
+  gradientFrom?: string;
+  gradientTo?: string;
+  gradientDirection?: "to-r" | "to-l" | "to-t" | "to-b" | "to-tr" | "to-tl" | "to-br" | "to-bl";
+  showAuthAlert?: boolean; // Whether to show auth alert automatically
 }
 
 const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
@@ -52,7 +56,11 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
   boxShadow = "none",
   iconPosition = "left",
   paddingX,
-  paddingY
+  paddingY,
+  gradientFrom,
+  gradientTo,
+  gradientDirection = "to-r",
+  showAuthAlert = true
 }) => {
   const { 
     isSubscribed, 
@@ -64,8 +72,9 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     
-    // Check if authentication is required and the function returns false
-    if (onAuthRequired && !onAuthRequired()) {
+    // Check if authentication is required
+    if (onAuthRequired) {
+      onAuthRequired();
       return;
     }
     
@@ -76,10 +85,30 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
     }
   };
   
+  // Generate a gradient background if variant is gradient
+  const getGradientStyle = () => {
+    if (variant !== 'gradient') return {};
+    
+    const fromColor = gradientFrom || '#3B82F6';
+    const toColor = gradientTo || '#10B981';
+    
+    return {
+      background: `linear-gradient(${gradientDirection === 'to-r' ? '90deg' : 
+                                     gradientDirection === 'to-l' ? '270deg' : 
+                                     gradientDirection === 'to-t' ? '0deg' : 
+                                     gradientDirection === 'to-b' ? '180deg' : 
+                                     gradientDirection === 'to-tr' ? '45deg' : 
+                                     gradientDirection === 'to-tl' ? '315deg' : 
+                                     gradientDirection === 'to-br' ? '135deg' : '225deg'}, 
+                                     ${fromColor}, ${toColor})`
+    };
+  };
+  
   // Custom styles based on props
   const customButtonStyle: React.CSSProperties = {
     ...(buttonStyle || {}),
-    ...(backgroundColor ? { backgroundColor } : {}),
+    ...(backgroundColor && variant !== 'gradient' ? { backgroundColor } : {}),
+    ...(variant === 'gradient' ? getGradientStyle() : {}),
     ...(textColor ? { color: textColor } : {}),
     ...(borderRadius ? { borderRadius } : {}),
     ...(borderColor ? { borderColor } : {}),
@@ -112,6 +141,12 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
     return className;
   }, [hoverColor, hoverTextColor, hoverBorderColor, boxShadow]);
   
+  // Determine the button variant to use with shadcn
+  const getButtonVariant = () => {
+    if (variant === 'gradient') return 'default';
+    return isSubscribed ? "outline" : variant;
+  };
+  
   if (checkingSubscription) {
     return (
       <Button 
@@ -129,7 +164,7 @@ const BusinessSubscribeButton: React.FC<BusinessSubscribeButtonProps> = ({
   
   return (
     <Button
-      variant={variant === "gradient" ? "default" : (isSubscribed ? "outline" : variant)}
+      variant={getButtonVariant() as any}
       size={size}
       className={cn(
         isSubscribed ? "bg-muted/20" : "",
