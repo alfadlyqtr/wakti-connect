@@ -7,6 +7,7 @@ import { Check, Copy, Loader2 } from "lucide-react";
 import { SectionType } from "@/types/business.types";
 import { getTemplates } from "@/data/section-templates";
 import { useSectionEditor } from "./SectionEditorContext";
+import { toast } from "@/components/ui/use-toast";
 
 interface SectionTemplateDialogProps {
   isOpen: boolean;
@@ -36,18 +37,43 @@ const SectionTemplateDialog: React.FC<SectionTemplateDialogProps> = ({
     const template = templates.find(t => t.id === selectedTemplate);
     if (!template) return;
     
-    setIsApplying(true);
-    
     try {
+      console.log("Applying template:", template);
+      setIsApplying(true);
+      
+      // Validate template content
+      if (!template.content || typeof template.content !== 'object') {
+        console.error("Invalid template content:", template.content);
+        toast({
+          variant: "destructive",
+          title: "Invalid template",
+          description: "This template has invalid content and cannot be applied."
+        });
+        setIsApplying(false);
+        return;
+      }
+      
+      // Apply template content
       applyTemplateContent(template.content);
       onSelect(template.content);
+      
       setTimeout(() => {
         setIsApplying(false);
         onOpenChange(false);
+        
+        toast({
+          title: "Template applied",
+          description: "The template has been applied to your section."
+        });
       }, 500);
     } catch (error) {
       console.error('Error applying template:', error);
       setIsApplying(false);
+      toast({
+        variant: "destructive",
+        title: "Failed to apply template",
+        description: "An error occurred while applying the template."
+      });
     }
   };
   

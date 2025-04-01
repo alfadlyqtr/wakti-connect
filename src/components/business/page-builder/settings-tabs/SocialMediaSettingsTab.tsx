@@ -20,16 +20,27 @@ const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
   const { data: socialLinks, isLoading } = useQuery({
     queryKey: ['businessSocialLinks', businessId],
     queryFn: async () => {
-      const { data, error } = await fromTable('business_social_links')
-        .select()
-        .eq('business_id', businessId);
-      
-      if (error) {
-        console.error("Error fetching social links:", error);
-        throw error;
+      if (!businessId) {
+        console.log("No business ID provided for social links query");
+        return [];
       }
       
-      return data as BusinessSocialLink[] || [];
+      try {
+        const { data, error } = await fromTable('business_social_links')
+          .select()
+          .eq('business_id', businessId);
+        
+        if (error) {
+          console.error("Error fetching social links:", error);
+          throw error;
+        }
+        
+        console.log("Fetched social links:", data);
+        return data as BusinessSocialLink[] || [];
+      } catch (error) {
+        console.error("Exception fetching social links:", error);
+        return [];
+      }
     },
     enabled: !!businessId
   });
@@ -37,6 +48,7 @@ const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
   // Add social link mutation
   const addSocialLinkMutation = useMutation({
     mutationFn: async (linkData: Omit<BusinessSocialLink, 'id' | 'created_at'>) => {
+      console.log("Adding social link with data:", linkData);
       const { data, error } = await fromTable('business_social_links')
         .insert({ ...linkData, business_id: businessId })
         .select()
@@ -65,6 +77,7 @@ const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
   // Update social link mutation
   const updateSocialLinkMutation = useMutation({
     mutationFn: async (linkData: Partial<BusinessSocialLink> & { id: string }) => {
+      console.log("Updating social link:", linkData);
       const { id, ...updates } = linkData;
       const { data, error } = await fromTable('business_social_links')
         .update(updates)
@@ -95,6 +108,7 @@ const SocialMediaSettingsTab: React.FC<SocialMediaSettingsTabProps> = ({
   // Delete social link mutation
   const deleteSocialLinkMutation = useMutation({
     mutationFn: async (linkId: string) => {
+      console.log("Deleting social link:", linkId);
       const { error } = await fromTable('business_social_links')
         .delete()
         .eq('id', linkId);

@@ -4,7 +4,6 @@ import { useCreatePageMutation, useUpdatePageMutation, useUpdateSectionMutation,
 import { useAutoSavePageSettings, usePublicPageUrl } from "./useBusinessPageUtils";
 import { useContactSubmissionsQuery, useMarkSubmissionAsReadMutation } from "./useContactSubmissionsQuery";
 import { BusinessPage, BusinessPageSection } from "@/types/business.types";
-import { useCallback } from "react";
 
 export const useBusinessPage = (pageSlug?: string, isPreviewMode?: boolean) => {
   // Public view queries

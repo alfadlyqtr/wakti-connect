@@ -48,7 +48,7 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
   children, 
   section
 }) => {
-  // State to track form values
+  // State to track form values - ensure we initialize with an empty object if section_content is null
   const [contentData, setContentData] = useState<Record<string, any>>(section.section_content || {});
   const updateSectionMutation = useUpdateSectionMutation();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -108,9 +108,20 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
     setIsDirty(true);
   };
 
-  // Apply template content - FIXED to properly apply all styles
+  // Apply template content
   const applyTemplateContent = (templateContent: Record<string, any>) => {
     console.log('Applying template content:', templateContent);
+    
+    // Ensure templateContent is not null/undefined
+    if (!templateContent) {
+      console.error('Template content is null or undefined');
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Cannot apply empty template",
+      });
+      return;
+    }
     
     // Define which fields should be applied directly to the section
     const sectionLevelStyleProperties = [
@@ -132,7 +143,7 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
     });
     
     // Update content data with all template content
-    setContentData({...contentData, ...templateContent});
+    setContentData(prevData => ({...prevData, ...templateContent}));
     setIsDirty(true);
     
     console.log('Section level styles to apply:', sectionLevelStyles);
@@ -172,10 +183,13 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
     setIsSubmitting(true);
     
     try {
+      // Ensure contentData is a valid object before saving
+      const validContentData = contentData || {};
+      
       await updateSectionMutation.mutateAsync({ 
         sectionId: section.id, 
         data: { 
-          section_content: contentData 
+          section_content: validContentData 
         } 
       });
       

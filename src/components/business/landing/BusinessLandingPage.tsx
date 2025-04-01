@@ -6,6 +6,9 @@ import BusinessPageSections from "./BusinessPageSections";
 import PoweredByWAKTI from "@/components/common/PoweredByWAKTI";
 import BusinessPageNotFound from "./BusinessPageNotFound";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import SocialIconsGroup from "./SocialIconsGroup";
+import FloatingSubscribeButton from "./FloatingSubscribeButton";
+import { useAuthentication } from "@/hooks/useAuthentication";
 
 interface BusinessLandingPageProps {
   slug: string;
@@ -20,10 +23,13 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   const { 
     businessPage, 
     isLoading, 
-    pageSections 
+    pageSections,
+    socialLinks
   } = useBusinessPage(slug);
   
   const [showPoweredBy, setShowPoweredBy] = useState(true);
+  const [showSubscribeButton, setShowSubscribeButton] = useState(true);
+  const isAuthenticated = useAuthentication();
 
   // Hide PoweredByWAKTI after scrolling
   useEffect(() => {
@@ -60,6 +66,11 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     font_family,
     page_pattern,
     content_max_width = "1200px",
+    social_icons_style = "default",
+    social_icons_size = "default",
+    social_icons_position = "footer",
+    show_subscribe_button = true,
+    subscribe_button_position = "floating",
   } = businessPage;
 
   // Set default background to white if not specified
@@ -76,6 +87,12 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     backgroundSize: "cover",
     backgroundRepeat: "repeat",
     backgroundPosition: "center",
+  };
+
+  // Check if subscribe button should be shown
+  const handleAuthRequired = () => {
+    // Open login modal or redirect to login page
+    console.log("Auth required for subscription");
   };
 
   return (
@@ -97,7 +114,34 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
             pageSections={pageSections || []} 
             businessPage={businessPage} 
           />
+
+          {/* Social Media Icons */}
+          {socialLinks && socialLinks.length > 0 && (
+            <div className="mt-8 mb-4">
+              <SocialIconsGroup 
+                socialLinks={socialLinks}
+                style={social_icons_style as any}
+                size={social_icons_size as any}
+                position={social_icons_position as any}
+                className="pb-6"
+              />
+            </div>
+          )}
         </div>
+
+        {/* Floating Subscribe Button */}
+        {show_subscribe_button && subscribe_button_position === "floating" && (
+          <FloatingSubscribeButton 
+            businessId={businessPage.business_id}
+            visible={showSubscribeButton}
+            showButton={show_subscribe_button}
+            isAuthenticated={isAuthenticated}
+            onAuthRequired={handleAuthRequired}
+            backgroundColor={primary_color}
+            textColor="#ffffff"
+            customText={businessPage.subscribe_button_text || "Subscribe"}
+          />
+        )}
 
         {showPoweredBy && <PoweredByWAKTI />}
       </div>
