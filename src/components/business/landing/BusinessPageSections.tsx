@@ -72,6 +72,10 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
     
     // Get background pattern from section content
     const backgroundPattern = section.section_content?.background_pattern;
+    
+    // Log section data for debugging
+    console.log(`Section ${section.section_type} content:`, section.section_content);
+    
     // Generate the background pattern CSS
     const backgroundPatternValue = backgroundPattern ? getBackgroundPattern(backgroundPattern) : 'none';
     
@@ -173,7 +177,11 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
           return <BusinessInstagramSection content={content} />;
           
         case 'chatbot':
-          return <BusinessChatbotSection content={content} />;
+          return <BusinessChatbotSection content={{
+            ...content,
+            // Ensure background_pattern is properly passed down
+            background_pattern: content.background_pattern || 'none'
+          }} />;
           
         default:
           return (

@@ -20,6 +20,7 @@ const ChatbotSection: React.FC = () => {
   
   // Ensure default content values are set
   useEffect(() => {
+    // Initialize default values if they don't exist
     if (contentData?.enabled === undefined) {
       updateContentField('enabled', true);
     }
@@ -62,11 +63,37 @@ const ChatbotSection: React.FC = () => {
     updateContentField(field, value);
   };
   
-  // Sample chatbot code for easy testing
-  const sampleChatbotCode = '<script src="https://cdn.example.com/tmw-chatbot.js"></script>';
+  // Apply pattern to preview container
+  useEffect(() => {
+    // This will help debug if pattern changes are recognized
+    console.log("Background pattern updated:", contentData?.background_pattern);
+  }, [contentData?.background_pattern]);
   
-  const addSampleCode = () => {
-    updateContentField('chatbot_code', sampleChatbotCode);
+  // Get preview pattern styles for the container
+  const getPreviewPatternStyle = () => {
+    if (!contentData?.background_pattern || contentData.background_pattern === 'none') {
+      return {};
+    }
+    
+    const pattern = contentData.background_pattern;
+    const backgroundPatternValue = 
+      pattern === 'dots' ? 'radial-gradient(#00000022 1px, transparent 1px)' :
+      pattern === 'grid' ? 'linear-gradient(to right, #00000011 1px, transparent 1px), linear-gradient(to bottom, #00000011 1px, transparent 1px)' :
+      pattern === 'waves' ? 'url("data:image/svg+xml,%3Csvg width="100" height="20" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 10 C 30 0, 70 0, 100 10 L 100 20 L 0 20 Z" fill="%2300000011"/%3E%3C/svg%3E")' :
+      pattern === 'diagonal' ? 'repeating-linear-gradient(45deg, #00000011, #00000011 1px, transparent 1px, transparent 10px)' :
+      pattern === 'circles' ? 'radial-gradient(circle, #00000011 10px, transparent 11px)' :
+      pattern === 'triangles' ? 'url("data:image/svg+xml,%3Csvg width="60" height="60" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 0 L 30 52 L 60 0 Z" fill="%2300000011"/%3E%3C/svg%3E")' :
+      pattern === 'hexagons' ? 'url("data:image/svg+xml,%3Csvg width="60" height="60" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 15 L 15 0 L 45 0 L 60 15 L 60 45 L 45 60 L 15 60 L 0 45 Z" fill="%2300000011"/%3E%3C/svg%3E")' :
+      pattern === 'stripes' ? 'repeating-linear-gradient(90deg, #00000011, #00000011 5px, transparent 5px, transparent 15px)' :
+      pattern === 'zigzag' ? 'linear-gradient(135deg, #00000011 25%, transparent 25%) 0 0, linear-gradient(225deg, #00000011 25%, transparent 25%) 0 0' :
+      pattern === 'confetti' ? 'url("data:image/svg+xml,%3Csvg width="60" height="60" xmlns="http://www.w3.org/2000/svg"%3E%3Crect x="10" y="10" width="4" height="4" transform="rotate(45 12 12)" fill="%2300000022"/%3E%3Crect x="30" y="20" width="4" height="4" transform="rotate(30 32 22)" fill="%2300000022"/%3E%3Crect x="15" y="40" width="4" height="4" transform="rotate(60 17 42)" fill="%2300000022"/%3E%3Crect x="40" y="45" width="4" height="4" transform="rotate(12 42 47)" fill="%2300000022"/%3E%3C/svg%3E")' :
+      pattern === 'bubbles' ? 'radial-gradient(circle at 25px 25px, #00000011 15px, transparent 16px), radial-gradient(circle at 75px 75px, #00000011 15px, transparent 16px)' : 'none';
+      
+    return {
+      backgroundImage: backgroundPatternValue,
+      backgroundSize: 'auto',
+      backgroundRepeat: 'repeat'
+    };
   };
   
   return (
@@ -188,6 +215,7 @@ const ChatbotSection: React.FC = () => {
                 <div 
                   id={chatbotContainerId}
                   className="border border-dashed border-muted-foreground rounded-md p-4 min-h-[300px] flex items-center justify-center"
+                  style={getPreviewPatternStyle()}
                 >
                   {!contentData?.chatbot_code && (
                     <p className="text-muted-foreground">
