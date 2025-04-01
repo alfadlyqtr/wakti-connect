@@ -24,6 +24,7 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
   unsubscribe
 }) => {
   console.log("BusinessPageHeader component rendering with:", business);
+  console.log("Subscribe button props:", { isPreviewMode, isAuthenticated, isSubscribed });
   
   return (
     <div className="business-page-header py-8">
@@ -44,21 +45,29 @@ const BusinessPageHeader: React.FC<BusinessPageHeaderProps> = ({
         
         <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">{business.business_name || "Business Name"}</h1>
         
-        {/* Subscribe button placed directly under the business name */}
-        {!isPreviewMode && isAuthenticated && (
-          <BusinessSubscribeButton 
-            businessId={business.id}
-            isAuthenticated={isAuthenticated}
-            backgroundColor="#0053c3"
-            textColor="#ffffff"
-            customText={isSubscribed ? "Unsubscribe" : "Subscribe"}
-            gradientFrom="#0053c3"
-            gradientTo="#3B82F6"
-            variant="gradient"
-            borderRadius="0.5rem"
-            boxShadow="md"
-            className="px-6 py-2 mt-2"
-          />
+        {/* Adding a debug output to check visibility conditions */}
+        <div className="hidden">
+          Debug: isPreviewMode={String(isPreviewMode)}, isAuthenticated={String(isAuthenticated)}
+        </div>
+        
+        {/* Subscribe button placed directly under the business name with forced display */}
+        {!isPreviewMode && (
+          <div className="mt-2 mb-4">
+            <BusinessSubscribeButton 
+              businessId={business.id}
+              isAuthenticated={isAuthenticated}
+              backgroundColor="#0053c3"
+              textColor="#ffffff"
+              customText={isSubscribed ? "Unsubscribe" : "Subscribe"}
+              gradientFrom="#0053c3"
+              gradientTo="#3B82F6"
+              variant="gradient"
+              borderRadius="0.5rem"
+              boxShadow="md"
+              className="px-6 py-2"
+              showAuthAlert={true}
+            />
+          </div>
         )}
       </div>
     </div>

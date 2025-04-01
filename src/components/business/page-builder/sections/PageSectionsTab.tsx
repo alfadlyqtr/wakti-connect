@@ -83,7 +83,7 @@ const PageSectionsTab: React.FC<PageSectionsTabProps> = ({
   const toggleSectionVisibility = useMutation({
     mutationFn: async ({ sectionId, isVisible }: { sectionId: string, isVisible: boolean }) => {
       const { data, error } = await fromTable('business_page_sections')
-        .update({ is_visible: isVisible })
+        .update({ is_visible: !isVisible })
         .eq('id', sectionId)
         .select()
         .single();
@@ -139,7 +139,7 @@ const PageSectionsTab: React.FC<PageSectionsTabProps> = ({
   const handleToggleVisibility = (sectionId: string, currentVisibility: boolean) => {
     toggleSectionVisibility.mutate({
       sectionId,
-      isVisible: !currentVisibility
+      isVisible: currentVisibility
     });
   };
   

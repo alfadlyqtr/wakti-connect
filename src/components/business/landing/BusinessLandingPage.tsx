@@ -9,6 +9,9 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import SocialIconsGroup from "./SocialIconsGroup";
 import { useAuthentication } from "@/hooks/useAuthentication";
 import { useBusinessSubscribers } from "@/hooks/useBusinessSubscribers";
+import FloatingSubscribeButton from "./FloatingSubscribeButton";
+import { useAuth } from "@/hooks/useAuth";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 
 interface BusinessLandingPageProps {
   slug: string;
@@ -28,24 +31,35 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   } = useBusinessPage(slug, isPreviewMode);
   
   const [showPoweredBy, setShowPoweredBy] = useState(true);
+  const [showFloatingButton, setShowFloatingButton] = useState(false);
   const isAuthenticated = useAuthentication();
+  const { redirectToLogin } = useAuthRedirect();
   
   // Get subscription info for the business
   const { isSubscribed, checkingSubscription, subscribe, unsubscribe } = 
     useBusinessSubscribers(businessPage?.business_id);
 
+  // Debug logs to identify issues
+  console.log("BusinessLandingPage - authentication status:", isAuthenticated);
   console.log("BusinessLandingPage - businessPage:", businessPage);
   console.log("BusinessLandingPage - socialLinks:", socialLinks?.length || 0);
   console.log("BusinessLandingPage - social icons position:", businessPage?.social_icons_position);
   console.log("BusinessLandingPage - subscription status:", isSubscribed);
+  console.log("BusinessLandingPage - subscribe button settings:", {
+    show: businessPage?.show_subscribe_button,
+    position: businessPage?.subscribe_button_position,
+    text: businessPage?.subscribe_button_text
+  });
 
-  // Hide PoweredByWAKTI after scrolling
+  // Handle scroll to show/hide the floating button and PoweredByWAKTI component
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 300) {
         setShowPoweredBy(false);
+        setShowFloatingButton(true);
       } else {
         setShowPoweredBy(true);
+        setShowFloatingButton(false);
       }
     };
 
@@ -100,6 +114,11 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     return `${r}, ${g}, ${b}`;
   }
 
+  // Handler for when auth is required
+  const handleAuthRequired = () => {
+    redirectToLogin(`/business/${slug}`);
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -124,24 +143,66 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     social_icons_style = "default",
     social_icons_size = "default",
     social_icons_position = "footer",
-    logo_url
+    logo_url,
+    show_subscribe_button = true,
+    subscribe_button_text = "Subscribe",
+    subscribe_button_position = "both"
   } = businessPage;
 
   // Set default background to white if not specified
   const bgColor = background_color || "#ffffff";
+
+  // Check if the background pattern is a data URL (custom image)
+  const isCustomBgImage = page_pattern && page_pattern.startsWith('data:');
 
   // Create dynamic styles based on the business page settings
   const pageStyle: React.CSSProperties = {
     backgroundColor: bgColor,
     color: text_color || "#1f2937",
     fontFamily: font_family || "inherit",
-    backgroundImage: page_pattern
+    backgroundImage: isCustomBgImage 
       ? `url(${page_pattern})`
-      : "none",
-    backgroundSize: "cover",
-    backgroundRepeat: "repeat",
+      : getBackgroundPattern(page_pattern),
+    backgroundSize: isCustomBgImage ? "cover" : "auto",
+    backgroundRepeat: isCustomBgImage ? "no-repeat" : "repeat",
     backgroundPosition: "center",
   };
+
+  // Generate pattern CSS
+  function getBackgroundPattern(pattern?: string): string {
+    if (!pattern || pattern === 'none') return "none";
+    
+    switch (pattern) {
+      case 'dots':
+        return 'radial-gradient(#00000022 1px, transparent 1px)';
+      case 'grid':
+        return 'linear-gradient(to right, #00000011 1px, transparent 1px), linear-gradient(to bottom, #00000011 1px, transparent 1px)';
+      case 'waves':
+        return 'url("data:image/svg+xml,%3Csvg width="100" height="20" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 10 C 30 0, 70 0, 100 10 L 100 20 L 0 20 Z" fill="%2300000011"/%3E%3C/svg%3E")';
+      case 'diagonal':
+        return 'repeating-linear-gradient(45deg, #00000011, #00000011 1px, transparent 1px, transparent 10px)';
+      case 'circles':
+        return 'radial-gradient(circle, #00000011 10px, transparent 11px)';
+      case 'triangles':
+        return 'url("data:image/svg+xml,%3Csvg width="60" height="60" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 0 L 30 52 L 60 0 Z" fill="%2300000011"/%3E%3C/svg%3E")';
+      case 'hexagons':
+        return 'url("data:image/svg+xml,%3Csvg width="60" height="60" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 15 L 15 0 L 45 0 L 60 15 L 60 45 L 45 60 L 15 60 L 0 45 Z" fill="%2300000011"/%3E%3C/svg%3E")';
+      case 'stripes':
+        return 'repeating-linear-gradient(90deg, #00000011, #00000011 5px, transparent 5px, transparent 15px)';
+      case 'zigzag':
+        return 'linear-gradient(135deg, #00000011 25%, transparent 25%) 0 0, linear-gradient(225deg, #00000011 25%, transparent 25%) 0 0';
+      case 'confetti':
+        return 'url("data:image/svg+xml,%3Csvg width="60" height="60" xmlns="http://www.w3.org/2000/svg"%3E%3Crect x="10" y="10" width="4" height="4" transform="rotate(45 12 12)" fill="%2300000022"/%3E%3Crect x="30" y="20" width="4" height="4" transform="rotate(30 32 22)" fill="%2300000022"/%3E%3Crect x="15" y="40" width="4" height="4" transform="rotate(60 17 42)" fill="%2300000022"/%3E%3Crect x="40" y="45" width="4" height="4" transform="rotate(12 42 47)" fill="%2300000022"/%3E%3C/svg%3E")';
+      case 'bubbles':
+        return 'radial-gradient(circle at 25px 25px, #00000011 15px, transparent 16px), radial-gradient(circle at 75px 75px, #00000011 15px, transparent 16px)';
+      case 'noise':
+        return 'url("data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%" height="100%" filter="url(%23noiseFilter)" opacity="0.15"/%3E%3C/svg%3E")';
+      case 'paper':
+        return 'url("data:image/svg+xml,%3Csvg width="100" height="100" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="paperFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5"/%3E%3CfeDisplacementMap in="SourceGraphic" scale="10"/%3E%3C/filter%3E%3Crect width="100%" height="100%" filter="url(%23paperFilter)" opacity="0.1"/%3E%3C/svg%3E")';
+      default:
+        return 'none';
+    }
+  }
 
   // Check if social links should be shown in their respective positions
   const showHeaderSocialLinks = socialLinks && socialLinks.length > 0 && 
@@ -153,9 +214,14 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   const showSidebarSocialLinks = socialLinks && socialLinks.length > 0 && 
     ['sidebar'].includes(social_icons_position || '');
 
+  // Check if floating subscribe button should be shown
+  const showFloatingSubscribeBtn = show_subscribe_button && 
+    ['floating', 'both'].includes(subscribe_button_position || '');
+
   console.log("Show header social links:", showHeaderSocialLinks);
   console.log("Show footer social links:", showFooterSocialLinks);
   console.log("Show sidebar social links:", showSidebarSocialLinks);
+  console.log("Show floating subscribe button:", showFloatingSubscribeBtn);
 
   return (
     <CurrencyProvider initialCurrency={businessPage.business_id}>
@@ -185,6 +251,23 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
               scale={0.8} /* Slightly smaller for mobile */
             />
           </div>
+        )}
+        
+        {/* Floating subscribe button */}
+        {showFloatingSubscribeBtn && (
+          <FloatingSubscribeButton 
+            businessId={businessPage.business_id}
+            visible={showFloatingButton}
+            showButton={show_subscribe_button}
+            isAuthenticated={isAuthenticated}
+            onAuthRequired={handleAuthRequired}
+            backgroundColor={primary_color}
+            textColor="#FFFFFF"
+            borderRadius="0.5rem"
+            gradientFrom={primary_color}
+            gradientTo={secondary_color}
+            customText={subscribe_button_text || "Subscribe"}
+          />
         )}
         
         <div

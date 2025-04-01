@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SectionActionsProps {
@@ -17,7 +17,10 @@ interface SectionActionsProps {
 const SectionActions: React.FC<SectionActionsProps> = ({
   sectionId,
   isVisible,
+  isFirstSection,
+  isLastSection,
   onToggleVisibility,
+  onMoveSection,
   onDeleteSection
 }) => {
   const isMobile = useIsMobile();
@@ -38,8 +41,53 @@ const SectionActions: React.FC<SectionActionsProps> = ({
     onDeleteSection(sectionId);
   };
   
+  const handleMoveUp = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isFirstSection) {
+      console.log('Moving section up:', sectionId);
+      onMoveSection(sectionId, 'up');
+    }
+  };
+  
+  const handleMoveDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isLastSection) {
+      console.log('Moving section down:', sectionId);
+      onMoveSection(sectionId, 'down');
+    }
+  };
+  
   return (
     <div className="flex items-center gap-1 flex-wrap justify-end">
+      {/* Move Up Button */}
+      <Button 
+        variant="ghost" 
+        size={buttonSize}
+        onClick={handleMoveUp}
+        className={`touch-target ${isFirstSection ? 'opacity-50 cursor-not-allowed' : ''}`}
+        disabled={isFirstSection}
+        type="button"
+      >
+        <ArrowUp className="h-4 w-4" />
+        {isMobile && <span className="ml-2 text-xs">Up</span>}
+      </Button>
+      
+      {/* Move Down Button */}
+      <Button 
+        variant="ghost" 
+        size={buttonSize}
+        onClick={handleMoveDown}
+        className={`touch-target ${isLastSection ? 'opacity-50 cursor-not-allowed' : ''}`}
+        disabled={isLastSection}
+        type="button"
+      >
+        <ArrowDown className="h-4 w-4" />
+        {isMobile && <span className="ml-2 text-xs">Down</span>}
+      </Button>
+      
+      {/* Toggle Visibility Button */}
       <Button 
         variant="ghost" 
         size={buttonSize}
@@ -53,6 +101,8 @@ const SectionActions: React.FC<SectionActionsProps> = ({
         }
         {isMobile && <span className="ml-2 text-xs">{isVisible ? "Hide" : "Show"}</span>}
       </Button>
+      
+      {/* Delete Button */}
       <Button 
         variant="ghost" 
         size={buttonSize}

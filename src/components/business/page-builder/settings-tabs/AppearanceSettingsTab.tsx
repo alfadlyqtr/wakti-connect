@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -7,8 +8,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Save, Loader2 } from "lucide-react";
+import { Save, Loader2, ImagePlus } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+
+// Define available background patterns
+const backgroundPatterns = {
+  none: "None",
+  dots: "Dots",
+  grid: "Grid",
+  waves: "Waves",
+  diagonal: "Diagonal Lines",
+  circles: "Circles",
+  triangles: "Triangles",
+  hexagons: "Hexagons",
+  stripes: "Stripes",
+  zigzag: "Zigzag",
+  confetti: "Confetti",
+  bubbles: "Bubbles",
+  noise: "Noise Texture",
+  paper: "Paper Texture"
+};
 
 interface AppearanceSettingsTabProps {
   pageData: {
@@ -42,6 +61,7 @@ const AppearanceSettingsTab: React.FC<AppearanceSettingsTabProps> = ({
   const [localChanges, setLocalChanges] = useState<Partial<AppearanceSettingsTabProps['pageData']>>({});
   const [isDirty, setIsDirty] = useState(false);
   const [activeTab, setActiveTab] = useState("colors");
+  const [customBackgroundImage, setCustomBackgroundImage] = useState<string | null>(null);
   
   const handleLocalInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -106,6 +126,50 @@ const AppearanceSettingsTab: React.FC<AppearanceSettingsTabProps> = ({
         description: "There was a problem saving your changes. Please try again."
       });
     } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  const handleBackgroundImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        variant: "destructive",
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB"
+      });
+      return;
+    }
+    
+    try {
+      setIsSaving(true);
+      // Convert to base64 for simplicity
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target && event.target.result) {
+          const base64Img = event.target.result.toString();
+          setCustomBackgroundImage(base64Img);
+          
+          // Save custom background image URL via handleLocalSelectChange
+          handleLocalSelectChange('page_pattern', base64Img);
+          
+          toast({
+            title: "Background image uploaded",
+            description: "Your custom background image has been set"
+          });
+          setIsSaving(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Error uploading background image:", error);
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: "There was a problem uploading your image"
+      });
       setIsSaving(false);
     }
   };
@@ -255,6 +319,11 @@ const AppearanceSettingsTab: React.FC<AppearanceSettingsTabProps> = ({
                       <SelectItem value="monospace">Monospace</SelectItem>
                       <SelectItem value="cairo">Cairo</SelectItem>
                       <SelectItem value="redrose">Red Rose</SelectItem>
+                      <SelectItem value="montserrat">Montserrat</SelectItem>
+                      <SelectItem value="lato">Lato</SelectItem>
+                      <SelectItem value="roboto">Roboto</SelectItem>
+                      <SelectItem value="poppins">Poppins</SelectItem>
+                      <SelectItem value="opensans">Open Sans</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -299,6 +368,8 @@ const AppearanceSettingsTab: React.FC<AppearanceSettingsTabProps> = ({
                       <SelectItem value="small">Small (4px)</SelectItem>
                       <SelectItem value="medium">Medium (8px)</SelectItem>
                       <SelectItem value="large">Large (12px)</SelectItem>
+                      <SelectItem value="xl">Extra Large (16px)</SelectItem>
+                      <SelectItem value="2xl">2XL (24px)</SelectItem>
                       <SelectItem value="full">Full (9999px)</SelectItem>
                     </SelectContent>
                   </Select>
@@ -307,21 +378,58 @@ const AppearanceSettingsTab: React.FC<AppearanceSettingsTabProps> = ({
                 <div>
                   <Label htmlFor="page_pattern">Background Pattern</Label>
                   <Select 
-                    value={pageData.page_pattern || 'none'} 
+                    value={pageData.page_pattern && !pageData.page_pattern.startsWith('data:') ? pageData.page_pattern : 'custom'} 
                     onValueChange={(value) => handleLocalSelectChange('page_pattern', value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a pattern" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      <SelectItem value="dots">Dots</SelectItem>
-                      <SelectItem value="grid">Grid</SelectItem>
-                      <SelectItem value="waves">Waves</SelectItem>
-                      <SelectItem value="diagonal">Diagonal Lines</SelectItem>
+                      {Object.entries(backgroundPatterns).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>{label}</SelectItem>
+                      ))}
+                      <SelectItem value="custom">Custom Image</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+                
+                {(pageData.page_pattern === 'custom' || (pageData.page_pattern && pageData.page_pattern.startsWith('data:'))) && (
+                  <div className="mt-2">
+                    <Label htmlFor="background_image_upload">Custom Background Image</Label>
+                    <div className="flex gap-2 items-center mt-1">
+                      <Input
+                        id="background_image_upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleBackgroundImageUpload}
+                        className="flex-1"
+                      />
+                      {customBackgroundImage && (
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          type="button" 
+                          onClick={() => {
+                            setCustomBackgroundImage(null);
+                            handleLocalSelectChange('page_pattern', 'none');
+                          }}
+                        >
+                          Clear
+                        </Button>
+                      )}
+                    </div>
+                    
+                    {(customBackgroundImage || (pageData.page_pattern && pageData.page_pattern.startsWith('data:'))) && (
+                      <div className="mt-2 border rounded-md p-2">
+                        <img 
+                          src={customBackgroundImage || pageData.page_pattern} 
+                          alt="Background preview" 
+                          className="max-h-24 mx-auto"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
                 
                 <div>
                   <Label htmlFor="content_max_width">Content Max Width</Label>
@@ -336,6 +444,8 @@ const AppearanceSettingsTab: React.FC<AppearanceSettingsTabProps> = ({
                       <SelectItem value="800px">Narrow (800px)</SelectItem>
                       <SelectItem value="1000px">Medium (1000px)</SelectItem>
                       <SelectItem value="1200px">Wide (1200px)</SelectItem>
+                      <SelectItem value="1400px">Extra Wide (1400px)</SelectItem>
+                      <SelectItem value="1600px">Ultra Wide (1600px)</SelectItem>
                       <SelectItem value="100%">Full Width (100%)</SelectItem>
                     </SelectContent>
                   </Select>
@@ -351,9 +461,11 @@ const AppearanceSettingsTab: React.FC<AppearanceSettingsTabProps> = ({
                       <SelectValue placeholder="Select spacing" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
                       <SelectItem value="compact">Compact</SelectItem>
                       <SelectItem value="default">Default</SelectItem>
                       <SelectItem value="spacious">Spacious</SelectItem>
+                      <SelectItem value="extra">Extra Spacious</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -369,17 +481,39 @@ const AppearanceSettingsTab: React.FC<AppearanceSettingsTabProps> = ({
                           pageData.border_radius === 'small' ? '4px' :
                           pageData.border_radius === 'medium' ? '8px' :
                           pageData.border_radius === 'large' ? '12px' :
+                          pageData.border_radius === 'xl' ? '16px' :
+                          pageData.border_radius === '2xl' ? '24px' :
                           pageData.border_radius === 'full' ? '9999px' : '8px',
                         backgroundImage: 
                           pageData.page_pattern === 'dots' ? 'radial-gradient(#00000022 1px, transparent 1px)' :
                           pageData.page_pattern === 'grid' ? 'linear-gradient(to right, #00000011 1px, transparent 1px), linear-gradient(to bottom, #00000011 1px, transparent 1px)' :
                           pageData.page_pattern === 'waves' ? 'url("data:image/svg+xml,%3Csvg width="100" height="20" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 10 C 30 0, 70 0, 100 10 L 100 20 L 0 20 Z" fill="%2300000011"/%3E%3C/svg%3E")' :
-                          pageData.page_pattern === 'diagonal' ? 'repeating-linear-gradient(45deg, #00000011, #00000011 1px, transparent 1px, transparent 10px)' : 'none',
+                          pageData.page_pattern === 'diagonal' ? 'repeating-linear-gradient(45deg, #00000011, #00000011 1px, transparent 1px, transparent 10px)' :
+                          pageData.page_pattern === 'circles' ? 'radial-gradient(circle, #00000011 10px, transparent 11px)' :
+                          pageData.page_pattern === 'triangles' ? 'url("data:image/svg+xml,%3Csvg width="60" height="60" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 0 L 30 52 L 60 0 Z" fill="%2300000011"/%3E%3C/svg%3E")' :
+                          pageData.page_pattern === 'hexagons' ? 'url("data:image/svg+xml,%3Csvg width="60" height="60" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 15 L 15 0 L 45 0 L 60 15 L 60 45 L 45 60 L 15 60 L 0 45 Z" fill="%2300000011"/%3E%3C/svg%3E")' :
+                          pageData.page_pattern === 'stripes' ? 'repeating-linear-gradient(90deg, #00000011, #00000011 5px, transparent 5px, transparent 15px)' :
+                          pageData.page_pattern === 'zigzag' ? 'linear-gradient(135deg, #00000011 25%, transparent 25%) 0 0, linear-gradient(225deg, #00000011 25%, transparent 25%) 0 0' :
+                          pageData.page_pattern === 'confetti' ? 'url("data:image/svg+xml,%3Csvg width="60" height="60" xmlns="http://www.w3.org/2000/svg"%3E%3Crect x="10" y="10" width="4" height="4" transform="rotate(45 12 12)" fill="%2300000022"/%3E%3Crect x="30" y="20" width="4" height="4" transform="rotate(30 32 22)" fill="%2300000022"/%3E%3Crect x="15" y="40" width="4" height="4" transform="rotate(60 17 42)" fill="%2300000022"/%3E%3Crect x="40" y="45" width="4" height="4" transform="rotate(12 42 47)" fill="%2300000022"/%3E%3C/svg%3E")' :
+                          pageData.page_pattern === 'bubbles' ? 'radial-gradient(circle at 25px 25px, #00000011 15px, transparent 16px), radial-gradient(circle at 75px 75px, #00000011 15px, transparent 16px)' :
+                          pageData.page_pattern === 'noise' ? 'url("data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%" height="100%" filter="url(%23noiseFilter)" opacity="0.15"/%3E%3C/svg%3E")' :
+                          pageData.page_pattern === 'paper' ? 'url("data:image/svg+xml,%3Csvg width="100" height="100" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="paperFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5"/%3E%3CfeDisplacementMap in="SourceGraphic" scale="10"/%3E%3C/filter%3E%3Crect width="100%" height="100%" filter="url(%23paperFilter)" opacity="0.1"/%3E%3C/svg%3E")' :
+                          pageData.page_pattern?.startsWith('data:') ? `url(${pageData.page_pattern})` : 'none',
                         backgroundSize: 
                           pageData.page_pattern === 'dots' ? '20px 20px' :
                           pageData.page_pattern === 'grid' ? '20px 20px' :
                           pageData.page_pattern === 'waves' ? '100px 20px' :
-                          pageData.page_pattern === 'diagonal' ? '14px 14px' : 'auto',
+                          pageData.page_pattern === 'diagonal' ? '14px 14px' :
+                          pageData.page_pattern === 'circles' ? '60px 60px' :
+                          pageData.page_pattern === 'triangles' ? '60px 60px' :
+                          pageData.page_pattern === 'hexagons' ? '60px 60px' :
+                          pageData.page_pattern === 'stripes' ? '20px 20px' :
+                          pageData.page_pattern === 'zigzag' ? '20px 20px' :
+                          pageData.page_pattern === 'confetti' ? '60px 60px' :
+                          pageData.page_pattern === 'bubbles' ? '100px 100px' :
+                          pageData.page_pattern === 'noise' ? '200px 200px' :
+                          pageData.page_pattern === 'paper' ? '100px 100px' : 'cover',
+                        backgroundRepeat: pageData.page_pattern?.startsWith('data:') ? 'repeat' : 'repeat',
                         backgroundColor: '#f5f5f5'
                       }}
                     >
@@ -599,24 +733,6 @@ const AppearanceSettingsTab: React.FC<AppearanceSettingsTabProps> = ({
           </Card>
         </TabsContent>
       </Tabs>
-      
-      <Button
-        type="button"
-        onClick={handleSaveChanges}
-        disabled={isSaving || !isDirty}
-      >
-        {isSaving ? (
-          <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Saving...
-          </>
-        ) : (
-          <>
-            <Save className="w-4 h-4 mr-2" />
-            Save Appearance Settings
-          </>
-        )}
-      </Button>
     </div>
   );
 };

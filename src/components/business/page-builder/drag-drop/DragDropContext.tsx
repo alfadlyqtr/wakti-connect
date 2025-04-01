@@ -24,6 +24,7 @@ export const DragDropProvider: React.FC<{
 
   // Update sections when prop changes
   useEffect(() => {
+    // Deep clone the sections and sort them to avoid mutation issues
     setOrderedSections([...sections].sort((a, b) => a.section_order - b.section_order));
   }, [sections]);
 
@@ -43,7 +44,7 @@ export const DragDropProvider: React.FC<{
             .eq('id', section.id);
         });
         
-        // Execute all updates
+        // Execute all updates in a single batch
         await Promise.all(updatePromises);
         
         return updatedSections;
@@ -77,16 +78,22 @@ export const DragDropProvider: React.FC<{
       reorderedSections.map(s => ({ id: s.id, type: s.section_type, order: s.section_order }))
     );
     
-    setOrderedSections(reorderedSections);
-    updateSectionOrderMutation.mutate(reorderedSections);
+    // Create a completely new array to avoid mutation issues
+    const newSections = reorderedSections.map((section, index) => ({
+      ...section,
+      section_order: index
+    }));
+    
+    setOrderedSections(newSections);
+    updateSectionOrderMutation.mutate(newSections);
   };
 
-  // New function for moving sections up or down
+  // Improved function for moving sections up or down
   const moveSectionUpDown = (sectionId: string, direction: 'up' | 'down') => {
     console.log(`Moving section ${sectionId} ${direction}`);
     
     // Create a fresh sorted copy of the sections to avoid mutation issues
-    const sortedSections = [...sections].sort((a, b) => a.section_order - b.section_order);
+    const sortedSections = [...orderedSections].sort((a, b) => a.section_order - b.section_order);
     
     const currentIndex = sortedSections.findIndex(s => s.id === sectionId);
     if (currentIndex === -1) {
@@ -104,28 +111,27 @@ export const DragDropProvider: React.FC<{
     // Determine target index
     const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
     
-    // Create a completely new array with swapped elements to avoid mutation issues
-    const newSections = sortedSections.map(section => ({...section}));
+    // Create completely new array with swapped elements
+    const newSections = [...sortedSections];
     
-    // Store the current and target sections
-    const currentSection = {...newSections[currentIndex]};
-    const targetSection = {...newSections[targetIndex]};
+    // Simply swap the array positions, NOT just the order values
+    const temp = newSections[currentIndex];
+    newSections[currentIndex] = newSections[targetIndex];
+    newSections[targetIndex] = temp;
     
-    // Swap the order values
-    const tempOrder = currentSection.section_order;
-    currentSection.section_order = targetSection.section_order;
-    targetSection.section_order = tempOrder;
+    // Now assign sequential order values to ensure consistency
+    const reorderedSections = newSections.map((section, index) => ({
+      ...section,
+      section_order: index
+    }));
     
-    // Replace the sections in the array
-    newSections[currentIndex] = currentSection;
-    newSections[targetIndex] = targetSection;
-    
-    console.log('Manually updating section order:', 
-      newSections.map(s => ({ id: s.id, type: s.section_type, order: s.section_order }))
+    console.log('Updated section order:', 
+      reorderedSections.map(s => ({ id: s.id, type: s.section_type, order: s.section_order }))
     );
     
-    // Update the state and trigger the mutation
-    updateSectionOrder(newSections);
+    // Update the state and save to database
+    setOrderedSections(reorderedSections);
+    updateSectionOrderMutation.mutate(reorderedSections);
   };
 
   return (
