@@ -64,7 +64,7 @@ const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
       case 'bottom': return 'justify-center mb-4';
       case 'left': return 'justify-start';
       case 'right': return 'justify-end';
-      case 'both': return position === 'header' ? 'justify-end' : 'justify-center'; // Handle 'both' based on current rendering position
+      case 'both': return position === 'both' && 'header' ? 'justify-end' : 'justify-center'; // Fixed comparison
       default: return 'justify-center';
     }
   };
