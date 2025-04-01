@@ -2,109 +2,125 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Ensures that staff and business contacts are correctly set up
- * This can be called to fix any missing relationships
+ * Syncs staff-business contacts to ensure mutual contacts
+ * between business owners and their staff members
  */
-export const syncStaffBusinessContacts = async (): Promise<boolean> => {
+export const syncStaffBusinessContacts = async (): Promise<{ success: boolean, message: string }> => {
   try {
-    // First check if the user is a staff member
     const { data: { session } } = await supabase.auth.getSession();
+    
     if (!session?.user) {
-      console.log("No active session, can't sync contacts");
-      return false;
+      return { success: false, message: "Not authenticated" };
     }
     
-    const userId = session.user.id;
-    console.log("Attempting to sync contacts for user:", userId);
+    // Check if user is either a business owner or staff
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, account_type')
+      .eq('id', session.user.id)
+      .single();
     
-    // Check for a staff relation
-    const { data: staffData, error: staffError } = await supabase
-      .from('business_staff')
-      .select('id, business_id, staff_id')
-      .or(`staff_id.eq.${userId},business_id.eq.${userId}`)
-      .eq('status', 'active');
+    if (profileError) {
+      console.error("Error fetching profile:", profileError);
+      return { success: false, message: "Could not fetch profile" };
+    }
+    
+    if (profile.account_type === 'business') {
+      // For business owners, sync contacts with all staff members
+      const { data: staffRelations, error: staffError } = await supabase
+        .from('business_staff')
+        .select('id, staff_id')
+        .eq('business_id', session.user.id);
       
-    if (staffError) {
-      console.error("Error fetching staff relations:", staffError);
-      return false;
-    }
-      
-    if (!staffData || staffData.length === 0) {
-      console.log("User is not a staff member or business owner with staff");
-      return false; // Not a staff member or business with staff
-    }
-    
-    console.log("Found staff relations:", staffData);
-    
-    // Create missing contacts - process sequentially to avoid RLS conflicts
-    for (const relation of staffData) {
-      try {
-        // First check if the contact already exists to avoid RLS violation
-        if (relation.staff_id === userId) {
-          console.log("User is staff, ensuring contact with business:", relation.business_id);
-          
-          // Check if contact already exists
-          const { data: existingContact } = await supabase
-            .from('user_contacts')
-            .select('id')
-            .eq('user_id', relation.staff_id)
-            .eq('contact_id', relation.business_id)
-            .maybeSingle();
-            
-          if (!existingContact) {
-            // Create staff->business contact
-            const { error } = await supabase
-              .from('user_contacts')
-              .insert({
-                user_id: relation.staff_id,
-                contact_id: relation.business_id,
-                status: 'accepted',
-                staff_relation_id: relation.id
-              });
-              
-            if (error) console.error("Error creating staff->business contact:", error);
-            else console.log("Created staff->business contact");
-          } else {
-            console.log("Staff->Business contact already exists");
-          }
-          
-        } else if (relation.business_id === userId) {
-          console.log("User is business, ensuring contact with staff:", relation.staff_id);
-          
-          // Check if contact already exists
-          const { data: existingContact } = await supabase
-            .from('user_contacts')
-            .select('id')
-            .eq('user_id', relation.business_id)
-            .eq('contact_id', relation.staff_id)
-            .maybeSingle();
-            
-          if (!existingContact) {
-            // Create business->staff contact
-            const { error } = await supabase
-              .from('user_contacts')
-              .insert({
-                user_id: relation.business_id,
-                contact_id: relation.staff_id,
-                status: 'accepted',
-                staff_relation_id: relation.id
-              });
-              
-            if (error) console.error("Error creating business->staff contact:", error);
-            else console.log("Created business->staff contact");
-          } else {
-            console.log("Business->Staff contact already exists");
-          }
-        }
-      } catch (innerError) {
-        console.error("Error in contact creation for relation:", relation, innerError);
+      if (staffError) {
+        console.error("Error fetching staff:", staffError);
+        return { success: false, message: "Could not fetch staff" };
       }
+      
+      if (!staffRelations || staffRelations.length === 0) {
+        return { success: true, message: "No staff members to sync" };
+      }
+      
+      // Create contacts for each staff member
+      for (const relation of staffRelations) {
+        await createMutualContactsIfNeeded(session.user.id, relation.staff_id, relation.id);
+      }
+      
+      return { success: true, message: `Synced contacts with ${staffRelations.length} staff members` };
+    } else {
+      // For staff members, sync contacts with business owners
+      const { data: businessRelations, error: businessError } = await supabase
+        .from('business_staff')
+        .select('id, business_id')
+        .eq('staff_id', session.user.id);
+      
+      if (businessError) {
+        console.error("Error fetching business relations:", businessError);
+        return { success: false, message: "Could not fetch business relations" };
+      }
+      
+      if (!businessRelations || businessRelations.length === 0) {
+        return { success: true, message: "No business relations to sync" };
+      }
+      
+      // Create contacts for each business owner
+      for (const relation of businessRelations) {
+        await createMutualContactsIfNeeded(session.user.id, relation.business_id, relation.id);
+      }
+      
+      return { success: true, message: `Synced contacts with ${businessRelations.length} businesses` };
     }
-    
-    console.log("Contact sync completed");
-    return true;
   } catch (error) {
-    console.error("Error syncing staff-business contacts:", error);
-    return false;
+    console.error("Error syncing contacts:", error);
+    return { success: false, message: "Unknown error syncing contacts" };
+  }
+};
+
+/**
+ * Helper function to create mutual contacts between two users
+ */
+const createMutualContactsIfNeeded = async (
+  userId1: string, 
+  userId2: string,
+  staffRelationId: string
+): Promise<void> => {
+  // Check for existing contacts
+  const { data: existingContact1, error: error1 } = await supabase
+    .from('user_contacts')
+    .select('id')
+    .eq('user_id', userId1)
+    .eq('contact_id', userId2)
+    .maybeSingle();
+  
+  // Create first direction contact if needed
+  if (!existingContact1 && !error1) {
+    await supabase
+      .from('user_contacts')
+      .insert({
+        user_id: userId1,
+        contact_id: userId2,
+        status: 'accepted',
+        staff_relation_id: staffRelationId
+      });
+  }
+  
+  // Check reverse direction
+  const { data: existingContact2, error: error2 } = await supabase
+    .from('user_contacts')
+    .select('id')
+    .eq('user_id', userId2)
+    .eq('contact_id', userId1)
+    .maybeSingle();
+  
+  // Create second direction contact if needed
+  if (!existingContact2 && !error2) {
+    await supabase
+      .from('user_contacts')
+      .insert({
+        user_id: userId2,
+        contact_id: userId1,
+        status: 'accepted',
+        staff_relation_id: staffRelationId
+      });
   }
 };
