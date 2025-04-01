@@ -28,9 +28,8 @@ const SectionCard: React.FC<SectionCardProps> = ({
   actionsComponent, 
   displayOrder 
 }) => {
-  // Set default section title if not provided
+  // Get the section title from section_content if available, or use section type label
   const sectionTitle = section.section_content?.title || 
-                       section.section_title || 
                        sectionTypeLabels[section.section_type] || 
                        "Unnamed Section";
   
