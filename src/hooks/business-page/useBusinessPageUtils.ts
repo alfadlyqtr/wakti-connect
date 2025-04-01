@@ -29,9 +29,6 @@ export const useAutoSavePageSettings = (
           title: "Auto-save failed",
           description: "Your changes could not be saved automatically. Please try saving manually."
         });
-      },
-      onSuccess: () => {
-        console.log("Auto-save successful");
       }
     });
   }, 1000);
