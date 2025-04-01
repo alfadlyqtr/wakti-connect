@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, Trash2, Wand2, Save } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useSectionEditor } from "@/hooks/useSectionEditor";
+import { toast } from "@/components/ui/use-toast";
 
 interface SectionEditorControlsProps {
   onTemplateClick: () => void;
@@ -19,8 +20,31 @@ const SectionEditorControls: React.FC<SectionEditorControlsProps> = ({ onTemplat
     deleteSection,
     handleSaveSection,
     isSubmitting,
-    isDirty
+    isDirty,
+    contentData
   } = useSectionEditor();
+  
+  const handleSave = async () => {
+    if (!isDirty) {
+      toast({
+        title: "No changes",
+        description: "No changes to save. Make some changes first."
+      });
+      return;
+    }
+    
+    try {
+      console.log("Saving section with content:", contentData);
+      await handleSaveSection();
+    } catch (error) {
+      console.error("Error saving section:", error);
+      toast({
+        variant: "destructive",
+        title: "Save failed",
+        description: "There was an error saving your changes. Please try again."
+      });
+    }
+  };
   
   return (
     <div className="space-y-4">
@@ -117,17 +141,21 @@ const SectionEditorControls: React.FC<SectionEditorControlsProps> = ({ onTemplat
         </AlertDialog>
       </div>
       
-      {/* Add save button at the bottom */}
+      {/* Add save button with enhanced visibility and state management */}
       <Button 
         type="button" 
         size="sm" 
-        variant="default"
-        onClick={handleSaveSection}
+        variant={isDirty ? "default" : "outline"}
+        onClick={handleSave}
         disabled={isSubmitting || !isDirty}
-        className="w-full"
+        className="w-full relative"
       >
-        <Save className="w-4 h-4 mr-2" />
-        <span>{isSubmitting ? 'Saving...' : 'Save Changes'}</span>
+        <Save className={`w-4 h-4 mr-2 ${isSubmitting ? 'animate-pulse' : ''}`} />
+        <span>{isSubmitting ? 'Saving...' : (isDirty ? 'Save Changes' : 'No Changes')}</span>
+        
+        {isDirty && (
+          <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500 transform translate-x-1/2 -translate-y-1/2"></span>
+        )}
       </Button>
     </div>
   );

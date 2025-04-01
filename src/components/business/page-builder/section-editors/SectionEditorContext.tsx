@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { useUpdateSectionMutation } from "@/hooks/business-page/useBusinessPageMutations";
 import { toast } from "@/components/ui/use-toast";
 import { BusinessPageSection } from "@/types/business.types";
@@ -50,14 +50,23 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
   section
 }) => {
   // State to track form values - ensure we initialize with an empty object if section_content is null
-  const [contentData, setContentData] = useState<Record<string, any>>(section.section_content || {});
+  const [originalContent, setOriginalContent] = useState<Record<string, any>>({});
+  const [contentData, setContentData] = useState<Record<string, any>>({});
   const updateSectionMutation = useUpdateSectionMutation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   
+  // Initialize the content data from the section
+  useEffect(() => {
+    const initialContent = section.section_content || {};
+    setContentData(JSON.parse(JSON.stringify(initialContent)));
+    setOriginalContent(JSON.parse(JSON.stringify(initialContent)));
+    setIsDirty(false);
+  }, [section.id, section.section_content]);
+  
   // Reset changes
   const resetChanges = () => {
-    setContentData(section.section_content || {});
+    setContentData(JSON.parse(JSON.stringify(originalContent)));
     setIsDirty(false);
   };
   
@@ -66,47 +75,79 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
     return !section.section_content || Object.keys(section.section_content).length === 0;
   };
   
+  // Check if content is different from original
+  const checkIfDirty = (newContent: Record<string, any>) => {
+    // Quick check for empty objects
+    if (Object.keys(newContent).length === 0 && Object.keys(originalContent).length === 0) {
+      return false;
+    }
+    
+    // Compare stringified JSON for deep equality
+    return JSON.stringify(newContent) !== JSON.stringify(originalContent);
+  };
+  
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setContentData(prev => ({ ...prev, [name]: value }));
-    setIsDirty(true);
+    setContentData(prev => {
+      const newData = { ...prev, [name]: value };
+      setIsDirty(checkIfDirty(newData));
+      return newData;
+    });
   };
   
   // Handle toggle changes
   const handleToggleChange = (name: string, checked: boolean) => {
-    setContentData(prev => ({ ...prev, [name]: checked }));
-    setIsDirty(true);
+    setContentData(prev => {
+      const newData = { ...prev, [name]: checked };
+      setIsDirty(checkIfDirty(newData));
+      return newData;
+    });
   };
   
   // Handle color picker changes
   const handleColorChange = (name: string, value: string) => {
-    setContentData(prev => ({ ...prev, [name]: value }));
-    setIsDirty(true);
+    setContentData(prev => {
+      const newData = { ...prev, [name]: value };
+      setIsDirty(checkIfDirty(newData));
+      return newData;
+    });
   };
   
   // Handle style changes
   const handleStyleChange = (name: string, value: string) => {
-    setContentData(prev => ({ ...prev, [name]: value }));
-    setIsDirty(true);
+    setContentData(prev => {
+      const newData = { ...prev, [name]: value };
+      setIsDirty(checkIfDirty(newData));
+      return newData;
+    });
   };
   
   // Handle select changes
   const handleSelectChange = (name: string, value: string) => {
-    setContentData(prev => ({ ...prev, [name]: value }));
-    setIsDirty(true);
+    setContentData(prev => {
+      const newData = { ...prev, [name]: value };
+      setIsDirty(checkIfDirty(newData));
+      return newData;
+    });
   };
   
   // Handle list changes
   const handleListChange = (name: string, list: any[]) => {
-    setContentData(prev => ({ ...prev, [name]: list }));
-    setIsDirty(true);
+    setContentData(prev => {
+      const newData = { ...prev, [name]: list };
+      setIsDirty(checkIfDirty(newData));
+      return newData;
+    });
   };
   
   // Handle nested updates
   const handleNestedUpdate = (name: string, value: any) => {
-    setContentData(prev => ({ ...prev, [name]: value }));
-    setIsDirty(true);
+    setContentData(prev => {
+      const newData = { ...prev, [name]: value };
+      setIsDirty(checkIfDirty(newData));
+      return newData;
+    });
   };
 
   // Apply template content
@@ -144,8 +185,11 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
     });
     
     // Update content data with all template content
-    setContentData(prevData => ({...prevData, ...templateContent}));
-    setIsDirty(true);
+    setContentData(prevData => {
+      const newData = {...prevData, ...templateContent};
+      setIsDirty(checkIfDirty(newData));
+      return newData;
+    });
     
     console.log('Section level styles to apply:', sectionLevelStyles);
     
@@ -184,8 +228,11 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Ensure contentData is a valid object before saving
-      const validContentData = contentData || {};
+      // Log what we're saving
+      console.log("Saving section content:", contentData);
+      
+      // Deep clone to avoid reference issues
+      const validContentData = JSON.parse(JSON.stringify(contentData || {}));
       
       await updateSectionMutation.mutateAsync({ 
         sectionId: section.id, 
@@ -193,6 +240,9 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
           section_content: validContentData 
         } 
       });
+      
+      // Update the original content after successful save
+      setOriginalContent(JSON.parse(JSON.stringify(validContentData)));
       
       toast({
         title: "Section Updated",

@@ -10,13 +10,28 @@ export const useCreatePageMutation = () => {
   
   return useMutation({
     mutationFn: async (data: any) => {
+      console.log("Creating new business page with data:", data);
+      
+      // Clean data to ensure valid JSON
+      const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
+        if (value !== null && value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as Record<string, any>);
+      
       const { data: response, error } = await supabase
         .from('business_pages')
-        .insert(data)
+        .insert(cleanData)
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating business page:", error);
+        throw error;
+      }
+      
+      console.log("Business page created successfully:", response);
       return response;
     },
     onSuccess: () => {
@@ -27,6 +42,7 @@ export const useCreatePageMutation = () => {
       });
     },
     onError: (error: any) => {
+      console.error("Detailed error when creating business page:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -42,25 +58,44 @@ export const useUpdatePageMutation = () => {
   
   return useMutation({
     mutationFn: async ({ pageId, data }: { pageId: string; data: any }) => {
+      console.log("Updating business page with ID:", pageId);
+      console.log("Update data:", data);
+      
+      // Clean data to ensure valid JSON
+      const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
+        if (value !== null && value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {} as Record<string, any>);
+      
+      if (Object.keys(cleanData).length === 0) {
+        console.log("No valid data to update, skipping update");
+        throw new Error("No valid data to update");
+      }
+      
       const { data: response, error } = await supabase
         .from('business_pages')
-        .update(data)
+        .update(cleanData)
         .eq('id', pageId)
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating business page:", error);
+        throw error;
+      }
+      
+      console.log("Business page updated successfully:", response);
       return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ownerBusinessPage'] });
+      // Toast notification is now handled by the component that calls the mutation
     },
     onError: (error: any) => {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to update business page",
-      });
+      console.error("Detailed error when updating business page:", error);
+      // Toast notification is now handled by the component that calls the mutation
     }
   });
 };
@@ -71,29 +106,56 @@ export const useUpdateSectionMutation = () => {
   
   return useMutation({
     mutationFn: async ({ sectionId, data }: { sectionId: string; data: any }) => {
+      console.log("Updating section with ID:", sectionId);
+      console.log("Section update data:", data);
+      
+      // Clean data to ensure valid JSON
+      const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
+        if (value !== null && value !== undefined) {
+          // Special handling for section_content to ensure it's valid JSON
+          if (key === 'section_content' && typeof value === 'object') {
+            try {
+              // Ensure we can stringify and parse it (valid JSON)
+              const validJson = JSON.parse(JSON.stringify(value));
+              acc[key] = validJson;
+            } catch (error) {
+              console.error("Invalid JSON in section_content:", error);
+              // Skip this property
+            }
+          } else {
+            acc[key] = value;
+          }
+        }
+        return acc;
+      }, {} as Record<string, any>);
+      
+      if (Object.keys(cleanData).length === 0) {
+        console.log("No valid data to update, skipping section update");
+        throw new Error("No valid data to update");
+      }
+      
       const { data: response, error } = await supabase
         .from('business_page_sections')
-        .update(data)
+        .update(cleanData)
         .eq('id', sectionId)
         .select()
         .single();
         
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating section:", error);
+        throw error;
+      }
+      
+      console.log("Section updated successfully:", response);
       return response;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['businessPageSections'] });
-      toast({
-        title: "Section Updated",
-        description: "Your changes have been saved",
-      });
+      // Toast notification is now handled by the component that calls the mutation
     },
     onError: (error: any) => {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to update section",
-      });
+      console.error("Detailed error when updating section:", error);
+      // Toast notification is now handled by the component that calls the mutation
     }
   });
 };

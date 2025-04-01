@@ -12,16 +12,33 @@ export const useAutoSavePageSettings = (
   // Debounced auto-save function
   const debouncedSave = useDebouncedCallback((data: Partial<BusinessPage>) => {
     if (!pageId) {
-      console.log("Cannot auto-save: No page ID available");
+      console.error("Cannot auto-save: No page ID available");
       return;
     }
     
     console.log("Auto-saving page data:", { pageId, ...data });
     
+    // Filter out null or undefined values to prevent errors
+    const cleanedData = Object.entries(data).reduce((acc, [key, value]) => {
+      if (value !== null && value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+    
+    // Only save if there's actual data to save
+    if (Object.keys(cleanedData).length === 0) {
+      console.log("No valid data to save, skipping auto-save");
+      return;
+    }
+    
     updatePage.mutate({ 
       pageId, 
-      data 
+      data: cleanedData 
     }, {
+      onSuccess: () => {
+        console.log("Auto-save successful");
+      },
       onError: (error: any) => {
         console.error("Auto-save failed:", error);
         toast({
@@ -36,7 +53,13 @@ export const useAutoSavePageSettings = (
   // Function to auto-save a specific field
   const autoSaveField = useCallback((fieldName: string, value: any) => {
     if (!pageId) {
-      console.log("Cannot auto-save field: No page ID available");
+      console.error("Cannot auto-save field: No page ID available");
+      return;
+    }
+    
+    // Skip saving if value is null or undefined
+    if (value === null || value === undefined) {
+      console.log(`Skipping auto-save for field "${fieldName}" due to null/undefined value`);
       return;
     }
     
@@ -47,7 +70,7 @@ export const useAutoSavePageSettings = (
   // Function to auto-save the entire page data
   const autoSavePage = useCallback((pageData: Partial<BusinessPage>) => {
     if (!pageId) {
-      console.log("Cannot auto-save page: No page ID available");
+      console.error("Cannot auto-save page: No page ID available");
       return;
     }
     

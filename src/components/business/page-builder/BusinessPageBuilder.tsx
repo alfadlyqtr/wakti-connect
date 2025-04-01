@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +8,7 @@ import { PageSectionsTab } from "./sections";
 import PageSettingsTab from "./PageSettingsTab";
 import PagePreviewTab from "./PagePreviewTab";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "@/components/ui/use-toast";
 
 const BusinessPageBuilder = () => {
   const { 
@@ -24,7 +25,7 @@ const BusinessPageBuilder = () => {
   const isMobile = useIsMobile();
   
   // Create state for editable page data
-  const [pageData, setPageData] = React.useState({
+  const [pageData, setPageData] = useState({
     page_title: "",
     page_slug: "",
     description: "",
@@ -39,6 +40,8 @@ const BusinessPageBuilder = () => {
   // Update local state from fetched data
   useEffect(() => {
     if (ownerBusinessPage) {
+      console.log("Updating page data from owner business page:", ownerBusinessPage);
+      
       setPageData({
         page_title: ownerBusinessPage.page_title || "",
         page_slug: ownerBusinessPage.page_slug || "",
@@ -48,7 +51,23 @@ const BusinessPageBuilder = () => {
         chatbot_code: ownerBusinessPage.chatbot_code || "",
         primary_color: ownerBusinessPage.primary_color || "#3B82F6",
         secondary_color: ownerBusinessPage.secondary_color || "#10B981",
-        logo_url: ownerBusinessPage.logo_url || ""
+        logo_url: ownerBusinessPage.logo_url || "",
+        // Add any additional fields that need to be handled
+        text_color: ownerBusinessPage.text_color || "",
+        font_family: ownerBusinessPage.font_family || "",
+        border_radius: ownerBusinessPage.border_radius || "",
+        page_pattern: ownerBusinessPage.page_pattern || "",
+        background_color: ownerBusinessPage.background_color || "",
+        subscribe_button_position: ownerBusinessPage.subscribe_button_position || "both",
+        subscribe_button_style: ownerBusinessPage.subscribe_button_style || "default",
+        subscribe_button_size: ownerBusinessPage.subscribe_button_size || "default",
+        social_icons_style: ownerBusinessPage.social_icons_style || "default",
+        social_icons_size: ownerBusinessPage.social_icons_size || "default",
+        social_icons_position: ownerBusinessPage.social_icons_position || "footer",
+        content_max_width: ownerBusinessPage.content_max_width || "1200px",
+        section_spacing: ownerBusinessPage.section_spacing || "default",
+        show_subscribe_button: ownerBusinessPage.show_subscribe_button !== false, // Default to true
+        subscribe_button_text: ownerBusinessPage.subscribe_button_text || "Subscribe"
       });
     }
   }, [ownerBusinessPage]);
@@ -64,26 +83,76 @@ const BusinessPageBuilder = () => {
   
   const handleSavePageSettings = () => {
     if (ownerBusinessPage) {
+      // Log what we're saving
+      console.log("Saving page settings:", pageData);
+      
       updatePage.mutate({ 
         pageId: ownerBusinessPage.id,
         data: pageData
+      }, {
+        onSuccess: () => {
+          toast({
+            title: "Settings saved",
+            description: "Your page settings have been updated successfully.",
+          });
+        },
+        onError: (error: any) => {
+          console.error("Failed to save page settings:", error);
+          toast({
+            variant: "destructive",
+            title: "Save failed",
+            description: "Failed to save page settings. Please try again.",
+          });
+        }
       });
     } else {
-      createPage.mutate(pageData);
+      createPage.mutate(pageData, {
+        onSuccess: () => {
+          toast({
+            title: "Page created",
+            description: "Your business page has been created successfully.",
+          });
+        },
+        onError: (error: any) => {
+          console.error("Failed to create page:", error);
+          toast({
+            variant: "destructive",
+            title: "Creation failed",
+            description: "Failed to create business page. Please try again.",
+          });
+        }
+      });
     }
   };
 
   // Create a function that handles input changes and auto-saves
   const handleInputChangeWithAutoSave = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
+    console.log(`Handling input change with auto-save for ${name}:`, value);
+    
     setPageData(prev => ({ ...prev, [name]: value }));
-    autoSaveField(name, value);
+    
+    // Wrap in try-catch to prevent any errors from breaking functionality
+    try {
+      autoSaveField(name, value);
+    } catch (error) {
+      console.error(`Error in auto-saving field ${name}:`, error);
+    }
   };
 
   // Create a function that handles toggle changes and auto-saves
   const handleToggleWithAutoSave = (name: string, checked: boolean) => {
+    console.log(`Handling toggle change with auto-save for ${name}:`, checked);
+    
     setPageData(prev => ({ ...prev, [name]: checked }));
-    autoSaveField(name, checked);
+    
+    // Wrap in try-catch to prevent any errors from breaking functionality
+    try {
+      autoSaveField(name, checked);
+    } catch (error) {
+      console.error(`Error in auto-saving toggle ${name}:`, error);
+    }
   };
   
   if (isLoading) {
