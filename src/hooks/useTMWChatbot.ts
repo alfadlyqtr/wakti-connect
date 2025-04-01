@@ -1,8 +1,10 @@
 
 import { useEffect, useRef } from "react";
+import { useIsMobile } from "./useIsMobile";
 
 export const useTMWChatbot = (chatbotEnabled: boolean | undefined, chatbotCode: string | undefined) => {
   const chatbotScriptRef = useRef<HTMLScriptElement | HTMLIFrameElement | null>(null);
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     // Clear any previously added chatbot elements
@@ -56,14 +58,23 @@ export const useTMWChatbot = (chatbotEnabled: boolean | undefined, chatbotCode: 
           // Handle iframe embed
           console.log("Detected iframe embed for TMW AI Chatbot");
           
-          // Create a container for the iframe if needed
+          // Create a container for the iframe with improved styling
           const container = document.createElement('div');
           container.id = 'tmw-chatbot-container-' + Date.now();
           container.className = 'tmw-chatbot-container';
+          
+          // Enhanced styling for the container
           container.style.position = 'fixed';
-          container.style.bottom = '0';
-          container.style.right = '0';
+          container.style.bottom = isMobile ? '16px' : '24px';
+          container.style.right = isMobile ? '16px' : '24px';
           container.style.zIndex = '9999';
+          container.style.maxWidth = '100%';
+          container.style.maxHeight = '85vh';
+          container.style.display = 'flex';
+          container.style.flexDirection = 'column';
+          container.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+          container.style.borderRadius = '12px';
+          container.style.overflow = 'hidden';
           
           // Extract the iframe HTML
           const tempDiv = document.createElement('div');
@@ -73,6 +84,17 @@ export const useTMWChatbot = (chatbotEnabled: boolean | undefined, chatbotCode: 
           if (iframe) {
             // Set a unique ID on the iframe for future reference
             iframe.id = 'tmw-chatbot-iframe-' + Date.now();
+            
+            // Improve iframe styling
+            iframe.style.border = 'none';
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.maxWidth = '450px';
+            iframe.style.maxHeight = isMobile ? '600px' : '700px';
+            iframe.style.borderRadius = '12px';
+            iframe.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
+            iframe.style.display = 'block';
+            
             chatbotScriptRef.current = iframe as HTMLIFrameElement;
             
             // Add the iframe to the container, then add container to the body
@@ -219,7 +241,7 @@ export const useTMWChatbot = (chatbotEnabled: boolean | undefined, chatbotCode: 
         }
       });
     };
-  }, [chatbotEnabled, chatbotCode]);
+  }, [chatbotEnabled, chatbotCode, isMobile]);
   
   return chatbotScriptRef;
 };
