@@ -21,7 +21,12 @@ const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
     showButton = true
   } = content;
 
-  console.log("BusinessHeader rendering with logo:", businessPage.logo_url);
+  console.log("BusinessHeader rendering with: ", {
+    logoUrl: businessPage.logo_url,
+    primaryColor: businessPage.primary_color,
+    title: title,
+    pageTitle: businessPage.page_title
+  });
   
   const handleBookNow = () => {
     navigate(`/business/${businessPage.page_slug}/book`);
@@ -56,7 +61,7 @@ const BusinessHeader = ({ section, businessPage }: BusinessHeaderProps) => {
           size="lg" 
           onClick={handleBookNow}
           style={{
-            backgroundColor: businessPage.primary_color,
+            backgroundColor: businessPage.primary_color || undefined,
             color: '#ffffff'
           }}
         >

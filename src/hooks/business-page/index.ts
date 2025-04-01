@@ -4,8 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { useBusinessPageUtils } from "./useBusinessPageUtils";
-import { useBusinessPageQueries } from "./useBusinessPageQueries";
-import { useBusinessPageMutations } from "./useBusinessPageMutations";
+import { 
+  useBusinessPageQuery, 
+  useOwnerBusinessPageQuery, 
+  usePageSectionsQuery,
+  useSocialLinksQuery 
+} from "./useBusinessPageQueries";
+import { 
+  useCreatePageMutation, 
+  useUpdatePageMutation, 
+  useUpdateSectionMutation,
+  useSubmitContactFormMutation 
+} from "./useBusinessPageMutations";
 import { BusinessPage, BusinessPageSection } from "@/types/business.types";
 
 export const useBusinessPage = (slug?: string) => {
@@ -18,88 +28,22 @@ export const useBusinessPage = (slug?: string) => {
     data: businessPage,
     isLoading: isBusinessPageLoading,
     error: businessPageError,
-  } = useQuery({
-    queryKey: ['businessPage', slug],
-    queryFn: async () => {
-      if (!slug) return null;
-      
-      const { data, error } = await supabase
-        .from('business_pages')
-        .select('*')
-        .eq('page_slug', slug)
-        .single();
-        
-      if (error) {
-        console.error("Error fetching business page:", error);
-        return null;
-      }
-      
-      return data;
-    },
-    enabled: !!slug,
-  });
+  } = useBusinessPageQuery(slug);
   
   const {
     data: pageSections,
     isLoading: isSectionsLoading,
-  } = useQuery({
-    queryKey: ['businessPageSections', businessPage?.id],
-    queryFn: async () => {
-      if (!businessPage?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('business_page_sections')
-        .select('*')
-        .eq('page_id', businessPage.id)
-        .order('section_order', { ascending: true });
-        
-      if (error) {
-        console.error("Error fetching page sections:", error);
-        return [];
-      }
-      
-      return data || [];
-    },
-    enabled: !!businessPage?.id,
-  });
+  } = usePageSectionsQuery(businessPage?.id);
   
   // Fetch owner's business page (for dashboard)
   const {
     data: ownerBusinessPage,
     isLoading: isOwnerLoading,
-  } = useQuery({
-    queryKey: ['ownerBusinessPage'],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.user) {
-        return null;
-      }
-      
-      const { data, error } = await supabase
-        .from('business_pages')
-        .select('*')
-        .eq('business_id', session.user.id)
-        .maybeSingle();
-        
-      if (error) {
-        console.error("Error fetching owner's business page:", error);
-        return null;
-      }
-      
-      return data;
-    },
-  });
+  } = useOwnerBusinessPageQuery();
   
   // Mutations
-  const {
-    createPage,
-    updatePage,
-    createSection,
-    updateSection,
-    deleteSection,
-    reorderSection,
-  } = useBusinessPageMutations(queryClient);
+  const createPageMutation = useCreatePageMutation();
+  const updatePageMutation = useUpdatePageMutation();
   
   // Fetch social links
   useEffect(() => {
@@ -126,6 +70,83 @@ export const useBusinessPage = (slug?: string) => {
       fetchSocialLinks(businessPage.business_id);
     }
   }, [businessPage?.business_id]);
+  
+  // Handle mutations
+  const createPage = (data: Partial<BusinessPage>) => {
+    return createPageMutation.mutateAsync(data);
+  };
+  
+  const updatePage = (pageId: string, data: Partial<BusinessPage>) => {
+    return updatePageMutation.mutateAsync({ pageId, data });
+  };
+  
+  const createSection = async (sectionType: string, pageId: string) => {
+    if (!pageId) {
+      throw new Error("No business page found");
+    }
+    
+    // Calculate highest order + 1
+    const highestOrder = pageSections && pageSections.length > 0
+      ? Math.max(...pageSections.map(s => s.section_order))
+      : -1;
+    
+    const nextOrder = highestOrder + 1;
+    
+    const { data, error } = await supabase
+      .from('business_page_sections')
+      .insert({
+        page_id: pageId,
+        section_type: sectionType,
+        section_order: nextOrder,
+        section_title: `New ${sectionType} section`,
+        section_content: {},
+        is_visible: true
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error creating section:", error);
+      throw error;
+    }
+    
+    queryClient.invalidateQueries({ queryKey: ['businessPageSections'] });
+    return data;
+  };
+  
+  const updateSection = (sectionId: string, data: any) => {
+    return useUpdateSectionMutation().mutateAsync({ sectionId, data });
+  };
+  
+  const deleteSection = async (sectionId: string) => {
+    const { error } = await supabase
+      .from('business_page_sections')
+      .delete()
+      .eq('id', sectionId);
+    
+    if (error) {
+      console.error("Error deleting section:", error);
+      throw error;
+    }
+    
+    queryClient.invalidateQueries({ queryKey: ['businessPageSections'] });
+    return { success: true };
+  };
+  
+  const reorderSection = async (sectionId: string, newOrder: number) => {
+    const { error } = await supabase
+      .from('business_page_sections')
+      .update({ section_order: newOrder })
+      .eq('id', sectionId);
+    
+    if (error) {
+      console.error("Error reordering section:", error);
+      throw error;
+    }
+    
+    queryClient.invalidateQueries({ queryKey: ['businessPageSections'] });
+    return { success: true };
+  };
   
   // Auto-save function for updating a single field
   const autoSaveField = async (name: string, value: any) => {
@@ -214,3 +235,18 @@ export const useBusinessPage = (slug?: string) => {
     autoSavePage,
   };
 };
+
+// Export the individual hooks for direct usage
+export { 
+  useBusinessPageQuery, 
+  useOwnerBusinessPageQuery, 
+  usePageSectionsQuery,
+  useSocialLinksQuery 
+} from './useBusinessPageQueries';
+
+export { 
+  useCreatePageMutation, 
+  useUpdatePageMutation, 
+  useUpdateSectionMutation,
+  useSubmitContactFormMutation 
+} from './useBusinessPageMutations';

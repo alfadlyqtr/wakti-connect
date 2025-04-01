@@ -56,12 +56,12 @@ const SocialIconsGroup: React.FC<SocialIconsGroupProps> = ({
 
   // Determine position classes
   const getPositionClass = () => {
-    // Fix the TypeScript error by using proper string comparison
+    // Handle 'both' position specifically
     if (position === 'both') {
-      // When used in header with 'both', it defaults to header styling
-      return 'justify-end';
+      return 'justify-end'; // Default to header style when in header with 'both'
     }
     
+    // Handle other positions
     switch (position) {
       case 'header': return 'justify-end';
       case 'footer': return 'justify-center';
