@@ -6,6 +6,7 @@ import { BusinessPageSection } from "@/types/business.types";
 
 interface SectionEditorContextType {
   isSubmitting: boolean;
+  isDirty: boolean;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleToggleChange: (name: string, checked: boolean) => void;
   handleSubmit: () => Promise<void>;
@@ -216,6 +217,7 @@ export const SectionEditorProvider: React.FC<SectionEditorProviderProps> = ({
   const value: SectionEditorContextType = {
     contentData,
     isSubmitting,
+    isDirty,
     handleInputChange,
     handleToggleChange,
     handleSubmit,

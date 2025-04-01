@@ -1,17 +1,14 @@
 
-import React from "react";
+import React, { useState } from "react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Copy, ExternalLink, Edit } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "@/components/ui/use-toast";
+import { Loader2, Save } from "lucide-react";
+import { UseMutationResult } from "@tanstack/react-query";
+import { BusinessPage } from "@/types/business.types";
 
 interface GeneralSettingsTabProps {
   pageData: {
@@ -19,251 +16,120 @@ interface GeneralSettingsTabProps {
     page_slug: string;
     description: string;
     is_published: boolean;
-    chatbot_enabled: boolean;
-    chatbot_code?: string;
-    primary_color: string;
-    secondary_color: string;
     logo_url?: string;
-    show_subscribe_button?: boolean;
-    subscribe_button_text?: string;
   };
   handleInputChangeWithAutoSave: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleToggleWithAutoSave: (name: string, checked: boolean) => void;
-  handleLogoUpload: (fileOrEvent: File | React.ChangeEvent<HTMLInputElement>) => void;
   getPublicPageUrl: () => string;
-  uploadingLogo: boolean;
+  updatePage: UseMutationResult<any, unknown, { pageId: string; data: any; }, unknown>;
 }
 
-// Schema for the URL change request
-const urlChangeSchema = z.object({
-  requestedSlug: z.string().min(3, "URL must be at least 3 characters").max(60, "URL cannot exceed 60 characters")
-    .regex(/^[a-z0-9-]+$/, "URL can only contain lowercase letters, numbers, and hyphens"),
-  reason: z.string().min(10, "Please provide a brief reason for this change").max(500, "Reason is too long")
-});
-
-const GeneralSettingsTab = ({ 
-  pageData, 
-  handleInputChangeWithAutoSave, 
+const GeneralSettingsTab: React.FC<GeneralSettingsTabProps> = ({
+  pageData,
+  handleInputChangeWithAutoSave,
   handleToggleWithAutoSave,
-  handleLogoUpload,
   getPublicPageUrl,
-  uploadingLogo
-}: GeneralSettingsTabProps) => {
-  const [urlChangeOpen, setUrlChangeOpen] = React.useState(false);
+  updatePage
+}) => {
+  const [isSaving, setIsSaving] = useState(false);
+  const pageUrl = getPublicPageUrl();
   
-  const copyPageUrl = () => {
-    const url = getPublicPageUrl();
-    navigator.clipboard.writeText(url);
-    toast({
-      title: "URL copied",
-      description: "Page URL has been copied to clipboard",
-    });
+  const handleSaveGeneralSettings = async () => {
+    setIsSaving(true);
+    try {
+      await updatePage.mutateAsync({
+        pageId: updatePage.variables?.pageId,
+        data: {
+          page_title: pageData.page_title,
+          page_slug: pageData.page_slug,
+          description: pageData.description,
+          is_published: pageData.is_published,
+          logo_url: pageData.logo_url
+        }
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
   
-  const visitPage = () => {
-    const url = getPublicPageUrl();
-    window.open(url, '_blank');
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleLogoUpload(e);
-  };
-  
-  // URL change request form
-  const urlChangeForm = useForm<z.infer<typeof urlChangeSchema>>({
-    resolver: zodResolver(urlChangeSchema),
-    defaultValues: {
-      requestedSlug: pageData.page_slug,
-      reason: ""
-    },
-  });
-  
-  const onSubmitUrlChange = (values: z.infer<typeof urlChangeSchema>) => {
-    // In a real implementation, this would send the request to an admin
-    // For now, we'll just show a success toast
-    toast({
-      title: "URL change requested",
-      description: "Your request has been submitted and is pending review",
-    });
-    setUrlChangeOpen(false);
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <div>
+    <Card>
+      <CardHeader>
+        <CardTitle>General Settings</CardTitle>
+        <CardDescription>
+          Configure your business landing page basic information
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
           <Label htmlFor="page_title">Page Title</Label>
-          <Input 
+          <Input
             id="page_title"
             name="page_title"
-            value={pageData.page_title || ''}
+            value={pageData.page_title}
             onChange={handleInputChangeWithAutoSave}
             placeholder="Your Business Name"
           />
-          <p className="text-sm text-muted-foreground mt-1">
-            This will be displayed as the title of your business page.
-          </p>
         </div>
 
-        <div>
-          <Label htmlFor="page_slug">Page URL</Label>
-          <div className="flex items-center">
-            <span className="text-muted-foreground mr-1">/business/</span>
-            <Input 
+        <div className="space-y-2">
+          <Label htmlFor="page_slug">
+            Page URL Slug
+            <span className="text-xs text-muted-foreground ml-2">
+              (Only lowercase letters, numbers, and hyphens)
+            </span>
+          </Label>
+          <div className="flex items-center gap-2">
+            <div className="bg-muted px-3 py-2 rounded-l-md border border-r-0 text-muted-foreground text-sm">
+              {window.location.origin}/business/
+            </div>
+            <Input
               id="page_slug"
               name="page_slug"
-              value={pageData.page_slug || ''}
-              readOnly
+              value={pageData.page_slug}
+              onChange={handleInputChangeWithAutoSave}
+              className="rounded-l-none"
               placeholder="your-business-name"
-              className="flex-1 bg-muted cursor-not-allowed"
             />
           </div>
-          <div className="flex items-center justify-between mt-2">
-            <p className="text-sm text-muted-foreground">
-              <span className="text-amber-500">Note:</span> URL changes require admin approval.
+          {pageUrl && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Public URL: <a href={pageUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{pageUrl}</a>
             </p>
-            <div className="flex gap-2">
-              <Dialog open={urlChangeOpen} onOpenChange={setUrlChangeOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Edit className="h-4 w-4 mr-1" />
-                    Request Change
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Request URL Change</DialogTitle>
-                    <DialogDescription>
-                      Submit a request to change your page URL. This is subject to availability and approval.
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <Form {...urlChangeForm}>
-                    <form onSubmit={urlChangeForm.handleSubmit(onSubmitUrlChange)} className="space-y-4 py-4">
-                      <FormField
-                        control={urlChangeForm.control}
-                        name="requestedSlug"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Requested URL</FormLabel>
-                            <div className="flex items-center">
-                              <span className="text-muted-foreground mr-1">/business/</span>
-                              <FormControl>
-                                <Input placeholder="your-business-name" {...field} />
-                              </FormControl>
-                            </div>
-                            <FormDescription>
-                              Use lowercase letters, numbers, and hyphens only
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={urlChangeForm.control}
-                        name="reason"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Reason for change</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Please explain why you want to change your URL"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormDescription>
-                              Briefly explain why you need this change
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <DialogFooter>
-                        <Button type="submit">Submit Request</Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
-              
-              <Button variant="outline" size="sm" onClick={copyPageUrl}>
-                <Copy className="h-4 w-4 mr-1" />
-                Copy URL
-              </Button>
-              <Button variant="outline" size="sm" onClick={visitPage}>
-                <ExternalLink className="h-4 w-4 mr-1" />
-                Visit
-              </Button>
-            </div>
-          </div>
+          )}
         </div>
 
-        <div>
+        <div className="space-y-2">
           <Label htmlFor="description">Page Description</Label>
-          <Textarea 
+          <Textarea
             id="description"
             name="description"
             value={pageData.description || ''}
             onChange={handleInputChangeWithAutoSave}
-            placeholder="Brief description of your business"
+            placeholder="Enter a brief description about your business"
             rows={3}
           />
-          <p className="text-sm text-muted-foreground mt-1">
-            This will be used for SEO and may appear in search results.
-          </p>
-        </div>
-        
-        <div>
-          <Label htmlFor="logo">Business Logo</Label>
-          <div className="mt-2 flex items-center space-x-4">
-            {pageData.logo_url && (
-              <div className="relative w-16 h-16 rounded-md overflow-hidden border">
-                <img 
-                  src={pageData.logo_url} 
-                  alt="Business Logo" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-            <div>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={uploadingLogo}
-                onClick={() => document.getElementById('logo-upload')?.click()}
-              >
-                {uploadingLogo ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    {pageData.logo_url ? 'Change Logo' : 'Upload Logo'}
-                  </>
-                )}
-              </Button>
-              <input
-                id="logo-upload"
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={handleFileChange}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Recommended size: 200x200px
-              </p>
-            </div>
-          </div>
         </div>
 
-        <div className="flex items-center justify-between border-t pt-4 mt-4">
-          <div className="space-y-0.5">
-            <Label htmlFor="is_published">Publish Page</Label>
+        <div className="space-y-2">
+          <Label htmlFor="logo_url">Logo URL</Label>
+          <Input
+            id="logo_url"
+            name="logo_url"
+            value={pageData.logo_url || ''}
+            onChange={handleInputChangeWithAutoSave}
+            placeholder="https://example.com/your-logo.png"
+          />
+          <p className="text-xs text-muted-foreground">
+            Enter a URL to your logo image. Recommended size: 200x200px.
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <Label htmlFor="is_published" className="text-base">Publish Page</Label>
             <p className="text-sm text-muted-foreground">
-              When enabled, your page will be visible to the public.
+              Make your business page visible to the public
             </p>
           </div>
           <Switch
@@ -272,35 +138,27 @@ const GeneralSettingsTab = ({
             onCheckedChange={(checked) => handleToggleWithAutoSave('is_published', checked)}
           />
         </div>
-
-        <div className="flex items-center justify-between border-t pt-4 mt-4">
-          <div className="space-y-0.5">
-            <Label htmlFor="show_subscribe_button">Show Subscribe Button</Label>
-            <p className="text-sm text-muted-foreground">
-              Allow visitors to subscribe to your business updates.
-            </p>
-          </div>
-          <Switch
-            id="show_subscribe_button"
-            checked={pageData.show_subscribe_button !== false} // Default to true if undefined
-            onCheckedChange={(checked) => handleToggleWithAutoSave('show_subscribe_button', checked)}
-          />
-        </div>
-
-        {pageData.show_subscribe_button !== false && (
-          <div className="mt-2 pl-4 border-l-2 border-muted">
-            <Label htmlFor="subscribe_button_text">Subscribe Button Text</Label>
-            <Input 
-              id="subscribe_button_text"
-              name="subscribe_button_text"
-              value={pageData.subscribe_button_text || 'Subscribe'}
-              onChange={handleInputChangeWithAutoSave}
-              placeholder="Subscribe"
-            />
-          </div>
-        )}
-      </div>
-    </div>
+      </CardContent>
+      <CardFooter>
+        <Button 
+          onClick={handleSaveGeneralSettings}
+          disabled={isSaving || updatePage.isPending}
+          className="ml-auto"
+        >
+          {isSaving || updatePage.isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Save General Settings
+            </>
+          )}
+        </Button>
+      </CardFooter>
+    </Card>
   );
 };
 
