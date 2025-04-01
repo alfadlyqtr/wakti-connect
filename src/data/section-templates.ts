@@ -1,4 +1,3 @@
-
 import { SectionType } from "@/types/business.types";
 
 interface SectionTemplate {
@@ -301,6 +300,40 @@ const instagramTemplates: SectionTemplate[] = [
   }
 ];
 
+// Add chatbot templates
+const chatbotTemplates: SectionTemplate[] = [
+  {
+    id: 'chatbot-simple',
+    name: 'Simple Chatbot',
+    description: 'Clean, minimalist chatbot section',
+    category: 'Simple',
+    content: {
+      section_title: 'Chat with Us',
+      section_description: 'Our AI assistant is ready to help you with any questions',
+      enabled: true,
+      chatbot_size: 'medium',
+      background_color: '#ffffff',
+      text_color: '#1f2937',
+      padding: 'md'
+    }
+  },
+  {
+    id: 'chatbot-large',
+    name: 'Large Chatbot',
+    description: 'Prominent chatbot section with detailed description',
+    category: 'Featured',
+    content: {
+      section_title: 'Virtual Assistant',
+      section_description: 'Get immediate answers and assistance with our AI-powered chatbot',
+      enabled: true,
+      chatbot_size: 'large',
+      background_color: '#f9fafb',
+      text_color: '#111827',
+      padding: 'lg'
+    }
+  }
+];
+
 // Map all templates by section type
 const allTemplates: Record<SectionType, SectionTemplate[]> = {
   header: headerTemplates,
@@ -310,7 +343,8 @@ const allTemplates: Record<SectionType, SectionTemplate[]> = {
   hours: hoursTemplates,
   testimonials: testimonialsTemplates,
   booking: bookingTemplates,
-  instagram: instagramTemplates
+  instagram: instagramTemplates,
+  chatbot: chatbotTemplates
 };
 
 // Get templates by section type

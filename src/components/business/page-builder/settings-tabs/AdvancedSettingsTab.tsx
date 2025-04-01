@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { toast } from "@/components/ui/use-toast";
 import SubscribeButtonCard from "./advanced/SubscribeButtonCard";
@@ -137,14 +136,7 @@ const AdvancedSettingsTab: React.FC<AdvancedSettingsTabProps> = ({
         getButtonPreviewStyles={getButtonPreviewStyles}
       />
 
-      <ChatbotCard 
-        chatbotEnabled={!!pageData.chatbot_enabled}
-        chatbotCode={pageData.chatbot_code || ""}
-        chatbotPosition={pageData.chatbot_position || "sidebar"}
-        handleInputChange={handleLocalInputChange}
-        handleToggleChange={handleLocalToggleChange}
-        handleSelectChange={handleLocalSelectChange}
-      />
+      <ChatbotCard />
 
       <SaveButton 
         isSaving={isSaving}

@@ -6,6 +6,7 @@ import { InfoIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
+// Removed props since they're not being used anymore
 const ChatbotCard: React.FC = () => {
   const navigate = useNavigate();
   
