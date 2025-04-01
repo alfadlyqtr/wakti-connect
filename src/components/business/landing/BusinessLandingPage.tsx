@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useBusinessPage } from "@/hooks/useBusinessPage";
 import BusinessPageHeader from "./BusinessPageHeader";
@@ -23,7 +22,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   slug,
   isPreviewMode = false,
 }) => {
-  // Updated to match the new useBusinessPage API
   const { 
     businessPage, 
     isLoading, 
@@ -36,14 +34,11 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   const isAuthenticated = useAuthentication();
   const { redirectToLogin } = useAuthRedirect();
   
-  // Get subscription info for the business
   const { isSubscribed, checkingSubscription, subscribe, unsubscribe } = 
     useBusinessSubscribers(businessPage?.business_id);
 
-  // Initialize the TMW Chatbot hook
   useTMWChatbot(businessPage?.chatbot_enabled, businessPage?.chatbot_code);
 
-  // Debug logs to identify issues
   console.log("BusinessLandingPage - authentication status:", isAuthenticated);
   console.log("BusinessLandingPage - businessPage:", businessPage);
   console.log("BusinessLandingPage - socialLinks:", socialLinks?.length || 0);
@@ -56,10 +51,9 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   });
   console.log("BusinessLandingPage - TMW chatbot settings:", {
     enabled: businessPage?.chatbot_enabled,
-    hasCode: !!businessPage?.chatbot_code
+    code: businessPage?.chatbot_code ? businessPage.chatbot_code.substring(0, 50) + '...' : null
   });
 
-  // Handle scroll to show/hide the floating button and PoweredByWAKTI component
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 300) {
@@ -75,7 +69,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Apply theme colors from business page settings
   useEffect(() => {
     if (businessPage) {
       console.log("Applying theme colors:", {
@@ -84,16 +77,12 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
       });
       
       if (businessPage.primary_color) {
-        // Set primary color as CSS variable
         document.documentElement.style.setProperty('--primary', businessPage.primary_color);
-        // Also set the RGB version for Tailwind compatibility
         document.documentElement.style.setProperty('--primary-rgb', hexToRGB(businessPage.primary_color));
       }
       
       if (businessPage.secondary_color) {
-        // Set secondary color as CSS variable
         document.documentElement.style.setProperty('--secondary', businessPage.secondary_color);
-        // Also set the RGB version for Tailwind compatibility
         document.documentElement.style.setProperty('--secondary-rgb', hexToRGB(businessPage.secondary_color));
       }
     }
@@ -106,23 +95,18 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     };
   }, [businessPage]);
 
-  // Helper function to convert HEX to RGB for CSS variables
   function hexToRGB(hex: string): string {
     if (!hex || !hex.startsWith('#')) return '0, 0, 0';
     
-    // Remove # if present
     hex = hex.replace('#', '');
     
-    // Parse the hex values to get r, g, b
     const r = parseInt(hex.substring(0, 2), 16);
     const g = parseInt(hex.substring(2, 4), 16);
     const b = parseInt(hex.substring(4, 6), 16);
     
-    // Return RGB value as comma-separated string
     return `${r}, ${g}, ${b}`;
   }
 
-  // Handler for when auth is required
   const handleAuthRequired = () => {
     redirectToLogin(`/business/${slug}`);
   };
@@ -139,7 +123,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     return <BusinessPageNotFound />;
   }
 
-  // Get the business's style preferences
   const {
     primary_color,
     secondary_color,
@@ -157,13 +140,10 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     subscribe_button_position = "both"
   } = businessPage;
 
-  // Set default background to white if not specified
   const bgColor = background_color || "#ffffff";
 
-  // Check if the background pattern is a data URL (custom image)
   const isCustomBgImage = page_pattern && page_pattern.startsWith('data:');
 
-  // Create dynamic styles based on the business page settings
   const pageStyle: React.CSSProperties = {
     backgroundColor: bgColor,
     color: text_color || "#1f2937",
@@ -176,7 +156,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     backgroundPosition: "center",
   };
 
-  // Generate pattern CSS
   function getBackgroundPattern(pattern?: string): string {
     if (!pattern || pattern === 'none') return "none";
     
@@ -212,7 +191,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
     }
   }
 
-  // Check if social links should be shown in their respective positions
   const showHeaderSocialLinks = socialLinks && socialLinks.length > 0 && 
     ['header', 'both'].includes(social_icons_position || '');
   
@@ -222,7 +200,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   const showSidebarSocialLinks = socialLinks && socialLinks.length > 0 && 
     ['sidebar'].includes(social_icons_position || '');
 
-  // Check if floating subscribe button should be shown
   const showFloatingSubscribeBtn = show_subscribe_button && 
     ['floating', 'both'].includes(subscribe_button_position || '');
 
@@ -234,7 +211,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
   return (
     <CurrencyProvider initialCurrency={businessPage.business_id}>
       <div style={pageStyle} className="min-h-screen relative pb-10">
-        {/* Sidebar Social Icons - Fixed position for both mobile and desktop */}
         {showSidebarSocialLinks && (
           <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-30 hidden md:block">
             <SocialIconsGroup 
@@ -247,21 +223,19 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
           </div>
         )}
         
-        {/* Mobile Sidebar Social Icons - Show on smaller screens */}
         {showSidebarSocialLinks && (
           <div className="fixed left-2 top-1/2 transform -translate-y-1/2 z-30 block md:hidden">
             <SocialIconsGroup 
               socialLinks={socialLinks || []}
               style={(social_icons_style as any) || "default"}
-              size="small" /* Smaller size for mobile */
+              size="small"
               position="sidebar"
               vertical={true}
-              scale={0.8} /* Slightly smaller for mobile */
+              scale={0.8}
             />
           </div>
         )}
         
-        {/* Floating subscribe button */}
         {showFloatingSubscribeBtn && (
           <FloatingSubscribeButton 
             businessId={businessPage.business_id}
@@ -282,7 +256,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
           style={{ maxWidth: content_max_width }}
           className="mx-auto px-4 sm:px-6"
         >
-          {/* Add social media icons in header if position is set to "header" or "both" */}
           {showHeaderSocialLinks && (
             <div className="pt-4 pb-2">
               <SocialIconsGroup 
@@ -301,7 +274,7 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
               business_name: businessPage.page_title,
               display_name: businessPage.page_title,
               account_type: "business",
-              avatar_url: logo_url  // Pass logo URL to header
+              avatar_url: logo_url
             }} 
             isPreviewMode={isPreviewMode}
             isAuthenticated={isAuthenticated}
@@ -316,7 +289,6 @@ const BusinessLandingPageComponent: React.FC<BusinessLandingPageProps> = ({
             businessPage={businessPage} 
           />
 
-          {/* Social Media Icons in footer */}
           {showFooterSocialLinks && (
             <div className="mt-8 mb-4">
               <SocialIconsGroup 
