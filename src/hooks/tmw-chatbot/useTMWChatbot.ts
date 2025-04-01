@@ -19,7 +19,9 @@ export const useTMWChatbot = (chatbotEnabled: boolean | undefined, chatbotCode: 
     // Clear any previously added chatbot elements
     if (chatbotScriptRef.current) {
       try {
-        document.body.removeChild(chatbotScriptRef.current);
+        if (chatbotScriptRef.current.parentNode) {
+          chatbotScriptRef.current.parentNode.removeChild(chatbotScriptRef.current);
+        }
         chatbotScriptRef.current = null;
       } catch (error) {
         console.error("Error removing previous chatbot element:", error);
@@ -31,7 +33,7 @@ export const useTMWChatbot = (chatbotEnabled: boolean | undefined, chatbotCode: 
     
     if (chatbotEnabled && chatbotCode) {
       try {
-        console.log("TMW AI Chatbot is enabled with code:", chatbotCode.substring(0, 100) + "...");
+        console.log("TMW AI Chatbot is enabled");
         
         // Check if the code contains an iframe tag
         const isIframeEmbed = chatbotCode.trim().toLowerCase().includes('<iframe');
@@ -46,18 +48,13 @@ export const useTMWChatbot = (chatbotEnabled: boolean | undefined, chatbotCode: 
       } catch (error) {
         console.error('Error injecting TMW AI Chatbot code:', error);
       }
-    } else {
-      console.log("TMW AI Chatbot is disabled or has no code", {
-        enabled: chatbotEnabled,
-        hasCode: !!chatbotCode
-      });
     }
     
     // Cleanup function
     return () => {
-      if (chatbotScriptRef.current) {
+      if (chatbotScriptRef.current && chatbotScriptRef.current.parentNode) {
         try {
-          document.body.removeChild(chatbotScriptRef.current);
+          chatbotScriptRef.current.parentNode.removeChild(chatbotScriptRef.current);
           chatbotScriptRef.current = null;
         } catch (error) {
           console.error('Error removing TMW chatbot element on unmount:', error);

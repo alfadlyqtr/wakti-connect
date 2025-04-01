@@ -23,9 +23,7 @@ export const injectScriptChatbot = (chatbotCode: string): HTMLScriptElement | nu
   console.log("Script analysis:", { 
     hasScriptTag: isFullScriptTag, 
     hasSrc: !!scriptSrc, 
-    hasContent: !!scriptContent.length,
-    srcPreview: scriptSrc ? scriptSrc.substring(0, 50) + "..." : "none",
-    contentPreview: scriptContent ? scriptContent.substring(0, 50) + "..." : "none"
+    hasContent: !!scriptContent.length
   });
   
   // Create a new script element
@@ -65,10 +63,7 @@ export const injectScriptChatbot = (chatbotCode: string): HTMLScriptElement | nu
       document.body.appendChild(contentScript);
     }, 100);
     
-    console.log('TMW AI Chatbot hybrid scripts have been injected:', {
-      srcScriptId: srcScript.id,
-      contentScriptId: contentScript.id
-    });
+    console.log('TMW AI Chatbot hybrid scripts have been injected');
     
     return contentScript;
   } else if (scriptSrc) {
@@ -76,10 +71,7 @@ export const injectScriptChatbot = (chatbotCode: string): HTMLScriptElement | nu
     script.src = scriptSrc;
     document.body.appendChild(script);
     
-    console.log('TMW AI Chatbot external script has been injected:', {
-      id: script.id,
-      src: scriptSrc
-    });
+    console.log('TMW AI Chatbot external script has been injected');
     
     return script;
   } else {
@@ -87,10 +79,7 @@ export const injectScriptChatbot = (chatbotCode: string): HTMLScriptElement | nu
     script.textContent = scriptContent;
     document.body.appendChild(script);
     
-    console.log('TMW AI Chatbot inline script has been injected:', {
-      id: script.id,
-      contentPreview: scriptContent.substring(0, 50) + '...'
-    });
+    console.log('TMW AI Chatbot inline script has been injected');
     
     return script;
   }

@@ -27,13 +27,13 @@ export const cleanupExistingChatbotElements = (): void => {
     }
   });
   
-  // Remove any existing chatbot containers
-  const chatbotContainers = document.querySelectorAll('.tmw-chat-container, .tmw-chatbot-container');
-  chatbotContainers.forEach(container => {
+  // Remove any div elements that might have been created for the chatbot
+  const chatbotDivs = document.querySelectorAll('div[id*="tmw"]');
+  chatbotDivs.forEach(div => {
     try {
-      container.parentNode?.removeChild(container);
+      div.parentNode?.removeChild(div);
     } catch (err) {
-      console.error("Error removing chatbot container:", err);
+      console.error("Error removing chatbot div:", err);
     }
   });
 };
