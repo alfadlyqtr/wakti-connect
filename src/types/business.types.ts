@@ -92,7 +92,8 @@ export type SectionType =
   | 'hours'
   | 'testimonials'
   | 'booking'
-  | 'instagram';
+  | 'instagram'
+  | 'chatbot'; // Add chatbot as a new section type
 
 export interface BusinessSocialLink {
   id: string;

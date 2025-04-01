@@ -11,6 +11,7 @@ import BusinessGallerySection from "./sections/BusinessGallerySection";
 import BusinessTestimonialsSection from "./sections/BusinessTestimonialsSection";
 import BusinessBookingTemplatesSection from "./sections/BusinessBookingTemplatesSection";
 import BusinessInstagramSection from "./sections/BusinessInstagramSection";
+import BusinessChatbotSection from "./sections/BusinessChatbotSection";
 import { cn } from "@/lib/utils";
 
 export interface BusinessPageSectionsProps {
@@ -154,6 +155,9 @@ const BusinessPageSections = ({ pageSections, businessPage }: BusinessPageSectio
           
         case 'instagram':
           return <BusinessInstagramSection content={content} />;
+          
+        case 'chatbot':
+          return <BusinessChatbotSection content={content} />;
           
         default:
           return (

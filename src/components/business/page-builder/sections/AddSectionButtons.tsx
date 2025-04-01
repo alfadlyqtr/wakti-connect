@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { SectionType } from "@/types/business.types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Plus, Layout, Image, Clock, MapPin, FileText, Star, Calendar, Instagram } from "lucide-react";
+import { Loader2, Plus, Layout, Image, Clock, MapPin, FileText, Star, Calendar, Instagram, MessageCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface AddSectionButtonsProps {
@@ -25,6 +25,7 @@ const sectionCategories = {
   "integration": [
     { type: "booking" as SectionType, icon: Calendar, title: "Booking Templates", description: "Display your booking services" },
     { type: "instagram" as SectionType, icon: Instagram, title: "Instagram Feed", description: "Embed your Instagram posts" },
+    { type: "chatbot" as SectionType, icon: MessageCircle, title: "TMW AI Chatbot", description: "Add an AI chatbot to your page" },
   ]
 };
 

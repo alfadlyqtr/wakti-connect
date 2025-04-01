@@ -10,6 +10,7 @@ import GalleryEditor from "./gallery";
 import BookingTemplateSection from "../sections/BookingTemplateSection";
 import InstagramFeedSection from "../sections/InstagramFeedSection";
 import TestimonialsEditor from "./TestimonialsEditor";
+import ChatbotSection from "../sections/ChatbotSection";
 
 const SectionEditorFields: React.FC = () => {
   const { section, contentData, handleInputChange } = useSectionEditor();
@@ -36,6 +37,9 @@ const SectionEditorFields: React.FC = () => {
         
       case 'instagram':
         return <InstagramFeedSection />;
+        
+      case 'chatbot':
+        return <ChatbotSection />;
         
       case 'testimonials':
         return <TestimonialsEditor contentData={contentData} handleInputChange={handleInputChange} />;
