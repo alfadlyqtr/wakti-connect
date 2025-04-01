@@ -36,7 +36,6 @@ const FloatingSubscribeButton: React.FC<FloatingSubscribeButtonProps> = ({
   businessId,
   visible,
   showButton,
-  isAuthenticated,
   onAuthRequired,
   buttonStyle,
   size = "default",
