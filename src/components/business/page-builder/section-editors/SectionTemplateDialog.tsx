@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,13 +38,8 @@ const SectionTemplateDialog: React.FC<SectionTemplateDialogProps> = ({
     setIsApplying(true);
     
     try {
-      // Apply the template content through context
       applyTemplateContent(template.content);
-      
-      // Notify parent component
       onSelect(template.content);
-      
-      // Add a slight delay to show the loading state
       setTimeout(() => {
         setIsApplying(false);
         onOpenChange(false);

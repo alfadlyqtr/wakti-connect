@@ -1,5 +1,5 @@
 
-import { BusinessPageSection } from "@/types/business.types";
+import { BusinessPageSection, SectionType } from "@/types/business.types";
 
 // Define template interfaces
 interface SectionTemplate {
@@ -9,6 +9,8 @@ interface SectionTemplate {
   section_type: string;
   thumbnail?: string;
   content: Record<string, any>;
+  category?: string;
+  previewUrl?: string;
 }
 
 // Header Section Templates
@@ -19,6 +21,8 @@ const headerTemplates: SectionTemplate[] = [
     description: "A clean, modern header with title and subtitle",
     section_type: "header",
     thumbnail: "/templates/header-standard.jpg",
+    previewUrl: "/templates/header-standard.jpg",
+    category: "Basic",
     content: {
       title: "Welcome to Our Business",
       subtitle: "We provide quality products and services",
@@ -36,6 +40,8 @@ const headerTemplates: SectionTemplate[] = [
     description: "Header with a full-width background image",
     section_type: "header",
     thumbnail: "/templates/header-background.jpg",
+    previewUrl: "/templates/header-background.jpg",
+    category: "Featured",
     content: {
       title: "Welcome to Our Business",
       subtitle: "Premium Services for You",
@@ -58,6 +64,8 @@ const aboutTemplates: SectionTemplate[] = [
     description: "Simple about section with text and image",
     section_type: "about",
     thumbnail: "/templates/about-standard.jpg",
+    previewUrl: "/templates/about-standard.jpg",
+    category: "Basic",
     content: {
       title: "About Us",
       content: "<p>We are a dedicated team of professionals committed to providing the best services to our customers. Our years of experience in the industry allow us to deliver exceptional results.</p>",
@@ -71,6 +79,8 @@ const aboutTemplates: SectionTemplate[] = [
     description: "About section with team information",
     section_type: "about",
     thumbnail: "/templates/about-team.jpg",
+    previewUrl: "/templates/about-team.jpg",
+    category: "Team",
     content: {
       title: "Our Story",
       content: "<p>Founded in 2020, our business has grown from a small local service to a recognized brand in the industry. We take pride in our work and the relationships we build with our clients.</p>",
@@ -88,6 +98,8 @@ const contactTemplates: SectionTemplate[] = [
     description: "Basic contact form with information",
     section_type: "contact",
     thumbnail: "/templates/contact-standard.jpg",
+    previewUrl: "/templates/contact-standard.jpg",
+    category: "Basic",
     content: {
       title: "Contact Us",
       subtitle: "We'd love to hear from you",
@@ -104,6 +116,8 @@ const contactTemplates: SectionTemplate[] = [
     description: "Contact information without form",
     section_type: "contact",
     thumbnail: "/templates/contact-simple.jpg",
+    previewUrl: "/templates/contact-simple.jpg",
+    category: "Minimal",
     content: {
       title: "Get in Touch",
       subtitle: "Contact us today",
@@ -124,6 +138,8 @@ const galleryTemplates: SectionTemplate[] = [
     description: "Gallery with grid layout",
     section_type: "gallery",
     thumbnail: "/templates/gallery-grid.jpg",
+    previewUrl: "/templates/gallery-grid.jpg",
+    category: "Grid",
     content: {
       title: "Our Gallery",
       images: [],
@@ -137,6 +153,8 @@ const galleryTemplates: SectionTemplate[] = [
     description: "Gallery with masonry layout",
     section_type: "gallery",
     thumbnail: "/templates/gallery-masonry.jpg",
+    previewUrl: "/templates/gallery-masonry.jpg",
+    category: "Masonry",
     content: {
       title: "Photo Gallery",
       images: [],
@@ -154,6 +172,8 @@ const hoursTemplates: SectionTemplate[] = [
     description: "Basic business hours display",
     section_type: "hours",
     thumbnail: "/templates/hours-standard.jpg",
+    previewUrl: "/templates/hours-standard.jpg",
+    category: "Basic",
     content: {
       title: "Business Hours",
       days: [
@@ -174,6 +194,8 @@ const hoursTemplates: SectionTemplate[] = [
     description: "Business hours with additional information",
     section_type: "hours",
     thumbnail: "/templates/hours-with-info.jpg",
+    previewUrl: "/templates/hours-with-info.jpg",
+    category: "Detailed",
     content: {
       title: "When We're Open",
       days: [
@@ -198,6 +220,8 @@ const testimonialsTemplates: SectionTemplate[] = [
     description: "Testimonials in card format",
     section_type: "testimonials",
     thumbnail: "/templates/testimonials-cards.jpg",
+    previewUrl: "/templates/testimonials-cards.jpg",
+    category: "Cards",
     content: {
       title: "What Our Clients Say",
       testimonials: [
@@ -213,6 +237,8 @@ const testimonialsTemplates: SectionTemplate[] = [
     description: "Testimonials displayed as quotes",
     section_type: "testimonials",
     thumbnail: "/templates/testimonials-quotes.jpg",
+    previewUrl: "/templates/testimonials-quotes.jpg",
+    category: "Quotes",
     content: {
       title: "Client Testimonials",
       testimonials: [
@@ -232,6 +258,8 @@ const bookingTemplates: SectionTemplate[] = [
     description: "Basic booking section with service selection",
     section_type: "booking",
     thumbnail: "/templates/booking-simple.jpg",
+    previewUrl: "/templates/booking-simple.jpg",
+    category: "Basic",
     content: {
       title: "Book Your Appointment",
       subtitle: "Select from our available services",
@@ -245,6 +273,8 @@ const bookingTemplates: SectionTemplate[] = [
     description: "Booking with featured services highlighted",
     section_type: "booking",
     thumbnail: "/templates/booking-featured.jpg",
+    previewUrl: "/templates/booking-featured.jpg",
+    category: "Featured",
     content: {
       title: "Our Services",
       subtitle: "Book your appointment today",
@@ -262,6 +292,8 @@ const instagramTemplates: SectionTemplate[] = [
     description: "Display your latest Instagram posts",
     section_type: "instagram",
     thumbnail: "/templates/instagram-feed.jpg",
+    previewUrl: "/templates/instagram-feed.jpg",
+    category: "Feed",
     content: {
       title: "Follow Us on Instagram",
       username: "yourusername",
@@ -275,6 +307,8 @@ const instagramTemplates: SectionTemplate[] = [
     description: "Clean Instagram feed display",
     section_type: "instagram",
     thumbnail: "/templates/instagram-minimal.jpg",
+    previewUrl: "/templates/instagram-minimal.jpg",
+    category: "Minimal",
     content: {
       title: "Instagram",
       username: "yourusername",
@@ -316,6 +350,11 @@ export const getTemplatesByType = (type: string) => {
 // Find template by ID
 export const findTemplateById = (id: string) => {
   return allSectionTemplates.find(template => template.id === id);
+};
+
+// Export the getTemplates function explicitly
+export const getTemplates = (sectionType: SectionType) => {
+  return getTemplatesByType(sectionType);
 };
 
 export default sectionTemplates;
