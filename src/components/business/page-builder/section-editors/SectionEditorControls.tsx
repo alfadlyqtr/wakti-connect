@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { useSectionEditor } from "./SectionEditorContext";
-import { Loader2, RotateCcw, Save, Template } from "lucide-react";
+import { Loader2, RotateCcw, Save, LayoutTemplate } from "lucide-react";
 
 interface SectionEditorControlsProps {
   onTemplateClick: () => void;
@@ -27,7 +27,7 @@ const SectionEditorControls: React.FC<SectionEditorControlsProps> = ({
           className="flex items-center gap-1"
           onClick={onTemplateClick}
         >
-          <Template className="h-4 w-4" />
+          <LayoutTemplate className="h-4 w-4" />
           <span>Apply Template</span>
         </Button>
         
