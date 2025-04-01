@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BusinessPageSection, SectionType } from "@/types/business.types";
 import { Button } from "@/components/ui/button";
@@ -45,8 +44,7 @@ const PageSectionsTab: React.FC<PageSectionsTabProps> = ({
           page_id: businessPageId,
           section_type: sectionType,
           section_order: nextOrder,
-          section_title: `New ${sectionType} section`,
-          section_content: {},
+          section_content: {}, // Initialize with empty content
           is_visible: true
         })
         .select()

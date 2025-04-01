@@ -3,7 +3,6 @@ import React from "react";
 import { useDragDrop } from "./DragDropContext";
 import SectionCard from "../sections/SectionCard";
 import SectionActions from "../sections/SectionActions";
-import { BusinessPageSection } from "@/types/business.types";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Loader2 } from "lucide-react";
 
@@ -63,15 +62,17 @@ const DraggableSectionList: React.FC<DraggableSectionListProps> = ({
                         section={section}
                         displayOrder={index + 1}
                         actionsComponent={
-                          <SectionActions
-                            sectionId={section.id}
-                            isVisible={section.is_visible}
-                            isFirstSection={index === 0}
-                            isLastSection={index === sections.length - 1}
-                            onToggleVisibility={onToggleVisibility}
-                            onDeleteSection={onDeleteSection}
-                            onMoveSection={moveSectionUpDown}
-                          />
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <SectionActions
+                              sectionId={section.id}
+                              isVisible={section.is_visible}
+                              isFirstSection={index === 0}
+                              isLastSection={index === sections.length - 1}
+                              onToggleVisibility={onToggleVisibility}
+                              onDeleteSection={onDeleteSection}
+                              onMoveSection={moveSectionUpDown}
+                            />
+                          </div>
                         }
                       />
                     </div>

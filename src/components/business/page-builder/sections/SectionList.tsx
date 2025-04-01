@@ -1,8 +1,7 @@
-
 import React from "react";
 import { BusinessPageSection } from "@/types/business.types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import SectionEditor from "../section-editors/SectionEditor";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import SectionCard from "./SectionCard";
 import SectionActions from "./SectionActions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { fromTable } from "@/integrations/supabase/helper";
@@ -159,32 +158,22 @@ const SectionList: React.FC<SectionListProps> = ({
       {[...pageSections]
         .sort((a, b) => a.section_order - b.section_order)
         .map((section, index) => (
-          <Card key={section.id}>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg capitalize flex items-center">
-                  {section.section_type}
-                  {!section.is_visible && (
-                    <span className="ml-2 text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded">
-                      Hidden
-                    </span>
-                  )}
-                </CardTitle>
-                <SectionActions 
-                  sectionId={section.id}
-                  isVisible={section.is_visible}
-                  isFirstSection={index === 0}
-                  isLastSection={index === pageSections.length - 1}
-                  onToggleVisibility={handleToggleVisibility}
-                  onMoveSection={handleMoveSection}
-                  onDeleteSection={handleDeleteSection}
-                />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <SectionEditor section={section} />
-            </CardContent>
-          </Card>
+          <SectionCard 
+            key={section.id} 
+            section={section}
+            displayOrder={index + 1}
+            actionsComponent={
+              <SectionActions 
+                sectionId={section.id}
+                isVisible={section.is_visible}
+                isFirstSection={index === 0}
+                isLastSection={index === pageSections.length - 1}
+                onToggleVisibility={handleToggleVisibility}
+                onMoveSection={handleMoveSection}
+                onDeleteSection={handleDeleteSection}
+              />
+            }
+          />
         ))}
     </div>
   );
