@@ -16,7 +16,6 @@ export const useAIChatOperations = (userId?: string, userName: string = "") => {
   } = useAIMessages(userName);
   
   const [offTopicCount, setOffTopicCount] = useState(0);
-  const [activeDocuments, setActiveDocuments] = useState<Array<any>>([]);
 
   const sendMessage = useMutation({
     mutationFn: async (message: string) => {
@@ -61,14 +60,8 @@ export const useAIChatOperations = (userId?: string, userName: string = "") => {
         setOffTopicCount(0);
       }
       
-      // Prepare context object with any active documents
-      const context = {
-        documents: activeDocuments,
-        conversationContext: ""
-      };
-      
       // Call the edge function
-      const data = await callAIAssistant(token, message, userName, context);
+      const data = await callAIAssistant(token, message, userName);
       
       // Add AI response to the list
       addAssistantMessage(data.response);
@@ -88,33 +81,10 @@ export const useAIChatOperations = (userId?: string, userName: string = "") => {
       });
     },
   });
-  
-  const addDocumentContext = (document: any) => {
-    setActiveDocuments(prev => {
-      // Check if document already exists
-      const exists = prev.some(doc => doc.id === document.id);
-      if (exists) return prev;
-      
-      // Add the new document
-      return [...prev, document];
-    });
-  };
-  
-  const removeDocumentContext = (documentId: string) => {
-    setActiveDocuments(prev => prev.filter(doc => doc.id !== documentId));
-  };
-  
-  const clearDocumentContext = () => {
-    setActiveDocuments([]);
-  };
 
   return {
     messages,
     sendMessage,
     clearMessages,
-    addDocumentContext,
-    removeDocumentContext,
-    clearDocumentContext,
-    activeDocuments
   };
 };

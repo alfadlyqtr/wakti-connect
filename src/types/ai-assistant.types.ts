@@ -7,7 +7,7 @@ export interface AIMessage {
 }
 
 export interface AISettings {
-  id?: string;
+  id?: string; // Changed from number | string to just string to match Supabase's UUID type
   assistant_name: string;
   tone: "formal" | "casual" | "concise" | "detailed" | "balanced";
   response_length: "short" | "balanced" | "detailed";
@@ -20,10 +20,6 @@ export interface AISettings {
     analytics: boolean;
     messaging: boolean;
   };
-  // Add new fields for enhanced AI personalization
-  user_role?: "student" | "professional" | "business_owner" | "other";
-  assistant_mode?: "tutor" | "content_creator" | "project_manager" | "business_manager" | "personal_assistant";
-  specialized_settings?: Record<string, any>;
 }
 
 export interface AIKnowledgeUpload {
