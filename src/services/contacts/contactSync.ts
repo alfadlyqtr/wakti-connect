@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { fetchAutoAddStaffSetting } from './contactSettings';
 
 /**
  * Synchronizes staff-business contacts when a user is part of a business
@@ -67,58 +68,13 @@ export const ensureStaffContacts = async (): Promise<{success: boolean; message:
 
 /**
  * Get the auto add staff to contacts setting from user profile
+ * This function uses fetchAutoAddStaffSetting from contactSettings.ts
  */
 export const getAutoAddStaffSetting = async (): Promise<boolean> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      return true; // Default to true if not logged in
-    }
-    
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('auto_add_staff_to_contacts')
-      .eq('id', session.user.id)
-      .single();
-      
-    if (error) {
-      console.error('Error fetching auto add staff setting:', error);
-      return true; // Default to true on error
-    }
-    
-    // If setting is explicitly false, return false, otherwise default to true
-    return data?.auto_add_staff_to_contacts !== false;
+    return await fetchAutoAddStaffSetting();
   } catch (error) {
     console.error('Error in getAutoAddStaffSetting:', error);
     return true; // Default to true on error
-  }
-};
-
-/**
- * Update auto add staff to contacts setting
- */
-export const updateAutoAddStaffSetting = async (autoAddStaff: boolean): Promise<boolean> => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      throw new Error('You must be logged in to update settings');
-    }
-    
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        auto_add_staff_to_contacts: autoAddStaff
-      })
-      .eq('id', session.user.id);
-      
-    if (error) {
-      console.error('Error updating auto add staff setting:', error);
-      throw new Error(error.message);
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Error in updateAutoAddStaffSetting:', error);
-    throw error;
   }
 };

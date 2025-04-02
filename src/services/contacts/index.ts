@@ -6,8 +6,7 @@ export { searchUsers, checkContactRequest } from './contactSearch';
 export { 
   syncStaffBusinessContacts, 
   ensureStaffContacts, 
-  getAutoAddStaffSetting, 
-  updateAutoAddStaffSetting 
+  getAutoAddStaffSetting 
 } from './contactSync';
 export { 
   fetchAutoApproveSetting, 
