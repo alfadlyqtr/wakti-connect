@@ -18,10 +18,13 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelect, initialA
   const [accountType, setAccountType] = useState<string>(initialAccountType);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Fetch account type if not provided
+  // Fetch account type if not provided - always define hooks at the top level
   useEffect(() => {
     const getAccountType = async () => {
-      if (!user) return;
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
       
       try {
         setIsLoading(true);
@@ -49,16 +52,17 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelect, initialA
     }
   }, [user, initialAccountType]);
   
-  if (isLoading) {
-    return <div className="p-4 text-center">Loading account information...</div>;
-  }
-  
-  // If it's a business account, automatically select business_owner
+  // Handle business account selection - always define hooks at the top level
   useEffect(() => {
+    // Only trigger the selection if we have a business account and we've finished loading
     if (accountType === "business" && !isLoading) {
       onSelect("business_owner");
     }
   }, [accountType, isLoading, onSelect]);
+  
+  if (isLoading) {
+    return <div className="p-4 text-center">Loading account information...</div>;
+  }
   
   // For business accounts, show specific content
   if (accountType === "business") {

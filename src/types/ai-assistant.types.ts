@@ -19,7 +19,7 @@ export interface AISettings {
     staff: boolean;
     analytics: boolean;
     messaging: boolean;
-    text_generation: boolean; // NEW: For email signatures, templates
+    text_generation: boolean; // Required field for email signatures, templates
     _userRole?: string;
     _assistantMode?: string;
     _specializedSettings?: Record<string, any>;
