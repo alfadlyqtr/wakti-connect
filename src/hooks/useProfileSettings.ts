@@ -44,6 +44,7 @@ export const useProfileSettings = () => {
               account_type: 'free',
               is_searchable: true,
               auto_approve_contacts: false,
+              auto_add_staff_to_contacts: true, // Add missing field
               avatar_url: '',
               business_name: '',
               created_at: new Date().toISOString(),
@@ -74,9 +75,10 @@ export const useProfileSettings = () => {
         
         console.log("Profile fetched successfully:", data);
         
-        // Create a proper profile object
+        // Create a proper profile object with typed properties
         const profileWithEmail: ProfileWithEmail = {
           ...data,
+          auto_add_staff_to_contacts: data.auto_add_staff_to_contacts ?? true, // Ensure field exists
           email: session.user.email
         };
         
@@ -135,6 +137,7 @@ export const useProfileSettings = () => {
         // Combine the updated profile with the email
         const updatedProfile: ProfileWithEmail = {
           ...data,
+          auto_add_staff_to_contacts: data.auto_add_staff_to_contacts ?? true, // Ensure field exists
           email: email || session.user.email
         };
         

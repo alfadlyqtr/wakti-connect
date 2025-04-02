@@ -9,6 +9,8 @@ interface StaffData {
   isServiceProvider?: boolean;
   isCoAdmin?: boolean;
   permissions?: Record<string, boolean>;
+  avatar?: any;
+  addToContacts?: boolean;
 }
 
 /**
@@ -164,3 +166,6 @@ export const createStaffRecord = async (staffData: StaffData) => {
     throw new Error(error.message || "Failed to create staff account");
   }
 };
+
+// Export both function names to maintain compatibility
+export const createStaffMember = createStaffRecord;

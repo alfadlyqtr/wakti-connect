@@ -83,6 +83,6 @@ const CreateStaffDialog: React.FC<CreateStaffDialogProps> = ({
       </DialogContent>
     </Dialog>
   );
-};
+}
 
 export default CreateStaffDialog;

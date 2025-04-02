@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,15 +21,20 @@ export function StaffDialog({
   onOpenChange,
   onSuccess
 }: StaffDialogProps) {
+  const [activeTab, setActiveTab] = useState("create");
   const {
     form,
     isSubmitting,
-    isEditing,
-    activeTab,
-    setActiveTab,
-    handleSubmit,
-    error
-  } = useStaffDialog(staffId, onSuccess, onOpenChange);
+    onSubmit
+  } = useStaffDialog(onSuccess);
+  
+  // Determine if we are editing based on staffId
+  const isEditing = !!staffId;
+  
+  // Handle the form submission
+  const handleSubmit = async (values: any) => {
+    await onSubmit(values);
+  };
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -43,7 +48,7 @@ export function StaffDialog({
           setActiveTab={setActiveTab}
           handleSubmit={handleSubmit}
           onCancel={() => onOpenChange(false)}
-          error={error}
+          error={null}
         />
       </DialogContent>
     </Dialog>

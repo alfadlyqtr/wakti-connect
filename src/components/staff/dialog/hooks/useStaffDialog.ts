@@ -27,7 +27,15 @@ export const useStaffDialog = (
         can_manage_bookings: false,
         can_track_hours: true,
         can_log_earnings: false,
-        can_view_analytics: false
+        can_view_analytics: false,
+        can_view_tasks: true,
+        can_update_task_status: false,
+        can_view_customer_bookings: false,
+        can_update_booking_status: false,
+        can_create_job_cards: false,
+        can_message_staff: true,
+        can_edit_profile: true,
+        can_update_profile: false
       },
       addToContacts: true
     }
@@ -61,7 +69,15 @@ export const useStaffDialog = (
         can_manage_bookings: permissions.can_manage_bookings || false,
         can_track_hours: permissions.can_track_hours || true,
         can_log_earnings: permissions.can_log_earnings || false,
-        can_view_analytics: permissions.can_view_analytics || false
+        can_view_analytics: permissions.can_view_analytics || false,
+        can_view_tasks: permissions.can_view_tasks || true,
+        can_update_task_status: permissions.can_update_task_status || false,
+        can_view_customer_bookings: permissions.can_view_customer_bookings || false,
+        can_update_booking_status: permissions.can_update_booking_status || false,
+        can_create_job_cards: permissions.can_create_job_cards || false,
+        can_message_staff: permissions.can_message_staff || true,
+        can_edit_profile: permissions.can_edit_profile || true,
+        can_update_profile: permissions.can_update_profile || false
       };
 
       // Call the create staff mutation
