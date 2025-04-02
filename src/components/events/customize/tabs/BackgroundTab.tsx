@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { ColorPickerInput } from "../inputs/ColorPickerInput";
-import { AnimationType } from "@/types/event.types";
+import { AnimationType, BackgroundType } from "@/types/event.types";
 
 interface BackgroundTabProps {
   backgroundType: "gradient" | "image" | "color";
@@ -59,7 +59,7 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
   onAnimationChange
 }) => {
   // Convert BackgroundType to the string types expected by the handler
-  const getDisplayType = (type: BackgroundType): "color" | "gradient" | "image" => {
+  const getDisplayType = (type: string): "color" | "gradient" | "image" => {
     if (type === "solid") return "color";
     return type as "gradient" | "image";
   };

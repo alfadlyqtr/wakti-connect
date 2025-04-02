@@ -33,19 +33,15 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
     
     // Transform the data to match our types
     const userContacts = contacts.map(contact => {
+      const contactData = contact.contact || {};
+      
       // Make sure contact exists and has necessary properties
-      const contactProfile = contact.contact ? {
-        id: contact.contact.id || contact.contact_id,
-        fullName: contact.contact.full_name || null,
-        displayName: contact.contact.display_name || null,
-        avatarUrl: contact.contact.avatar_url || null,
-        accountType: contact.contact.account_type || null
-      } : {
-        id: contact.contact_id,
-        fullName: null,
-        displayName: null,
-        avatarUrl: null,
-        accountType: null
+      const contactProfile = {
+        id: contactData.id || contact.contact_id,
+        fullName: contactData.full_name || null,
+        displayName: contactData.display_name || null,
+        avatarUrl: contactData.avatar_url || null,
+        accountType: contactData.account_type || null
       };
       
       return {
@@ -97,19 +93,15 @@ export const getContactRequests = async (userId: string): Promise<UserContact[]>
     
     // Transform the data to match our types
     const userContacts = contacts.map(contact => {
+      const contactData = contact.contact || {};
+      
       // Make sure contact exists and has necessary properties
-      const contactProfile = contact.contact ? {
-        id: contact.contact.id || contact.user_id,
-        fullName: contact.contact.full_name || null,
-        displayName: contact.contact.display_name || null,
-        avatarUrl: contact.contact.avatar_url || null,
-        accountType: contact.contact.account_type || null
-      } : {
-        id: contact.user_id,
-        fullName: null,
-        displayName: null,
-        avatarUrl: null,
-        accountType: null
+      const contactProfile = {
+        id: contactData.id || contact.user_id,
+        fullName: contactData.full_name || null,
+        displayName: contactData.display_name || null,
+        avatarUrl: contactData.avatar_url || null,
+        accountType: contactData.account_type || null
       };
       
       return {
