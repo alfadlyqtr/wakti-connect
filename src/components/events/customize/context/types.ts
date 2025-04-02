@@ -4,6 +4,7 @@ import { EventCustomization } from "@/types/event.types";
 export interface CustomizationContextType {
   customization: EventCustomization;
   onCustomizationChange: (customization: EventCustomization) => void;
+  // Updated type to accept 'color' instead of 'solid'
   handleBackgroundChange: (type: 'color' | 'gradient' | 'image', value: string) => void;
   handleBackgroundAngleChange: (angle: number) => void;
   handleBackgroundDirectionChange: (direction: string) => void;

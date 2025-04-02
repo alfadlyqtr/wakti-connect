@@ -1,13 +1,14 @@
+
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { ColorPickerInput } from "../inputs/ColorPickerInput";
-import { BackgroundType, AnimationType } from "@/types/event.types";
+import { AnimationType } from "@/types/event.types";
 
 interface BackgroundTabProps {
-  backgroundType: BackgroundType;
+  backgroundType: "gradient" | "image" | "color";
   backgroundValue: string;
   backgroundAngle?: number;
   backgroundDirection?: string;

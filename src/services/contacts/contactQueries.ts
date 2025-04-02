@@ -35,11 +35,11 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
     const userContacts = contacts.map(contact => {
       // Make sure contact exists and has necessary properties
       const contactProfile = contact.contact ? {
-        id: contact.contact.id,
-        fullName: contact.contact.full_name,
-        displayName: contact.contact.display_name,
-        avatarUrl: contact.contact.avatar_url,
-        accountType: contact.contact.account_type
+        id: contact.contact.id || contact.contact_id,
+        fullName: contact.contact.full_name || null,
+        displayName: contact.contact.display_name || null,
+        avatarUrl: contact.contact.avatar_url || null,
+        accountType: contact.contact.account_type || null
       } : {
         id: contact.contact_id,
         fullName: null,
@@ -99,11 +99,11 @@ export const getContactRequests = async (userId: string): Promise<UserContact[]>
     const userContacts = contacts.map(contact => {
       // Make sure contact exists and has necessary properties
       const contactProfile = contact.contact ? {
-        id: contact.contact.id,
-        fullName: contact.contact.full_name,
-        displayName: contact.contact.display_name,
-        avatarUrl: contact.contact.avatar_url,
-        accountType: contact.contact.account_type
+        id: contact.contact.id || contact.user_id,
+        fullName: contact.contact.full_name || null,
+        displayName: contact.contact.display_name || null,
+        avatarUrl: contact.contact.avatar_url || null,
+        accountType: contact.contact.account_type || null
       } : {
         id: contact.user_id,
         fullName: null,

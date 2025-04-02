@@ -20,12 +20,6 @@ const BackgroundTabContent = () => {
     return type === 'solid' ? 'color' : (type as "gradient" | "image");
   };
 
-  // Convert from UI type to internal type
-  const convertUITypeToBackground = (type: "color" | "gradient" | "image"): BackgroundType => {
-    // Convert 'color' back to 'solid' for internal representation
-    return type === 'color' ? 'solid' : (type as "gradient" | "image");
-  };
-
   return (
     <BackgroundTab
       backgroundType={convertBackgroundTypeToUI(customization.background.type)}
@@ -34,11 +28,7 @@ const BackgroundTabContent = () => {
       backgroundDirection={customization.background.direction}
       headerImage={customization.headerImage}
       animation={customization.animation}
-      onBackgroundChange={(type, value) => {
-        // Convert 'color' back to 'solid' for internal representation
-        const adjustedType = convertUITypeToBackground(type);
-        handleBackgroundChange(adjustedType, value);
-      }}
+      onBackgroundChange={handleBackgroundChange}
       onBackgroundAngleChange={handleBackgroundAngleChange}
       onBackgroundDirectionChange={handleBackgroundDirectionChange}
       onHeaderImageChange={handleHeaderImageChange}
