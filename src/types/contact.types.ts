@@ -1,3 +1,3 @@
 
 // Re-export types from invitation.types.ts for backward compatibility
-export { UserContact, UserSearchResult, ContactRequestStatus } from './invitation.types';
+export type { UserContact, UserSearchResult, ContactRequestStatus } from './invitation.types';

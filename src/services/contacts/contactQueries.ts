@@ -33,13 +33,19 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
     
     // Transform the data to match our types
     const userContacts = contacts.map(contact => {
-      // Handle possible null values in contact data
-      const contactProfile = contact.contact || {
-        id: null,
-        full_name: null,
-        display_name: null,
-        avatar_url: null,
-        account_type: null
+      // Make sure contact exists and has necessary properties
+      const contactProfile = contact.contact ? {
+        id: contact.contact.id,
+        fullName: contact.contact.full_name,
+        displayName: contact.contact.display_name,
+        avatarUrl: contact.contact.avatar_url,
+        accountType: contact.contact.account_type
+      } : {
+        id: contact.contact_id,
+        fullName: null,
+        displayName: null,
+        avatarUrl: null,
+        accountType: null
       };
       
       return {
@@ -48,13 +54,7 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
         contactId: contact.contact_id,
         status: contact.status as "accepted" | "pending" | "rejected",
         staffRelationId: contact.staff_relation_id,
-        contactProfile: {
-          id: contactProfile.id,
-          fullName: contactProfile.full_name,
-          displayName: contactProfile.display_name,
-          avatarUrl: contactProfile.avatar_url,
-          accountType: contactProfile.account_type
-        }
+        contactProfile
       };
     });
     
@@ -97,13 +97,19 @@ export const getContactRequests = async (userId: string): Promise<UserContact[]>
     
     // Transform the data to match our types
     const userContacts = contacts.map(contact => {
-      // Handle possible null values in contact data
-      const contactProfile = contact.contact || {
-        id: null,
-        full_name: null,
-        display_name: null,
-        avatar_url: null,
-        account_type: null
+      // Make sure contact exists and has necessary properties
+      const contactProfile = contact.contact ? {
+        id: contact.contact.id,
+        fullName: contact.contact.full_name,
+        displayName: contact.contact.display_name,
+        avatarUrl: contact.contact.avatar_url,
+        accountType: contact.contact.account_type
+      } : {
+        id: contact.user_id,
+        fullName: null,
+        displayName: null,
+        avatarUrl: null,
+        accountType: null
       };
       
       return {
@@ -112,13 +118,7 @@ export const getContactRequests = async (userId: string): Promise<UserContact[]>
         contactId: contact.contact_id,
         status: contact.status as "accepted" | "pending" | "rejected",
         staffRelationId: contact.staff_relation_id,
-        contactProfile: {
-          id: contactProfile.id,
-          fullName: contactProfile.full_name,
-          displayName: contactProfile.display_name,
-          avatarUrl: contactProfile.avatar_url,
-          accountType: contactProfile.account_type
-        }
+        contactProfile
       };
     });
     

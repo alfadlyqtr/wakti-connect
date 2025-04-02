@@ -2,6 +2,7 @@
 import React from "react";
 import { useCustomization } from "../context";
 import BackgroundTab from "../tabs/BackgroundTab";
+import { BackgroundType } from "@/types/event.types";
 
 const BackgroundTabContent = () => {
   const {
@@ -14,14 +15,20 @@ const BackgroundTabContent = () => {
   } = useCustomization();
 
   // Convert between type values used in UI and the internal values
-  const convertBackgroundType = (type: 'solid' | 'gradient' | 'image'): 'color' | 'gradient' | 'image' => {
+  const convertBackgroundTypeToUI = (type: BackgroundType): "color" | "gradient" | "image" => {
     // Map 'solid' to 'color' for compatibility with BackgroundTab component
-    return type === 'solid' ? 'color' : type;
+    return type === 'solid' ? 'color' : (type as "gradient" | "image");
+  };
+
+  // Convert from UI type to internal type
+  const convertUITypeToBackground = (type: "color" | "gradient" | "image"): BackgroundType => {
+    // Convert 'color' back to 'solid' for internal representation
+    return type === 'color' ? 'solid' : (type as "gradient" | "image");
   };
 
   return (
     <BackgroundTab
-      backgroundType={convertBackgroundType(customization.background.type)}
+      backgroundType={convertBackgroundTypeToUI(customization.background.type)}
       backgroundValue={customization.background.value}
       backgroundAngle={customization.background.angle}
       backgroundDirection={customization.background.direction}
@@ -29,7 +36,7 @@ const BackgroundTabContent = () => {
       animation={customization.animation}
       onBackgroundChange={(type, value) => {
         // Convert 'color' back to 'solid' for internal representation
-        const adjustedType = type === 'color' ? 'solid' : type;
+        const adjustedType = convertUITypeToBackground(type);
         handleBackgroundChange(adjustedType, value);
       }}
       onBackgroundAngleChange={handleBackgroundAngleChange}

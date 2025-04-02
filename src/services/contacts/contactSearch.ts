@@ -70,9 +70,14 @@ export const checkContactRequest = async (userId: string): Promise<ContactReques
       return { requestExists: false, requestStatus: 'none' };
     }
     
+    // Make sure we only return valid status values
+    const validStatus = (data.status === 'accepted' || data.status === 'pending' || data.status === 'rejected') 
+      ? data.status 
+      : 'none';
+    
     return {
       requestExists: true,
-      requestStatus: data.status || 'none'
+      requestStatus: validStatus
     };
   } catch (error) {
     console.error('Error in checkContactRequest:', error);

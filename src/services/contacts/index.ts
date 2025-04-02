@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { getUserContacts, getContactRequests } from './contactQueries';
 import { UserContact } from '@/types/invitation.types';
@@ -8,11 +9,13 @@ export { searchUsers, checkContactRequest } from './contactSearch';
 // Fetch contacts data
 export const fetchContacts = async (): Promise<UserContact[]> => {
   try {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session?.user?.id) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    
+    if (!sessionData.session?.user?.id) {
       throw new Error('User not authenticated');
     }
-    return getUserContacts(session.user.id);
+    
+    return getUserContacts(sessionData.session.user.id);
   } catch (error) {
     console.error('Error fetching contacts:', error);
     return [];
@@ -22,11 +25,13 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
 // Fetch pending requests
 export const fetchPendingRequests = async (): Promise<UserContact[]> => {
   try {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session?.user?.id) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    
+    if (!sessionData.session?.user?.id) {
       throw new Error('User not authenticated');
     }
-    return getContactRequests(session.user.id);
+    
+    return getContactRequests(sessionData.session.user.id);
   } catch (error) {
     console.error('Error fetching pending requests:', error);
     return [];
@@ -36,15 +41,15 @@ export const fetchPendingRequests = async (): Promise<UserContact[]> => {
 // Send contact request
 export const sendContactRequest = async (contactId: string): Promise<boolean> => {
   try {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
       throw new Error('You must be logged in to send contact requests');
     }
     
     const { error } = await supabase
       .from('user_contacts')
       .insert({
-        user_id: session.session.user.id,
+        user_id: sessionData.session.user.id,
         contact_id: contactId,
         status: 'pending'
       });
@@ -70,8 +75,8 @@ export const sendContactRequest = async (contactId: string): Promise<boolean> =>
 // Respond to a contact request
 export const respondToContactRequest = async (requestId: string, accept: boolean): Promise<boolean> => {
   try {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
       throw new Error('You must be logged in to respond to contact requests');
     }
     
@@ -81,7 +86,7 @@ export const respondToContactRequest = async (requestId: string, accept: boolean
         status: accept ? 'accepted' : 'rejected'
       })
       .eq('id', requestId)
-      .eq('contact_id', session.session.user.id);
+      .eq('contact_id', sessionData.session.user.id);
     
     if (error) {
       console.error('Error responding to contact request:', error);
@@ -98,8 +103,8 @@ export const respondToContactRequest = async (requestId: string, accept: boolean
 // Sync staff-business contacts (ensures all staff within a business are connected)
 export const syncStaffBusinessContacts = async (): Promise<boolean> => {
   try {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
       throw new Error('You must be logged in to sync contacts');
     }
     

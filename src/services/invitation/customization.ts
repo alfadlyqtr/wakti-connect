@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { InvitationCustomization } from '@/types/invitation.types';
 import { EventCustomization, BackgroundType } from '@/types/event.types';
@@ -33,6 +34,39 @@ const convertEventCustomization = (customization: EventCustomization): any => {
   };
 };
 
+// Helper function to convert InvitationCustomization to EventCustomization
+const convertToEventCustomization = (invitationCustomization: InvitationCustomization): EventCustomization => {
+  // Create a default EventCustomization structure
+  const eventCustomization: EventCustomization = {
+    background: {
+      type: invitationCustomization.backgroundType === 'solid' ? 'solid' as BackgroundType : 
+             (invitationCustomization.backgroundType as BackgroundType) || 'solid' as BackgroundType,
+      value: invitationCustomization.backgroundValue || '#ffffff'
+    },
+    font: {
+      family: invitationCustomization.fontFamily || 'system-ui, sans-serif',
+      size: invitationCustomization.fontSize || 'medium',
+      color: invitationCustomization.textColor || '#000000',
+      weight: 'normal',
+      alignment: invitationCustomization.textAlign || 'left'
+    },
+    buttons: {
+      accept: {
+        background: invitationCustomization.buttonStyles?.color || '#3B82F6',
+        color: '#ffffff',
+        shape: invitationCustomization.buttonStyles?.style || 'rounded'
+      },
+      decline: {
+        background: '#f43f5e',
+        color: '#ffffff',
+        shape: invitationCustomization.buttonStyles?.style || 'rounded'
+      }
+    }
+  };
+
+  return eventCustomization;
+};
+
 /**
  * Get invitation customization by invitation ID
  */
@@ -61,8 +95,11 @@ export const getInvitationCustomization = async (invitationId: string): Promise<
  */
 export const saveInvitationCustomization = async (invitationId: string, customization: InvitationCustomization): Promise<InvitationCustomization | null> => {
   try {
-    // Convert EventCustomization to a safe JSON format
-    const safeCustomization = convertEventCustomization(customization as EventCustomization);
+    // Convert InvitationCustomization to EventCustomization for proper processing
+    const eventCustomization = convertToEventCustomization(customization);
+    
+    // Then convert EventCustomization to a safe JSON format
+    const safeCustomization = convertEventCustomization(eventCustomization);
     
     const { data, error } = await supabase
       .from('invitation_customizations')
