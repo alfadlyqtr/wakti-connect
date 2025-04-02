@@ -11,9 +11,6 @@ import { WizardContent } from "./components/WizardContent";
 import { WizardNavigation } from "./components/WizardNavigation";
 import { AISetupProvider } from "./context/AISetupContext";
 
-export type UserRole = "student" | "professional" | "business_owner" | "other";
-export type AssistantMode = "tutor" | "content_creator" | "project_manager" | "business_manager" | "personal_assistant" | "text_generator";
-
 interface AISetupWizardProps {
   onComplete: () => void;
   initialAccountType?: string;

@@ -1,13 +1,23 @@
 
-export * from "./AISetupWizard";
-export * from "./RoleSelection";
-export * from "./StudentSetup";
-export * from "./ProfessionalSetup";
-export * from "./BusinessSetup";
-export * from "./TextCreatorSetup";
-export * from "./context/AISetupContext";
-export * from "./components/WizardHeader";
-export * from "./components/WizardContent";
-export * from "./components/WizardNavigation";
-export * from "./components/AssistantModeSelector";
-export * from "./components/SpecializedSettingsStep";
+// Re-export setup wizard components
+export { AISetupWizard } from "./AISetupWizard";
+export { RoleSelection } from "./RoleSelection";
+export { StudentSetup } from "./StudentSetup";
+export { ProfessionalSetup } from "./ProfessionalSetup";
+export { BusinessSetup } from "./BusinessSetup";
+export { TextCreatorSetup } from "./TextCreatorSetup";
+
+// Re-export context and types from context file instead of from AISetupWizard
+export { 
+  AISetupProvider, 
+  useAISetup, 
+  type UserRole, 
+  type AssistantMode 
+} from "./context/AISetupContext";
+
+// Re-export components
+export { WizardHeader } from "./components/WizardHeader";
+export { WizardContent } from "./components/WizardContent";
+export { WizardNavigation } from "./components/WizardNavigation";
+export { AssistantModeSelector } from "./components/AssistantModeSelector";
+export { SpecializedSettingsStep } from "./components/SpecializedSettingsStep";
