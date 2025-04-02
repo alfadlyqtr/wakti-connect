@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { UserContact, ContactRequestStatus } from '@/types/invitation.types';
+import { UserContact } from '@/types/invitation.types';
 
 export const getUserContacts = async (): Promise<UserContact[]> => {
   try {
@@ -17,7 +17,7 @@ export const getUserContacts = async (): Promise<UserContact[]> => {
         contact_id,
         status,
         staff_relation_id,
-        contactProfile:contact_id(
+        profiles:contact_id(
           id,
           full_name,
           display_name,
@@ -34,18 +34,18 @@ export const getUserContacts = async (): Promise<UserContact[]> => {
     }
     
     // Transform the data to match the UserContact interface
-    return data.map(contact => ({
+    return data.map((contact) => ({
       id: contact.id,
       userId: contact.user_id,
       contactId: contact.contact_id,
-      status: contact.status as 'pending' | 'accepted' | 'rejected',
+      status: contact.status,
       staffRelationId: contact.staff_relation_id,
       contactProfile: {
-        id: contact.contactProfile?.id || '',
-        fullName: contact.contactProfile?.full_name || '',
-        displayName: contact.contactProfile?.display_name || '',
-        avatarUrl: contact.contactProfile?.avatar_url || '',
-        accountType: contact.contactProfile?.account_type || 'free'
+        id: contact.profiles?.id || '',
+        fullName: contact.profiles?.full_name || '',
+        displayName: contact.profiles?.display_name || '',
+        avatarUrl: contact.profiles?.avatar_url || '',
+        accountType: contact.profiles?.account_type || 'free'
       }
     }));
   } catch (error) {
@@ -68,7 +68,7 @@ export const getContactRequests = async (): Promise<UserContact[]> => {
         user_id,
         contact_id,
         status,
-        contactProfile:user_id(
+        profiles:user_id(
           id,
           full_name,
           display_name,
@@ -85,17 +85,17 @@ export const getContactRequests = async (): Promise<UserContact[]> => {
     }
     
     // Transform the data to match the UserContact interface
-    return data.map(contact => ({
+    return data.map((contact) => ({
       id: contact.id,
       userId: contact.user_id,
       contactId: contact.contact_id,
-      status: contact.status as 'pending' | 'accepted' | 'rejected',
+      status: contact.status,
       contactProfile: {
-        id: contact.contactProfile?.id || '',
-        fullName: contact.contactProfile?.full_name || '',
-        displayName: contact.contactProfile?.display_name || '',
-        avatarUrl: contact.contactProfile?.avatar_url || '',
-        accountType: contact.contactProfile?.account_type || 'free'
+        id: contact.profiles?.id || '',
+        fullName: contact.profiles?.full_name || '',
+        displayName: contact.profiles?.display_name || '',
+        avatarUrl: contact.profiles?.avatar_url || '',
+        accountType: contact.profiles?.account_type || 'free'
       }
     }));
   } catch (error) {
@@ -104,7 +104,7 @@ export const getContactRequests = async (): Promise<UserContact[]> => {
   }
 };
 
-export const checkContactRequestStatus = async (contactId: string): Promise<ContactRequestStatus> => {
+export const checkContactRequestStatus = async (contactId: string): Promise<{ requestExists: boolean; requestStatus: string }> => {
   try {
     const { data: session } = await supabase.auth.getSession();
     if (!session.session) {
@@ -116,14 +116,16 @@ export const checkContactRequestStatus = async (contactId: string): Promise<Cont
     const { data, error } = await supabase
       .from('user_contacts')
       .select('id, status')
-      .or(`user_id.eq.${userId},contact_id.eq.${userId}`)
-      .or(`user_id.eq.${contactId},contact_id.eq.${contactId}`)
+      .or(`and(user_id.eq.${userId},contact_id.eq.${contactId}),and(user_id.eq.${contactId},contact_id.eq.${userId})`)
       .single();
     
     if (error) {
       if (error.code === 'PGRST116') {
         // No results found
-        return { requestExists: false, requestStatus: 'none' };
+        return {
+          requestExists: false,
+          requestStatus: 'none'
+        };
       }
       console.error('Error checking contact request status:', error);
       throw new Error(error.message);
@@ -136,7 +138,10 @@ export const checkContactRequestStatus = async (contactId: string): Promise<Cont
   } catch (error) {
     console.error('Error in checkContactRequestStatus:', error);
     if (error instanceof Error && error.message.includes('single row')) {
-      return { requestExists: false, requestStatus: 'none' };
+      return {
+        requestExists: false,
+        requestStatus: 'none'
+      };
     }
     throw error;
   }

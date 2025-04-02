@@ -13,11 +13,14 @@ export const searchUsers = async (searchTerm: string): Promise<UserSearchResult[
       throw new Error('You must be logged in to search users');
     }
     
-    // Using RPC function for search instead
-    const { data, error } = await supabase.rpc('search_public_profiles', {
-      search_term: searchTerm.toLowerCase(),
-      current_user_id: session.session.user.id
-    });
+    // Using a simple query instead of RPC function
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, full_name, display_name, email, avatar_url, account_type')
+      .or(`full_name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
+      .neq('id', session.session.user.id)
+      .eq('is_searchable', true)
+      .limit(10);
     
     if (error) {
       console.error('Error searching users:', error);
@@ -28,7 +31,7 @@ export const searchUsers = async (searchTerm: string): Promise<UserSearchResult[
       return [];
     }
     
-    return data.map((user: any) => ({
+    return data.map((user) => ({
       id: user.id,
       fullName: user.full_name,
       displayName: user.display_name,
@@ -51,11 +54,12 @@ export const checkContactRequest = async (userId: string): Promise<ContactReques
     
     const currentUserId = session.session.user.id;
     
-    // Using RPC function for checking contact request
-    const { data, error } = await supabase.rpc('check_contact_status', {
-      user_id_1: currentUserId,
-      user_id_2: userId
-    });
+    // Using a direct query instead of RPC
+    const { data, error } = await supabase
+      .from('user_contacts')
+      .select('id, status')
+      .or(`and(user_id.eq.${currentUserId},contact_id.eq.${userId}),and(user_id.eq.${userId},contact_id.eq.${currentUserId})`)
+      .maybeSingle();
     
     if (error) {
       console.error('Error checking contact request:', error);
@@ -67,7 +71,7 @@ export const checkContactRequest = async (userId: string): Promise<ContactReques
     }
     
     return {
-      requestExists: !!data.exists,
+      requestExists: true,
       requestStatus: data.status || 'none'
     };
   } catch (error) {
