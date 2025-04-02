@@ -35,26 +35,35 @@ const SubscribersList = ({ businessId }: SubscribersListProps) => {
 
       {(subscribers && subscribers.length > 0) ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {subscribers.map((subscriber) => (
-            <Card key={subscriber.id} className="overflow-hidden">
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-4">
-                  <Avatar>
-                    <AvatarImage src={subscriber.profile.avatar_url || ''} />
-                    <AvatarFallback>
-                      {(subscriber.profile.display_name || subscriber.profile.full_name || "User").slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{subscriber.profile.display_name || subscriber.profile.full_name || "User"}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Subscribed: {new Date(subscriber.created_at).toLocaleDateString()}
-                    </p>
+          {subscribers.map((subscriber) => {
+            // Safely access profile properties with fallbacks
+            const avatarUrl = subscriber.profile?.avatar_url || '';
+            const displayName = subscriber.profile?.display_name || '';
+            const fullName = subscriber.profile?.full_name || '';
+            const nameInitials = (displayName || fullName || "User").slice(0, 2).toUpperCase();
+            const subscriberName = displayName || fullName || "User";
+            
+            return (
+              <Card key={subscriber.id} className="overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-4">
+                    <Avatar>
+                      <AvatarImage src={avatarUrl} />
+                      <AvatarFallback>
+                        {nameInitials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{subscriberName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Subscribed: {new Date(subscriber.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       ) : (
         <div className="text-center py-12 border rounded-lg">

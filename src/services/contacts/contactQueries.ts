@@ -38,7 +38,21 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
     throw error;
   }
   
-  return data as UserContact[];
+  // Transform the data to match our interface
+  return data.map(contact => ({
+    id: contact.id,
+    userId: contact.user_id,
+    contactId: contact.contact_id,
+    status: contact.status as 'pending' | 'accepted' | 'rejected',
+    staffRelationId: contact.staff_relation_id,
+    contactProfile: contact.contactProfile ? {
+      id: contact.contactProfile.id,
+      fullName: contact.contactProfile.full_name,
+      displayName: contact.contactProfile.display_name,
+      avatarUrl: contact.contactProfile.avatar_url,
+      accountType: contact.contactProfile.account_type
+    } : undefined
+  }));
 };
 
 /**
@@ -74,5 +88,18 @@ export const fetchPendingRequests = async (): Promise<UserContact[]> => {
     throw error;
   }
   
-  return data as UserContact[];
+  // Transform the data to match our interface
+  return data.map(contact => ({
+    id: contact.id,
+    userId: contact.user_id,
+    contactId: contact.contact_id,
+    status: contact.status as 'pending' | 'accepted' | 'rejected',
+    contactProfile: contact.contactProfile ? {
+      id: contact.contactProfile.id,
+      fullName: contact.contactProfile.full_name,
+      displayName: contact.contactProfile.display_name,
+      avatarUrl: contact.contactProfile.avatar_url,
+      accountType: contact.contactProfile.account_type
+    } : undefined
+  }));
 };

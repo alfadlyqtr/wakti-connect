@@ -45,3 +45,61 @@ export interface ContactRequestStatus {
   requestExists: boolean;
   requestStatus: string;
 }
+
+// Invitation system types
+export interface InvitationRecipient {
+  id: string;
+  name: string;
+  email?: string;
+  type: 'contact' | 'email';
+}
+
+export interface InvitationRequest {
+  recipients: InvitationRecipient[];
+  shared_as_link?: boolean;
+}
+
+export interface InvitationResponse {
+  id: string;
+  status: 'sent' | 'failed';
+  recipients: {
+    successful: string[];
+    failed: string[];
+  };
+}
+
+export interface InvitationTemplate {
+  id: string;
+  name: string;
+  previewImage: string;
+  defaultStyles: any;
+  createdAt: string;
+}
+
+export interface InvitationCustomization {
+  backgroundType?: 'solid' | 'gradient' | 'image';
+  backgroundValue?: string;
+  fontFamily?: string;
+  fontSize?: string;
+  textAlign?: string;
+  buttonStyles?: any;
+  layoutSize?: 'small' | 'medium' | 'large';
+  customEffects?: {
+    shadow?: string;
+  };
+}
+
+export interface InvitationStyle {
+  background: {
+    type: string;
+    value: string;
+  };
+  font: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    text: string;
+    accent: string;
+  };
+  layout: string;
+}
