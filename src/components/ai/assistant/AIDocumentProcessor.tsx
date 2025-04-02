@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { fromTable } from '@/integrations/supabase/helper';
 
 interface AIDocumentProcessorProps {
   onDocumentProcessed: (documentContent: string) => void;
@@ -57,9 +58,9 @@ export const AIDocumentProcessor: React.FC<AIDocumentProcessorProps> = ({ onDocu
         const text = await file.text();
         
         // Store the processed document
-        const { data, error } = await supabase
-          .from('ai_processed_documents')
+        const { data, error } = await fromTable('ai_processed_documents')
           .insert({
+            user_id: (await supabase.auth.getSession()).data.session?.user.id,
             document_name: file.name,
             document_type: file.type,
             content: text,

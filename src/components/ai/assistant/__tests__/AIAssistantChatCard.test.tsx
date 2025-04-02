@@ -1,69 +1,78 @@
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { vi, describe, it, expect } from 'vitest';
-import '@testing-library/jest-dom'; // Add this import for the matchers
+import { render, screen, fireEvent } from '@testing-library/react';
 import { AIAssistantChatCard } from '../AIAssistantChatCard';
-import { AISettingsProvider } from '@/components/settings/ai';
+import { vi } from 'vitest';
+import { AIAssistantRole } from '@/types/ai-assistant.types';
 
-// Mock the useAISettings hook
-vi.mock('@/components/settings/ai', async () => {
-  const actual = await vi.importActual('@/components/settings/ai');
-  return {
-    ...actual,
-    useAISettings: vi.fn().mockReturnValue({
-      settings: {
-        assistant_name: 'Custom AI Name'
-      }
-    }),
-    AISettingsProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>
-  };
-});
+// Mock child components
+vi.mock('../AIAssistantChat', () => ({
+  AIAssistantChat: () => <div data-testid="mock-assistant-chat">AIAssistantChat</div>,
+}));
 
-// Mock the useIsMobile hook
-vi.mock('@/hooks/use-mobile', () => ({
-  useIsMobile: vi.fn().mockReturnValue(false)
+vi.mock('../MessageInputForm', () => ({
+  MessageInputForm: () => <div data-testid="mock-message-form">MessageInputForm</div>,
+}));
+
+vi.mock('../EmptyStateView', () => ({
+  EmptyStateView: ({ onPromptClick }: { onPromptClick: (prompt: string) => void }) => (
+    <button data-testid="mock-prompt-button" onClick={() => onPromptClick('Test prompt')}>
+      Prompt
+    </button>
+  ),
+}));
+
+vi.mock('../PoweredByTMW', () => ({
+  PoweredByTMW: () => <div data-testid="mock-powered-by">PoweredByTMW</div>,
+}));
+
+vi.mock('../AIRoleSelector', () => ({
+  AIRoleSelector: () => <div data-testid="mock-role-selector">AIRoleSelector</div>,
 }));
 
 describe('AIAssistantChatCard', () => {
-  it('displays the correct assistant name from context', () => {
-    // Render the component with mocked props
+  const mockSetInputMessage = vi.fn();
+  const mockHandleSendMessage = vi.fn();
+  const mockClearMessages = vi.fn();
+  const mockOnRoleChange = vi.fn();
+  const selectedRole: AIAssistantRole = 'general';
+
+  it('renders empty state when no messages', () => {
     render(
       <AIAssistantChatCard
         messages={[]}
         inputMessage=""
-        setInputMessage={vi.fn()}
-        handleSendMessage={vi.fn()}
+        setInputMessage={mockSetInputMessage}
+        handleSendMessage={mockHandleSendMessage}
         isLoading={false}
         canAccess={true}
-        clearMessages={vi.fn()}
+        clearMessages={mockClearMessages}
+        selectedRole={selectedRole}
+        onRoleChange={mockOnRoleChange}
       />
     );
-
-    // Check that the custom assistant name is displayed
-    expect(screen.getByText(/Chat with Custom AI Name/i)).toBeInTheDocument();
+    
+    expect(screen.getByTestId('mock-prompt-button')).toBeInTheDocument();
+    expect(screen.getByTestId('mock-message-form')).toBeInTheDocument();
+    expect(screen.getByTestId('mock-powered-by')).toBeInTheDocument();
   });
 
-  it('falls back to default name if settings are not available', () => {
-    // Override the mock to return null settings
-    vi.mocked(require('@/components/settings/ai').useAISettings).mockReturnValueOnce({
-      settings: null
-    });
-
-    // Render the component
+  it('sets input message when prompt is clicked', () => {
     render(
       <AIAssistantChatCard
         messages={[]}
         inputMessage=""
-        setInputMessage={vi.fn()}
-        handleSendMessage={vi.fn()}
+        setInputMessage={mockSetInputMessage}
+        handleSendMessage={mockHandleSendMessage}
         isLoading={false}
         canAccess={true}
-        clearMessages={vi.fn()}
+        clearMessages={mockClearMessages}
+        selectedRole={selectedRole}
+        onRoleChange={mockOnRoleChange}
       />
     );
-
-    // Check that the default name is used
-    expect(screen.getByText(/Chat with WAKTI AI/i)).toBeInTheDocument();
+    
+    fireEvent.click(screen.getByTestId('mock-prompt-button'));
+    expect(mockSetInputMessage).toHaveBeenCalledWith('Test prompt');
   });
 });

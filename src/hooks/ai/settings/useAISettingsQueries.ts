@@ -85,6 +85,7 @@ export const useAISettingsQuery = (user: User | null) => {
           response_length: (data.response_length as AISettings["response_length"]) || "balanced",
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
           suggestion_frequency: (data.suggestion_frequency as AISettings["suggestion_frequency"]) || "medium",
+          role: (data.role as AISettings["role"]) || "general",
           enabled_features: data.enabled_features as AISettings["enabled_features"] || {
             tasks: true,
             events: true,
