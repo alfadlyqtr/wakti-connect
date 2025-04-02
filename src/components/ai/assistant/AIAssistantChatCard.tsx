@@ -13,6 +13,8 @@ import { AISetupWizard } from '../setup/AISetupWizard';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AIDocumentManager } from '../documents/AIDocumentManager';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from '@/components/ui/use-toast';
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -37,8 +39,10 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [activeDocument, setActiveDocument] = useState<any>(null);
+  const [setupError, setSetupError] = useState<string | null>(null);
   const { settings } = useAISettings();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   
   // Check if setup is needed (no settings or no userRole)
   useEffect(() => {
@@ -88,15 +92,48 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   // Handle setup completion
   const handleSetupComplete = () => {
     setShowSetupWizard(false);
+    setSetupError(null);
     // Reload the page or fetch settings again
     window.location.reload();
+  };
+  
+  // Handle setup error
+  const handleSetupError = (error: string) => {
+    setSetupError(error);
+    toast({
+      title: "Setup Error",
+      description: error,
+      variant: "destructive"
+    });
   };
 
   if (showSetupWizard) {
     return (
-      <Card className="w-full h-[calc(80vh)] flex flex-col">
-        <CardContent className="p-4 flex-1 overflow-y-auto">
-          <AISetupWizard onComplete={handleSetupComplete} />
+      <Card className="w-full h-[calc(80vh)] flex flex-col overflow-hidden">
+        <CardHeader className="py-2 px-3 sm:py-3 sm:px-4 border-b flex-row justify-between items-center">
+          <div className="flex items-center">
+            <Bot className="w-5 h-5 mr-2 text-wakti-blue" />
+            <h3 className="font-medium text-sm md:text-base">
+              AI Assistant Setup
+            </h3>
+          </div>
+          {setupError && (
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setShowSetupWizard(false)}
+            >
+              Cancel
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="p-0 flex-1 overflow-hidden">
+          <div className="h-full overflow-auto p-0">
+            <AISetupWizard 
+              onComplete={handleSetupComplete} 
+              onError={handleSetupError}
+            />
+          </div>
         </CardContent>
       </Card>
     );

@@ -18,11 +18,13 @@ export type AssistantMode = "tutor" | "content_creator" | "project_manager" | "b
 interface AISetupWizardProps {
   onComplete: () => void;
   initialAccountType?: string;
+  onError?: (error: string) => void;
 }
 
 export const AISetupWizard: React.FC<AISetupWizardProps> = ({ 
   onComplete,
-  initialAccountType = "individual"
+  initialAccountType = "individual",
+  onError
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -79,11 +81,22 @@ export const AISetupWizard: React.FC<AISetupWizardProps> = ({
   };
   
   const handleComplete = async () => {
-    if (!user) return;
+    if (!user) {
+      const errorMsg = "User not authenticated. Please sign in.";
+      if (onError) onError(errorMsg);
+      toast({
+        title: "Authentication Error",
+        description: errorMsg,
+        variant: "destructive"
+      });
+      return;
+    }
     
     setIsLoading(true);
     
     try {
+      console.log("Starting AISetupWizard save process for user:", user.id);
+
       // Check if user already has AI settings
       const { data: existingSettings, error: checkError } = await supabase
         .from("ai_assistant_settings")
@@ -91,45 +104,75 @@ export const AISetupWizard: React.FC<AISetupWizardProps> = ({
         .eq("user_id", user.id)
         .maybeSingle();
         
+      if (checkError) {
+        console.error("Error checking existing settings:", checkError);
+        throw new Error(`Failed to check for existing settings: ${checkError.message}`);
+      }
+        
       const settings = {
         user_id: user.id,
         user_role: userRole,
         assistant_mode: assistantMode,
         specialized_settings: specializedSettings,
         tone: specializedSettings.communicationStyle || "balanced",
-        response_length: specializedSettings.detailLevel || "balanced"
+        response_length: specializedSettings.detailLevel || "balanced",
+        // Ensure these default values are included
+        assistant_name: "WAKTI AI",
+        proactiveness: true,
+        suggestion_frequency: "medium",
+        enabled_features: {
+          tasks: true,
+          events: true,
+          staff: true,
+          analytics: true,
+          messaging: true
+        }
       };
+      
+      console.log("Saving AI settings:", settings);
       
       if (existingSettings?.id) {
         // Update existing settings
+        console.log("Updating existing settings with ID:", existingSettings.id);
         const { error: updateError } = await supabase
           .from("ai_assistant_settings")
           .update(settings)
           .eq("id", existingSettings.id);
           
         if (updateError) {
-          throw updateError;
+          console.error("Error updating settings:", updateError);
+          throw new Error(`Failed to update settings: ${updateError.message}`);
         }
       } else {
         // Create new settings
+        console.log("Creating new settings");
         const { error: insertError } = await supabase
           .from("ai_assistant_settings")
           .insert(settings);
           
         if (insertError) {
-          throw insertError;
+          console.error("Error inserting settings:", insertError);
+          throw new Error(`Failed to create settings: ${insertError.message}`);
         }
       }
       
       // Also update the profile table with relevant information
       if (userRole === "student" && specializedSettings.schoolLevel) {
-        await supabase
+        console.log("Updating profile with student info");
+        const { error: profileError } = await supabase
           .from("profiles")
           .update({ 
             occupation: `Student (${specializedSettings.schoolLevel})` 
           })
           .eq("id", user.id);
+          
+        if (profileError) {
+          console.warn("Error updating profile:", profileError);
+          // Don't throw here - just a warning as this is not critical
+        }
       }
+      
+      console.log("AI setup completed successfully");
       
       toast({
         title: "AI Setup Complete",
@@ -139,6 +182,12 @@ export const AISetupWizard: React.FC<AISetupWizardProps> = ({
       onComplete();
     } catch (error) {
       console.error("Error saving AI settings:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      
+      if (onError) {
+        onError(errorMessage);
+      }
+      
       toast({
         title: "Setup Error",
         description: "There was a problem saving your settings. Please try again.",
@@ -150,7 +199,7 @@ export const AISetupWizard: React.FC<AISetupWizardProps> = ({
   };
   
   return (
-    <ScrollArea className="h-full w-full pr-4">
+    <div className="h-full w-full overflow-auto py-4">
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">Set Up Your AI Assistant</CardTitle>
@@ -166,115 +215,117 @@ export const AISetupWizard: React.FC<AISetupWizardProps> = ({
         </CardHeader>
         
         <CardContent className="pb-4">
-          {step === 1 && (
-            <RoleSelection onSelect={handleRoleSelect} />
-          )}
-          
-          {step === 2 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Choose Your Assistant Mode</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {userRole === "student" && (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      className="flex flex-col items-start h-auto p-4 text-left" 
-                      onClick={() => handleModeSelect("tutor")}
-                    >
-                      <span className="font-bold">Tutor</span>
-                      <span className="text-sm text-muted-foreground">
-                        Helps with homework, explains concepts, and assists with studying
-                      </span>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="flex flex-col items-start h-auto p-4 text-left" 
-                      onClick={() => handleModeSelect("content_creator")}
-                    >
-                      <span className="font-bold">Essay Helper</span>
-                      <span className="text-sm text-muted-foreground">
-                        Assists with writing assignments, research, and creative projects
-                      </span>
-                    </Button>
-                  </>
-                )}
-                
-                {userRole === "professional" && (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      className="flex flex-col items-start h-auto p-4 text-left" 
-                      onClick={() => handleModeSelect("personal_assistant")}
-                    >
-                      <span className="font-bold">Personal Assistant</span>
-                      <span className="text-sm text-muted-foreground">
-                        Helps with tasks, scheduling, and daily productivity
-                      </span>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="flex flex-col items-start h-auto p-4 text-left" 
-                      onClick={() => handleModeSelect("project_manager")}
-                    >
-                      <span className="font-bold">Project Manager</span>
-                      <span className="text-sm text-muted-foreground">
-                        Focuses on organizing workflows, tracking progress, and meeting deadlines
-                      </span>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="flex flex-col items-start h-auto p-4 text-left" 
-                      onClick={() => handleModeSelect("content_creator")}
-                    >
-                      <span className="font-bold">Content Creator</span>
-                      <span className="text-sm text-muted-foreground">
-                        Specializes in writing emails, reports, and professional documents
-                      </span>
-                    </Button>
-                  </>
-                )}
-                
-                {userRole === "business_owner" && (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      className="flex flex-col items-start h-auto p-4 text-left" 
-                      onClick={() => handleModeSelect("business_manager")}
-                    >
-                      <span className="font-bold">Business Manager</span>
-                      <span className="text-sm text-muted-foreground">
-                        Helps with operations, staff coordination, and business analytics
-                      </span>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="flex flex-col items-start h-auto p-4 text-left" 
-                      onClick={() => handleModeSelect("content_creator")}
-                    >
-                      <span className="font-bold">Marketing Assistant</span>
-                      <span className="text-sm text-muted-foreground">
-                        Focuses on creating marketing content, emails, and business copy
-                      </span>
-                    </Button>
-                  </>
-                )}
+          <ScrollArea className="h-full max-h-[60vh] pr-4 overflow-y-auto">
+            {step === 1 && (
+              <RoleSelection onSelect={handleRoleSelect} />
+            )}
+            
+            {step === 2 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Choose Your Assistant Mode</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {userRole === "student" && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-start h-auto p-4 text-left" 
+                        onClick={() => handleModeSelect("tutor")}
+                      >
+                        <span className="font-bold">Tutor</span>
+                        <span className="text-sm text-muted-foreground">
+                          Helps with homework, explains concepts, and assists with studying
+                        </span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-start h-auto p-4 text-left" 
+                        onClick={() => handleModeSelect("content_creator")}
+                      >
+                        <span className="font-bold">Essay Helper</span>
+                        <span className="text-sm text-muted-foreground">
+                          Assists with writing assignments, research, and creative projects
+                        </span>
+                      </Button>
+                    </>
+                  )}
+                  
+                  {userRole === "professional" && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-start h-auto p-4 text-left" 
+                        onClick={() => handleModeSelect("personal_assistant")}
+                      >
+                        <span className="font-bold">Personal Assistant</span>
+                        <span className="text-sm text-muted-foreground">
+                          Helps with tasks, scheduling, and daily productivity
+                        </span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-start h-auto p-4 text-left" 
+                        onClick={() => handleModeSelect("project_manager")}
+                      >
+                        <span className="font-bold">Project Manager</span>
+                        <span className="text-sm text-muted-foreground">
+                          Focuses on organizing workflows, tracking progress, and meeting deadlines
+                        </span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-start h-auto p-4 text-left" 
+                        onClick={() => handleModeSelect("content_creator")}
+                      >
+                        <span className="font-bold">Content Creator</span>
+                        <span className="text-sm text-muted-foreground">
+                          Specializes in writing emails, reports, and professional documents
+                        </span>
+                      </Button>
+                    </>
+                  )}
+                  
+                  {userRole === "business_owner" && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-start h-auto p-4 text-left" 
+                        onClick={() => handleModeSelect("business_manager")}
+                      >
+                        <span className="font-bold">Business Manager</span>
+                        <span className="text-sm text-muted-foreground">
+                          Helps with operations, staff coordination, and business analytics
+                        </span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-start h-auto p-4 text-left" 
+                        onClick={() => handleModeSelect("content_creator")}
+                      >
+                        <span className="font-bold">Marketing Assistant</span>
+                        <span className="text-sm text-muted-foreground">
+                          Focuses on creating marketing content, emails, and business copy
+                        </span>
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-          
-          {step === 3 && (
-            <>
-              {userRole === "student" && (
-                <StudentSetup onChange={handleSpecializedSettingsChange} />
-              )}
-              {userRole === "professional" && (
-                <ProfessionalSetup onChange={handleSpecializedSettingsChange} />
-              )}
-              {userRole === "business_owner" && (
-                <BusinessSetup onChange={handleSpecializedSettingsChange} />
-              )}
-            </>
-          )}
+            )}
+            
+            {step === 3 && (
+              <>
+                {userRole === "student" && (
+                  <StudentSetup onChange={handleSpecializedSettingsChange} />
+                )}
+                {userRole === "professional" && (
+                  <ProfessionalSetup onChange={handleSpecializedSettingsChange} />
+                )}
+                {userRole === "business_owner" && (
+                  <BusinessSetup onChange={handleSpecializedSettingsChange} />
+                )}
+              </>
+            )}
+          </ScrollArea>
         </CardContent>
         
         <CardFooter className="flex justify-between">
@@ -303,6 +354,6 @@ export const AISetupWizard: React.FC<AISetupWizardProps> = ({
           )}
         </CardFooter>
       </Card>
-    </ScrollArea>
+    </div>
   );
 };
