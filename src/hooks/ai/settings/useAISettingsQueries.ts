@@ -96,22 +96,40 @@ export const useAISettingsQuery = (user: User | null) => {
         };
         
         // Add fallback support for new fields that might not be in the database yet
-        if (data.user_role) {
-          settings.user_role = data.user_role as AISettings["user_role"];
-        } else if (data.enabled_features && '_userRole' in data.enabled_features) {
-          settings.user_role = data.enabled_features._userRole as AISettings["user_role"];
+        // We need to use type assertions and checking differently for the JSON data
+        const dbData = data as any; // Use any temporarily for safer property access
+
+        if (dbData.user_role) {
+          settings.user_role = dbData.user_role as AISettings["user_role"];
+        } else if (settings.enabled_features && 
+                  typeof settings.enabled_features === 'object' && 
+                  '_userRole' in settings.enabled_features) {
+          const userRole = settings.enabled_features._userRole;
+          if (typeof userRole === 'string') {
+            settings.user_role = userRole as AISettings["user_role"];
+          }
         }
         
-        if (data.assistant_mode) {
-          settings.assistant_mode = data.assistant_mode as AISettings["assistant_mode"];
-        } else if (data.enabled_features && '_assistantMode' in data.enabled_features) {
-          settings.assistant_mode = data.enabled_features._assistantMode as AISettings["assistant_mode"];
+        if (dbData.assistant_mode) {
+          settings.assistant_mode = dbData.assistant_mode as AISettings["assistant_mode"];
+        } else if (settings.enabled_features && 
+                  typeof settings.enabled_features === 'object' && 
+                  '_assistantMode' in settings.enabled_features) {
+          const assistantMode = settings.enabled_features._assistantMode;
+          if (typeof assistantMode === 'string') {
+            settings.assistant_mode = assistantMode as AISettings["assistant_mode"];
+          }
         }
         
-        if (data.specialized_settings) {
-          settings.specialized_settings = data.specialized_settings;
-        } else if (data.enabled_features && '_specializedSettings' in data.enabled_features) {
-          settings.specialized_settings = data.enabled_features._specializedSettings;
+        if (dbData.specialized_settings) {
+          settings.specialized_settings = dbData.specialized_settings as Record<string, any>;
+        } else if (settings.enabled_features && 
+                  typeof settings.enabled_features === 'object' && 
+                  '_specializedSettings' in settings.enabled_features) {
+          const specializedSettings = settings.enabled_features._specializedSettings;
+          if (specializedSettings && typeof specializedSettings === 'object') {
+            settings.specialized_settings = specializedSettings as Record<string, any>;
+          }
         }
         
         return settings;
