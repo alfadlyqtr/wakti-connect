@@ -3,18 +3,31 @@ import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Users } from "lucide-react";
+import { RefreshCw, MessageSquare, Trash2, User, Users, Briefcase } from "lucide-react";
 import { UserContact } from "@/types/invitation.types";
 import { useNavigate } from "react-router-dom";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ContactsListProps {
   contacts: UserContact[];
   isLoading: boolean;
   isSyncing?: boolean;
   onRefresh?: () => void;
+  onDeleteContact?: (contactId: string) => Promise<void>;
 }
 
-const ContactItem = ({ contact }: { contact: UserContact }) => {
+const ContactItem = ({ 
+  contact, 
+  onDeleteContact 
+}: { 
+  contact: UserContact;
+  onDeleteContact?: (contactId: string) => Promise<void>;
+}) => {
   const navigate = useNavigate();
   
   const displayName = contact.contactProfile?.displayName || 
@@ -24,17 +37,18 @@ const ContactItem = ({ contact }: { contact: UserContact }) => {
   const avatarUrl = contact.contactProfile?.avatarUrl;
   const displayInitial = displayName.charAt(0) || 'U';
   
-  // Check if the contact is a business owner or staff
+  // Determine contact type
   const isBusinessOwner = contact.contactProfile?.accountType === 'business';
   const hasStaffRelation = !!contact.staffRelationId;
   
   const handleMessageClick = () => {
-    // Determine the correct contact ID for messaging
-    const contactUserId = contact.contactId === contact.userId ? 
-                        contact.contactId : 
-                        (contact.userId === contact.contactId ? contact.contactId : 
-                         (contact.userId || contact.contactId));
-    navigate(`/dashboard/messages/${contactUserId}`);
+    navigate(`/dashboard/messages/${contact.contactId}`);
+  };
+
+  const handleDeleteClick = async () => {
+    if (onDeleteContact) {
+      await onDeleteContact(contact.contactId);
+    }
   };
   
   return (
@@ -45,26 +59,75 @@ const ContactItem = ({ contact }: { contact: UserContact }) => {
           <AvatarFallback>{displayInitial}</AvatarFallback>
         </Avatar>
         <div>
-          <p className="font-medium">{displayName}</p>
-          <p className="text-sm text-muted-foreground truncate max-w-[200px]">
-            {contact.contactProfile?.accountType || 'Free User'}
+          <div className="flex items-center gap-2">
+            <p className="font-medium">{displayName}</p>
+            {isBusinessOwner ? (
+              <Badge variant="outline" className="bg-blue-50">
+                <Briefcase className="h-3 w-3 mr-1" />
+                Business
+              </Badge>
+            ) : hasStaffRelation ? (
+              <Badge variant="outline" className="bg-green-50">
+                <User className="h-3 w-3 mr-1" />
+                Staff
+              </Badge>
+            ) : (
+              <Badge variant="outline">
+                <User className="h-3 w-3 mr-1" />
+                Individual
+              </Badge>
+            )}
+          </div>
+          {contact.contactProfile?.businessName && (
+            <p className="text-sm text-muted-foreground">
+              {contact.contactProfile.businessName}
+            </p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            {contact.contactProfile?.email || contact.contactId}
           </p>
         </div>
       </div>
+      
       <div className="flex items-center gap-2">
-        {isBusinessOwner && (
-          <Badge variant="outline" className="bg-blue-50">Business</Badge>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={handleMessageClick}
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span className="sr-only md:not-sr-only md:ml-2">Message</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Send message</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        
+        {onDeleteContact && !hasStaffRelation && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="text-red-500 hover:bg-red-50"
+                  onClick={handleDeleteClick}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="sr-only md:not-sr-only md:ml-2">Remove</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Remove contact</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
-        {hasStaffRelation && !isBusinessOwner && (
-          <Badge variant="outline" className="bg-green-50">Staff</Badge>
-        )}
-        <Button 
-          size="sm" 
-          variant="outline"
-          onClick={handleMessageClick}
-        >
-          Message
-        </Button>
       </div>
     </div>
   );
@@ -74,10 +137,9 @@ const ContactsList: React.FC<ContactsListProps> = ({
   contacts, 
   isLoading,
   isSyncing,
-  onRefresh 
+  onRefresh,
+  onDeleteContact
 }) => {
-  console.log("Rendering ContactsList with contacts:", contacts?.length || 0);
-
   if (isLoading) {
     return (
       <div className="py-10 text-center">
@@ -105,7 +167,11 @@ const ContactsList: React.FC<ContactsListProps> = ({
       {contacts && contacts.length > 0 ? (
         <div className="space-y-4">
           {contacts.map((contact) => (
-            <ContactItem key={contact.id} contact={contact} />
+            <ContactItem 
+              key={contact.id} 
+              contact={contact} 
+              onDeleteContact={onDeleteContact}
+            />
           ))}
         </div>
       ) : (

@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { UserSearchResult, ContactRequestStatus } from "@/types/invitation.types";
-import { searchUsers, checkContactRequest } from "@/services/contacts/contactSearch";
+import { searchUsers, checkContactRequest } from "@/services/contacts";
 import { toast } from "@/components/ui/use-toast";
 import { useMutation } from "@tanstack/react-query";
 

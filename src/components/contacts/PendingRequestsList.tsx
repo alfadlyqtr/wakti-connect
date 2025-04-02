@@ -2,7 +2,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, XCircle, Briefcase, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { UserContact } from "@/types/invitation.types";
 
 interface PendingRequestsListProps {
@@ -36,7 +37,7 @@ const PendingRequestsList: React.FC<PendingRequestsListProps> = ({
   return (
     <div className="space-y-4">
       {pendingRequests.map((request) => (
-        <div key={request.id} className="flex items-center justify-between p-3 rounded-lg border">
+        <div key={request.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/10">
           <div className="flex items-center gap-3">
             <Avatar>
               <AvatarImage src={request.contactProfile?.avatarUrl || ''} />
@@ -46,12 +47,22 @@ const PendingRequestsList: React.FC<PendingRequestsListProps> = ({
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-medium">
-                {request.contactProfile?.displayName || 
-                 request.contactProfile?.fullName || 'Unknown User'}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {request.userId}
+              <div className="flex items-center gap-2">
+                <p className="font-medium">
+                  {request.contactProfile?.displayName || 
+                   request.contactProfile?.fullName || 'Unknown User'}
+                </p>
+                {request.contactProfile?.accountType === 'business' ? (
+                  <Badge variant="outline" className="bg-blue-50">Business</Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-green-50">Individual</Badge>
+                )}
+              </div>
+              {request.contactProfile?.businessName && (
+                <p className="text-sm">{request.contactProfile.businessName}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {request.contactProfile?.email || request.userId}
               </p>
             </div>
           </div>
@@ -59,17 +70,19 @@ const PendingRequestsList: React.FC<PendingRequestsListProps> = ({
             <Button 
               variant="outline" 
               size="sm"
+              className="border-green-200 hover:bg-green-50"
               onClick={() => onRespondToRequest(request.id, true)}
             >
-              <CheckCircle className="h-4 w-4 mr-1" />
+              <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
               Accept
             </Button>
             <Button 
               variant="outline" 
               size="sm"
+              className="border-red-200 hover:bg-red-50"
               onClick={() => onRespondToRequest(request.id, false)}
             >
-              <XCircle className="h-4 w-4 mr-1" />
+              <XCircle className="h-4 w-4 mr-1 text-red-500" />
               Reject
             </Button>
           </div>

@@ -1,5 +1,5 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { UserSearchResult, ContactRequestStatus } from '@/types/invitation.types';
 
 export const searchUsers = async (searchTerm: string): Promise<UserSearchResult[]> => {
@@ -13,11 +13,11 @@ export const searchUsers = async (searchTerm: string): Promise<UserSearchResult[
       throw new Error('You must be logged in to search users');
     }
     
-    // Using a simple query instead of RPC function
+    // Using a clean, optimized query to search users
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, display_name, email, avatar_url, account_type')
-      .or(`full_name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
+      .select('id, full_name, display_name, email, avatar_url, account_type, business_name')
+      .or(`full_name.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,business_name.ilike.%${searchTerm}%`)
       .neq('id', session.session.user.id)
       .eq('is_searchable', true)
       .limit(10);
@@ -37,7 +37,8 @@ export const searchUsers = async (searchTerm: string): Promise<UserSearchResult[
       displayName: user.display_name,
       email: user.email,
       avatarUrl: user.avatar_url,
-      accountType: user.account_type
+      accountType: user.account_type,
+      businessName: user.business_name
     }));
   } catch (error) {
     console.error('Error in searchUsers:', error);
@@ -45,7 +46,7 @@ export const searchUsers = async (searchTerm: string): Promise<UserSearchResult[
   }
 };
 
-export const checkContactRequest = async (userId: string): Promise<ContactRequestStatus> => {
+export const checkContactRequest = async (contactId: string): Promise<ContactRequestStatus> => {
   try {
     const { data: session } = await supabase.auth.getSession();
     if (!session.session) {
@@ -54,11 +55,11 @@ export const checkContactRequest = async (userId: string): Promise<ContactReques
     
     const currentUserId = session.session.user.id;
     
-    // Using a direct query instead of RPC
+    // Direct query to check if a contact request exists in either direction
     const { data, error } = await supabase
       .from('user_contacts')
       .select('id, status')
-      .or(`and(user_id.eq.${currentUserId},contact_id.eq.${userId}),and(user_id.eq.${userId},contact_id.eq.${currentUserId})`)
+      .or(`and(user_id.eq.${currentUserId},contact_id.eq.${contactId}),and(user_id.eq.${contactId},contact_id.eq.${currentUserId})`)
       .maybeSingle();
     
     if (error) {

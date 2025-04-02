@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { UserSearch, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { UserContact } from "@/types/invitation.types";
 
 // Import the components
 import ContactsList from "@/components/contacts/ContactsList";
@@ -26,6 +25,7 @@ const DashboardContacts = () => {
     isSyncingContacts,
     sendContactRequest,
     respondToContactRequest,
+    deleteContact,
     handleToggleAutoApprove,
     refreshContacts
   } = useContacts();
@@ -54,13 +54,24 @@ const DashboardContacts = () => {
     }
   };
 
+  const handleDeleteContact = async (contactId: string) => {
+    try {
+      await deleteContact.mutateAsync(contactId);
+    } catch (error) {
+      console.error("Error deleting contact:", error);
+    }
+  };
+
   // Filter contacts by search query if provided
   const filteredContacts = searchQuery && contacts 
     ? contacts.filter(contact => {
         const displayName = contact.contactProfile?.displayName || contact.contactProfile?.fullName || '';
+        const businessName = contact.contactProfile?.businessName || '';
+        const email = contact.contactProfile?.email || '';
+        
         return displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-               contact.contactId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-               contact.userId.toLowerCase().includes(searchQuery.toLowerCase());
+               businessName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               email.toLowerCase().includes(searchQuery.toLowerCase());
       })
     : contacts;
 
@@ -73,8 +84,8 @@ const DashboardContacts = () => {
         </p>
       </div>
       
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="flex w-full sm:w-auto items-center space-x-4">
           <Input
             placeholder="Search contacts..."
             value={searchQuery}
@@ -116,6 +127,7 @@ const DashboardContacts = () => {
                 isLoading={isLoading}
                 isSyncing={isSyncingContacts}
                 onRefresh={refreshContacts}
+                onDeleteContact={handleDeleteContact}
               />
             </CardContent>
           </Card>

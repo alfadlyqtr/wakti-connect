@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { checkContactRequest } from "./contactSearch";
 
 /**
@@ -15,7 +15,7 @@ export const sendContactRequest = async (contactId: string): Promise<void> => {
   // Check if user exists
   const { data: userData, error: userError } = await supabase
     .from('profiles')
-    .select('id')
+    .select('id, auto_approve_contacts')
     .eq('id', contactId)
     .single();
   
@@ -29,10 +29,13 @@ export const sendContactRequest = async (contactId: string): Promise<void> => {
   if (contactStatus.requestExists) {
     if (contactStatus.requestStatus === 'accepted') {
       throw new Error("Already contacts");
-    } else {
+    } else if (contactStatus.requestStatus === 'pending') {
       throw new Error("Request already sent");
     }
   }
+  
+  // Determine status - auto-approved or pending
+  const status = userData.auto_approve_contacts ? 'accepted' : 'pending';
   
   // Create new contact request
   const { error } = await supabase
@@ -40,7 +43,7 @@ export const sendContactRequest = async (contactId: string): Promise<void> => {
     .insert({
       user_id: session.user.id,
       contact_id: contactId,
-      status: 'pending'
+      status
     });
   
   if (error) {
@@ -48,15 +51,31 @@ export const sendContactRequest = async (contactId: string): Promise<void> => {
     throw error;
   }
   
-  // Create notification for the recipient
-  await supabase
-    .from('notifications')
-    .insert({
-      user_id: contactId,
-      type: 'contact_request',
-      title: 'New Contact Request',
-      content: 'Someone wants to add you as a contact'
-    });
+  // If auto-approved, create the reciprocal relationship
+  if (userData.auto_approve_contacts) {
+    const { error: reciprocalError } = await supabase
+      .from('user_contacts')
+      .insert({
+        user_id: contactId,
+        contact_id: session.user.id,
+        status: 'accepted'
+      });
+    
+    if (reciprocalError) {
+      console.error("Error creating reciprocal contact:", reciprocalError);
+      // Don't throw here, still consider the request successful
+    }
+  } else {
+    // Create notification for the recipient if not auto-approved
+    await supabase
+      .from('notifications')
+      .insert({
+        user_id: contactId,
+        type: 'contact_request',
+        title: 'New Contact Request',
+        content: 'Someone wants to add you as a contact'
+      });
+  }
 };
 
 /**
@@ -122,12 +141,47 @@ export const respondToContactRequest = async (requestId: string, accept: boolean
     // Reject the request
     const { error } = await supabase
       .from('user_contacts')
-      .delete()
+      .update({ status: 'rejected' })
       .eq('id', requestId);
     
     if (error) {
       console.error("Error rejecting request:", error);
       throw error;
     }
+  }
+};
+
+/**
+ * Delete a contact
+ */
+export const deleteContact = async (contactId: string): Promise<void> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session?.user) {
+    throw new Error("Not authenticated");
+  }
+  
+  // Delete the relationship from user to contact
+  const { error: error1 } = await supabase
+    .from('user_contacts')
+    .delete()
+    .eq('user_id', session.user.id)
+    .eq('contact_id', contactId);
+  
+  if (error1) {
+    console.error("Error deleting contact (direction 1):", error1);
+    throw error1;
+  }
+  
+  // Delete the relationship from contact to user
+  const { error: error2 } = await supabase
+    .from('user_contacts')
+    .delete()
+    .eq('user_id', contactId)
+    .eq('contact_id', session.user.id);
+  
+  if (error2) {
+    console.error("Error deleting contact (direction 2):", error2);
+    // Continue even if this fails, it could be that the reciprocal relationship doesn't exist
   }
 };

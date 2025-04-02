@@ -7,7 +7,7 @@ import { UserContact } from '@/types/invitation.types';
  */
 export const getUserContacts = async (userId: string): Promise<UserContact[]> => {
   try {
-    // Get all user's contacts
+    // Get all user's contacts with accepted status
     const { data: contacts, error } = await supabase
       .from('user_contacts')
       .select(`
@@ -21,10 +21,13 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
           full_name,
           display_name,
           avatar_url,
-          account_type
+          account_type,
+          business_name,
+          email
         )
       `)
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .eq('status', 'accepted');
     
     if (error) {
       console.error('Error fetching user contacts:', error);
@@ -42,7 +45,9 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
         fullName: contactData.full_name || null,
         displayName: contactData.display_name || null,
         avatarUrl: contactData.avatar_url || null,
-        accountType: contactData.account_type || null
+        accountType: contactData.account_type || null,
+        businessName: contactData.business_name || null,
+        email: contactData.email || null
       };
       
       return {
@@ -81,7 +86,9 @@ export const getContactRequests = async (userId: string): Promise<UserContact[]>
           full_name,
           display_name,
           avatar_url,
-          account_type
+          account_type,
+          business_name,
+          email
         )
       `)
       .eq('contact_id', userId)
@@ -103,7 +110,9 @@ export const getContactRequests = async (userId: string): Promise<UserContact[]>
         fullName: contactData.full_name || null,
         displayName: contactData.display_name || null,
         avatarUrl: contactData.avatar_url || null,
-        accountType: contactData.account_type || null
+        accountType: contactData.account_type || null,
+        businessName: contactData.business_name || null,
+        email: contactData.email || null
       };
       
       return {

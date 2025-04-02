@@ -2,8 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Check, Loader2, Search, UserPlus, X, AlertCircle } from "lucide-react";
+import { Check, Loader2, User, UserPlus, AlertCircle, Briefcase } from "lucide-react";
 import { useContactSearch } from "@/hooks/useContactSearch";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { UserSearchResult } from "@/types/invitation.types";
@@ -40,7 +39,7 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
     if (!isOpen) {
       clearSearch();
     }
-  }, [isOpen]);
+  }, [isOpen, clearSearch]);
 
   const handleSubmit = async () => {
     if (!selectedContact) return;
@@ -57,14 +56,29 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
     }
   };
 
-  const getAccountTypeLabel = (accountType: string) => {
+  const getAccountTypeIcon = (accountType: string) => {
     switch (accountType) {
       case 'business':
-        return <Badge variant="outline" className="bg-blue-50">Business</Badge>;
-      case 'individual':
-        return <Badge variant="outline" className="bg-green-50">Individual</Badge>;
+        return <Briefcase className="h-3 w-3 mr-1" />;
       default:
-        return <Badge variant="outline">Free</Badge>;
+        return <User className="h-3 w-3 mr-1" />;
+    }
+  };
+
+  const getAccountTypeBadge = (accountType: string) => {
+    switch (accountType) {
+      case 'business':
+        return <Badge variant="outline" className="bg-blue-50 flex items-center">
+          {getAccountTypeIcon(accountType)} Business
+        </Badge>;
+      case 'individual':
+        return <Badge variant="outline" className="bg-green-50 flex items-center">
+          {getAccountTypeIcon(accountType)} Individual
+        </Badge>;
+      default:
+        return <Badge variant="outline" className="flex items-center">
+          {getAccountTypeIcon(accountType)} Free
+        </Badge>;
     }
   };
 
@@ -84,6 +98,13 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
           <div className="flex items-center gap-2 text-amber-600 mt-4 p-2 rounded-md bg-amber-50">
             <AlertCircle className="h-4 w-4" />
             <span>Contact request already sent</span>
+          </div>
+        );
+      } else if (contactStatus.requestStatus === 'rejected') {
+        return (
+          <div className="flex items-center gap-2 text-red-600 mt-4 p-2 rounded-md bg-red-50">
+            <AlertCircle className="h-4 w-4" />
+            <span>Contact request was rejected</span>
           </div>
         );
       }
@@ -116,14 +137,14 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Add New Contact</DialogTitle>
           <DialogDescription>
-            Search for users by name, email, or business name.
+            Search for users or businesses by name or email.
           </DialogDescription>
         </DialogHeader>
         
         <div className="flex flex-col gap-4">
           <Command className="rounded-lg border shadow-md">
             <CommandInput 
-              placeholder="Search users..." 
+              placeholder="Search users or businesses..." 
               value={searchQuery}
               onValueChange={handleSearch}
               className="h-9"
@@ -137,7 +158,7 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
                   </div>
                 ) : (
                   <>
-                    <CommandEmpty>No users found</CommandEmpty>
+                    <CommandEmpty>No users or businesses found</CommandEmpty>
                     <CommandGroup>
                       {searchResults.map((user) => (
                         <CommandItem 
@@ -154,13 +175,15 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
                           <div className="flex flex-col flex-1 min-w-0">
                             <span className="font-medium">
                               {user.displayName || user.fullName || 'Unknown User'}
-                              {user.businessName && ` (${user.businessName})`}
                             </span>
+                            {user.businessName && (
+                              <span className="text-xs text-slate-600">{user.businessName}</span>
+                            )}
                             <span className="text-xs text-muted-foreground truncate">
                               {user.email}
                             </span>
                           </div>
-                          {getAccountTypeLabel(user.accountType)}
+                          {getAccountTypeBadge(user.accountType)}
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -184,7 +207,7 @@ const AddContactDialog: React.FC<AddContactDialogProps> = ({
                     <span className="font-medium">
                       {selectedContact.displayName || selectedContact.fullName || 'Unknown User'}
                     </span>
-                    {getAccountTypeLabel(selectedContact.accountType)}
+                    {getAccountTypeBadge(selectedContact.accountType)}
                   </div>
                   {selectedContact.businessName && (
                     <span className="text-sm">{selectedContact.businessName}</span>

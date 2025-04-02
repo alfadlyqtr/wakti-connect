@@ -4,16 +4,15 @@ import { useState, useEffect } from "react";
 import { UserContact } from "@/types/invitation.types";
 import { toast } from "@/components/ui/use-toast";
 import { 
-  fetchContacts, 
-  fetchPendingRequests,
+  getUserContacts, 
+  getContactRequests,
   sendContactRequest as sendRequest,
   respondToContactRequest as respondToRequest,
-  syncStaffBusinessContacts
-} from "@/services/contacts";
-import {
+  deleteContact as removeContact,
+  syncStaffBusinessContacts,
   fetchAutoApproveSetting,
   updateAutoApproveContacts
-} from "@/services/contacts/contactSettings";
+} from "@/services/contacts";
 
 export const useContacts = () => {
   const queryClient = useQueryClient();
@@ -21,24 +20,15 @@ export const useContacts = () => {
   const [isUpdatingAutoApprove, setIsUpdatingAutoApprove] = useState<boolean>(false);
   const [isSyncingContacts, setIsSyncingContacts] = useState<boolean>(false);
 
-  // Sync staff-business contacts
+  // Sync staff-business contacts on initial load
   useEffect(() => {
     const syncContacts = async () => {
       setIsSyncingContacts(true);
       try {
-        console.log("Starting contact sync operation");
-        const result = await syncStaffBusinessContacts();
-        console.log("Contact sync result:", result);
-        
-        // After syncing, refresh contacts
+        await syncStaffBusinessContacts();
         queryClient.invalidateQueries({ queryKey: ['contacts'] });
       } catch (error) {
         console.error("Error syncing staff-business contacts:", error);
-        toast({
-          title: "Sync Failed",
-          description: "Could not sync staff-business contacts. Please try refreshing the page.",
-          variant: "destructive"
-        });
       } finally {
         setIsSyncingContacts(false);
       }
@@ -56,17 +46,20 @@ export const useContacts = () => {
   } = useQuery({
     queryKey: ['contacts'],
     queryFn: fetchContacts,
-    meta: {
-      onError: (error: any) => {
-        console.error("Error fetching contacts:", error);
-        toast({
-          title: "Error loading contacts",
-          description: "Could not load your contacts. Please try again later.",
-          variant: "destructive"
-        });
-      }
-    }
   });
+
+  async function fetchContacts() {
+    const { data: session } = await queryClient.fetchQuery({
+      queryKey: ['session'],
+      queryFn: async () => await fetch('/api/auth/session')
+    });
+    
+    if (!session?.user?.id) {
+      throw new Error('Not authenticated');
+    }
+    
+    return getUserContacts(session.user.id);
+  }
 
   // Get pending contact requests
   const { 
@@ -76,12 +69,20 @@ export const useContacts = () => {
   } = useQuery({
     queryKey: ['contactRequests'],
     queryFn: fetchPendingRequests,
-    meta: {
-      onError: (error: any) => {
-        console.error("Error fetching pending requests:", error);
-      }
-    }
   });
+
+  async function fetchPendingRequests() {
+    const { data: session } = await queryClient.fetchQuery({
+      queryKey: ['session'],
+      queryFn: async () => await fetch('/api/auth/session')
+    });
+    
+    if (!session?.user?.id) {
+      throw new Error('Not authenticated');
+    }
+    
+    return getContactRequests(session.user.id);
+  }
 
   // Fetch auto-approve setting
   useEffect(() => {
@@ -128,7 +129,6 @@ export const useContacts = () => {
         title: "Contact Request Sent",
         description: "Your contact request has been sent successfully."
       });
-      // Invalidate contacts queries to refresh the list
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       queryClient.invalidateQueries({ queryKey: ['contactRequests'] });
     },
@@ -153,7 +153,6 @@ export const useContacts = () => {
           ? "You have accepted the contact request." 
           : "You have rejected the contact request."
       });
-      // Invalidate contacts queries to refresh the list
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       queryClient.invalidateQueries({ queryKey: ['contactRequests'] });
     },
@@ -161,6 +160,25 @@ export const useContacts = () => {
       toast({
         title: "Failed to Respond to Request",
         description: error.message || "An error occurred while responding to the contact request",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete contact
+  const deleteContact = useMutation({
+    mutationFn: removeContact,
+    onSuccess: () => {
+      toast({
+        title: "Contact Removed",
+        description: "Contact has been removed successfully."
+      });
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Remove Contact",
+        description: error.message || "An error occurred while removing the contact",
         variant: "destructive"
       });
     }
@@ -204,6 +222,7 @@ export const useContacts = () => {
     isSyncingContacts,
     sendContactRequest,
     respondToContactRequest,
+    deleteContact,
     handleToggleAutoApprove,
     refreshContacts: handleRefreshContacts
   };

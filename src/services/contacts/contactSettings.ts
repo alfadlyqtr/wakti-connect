@@ -1,5 +1,5 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 // Fetch auto-approve setting
 export const fetchAutoApproveSetting = async (): Promise<boolean> => {
