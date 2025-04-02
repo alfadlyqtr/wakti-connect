@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { EventFormData, EventCustomization } from "@/types/event.types";
+import { EventFormValues, EventCustomization, EventFormData, EventStatus } from "@/types/event.types";
 import { InvitationRecipient } from "@/types/invitation.types";
 import { useEvents } from "@/hooks/useEvents";
 import { toast } from "@/components/ui/use-toast";
@@ -49,7 +49,7 @@ export const useEventSubmission = ({
     formState: { errors },
     setValue,
     reset
-  } = useForm<EventFormData>({
+  } = useForm<EventFormValues>({
     defaultValues: {
       title: title,
       description: description
@@ -62,7 +62,7 @@ export const useEventSubmission = ({
     setValue('description', description);
   }, [title, description, setValue]);
   
-  const processDateAndTime = (formData: EventFormData) => {
+  const processDateAndTime = (formData: EventFormValues): EventFormData => {
     // Create ISO string for start and end times
     const startDateTime = new Date(selectedDate);
     const endDateTime = new Date(selectedDate);
@@ -80,20 +80,26 @@ export const useEventSubmission = ({
     }
     
     return {
-      ...formData,
       title: title, // Ensure title is explicitly added from the current state
       description: description, // Ensure description is also explicitly added
+      startDate: selectedDate,
+      isAllDay: isAllDay,
+      location: location,
       start_time: startDateTime.toISOString(),
       end_time: endDateTime.toISOString(),
       is_all_day: isAllDay,
-      location: location,
       location_type: locationType,
       maps_url: locationType === 'google_maps' ? mapsUrl : undefined,
-      customization: customization
+      customization: customization,
+      // Add invitations for recipients if available
+      invitations: recipients.length > 0 ? recipients.map(recipient => ({
+        email: recipient.email,
+        userId: recipient.userId
+      })) : undefined
     };
   };
 
-  const onSubmit = useCallback(async (formData: EventFormData) => {
+  const onSubmit = useCallback(async (formData: EventFormValues) => {
     try {
       setIsSubmitting(true);
       
@@ -126,7 +132,7 @@ export const useEventSubmission = ({
       console.log("Processed form data:", completeFormData);
       
       // Determine status based on recipients and current state
-      const status = editEvent?.status === 'draft' && recipients.length === 0 
+      const status: EventStatus = editEvent?.status === 'draft' && recipients.length === 0 
         ? 'draft' 
         : recipients.length > 0 ? 'sent' : 'draft';
       

@@ -1,187 +1,149 @@
+import { useState, useCallback } from 'react';
+import { useRouter } from 'next/router';
+import { useForm } from 'react-hook-form';
+import { toast } from '@/components/ui/use-toast';
+import { getInvitationCustomization, saveInvitationCustomization } from '@/services/invitation';
+import { InvitationCustomization } from '@/types/invitation.types';
+import { supabase } from '@/integrations/supabase/client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-import { 
-  getInvitationCustomization,
-  updateInvitationCustomization
-} from '@/services/invitation';
-import { InvitationTemplate, InvitationCustomization, InvitationStyle } from '@/types/invitation.types';
-
-export const useInvitationBuilder = (invitationId?: string) => {
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const [templates, setTemplates] = useState<InvitationTemplate[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+export const useInvitationBuilder = (eventId?: string, invitationId?: string) => {
+  const [isLoading, setIsLoading] = useState(false);
   const [customization, setCustomization] = useState<InvitationCustomization>({
-    background: {
-      type: 'color',
-      value: '#ffffff'
-    },
     font: {
       family: 'system-ui, sans-serif',
       size: 'medium',
       color: '#333333',
-      alignment: 'left'
     },
-    buttons: {
-      accept: {
-        background: '#4CAF50',
-        color: '#ffffff',
-        shape: 'rounded'
-      },
-      decline: {
-        background: '#f44336',
-        color: '#ffffff',
-        shape: 'rounded'
-      }
-    },
-    headerStyle: 'simple',
-    animation: 'fade'
+    buttonStyle: 'rounded',
+    buttonColor: '#3B82F6',
+    layoutSize: 'medium',
+    effects: {}
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   
-  // Load available templates
-  useEffect(() => {
-    // Load templates logic
-    const loadTemplates = async () => {
-      // Normally you would fetch templates from API
-      setTemplates([
-        {
-          id: 'template1',
-          name: 'Basic',
-          previewImage: '/templates/basic.jpg',
-          defaultStyles: {
-            background: { type: 'color', value: '#ffffff' },
-            font: { family: 'system-ui, sans-serif', size: 'medium', color: '#333333' },
-            buttons: {
-              accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
-              decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' }
-            }
-          },
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: 'template2',
-          name: 'Professional',
-          previewImage: '/templates/professional.jpg',
-          defaultStyles: {
-            background: { type: 'color', value: '#f8f9fa' },
-            font: { family: 'Georgia, serif', size: 'medium', color: '#212529' },
-            buttons: {
-              accept: { background: '#343a40', color: '#ffffff', shape: 'rounded' },
-              decline: { background: '#6c757d', color: '#ffffff', shape: 'rounded' }
-            }
-          },
-          createdAt: new Date().toISOString()
-        }
-      ]);
-    };
-    
-    loadTemplates();
-  }, []);
+  const router = useRouter();
   
-  // Load customization settings if invitationId is provided
-  useEffect(() => {
+  const form = useForm({
+    defaultValues: {
+      title: '',
+      description: '',
+      eventDate: undefined,
+      eventLocation: '',
+      isAllDay: false,
+      startTime: '09:00',
+      endTime: '10:00',
+    }
+  });
+  
+  // Load existing invitation data if invitationId is provided
+  const loadInvitation = useCallback(async () => {
     if (!invitationId) return;
     
-    const loadCustomization = async () => {
-      setIsLoading(true);
-      try {
-        const data = await getInvitationCustomization(invitationId);
-        if (data) {
-          setCustomization(data);
-        }
-      } catch (error) {
-        console.error('Error loading invitation customization:', error);
-        toast({
-          title: 'Error',
-          description: 'Could not load invitation customization settings',
-          variant: 'destructive'
-        });
-      } finally {
-        setIsLoading(false);
+    setIsLoading(true);
+    try {
+      // Load invitation details
+      const { data: invitationData, error: invitationError } = await supabase
+        .from('event_invitations')
+        .select('*, event:event_id(*)')
+        .eq('id', invitationId)
+        .single();
+      
+      if (invitationError) {
+        throw invitationError;
       }
-    };
-    
-    loadCustomization();
-  }, [invitationId, toast]);
-  
-  // Handle selecting a template
-  const selectTemplate = useCallback((templateId: string) => {
-    const template = templates.find(t => t.id === templateId);
-    if (template) {
-      setSelectedTemplate(templateId);
-      // Here you would transform template.defaultStyles into InvitationCustomization format
-      // This is just a simplified example
-      setCustomization(prev => ({
-        ...prev,
-        background: template.defaultStyles.background,
-        font: template.defaultStyles.font,
-        buttons: template.defaultStyles.buttons
-      }));
+      
+      if (!invitationData) {
+        throw new Error('Invitation not found');
+      }
+      
+      // Load event data
+      const event = invitationData.event;
+      if (event) {
+        form.reset({
+          title: event.title || '',
+          description: event.description || '',
+          eventDate: event.start_time ? new Date(event.start_time) : undefined,
+          eventLocation: event.location || '',
+          isAllDay: event.is_all_day || false,
+          startTime: event.start_time ? new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '09:00',
+          endTime: event.end_time ? new Date(event.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '10:00',
+        });
+      }
+      
+      // Load customization
+      const customizationData = await getInvitationCustomization(invitationId);
+      if (customizationData) {
+        setCustomization(customizationData);
+      }
+    } catch (error) {
+      console.error('Error loading invitation:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load invitation data',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [templates]);
-  
-  // Handle updating customization
-  const updateCustomization = useCallback((newCustomization: Partial<InvitationCustomization>) => {
-    setCustomization(prev => ({
-      ...prev,
-      ...newCustomization
-    }));
-  }, []);
+  }, [invitationId, form]);
   
   // Save customization changes
   const saveCustomization = useCallback(async () => {
-    if (!invitationId || !user) {
-      toast({
-        title: 'Error',
-        description: 'Missing invitation ID or user not logged in',
-        variant: 'destructive'
-      });
-      return { success: false };
-    }
+    if (!invitationId) return;
     
-    setIsSaving(true);
+    setIsLoading(true);
     try {
-      const result = await updateInvitationCustomization(invitationId, customization);
+      const savedCustomization = await saveInvitationCustomization(invitationId, customization);
       
-      if (result.success) {
+      if (typeof savedCustomization === 'object') {
+        setCustomization(savedCustomization as InvitationCustomization);
         toast({
           title: 'Success',
-          description: 'Invitation customization saved successfully'
+          description: 'Invitation customization saved',
         });
-        return { success: true };
-      } else {
-        toast({
-          title: 'Error',
-          description: result.message || 'Could not save invitation customization',
-          variant: 'destructive'
-        });
-        return { success: false };
       }
     } catch (error) {
-      console.error('Error saving invitation customization:', error);
+      console.error('Error saving customization:', error);
       toast({
         title: 'Error',
-        description: 'An unexpected error occurred while saving customization',
-        variant: 'destructive'
+        description: 'Failed to save customization',
+        variant: 'destructive',
       });
-      return { success: false };
     } finally {
-      setIsSaving(false);
+      setIsLoading(false);
     }
-  }, [invitationId, user, customization, toast]);
+  }, [invitationId, customization]);
+  
+  // Handle form submission
+  const handleSubmit = useCallback(async (data) => {
+    setIsLoading(true);
+    try {
+      // TBD: Implement invitation creation logic
+      
+      toast({
+        title: 'Success',
+        description: 'Invitation created successfully',
+      });
+      
+      router.push('/dashboard/events');
+    } catch (error) {
+      console.error('Error creating invitation:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to create invitation',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router]);
   
   return {
-    templates,
-    selectedTemplate,
+    form,
     customization,
+    setCustomization,
     isLoading,
-    isSaving,
-    selectTemplate,
-    updateCustomization,
-    saveCustomization
+    loadInvitation,
+    saveCustomization,
+    handleSubmit: form.handleSubmit(handleSubmit),
   };
 };

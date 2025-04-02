@@ -1,104 +1,60 @@
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { EventFormValues, Event } from '@/types/event.types';
+import { Event, EventFormValues, EventCustomization } from '@/types/event.types';
 import { InvitationRecipient } from '@/types/invitation.types';
-import { supabase } from '@/integrations/supabase/client';
+import { parse } from 'date-fns';
 
-const useEditEventEffect = (
-  form: UseFormReturn<EventFormValues>,
-  setRecipients: React.Dispatch<React.SetStateAction<InvitationRecipient[]>>,
-  setIsEditMode: React.Dispatch<React.SetStateAction<boolean>>
-) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const { eventId } = useParams<{ eventId: string }>();
-  
-  const getEventById = async (id: string): Promise<Event | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('events')
-        .select(`
-          *,
-          invitations:event_invitations(*)
-        `)
-        .eq('id', id)
-        .single();
-      
-      if (error) {
-        console.error("Error fetching event:", error);
-        throw error;
-      }
-      
-      return data;
-    } catch (error) {
-      console.error("Error in getEventById:", error);
-      throw error;
-    }
-  };
-  
+interface UseEditEventEffectProps {
+  editEvent?: Event | null;
+  form: UseFormReturn<EventFormValues>;
+  setRecipients: (recipients: InvitationRecipient[]) => void;
+  setIsEditMode: (isEditMode: boolean) => void;
+}
+
+const useEditEventEffect = ({
+  editEvent,
+  form,
+  setRecipients,
+  setIsEditMode
+}: UseEditEventEffectProps) => {
   useEffect(() => {
-    if (!eventId) return;
-    
-    const fetchEventData = async () => {
-      setIsLoading(true);
-      try {
-        const event = await getEventById(eventId);
+    if (editEvent) {
+      setIsEditMode(true);
+      
+      // Parse the date from string
+      const startDate = new Date(editEvent.start_time);
+      
+      // Convert the database event to the form values format
+      const eventData: EventFormValues = {
+        title: editEvent.title,
+        description: editEvent.description || '',
+        location: editEvent.location || '',
+        startDate,
+        isAllDay: editEvent.is_all_day
+      };
+      
+      // Reset the form with the event data
+      form.reset(eventData);
+      
+      // Convert invitations to recipients
+      if (editEvent.invitations && editEvent.invitations.length > 0) {
+        const eventRecipients: InvitationRecipient[] = editEvent.invitations.map(invite => ({
+          id: invite.id,
+          email: invite.email || '',
+          userId: invite.invited_user_id || '',
+          type: invite.email ? 'email' : 'user',
+          status: invite.status
+        }));
         
-        if (event) {
-          // Set edit mode
-          setIsEditMode(true);
-          
-          // Set form data
-          form.reset({
-            title: event.title,
-            description: event.description || '',
-            location: event.location || '',
-            startDate: event.start_time ? new Date(event.start_time) : undefined,
-            endDate: event.end_time ? new Date(event.end_time) : undefined,
-            isAllDay: event.is_all_day
-          });
-          
-          // Set recipients from invitations if available
-          if (event.invitations && event.invitations.length > 0) {
-            const formattedRecipients: InvitationRecipient[] = event.invitations.map(invitation => {
-              if (invitation.email) {
-                return {
-                  id: invitation.id,
-                  name: invitation.email,
-                  email: invitation.email,
-                  type: 'email'
-                };
-              } else if (invitation.invited_user_id) {
-                return {
-                  id: invitation.id,
-                  name: `User ${invitation.invited_user_id.substring(0, 8)}`,
-                  type: 'contact'
-                };
-              }
-              
-              // Default fallback
-              return {
-                id: invitation.id,
-                name: `Recipient ${invitation.id.substring(0, 8)}`,
-                type: 'contact'
-              };
-            });
-            
-            setRecipients(formattedRecipients);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching event data:", error);
-      } finally {
-        setIsLoading(false);
+        setRecipients(eventRecipients);
       }
-    };
-    
-    fetchEventData();
-  }, [eventId, form, setRecipients, setIsEditMode]);
+    }
+  }, [editEvent, form, setRecipients, setIsEditMode]);
   
-  return { isLoading };
+  return {
+    isLoading: false
+  };
 };
 
 export default useEditEventEffect;

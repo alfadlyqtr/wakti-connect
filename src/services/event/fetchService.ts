@@ -1,150 +1,183 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { EventTab, Event, EventsResult } from "@/types/event.types";
+import { supabase } from '@/integrations/supabase/client';
+import { Event, EventTab, EventsResult } from '@/types/event.types';
+import { getUserRole } from '@/services/profile/userService';
 
-/**
- * Fetches events based on the selected tab
- */
-export const fetchEvents = async (
-  tab: EventTab
-): Promise<EventsResult> => {
+// Fetch events based on the active tab
+export const fetchEvents = async (activeTab: EventTab): Promise<EventsResult> => {
   try {
-    let events: Event[] = [];
-
-    // Get the user's account type (free, individual, business)
-    const { data: userRoleData, error: roleError } = await supabase.rpc(
-      "get_auth_user_account_type"
-    );
-
-    if (roleError) {
-      console.error("Error checking user role:", roleError);
-      throw new Error(`Failed to check user role: ${roleError.message}`);
-    }
-
-    // Make sure userRole is one of the allowed values
-    let userRole: "free" | "individual" | "business";
-    if (userRoleData === "individual") {
-      userRole = "individual";
-    } else if (userRoleData === "business") {
-      userRole = "business";
-    } else {
-      userRole = "free";
+    // Check if the user is authenticated
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw new Error('You must be logged in to view events');
     }
     
-    // Store user role in localStorage for access in components
-    localStorage.setItem('userRole', userRole);
-
-    // Fetch events based on the selected tab
-    try {
-      switch (tab) {
-        case "my-events":
-          // Fetch events created by the user
-          const { data: myEvents, error: myEventsError } = await supabase
-            .from('events')
-            .select('*')
-            .eq('user_id', await getUserId())
-            .order('created_at', { ascending: false });
-            
-          if (myEventsError) throw myEventsError;
-          
-          // Parse the JSON customization field for each event
-          events = (myEvents || []).map(event => ({
-            ...event,
-            customization: typeof event.customization === 'string' 
-              ? JSON.parse(event.customization) 
-              : event.customization
-          }));
-          break;
-          
-        case "invited-events":
-          // Fetch events the user is invited to
-          const { data: invitations, error: invitationsError } = await supabase
-            .from('event_invitations')
-            .select(`
-              *,
-              event:event_id (*)
-            `)
-            .eq('invited_user_id', await getUserId())
-            .order('created_at', { ascending: false });
-            
-          if (invitationsError) throw invitationsError;
-          
-          // Parse the JSON customization field for each event
-          events = invitations
-            .filter(inv => inv.event)
-            .map(inv => {
-              const event = inv.event as any;
-              return {
-                ...event,
-                customization: typeof event.customization === 'string' 
-                  ? JSON.parse(event.customization) 
-                  : event.customization
-              };
-            }) as Event[];
-          break;
-          
-        case "draft-events":
-          // Fetch draft events created by the user
-          const { data: draftEvents, error: draftEventsError } = await supabase
-            .from('events')
-            .select('*')
-            .eq('user_id', await getUserId())
-            .eq('status', 'draft')
-            .order('created_at', { ascending: false });
-            
-          if (draftEventsError) throw draftEventsError;
-          
-          // Parse the JSON customization field for each event
-          events = (draftEvents || []).map(event => ({
-            ...event,
-            customization: typeof event.customization === 'string' 
-              ? JSON.parse(event.customization) 
-              : event.customization
-          }));
-          break;
-            
-        default:
-          const { data: defaultEvents, error: defaultEventsError } = await supabase
-            .from('events')
-            .select('*')
-            .eq('user_id', await getUserId())
-            .order('created_at', { ascending: false });
-            
-          if (defaultEventsError) throw defaultEventsError;
-          
-          // Parse the JSON customization field for each event
-          events = (defaultEvents || []).map(event => ({
-            ...event,
-            customization: typeof event.customization === 'string' 
-              ? JSON.parse(event.customization) 
-              : event.customization
-          }));
-      }
-    } catch (fetchError: any) {
-      console.error(`Error fetching events for tab "${tab}":`, fetchError);
-      events = [];
+    const userId = sessionData.session.user.id;
+    let events: Event[] = [];
+    
+    // Get the user's role to determine if they can create events
+    const userRole = await getUserRole(userId);
+    const canCreateEvents = userRole === 'individual' || userRole === 'business';
+    
+    // Fetch events based on the active tab
+    switch (activeTab) {
+      case 'my-events':
+        events = await fetchMyEvents(userId);
+        break;
+      case 'invited-events':
+        events = await fetchInvitedEvents(userId);
+        break;
+      case 'draft-events':
+        events = await fetchDraftEvents(userId);
+        break;
+      default:
+        events = await fetchMyEvents(userId);
     }
-
+    
     return {
       events,
-      userRole
+      userRole,
+      canCreateEvents
     };
-  } catch (error: any) {
-    console.error("Error in fetchEvents:", error);
-    return {
-      events: [],
-      userRole: "free"
-    };
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    throw error;
   }
 };
 
-/**
- * Helper to get the current user ID
- */
-const getUserId = async (): Promise<string> => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) {
-    throw new Error("No authenticated user");
+// Fetch events created by the user
+const fetchMyEvents = async (userId: string): Promise<Event[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .select(`
+        *,
+        invitations:event_invitations(*)
+      `)
+      .eq('user_id', userId)
+      .neq('status', 'draft')
+      .order('start_time', { ascending: true });
+    
+    if (error) {
+      console.error('Error fetching my events:', error);
+      throw error;
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error in fetchMyEvents:', error);
+    throw error;
   }
-  return session.user.id;
+};
+
+// Fetch events where the user is invited
+const fetchInvitedEvents = async (userId: string): Promise<Event[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('event_invitations')
+      .select(`
+        *,
+        event:events(*)
+      `)
+      .eq('invited_user_id', userId)
+      .not('status', 'eq', 'draft')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching invited events:', error);
+      throw error;
+    }
+    
+    // Transform the data to match the Event interface
+    const events = data
+      .map(invitation => invitation.event)
+      .filter(event => event !== null) as Event[];
+    
+    return events;
+  } catch (error) {
+    console.error('Error in fetchInvitedEvents:', error);
+    throw error;
+  }
+};
+
+// Fetch draft events created by the user
+const fetchDraftEvents = async (userId: string): Promise<Event[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .select(`
+        *,
+        invitations:event_invitations(*)
+      `)
+      .eq('user_id', userId)
+      .eq('status', 'draft')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching draft events:', error);
+      throw error;
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error in fetchDraftEvents:', error);
+    throw error;
+  }
+};
+
+// Fetch a single event by ID
+export const fetchEventById = async (eventId: string): Promise<Event | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .select(`
+        *,
+        invitations:event_invitations(*)
+      `)
+      .eq('id', eventId)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null; // Event not found
+      }
+      console.error('Error fetching event by ID:', error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error in fetchEventById:', error);
+    throw error;
+  }
+};
+
+// Get results when no events are available
+export const getEmptyEventsResult = async (): Promise<EventsResult> => {
+  try {
+    // Check if the user is authenticated
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw new Error('You must be logged in to view events');
+    }
+    
+    const userId = sessionData.session.user.id;
+    
+    // Get the user's role to determine if they can create events
+    const userRole = await getUserRole(userId);
+    const canCreateEvents = userRole === 'individual' || userRole === 'business';
+    
+    return {
+      events: [],
+      userRole,
+      canCreateEvents
+    };
+  } catch (error) {
+    console.error('Error in getEmptyEventsResult:', error);
+    return {
+      events: [],
+      userRole: 'free',
+      canCreateEvents: false
+    };
+  }
 };

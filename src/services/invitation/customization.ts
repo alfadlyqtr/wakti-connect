@@ -1,117 +1,149 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { InvitationCustomization } from '@/types/invitation.types';
 
-// Get an invitation customization by ID
-export const getInvitationCustomization = async (invitationId: string) => {
+export const getInvitationCustomization = async (invitationId: string): Promise<InvitationCustomization | null> => {
   try {
     const { data: session } = await supabase.auth.getSession();
     if (!session.session) {
-      throw new Error('You must be logged in to access customizations');
+      throw new Error('You must be logged in to get invitation customization');
     }
     
+    // First check if a customization exists for this invitation
     const { data, error } = await supabase
-      .from('events')
-      .select('customization')
-      .eq('id', invitationId)
+      .from('invitation_customizations')
+      .select('*')
+      .eq('invitation_id', invitationId)
       .single();
     
     if (error) {
-      console.error('Error fetching invitation customization:', error);
-      throw new Error(error.message);
+      if (error.code === 'PGRST116') {
+        // No customization found, return null
+        return null;
+      }
+      console.error('Error getting invitation customization:', error);
+      throw new Error(`Failed to get invitation customization: ${error.message}`);
     }
     
-    return data?.customization || getDefaultCustomization();
+    // Transform database format to application format
+    return {
+      id: data.id,
+      font: {
+        family: data.font_family || 'system-ui, sans-serif',
+        size: data.font_size || 'medium',
+        color: data.font_color || '#333333',
+      },
+      buttonStyle: data.button_style || 'rounded',
+      buttonColor: data.button_color || '#3B82F6',
+      layoutSize: data.layout_size || 'medium',
+      effects: data.custom_effects || {},
+      creatorId: data.creator_id,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      invitationId: data.invitation_id
+    };
   } catch (error) {
     console.error('Error in getInvitationCustomization:', error);
-    return getDefaultCustomization();
-  }
-};
-
-// Create a default customization for a new invitation
-export const getDefaultCustomization = () => {
-  return {
-    background: {
-      type: 'solid',
-      value: '#ffffff'
-    },
-    font: {
-      family: 'Inter, sans-serif',
-      size: 'medium',
-      color: '#333333'
-    },
-    buttons: {
-      accept: {
-        background: '#4CAF50',
-        color: '#ffffff',
-        shape: 'rounded'
-      },
-      decline: {
-        background: '#f44336',
-        color: '#ffffff',
-        shape: 'rounded'
-      }
-    }
-  };
-};
-
-// Save an invitation customization
-export const saveInvitationCustomization = async (eventId: string, customization: any) => {
-  try {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session) {
-      throw new Error('You must be logged in to save customizations');
-    }
-    
-    const { data, error } = await supabase
-      .from('events')
-      .update({ customization })
-      .eq('id', eventId)
-      .eq('user_id', session.session.user.id)
-      .single();
-    
-    if (error) {
-      console.error('Error saving invitation customization:', error);
-      throw new Error(error.message);
-    }
-    
-    return data?.customization;
-  } catch (error) {
-    console.error('Error in saveInvitationCustomization:', error);
     throw error;
   }
 };
 
-// Get customization from an invitation
-export const getCustomizationFromInvitation = async (invitationId: string) => {
+export const saveInvitationCustomization = async (invitationId: string, customization: InvitationCustomization): Promise<InvitationCustomization> => {
   try {
-    const { data, error } = await supabase
-      .from('event_invitations')
-      .select(`
-        event_id,
-        events:event_id (
-          customization
-        )
-      `)
-      .eq('id', invitationId)
+    const { data: session } = await supabase.auth.getSession();
+    if (!session.session) {
+      throw new Error('You must be logged in to save invitation customization');
+    }
+    
+    // Check if customization already exists
+    const { data: existingData } = await supabase
+      .from('invitation_customizations')
+      .select('id')
+      .eq('invitation_id', invitationId)
       .single();
     
-    if (error) {
-      console.error('Error fetching customization from invitation:', error);
-      throw new Error(error.message);
-    }
+    const dbCustomization = {
+      invitation_id: invitationId,
+      creator_id: session.session.user.id,
+      font_family: customization.font?.family || 'system-ui, sans-serif',
+      font_size: customization.font?.size || 'medium',
+      font_color: customization.font?.color || '#333333',
+      button_style: customization.buttonStyle || 'rounded',
+      button_color: customization.buttonColor || '#3B82F6',
+      layout_size: customization.layoutSize || 'medium',
+      custom_effects: customization.effects || {}
+    };
     
-    if (!data || !data.events || !data.events.customization) {
-      return getDefaultCustomization();
+    if (existingData) {
+      // Update existing customization
+      const { data, error } = await supabase
+        .from('invitation_customizations')
+        .update(dbCustomization)
+        .eq('id', existingData.id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating invitation customization:', error);
+        throw new Error(`Failed to update invitation customization: ${error.message}`);
+      }
+      
+      if (!data) {
+        throw new Error('Failed to update invitation customization');
+      }
+      
+      return {
+        id: data.id,
+        font: {
+          family: data.font_family || 'system-ui, sans-serif',
+          size: data.font_size || 'medium',
+          color: data.font_color || '#333333',
+        },
+        buttonStyle: data.button_style || 'rounded',
+        buttonColor: data.button_color || '#3B82F6',
+        layoutSize: data.layout_size || 'medium',
+        effects: data.custom_effects || {},
+        creatorId: data.creator_id,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        invitationId: data.invitation_id
+      };
+    } else {
+      // Create new customization
+      const { data, error } = await supabase
+        .from('invitation_customizations')
+        .insert(dbCustomization)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating invitation customization:', error);
+        throw new Error(`Failed to create invitation customization: ${error.message}`);
+      }
+      
+      if (!data) {
+        throw new Error('Failed to create invitation customization');
+      }
+      
+      return {
+        id: data.id,
+        font: {
+          family: data.font_family || 'system-ui, sans-serif',
+          size: data.font_size || 'medium',
+          color: data.font_color || '#333333',
+        },
+        buttonStyle: data.button_style || 'rounded',
+        buttonColor: data.button_color || '#3B82F6',
+        layoutSize: data.layout_size || 'medium',
+        effects: data.custom_effects || {},
+        creatorId: data.creator_id,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        invitationId: data.invitation_id
+      };
     }
-    
-    return data.events.customization;
   } catch (error) {
-    console.error('Error in getCustomizationFromInvitation:', error);
-    return getDefaultCustomization();
+    console.error('Error in saveInvitationCustomization:', error);
+    throw error;
   }
-};
-
-// Helper function to create a new invitation with customization
-export const createInvitationCustomization = () => {
-  return getDefaultCustomization();
 };

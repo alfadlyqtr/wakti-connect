@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 // Define the event schema for form validation
@@ -13,7 +14,7 @@ export const eventSchema = z.object({
 // Define the form values type from the schema
 export type EventFormValues = z.infer<typeof eventSchema>;
 
-// Event status types
+// Event status types - updated to match database values
 export type EventStatus = "draft" | "published" | "cancelled" | "accepted" | "declined" | "sent" | "recalled";
 
 // Event tab types
@@ -21,6 +22,31 @@ export type EventTab = "my-events" | "invited-events" | "draft-events";
 
 // Event form tab types
 export type EventFormTab = "details" | "customize" | "share";
+
+// Event button shape types
+export type ButtonShape = "rounded" | "pill" | "square";
+
+// Event card effect types
+export type CardEffectType = "shadow" | "matte" | "gloss";
+
+// Event form data type
+export interface EventFormData {
+  title: string;
+  description?: string;
+  location?: string;
+  startDate: Date;
+  endDate?: Date;
+  isAllDay: boolean;
+  start_time?: string;
+  end_time?: string;
+  is_all_day?: boolean;
+  status?: EventStatus;
+  customization?: EventCustomization;
+  invitations?: Array<{
+    email?: string;
+    userId?: string;
+  }>;
+}
 
 // Define the event type
 export interface Event {
@@ -35,16 +61,28 @@ export interface Event {
   user_id: string;
   created_at: string;
   updated_at: string;
-  customization?: EventCustomization;
+  customization: EventCustomization;
   invitations?: EventInvitation[];
   is_recalled?: boolean;
 }
+
+// Background type definition with solid instead of color
+export type BackgroundType = "solid" | "gradient" | "image";
+
+// Font weight type
+export type FontWeight = "normal" | "medium" | "bold" | "light";
+
+// Animation type
+export type AnimationType = "fade" | "slide" | "pop" | "none";
+
+// Animation delay type
+export type AnimationDelay = "none" | "staggered" | "sequence";
 
 // Event customization interface
 export interface EventCustomization {
   // Background
   background: {
-    type?: 'solid' | 'gradient' | 'image';
+    type?: BackgroundType;
     value?: string;
     angle?: number;
     direction?: string;
@@ -86,12 +124,12 @@ export interface EventCustomization {
     accept?: {
       background: string;
       color: string;
-      shape: string;
+      shape: ButtonShape;
     };
     decline?: {
       background: string;
       color: string;
-      shape: string;
+      shape: ButtonShape;
     };
     style?: string;
     color?: string;
@@ -103,7 +141,7 @@ export interface EventCustomization {
     [key: string]: {
       background: string;
       color: string;
-      shape: string;
+      shape: ButtonShape;
     };
   };
   
@@ -112,28 +150,22 @@ export interface EventCustomization {
   headerImage?: string;
   
   // Animation settings
-  animations?: {
-    text?: 'pop' | 'fade' | 'slide' | 'none';
-    buttons?: 'pop' | 'fade' | 'slide' | 'none';
-    icons?: 'pop' | 'fade' | 'slide' | 'none';
-    delay?: 'none' | 'staggered' | 'sequence';
-  };
-  animation?: 'fade' | 'slide' | 'pop';
+  animation?: AnimationType;
   
   // Card effects
   cardEffect?: {
-    type?: 'shadow' | 'matte' | 'gloss';
-    borderRadius?: 'none' | 'small' | 'medium' | 'large';
+    type: CardEffectType;
+    borderRadius?: "none" | "small" | "medium" | "large";
     border?: boolean;
     borderColor?: string;
   };
   
   // Element animations
   elementAnimations?: {
-    text?: 'fade' | 'slide' | 'pop' | 'none';
-    buttons?: 'fade' | 'slide' | 'pop' | 'none';
-    icons?: 'fade' | 'slide' | 'pop' | 'none';
-    delay?: 'none' | 'staggered' | 'sequence';
+    text?: AnimationType;
+    buttons?: AnimationType;
+    icons?: AnimationType;
+    delay?: AnimationDelay;
   };
   
   // Feature toggles
@@ -151,14 +183,13 @@ export interface EventCustomization {
   // Other features
   mapDisplay?: 'button' | 'qrcode' | 'both';
   poweredByColor?: string;
-  
-  // Legacy properties for backward compatibility
-  features?: {
-    showBranding?: boolean;
-    showMapLocation?: boolean;
-    showCountdown?: boolean;
-    interactiveRSVP?: boolean;
-  };
+}
+
+// Events result interface
+export interface EventsResult {
+  events: Event[];
+  userRole: 'free' | 'individual' | 'business';
+  canCreateEvents: boolean;
 }
 
 // Event with invitations interface
@@ -176,26 +207,4 @@ export interface EventInvitation {
   event_id: string;
   created_at: string;
   updated_at: string;
-}
-
-// Event form data type
-export interface EventFormData {
-  title: string;
-  description?: string;
-  location?: string;
-  startDate: Date;
-  endDate?: Date;
-  isAllDay: boolean;
-  customization?: EventCustomization;
-  invitations?: Array<{
-    email?: string;
-    userId?: string;
-  }>;
-}
-
-// Events result interface
-export interface EventsResult {
-  events: Event[];
-  userRole: 'free' | 'individual' | 'business';
-  canCreateEvents: boolean;
 }

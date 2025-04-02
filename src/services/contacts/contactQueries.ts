@@ -17,7 +17,7 @@ export const getUserContacts = async (): Promise<UserContact[]> => {
         contact_id,
         status,
         staff_relation_id,
-        profiles:contact_id(
+        contactProfile:contact_id(
           id,
           full_name,
           display_name,
@@ -38,14 +38,14 @@ export const getUserContacts = async (): Promise<UserContact[]> => {
       id: contact.id,
       userId: contact.user_id,
       contactId: contact.contact_id,
-      status: contact.status,
+      status: contact.status as "accepted" | "pending" | "rejected",
       staffRelationId: contact.staff_relation_id,
       contactProfile: {
-        id: contact.profiles?.id || '',
-        fullName: contact.profiles?.full_name || '',
-        displayName: contact.profiles?.display_name || '',
-        avatarUrl: contact.profiles?.avatar_url || '',
-        accountType: contact.profiles?.account_type || 'free'
+        id: contact.contactProfile?.id || '',
+        fullName: contact.contactProfile?.full_name || '',
+        displayName: contact.contactProfile?.display_name || '',
+        avatarUrl: contact.contactProfile?.avatar_url || '',
+        accountType: contact.contactProfile?.account_type || 'free'
       }
     }));
   } catch (error) {
@@ -68,7 +68,7 @@ export const getContactRequests = async (): Promise<UserContact[]> => {
         user_id,
         contact_id,
         status,
-        profiles:user_id(
+        contactProfile:user_id(
           id,
           full_name,
           display_name,
@@ -89,13 +89,13 @@ export const getContactRequests = async (): Promise<UserContact[]> => {
       id: contact.id,
       userId: contact.user_id,
       contactId: contact.contact_id,
-      status: contact.status,
+      status: contact.status as "accepted" | "pending" | "rejected",
       contactProfile: {
-        id: contact.profiles?.id || '',
-        fullName: contact.profiles?.full_name || '',
-        displayName: contact.profiles?.display_name || '',
-        avatarUrl: contact.profiles?.avatar_url || '',
-        accountType: contact.profiles?.account_type || 'free'
+        id: contact.contactProfile?.id || '',
+        fullName: contact.contactProfile?.full_name || '',
+        displayName: contact.contactProfile?.display_name || '',
+        avatarUrl: contact.contactProfile?.avatar_url || '',
+        accountType: contact.contactProfile?.account_type || 'free'
       }
     }));
   } catch (error) {
@@ -117,7 +117,7 @@ export const checkContactRequestStatus = async (contactId: string): Promise<{ re
       .from('user_contacts')
       .select('id, status')
       .or(`and(user_id.eq.${userId},contact_id.eq.${contactId}),and(user_id.eq.${contactId},contact_id.eq.${userId})`)
-      .single();
+      .maybeSingle();
     
     if (error) {
       if (error.code === 'PGRST116') {
@@ -132,7 +132,7 @@ export const checkContactRequestStatus = async (contactId: string): Promise<{ re
     }
     
     return {
-      requestExists: true,
+      requestExists: !!data,
       requestStatus: data?.status || 'none'
     };
   } catch (error) {

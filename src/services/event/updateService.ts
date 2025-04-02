@@ -1,113 +1,119 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
-import { EventFormData, Event } from "@/types/event.types";
+import { supabase } from '@/integrations/supabase/client';
+import { Event, EventFormData } from '@/types/event.types';
+import { toast } from '@/components/ui/use-toast';
 
-/**
- * Updates an existing event with account type permission checking
- */
-export const updateEvent = async (
-  eventId: string,
-  eventData: EventFormData
-): Promise<Event> => {
+export async function updateEvent(eventId: string, eventData: EventFormData): Promise<Event | null> {
   try {
-    // Check if the user can create events (only business and individual accounts)
-    const { data: canCreate, error: permissionError } = await supabase.rpc(
-      "can_create_event"
-    );
-
-    if (permissionError) {
-      console.error("Permission check failed:", permissionError);
-      throw new Error(`Permission check failed: ${permissionError.message}`);
-    }
-
-    if (!canCreate) {
-      toast({
-        title: "Subscription Required",
-        description: "Editing events requires an Individual or Business subscription",
-        variant: "destructive",
-      });
-      throw new Error("Subscription required to update events");
+    // Check if the user is authenticated
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw new Error('You must be logged in to update an event');
     }
     
-    // Get the current user's ID
-    const { data: { session } } = await supabase.auth.getSession();
+    const userId = sessionData.session.user.id;
     
-    if (!session?.user?.id) {
-      console.error("No authenticated user for event update");
-      throw new Error("Authentication required to update events");
-    }
-
-    // Ensure title is present and not empty
+    // Basic validation
     if (!eventData.title || !eventData.title.trim()) {
-      console.error("Event title is missing or empty");
-      throw new Error("Event title is required");
+      throw new Error('Event title is required');
     }
-
-    // Ensure start_time and end_time are present
+    
     if (!eventData.start_time || !eventData.end_time) {
-      throw new Error("Event must have start and end times");
+      throw new Error('Event start and end times are required');
     }
     
-    console.log("Updating event with data:", eventData);
+    // Check if the event exists and belongs to the user
+    const { data: existingEvent, error: eventError } = await supabase
+      .from('events')
+      .select('*')
+      .eq('id', eventId)
+      .eq('user_id', userId)
+      .single();
     
-    // Prepare the update data
-    const updateEventData = {
-      title: eventData.title.trim(),
-      description: eventData.description || '',
-      location: eventData.location || '',
+    if (eventError) {
+      if (eventError.code === 'PGRST116') {
+        throw new Error('Event not found or you do not have permission to update it');
+      }
+      throw eventError;
+    }
+    
+    // Prepare the event object for update
+    const event = {
+      title: eventData.title,
+      description: eventData.description || null,
       start_time: eventData.start_time,
       end_time: eventData.end_time,
-      is_all_day: eventData.is_all_day || false,
-      status: eventData.status || 'draft',
-      customization: JSON.stringify(eventData.customization || {})
+      is_all_day: eventData.is_all_day ?? eventData.isAllDay ?? false,
+      location: eventData.location || null,
+      location_type: eventData.location_type || 'manual',
+      maps_url: eventData.maps_url || null,
+      status: eventData.status || existingEvent.status,
+      customization: eventData.customization || existingEvent.customization
     };
-
-    // Check that the event exists and belongs to the user
-    const { data: existingEvent, error: checkError } = await supabase
-      .from("events")
-      .select("*")
-      .eq("id", eventId)
-      .eq("user_id", session.user.id)
-      .single();
-
-    if (checkError) {
-      console.error("Supabase Error checking event:", checkError);
-      throw new Error(`Cannot update event: ${checkError.message}`);
-    }
-
-    if (!existingEvent) {
-      throw new Error("Event not found or you don't have permission to update it");
-    }
-
-    // Update the event
-    const { data: event, error } = await supabase
-      .from("events")
-      .update(updateEventData)
-      .eq("id", eventId)
+    
+    // Update the event in the database
+    const { data: updatedEvent, error } = await supabase
+      .from('events')
+      .update(event)
+      .eq('id', eventId)
       .select()
       .single();
-
+    
     if (error) {
-      console.error("Supabase Error updating event:", error);
-      throw new Error(`Database error: ${error.message}`);
+      console.error('Error updating event:', error);
+      throw new Error(`Failed to update event: ${error.message}`);
     }
-
-    if (!event) {
-      throw new Error("Failed to update event: No data returned");
+    
+    // If there are new invitations, create them
+    if (eventData.invitations && eventData.invitations.length > 0) {
+      // First, fetch existing invitations to avoid duplicates
+      const { data: existingInvitations } = await supabase
+        .from('event_invitations')
+        .select('email, invited_user_id')
+        .eq('event_id', eventId);
+      
+      const existingEmails = new Set(existingInvitations?.map(i => i.email).filter(Boolean) || []);
+      const existingUserIds = new Set(existingInvitations?.map(i => i.invited_user_id).filter(Boolean) || []);
+      
+      // Filter out invitations that already exist
+      const newInvitations = eventData.invitations.filter(invite => {
+        if (invite.email && existingEmails.has(invite.email)) {
+          return false;
+        }
+        if (invite.userId && existingUserIds.has(invite.userId)) {
+          return false;
+        }
+        return true;
+      });
+      
+      if (newInvitations.length > 0) {
+        const invitationsToInsert = newInvitations.map(invite => ({
+          event_id: eventId,
+          email: invite.email || null,
+          invited_user_id: invite.userId || null,
+          status: 'pending',
+          shared_as_link: false
+        }));
+        
+        const { error: invitationError } = await supabase
+          .from('event_invitations')
+          .insert(invitationsToInsert);
+        
+        if (invitationError) {
+          console.error('Error creating new invitations:', invitationError);
+          // Don't fail the event update if invitations fail
+          toast({
+            title: 'Warning',
+            description: 'Event was updated, but there was an issue sending new invitations',
+            variant: 'warning',
+          });
+        }
+      }
     }
-
-    // Parse the stored JSON customization back into an object
-    const parsedEvent: Event = {
-      ...event,
-      customization: typeof event.customization === 'string' 
-        ? JSON.parse(event.customization) 
-        : event.customization
-    };
-
-    return parsedEvent;
-  } catch (error: any) {
-    console.error("Error in updateEvent:", error);
+    
+    return updatedEvent;
+  } catch (error) {
+    console.error('Error in updateEvent:', error);
     throw error;
   }
-};
+}

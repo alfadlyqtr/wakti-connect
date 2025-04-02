@@ -1,241 +1,237 @@
-import React, { useState } from "react";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Event } from "@/types/event.types";
-import { format, isToday, isTomorrow, isYesterday } from "date-fns";
-import { CalendarClock, MapPin, MoreVertical, Trash, Edit, Users, QrCode, Calendar, Copy } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { toast } from "@/components/ui/use-toast";
 
-export interface EventCardProps {
+import React, { useState } from 'react';
+import { Event, EventCustomization } from '@/types/event.types';
+import { format } from 'date-fns';
+import { useRouter } from 'next/router';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Calendar, Clock, MapPin, Check, X } from 'lucide-react';
+import { useEvents } from '@/hooks/useEvents';
+
+interface EventCardProps {
   event: Event;
-  onCardClick?: () => void;
-  onAccept?: (eventId: string) => void;
-  onDecline?: (eventId: string) => void;
-  onDelete?: (eventId: string) => void;
-  onEdit?: (event: Event) => void;
-  onViewResponses?: (eventId: string) => void;
-  viewType?: string;
+  isPreview?: boolean;
+  onResponse?: (status: 'accepted' | 'declined') => void;
 }
 
 const EventCard: React.FC<EventCardProps> = ({ 
   event, 
-  onCardClick, 
-  onAccept, 
-  onDecline,
-  onDelete,
-  onEdit,
-  onViewResponses,
-  viewType 
+  isPreview = false,
+  onResponse
 }) => {
-  const [showQrCode, setShowQrCode] = useState(false);
-  const [showMapDialog, setShowMapDialog] = useState(false);
-  const [showCalendarDialog, setShowCalendarDialog] = useState(false);
+  const router = useRouter();
+  const { respondToInvitation } = useEvents();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    
-    if (isToday(date)) {
-      return `Today, ${format(date, "h:mm a")}`;
-    } else if (isTomorrow(date)) {
-      return `Tomorrow, ${format(date, "h:mm a")}`;
-    } else if (isYesterday(date)) {
-      return `Yesterday, ${format(date, "h:mm a")}`;
-    } else {
-      return format(date, "MMM d, yyyy 'at' h:mm a");
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return format(date, 'EEEE, MMMM d, yyyy');
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
     }
   };
 
-  const getCustomCardStyle = () => {
-    if (!event.customization) return {};
-
-    const background = event.customization.background || { type: 'color', value: '#ffffff' };
-    
-    if (background.type === 'color') {
-      return { backgroundColor: background.value };
-    } else if (background.type === 'gradient') {
-      return { backgroundImage: background.value };
-    } else if (background.type === 'image' && background.value) {
-      return { 
-        backgroundImage: `url(${background.value})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      };
+  const formatTime = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return format(date, 'h:mm a');
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return 'Invalid time';
     }
-    
-    return {};
   };
 
-  const getTextStyle = (type?: 'header' | 'description' | 'datetime') => {
-    const { font, headerFont, descriptionFont, dateTimeFont } = event.customization || {};
+  const handleResponse = async (status: 'accepted' | 'declined') => {
+    if (isPreview || isLoading) return;
     
-    if (!font?.color) return {};
-
-    let specificFont;
-    if (type === 'header' && headerFont) {
-      specificFont = headerFont;
-    } else if (type === 'description' && descriptionFont) {
-      specificFont = descriptionFont;
-    } else if (type === 'datetime' && dateTimeFont) {
-      specificFont = dateTimeFont;
+    try {
+      setIsLoading(true);
+      await respondToInvitation(event.id, status);
+      if (onResponse) {
+        onResponse(status);
+      }
+    } catch (error) {
+      console.error('Error responding to invitation:', error);
+    } finally {
+      setIsLoading(false);
     }
-    
-    if (!specificFont) {
-      return { color: font.color };
-    }
-    
-    return {
-      color: specificFont.color || font.color,
-      fontFamily: specificFont.family || font.family,
-      fontWeight: specificFont.weight === 'bold' ? 'bold' : 
-                 specificFont.weight === 'medium' ? '500' : 'normal',
-    };
   };
 
-  const isDarkBackground = () => {
-    const bgType = event.customization?.background?.type;
-    const bgValue = event.customization?.background?.value;
-    
-    if (bgType === 'color' && bgValue) {
-      return bgValue.match(/#[0-9a-f]{6}/i) && 
-        (bgValue.toLowerCase() === '#000000' || 
-         bgValue.toLowerCase() === '#111111' || 
-         bgValue.toLowerCase().startsWith('#00') || 
-         bgValue.toLowerCase().startsWith('#11') || 
-         bgValue.toLowerCase().startsWith('#22') || 
-         bgValue.toLowerCase().startsWith('#33'));
-    }
-    
-    return false;
+  // Apply default customization if needed
+  const customization: EventCustomization = event.customization || {
+    background: {
+      type: 'solid',
+      value: '#ffffff'
+    },
+    font: {
+      family: 'system-ui, sans-serif',
+      size: 'medium',
+      color: '#333333'
+    },
+    buttons: {
+      accept: {
+        background: '#4CAF50',
+        color: '#ffffff',
+        shape: 'rounded'
+      },
+      decline: {
+        background: '#f44336',
+        color: '#ffffff',
+        shape: 'rounded'
+      }
+    },
+    animation: 'fade'
   };
 
-  const renderCustomHeader = () => {
-    if (!event.customization?.headerStyle || event.customization.headerStyle === 'simple') {
+  // Use specific font settings or fall back to the general font settings
+  const headerFont = customization.headerFont || customization.font;
+  const descriptionFont = customization.descriptionFont || customization.font;
+  const dateTimeFont = customization.dateTimeFont || customization.font;
+
+  // Generate styles for background
+  const getBackgroundStyle = () => {
+    const bg = customization.background || {};
+    
+    if (!bg.type || !bg.value) {
+      return { backgroundColor: '#ffffff' };
+    }
+
+    // Convert 'color' to 'solid' for backwards compatibility
+    const bgType = bg.type === 'color' ? 'solid' : bg.type;
+    
+    switch (bgType) {
+      case 'solid':
+        return { backgroundColor: bg.value };
+      case 'gradient':
+        if (bg.direction) {
+          return { backgroundImage: `linear-gradient(${bg.direction}, ${bg.value})` };
+        } else if (bg.angle !== undefined) {
+          return { backgroundImage: `linear-gradient(${bg.angle}deg, ${bg.value})` };
+        }
+        return { backgroundImage: bg.value };
+      case 'image':
+        return { 
+          backgroundImage: `url(${bg.value})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        };
+      default:
+        return { backgroundColor: '#ffffff' };
+    }
+  };
+
+  // Generate card header based on header style
+  const renderHeader = () => {
+    const headerStyle = customization.headerStyle || 'simple';
+    const hasHeaderImage = customization.headerImage && customization.headerImage.length > 0;
+    
+    // Animation classes
+    const textAnimation = customization.elementAnimations?.text || 'fade';
+    const animationClass = textAnimation === 'fade' ? 'animate-fade-in' :
+                         textAnimation === 'slide' ? 'animate-slide-in' :
+                         textAnimation === 'pop' ? 'animate-scale-in' : '';
+    
+    if (headerStyle === 'banner' && hasHeaderImage) {
       return (
-        <div className="flex justify-between items-start">
-          <h3 
-            className={`text-lg font-medium line-clamp-1 ${event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
-              event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
-              event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''}`}
-            style={getTextStyle('header')}
-          >
+        <CardHeader 
+          className="p-0 overflow-hidden" 
+          style={{ 
+            backgroundImage: `url(${customization.headerImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            minHeight: '120px'
+          }}
+        >
+          <div className={`bg-black/50 p-6 text-white ${animationClass}`}>
+            <h3 className="text-2xl font-semibold" style={{
+              fontFamily: headerFont?.family,
+              fontSize: getFontSize(headerFont?.size, 'large'),
+              color: headerFont?.color || 'white',
+              fontWeight: headerFont?.weight || 'bold'
+            }}>
+              {event.title}
+            </h3>
+            {event.status === 'accepted' || event.status === 'declined' ? (
+              <div className="mt-2 text-sm">
+                Status: <span className={`font-medium ${event.status === 'accepted' ? 'text-green-300' : 'text-red-300'}`}>
+                  {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                </span>
+              </div>
+            ) : null}
+          </div>
+        </CardHeader>
+      );
+    } else {
+      // Simple or minimal header
+      return (
+        <CardHeader>
+          <h3 className={`text-2xl font-semibold ${animationClass}`} style={{
+            fontFamily: headerFont?.family,
+            fontSize: getFontSize(headerFont?.size, 'large'),
+            color: headerFont?.color || '#333333',
+            fontWeight: headerFont?.weight || 'bold'
+          }}>
             {event.title}
           </h3>
-          <Badge variant={event.status === 'accepted' ? 'success' : event.status === 'declined' ? 'destructive' : 'outline'}>
-            {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-          </Badge>
-        </div>
-      );
-    }
-
-    if (event.customization.headerStyle === 'banner' && event.customization.headerImage) {
-      return (
-        <div className="relative h-20 w-full overflow-hidden rounded-t-lg">
-          <img 
-            src={event.customization.headerImage} 
-            alt="Event header" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black/40 flex flex-col justify-between p-2">
-            <div className="flex justify-end">
-              <Badge 
-                variant={event.status === 'accepted' ? 'success' : event.status === 'declined' ? 'destructive' : 'outline'}
-                className="bg-white/80 text-black"
-              >
-                {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-              </Badge>
+          {hasHeaderImage && (
+            <div className="mt-4 rounded-md overflow-hidden">
+              <img 
+                src={customization.headerImage} 
+                alt={event.title} 
+                className="w-full h-auto object-cover"
+              />
             </div>
-            <h3 
-              className={`text-lg font-medium text-white ${
-                event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
-                event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
-                event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''
-              }`}
-            >
-              {event.title}
-            </h3>
-          </div>
-        </div>
+          )}
+          {event.status === 'accepted' || event.status === 'declined' ? (
+            <div className={`mt-2 text-sm ${animationClass}`}>
+              Status: <span className={`font-medium ${event.status === 'accepted' ? 'text-green-600' : 'text-red-600'}`}>
+                {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+              </span>
+            </div>
+          ) : null}
+        </CardHeader>
       );
     }
-
-    if (event.customization.headerStyle === 'minimal') {
-      return (
-        <div className="flex justify-between items-start">
-          <div className="flex items-center gap-2">
-            {event.customization.headerImage && (
-              <div className="w-10 h-10 rounded-full overflow-hidden">
-                <img 
-                  src={event.customization.headerImage} 
-                  alt="Event" 
-                  className="w-full h-full object-cover" 
-                />
-              </div>
-            )}
-            <h3 
-              className={`text-lg font-medium line-clamp-1 ${
-                event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
-                event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
-                event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''
-              }`}
-              style={getTextStyle('header')}
-            >
-              {event.title}
-            </h3>
-          </div>
-          <Badge variant={event.status === 'accepted' ? 'success' : event.status === 'declined' ? 'destructive' : 'outline'}>
-            {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-          </Badge>
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex justify-between items-start">
-        <h3 
-          className={`text-lg font-medium line-clamp-1 ${
-            event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
-            event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
-            event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''
-          }`}
-          style={getTextStyle('header')}
-        >
-          {event.title}
-        </h3>
-        <Badge variant={event.status === 'accepted' ? 'success' : event.status === 'declined' ? 'destructive' : 'outline'}>
-          {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-        </Badge>
-      </div>
-    );
   };
 
+  // Function to get branding footer
   const renderBranding = () => {
-    const { branding } = event.customization || {};
-    
-    if (!branding?.logo && !branding?.slogan) return null;
-    
-    return (
-      <div className={`flex flex-col items-center mt-4 mb-2 ${
-        event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
-        event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
-        event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''
-      }`}>
-        {branding.logo && (
-          <img src={branding.logo} alt="Business logo" className="h-8 mb-1 object-contain" />
-        )}
-        {branding.slogan && (
-          <p className="text-xs text-muted-foreground">{branding.slogan}</p>
-        )}
-      </div>
-    );
+    if (customization.branding && 
+        (customization.branding.logo || customization.branding.slogan)) {
+      const textAnimation = customization.elementAnimations?.text || 'fade';
+      const animationClass = textAnimation === 'fade' ? 'animate-fade-in' :
+                           textAnimation === 'slide' ? 'animate-slide-in' :
+                           textAnimation === 'pop' ? 'animate-scale-in' : '';
+      
+      return (
+        <div className={`text-center text-sm mt-4 pt-4 border-t ${animationClass}`}>
+          <div className="flex flex-col items-center space-y-2">
+            {customization.branding.logo && (
+              <img 
+                src={customization.branding.logo} 
+                alt="Brand" 
+                className="h-8 w-auto"
+              />
+            )}
+            {customization.branding.slogan && (
+              <p className="opacity-70" style={{ color: customization.font?.color || '#666666' }}>
+                {customization.branding.slogan}
+              </p>
+            )}
+          </div>
+        </div>
+      );
+    }
+    return null;
   };
 
+  // Define animation class based on animation setting
   const getAnimationClass = () => {
-    if (!event.customization?.animation) return '';
+    const animationType = customization.animation || 'fade';
     
-    switch (event.customization.animation) {
+    switch (animationType) {
       case 'fade':
         return 'animate-fade-in';
       case 'slide':
@@ -247,413 +243,292 @@ const EventCard: React.FC<EventCardProps> = ({
     }
   };
 
-  const getCardEffectClass = () => {
-    if (!event.customization?.cardEffect?.type) return 'shadow-md';
+  // Define card effect styles
+  const getCardEffectStyles = () => {
+    const cardEffect = customization.cardEffect || { 
+      type: 'shadow',
+      borderRadius: 'medium'
+    };
     
-    switch (event.customization.cardEffect.type) {
-      case 'shadow':
-        return 'shadow-lg';
-      case 'matte':
-        return 'shadow-sm bg-opacity-90';
-      case 'gloss':
-        return 'shadow-lg bg-opacity-95 backdrop-blur-sm';
-      default:
-        return 'shadow-md';
-    }
-  };
-  
-  const getBorderRadiusClass = () => {
-    if (!event.customization?.cardEffect?.borderRadius) return 'rounded-lg';
+    let styles: React.CSSProperties = {};
     
-    switch (event.customization.cardEffect.borderRadius) {
+    // Border radius
+    switch (cardEffect.borderRadius) {
       case 'none':
-        return 'rounded-none';
+        styles.borderRadius = '0';
+        break;
       case 'small':
-        return 'rounded-sm';
+        styles.borderRadius = '0.25rem';
+        break;
       case 'medium':
-        return 'rounded-md';
+        styles.borderRadius = '0.5rem';
+        break;
       case 'large':
-        return 'rounded-lg';
+        styles.borderRadius = '1rem';
+        break;
       default:
-        return 'rounded-lg';
+        styles.borderRadius = '0.5rem';
     }
-  };
-  
-  const getBorderStyle = () => {
-    if (event.customization?.cardEffect?.border) {
-      return {
-        borderWidth: '1px',
-        borderStyle: 'solid',
-        borderColor: event.customization.cardEffect.borderColor || '#e2e8f0'
-      };
+    
+    // Card effect type
+    switch (cardEffect.type) {
+      case 'shadow':
+        styles.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
+        break;
+      case 'matte':
+        styles.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.05)';
+        styles.background = 'rgba(255, 255, 255, 0.9)';
+        break;
+      case 'gloss':
+        styles.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
+        styles.background = 'rgba(255, 255, 255, 0.95)';
+        styles.backdropFilter = 'blur(10px)';
+        break;
     }
-    return {};
+    
+    // Border
+    if (cardEffect.border) {
+      styles.border = `1px solid ${cardEffect.borderColor || '#e2e8f0'}`;
+    }
+    
+    return styles;
   };
 
-  const getUtilityButtonStyle = (type: 'calendar' | 'map' | 'qr') => {
-    const buttonStyle = event.customization?.utilityButtons?.[type];
+  // Utility button style (for map buttons etc)
+  const getUtilityButtonStyle = (buttonType: 'calendar' | 'map' | 'qr') => {
+    const defaultStyle = {
+      background: '#f1f5f9',
+      color: '#475569',
+      shape: 'rounded'
+    };
     
-    if (!buttonStyle) return {};
+    const buttonStyle = customization.utilityButtons?.[buttonType] || defaultStyle;
     
     return {
-      backgroundColor: buttonStyle.background || undefined,
-      color: buttonStyle.color || undefined,
-      borderRadius: buttonStyle.shape === 'pill' ? '9999px' : 
-                   buttonStyle.shape === 'rounded' ? '0.375rem' : '0'
+      backgroundColor: buttonStyle.background,
+      color: buttonStyle.color,
+      borderRadius: 
+        buttonStyle.shape === 'pill' ? '9999px' :
+        buttonStyle.shape === 'rounded' ? '0.375rem' : 
+        '0'
     };
   };
 
-  const handleButtonClick = (action: 'map' | 'qr' | 'calendar', e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (action === 'map') {
-      setShowMapDialog(true);
-    } else if (action === 'qr') {
-      setShowQrCode(true);
-    } else if (action === 'calendar') {
-      setShowCalendarDialog(true);
-    }
-  };
-  
-  const handleCopyLink = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    const shareableLink = `${window.location.origin}/events/view/${event.id}`;
-    navigator.clipboard.writeText(shareableLink)
-      .then(() => {
-        toast({
-          title: "Link Copied",
-          description: "Event link has been copied to clipboard",
-        });
-      })
-      .catch(err => {
-        console.error('Failed to copy link:', err);
-        toast({
-          title: "Failed to Copy",
-          description: "Could not copy the link to clipboard",
-          variant: "destructive"
-        });
-      });
-  };
-  
-  const handleAcceptClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onAccept) {
-      onAccept(event.id);
-      setShowCalendarDialog(true);
+  // Helper to get font size from string
+  const getFontSize = (size?: string, fallback = 'medium') => {
+    switch (size || fallback) {
+      case 'small':
+        return '0.875rem';
+      case 'medium':
+        return '1rem';
+      case 'large':
+        return '1.25rem';
+      case 'xlarge':
+        return '1.5rem';
+      default:
+        return '1rem';
     }
   };
 
-  const handleDeclineClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onDecline) {
-      onDecline(event.id);
-    }
-  };
-  
-  const getPoweredByStyle = () => {
-    return {
-      color: event.customization?.poweredByColor || '#888888',
-      fontSize: '0.7rem',
-      fontWeight: 'normal'
-    };
-  };
-
-  const renderQrCodeDialog = () => {
-    return (
-      <Dialog open={showQrCode} onOpenChange={setShowQrCode}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Event QR Code</DialogTitle>
-            <DialogDescription>
-              Scan this code to view the event details.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col items-center justify-center p-4">
-            <div className="w-48 h-48 bg-gray-200 flex items-center justify-center mb-4">
-              <QrCode size={140} className="text-gray-800" />
-            </div>
-            <p className="text-center text-sm font-medium">Scan to view event</p>
-            <div className="flex gap-2 mt-4">
-              <Button 
-                variant="outline" 
-                onClick={handleCopyLink}
-              >
-                <Copy className="mr-2 h-4 w-4" /> Copy Link
-              </Button>
-              <Button onClick={() => setShowQrCode(false)}>
-                Close
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  };
-  
-  const renderMapDialog = () => {
-    return (
-      <Dialog open={showMapDialog} onOpenChange={setShowMapDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Event Location</DialogTitle>
-            <DialogDescription>
-              {event.location || "No location specified"}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="h-64 bg-gray-200 flex items-center justify-center mb-4">
-            <MapPin size={40} className="text-gray-400" />
-            <p className="text-gray-500 ml-2">Map View</p>
-          </div>
-          <Button 
-            onClick={() => setShowMapDialog(false)}
-            className="w-full"
-          >
-            Close
-          </Button>
-        </DialogContent>
-      </Dialog>
-    );
-  };
-  
-  const renderCalendarDialog = () => {
-    return (
-      <Dialog open={showCalendarDialog} onOpenChange={setShowCalendarDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add to Calendar</DialogTitle>
-            <DialogDescription>
-              Add this event to your WAKTI calendar
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center my-4">
-            <Button 
-              onClick={() => {
-                toast({
-                  title: "Added to Calendar",
-                  description: "Event has been added to your WAKTI calendar",
-                });
-                setShowCalendarDialog(false);
-              }}
-              className="px-8"
-            >
-              <Calendar className="mr-2 h-4 w-4" /> Add to Calendar
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  };
-
+  // Main card render
   return (
     <Card 
-      className={`${onCardClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''} 
-        overflow-hidden ${getAnimationClass()} ${getCardEffectClass()} ${getBorderRadiusClass()}`}
-      onClick={onCardClick ? () => onCardClick() : undefined}
+      className={`overflow-hidden ${getAnimationClass()}`}
       style={{
-        ...getCustomCardStyle(),
-        ...getBorderStyle()
+        ...getBackgroundStyle(),
+        ...getCardEffectStyles(),
+        fontFamily: customization.font?.family || 'system-ui, sans-serif'
       }}
     >
-      <CardHeader className="p-4 pb-2 relative">
-        {renderCustomHeader()}
-        
-        {(viewType === 'draft' || viewType === 'sent') && (
-          <div className="absolute top-2 right-2 z-10">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {onEdit && (
-                  <DropdownMenuItem onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(event);
-                  }}>
-                    <Edit className="mr-2 h-4 w-4" /> Edit
-                  </DropdownMenuItem>
-                )}
-                {onDelete && (
-                  <DropdownMenuItem onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(event.id);
-                  }}>
-                    <Trash className="mr-2 h-4 w-4" /> Delete
-                  </DropdownMenuItem>
-                )}
-                {viewType === 'sent' && onViewResponses && (
-                  <DropdownMenuItem onClick={(e) => {
-                    e.stopPropagation();
-                    onViewResponses(event.id);
-                  }}>
-                    <Users className="mr-2 h-4 w-4" /> View Responses
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+      {renderHeader()}
+      
+      <CardContent className="pt-6">
+        {/* Event description */}
+        {event.description && (
+          <div className="mb-4">
+            <p style={{
+              fontFamily: descriptionFont?.family,
+              fontSize: getFontSize(descriptionFont?.size),
+              color: descriptionFont?.color || '#4b5563',
+              fontWeight: descriptionFont?.weight || 'normal',
+              textAlign: (descriptionFont?.alignment || 'left') as any
+            }} className={`${customization.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
+                         customization.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
+                         customization.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''}`}>
+              {event.description}
+            </p>
           </div>
         )}
-      </CardHeader>
-      
-      <CardContent className="p-4 pt-0 pb-2">
-        {event.description && (
-          <p 
-            className={`text-muted-foreground text-sm line-clamp-2 mb-2 ${
-              event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
-              event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
-              event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''
-            }`}
-            style={isDarkBackground() ? { color: 'rgba(255,255,255,0.8)' } : getTextStyle('description')}
-          >
-            {event.description}
-          </p>
-        )}
         
-        <div className="space-y-1 text-sm">
-          <div 
-            className={`flex items-center gap-1 ${
-              event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
-              event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
-              event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''
-            }`}
-          >
-            <CalendarClock 
-              className={`h-4 w-4 text-muted-foreground ${
-                event.customization?.elementAnimations?.icons === 'fade' ? 'animate-fade-in' : 
-                event.customization?.elementAnimations?.icons === 'slide' ? 'animate-slide-in' : 
-                event.customization?.elementAnimations?.icons === 'pop' ? 'animate-scale-in' : ''
-              }`} 
-            />
-            <span 
-              style={isDarkBackground() ? { color: 'rgba(255,255,255,0.8)' } : getTextStyle('datetime')}
-            >
+        {/* Date and time info */}
+        <div className="space-y-3 mt-4">
+          <div className={`flex items-center space-x-2 ${
+            customization.elementAnimations?.text === 'fade' ? 'animate-fade-in delay-75' : 
+            customization.elementAnimations?.text === 'slide' ? 'animate-slide-in delay-75' : 
+            customization.elementAnimations?.text === 'pop' ? 'animate-scale-in delay-75' : ''
+          }`}>
+            <Calendar className={`h-5 w-5 ${
+              customization.elementAnimations?.icons === 'fade' ? 'animate-fade-in delay-150' : 
+              customization.elementAnimations?.icons === 'slide' ? 'animate-slide-in delay-150' : 
+              customization.elementAnimations?.icons === 'pop' ? 'animate-scale-in delay-150' : ''
+            }`} style={{ color: dateTimeFont?.color || '#4b5563' }} />
+            <span style={{
+              fontFamily: dateTimeFont?.family,
+              fontSize: getFontSize(dateTimeFont?.size, 'medium'),
+              color: dateTimeFont?.color || '#4b5563',
+              fontWeight: dateTimeFont?.weight || 'normal'
+            }}>
               {formatDate(event.start_time)}
             </span>
           </div>
           
+          {!event.is_all_day && (
+            <div className={`flex items-center space-x-2 ${
+              customization.elementAnimations?.text === 'fade' ? 'animate-fade-in delay-100' : 
+              customization.elementAnimations?.text === 'slide' ? 'animate-slide-in delay-100' : 
+              customization.elementAnimations?.text === 'pop' ? 'animate-scale-in delay-100' : ''
+            }`}>
+              <Clock className={`h-5 w-5 ${
+                customization.elementAnimations?.icons === 'fade' ? 'animate-fade-in delay-200' : 
+                customization.elementAnimations?.icons === 'slide' ? 'animate-slide-in delay-200' : 
+                customization.elementAnimations?.icons === 'pop' ? 'animate-scale-in delay-200' : ''
+              }`} style={{ color: dateTimeFont?.color || '#4b5563' }} />
+              <span style={{
+                fontFamily: dateTimeFont?.family,
+                fontSize: getFontSize(dateTimeFont?.size, 'medium'),
+                color: dateTimeFont?.color || '#4b5563',
+                fontWeight: dateTimeFont?.weight || 'normal'
+              }}>
+                {formatTime(event.start_time)} - {formatTime(event.end_time)}
+              </span>
+            </div>
+          )}
+          
           {event.location && (
-            <div 
-              className={`flex items-center gap-1 ${
-                event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
-                event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
-                event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''
-              }`}
-            >
-              <MapPin 
-                className={`h-4 w-4 text-muted-foreground ${
-                  event.customization?.elementAnimations?.icons === 'fade' ? 'animate-fade-in' : 
-                  event.customization?.elementAnimations?.icons === 'slide' ? 'animate-slide-in' : 
-                  event.customization?.elementAnimations?.icons === 'pop' ? 'animate-scale-in' : ''
-                }`} 
-              />
-              <span 
-                className="line-clamp-1"
-                style={isDarkBackground() ? { color: 'rgba(255,255,255,0.8)' } : getTextStyle()}
-              >
+            <div className={`flex items-center space-x-2 ${
+              customization.elementAnimations?.text === 'fade' ? 'animate-fade-in delay-150' : 
+              customization.elementAnimations?.text === 'slide' ? 'animate-slide-in delay-150' : 
+              customization.elementAnimations?.text === 'pop' ? 'animate-scale-in delay-150' : ''
+            }`}>
+              <MapPin className={`h-5 w-5 ${
+                customization.elementAnimations?.icons === 'fade' ? 'animate-fade-in delay-300' : 
+                customization.elementAnimations?.icons === 'slide' ? 'animate-slide-in delay-300' : 
+                customization.elementAnimations?.icons === 'pop' ? 'animate-scale-in delay-300' : ''
+              }`} style={{ color: dateTimeFont?.color || '#4b5563' }} />
+              <span style={{
+                fontFamily: dateTimeFont?.family,
+                fontSize: getFontSize(dateTimeFont?.size, 'medium'),
+                color: dateTimeFont?.color || '#4b5563',
+                fontWeight: dateTimeFont?.weight || 'normal'
+              }}>
                 {event.location}
               </span>
             </div>
           )}
         </div>
 
-        {event.customization?.enableChatbot && (
-          <div className={`mt-3 p-2 border rounded-md bg-background/50 text-xs ${
-            event.customization?.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
-            event.customization?.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
-            event.customization?.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''
+        {/* Chatbot section */}
+        {customization.enableChatbot && (
+          <div className={`mt-6 p-4 bg-gray-50 rounded-lg ${
+            customization.elementAnimations?.text === 'fade' ? 'animate-fade-in delay-200' : 
+            customization.elementAnimations?.text === 'slide' ? 'animate-slide-in delay-200' : 
+            customization.elementAnimations?.text === 'pop' ? 'animate-scale-in delay-200' : ''
           }`}>
-            <p>Ask me about this event! (Chatbot enabled)</p>
+            <h4 className="text-sm font-medium mb-2">Have questions?</h4>
+            <Button 
+              variant="outline" 
+              className={`w-full ${
+                customization.elementAnimations?.buttons === 'fade' ? 'animate-fade-in delay-250' : 
+                customization.elementAnimations?.buttons === 'slide' ? 'animate-slide-in delay-250' : 
+                customization.elementAnimations?.buttons === 'pop' ? 'animate-scale-in delay-250' : ''
+              }`}
+              onClick={() => {/* Implement chatbot open */}}
+            >
+              Chat with Event Assistant
+            </Button>
           </div>
         )}
-
+        
         {renderBranding()}
-
-        {event.location && (
-          <div className={`grid grid-cols-2 gap-2 mt-3 ${
-            event.customization?.elementAnimations?.buttons === 'fade' ? 'animate-fade-in' : 
-            event.customization?.elementAnimations?.buttons === 'slide' ? 'animate-slide-in' : 
-            event.customization?.elementAnimations?.buttons === 'pop' ? 'animate-scale-in' : ''
-          }`}>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="text-xs flex items-center justify-center gap-1"
-              style={getUtilityButtonStyle('map')}
-              onClick={(e) => handleButtonClick('map', e)}
-            >
-              <MapPin className={`h-3 w-3 ${event.customization?.elementAnimations?.icons || ''}`} /> 
-              Map
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="text-xs flex items-center justify-center gap-1"
-              style={getUtilityButtonStyle('qr')}
-              onClick={(e) => handleButtonClick('qr', e)}
-            >
-              <QrCode className={`h-3 w-3 ${event.customization?.elementAnimations?.icons || ''}`} /> 
-              QR Code
-            </Button>
-          </div>
-        )}
-
-        <div className="text-center text-xs text-muted-foreground mt-3">
-          <span 
-            className="hover:underline"
-            style={getPoweredByStyle()}
-          >
-            Powered by WAKTI
-          </span>
-        </div>
       </CardContent>
       
-      {(onAccept || onDecline) && (event.customization?.showAcceptDeclineButtons !== false) && (
-        <CardFooter 
-          className={`p-4 pt-2 flex space-x-2 ${
-            event.customization?.elementAnimations?.buttons === 'fade' ? 'animate-fade-in' : 
-            event.customization?.elementAnimations?.buttons === 'slide' ? 'animate-slide-in' : 
-            event.customization?.elementAnimations?.buttons === 'pop' ? 'animate-scale-in' : ''
-          }`}
-        >
-          {onDecline && (
-            <Button 
-              variant="outline" 
-              className="flex-1" 
-              onClick={handleDeclineClick}
-              style={event.customization?.buttons?.decline ? {
-                backgroundColor: event.customization.buttons.decline.background,
-                color: event.customization.buttons.decline.color,
-                borderRadius: event.customization.buttons.decline.shape === 'pill' ? '9999px' : 
-                             event.customization.buttons.decline.shape === 'rounded' ? '0.375rem' : '0px'
-              } : {}}
-            >
-              Decline
-            </Button>
-          )}
+      <CardFooter className="flex flex-col gap-4">
+        {/* Calendar and map buttons */}
+        <div className={`w-full flex flex-wrap gap-2 justify-center ${
+          customization.elementAnimations?.buttons === 'fade' ? 'animate-fade-in delay-300' : 
+          customization.elementAnimations?.buttons === 'slide' ? 'animate-slide-in delay-300' : 
+          customization.elementAnimations?.buttons === 'pop' ? 'animate-scale-in delay-300' : ''
+        }`}>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex-1"
+            style={getUtilityButtonStyle('calendar')}
+            onClick={() => {/* Add to calendar functionality */}}
+          >
+            <Calendar className="mr-2 h-4 w-4" /> Add to Calendar
+          </Button>
           
-          {onAccept && (
-            <Button 
-              className="flex-1" 
-              onClick={handleAcceptClick}
-              style={event.customization?.buttons?.accept ? {
-                backgroundColor: event.customization.buttons.accept.background,
-                color: event.customization.buttons.accept.color,
-                borderRadius: event.customization.buttons.accept.shape === 'pill' ? '9999px' : 
-                             event.customization.buttons.accept.shape === 'rounded' ? '0.375rem' : '0px'
-              } : {}}
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            style={getUtilityButtonStyle('map')}
+            onClick={() => {/* Open map functionality */}}
+          >
+            <MapPin className="mr-2 h-4 w-4" /> View on Map
+          </Button>
+        </div>
+        
+        {/* Accept/Decline buttons */}
+        {(customization.showAcceptDeclineButtons !== false) && 
+         !isPreview && 
+         (event.status !== 'accepted' && event.status !== 'declined') && (
+          <div className={`w-full flex gap-3 mt-2 ${
+            customization.elementAnimations?.buttons === 'fade' ? 'animate-fade-in delay-400' : 
+            customization.elementAnimations?.buttons === 'slide' ? 'animate-slide-in delay-400' : 
+            customization.elementAnimations?.buttons === 'pop' ? 'animate-scale-in delay-400' : ''
+          }`}>
+            <Button
+              className="flex-1"
+              style={{
+                backgroundColor: customization.buttons.decline?.background || '#f44336',
+                color: customization.buttons.decline?.color || '#ffffff',
+                borderRadius: 
+                  customization.buttons.decline?.shape === 'pill' ? '9999px' :
+                  customization.buttons.decline?.shape === 'rounded' ? '0.375rem' : 
+                  '0'
+              }}
+              onClick={() => handleResponse('declined')}
+              disabled={isLoading}
             >
-              Accept
+              <X className="mr-2 h-4 w-4" /> Decline
             </Button>
-          )}
-        </CardFooter>
-      )}
+            
+            <Button
+              className="flex-1"
+              style={{
+                backgroundColor: customization.buttons.accept?.background || '#4CAF50',
+                color: customization.buttons.accept?.color || '#ffffff',
+                borderRadius: 
+                  customization.buttons.accept?.shape === 'pill' ? '9999px' :
+                  customization.buttons.accept?.shape === 'rounded' ? '0.375rem' : 
+                  '0'
+              }}
+              onClick={() => handleResponse('accepted')}
+              disabled={isLoading}
+            >
+              <Check className="mr-2 h-4 w-4" /> Accept
+            </Button>
+          </div>
+        )}
+      </CardFooter>
       
-      {renderQrCodeDialog()}
-      {renderMapDialog()}
-      {renderCalendarDialog()}
+      {/* Powered by footer */}
+      <div className="text-center text-xs opacity-60 py-2" 
+        style={{ color: customization.poweredByColor || '#666666' }}>
+        Powered by WAKTI
+      </div>
     </Card>
   );
 };
