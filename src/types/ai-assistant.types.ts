@@ -19,15 +19,10 @@ export interface AISettings {
     staff: boolean;
     analytics: boolean;
     messaging: boolean;
-    text_generation: boolean; // Required field for email signatures, templates
-    _userRole?: string;
-    _assistantMode?: string;
-    _specializedSettings?: Record<string, any>;
-    [key: string]: any; // Allow for additional custom properties
   };
   // Add new fields for enhanced AI personalization
   user_role?: "student" | "professional" | "business_owner" | "other";
-  assistant_mode?: "tutor" | "content_creator" | "project_manager" | "business_manager" | "personal_assistant" | "text_generator";
+  assistant_mode?: "tutor" | "content_creator" | "project_manager" | "business_manager" | "personal_assistant";
   specialized_settings?: Record<string, any>;
 }
 

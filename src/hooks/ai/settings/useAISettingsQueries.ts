@@ -57,7 +57,7 @@ export const useAISettingsQuery = (user: User | null) => {
           .from("ai_assistant_settings")
           .select("*")
           .eq("user_id", user.id)
-          .maybeSingle();
+          .single();
 
         if (error) {
           // Only log error if it's not "no rows returned" which is expected for first-time users
@@ -78,76 +78,21 @@ export const useAISettingsQuery = (user: User | null) => {
         console.log("Settings fetched successfully:", data);
         
         // Create a proper AISettings object from the database result
-        // Use type assertion to safely work with potentially missing columns
-        const dbData = data as any;
-        
         const settings: AISettings = {
-          id: dbData.id,
-          assistant_name: dbData.assistant_name || "WAKTI",
-          tone: (dbData.tone as AISettings["tone"]) || "balanced",
-          response_length: (dbData.response_length as AISettings["response_length"]) || "balanced",
-          proactiveness: dbData.proactiveness !== null ? dbData.proactiveness : true,
-          suggestion_frequency: (dbData.suggestion_frequency as AISettings["suggestion_frequency"]) || "medium",
-          enabled_features: dbData.enabled_features as AISettings["enabled_features"] || {
+          id: data.id,
+          assistant_name: data.assistant_name || "WAKTI",
+          tone: (data.tone as AISettings["tone"]) || "balanced",
+          response_length: (data.response_length as AISettings["response_length"]) || "balanced",
+          proactiveness: data.proactiveness !== null ? data.proactiveness : true,
+          suggestion_frequency: (data.suggestion_frequency as AISettings["suggestion_frequency"]) || "medium",
+          enabled_features: data.enabled_features as AISettings["enabled_features"] || {
             tasks: true,
             events: true,
             staff: true,
             analytics: true,
             messaging: true,
-            text_generation: true,
           }
         };
-        
-        // For fields that might not exist in the database schema yet,
-        // check first from the direct db response, then fall back to checking
-        // if we stored them in the enabled_features JSON
-        
-        // Handle user_role
-        if (dbData.user_role) {
-          settings.user_role = dbData.user_role as AISettings["user_role"];
-        } else if (
-          settings.enabled_features && 
-          typeof settings.enabled_features === 'object' && 
-          '_userRole' in settings.enabled_features
-        ) {
-          const userRole = settings.enabled_features._userRole;
-          // Type safety check
-          if (typeof userRole === 'string' && 
-              ['student', 'professional', 'business_owner', 'other'].includes(userRole)) {
-            settings.user_role = userRole as AISettings["user_role"];
-          }
-        }
-        
-        // Handle assistant_mode
-        if (dbData.assistant_mode) {
-          settings.assistant_mode = dbData.assistant_mode as AISettings["assistant_mode"];
-        } else if (
-          settings.enabled_features && 
-          typeof settings.enabled_features === 'object' && 
-          '_assistantMode' in settings.enabled_features
-        ) {
-          const assistantMode = settings.enabled_features._assistantMode;
-          // Type safety check
-          if (typeof assistantMode === 'string' && 
-              ['tutor', 'content_creator', 'project_manager', 'business_manager', 
-               'personal_assistant', 'text_generator'].includes(assistantMode)) {
-            settings.assistant_mode = assistantMode as AISettings["assistant_mode"];
-          }
-        }
-        
-        // Handle specialized_settings
-        if (dbData.specialized_settings) {
-          settings.specialized_settings = dbData.specialized_settings as Record<string, any>;
-        } else if (
-          settings.enabled_features && 
-          typeof settings.enabled_features === 'object' && 
-          '_specializedSettings' in settings.enabled_features
-        ) {
-          const specializedSettings = settings.enabled_features._specializedSettings;
-          if (specializedSettings && typeof specializedSettings === 'object') {
-            settings.specialized_settings = specializedSettings as Record<string, any>;
-          }
-        }
         
         return settings;
       } catch (error) {

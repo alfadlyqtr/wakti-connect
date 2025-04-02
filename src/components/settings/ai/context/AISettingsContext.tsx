@@ -96,7 +96,6 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           staff: true,
           analytics: true,
           messaging: true,
-          text_generation: true,
         }
       };
       

@@ -101,43 +101,6 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
     console.error("Failed to fetch user profile:", error);
   }
   
-  // Get user's task data for context (new)
-  let userTasks = [];
-  try {
-    const { data: tasks, error: tasksError } = await supabaseClient
-      .from("tasks")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("priority", { ascending: false })
-      .limit(5);
-      
-    if (!tasksError && tasks) {
-      userTasks = tasks;
-      console.log("User tasks fetched for context:", tasks.length);
-    }
-  } catch (error) {
-    console.error("Failed to fetch user tasks:", error);
-  }
-  
-  // Get user's upcoming events for context (new)
-  let userEvents = [];
-  try {
-    const { data: events, error: eventsError } = await supabaseClient
-      .from("events")
-      .select("*")
-      .eq("user_id", user.id)
-      .gte("start_time", new Date().toISOString())
-      .order("start_time", { ascending: true })
-      .limit(5);
-      
-    if (!eventsError && events) {
-      userEvents = events;
-      console.log("User events fetched for context:", events.length);
-    }
-  } catch (error) {
-    console.error("Failed to fetch user events:", error);
-  }
-  
   // Build role-specific system message
   let systemMessage = buildRoleSpecificPrompt(userContext);
   
@@ -159,11 +122,8 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
     systemMessage += " Provide comprehensive and thorough responses.";
   }
   
-  // Add text generation capabilities - enhanced specific instructions
-  systemMessage += " You can help compose emails, create email signatures, and generate content for various purposes including business documents, presentations, and social media.";
-  
-  // Add WAKTI systems integration instructions
-  systemMessage += " You have access to the user's WAKTI systems including tasks, appointments, staff management, and business analytics. Leverage this information to provide tailored assistance.";
+  // Add text generation capabilities
+  systemMessage += " You can help compose emails, create email signatures, and generate content for various purposes.";
   
   // Add best friend instruction
   systemMessage += " Most importantly, act as the user's best friend in the digital world - be supportive, understanding, and genuinely helpful.";
@@ -209,63 +169,6 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
     });
   }
   
-  // Add user WAKTI data context
-  if (userTasks.length > 0 || userEvents.length > 0) {
-    let waktiContext = "Here is the user's current WAKTI data:\n";
-    
-    if (userTasks.length > 0) {
-      waktiContext += "\nTasks:\n";
-      userTasks.forEach((task, index) => {
-        waktiContext += `${index + 1}. ${task.title} (${task.priority || 'normal'} priority, ${task.status || 'pending'})\n`;
-      });
-    }
-    
-    if (userEvents.length > 0) {
-      waktiContext += "\nUpcoming Events:\n";
-      userEvents.forEach((event, index) => {
-        const startDate = new Date(event.start_time).toLocaleString();
-        waktiContext += `${index + 1}. ${event.title} (${startDate})\n`;
-      });
-    }
-    
-    conversation.push({
-      role: "system",
-      content: waktiContext
-    });
-  }
-  
-  // Add text generation context if applicable
-  if (settings?.enabled_features?.text_generation || 
-      settings?.assistant_mode === "text_generator" ||
-      settings?.assistant_mode === "content_creator" ||
-      settings?.enabled_features?._assistantMode === "text_generator" ||
-      settings?.enabled_features?._assistantMode === "content_creator") {
-    
-    // Get specialized settings for text generation
-    const textSettings = settings?.specialized_settings || 
-                         settings?.enabled_features?._specializedSettings || {};
-    
-    // If we have text content creator settings, add them to the AI context
-    if (textSettings.fullName || textSettings.jobTitle || textSettings.companyName) {
-      let textCreatorContext = "User's text creation profile:";
-      
-      if (textSettings.fullName) textCreatorContext += `\nName: ${textSettings.fullName}`;
-      if (textSettings.jobTitle) textCreatorContext += `\nJob Title: ${textSettings.jobTitle}`;
-      if (textSettings.companyName) textCreatorContext += `\nCompany: ${textSettings.companyName}`;
-      if (textSettings.emailAddress) textCreatorContext += `\nEmail: ${textSettings.emailAddress}`;
-      if (textSettings.phoneNumber) textCreatorContext += `\nPhone: ${textSettings.phoneNumber}`;
-      
-      if (textSettings.personalNotes) {
-        textCreatorContext += `\nPreferences: ${textSettings.personalNotes}`;
-      }
-      
-      conversation.push({
-        role: "system",
-        content: textCreatorContext + "\n\nUse this information when generating email signatures, templates, or other content for the user."
-      });
-    }
-  }
-  
   // Add specialized mode instructions based on the detected assistant mode
   if (userContext.assistantMode) {
     const modeInstructions = getModeSpecificInstructions(userContext.assistantMode);
@@ -284,7 +187,7 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
   return conversation;
 }
 
-function getModeSpecificInstructions(mode) {
+function getModeSpecificInstructions(mode: string): string | null {
   switch (mode) {
     case 'tutor':
       return "You are in TUTOR MODE. Focus on educational assistance. Explain concepts clearly, break down complex ideas into simple steps, and guide the learning process rather than providing direct answers. Be encouraging and supportive.";
@@ -300,9 +203,6 @@ function getModeSpecificInstructions(mode) {
       
     case 'personal_assistant':
       return "You are in PERSONAL ASSISTANT MODE. Focus on helping with day-to-day productivity, task management, and personal organization. Be supportive and help make the user's life easier.";
-      
-    case 'text_generator':
-      return "You are in TEXT GENERATOR MODE. Specialize in creating professional written content like email signatures, templates, business documents, and correspondence. When asked to create an email signature or template, always format it beautifully and provide multiple options when possible.";
       
     default:
       return null;

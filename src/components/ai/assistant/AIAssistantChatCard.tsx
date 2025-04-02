@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Bot, Trash2, Settings, FileText } from 'lucide-react';
@@ -12,9 +13,6 @@ import { AISetupWizard } from '../setup/AISetupWizard';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AIDocumentManager } from '../documents/AIDocumentManager';
 import { useAuth } from '@/hooks/useAuth';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { toast } from '@/components/ui/use-toast';
-import { supabase } from "@/integrations/supabase/client";
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -39,68 +37,34 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [activeDocument, setActiveDocument] = useState<any>(null);
-  const [setupError, setSetupError] = useState<string | null>(null);
-  const [accountType, setAccountType] = useState<string>("individual");
   const { settings } = useAISettings();
   const { user } = useAuth();
-  const isMobile = useIsMobile();
   
+  // Check if setup is needed (no settings or no userRole)
   useEffect(() => {
-    const getAccountType = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("account_type")
-          .eq("id", user.id)
-          .single();
-          
-        if (!error && data) {
-          setAccountType(data.account_type);
-        }
-      } catch (err) {
-        console.error("Error fetching account type:", err);
-      }
-    };
-    
-    getAccountType();
-  }, [user]);
-  
-  useEffect(() => {
-    if (canAccess && user && settings) {
-      const hasUserRole = settings.user_role || 
-        (settings.enabled_features && 
-         typeof settings.enabled_features === 'object' && 
-         '_userRole' in settings.enabled_features);
-      
-      if (!hasUserRole) {
-        setShowSetupWizard(true);
-      }
+    if (canAccess && user && settings && !settings.user_role) {
+      setShowSetupWizard(true);
     }
   }, [canAccess, settings, user]);
   
+  // Always use WAKTI AI as the assistant name regardless of settings
   const assistantName = "WAKTI AI";
   
+  // Get personalized mode label if available
   const getModeLabel = () => {
-    if (!settings) return "";
+    if (!settings?.assistant_mode) return "";
     
-    let assistantMode = settings.assistant_mode || "";
-    
-    if (!assistantMode && 
-        settings.enabled_features && 
-        typeof settings.enabled_features === 'object' && 
-        '_assistantMode' in settings.enabled_features) {
-      assistantMode = settings.enabled_features._assistantMode as string;
-    }
-    
-    switch (assistantMode) {
+    switch (settings.assistant_mode) {
+      case "tutor":
+        return " • Tutor Mode";
+      case "content_creator":
+        return " • Content Creator";
+      case "project_manager":
+        return " • Project Manager";
       case "business_manager":
-        return " • Business Assistant";
+        return " • Business Manager";
       case "personal_assistant":
         return " • Personal Assistant";
-      case "text_generator":
-        return " • Text Helper";
       default:
         return "";
     }
@@ -121,47 +85,18 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     setActiveDocument(document);
   };
   
+  // Handle setup completion
   const handleSetupComplete = () => {
     setShowSetupWizard(false);
-    setSetupError(null);
+    // Reload the page or fetch settings again
     window.location.reload();
-  };
-  
-  const handleSetupError = (error: string) => {
-    setSetupError(error);
-    toast({
-      title: "Setup Error",
-      description: error,
-      variant: "destructive"
-    });
   };
 
   if (showSetupWizard) {
     return (
       <Card className="w-full h-[calc(80vh)] flex flex-col">
-        <CardHeader className="py-2 px-3 sm:py-3 sm:px-4 border-b flex-row justify-between items-center">
-          <div className="flex items-center">
-            <Bot className="w-5 h-5 mr-2 text-wakti-blue" />
-            <h3 className="font-medium text-sm md:text-base">
-              AI Assistant Setup
-            </h3>
-          </div>
-          {setupError && (
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setShowSetupWizard(false)}
-            >
-              Cancel
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent className="p-0 flex-1 overflow-auto">
-          <AISetupWizard 
-            onComplete={handleSetupComplete} 
-            onError={handleSetupError}
-            initialAccountType={accountType}
-          />
+        <CardContent className="p-4 flex-1 flex flex-col overflow-hidden">
+          <AISetupWizard onComplete={handleSetupComplete} />
         </CardContent>
       </Card>
     );

@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tables } from "@/integrations/supabase/types";
-import { useIsMobile } from "@/hooks/use-mobile";
+import useIsMobile from "@/hooks/use-mobile";
 import ProfileAvatar from "./profile/ProfileAvatar";
 import ProfileForm from "./profile/ProfileForm";
 import { useProfileSettings } from "@/hooks/useProfileSettings";

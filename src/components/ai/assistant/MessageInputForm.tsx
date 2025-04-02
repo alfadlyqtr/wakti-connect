@@ -65,8 +65,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       const processedDoc = await processDocument(file);
       
       // Add a note about the document to the message input
-      // Fix: Changed to directly set the new string instead of using a function
-      setInputMessage(`I've uploaded a document named "${file.name}". ${inputMessage}`);
+      setInputMessage((prev) => `I've uploaded a document named "${file.name}". ${prev}`);
       
       // Notify parent component about the processed document
       if (onDocumentProcessed && processedDoc) {
