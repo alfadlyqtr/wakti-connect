@@ -5,7 +5,7 @@ export const fetchUserProfile = async (userId: string) => {
   try {
     const { data: profile, error } = await supabase
       .from('profiles')
-      .select('first_name, full_name, display_name')
+      .select('full_name, display_name')
       .eq('id', userId)
       .single();
       
@@ -16,9 +16,7 @@ export const fetchUserProfile = async (userId: string) => {
     
     // Try to get first name from different fields
     let firstName = '';
-    if (profile?.first_name) {
-      firstName = profile.first_name;
-    } else if (profile?.full_name) {
+    if (profile?.full_name) {
       firstName = profile.full_name.split(' ')[0] || '';
     } else if (profile?.display_name) {
       firstName = profile.display_name.split(' ')[0] || '';

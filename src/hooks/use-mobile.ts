@@ -23,3 +23,6 @@ export function useIsMobile() {
 
   return isMobile;
 }
+
+// Add a default export for backward compatibility
+export default useIsMobile;
