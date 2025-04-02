@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useContacts } from "@/hooks/useContacts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,8 @@ import ContactsList from "@/components/contacts/ContactsList";
 import PendingRequestsList from "@/components/contacts/PendingRequestsList";
 import AddContactDialog from "@/components/contacts/AddContactDialog";
 import AutoApproveToggle from "@/components/contacts/AutoApproveToggle";
+import StaffSyncSection from "@/components/contacts/StaffSyncSection";
+import { supabase } from "@/integrations/supabase/client";
 
 const DashboardContacts = () => {
   const { 
@@ -32,6 +34,26 @@ const DashboardContacts = () => {
   
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddContactOpen, setIsAddContactOpen] = useState(false);
+  const [isBusiness, setIsBusiness] = useState(false);
+
+  useEffect(() => {
+    const checkUserType = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('account_type')
+          .eq('id', data.session.user.id)
+          .single();
+          
+        if (!error && profile) {
+          setIsBusiness(profile.account_type === 'business');
+        }
+      }
+    };
+    
+    checkUserType();
+  }, []);
 
   const handleAddContact = async (contactId: string) => {
     if (!contactId.trim()) {
@@ -83,6 +105,11 @@ const DashboardContacts = () => {
           Manage your contacts and network.
         </p>
       </div>
+      
+      <StaffSyncSection 
+        isBusiness={isBusiness} 
+        onContactsRefresh={refreshContacts} 
+      />
       
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex w-full sm:w-auto items-center space-x-4">

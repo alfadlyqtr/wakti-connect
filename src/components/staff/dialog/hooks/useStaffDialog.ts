@@ -1,56 +1,55 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { staffFormSchema, StaffFormValues } from "../StaffFormSchema";
-import { useQuery } from "@tanstack/react-query";
+import { StaffFormSchema, StaffFormValues } from "../StaffFormSchema";
+import { useCreateStaffMutation } from "@/hooks/staff/creation/createStaffMutation";
+import { useUpdateStaffMutation } from "@/hooks/staff/creation/updateStaffMutation";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { getAutoAddStaffSetting } from "@/services/contacts/contactSync";
 
 export const useStaffDialog = (
-  staffId: string | null,
+  staffId: string | null, 
   onSuccess: () => void,
-  onOpenChange: (open: boolean) => void
+  onClose: (open: boolean) => void
 ) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("create");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autoAddToContacts, setAutoAddToContacts] = useState(true);
   
   const isEditing = !!staffId;
-
+  
+  const createStaff = useCreateStaffMutation();
+  const updateStaff = useUpdateStaffMutation();
+  
   const form = useForm<StaffFormValues>({
-    resolver: zodResolver(staffFormSchema),
+    resolver: zodResolver(StaffFormSchema),
     defaultValues: {
       fullName: "",
       email: "",
       password: "",
       confirmPassword: "",
       position: "",
-      isServiceProvider: false,
       isCoAdmin: false,
+      isServiceProvider: false,
       permissions: {
-        can_view_tasks: true,
         can_manage_tasks: false,
-        can_message_staff: true,
-        can_manage_bookings: false,
-        can_create_job_cards: false,
+        can_manage_bookings: false, 
         can_track_hours: true,
         can_log_earnings: false,
-        can_edit_profile: true,
-        can_view_customer_bookings: false,
-        can_view_analytics: false,
-        can_update_task_status: false,
-        can_update_booking_status: false,
-        can_update_profile: true
-      }
+        can_view_analytics: false
+      },
+      addToContacts: true
     }
   });
-
-  const { isLoading: isLoadingStaff } = useQuery({
-    queryKey: ['staffMember', staffId],
-    queryFn: async () => {
+  
+  // Load staff data when editing
+  useEffect(() => {
+    const loadStaffData = async () => {
+      if (!staffId) return;
+      
       try {
-        if (!staffId) return null;
-        
         const { data, error } = await supabase
           .from('business_staff')
           .select('*')
@@ -58,80 +57,82 @@ export const useStaffDialog = (
           .single();
           
         if (error) throw error;
+        if (!data) throw new Error("Staff not found");
         
-        const permissions = typeof data.permissions === 'string' 
-          ? JSON.parse(data.permissions) 
-          : data.permissions;
-          
         form.reset({
-          fullName: data.name || "",
-          email: data.email || "",
-          password: "",
-          confirmPassword: "",
+          fullName: data.name,
           position: data.position || "",
+          isCoAdmin: data.role === "co-admin",
           isServiceProvider: data.is_service_provider || false,
-          isCoAdmin: data.role === 'co-admin',
-          permissions: {
-            ...form.getValues().permissions,
-            ...permissions
-          }
+          permissions: data.permissions || {
+            can_manage_tasks: false,
+            can_manage_bookings: false, 
+            can_track_hours: true,
+            can_log_earnings: false,
+            can_view_analytics: false
+          },
+          addToContacts: true
         });
-        
-        return data;
       } catch (error) {
-        console.error("Error fetching staff details:", error);
-        setError(error instanceof Error ? error.message : "Failed to load staff details");
-        return null;
+        console.error("Error loading staff data:", error);
+        setError("Failed to load staff data. Please try again.");
       }
-    }
-  });
-
+    };
+    
+    // Check user's auto-add staff setting
+    const checkAutoAddSetting = async () => {
+      try {
+        const autoAdd = await getAutoAddStaffSetting();
+        setAutoAddToContacts(autoAdd);
+        form.setValue("addToContacts", autoAdd);
+      } catch (error) {
+        console.error("Error fetching auto-add staff setting:", error);
+      }
+    };
+    
+    loadStaffData();
+    checkAutoAddSetting();
+  }, [staffId, form]);
+  
   const handleSubmit = async (values: StaffFormValues) => {
     setIsSubmitting(true);
     setError(null);
     
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not authenticated");
-      
-      const businessId = session.user.id;
-      
-      const permissions = values.permissions;
-      
       if (isEditing) {
-        const { error } = await supabase
-          .from('business_staff')
-          .update({
-            name: values.fullName,
-            position: values.position,
-            role: values.isCoAdmin ? 'co-admin' : 'staff',
-            is_service_provider: values.isServiceProvider,
-            permissions,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', staffId);
-          
-        if (error) throw error;
-        
-        toast({
-          title: "Staff updated",
-          description: "Staff member has been successfully updated."
+        const result = await updateStaff.mutateAsync({
+          staffId,
+          data: {
+            ...values,
+            addToContacts: values.addToContacts
+          }
         });
+        
+        if (result.success) {
+          onSuccess();
+        } else {
+          setError(result.error || "Failed to update staff");
+        }
       } else {
-        // Create new staff - This would include invitation functionality
-        // Code for creating new staff would go here
-        // [This part would be handled by the CreateStaffDialog]
+        const result = await createStaff.mutateAsync({
+          ...values,
+          addToContacts: values.addToContacts 
+        });
+        
+        if (result.success) {
+          onSuccess();
+        } else {
+          setError(result.error || "Failed to create staff");
+        }
       }
-      
-      onSuccess();
     } catch (error) {
       console.error("Error submitting staff form:", error);
-      setError(error instanceof Error ? error.message : "An unknown error occurred");
+      setError(error.message || "An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
     }
   };
-
+  
   return {
     form,
     isSubmitting,
@@ -140,6 +141,7 @@ export const useStaffDialog = (
     setActiveTab,
     handleSubmit,
     error,
-    isLoadingStaff
+    autoAddToContacts,
+    setAutoAddToContacts
   };
 };

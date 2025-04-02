@@ -1173,6 +1173,7 @@ export type Database = {
       profiles: {
         Row: {
           account_type: Database["public"]["Enums"]["account_type"]
+          auto_add_staff_to_contacts: boolean | null
           auto_approve_contacts: boolean | null
           avatar_url: string | null
           business_address: string | null
@@ -1200,6 +1201,7 @@ export type Database = {
         }
         Insert: {
           account_type?: Database["public"]["Enums"]["account_type"]
+          auto_add_staff_to_contacts?: boolean | null
           auto_approve_contacts?: boolean | null
           avatar_url?: string | null
           business_address?: string | null
@@ -1227,6 +1229,7 @@ export type Database = {
         }
         Update: {
           account_type?: Database["public"]["Enums"]["account_type"]
+          auto_add_staff_to_contacts?: boolean | null
           auto_approve_contacts?: boolean | null
           avatar_url?: string | null
           business_address?: string | null

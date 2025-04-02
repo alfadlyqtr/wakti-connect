@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -71,29 +72,15 @@ export const useCreateStaffMutation = () => {
         
         if (staffError) throw staffError;
         
-        // Add to messages contacts automatically - business to staff
-        await supabase
-          .from('user_contacts')
-          .insert({
-            user_id: businessId,
-            contact_id: authData.user.id,
-            status: 'accepted',
-            staff_relation_id: staffData.id
-          });
+        // The trigger will handle creating necessary contacts automatically if they are active
+        // But we can manually handle it if we want to customize the behavior based on user preference
+        if (values.addToContacts === false) {
+          // If user chose not to add to contacts, we need to ensure contacts are NOT created
+          // This could be a follow-up API call to remove any auto-created contacts
+          // (This would be needed if trigger created contacts that we don't want)
+          console.log("User opted not to add staff to contacts");
+        }
           
-        // Staff to business contact
-        await supabase
-          .from('user_contacts')
-          .insert({
-            user_id: authData.user.id,
-            contact_id: businessId,
-            status: 'accepted',
-            staff_relation_id: staffData.id
-          });
-          
-        // Create staff-to-staff contacts
-        await createStaffContacts(businessId, authData.user.id, staffData.id);
-        
         // Update profile table
         await supabase
           .from('profiles')
@@ -125,45 +112,7 @@ export const useCreateStaffMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['businessStaff'] });
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
     }
   });
 };
-
-/**
- * Creates contact relationships between the new staff member and existing staff
- */
-async function createStaffContacts(businessId: string, newStaffId: string, staffRelationId: string) {
-  // Get other staff members to create contacts with
-  const { data: otherStaff, error: otherStaffError } = await supabase
-    .from('business_staff')
-    .select('staff_id, id')
-    .eq('business_id', businessId)
-    .neq('staff_id', newStaffId);
-    
-  if (!otherStaffError && otherStaff && otherStaff.length > 0) {
-    // Create contacts between all staff members
-    const contactInserts = [];
-    
-    for (const staff of otherStaff) {
-      // New staff to existing staff
-      contactInserts.push({
-        user_id: newStaffId,
-        contact_id: staff.staff_id,
-        status: 'accepted',
-        staff_relation_id: staff.id
-      });
-      
-      // Existing staff to new staff
-      contactInserts.push({
-        user_id: staff.staff_id,
-        contact_id: newStaffId,
-        status: 'accepted',
-        staff_relation_id: staffRelationId
-      });
-    }
-    
-    if (contactInserts.length > 0) {
-      await supabase.from('user_contacts').insert(contactInserts);
-    }
-  }
-}

@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { UserContact } from "@/types/invitation.types";
@@ -10,24 +11,36 @@ import {
   deleteContact as removeContact,
   syncStaffBusinessContacts,
   fetchAutoApproveSetting,
-  updateAutoApproveContacts
+  updateAutoApproveContacts,
+  fetchAutoAddStaffSetting,
+  updateAutoAddStaffSetting
 } from "@/services/contacts";
 
 export const useContacts = () => {
   const queryClient = useQueryClient();
   const [autoApprove, setAutoApprove] = useState<boolean>(false);
+  const [autoAddStaff, setAutoAddStaff] = useState<boolean>(true);
   const [isUpdatingAutoApprove, setIsUpdatingAutoApprove] = useState<boolean>(false);
+  const [isUpdatingAutoAddStaff, setIsUpdatingAutoAddStaff] = useState<boolean>(false);
   const [isSyncingContacts, setIsSyncingContacts] = useState<boolean>(false);
+  const [syncResult, setSyncResult] = useState<{success: boolean; message: string} | null>(null);
 
   // Sync staff-business contacts on initial load
   useEffect(() => {
     const syncContacts = async () => {
       setIsSyncingContacts(true);
       try {
-        await syncStaffBusinessContacts();
-        queryClient.invalidateQueries({ queryKey: ['contacts'] });
+        const result = await syncStaffBusinessContacts();
+        setSyncResult(result);
+        if (result.success) {
+          queryClient.invalidateQueries({ queryKey: ['contacts'] });
+        }
       } catch (error) {
         console.error("Error syncing staff-business contacts:", error);
+        setSyncResult({
+          success: false,
+          message: error.message || "Failed to sync contacts"
+        });
       } finally {
         setIsSyncingContacts(false);
       }
@@ -92,20 +105,44 @@ export const useContacts = () => {
     
     getAutoApproveSetting();
   }, []);
+  
+  // Fetch auto-add staff setting
+  useEffect(() => {
+    const getAutoAddStaffSetting = async () => {
+      try {
+        const setting = await fetchAutoAddStaffSetting();
+        setAutoAddStaff(setting);
+      } catch (error) {
+        console.error("Error fetching auto add staff setting:", error);
+      }
+    };
+    
+    getAutoAddStaffSetting();
+  }, []);
 
   // Handle manual refresh of contacts
   const handleRefreshContacts = async () => {
     setIsSyncingContacts(true);
+    setSyncResult(null);
     try {
-      await syncStaffBusinessContacts();
+      const result = await syncStaffBusinessContacts();
+      setSyncResult(result);
+      
       await refetchContacts();
       await refetchPendingRequests();
+      
       toast({
-        title: "Refreshed",
-        description: "Your contacts have been refreshed."
+        title: result.success ? "Refreshed" : "Refresh Warning",
+        description: result.message || "Your contacts have been refreshed.",
+        variant: result.success ? "default" : "destructive"
       });
     } catch (error) {
       console.error("Error refreshing contacts:", error);
+      setSyncResult({
+        success: false,
+        message: error.message || "Failed to refresh contacts"
+      });
+      
       toast({
         title: "Refresh Failed",
         description: "Failed to refresh contacts. Please try again.",
@@ -205,6 +242,33 @@ export const useContacts = () => {
       setIsUpdatingAutoApprove(false);
     }
   };
+  
+  // Handle toggling auto-add staff setting
+  const handleToggleAutoAddStaff = async () => {
+    setIsUpdatingAutoAddStaff(true);
+    try {
+      const success = await updateAutoAddStaffSetting(!autoAddStaff);
+      
+      if (success) {
+        setAutoAddStaff(!autoAddStaff);
+        toast({
+          title: "Setting Updated",
+          description: !autoAddStaff 
+            ? "Staff members will be automatically added to contacts" 
+            : "Staff members will not be automatically added to contacts"
+        });
+      }
+    } catch (error) {
+      console.error("Error updating auto-add staff setting:", error);
+      toast({
+        title: "Update Failed",
+        description: "Could not update auto-add staff setting",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUpdatingAutoAddStaff(false);
+    }
+  };
 
   return {
     contacts: contacts as UserContact[] | undefined,
@@ -213,12 +277,16 @@ export const useContacts = () => {
     pendingRequests: pendingRequests as UserContact[] | undefined,
     isLoadingRequests,
     autoApprove,
+    autoAddStaff,
     isUpdatingAutoApprove,
+    isUpdatingAutoAddStaff,
     isSyncingContacts,
+    syncResult,
     sendContactRequest,
     respondToContactRequest,
     deleteContact,
     handleToggleAutoApprove,
+    handleToggleAutoAddStaff,
     refreshContacts: handleRefreshContacts
   };
 };
