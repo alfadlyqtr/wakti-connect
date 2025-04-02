@@ -63,14 +63,14 @@ export const useContacts = () => {
 
   async function fetchContacts() {
     try {
-      const { data: session } = await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
       
-      if (!session?.user?.id) {
+      if (!data.session?.user?.id) {
         throw new Error('Not authenticated');
       }
       
-      console.log('Fetching contacts for authenticated user:', session.user.id);
-      return getUserContacts(session.user.id);
+      console.log('Fetching contacts for authenticated user:', data.session.user.id);
+      return getUserContacts(data.session.user.id);
     } catch (error) {
       console.error('Error in fetchContacts:', error);
       throw error;
@@ -89,13 +89,13 @@ export const useContacts = () => {
 
   async function fetchPendingRequests() {
     try {
-      const { data: session } = await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
       
-      if (!session?.user?.id) {
+      if (!data.session?.user?.id) {
         throw new Error('Not authenticated');
       }
       
-      return getContactRequests(session.user.id);
+      return getContactRequests(data.session.user.id);
     } catch (error) {
       console.error('Error in fetchPendingRequests:', error);
       throw error;
