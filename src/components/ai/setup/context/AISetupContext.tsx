@@ -64,18 +64,16 @@ export const AISetupProvider: React.FC<AISetupProviderProps> = ({
     if (initialAccountType === "business") {
       setUserRole("business_owner");
       setAssistantMode("business_manager");
-      setStep(3); // Skip to specialized setup
+      // Skip to specialized setup for business accounts
+      setStep(3);
     }
   }, [initialAccountType]);
 
   const handleRoleSelect = (role: UserRole) => {
     setUserRole(role);
     
-    // Set default assistant mode based on role
+    // Set default assistant mode based on simplified roles
     switch (role) {
-      case "student":
-        setAssistantMode("tutor");
-        break;
       case "business_owner":
         setAssistantMode("business_manager");
         break;
@@ -89,7 +87,8 @@ export const AISetupProvider: React.FC<AISetupProviderProps> = ({
         setAssistantMode("personal_assistant");
     }
     
-    setStep(2);
+    // Skip mode selection and go directly to specialized settings
+    setStep(3);
   };
   
   const handleModeSelect = (mode: AssistantMode) => {
@@ -137,23 +136,31 @@ export const AISetupProvider: React.FC<AISetupProviderProps> = ({
         throw new Error(`Failed to check for existing settings: ${checkError.message}`);
       }
       
-      // Store the role and mode information in a compatible format
+      // Get tone and response length preferences with defaults
       const tone = specializedSettings.communicationStyle || "balanced";
       const responseLength = specializedSettings.detailLevel || "balanced";
       
-      // Modified: Store all information in enabled_features as a workaround for missing columns
-      const enabledFeatures = {
+      // Set up default features for all users
+      const enabledFeatures: any = {
         tasks: true,
         events: true,
-        staff: true,
-        analytics: true,
         messaging: true,
-        text_generation: assistantMode === "text_generator" || assistantMode === "content_creator",
-        // Store settings in enabled_features as a workaround for potential missing columns
+        text_generation: true,
+        // Store these settings in the JSONB column as a workaround
         _userRole: userRole,
         _assistantMode: assistantMode,
         _specializedSettings: specializedSettings
       };
+      
+      // Add specific features based on account type
+      if (userRole === "business_owner") {
+        enabledFeatures.staff = true;
+        enabledFeatures.analytics = true;
+      } else {
+        // For non-business users, disable business-specific features
+        enabledFeatures.staff = false;
+        enabledFeatures.analytics = false;
+      }
       
       // Prepare settings object with basic required fields
       const settings = {
@@ -166,16 +173,15 @@ export const AISetupProvider: React.FC<AISetupProviderProps> = ({
         enabled_features: enabledFeatures
       };
       
-      // Attempt to add new fields if they exist in the schema
+      // Try to add new fields if schema supports them
       try {
-        // Only add these fields if they don't cause errors
         Object.assign(settings, {
           user_role: userRole,
           assistant_mode: assistantMode,
           specialized_settings: specializedSettings
         });
       } catch (e) {
-        console.log("Schema might not support new fields yet, using fallback method");
+        console.log("Schema might not support new fields, using fallback method via enabled_features");
       }
       
       console.log("Saving AI settings:", settings);
@@ -202,22 +208,6 @@ export const AISetupProvider: React.FC<AISetupProviderProps> = ({
         if (insertError) {
           console.error("Error inserting settings:", insertError);
           throw new Error(`Failed to create settings: ${insertError.message}`);
-        }
-      }
-      
-      // Also update the profile table with relevant information
-      if (userRole === "student" && specializedSettings.schoolLevel) {
-        console.log("Updating profile with student info");
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({ 
-            occupation: `Student (${specializedSettings.schoolLevel})` 
-          })
-          .eq("id", user.id);
-          
-        if (profileError) {
-          console.warn("Error updating profile:", profileError);
-          // Don't throw here - just a warning as this is not critical
         }
       }
       

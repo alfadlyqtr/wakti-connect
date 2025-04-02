@@ -14,6 +14,7 @@ import { AIDocumentManager } from '../documents/AIDocumentManager';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from "@/integrations/supabase/client";
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -39,14 +40,35 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [activeDocument, setActiveDocument] = useState<any>(null);
   const [setupError, setSetupError] = useState<string | null>(null);
+  const [accountType, setAccountType] = useState<string>("individual");
   const { settings } = useAISettings();
   const { user } = useAuth();
   const isMobile = useIsMobile();
   
-  // Check if setup is needed (by checking enabled_features or missing settings)
+  useEffect(() => {
+    const getAccountType = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("account_type")
+          .eq("id", user.id)
+          .single();
+          
+        if (!error && data) {
+          setAccountType(data.account_type);
+        }
+      } catch (err) {
+        console.error("Error fetching account type:", err);
+      }
+    };
+    
+    getAccountType();
+  }, [user]);
+  
   useEffect(() => {
     if (canAccess && user && settings) {
-      // Try to check for specialized settings
       const hasUserRole = settings.user_role || 
         (settings.enabled_features && 
          typeof settings.enabled_features === 'object' && 
@@ -58,17 +80,13 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     }
   }, [canAccess, settings, user]);
   
-  // Always use WAKTI AI as the assistant name regardless of settings
   const assistantName = "WAKTI AI";
   
-  // Get personalized mode label if available
   const getModeLabel = () => {
     if (!settings) return "";
     
-    // Try to get from new fields first, then fallback to enabled_features
     let assistantMode = settings.assistant_mode || "";
     
-    // Check if enabled_features exists and has the _assistantMode property
     if (!assistantMode && 
         settings.enabled_features && 
         typeof settings.enabled_features === 'object' && 
@@ -77,18 +95,12 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     }
     
     switch (assistantMode) {
-      case "tutor":
-        return " • Tutor Mode";
-      case "content_creator":
-        return " • Content Creator";
-      case "project_manager":
-        return " • Project Manager";
       case "business_manager":
-        return " • Business Manager";
+        return " • Business Assistant";
       case "personal_assistant":
         return " • Personal Assistant";
       case "text_generator":
-        return " • Text Generator";
+        return " • Text Helper";
       default:
         return "";
     }
@@ -109,15 +121,12 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     setActiveDocument(document);
   };
   
-  // Handle setup completion
   const handleSetupComplete = () => {
     setShowSetupWizard(false);
     setSetupError(null);
-    // Reload the page or fetch settings again
     window.location.reload();
   };
   
-  // Handle setup error
   const handleSetupError = (error: string) => {
     setSetupError(error);
     toast({
@@ -151,6 +160,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
           <AISetupWizard 
             onComplete={handleSetupComplete} 
             onError={handleSetupError}
+            initialAccountType={accountType}
           />
         </CardContent>
       </Card>
