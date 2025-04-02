@@ -5,15 +5,12 @@ export const createBackgroundHandlers = (
   customization: EventCustomization,
   onCustomizationChange: (customization: EventCustomization) => void
 ) => {
-  const handleBackgroundChange = (type: BackgroundType | 'color', value: string) => {
-    // Convert 'color' to 'solid' for backwards compatibility
-    const backgroundType = type === 'color' ? 'solid' as BackgroundType : type as BackgroundType;
-    
+  const handleBackgroundChange = (type: BackgroundType, value: string) => {
     onCustomizationChange({
       ...customization,
       background: {
         ...customization.background,
-        type: backgroundType,
+        type,
         value
       }
     });
