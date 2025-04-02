@@ -27,7 +27,7 @@ export const createDefaultSettings = async (): Promise<void> => {
       response_length: "balanced",
       proactiveness: true,
       suggestion_frequency: "medium",
-      role: "general",
+      role: "general", // Add the role property
       enabled_features: {
         tasks: true,
         events: true,

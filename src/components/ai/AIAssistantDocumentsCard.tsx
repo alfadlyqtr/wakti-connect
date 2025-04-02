@@ -9,7 +9,6 @@ import { File, Trash, Calendar, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { formatDistanceToNow } from "date-fns";
-import { fromTable } from "@/integrations/supabase/helper";
 
 interface AIAssistantDocumentsCardProps {
   canAccess: boolean;
@@ -24,13 +23,14 @@ export function AIAssistantDocumentsCard({ canAccess, onUseDocumentContent }: AI
   const fetchDocuments = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await fromTable<AIProcessedDocument>('ai_processed_documents')
+      const { data, error } = await supabase
+        .from('ai_processed_documents')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      setDocuments(data || []);
+      setDocuments(data as AIProcessedDocument[] || []);
     } catch (error) {
       console.error("Error fetching documents:", error);
       toast({
@@ -61,7 +61,8 @@ export function AIAssistantDocumentsCard({ canAccess, onUseDocumentContent }: AI
 
   const deleteDocument = async (id: string) => {
     try {
-      const { error } = await fromTable('ai_processed_documents')
+      const { error } = await supabase
+        .from('ai_processed_documents')
         .delete()
         .eq('id', id);
 
