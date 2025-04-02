@@ -1,3 +1,4 @@
+
 export interface Event {
   id: string;
   user_id: string;
@@ -24,6 +25,29 @@ export interface Event {
 export type EventStatus = "draft" | "sent" | "accepted" | "declined" | "recalled";
 
 export type EventTab = "my-events" | "invited-events" | "draft-events";
+
+export type EventFormTab = "details" | "customize" | "share";
+
+export interface EventFormValues {
+  title: string;
+  description?: string;
+  location?: string;
+  startDate?: Date;
+  endDate?: Date;
+  isAllDay?: boolean;
+}
+
+// Validation schema for event form
+import { z } from "zod";
+
+export const eventSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  location: z.string().optional(),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
+  isAllDay: z.boolean().optional(),
+});
 
 export interface EventFormData {
   title: string;
@@ -86,4 +110,83 @@ export interface ShareOptions {
   qrCode?: string;
   shareableLink?: string;
   emails?: string[];
+}
+
+// EventCustomization interface
+export interface EventCustomization {
+  background: {
+    type: 'color' | 'gradient' | 'image';
+    value: string;
+    angle?: number;
+    direction?: string;
+  };
+  font: {
+    family: string;
+    size: 'small' | 'medium' | 'large';
+    color: string;
+    weight?: 'normal' | 'medium' | 'bold';
+    alignment?: 'left' | 'center' | 'right';
+  };
+  headerFont?: {
+    family: string;
+    size: 'small' | 'medium' | 'large';
+    color: string;
+    weight?: 'normal' | 'medium' | 'bold';
+  };
+  descriptionFont?: {
+    family: string;
+    size: 'small' | 'medium' | 'large';
+    color: string;
+    weight?: 'normal' | 'medium' | 'bold';
+  };
+  dateTimeFont?: {
+    family: string;
+    size: 'small' | 'medium' | 'large';
+    color: string;
+    weight?: 'normal' | 'medium' | 'bold';
+  };
+  buttons: {
+    accept: {
+      background: string;
+      color: string;
+      shape: 'rounded' | 'pill' | 'square';
+    };
+    decline: {
+      background: string;
+      color: string;
+      shape: 'rounded' | 'pill' | 'square';
+    };
+  };
+  utilityButtons?: {
+    [key in 'calendar' | 'map' | 'qr']?: {
+      background: string;
+      color: string;
+      shape: 'rounded' | 'pill' | 'square';
+    };
+  };
+  headerStyle: 'banner' | 'simple' | 'minimal';
+  headerImage?: string;
+  animation: 'fade' | 'slide' | 'pop';
+  cardEffect?: {
+    type: string;
+    borderRadius?: string;
+    border?: boolean;
+    borderColor?: string;
+  };
+  elementAnimations?: {
+    text: string;
+    buttons: string;
+    icons: string;
+    delay: string;
+  };
+  mapDisplay?: 'button' | 'qrcode' | 'both';
+  branding?: {
+    logo?: string;
+    slogan?: string;
+  };
+  enableChatbot?: boolean;
+  enableAddToCalendar?: boolean;
+  showAddToCalendarButton?: boolean;
+  showAcceptDeclineButtons?: boolean;
+  poweredByColor?: string;
 }

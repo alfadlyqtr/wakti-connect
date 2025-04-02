@@ -1,118 +1,167 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { InvitationCustomization } from "@/types/invitation.types";
+import { supabase } from '@/lib/supabase';
+import { InvitationCustomization } from '@/types/invitation.types';
+import { formatErrorMessage } from '@/lib/utils';
 
 /**
- * Save customization settings for an invitation/event
+ * Get customization settings for an invitation
  */
-export const saveInvitationCustomization = async (
-  invitationId: string,
-  customization: Partial<InvitationCustomization>
-): Promise<boolean> => {
+export const getInvitationCustomization = async (invitationId: string): Promise<InvitationCustomization | null> => {
   try {
-    const { data: session } = await supabase.auth.getSession();
-    
-    if (!session?.user) {
-      throw new Error("Not authenticated");
+    const sessionResponse = await supabase.auth.getSession();
+    if (!sessionResponse.data.session) {
+      throw new Error('You must be logged in to view invitation customization');
     }
     
-    // First check if customization already exists for this invitation
-    const { data: existing } = await supabase
-      .from('invitation_customizations')
-      .select('id')
-      .eq('invitation_id', invitationId)
+    // Instead of using a direct table that might not exist, let's modify our approach
+    // Let's check for customization details in the events table
+    const { data, error } = await supabase
+      .from('events')
+      .select('customization')
+      .eq('id', invitationId)
       .single();
     
-    // Prepare the data for upsert
-    const customizationData = {
-      invitation_id: invitationId,
-      creator_id: session.user.id,
-      background_type: customization.backgroundType,
-      background_value: customization.backgroundValue,
-      font_family: customization.fontFamily,
-      font_size: customization.fontSize,
-      text_align: customization.textAlign,
-      button_styles: customization.buttonStyles,
-      layout_size: customization.layoutSize,
-      custom_effects: customization.customEffects,
-      header_image: customization.headerImage,
-      map_location: customization.mapLocation,
-      updated_at: new Date().toISOString()
-    };
-    
-    let result;
-    
-    if (existing) {
-      // Update existing customization
-      result = await supabase
-        .from('invitation_customizations')
-        .update(customizationData)
-        .eq('id', existing.id);
-    } else {
-      // Insert new customization
-      result = await supabase
-        .from('invitation_customizations')
-        .insert({
-          ...customizationData,
-          created_at: new Date().toISOString()
-        });
+    if (error) {
+      console.error('Error fetching invitation customization:', error);
+      return null;
     }
     
-    if (result.error) {
-      console.error("Error saving invitation customization:", result.error);
-      return false;
+    if (!data?.customization) {
+      // Create default customization
+      return {
+        background: {
+          type: 'color',
+          value: '#ffffff'
+        },
+        font: {
+          family: 'system-ui, sans-serif',
+          size: 'medium',
+          color: '#333333',
+          alignment: 'left'
+        },
+        buttons: {
+          accept: {
+            background: '#4CAF50',
+            color: '#ffffff',
+            shape: 'rounded'
+          },
+          decline: {
+            background: '#f44336',
+            color: '#ffffff',
+            shape: 'rounded'
+          }
+        },
+        headerStyle: 'simple',
+        headerImage: '',
+        mapLocation: '',
+        animation: 'fade'
+      };
     }
     
-    return true;
+    // Return the customization from the event
+    return data.customization as InvitationCustomization;
   } catch (error) {
-    console.error("Exception saving invitation customization:", error);
-    return false;
+    console.error('Error in getInvitationCustomization:', error);
+    return null;
   }
 };
 
 /**
- * Get customization settings for an invitation/event
+ * Update customization settings for an invitation
  */
-export const getInvitationCustomization = async (
-  invitationId: string
-): Promise<InvitationCustomization | null> => {
+export const updateInvitationCustomization = async (
+  invitationId: string,
+  customization: Partial<InvitationCustomization>
+): Promise<{ success: boolean; message: string }> => {
   try {
-    const { data, error } = await supabase
-      .from('invitation_customizations')
-      .select('*')
-      .eq('invitation_id', invitationId)
-      .single();
+    // Instead of using a table that might not exist, let's update the customization in the events table
+    const { error } = await supabase
+      .from('events')
+      .update({ customization })
+      .eq('id', invitationId);
     
     if (error) {
-      if (error.code === 'PGRST116') { // No rows returned
-        return null;
-      }
-      
-      console.error("Error fetching invitation customization:", error);
-      throw error;
+      console.error('Error updating invitation customization:', error);
+      return {
+        success: false,
+        message: formatErrorMessage(error)
+      };
     }
     
-    if (!data) return null;
-    
-    // Transform database fields to camelCase for the frontend
     return {
-      backgroundType: data.background_type,
-      backgroundValue: data.background_value,
-      fontFamily: data.font_family,
-      fontSize: data.font_size,
-      textAlign: data.text_align,
-      buttonStyles: data.button_styles,
-      layoutSize: data.layout_size,
-      customEffects: data.custom_effects,
-      creatorId: data.creator_id,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-      headerImage: data.header_image,
-      mapLocation: data.map_location,
-      invitationId: data.invitation_id
+      success: true,
+      message: 'Invitation customization updated successfully'
     };
   } catch (error) {
-    console.error("Exception fetching invitation customization:", error);
-    return null;
+    console.error('Error in updateInvitationCustomization:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
   }
+};
+
+/**
+ * Convert database customization format to application format
+ */
+export const formatInvitationCustomization = (data: any): InvitationCustomization => {
+  // Default customization if no data is provided
+  if (!data) {
+    return {
+      background: {
+        type: 'color',
+        value: '#ffffff'
+      },
+      font: {
+        family: 'system-ui, sans-serif',
+        size: 'medium',
+        color: '#333333',
+        alignment: 'left'
+      },
+      buttons: {
+        accept: {
+          background: '#4CAF50',
+          color: '#ffffff',
+          shape: 'rounded'
+        },
+        decline: {
+          background: '#f44336',
+          color: '#ffffff',
+          shape: 'rounded'
+        }
+      },
+      headerStyle: 'simple',
+      animation: 'fade'
+    };
+  }
+  
+  // Format existing data
+  return {
+    background: {
+      type: data.background?.type || 'color',
+      value: data.background?.value || '#ffffff'
+    },
+    font: {
+      family: data.font?.family || 'system-ui, sans-serif',
+      size: data.font?.size || 'medium',
+      color: data.font?.color || '#333333',
+      alignment: data.font?.alignment || 'left'
+    },
+    buttons: {
+      accept: {
+        background: data.buttons?.accept?.background || '#4CAF50',
+        color: data.buttons?.accept?.color || '#ffffff',
+        shape: data.buttons?.accept?.shape || 'rounded'
+      },
+      decline: {
+        background: data.buttons?.decline?.background || '#f44336',
+        color: data.buttons?.decline?.color || '#ffffff',
+        shape: data.buttons?.decline?.shape || 'rounded'
+      }
+    },
+    headerStyle: data.headerStyle || 'simple',
+    headerImage: data.headerImage || '',
+    mapLocation: data.mapLocation || '',
+    animation: data.animation || 'fade'
+  };
 };

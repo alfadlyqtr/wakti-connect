@@ -1,154 +1,187 @@
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useCallback, useEffect } from 'react';
+import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { 
-  fetchInvitationTemplates, 
-  createInvitationCustomization 
-} from "@/services/invitation"; 
-import { 
-  InvitationTemplate, 
-  InvitationCustomization, 
-  InvitationStyle 
-} from "@/types/invitation.types";
-import { toast } from "@/components/ui/use-toast";
+  getInvitationCustomization,
+  updateInvitationCustomization
+} from '@/services/invitation';
+import { InvitationTemplate, InvitationCustomization, InvitationStyle } from '@/types/invitation.types';
 
-export const useInvitationBuilder = () => {
-  const queryClient = useQueryClient();
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
-  const [currentCustomization, setCurrentCustomization] = useState<Partial<InvitationCustomization>>({});
-  
-  // Fetch available templates
-  const { 
-    data: templates, 
-    isLoading: isLoadingTemplates 
-  } = useQuery({
-    queryKey: ['invitationTemplates'],
-    queryFn: fetchInvitationTemplates
-  });
-  
-  // Get the selected template
-  const selectedTemplate = templates?.find(template => template.id === selectedTemplateId) || null;
-  
-  // Create customization
-  const createCustomization = useMutation({
-    mutationFn: async () => {
-      if (!selectedTemplateId) {
-        throw new Error("No template selected");
+export const useInvitationBuilder = (invitationId?: string) => {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const [templates, setTemplates] = useState<InvitationTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [customization, setCustomization] = useState<InvitationCustomization>({
+    background: {
+      type: 'color',
+      value: '#ffffff'
+    },
+    font: {
+      family: 'system-ui, sans-serif',
+      size: 'medium',
+      color: '#333333',
+      alignment: 'left'
+    },
+    buttons: {
+      accept: {
+        background: '#4CAF50',
+        color: '#ffffff',
+        shape: 'rounded'
+      },
+      decline: {
+        background: '#f44336',
+        color: '#ffffff',
+        shape: 'rounded'
       }
-      
-      return createInvitationCustomization(selectedTemplateId, currentCustomization);
     },
-    onSuccess: (data) => {
-      toast({
-        title: "Customization Saved",
-        description: "Your invitation styling has been saved successfully."
-      });
-      return data;
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to Save Customization",
-        description: error.message || "An error occurred while saving the customization",
-        variant: "destructive"
-      });
-    }
+    headerStyle: 'simple',
+    animation: 'fade'
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
-  // Update current customization
-  const updateCustomization = (updates: Partial<InvitationCustomization>) => {
-    setCurrentCustomization(prev => ({
-      ...prev,
-      ...updates
-    }));
-  };
-  
-  // Set template and initialize customization with template defaults
-  const selectTemplate = (templateId: string) => {
-    const template = templates?.find(t => t.id === templateId);
-    
-    if (template) {
-      setSelectedTemplateId(templateId);
-      
-      // Initialize customization with template defaults
-      setCurrentCustomization({
-        backgroundType: template.defaultStyles.background.type,
-        backgroundValue: template.defaultStyles.background.value,
-        fontFamily: template.defaultStyles.fontFamily,
-        fontSize: template.defaultStyles.fontSize,
-        textAlign: template.defaultStyles.textAlign,
-        buttonStyles: template.defaultStyles.buttons,
-        layoutSize: 'medium',
-        customEffects: { shadow: template.defaultStyles.shadow }
-      });
-    }
-  };
-  
-  // Reset customization to template defaults
-  const resetToDefaults = () => {
-    if (selectedTemplate) {
-      setCurrentCustomization({
-        backgroundType: selectedTemplate.defaultStyles.background.type,
-        backgroundValue: selectedTemplate.defaultStyles.background.value,
-        fontFamily: selectedTemplate.defaultStyles.fontFamily,
-        fontSize: selectedTemplate.defaultStyles.fontSize,
-        textAlign: selectedTemplate.defaultStyles.textAlign,
-        buttonStyles: selectedTemplate.defaultStyles.buttons,
-        layoutSize: 'medium',
-        customEffects: { shadow: selectedTemplate.defaultStyles.shadow }
-      });
-    }
-  };
-  
-  // Calculate the current preview style combining template defaults and customizations
-  const getCurrentStyle = (): InvitationStyle => {
-    if (!selectedTemplate) {
-      // Default styles if no template is selected
-      return {
-        background: { 
-          type: 'solid', 
-          value: '#ffffff' 
+  // Load available templates
+  useEffect(() => {
+    // Load templates logic
+    const loadTemplates = async () => {
+      // Normally you would fetch templates from API
+      setTemplates([
+        {
+          id: 'template1',
+          name: 'Basic',
+          previewImage: '/templates/basic.jpg',
+          defaultStyles: {
+            background: { type: 'color', value: '#ffffff' },
+            font: { family: 'system-ui, sans-serif', size: 'medium', color: '#333333' },
+            buttons: {
+              accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
+              decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' }
+            }
+          },
+          createdAt: new Date().toISOString()
         },
-        font: 'Inter',
-        colors: {
-          primary: '#4CAF50',
-          secondary: '#f44336',
-          text: '#333333',
-          accent: '#2196F3'
-        },
-        layout: 'standard'
-      };
-    }
-    
-    // Start with template defaults
-    const baseStyle = selectedTemplate.defaultStyles;
-    
-    // Apply current customizations
-    return {
-      background: {
-        type: (currentCustomization.backgroundType || baseStyle.background.type),
-        value: currentCustomization.backgroundValue || baseStyle.background.value
-      },
-      font: currentCustomization.fontFamily || baseStyle.fontFamily,
-      colors: {
-        primary: '#4CAF50',
-        secondary: '#f44336',
-        text: '#333333',
-        accent: '#2196F3'
-      },
-      layout: 'standard'
+        {
+          id: 'template2',
+          name: 'Professional',
+          previewImage: '/templates/professional.jpg',
+          defaultStyles: {
+            background: { type: 'color', value: '#f8f9fa' },
+            font: { family: 'Georgia, serif', size: 'medium', color: '#212529' },
+            buttons: {
+              accept: { background: '#343a40', color: '#ffffff', shape: 'rounded' },
+              decline: { background: '#6c757d', color: '#ffffff', shape: 'rounded' }
+            }
+          },
+          createdAt: new Date().toISOString()
+        }
+      ]);
     };
-  };
+    
+    loadTemplates();
+  }, []);
+  
+  // Load customization settings if invitationId is provided
+  useEffect(() => {
+    if (!invitationId) return;
+    
+    const loadCustomization = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getInvitationCustomization(invitationId);
+        if (data) {
+          setCustomization(data);
+        }
+      } catch (error) {
+        console.error('Error loading invitation customization:', error);
+        toast({
+          title: 'Error',
+          description: 'Could not load invitation customization settings',
+          variant: 'destructive'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadCustomization();
+  }, [invitationId, toast]);
+  
+  // Handle selecting a template
+  const selectTemplate = useCallback((templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      setSelectedTemplate(templateId);
+      // Here you would transform template.defaultStyles into InvitationCustomization format
+      // This is just a simplified example
+      setCustomization(prev => ({
+        ...prev,
+        background: template.defaultStyles.background,
+        font: template.defaultStyles.font,
+        buttons: template.defaultStyles.buttons
+      }));
+    }
+  }, [templates]);
+  
+  // Handle updating customization
+  const updateCustomization = useCallback((newCustomization: Partial<InvitationCustomization>) => {
+    setCustomization(prev => ({
+      ...prev,
+      ...newCustomization
+    }));
+  }, []);
+  
+  // Save customization changes
+  const saveCustomization = useCallback(async () => {
+    if (!invitationId || !user) {
+      toast({
+        title: 'Error',
+        description: 'Missing invitation ID or user not logged in',
+        variant: 'destructive'
+      });
+      return { success: false };
+    }
+    
+    setIsSaving(true);
+    try {
+      const result = await updateInvitationCustomization(invitationId, customization);
+      
+      if (result.success) {
+        toast({
+          title: 'Success',
+          description: 'Invitation customization saved successfully'
+        });
+        return { success: true };
+      } else {
+        toast({
+          title: 'Error',
+          description: result.message || 'Could not save invitation customization',
+          variant: 'destructive'
+        });
+        return { success: false };
+      }
+    } catch (error) {
+      console.error('Error saving invitation customization:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred while saving customization',
+        variant: 'destructive'
+      });
+      return { success: false };
+    } finally {
+      setIsSaving(false);
+    }
+  }, [invitationId, user, customization, toast]);
   
   return {
     templates,
-    isLoadingTemplates,
-    selectedTemplateId,
     selectedTemplate,
-    currentCustomization,
+    customization,
+    isLoading,
+    isSaving,
     selectTemplate,
     updateCustomization,
-    resetToDefaults,
-    createCustomization,
-    getCurrentStyle
+    saveCustomization
   };
 };

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,9 +8,20 @@ import FormTabs from "./creation/FormTabs";
 import FormActions from "./creation/FormActions";
 import { InvitationRecipient } from "@/types/invitation.types";
 import useEditEventEffect from "./hooks/useEditEventEffect";
+import { EventCreationFormProps, EventFormTab } from "@/types/form.types";
 
-const EventCreationForm = () => {
-  const [activeTab, setActiveTab] = useState<string>("details");
+interface EventCreationFormProps {
+  editEvent?: any;
+  onCancel?: () => void;
+  onSuccess?: () => void;
+}
+
+const EventCreationForm: React.FC<EventCreationFormProps> = ({ 
+  editEvent, 
+  onCancel, 
+  onSuccess 
+}) => {
+  const [activeTab, setActiveTab] = useState<EventFormTab>("details");
   const [recipients, setRecipients] = useState<InvitationRecipient[]>([]);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   
@@ -34,7 +46,11 @@ const EventCreationForm = () => {
   
   return (
     <div className="container mx-auto mt-10">
-      <FormHeader isEditMode={isEditMode} isLoading={isLoadingEvent} />
+      <FormHeader 
+        isEdit={isEditMode} 
+        isLoading={isLoadingEvent}
+        onCancel={onCancel}
+      />
       
       <FormTabs 
         activeTab={activeTab} 
@@ -42,10 +58,17 @@ const EventCreationForm = () => {
       />
       
       <FormActions 
-        form={form}
-        activeTab={activeTab}
-        recipients={recipients}
-        isEditMode={isEditMode}
+        onPrev={() => {
+          if (activeTab === "customize") setActiveTab("details");
+          if (activeTab === "share") setActiveTab("customize");
+        }}
+        onNext={() => {
+          if (activeTab === "details") setActiveTab("customize");
+          if (activeTab === "customize") setActiveTab("share");
+        }}
+        isSubmitting={false}
+        showSubmit={activeTab === "share"}
+        submitLabel={isEditMode ? "Update Event" : "Create Event"}
       />
     </div>
   );

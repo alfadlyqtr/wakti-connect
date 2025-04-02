@@ -1,9 +1,38 @@
 
-export type EventFormTab = "details" | "customize" | "share";
-export type ShareTab = "recipients" | "links";
+import { Event, EventCustomization } from "./event.types";
+import { InvitationRecipient } from "./invitation.types";
 
-// Add a constant for using ShareTab as a value in component props
+export type EventFormTab = "details" | "customize" | "share";
+
+export type ShareTab = "recipients" | "qrcode" | "link";
+
 export const SHARE_TABS = {
-  RECIPIENTS: "recipients" as ShareTab,
-  LINKS: "links" as ShareTab
+  RECIPIENTS: "recipients" as const,
+  QRCODE: "qrcode" as const,
+  LINK: "link" as const
 };
+
+export interface FormHeaderProps {
+  isEdit: boolean;
+  isLoading?: boolean;
+  onCancel?: () => void;
+}
+
+export interface FormTabsProps {
+  activeTab: EventFormTab;
+  setActiveTab: (tab: EventFormTab) => void;
+}
+
+export interface FormActionsProps {
+  onPrev: () => void;
+  onNext: () => void;
+  isSubmitting?: boolean;
+  showSubmit?: boolean;
+  submitLabel?: string;
+}
+
+export interface EventCreationFormProps {
+  editEvent?: Event | null;
+  onCancel?: () => void;
+  onSuccess?: () => void;
+}

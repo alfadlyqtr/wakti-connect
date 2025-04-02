@@ -1,87 +1,82 @@
 
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "@/components/ui/use-toast";
-import { EventWithInvitations } from "@/types/event.types"; // Make sure this type exists
-import { InvitationRecipient } from "@/types/invitation.types";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { UseFormReturn } from 'react-hook-form';
+import { EventFormValues } from '@/types/event.types';
+import { InvitationRecipient } from '@/types/invitation.types';
+import { useEvents } from '@/hooks/useEvents';
 
-// This hook is meant to be used in the EventCreationForm component
-// to handle loading an existing event for editing
 const useEditEventEffect = (
-  form: ReturnType<typeof useForm>,
-  setRecipients: (recipients: InvitationRecipient[]) => void,
-  setIsEditMode: (isEdit: boolean) => void
+  form: UseFormReturn<EventFormValues>,
+  setRecipients: React.Dispatch<React.SetStateAction<InvitationRecipient[]>>,
+  setIsEditMode: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
+  const [isLoading, setIsLoading] = useState(false);
   const { eventId } = useParams<{ eventId: string }>();
-  
-  const { data: eventData, isLoading } = useQuery({
-    queryKey: ['event', eventId],
-    queryFn: async () => {
-      if (!eventId) return null;
-      
-      const { data, error } = await supabase
-        .from('events')
-        .select(`
-          *,
-          event_invitations(*)
-        `)
-        .eq('id', eventId)
-        .single();
-      
-      if (error) {
-        throw error;
-      }
-      
-      return data as EventWithInvitations;
-    },
-    enabled: !!eventId,
-    meta: {
-      onError: (error: Error) => {
-        toast({
-          title: "Failed to load event",
-          description: error.message,
-          variant: "destructive"
-        });
-      }
-    }
-  });
+  const { getEventById } = useEvents();
   
   useEffect(() => {
-    if (eventId && eventData) {
-      setIsEditMode(true);
-      
-      // Set basic form values
-      form.reset({
-        title: eventData.title,
-        description: eventData.description || '',
-        location: eventData.location || '',
-        startDate: eventData.start_time ? new Date(eventData.start_time) : undefined,
-        endDate: eventData.end_time ? new Date(eventData.end_time) : undefined,
-        isAllDay: eventData.is_all_day || false,
-      });
-      
-      // Set invitation recipients if available
-      if (eventData.event_invitations && eventData.event_invitations.length > 0) {
-        // Map invitations to recipient format
-        const recipients: InvitationRecipient[] = eventData.event_invitations.map(invitation => ({
-          id: invitation.invited_user_id || invitation.email || '',
-          name: invitation.invited_user_id ? 'Contact User' : invitation.email || '',
-          email: invitation.email,
-          type: invitation.invited_user_id ? 'contact' : 'email'
-        }));
+    if (!eventId) return;
+    
+    const fetchEventData = async () => {
+      setIsLoading(true);
+      try {
+        const event = await getEventById(eventId);
         
-        setRecipients(recipients);
+        if (event) {
+          // Set edit mode
+          setIsEditMode(true);
+          
+          // Set form data
+          form.reset({
+            title: event.title,
+            description: event.description || '',
+            location: event.location || '',
+            startDate: event.start_time ? new Date(event.start_time) : undefined,
+            endDate: event.end_time ? new Date(event.end_time) : undefined,
+            isAllDay: event.is_all_day
+          });
+          
+          // Set recipients from invitations if available
+          if (event.invitations && event.invitations.length > 0) {
+            const formattedRecipients: InvitationRecipient[] = event.invitations.map(invitation => {
+              if (invitation.email) {
+                return {
+                  id: invitation.id,
+                  name: invitation.email,
+                  email: invitation.email,
+                  type: 'email'
+                };
+              } else if (invitation.invited_user_id) {
+                return {
+                  id: invitation.id,
+                  name: `User ${invitation.invited_user_id.substring(0, 8)}`,
+                  type: 'contact'
+                };
+              }
+              
+              // Default fallback
+              return {
+                id: invitation.id,
+                name: `Recipient ${invitation.id.substring(0, 8)}`,
+                type: 'contact'
+              };
+            });
+            
+            setRecipients(formattedRecipients);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching event data:", error);
+      } finally {
+        setIsLoading(false);
       }
-    }
-  }, [eventId, eventData, form, setRecipients, setIsEditMode]);
+    };
+    
+    fetchEventData();
+  }, [eventId, form, setRecipients, setIsEditMode, getEventById]);
   
-  return {
-    isLoading,
-    eventData
-  };
+  return { isLoading };
 };
 
 export default useEditEventEffect;
