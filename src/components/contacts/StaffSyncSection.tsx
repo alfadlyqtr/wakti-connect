@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -21,7 +21,7 @@ const StaffSyncSection: React.FC<StaffSyncSectionProps> = ({ isBusiness, onConta
   const [autoAddStaff, setAutoAddStaff] = useState(true);
   const [isUpdatingAutoAdd, setIsUpdatingAutoAdd] = useState(false);
   
-  React.useEffect(() => {
+  useEffect(() => {
     const loadSettings = async () => {
       try {
         const setting = await fetchAutoAddStaffSetting();

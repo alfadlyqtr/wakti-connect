@@ -42,8 +42,8 @@ export const useStaffSync = ({ onSuccess }: UseStaffSyncOptions = {}) => {
       
       if (data.success) {
         console.log("Sync successful:", data);
-        const syncedCount = data.data.synced.length;
-        const errorCount = data.data.errors.length;
+        const syncedCount = data.data?.synced?.length || 0;
+        const errorCount = data.data?.errors?.length || 0;
         
         toast({
           title: "Staff Records Synced",

@@ -14,7 +14,7 @@ export const syncStaffBusinessContacts = async (): Promise<{success: boolean; me
   }
 
   try {
-    // Call the stored function to sync contacts
+    // Call the updated stored function to sync contacts
     const { error } = await supabase
       .rpc('update_existing_staff_contacts');
     
@@ -41,7 +41,7 @@ export const ensureStaffContacts = async (): Promise<{success: boolean; message:
   }
 
   try {
-    // Check if the current user is a staff member
+    // Check if the current user is a staff member with explicit table reference
     const { data: staffData, error: staffError } = await supabase
       .from('business_staff')
       .select('id, business_id')
