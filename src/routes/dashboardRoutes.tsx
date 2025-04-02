@@ -108,7 +108,7 @@ export const dashboardRoutes: RouteObject[] = [
     element: withSuspense(DashboardNotifications),
   },
   {
-    path: "ai-assistant",
+    path: "ai-assistant/*",
     element: withSuspense(DashboardAIAssistant),
   },
   {

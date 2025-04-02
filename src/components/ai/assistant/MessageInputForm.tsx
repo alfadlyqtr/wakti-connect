@@ -64,8 +64,8 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       setIsPending(true);
       const processedDoc = await processDocument(file);
       
-      // Add a note about the document to the message input - fixed the function type issue
-      setInputMessage(`I've uploaded a document named "${file.name}". ${inputMessage}`);
+      // Add a note about the document to the message input
+      setInputMessage((prev) => `I've uploaded a document named "${file.name}". ${prev}`);
       
       // Notify parent component about the processed document
       if (onDocumentProcessed && processedDoc) {
