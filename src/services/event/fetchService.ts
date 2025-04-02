@@ -1,37 +1,123 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { Event, EventTab, EventsResult } from '@/types/event.types';
-import { getUserRole } from '@/services/profile/userService';
+import { supabase } from '@/lib/supabase';
+import { Event, EventsResult, EventStatus, EventTab } from '@/types/event.types';
+import { transformDatabaseEvent } from './eventHelpers';
+import { getUserProfile } from '@/services/profile';
 
-// Fetch events based on the active tab
-export const fetchEvents = async (activeTab: EventTab): Promise<EventsResult> => {
+/**
+ * Fetches events based on the tab and filters
+ */
+export const fetchEvents = async (
+  tab: EventTab,
+  filters: {
+    searchQuery?: string;
+    filterStatus?: string;
+    filterDate?: Date;
+  } = {}
+): Promise<EventsResult> => {
   try {
-    // Check if the user is authenticated
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
-      throw new Error('You must be logged in to view events');
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return { events: [], userRole: 'free', canCreateEvents: false };
     }
     
-    const userId = sessionData.session.user.id;
-    let events: Event[] = [];
-    
-    // Get the user's role to determine if they can create events
-    const userRole = await getUserRole(userId);
+    // Get user profile to check subscription
+    const userProfile = await getUserProfile();
+    const userRole = userProfile?.account_type || 'free';
     const canCreateEvents = userRole === 'individual' || userRole === 'business';
     
-    // Fetch events based on the active tab
-    switch (activeTab) {
-      case 'my-events':
-        events = await fetchMyEvents(userId);
-        break;
-      case 'invited-events':
-        events = await fetchInvitedEvents(userId);
-        break;
-      case 'draft-events':
-        events = await fetchDraftEvents(userId);
-        break;
-      default:
-        events = await fetchMyEvents(userId);
+    // Start building the query based on the tab
+    let query = supabase.from('events').select('*, invitations:event_invitations(*)');
+    
+    if (tab === 'my-events') {
+      // User's own events
+      query = query.eq('user_id', user.id);
+      
+      // Filter by status if provided
+      if (filters.filterStatus && filters.filterStatus !== 'all') {
+        query = query.eq('status', filters.filterStatus);
+      } else {
+        // Exclude drafts
+        query = query.not('status', 'eq', 'draft');
+      }
+    } else if (tab === 'invited-events') {
+      // Events where the user is invited
+      query = supabase
+        .from('event_invitations')
+        .select('*, event:events(*)')
+        .eq('invited_user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      // Filter by status if provided
+      if (filters.filterStatus && filters.filterStatus !== 'all') {
+        query = query.eq('status', filters.filterStatus);
+      }
+    } else if (tab === 'draft-events') {
+      // Draft events created by the user
+      query = query
+        .eq('user_id', user.id)
+        .eq('status', 'draft');
+    }
+    
+    // Add search filter if provided
+    if (filters.searchQuery) {
+      const searchTerm = `%${filters.searchQuery}%`;
+      if (tab === 'invited-events') {
+        // We're querying event_invitations, so use the event relation
+        query = query.or(`event.title.ilike.${searchTerm},event.description.ilike.${searchTerm}`);
+      } else {
+        // We're querying events directly
+        query = query.or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`);
+      }
+    }
+    
+    // Add date filter if provided
+    if (filters.filterDate) {
+      const date = filters.filterDate;
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      const startISOString = startOfDay.toISOString();
+      const endISOString = endOfDay.toISOString();
+      
+      if (tab === 'invited-events') {
+        // Filter on event's start_time
+        query = query.or(`event.start_time.gte.${startISOString},event.start_time.lte.${endISOString}`);
+      } else {
+        // Direct event query
+        query = query.or(`start_time.gte.${startISOString},start_time.lte.${endISOString}`);
+      }
+    }
+    
+    // Execute the query
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error("Error fetching events:", error);
+      throw error;
+    }
+    
+    // Process the results
+    let events: Event[] = [];
+    
+    if (tab === 'invited-events' && data) {
+      // Extract events from invitations
+      events = data
+        .filter(invitation => invitation.event)
+        .map(invitation => ({
+          ...invitation.event,
+          invitation_status: invitation.status,
+          invitation_id: invitation.id
+        }))
+        .map(event => transformDatabaseEvent(event));
+    } else if (data) {
+      // Direct events
+      events = data.map(event => transformDatabaseEvent(event));
     }
     
     return {
@@ -40,144 +126,36 @@ export const fetchEvents = async (activeTab: EventTab): Promise<EventsResult> =>
       canCreateEvents
     };
   } catch (error) {
-    console.error('Error fetching events:', error);
-    throw error;
+    console.error("Error in fetchEvents:", error);
+    return { events: [], userRole: 'free', canCreateEvents: false };
   }
 };
 
-// Fetch events created by the user
-const fetchMyEvents = async (userId: string): Promise<Event[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('events')
-      .select(`
-        *,
-        invitations:event_invitations(*)
-      `)
-      .eq('user_id', userId)
-      .neq('status', 'draft')
-      .order('start_time', { ascending: true });
-    
-    if (error) {
-      console.error('Error fetching my events:', error);
-      throw error;
-    }
-    
-    return data || [];
-  } catch (error) {
-    console.error('Error in fetchMyEvents:', error);
-    throw error;
-  }
-};
-
-// Fetch events where the user is invited
-const fetchInvitedEvents = async (userId: string): Promise<Event[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('event_invitations')
-      .select(`
-        *,
-        event:events(*)
-      `)
-      .eq('invited_user_id', userId)
-      .not('status', 'eq', 'draft')
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching invited events:', error);
-      throw error;
-    }
-    
-    // Transform the data to match the Event interface
-    const events = data
-      .map(invitation => invitation.event)
-      .filter(event => event !== null) as Event[];
-    
-    return events;
-  } catch (error) {
-    console.error('Error in fetchInvitedEvents:', error);
-    throw error;
-  }
-};
-
-// Fetch draft events created by the user
-const fetchDraftEvents = async (userId: string): Promise<Event[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('events')
-      .select(`
-        *,
-        invitations:event_invitations(*)
-      `)
-      .eq('user_id', userId)
-      .eq('status', 'draft')
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching draft events:', error);
-      throw error;
-    }
-    
-    return data || [];
-  } catch (error) {
-    console.error('Error in fetchDraftEvents:', error);
-    throw error;
-  }
-};
-
-// Fetch a single event by ID
+/**
+ * Fetches a single event by ID
+ */
 export const fetchEventById = async (eventId: string): Promise<Event | null> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error("You must be logged in to view events");
+    }
+    
     const { data, error } = await supabase
       .from('events')
-      .select(`
-        *,
-        invitations:event_invitations(*)
-      `)
+      .select('*, invitations:event_invitations(*)')
       .eq('id', eventId)
       .single();
     
     if (error) {
-      if (error.code === 'PGRST116') {
-        return null; // Event not found
-      }
-      console.error('Error fetching event by ID:', error);
+      console.error("Error fetching event by ID:", error);
       throw error;
     }
     
-    return data;
+    return transformDatabaseEvent(data);
   } catch (error) {
-    console.error('Error in fetchEventById:', error);
-    throw error;
-  }
-};
-
-// Get results when no events are available
-export const getEmptyEventsResult = async (): Promise<EventsResult> => {
-  try {
-    // Check if the user is authenticated
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
-      throw new Error('You must be logged in to view events');
-    }
-    
-    const userId = sessionData.session.user.id;
-    
-    // Get the user's role to determine if they can create events
-    const userRole = await getUserRole(userId);
-    const canCreateEvents = userRole === 'individual' || userRole === 'business';
-    
-    return {
-      events: [],
-      userRole,
-      canCreateEvents
-    };
-  } catch (error) {
-    console.error('Error in getEmptyEventsResult:', error);
-    return {
-      events: [],
-      userRole: 'free',
-      canCreateEvents: false
-    };
+    console.error("Error in fetchEventById:", error);
+    return null;
   }
 };

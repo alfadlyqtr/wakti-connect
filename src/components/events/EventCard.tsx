@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useRouter } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
   Calendar, 
@@ -15,7 +15,7 @@ import {
   Users
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { EventCustomization, Event, EventStatus } from '@/types/event.types';
+import { EventCustomization, Event, EventStatus, BackgroundType, ButtonShape } from '@/types/event.types';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -39,7 +39,7 @@ const EventCard: React.FC<EventCardProps> = ({
   onDecline
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter || { push: () => {} }; // Fallback if router is not available
+  const navigate = useNavigate();
   
   // Default customization values if not provided
   const customization = event.customization || {
@@ -52,11 +52,9 @@ const EventCard: React.FC<EventCardProps> = ({
   };
   
   // Destructure font objects with fallbacks
-  const { 
-    headerFont = customization.font, 
-    descriptionFont = customization.font, 
-    dateTimeFont = customization.font 
-  } = customization;
+  const headerFont = customization.headerFont || customization.font;
+  const descriptionFont = customization.descriptionFont || customization.font;
+  const dateTimeFont = customization.dateTimeFont || customization.font;
   
   // Format the date for display
   const formatEventDate = (dateString: string) => {
@@ -85,9 +83,9 @@ const EventCard: React.FC<EventCardProps> = ({
     if (customization.background.type === 'solid') {
       return { backgroundColor: customization.background.value || '#ffffff' };
     } else if (customization.background.type === 'gradient') {
-      if (customization.background.direction) {
+      if (customization?.background?.direction) {
         return { backgroundImage: customization.background.value };
-      } else if (customization.background.angle !== undefined) {
+      } else if (customization?.background?.angle !== undefined) {
         return { backgroundImage: customization.background.value };
       }
       return { backgroundImage: customization.background.value || 'linear-gradient(to right, #f7f7f7, #e3e3e3)' };
@@ -106,7 +104,7 @@ const EventCard: React.FC<EventCardProps> = ({
   };
   
   // Determine if header should be shown
-  const shouldShowHeader = customization.headerStyle !== 'minimal';
+  const shouldShowHeader = customization?.headerStyle !== 'minimal';
   
   // Get animation class
   const getAnimationClass = (animationType?: string, delay: number = 0) => {
@@ -121,8 +119,8 @@ const EventCard: React.FC<EventCardProps> = ({
   
   // Get element animation class
   const getElementAnimation = (element: 'text' | 'buttons' | 'icons') => {
-    if (!customization.elementAnimations) return '';
-    return getAnimationClass(customization.elementAnimations[element], 0);
+    if (!customization?.elementAnimations) return '';
+    return getAnimationClass(customization?.elementAnimations[element], 0);
   };
   
   return (
@@ -138,13 +136,13 @@ const EventCard: React.FC<EventCardProps> = ({
       {shouldShowHeader && (
         <CardHeader className={cn(
           "relative pt-6",
-          customization.headerStyle === 'banner' && "bg-primary/10 pb-16",
+          customization?.headerStyle === 'banner' && "bg-primary/10 pb-16",
           getElementAnimation('text')
         )}>
-          {customization.headerImage && (
+          {customization?.headerImage && (
             <div className="absolute inset-0 w-full h-full">
               <img 
-                src={customization.headerImage} 
+                src={customization?.headerImage} 
                 alt="Event header" 
                 className="w-full h-full object-cover opacity-50"
               />
@@ -153,11 +151,11 @@ const EventCard: React.FC<EventCardProps> = ({
           )}
           
           <CardTitle style={{ 
-            fontFamily: headerFont.family || 'inherit', 
-            fontSize: getFontSize(headerFont.size || 'large'), 
-            color: headerFont.color || '#333333',
-            fontWeight: getFontWeight(headerFont.weight || 'bold'),
-            textAlign: customization.font.alignment as any || 'left',
+            fontFamily: headerFont?.family || 'inherit', 
+            fontSize: getFontSize(headerFont?.size || 'large'), 
+            color: headerFont?.color || '#333333',
+            fontWeight: getFontWeight(headerFont?.weight || 'bold'),
+            textAlign: customization?.font?.alignment || 'left',
             position: 'relative',
             zIndex: 10
           }}>
@@ -166,10 +164,10 @@ const EventCard: React.FC<EventCardProps> = ({
           
           {event.description && (
             <CardDescription style={{ 
-              fontFamily: descriptionFont.family || 'inherit', 
-              fontSize: getFontSize(descriptionFont.size || 'medium'),
-              color: descriptionFont.color || '#666666',
-              fontWeight: getFontWeight(descriptionFont.weight || 'normal'),
+              fontFamily: descriptionFont?.family || 'inherit', 
+              fontSize: getFontSize(descriptionFont?.size || 'medium'),
+              color: descriptionFont?.color || '#666666',
+              fontWeight: getFontWeight(descriptionFont?.weight || 'normal'),
               position: 'relative',
               zIndex: 10
             }} className={getElementAnimation('text')}>
@@ -177,10 +175,10 @@ const EventCard: React.FC<EventCardProps> = ({
             </CardDescription>
           )}
           
-          {customization.branding && customization.branding.logo && (
+          {customization?.branding && customization?.branding?.logo && (
             <div className="absolute top-2 right-2">
               <img 
-                src={customization.branding.logo} 
+                src={customization?.branding?.logo} 
                 alt="Branding" 
                 className="h-8 w-auto"
               />
@@ -191,27 +189,27 @@ const EventCard: React.FC<EventCardProps> = ({
       
       <CardContent className={cn(
         "flex-1 space-y-4 pt-6",
-        customization.headerStyle === 'banner' && "-mt-12 relative z-10 rounded-t-xl bg-card shadow",
+        customization?.headerStyle === 'banner' && "-mt-12 relative z-10 rounded-t-xl bg-card shadow",
         !shouldShowHeader && "pt-6",
-        getAnimationClass(customization.animation)
+        getAnimationClass(customization?.animation)
       )}>
         {!shouldShowHeader && (
           <div className={getElementAnimation('text')}>
             <h3 style={{ 
-              fontFamily: headerFont.family || 'inherit', 
-              fontSize: getFontSize(headerFont.size || 'large'), 
-              color: headerFont.color || '#333333',
-              fontWeight: getFontWeight(headerFont.weight || 'bold')
+              fontFamily: headerFont?.family || 'inherit', 
+              fontSize: getFontSize(headerFont?.size || 'large'), 
+              color: headerFont?.color || '#333333',
+              fontWeight: getFontWeight(headerFont?.weight || 'bold')
             }}>
               {event.title}
             </h3>
             
             {event.description && (
               <p style={{ 
-                fontFamily: descriptionFont.family || 'inherit', 
-                fontSize: getFontSize(descriptionFont.size || 'medium'),
-                color: descriptionFont.color || '#666666',
-                fontWeight: getFontWeight(descriptionFont.weight || 'normal')
+                fontFamily: descriptionFont?.family || 'inherit', 
+                fontSize: getFontSize(descriptionFont?.size || 'medium'),
+                color: descriptionFont?.color || '#666666',
+                fontWeight: getFontWeight(descriptionFont?.weight || 'normal')
               }} className="mt-1">
                 {event.description}
               </p>
@@ -223,10 +221,10 @@ const EventCard: React.FC<EventCardProps> = ({
           <div className={cn("flex items-center", getElementAnimation('text'))}>
             <Calendar className={cn("mr-2 h-4 w-4 text-muted-foreground", getElementAnimation('icons'))} />
             <span style={{ 
-              fontFamily: dateTimeFont.family || 'inherit', 
-              fontSize: getFontSize(dateTimeFont.size || 'small'),
-              color: dateTimeFont.color || '#666666',
-              fontWeight: getFontWeight(dateTimeFont.weight || 'normal')
+              fontFamily: dateTimeFont?.family || 'inherit', 
+              fontSize: getFontSize(dateTimeFont?.size || 'small'),
+              color: dateTimeFont?.color || '#666666',
+              fontWeight: getFontWeight(dateTimeFont?.weight || 'normal')
             }}>
               {formatEventDate(event.start_time)}
             </span>
@@ -236,10 +234,10 @@ const EventCard: React.FC<EventCardProps> = ({
             <div className={cn("flex items-center", getElementAnimation('text'))}>
               <Clock className={cn("mr-2 h-4 w-4 text-muted-foreground", getElementAnimation('icons'))} />
               <span style={{ 
-                fontFamily: dateTimeFont.family || 'inherit', 
-                fontSize: getFontSize(dateTimeFont.size || 'small'),
-                color: dateTimeFont.color || '#666666',
-                fontWeight: getFontWeight(dateTimeFont.weight || 'normal')
+                fontFamily: dateTimeFont?.family || 'inherit', 
+                fontSize: getFontSize(dateTimeFont?.size || 'small'),
+                color: dateTimeFont?.color || '#666666',
+                fontWeight: getFontWeight(dateTimeFont?.weight || 'normal')
               }}>
                 {formatEventTime(event.start_time)} - {formatEventTime(event.end_time)}
               </span>
@@ -261,7 +259,7 @@ const EventCard: React.FC<EventCardProps> = ({
           )}
         </div>
         
-        {customization.enableChatbot && (
+        {customization?.enableChatbot && (
           <div className={cn("mt-4 p-3 bg-primary/5 rounded-md", getElementAnimation('text'))}>
             <p className={cn("text-sm", getElementAnimation('text'))}>
               AI assistant available to answer questions about this event
@@ -275,7 +273,7 @@ const EventCard: React.FC<EventCardProps> = ({
       
       <CardFooter className={cn(
         "flex flex-wrap gap-2 pt-0 pb-4 px-6",
-        customization.headerStyle === 'banner' && "bg-card",
+        customization?.headerStyle === 'banner' && "bg-card",
         getElementAnimation('buttons')
       )}>
         {event.status === "sent" && getResponseButtons()}
@@ -284,7 +282,7 @@ const EventCard: React.FC<EventCardProps> = ({
       </CardFooter>
       
       <div className="text-center text-xs text-muted-foreground p-1" style={{ 
-        color: customization.poweredByColor || '#666' 
+        color: customization?.poweredByColor || '#666' 
       }}>
         Powered by WAKTI
       </div>
@@ -293,7 +291,7 @@ const EventCard: React.FC<EventCardProps> = ({
   
   // Helper function to get response buttons
   function getResponseButtons() {
-    if (!customization.showAcceptDeclineButtons) return null;
+    if (!customization?.showAcceptDeclineButtons) return null;
     
     if (event.status === "accepted" || event.status === "declined") {
       return (
@@ -436,42 +434,42 @@ const EventCard: React.FC<EventCardProps> = ({
   
   // Helper function to get card effect classes
   function getCardEffectClasses() {
-    if (!customization.cardEffect) return '';
+    if (!customization?.cardEffect) return '';
     
     const classes = [];
     
     // Shadow effect
-    if (customization.cardEffect.type === 'shadow') {
+    if (customization?.cardEffect?.type === 'shadow') {
       classes.push('shadow-md');
     }
     
     // Matte effect
-    if (customization.cardEffect.type === 'matte') {
+    if (customization?.cardEffect?.type === 'matte') {
       classes.push('bg-opacity-90');
     }
     
     // Gloss effect
-    if (customization.cardEffect.type === 'gloss') {
+    if (customization?.cardEffect?.type === 'gloss') {
       classes.push('backdrop-filter backdrop-blur-sm bg-opacity-80');
     }
     
     // Border radius
-    if (customization.cardEffect.borderRadius) {
+    if (customization?.cardEffect?.borderRadius) {
       const radius = {
         'none': 'rounded-none',
         'small': 'rounded-sm',
         'medium': 'rounded-md',
         'large': 'rounded-lg'
-      }[customization.cardEffect.borderRadius];
+      }[customization?.cardEffect?.borderRadius];
       
       if (radius) classes.push(radius);
     }
     
     // Border
-    if (customization.cardEffect.border) {
+    if (customization?.cardEffect?.border) {
       classes.push('border');
-      if (customization.cardEffect.borderColor) {
-        classes.push(`border-[${customization.cardEffect.borderColor}]`);
+      if (customization?.cardEffect?.borderColor) {
+        classes.push(`border-[${customization?.cardEffect?.borderColor}]`);
       }
     }
     

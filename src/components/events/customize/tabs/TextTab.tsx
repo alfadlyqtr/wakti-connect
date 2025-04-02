@@ -1,135 +1,206 @@
 
-import React, { useState } from "react";
+import React from "react";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCustomization } from "../context";
+import { ColorPickerInput } from "../inputs/ColorPickerInput";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EventCustomization } from "@/types/event.types";
-import FontSelector from "../FontSelector";
 
-interface TextTabProps {
-  customization: EventCustomization;
-  onFontChange: (property: 'family' | 'size' | 'color' | 'weight' | 'alignment', value: string) => void;
-  onHeaderFontChange?: (property: 'family' | 'size' | 'color' | 'weight', value: string) => void;
-  onDescriptionFontChange?: (property: 'family' | 'size' | 'color' | 'weight', value: string) => void;
-  onDateTimeFontChange?: (property: 'family' | 'size' | 'color' | 'weight', value: string) => void;
-}
+const fontFamilies = [
+  { id: "inter", label: "Inter", value: 'Inter, sans-serif' },
+  { id: "roboto", label: "Roboto", value: 'Roboto, sans-serif' },
+  { id: "poppins", label: "Poppins", value: 'Poppins, sans-serif' },
+  { id: "system", label: "System UI", value: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
+];
 
-// Define FontProps interface to match component expectations
+const fontSizes = [
+  { id: "small", label: "Small" },
+  { id: "medium", label: "Medium" },
+  { id: "large", label: "Large" },
+  { id: "xlarge", label: "Extra Large" },
+];
+
+const fontWeights = [
+  { id: "light", label: "Light" },
+  { id: "normal", label: "Normal" },
+  { id: "medium", label: "Medium" },
+  { id: "bold", label: "Bold" },
+];
+
+const textAlignments = [
+  { id: "left", label: "Left" },
+  { id: "center", label: "Center" },
+  { id: "right", label: "Right" },
+];
+
 export interface FontProps {
   family: string;
-  size?: string;
-  color?: string;
+  size: string;
+  color: string;
   weight?: string;
-  alignment?: string;
+  label?: string;
+  handleFamilyChange: (value: string) => void;
+  handleSizeChange: (value: string) => void;
+  handleColorChange: (value: string) => void;
+  handleWeightChange?: (value: string) => void;
 }
 
-const TextTab: React.FC<TextTabProps> = ({
-  customization,
-  onFontChange,
-  onHeaderFontChange,
-  onDescriptionFontChange,
-  onDateTimeFontChange
+const FontSection: React.FC<FontProps> = ({
+  family,
+  size,
+  color,
+  weight = "normal",
+  label = "Font",
+  handleFamilyChange,
+  handleSizeChange,
+  handleColorChange,
+  handleWeightChange,
 }) => {
-  const [activeTab, setActiveTab] = useState("main");
-
-  // Helper function to handle property mapping and filter out alignment for tab-specific handlers
-  const handleFontChange = (handler: ((property: any, value: string) => void) | undefined, property: string, value: string) => {
-    if (handler) {
-      // Skip alignment for tab-specific handlers that don't support it
-      if (property === 'alignment' && handler !== onFontChange) {
-        return; // Skip alignment for header, description, and dateTime fonts
-      }
-      
-      // For onFontChange, pass all properties including alignment
-      if (handler === onFontChange) {
-        handler(property as 'family' | 'size' | 'color' | 'weight' | 'alignment', value);
-      } else {
-        // For other handlers, only pass the properties they support
-        handler(property as 'family' | 'size' | 'color' | 'weight', value);
-      }
-    }
-  };
-
-  // Ensure font objects have required properties with defaults
-  const mainFont: FontProps = {
-    family: customization.font.family || 'system-ui, sans-serif',
-    size: customization.font.size,
-    color: customization.font.color,
-    weight: customization.font.weight,
-    alignment: customization.font.alignment
-  };
-
   return (
     <div className="space-y-4">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4 w-full">
+      <h3 className="text-base font-medium">{label}</h3>
+      
+      <div className="grid grid-cols-1 gap-4">
+        <div className="space-y-2">
+          <Label>Font Family</Label>
+          <Select value={family} onValueChange={handleFamilyChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select font family" />
+            </SelectTrigger>
+            <SelectContent>
+              {fontFamilies.map((font) => (
+                <SelectItem key={font.id} value={font.value}>
+                  {font.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label>Font Size</Label>
+          <RadioGroup value={size} onValueChange={handleSizeChange} className="flex space-x-4">
+            {fontSizes.map((fSize) => (
+              <div key={fSize.id} className="flex items-center space-x-2">
+                <RadioGroupItem value={fSize.id} id={`size-${fSize.id}`} />
+                <Label htmlFor={`size-${fSize.id}`}>{fSize.label}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+        
+        {handleWeightChange && (
+          <div className="space-y-2">
+            <Label>Font Weight</Label>
+            <RadioGroup value={weight} onValueChange={handleWeightChange} className="flex space-x-4">
+              {fontWeights.map((fWeight) => (
+                <div key={fWeight.id} className="flex items-center space-x-2">
+                  <RadioGroupItem value={fWeight.id} id={`weight-${fWeight.id}`} />
+                  <Label htmlFor={`weight-${fWeight.id}`}>{fWeight.label}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
+        )}
+        
+        <div className="space-y-2">
+          <Label>Text Color</Label>
+          <ColorPickerInput value={color} onChange={handleColorChange} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const TextTab = () => {
+  const {
+    customization,
+    handleFontChange,
+    handleHeaderFontChange,
+    handleDescriptionFontChange,
+    handleDateTimeFontChange,
+  } = useCustomization();
+
+  return (
+    <div className="space-y-6">
+      <Tabs defaultValue="main">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="main">Main Text</TabsTrigger>
-          <TabsTrigger value="header">Header</TabsTrigger>
+          <TabsTrigger value="title">Title</TabsTrigger>
           <TabsTrigger value="description">Description</TabsTrigger>
-          <TabsTrigger value="datetime">Date & Time</TabsTrigger>
+          <TabsTrigger value="dateTime">Date & Time</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="main" className="pt-4">
-          <div className="mb-4 p-3 bg-muted/30 rounded-md text-sm">
-            These settings apply to all text by default, but can be overridden in the specific tabs.
+        <TabsContent value="main" className="space-y-4 pt-4">
+          <FontSection
+            family={customization.font.family}
+            size={customization.font.size}
+            color={customization.font.color}
+            weight={customization.font.weight}
+            handleFamilyChange={(value) => handleFontChange('family', value)}
+            handleSizeChange={(value) => handleFontChange('size', value)}
+            handleColorChange={(value) => handleFontChange('color', value)}
+            handleWeightChange={(value) => handleFontChange('weight', value)}
+            label="Main Font Settings"
+          />
+          
+          <div className="space-y-2">
+            <Label>Text Alignment</Label>
+            <RadioGroup
+              value={customization.font.alignment || 'left'}
+              onValueChange={(value) => handleFontChange('alignment', value)}
+              className="flex space-x-4"
+            >
+              {textAlignments.map((alignment) => (
+                <div key={alignment.id} className="flex items-center space-x-2">
+                  <RadioGroupItem value={alignment.id} id={`alignment-${alignment.id}`} />
+                  <Label htmlFor={`alignment-${alignment.id}`}>{alignment.label}</Label>
+                </div>
+              ))}
+            </RadioGroup>
           </div>
-          <FontSelector 
-            font={mainFont}
-            onFontChange={(property, value) => handleFontChange(onFontChange, property, value)}
-            showAlignment={true}
-            showWeight={true}
+        </TabsContent>
+        
+        <TabsContent value="title" className="space-y-4 pt-4">
+          <FontSection
+            family={customization.headerFont?.family || customization.font.family}
+            size={customization.headerFont?.size || customization.font.size}
+            color={customization.headerFont?.color || customization.font.color}
+            weight={customization.headerFont?.weight || customization.font.weight}
+            handleFamilyChange={(value) => handleHeaderFontChange('family', value)}
+            handleSizeChange={(value) => handleHeaderFontChange('size', value)}
+            handleColorChange={(value) => handleHeaderFontChange('color', value)}
+            handleWeightChange={(value) => handleHeaderFontChange('weight', value)}
+            label="Title Font Settings"
           />
         </TabsContent>
         
-        <TabsContent value="header" className="pt-4">
-          <div className="mb-4 p-3 bg-muted/30 rounded-md text-sm">
-            Customize the title font separately from the main text.
-          </div>
-          <FontSelector 
-            font={{
-              family: customization.headerFont?.family || customization.font.family || 'system-ui, sans-serif',
-              size: customization.headerFont?.size || customization.font.size,
-              color: customization.headerFont?.color || customization.font.color,
-              weight: customization.headerFont?.weight || customization.font.weight || 'normal'
-            }}
-            onFontChange={(property, value) => handleFontChange(onHeaderFontChange, property, value)}
-            showAlignment={false}
-            showWeight={true}
-            previewText={customization.headerFont?.family ? "Custom Header Font" : "Using Default Font"}
+        <TabsContent value="description" className="space-y-4 pt-4">
+          <FontSection
+            family={customization.descriptionFont?.family || customization.font.family}
+            size={customization.descriptionFont?.size || customization.font.size}
+            color={customization.descriptionFont?.color || customization.font.color}
+            weight={customization.descriptionFont?.weight || customization.font.weight}
+            handleFamilyChange={(value) => handleDescriptionFontChange('family', value)}
+            handleSizeChange={(value) => handleDescriptionFontChange('size', value)}
+            handleColorChange={(value) => handleDescriptionFontChange('color', value)}
+            handleWeightChange={(value) => handleDescriptionFontChange('weight', value)}
+            label="Description Font Settings"
           />
         </TabsContent>
         
-        <TabsContent value="description" className="pt-4">
-          <div className="mb-4 p-3 bg-muted/30 rounded-md text-sm">
-            Customize the description text separately.
-          </div>
-          <FontSelector 
-            font={{
-              family: customization.descriptionFont?.family || customization.font.family || 'system-ui, sans-serif',
-              size: customization.descriptionFont?.size || customization.font.size,
-              color: customization.descriptionFont?.color || customization.font.color,
-              weight: customization.descriptionFont?.weight || customization.font.weight || 'normal'
-            }}
-            onFontChange={(property, value) => handleFontChange(onDescriptionFontChange, property, value)}
-            showAlignment={false}
-            showWeight={true}
-            previewText={customization.descriptionFont?.family ? "Custom Description Font" : "Using Default Font"}
-          />
-        </TabsContent>
-        
-        <TabsContent value="datetime" className="pt-4">
-          <div className="mb-4 p-3 bg-muted/30 rounded-md text-sm">
-            Customize the date and time text separately.
-          </div>
-          <FontSelector 
-            font={{
-              family: customization.dateTimeFont?.family || customization.font.family || 'system-ui, sans-serif',
-              size: customization.dateTimeFont?.size || customization.font.size,
-              color: customization.dateTimeFont?.color || customization.font.color,
-              weight: customization.dateTimeFont?.weight || customization.font.weight || 'normal'
-            }}
-            onFontChange={(property, value) => handleFontChange(onDateTimeFontChange, property, value)}
-            showAlignment={false}
-            showWeight={true}
-            previewText={customization.dateTimeFont?.family ? "Custom Date/Time Font" : "Using Default Font"}
+        <TabsContent value="dateTime" className="space-y-4 pt-4">
+          <FontSection
+            family={customization.dateTimeFont?.family || customization.font.family}
+            size={customization.dateTimeFont?.size || customization.font.size}
+            color={customization.dateTimeFont?.color || customization.font.color}
+            weight={customization.dateTimeFont?.weight || customization.font.weight}
+            handleFamilyChange={(value) => handleDateTimeFontChange('family', value)}
+            handleSizeChange={(value) => handleDateTimeFontChange('size', value)}
+            handleColorChange={(value) => handleDateTimeFontChange('color', value)}
+            handleWeightChange={(value) => handleDateTimeFontChange('weight', value)}
+            label="Date & Time Font Settings"
           />
         </TabsContent>
       </Tabs>

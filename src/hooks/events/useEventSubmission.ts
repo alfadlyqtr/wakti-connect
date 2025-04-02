@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { EventFormValues, EventCustomization, EventStatus, EventFormData } from "@/types/event.types";
+import { EventFormValues, EventCustomization, EventStatus } from "@/types/event.types";
 import { InvitationRecipient } from "@/types/invitation.types";
 import { useEvents } from "@/hooks/useEvents";
 import { toast } from "@/components/ui/use-toast";
@@ -62,7 +62,7 @@ export const useEventSubmission = ({
     setValue('description', description);
   }, [title, description, setValue]);
   
-  const processDateAndTime = (formData: EventFormValues): EventFormData => {
+  const processDateAndTime = (formData: EventFormValues) => {
     // Create ISO string for start and end times
     const startDateTime = new Date(selectedDate);
     const endDateTime = new Date(selectedDate);
@@ -101,7 +101,7 @@ export const useEventSubmission = ({
       invitations: recipients.length > 0 ? recipients.map(recipient => ({
         email: recipient.email,
         invited_user_id: recipient.userId,
-        status: 'pending'
+        status: 'pending' as const
       })) : undefined
     };
   };

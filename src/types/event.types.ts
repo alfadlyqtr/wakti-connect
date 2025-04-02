@@ -28,6 +28,9 @@ export type ButtonShape = "rounded" | "pill" | "square";
 // Event card effect types
 export type CardEffectType = "shadow" | "matte" | "gloss";
 
+// Event animation types
+export type AnimationType = "fade" | "slide" | "pop" | "none";
+
 // Define the type for form data sent to API
 export interface EventFormData {
   title: string;
@@ -51,14 +54,11 @@ export interface EventFormData {
   }>;
 }
 
-// Background type definition with solid instead of color
+// Background type definition
 export type BackgroundType = "solid" | "gradient" | "image";
 
 // Font weight type
 export type FontWeight = "normal" | "medium" | "bold" | "light";
-
-// Animation type
-export type AnimationType = "fade" | "slide" | "pop" | "none";
 
 // Animation delay type
 export type AnimationDelay = "none" | "staggered" | "sequence";
@@ -67,40 +67,40 @@ export type AnimationDelay = "none" | "staggered" | "sequence";
 export interface EventCustomization {
   // Background
   background: {
-    type?: BackgroundType;
-    value?: string;
+    type: BackgroundType;
+    value: string;
     angle?: number;
     direction?: string;
   };
   
   // Font styles
   font: {
-    family?: string;
-    size?: string;
-    color?: string;
+    family: string;
+    size: string;
+    color: string;
     weight?: string;
     alignment?: string;
   };
   
   // Specific font customizations
   headerFont?: {
-    family?: string;
-    size?: string;
-    color?: string;
+    family: string;
+    size: string;
+    color: string;
     weight?: string;
   };
   
   descriptionFont?: {
-    family?: string;
-    size?: string;
-    color?: string;
+    family: string;
+    size: string;
+    color: string;
     weight?: string;
   };
   
   dateTimeFont?: {
-    family?: string;
-    size?: string;
-    color?: string;
+    family: string;
+    size: string;
+    color: string;
     weight?: string;
   };
   
