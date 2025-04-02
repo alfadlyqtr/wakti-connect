@@ -2,165 +2,169 @@
 import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 
 interface ProfessionalSetupProps {
   onChange: (settings: Record<string, any>) => void;
 }
 
 export const ProfessionalSetup: React.FC<ProfessionalSetupProps> = ({ onChange }) => {
-  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
-  
-  const handleAreaToggle = (area: string) => {
-    setSelectedAreas(prev => {
-      const newAreas = prev.includes(area)
-        ? prev.filter(s => s !== area)
-        : [...prev, area];
-        
-      onChange({ workAreas: newAreas });
-      return newAreas;
-    });
+  const [settings, setSettings] = useState({
+    industry: "",
+    communicationStyle: "balanced",
+    detailLevel: "balanced",
+    focusAreas: {
+      timeManagement: true,
+      emails: true,
+      scheduling: true,
+      projectPlanning: false,
+      research: false,
+    }
+  });
+
+  const handleChange = (field: string, value: any) => {
+    const newSettings = { ...settings, [field]: value };
+    setSettings(newSettings);
+    onChange(newSettings);
   };
-  
-  const handleIndustryChange = (value: string) => {
-    onChange({ industry: value });
+
+  const handleFocusAreaChange = (area: string, checked: boolean) => {
+    const newFocusAreas = { ...settings.focusAreas, [area]: checked };
+    const newSettings = { ...settings, focusAreas: newFocusAreas };
+    setSettings(newSettings);
+    onChange(newSettings);
   };
-  
-  const handleRoleChange = (value: string) => {
-    onChange({ jobRole: value });
-  };
-  
-  const handleCommunicationStyleChange = (value: string) => {
-    onChange({ communicationStyle: value });
-  };
-  
-  const handleDetailLevelChange = (value: string) => {
-    onChange({ detailLevel: value });
-  };
-  
-  const handleGoalsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onChange({ professionalGoals: e.target.value });
-  };
-  
+
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium mb-4">Personalize Your Professional Experience</h3>
+        <h3 className="text-lg font-medium mb-4">Professional Settings</h3>
         <p className="text-sm text-muted-foreground mb-6">
-          Tell us about your work so your AI assistant can better help you with professional tasks.
+          Tell us more about your work to customize your AI assistant.
         </p>
       </div>
-      
+
       <div className="space-y-4">
         <div>
-          <Label htmlFor="industry">Industry</Label>
-          <Select onValueChange={handleIndustryChange}>
-            <SelectTrigger id="industry">
-              <SelectValue placeholder="Select your industry" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="technology">Technology</SelectItem>
-              <SelectItem value="finance">Finance & Banking</SelectItem>
-              <SelectItem value="healthcare">Healthcare</SelectItem>
-              <SelectItem value="education">Education</SelectItem>
-              <SelectItem value="retail">Retail</SelectItem>
-              <SelectItem value="manufacturing">Manufacturing</SelectItem>
-              <SelectItem value="services">Professional Services</SelectItem>
-              <SelectItem value="government">Government</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <Label htmlFor="role">Job Role</Label>
-          <Select onValueChange={handleRoleChange}>
-            <SelectTrigger id="role">
-              <SelectValue placeholder="Select your role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="manager">Manager/Director</SelectItem>
-              <SelectItem value="executive">Executive/C-Suite</SelectItem>
-              <SelectItem value="specialist">Specialist/Associate</SelectItem>
-              <SelectItem value="consultant">Consultant</SelectItem>
-              <SelectItem value="freelancer">Freelancer</SelectItem>
-              <SelectItem value="technical">Technical Professional</SelectItem>
-              <SelectItem value="administrative">Administrative Staff</SelectItem>
-              <SelectItem value="academic">Academic Professional</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <Label>Areas You Need Help With</Label>
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            {["Task Management", "Project Planning", "Email Management", "Meeting Preparation", 
-              "Time Management", "Reports & Documents", "Research", "Data Analysis", 
-              "Presentations", "Networking", "Team Coordination", "Other"].map(area => (
-              <div key={area} className="flex items-center space-x-2">
-                <Checkbox 
-                  id={`area-${area}`} 
-                  checked={selectedAreas.includes(area)}
-                  onCheckedChange={() => handleAreaToggle(area)}
-                />
-                <label
-                  htmlFor={`area-${area}`}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {area}
-                </label>
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <div>
-          <Label htmlFor="communication-style">Communication Style</Label>
-          <Select onValueChange={handleCommunicationStyleChange}>
-            <SelectTrigger id="communication-style">
-              <SelectValue placeholder="How should the AI communicate with you?" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="formal">Formal and professional</SelectItem>
-              <SelectItem value="casual">Casual and conversational</SelectItem>
-              <SelectItem value="concise">Direct and to-the-point</SelectItem>
-              <SelectItem value="detailed">Detailed and thorough</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <Label htmlFor="detail-level">Information Detail Level</Label>
-          <Select onValueChange={handleDetailLevelChange}>
-            <SelectTrigger id="detail-level">
-              <SelectValue placeholder="How detailed should responses be?" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="short">Brief summaries</SelectItem>
-              <SelectItem value="balanced">Balanced details</SelectItem>
-              <SelectItem value="detailed">In-depth information</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <Label htmlFor="goals">What are your professional goals?</Label>
-          <Textarea 
-            id="goals" 
-            placeholder="E.g., Improve productivity, advance in my career, develop management skills..."
-            className="resize-none"
-            rows={3}
-            onChange={handleGoalsChange}
+          <Label htmlFor="industry">Your Industry or Field</Label>
+          <Input 
+            id="industry" 
+            placeholder="e.g. Marketing, Healthcare, Technology" 
+            value={settings.industry}
+            onChange={(e) => handleChange("industry", e.target.value)}
           />
+        </div>
+
+        <Separator />
+
+        <div className="space-y-2">
+          <Label>Communication Style</Label>
+          <RadioGroup 
+            value={settings.communicationStyle} 
+            onValueChange={(value) => handleChange("communicationStyle", value)}
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="formal" id="formal" />
+              <Label htmlFor="formal" className="cursor-pointer">Formal & Professional</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="casual" id="casual" />
+              <Label htmlFor="casual" className="cursor-pointer">Casual & Conversational</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="balanced" id="balanced" />
+              <Label htmlFor="balanced" className="cursor-pointer">Balanced</Label>
+            </div>
+          </RadioGroup>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Detail Level</Label>
+          <RadioGroup 
+            value={settings.detailLevel} 
+            onValueChange={(value) => handleChange("detailLevel", value)}
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="concise" id="concise" />
+              <Label htmlFor="concise" className="cursor-pointer">Concise & To the Point</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="detailed" id="detailed" />
+              <Label htmlFor="detailed" className="cursor-pointer">Detailed & Thorough</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="balanced" id="balanced_detail" />
+              <Label htmlFor="balanced_detail" className="cursor-pointer">Balanced</Label>
+            </div>
+          </RadioGroup>
+        </div>
+
+        <Separator />
+
+        <div className="space-y-2">
+          <Label>Focus Areas</Label>
+          <p className="text-sm text-muted-foreground">
+            Select the areas where you want the most assistance
+          </p>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="timeManagement" 
+                checked={settings.focusAreas.timeManagement}
+                onCheckedChange={(checked) => 
+                  handleFocusAreaChange("timeManagement", checked as boolean)
+                }
+              />
+              <Label htmlFor="timeManagement" className="cursor-pointer">Time Management</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="emails" 
+                checked={settings.focusAreas.emails}
+                onCheckedChange={(checked) => 
+                  handleFocusAreaChange("emails", checked as boolean)
+                }
+              />
+              <Label htmlFor="emails" className="cursor-pointer">Email & Communication</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="scheduling" 
+                checked={settings.focusAreas.scheduling}
+                onCheckedChange={(checked) => 
+                  handleFocusAreaChange("scheduling", checked as boolean)
+                }
+              />
+              <Label htmlFor="scheduling" className="cursor-pointer">Scheduling & Calendar</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="projectPlanning" 
+                checked={settings.focusAreas.projectPlanning}
+                onCheckedChange={(checked) => 
+                  handleFocusAreaChange("projectPlanning", checked as boolean)
+                }
+              />
+              <Label htmlFor="projectPlanning" className="cursor-pointer">Project Planning</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="research" 
+                checked={settings.focusAreas.research}
+                onCheckedChange={(checked) => 
+                  handleFocusAreaChange("research", checked as boolean)
+                }
+              />
+              <Label htmlFor="research" className="cursor-pointer">Research & Analysis</Label>
+            </div>
+          </div>
         </div>
       </div>
     </div>

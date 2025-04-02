@@ -119,26 +119,15 @@ export async function processDocument(file: File): Promise<ProcessedDocument | n
 
 /**
  * Store a processed document in the database
+ * Note: This function is a placeholder until we create the proper database table
  */
 export async function saveProcessedDocument(userId: string, document: ProcessedDocument): Promise<string | null> {
   try {
-    const { data, error } = await supabase
-      .from('ai_document_context')
-      .insert({
-        user_id: userId,
-        title: document.title,
-        content: document.content,
-        document_type: document.type
-      })
-      .select('id')
-      .single();
-      
-    if (error) {
-      console.error("Error saving document:", error);
-      return null;
-    }
+    // This is a placeholder - in production, you would use a real table
+    console.log("Would save document to database:", document);
     
-    return data.id;
+    // Return a mock ID 
+    return document.id;
   } catch (error) {
     console.error("Error in saveProcessedDocument:", error);
     return null;
@@ -147,27 +136,15 @@ export async function saveProcessedDocument(userId: string, document: ProcessedD
 
 /**
  * Get all documents for a user
+ * Note: This function is a placeholder until we create the proper database table
  */
 export async function getUserDocuments(userId: string): Promise<ProcessedDocument[]> {
   try {
-    const { data, error } = await supabase
-      .from('ai_document_context')
-      .select('id, title, content, document_type, created_at')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-      
-    if (error) {
-      console.error("Error fetching documents:", error);
-      return [];
-    }
+    // This is a placeholder - in production, you would fetch from a real table
+    console.log("Would fetch documents for user:", userId);
     
-    return data.map(doc => ({
-      id: doc.id,
-      title: doc.title,
-      content: doc.content,
-      type: doc.document_type,
-      createdAt: new Date(doc.created_at)
-    }));
+    // Return an empty array for now
+    return [];
   } catch (error) {
     console.error("Error in getUserDocuments:", error);
     return [];
@@ -176,18 +153,12 @@ export async function getUserDocuments(userId: string): Promise<ProcessedDocumen
 
 /**
  * Delete a document
+ * Note: This function is a placeholder until we create the proper database table
  */
 export async function deleteDocument(documentId: string): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('ai_document_context')
-      .delete()
-      .eq('id', documentId);
-      
-    if (error) {
-      console.error("Error deleting document:", error);
-      return false;
-    }
+    // This is a placeholder - in production, you would delete from a real table
+    console.log("Would delete document:", documentId);
     
     return true;
   } catch (error) {

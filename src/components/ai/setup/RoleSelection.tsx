@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mortarboard, Briefcase, Building2, User } from "lucide-react";
+import { GraduationCap, Briefcase, Building2, User } from "lucide-react";
 
 type UserRole = "student" | "professional" | "business_owner" | "other";
 
@@ -24,7 +24,7 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelect }) => {
           className="flex flex-col items-center h-auto p-4 gap-2"
           onClick={() => onSelect("student")}
         >
-          <Mortarboard className="h-8 w-8 mb-1 text-wakti-blue" />
+          <GraduationCap className="h-8 w-8 mb-1 text-wakti-blue" />
           <span className="font-medium">Student</span>
           <span className="text-xs text-muted-foreground text-center">
             Homework help, study guidance, and academic support

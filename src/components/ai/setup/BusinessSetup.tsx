@@ -2,161 +2,200 @@
 import React, { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface BusinessSetupProps {
   onChange: (settings: Record<string, any>) => void;
 }
 
 export const BusinessSetup: React.FC<BusinessSetupProps> = ({ onChange }) => {
-  const [selectedPriorities, setSelectedPriorities] = useState<string[]>([]);
-  
-  const handlePriorityToggle = (priority: string) => {
-    setSelectedPriorities(prev => {
-      const newPriorities = prev.includes(priority)
-        ? prev.filter(p => p !== priority)
-        : [...prev, priority];
-        
-      onChange({ businessPriorities: newPriorities });
-      return newPriorities;
-    });
+  const [settings, setSettings] = useState({
+    businessType: "retail",
+    employeeCount: "1-10",
+    communicationStyle: "formal",
+    detailLevel: "balanced",
+    priorities: {
+      customerService: true,
+      staffManagement: true,
+      scheduling: true,
+      analytics: false,
+      marketing: false,
+    }
+  });
+
+  const handleChange = (field: string, value: any) => {
+    const newSettings = { ...settings, [field]: value };
+    setSettings(newSettings);
+    onChange(newSettings);
   };
-  
-  const handleBusinessTypeChange = (value: string) => {
-    onChange({ businessType: value });
+
+  const handlePriorityChange = (area: string, checked: boolean) => {
+    const newPriorities = { ...settings.priorities, [area]: checked };
+    const newSettings = { ...settings, priorities: newPriorities };
+    setSettings(newSettings);
+    onChange(newSettings);
   };
-  
-  const handleBusinessSizeChange = (value: string) => {
-    onChange({ businessSize: value });
-  };
-  
-  const handleCommunicationStyleChange = (value: string) => {
-    onChange({ communicationStyle: value });
-  };
-  
-  const handleDetailLevelChange = (value: string) => {
-    onChange({ detailLevel: value });
-  };
-  
-  const handleGoalsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onChange({ businessGoals: e.target.value });
-  };
-  
+
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium mb-4">Customize Your Business Assistant</h3>
+        <h3 className="text-lg font-medium mb-4">Business Settings</h3>
         <p className="text-sm text-muted-foreground mb-6">
-          Tell us about your business so your AI assistant can help you manage operations more effectively.
+          Customize your AI assistant for your business needs.
         </p>
       </div>
-      
+
       <div className="space-y-4">
         <div>
-          <Label htmlFor="business-type">Business Type</Label>
-          <Select onValueChange={handleBusinessTypeChange}>
-            <SelectTrigger id="business-type">
+          <Label htmlFor="businessType">Business Type</Label>
+          <Select 
+            value={settings.businessType}
+            onValueChange={(value) => handleChange("businessType", value)}
+          >
+            <SelectTrigger id="businessType">
               <SelectValue placeholder="Select your business type" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="retail">Retail</SelectItem>
-              <SelectItem value="service">Service Business</SelectItem>
-              <SelectItem value="restaurant">Restaurant/Food Service</SelectItem>
+              <SelectItem value="restaurant">Restaurant or Food Service</SelectItem>
               <SelectItem value="professional">Professional Services</SelectItem>
               <SelectItem value="healthcare">Healthcare</SelectItem>
-              <SelectItem value="technology">Technology/Software</SelectItem>
-              <SelectItem value="manufacturing">Manufacturing</SelectItem>
-              <SelectItem value="construction">Construction</SelectItem>
+              <SelectItem value="technology">Technology</SelectItem>
+              <SelectItem value="education">Education</SelectItem>
               <SelectItem value="other">Other</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        
+
         <div>
-          <Label htmlFor="business-size">Business Size</Label>
-          <Select onValueChange={handleBusinessSizeChange}>
-            <SelectTrigger id="business-size">
-              <SelectValue placeholder="How large is your business?" />
+          <Label htmlFor="employeeCount">Number of Employees</Label>
+          <Select 
+            value={settings.employeeCount}
+            onValueChange={(value) => handleChange("employeeCount", value)}
+          >
+            <SelectTrigger id="employeeCount">
+              <SelectValue placeholder="Select employee count" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="solo">Solo Entrepreneur</SelectItem>
-              <SelectItem value="micro">Micro (2-9 employees)</SelectItem>
-              <SelectItem value="small">Small (10-49 employees)</SelectItem>
-              <SelectItem value="medium">Medium (50-249 employees)</SelectItem>
-              <SelectItem value="large">Large (250+ employees)</SelectItem>
+              <SelectItem value="1-10">1-10 employees</SelectItem>
+              <SelectItem value="11-50">11-50 employees</SelectItem>
+              <SelectItem value="51-200">51-200 employees</SelectItem>
+              <SelectItem value="201+">201+ employees</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        
-        <div>
+
+        <Separator />
+
+        <div className="space-y-2">
+          <Label>Communication Style</Label>
+          <RadioGroup 
+            value={settings.communicationStyle} 
+            onValueChange={(value) => handleChange("communicationStyle", value)}
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="formal" id="formal_business" />
+              <Label htmlFor="formal_business" className="cursor-pointer">Formal & Professional</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="concise" id="concise_business" />
+              <Label htmlFor="concise_business" className="cursor-pointer">Concise & Direct</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="balanced" id="balanced_business" />
+              <Label htmlFor="balanced_business" className="cursor-pointer">Balanced</Label>
+            </div>
+          </RadioGroup>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Detail Level</Label>
+          <RadioGroup 
+            value={settings.detailLevel} 
+            onValueChange={(value) => handleChange("detailLevel", value)}
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="concise" id="concise_detail" />
+              <Label htmlFor="concise_detail" className="cursor-pointer">Concise Reports</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="detailed" id="detailed_business" />
+              <Label htmlFor="detailed_business" className="cursor-pointer">Detailed Analysis</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="balanced" id="balanced_detail_business" />
+              <Label htmlFor="balanced_detail_business" className="cursor-pointer">Balanced</Label>
+            </div>
+          </RadioGroup>
+        </div>
+
+        <Separator />
+
+        <div className="space-y-2">
           <Label>Business Priorities</Label>
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            {["Customer Management", "Staff Coordination", "Marketing", "Sales", 
-              "Appointments & Scheduling", "Inventory Management", "Financial Management", 
-              "Business Planning", "Growth Strategy", "Operations", "Service Quality", "Other"].map(priority => (
-              <div key={priority} className="flex items-center space-x-2">
-                <Checkbox 
-                  id={`priority-${priority}`} 
-                  checked={selectedPriorities.includes(priority)}
-                  onCheckedChange={() => handlePriorityToggle(priority)}
-                />
-                <label
-                  htmlFor={`priority-${priority}`}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {priority}
-                </label>
-              </div>
-            ))}
+          <p className="text-sm text-muted-foreground">
+            Select the areas where you want the most assistance
+          </p>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="customerService" 
+                checked={settings.priorities.customerService}
+                onCheckedChange={(checked) => 
+                  handlePriorityChange("customerService", checked as boolean)
+                }
+              />
+              <Label htmlFor="customerService" className="cursor-pointer">Customer Service</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="staffManagement" 
+                checked={settings.priorities.staffManagement}
+                onCheckedChange={(checked) => 
+                  handlePriorityChange("staffManagement", checked as boolean)
+                }
+              />
+              <Label htmlFor="staffManagement" className="cursor-pointer">Staff Management</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="scheduling" 
+                checked={settings.priorities.scheduling}
+                onCheckedChange={(checked) => 
+                  handlePriorityChange("scheduling", checked as boolean)
+                }
+              />
+              <Label htmlFor="scheduling" className="cursor-pointer">Scheduling & Booking</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="analytics" 
+                checked={settings.priorities.analytics}
+                onCheckedChange={(checked) => 
+                  handlePriorityChange("analytics", checked as boolean)
+                }
+              />
+              <Label htmlFor="analytics" className="cursor-pointer">Business Analytics</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="marketing" 
+                checked={settings.priorities.marketing}
+                onCheckedChange={(checked) => 
+                  handlePriorityChange("marketing", checked as boolean)
+                }
+              />
+              <Label htmlFor="marketing" className="cursor-pointer">Marketing & Promotion</Label>
+            </div>
           </div>
-        </div>
-        
-        <div>
-          <Label htmlFor="communication-style">Communication Style</Label>
-          <Select onValueChange={handleCommunicationStyleChange}>
-            <SelectTrigger id="communication-style">
-              <SelectValue placeholder="How should the AI communicate?" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="formal">Formal and professional</SelectItem>
-              <SelectItem value="casual">Casual and conversational</SelectItem>
-              <SelectItem value="concise">Direct and to-the-point</SelectItem>
-              <SelectItem value="detailed">Detailed and thorough</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <Label htmlFor="detail-level">Information Detail Level</Label>
-          <Select onValueChange={handleDetailLevelChange}>
-            <SelectTrigger id="detail-level">
-              <SelectValue placeholder="How detailed should responses be?" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="short">Brief summaries</SelectItem>
-              <SelectItem value="balanced">Balanced details</SelectItem>
-              <SelectItem value="detailed">In-depth information</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <Label htmlFor="goals">What are your key business goals?</Label>
-          <Textarea 
-            id="goals" 
-            placeholder="E.g., Increase customer retention, streamline operations, expand services..."
-            className="resize-none"
-            rows={3}
-            onChange={handleGoalsChange}
-          />
         </div>
       </div>
     </div>
