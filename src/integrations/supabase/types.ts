@@ -1625,6 +1625,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      check_contact_request: {
+        Args: {
+          user_id_param: string
+          contact_id_param: string
+        }
+        Returns: {
+          request_exists: boolean
+          request_status: string
+        }[]
+      }
       check_if_task_shared_with_user: {
         Args: {
           task_id: string
@@ -1756,6 +1766,20 @@ export type Database = {
           booking_id_param: string
         }
         Returns: boolean
+      }
+      search_users: {
+        Args: {
+          search_query: string
+        }
+        Returns: {
+          id: string
+          full_name: string
+          display_name: string
+          email: string
+          avatar_url: string
+          account_type: string
+          business_name: string
+        }[]
       }
       todo_item_belongs_to_user: {
         Args: {

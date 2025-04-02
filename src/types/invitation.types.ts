@@ -30,3 +30,18 @@ export interface BusinessSubscription {
     account_type: string;
   } | null;
 }
+
+export interface UserSearchResult {
+  id: string;
+  fullName?: string;
+  displayName?: string;
+  email?: string;
+  avatarUrl?: string;
+  accountType: string;
+  businessName?: string;
+}
+
+export interface ContactRequestStatus {
+  requestExists: boolean;
+  requestStatus: string;
+}

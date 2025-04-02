@@ -4,3 +4,4 @@ export * from './contactQueries';
 export * from './contactMutations';
 export * from './contactSettings';
 export * from './contactSync';
+export * from './contactSearch';

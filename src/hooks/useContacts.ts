@@ -13,7 +13,7 @@ import {
 import {
   fetchAutoApproveSetting,
   updateAutoApproveContacts
-} from "@/services/contacts/contactOperations";
+} from "@/services/contacts/contactSettings";
 
 export const useContacts = () => {
   const queryClient = useQueryClient();

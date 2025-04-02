@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { checkContactRequest } from "./contactSearch";
 
 /**
  * Sends a contact request to another user
@@ -23,20 +24,10 @@ export const sendContactRequest = async (contactId: string): Promise<void> => {
   }
   
   // Check if request already exists
-  const { data: existingRequest, error: checkError } = await supabase
-    .from('user_contacts')
-    .select('id, status')
-    .or(`user_id.eq.${session.user.id},contact_id.eq.${session.user.id}`)
-    .or(`contact_id.eq.${contactId},user_id.eq.${contactId}`)
-    .maybeSingle();
+  const contactStatus = await checkContactRequest(contactId);
   
-  if (checkError) {
-    console.error("Error checking existing requests:", checkError);
-    throw checkError;
-  }
-  
-  if (existingRequest) {
-    if (existingRequest.status === 'accepted') {
+  if (contactStatus.requestExists) {
+    if (contactStatus.requestStatus === 'accepted') {
       throw new Error("Already contacts");
     } else {
       throw new Error("Request already sent");
