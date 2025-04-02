@@ -44,10 +44,16 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const { user } = useAuth();
   const isMobile = useIsMobile();
   
-  // Check if setup is needed (no settings or no userRole)
+  // Check if setup is needed (by checking enabled_features or missing settings)
   useEffect(() => {
-    if (canAccess && user && settings && !settings.user_role) {
-      setShowSetupWizard(true);
+    if (canAccess && user && settings) {
+      // Try to check for specialized settings
+      const hasUserRole = settings.enabled_features && 
+        (settings.enabled_features._userRole || settings.user_role);
+      
+      if (!hasUserRole) {
+        setShowSetupWizard(true);
+      }
     }
   }, [canAccess, settings, user]);
   
@@ -56,9 +62,13 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   
   // Get personalized mode label if available
   const getModeLabel = () => {
-    if (!settings?.assistant_mode) return "";
+    if (!settings) return "";
     
-    switch (settings.assistant_mode) {
+    // Try to get from new fields first, then fallback to enabled_features
+    const assistantMode = settings.assistant_mode || 
+      (settings.enabled_features && settings.enabled_features._assistantMode) || "";
+    
+    switch (assistantMode) {
       case "tutor":
         return " • Tutor Mode";
       case "content_creator":
@@ -109,7 +119,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
 
   if (showSetupWizard) {
     return (
-      <Card className="w-full h-[calc(80vh)] flex flex-col overflow-hidden">
+      <Card className="w-full h-[calc(80vh)] flex flex-col">
         <CardHeader className="py-2 px-3 sm:py-3 sm:px-4 border-b flex-row justify-between items-center">
           <div className="flex items-center">
             <Bot className="w-5 h-5 mr-2 text-wakti-blue" />
@@ -127,13 +137,11 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
             </Button>
           )}
         </CardHeader>
-        <CardContent className="p-0 flex-1 overflow-hidden">
-          <div className="h-full overflow-auto p-0">
-            <AISetupWizard 
-              onComplete={handleSetupComplete} 
-              onError={handleSetupError}
-            />
-          </div>
+        <CardContent className="p-0 flex-1 overflow-auto">
+          <AISetupWizard 
+            onComplete={handleSetupComplete} 
+            onError={handleSetupError}
+          />
         </CardContent>
       </Card>
     );

@@ -108,25 +108,33 @@ export const AISetupWizard: React.FC<AISetupWizardProps> = ({
         console.error("Error checking existing settings:", checkError);
         throw new Error(`Failed to check for existing settings: ${checkError.message}`);
       }
-        
+      
+      // Store the role and mode information in a compatible format
+      // Save role and mode data in existing JSON fields until the migration is applied
+      const tone = specializedSettings.communicationStyle || "balanced";
+      const responseLength = specializedSettings.detailLevel || "balanced";
+      
+      // Store specialized settings in enabled_features until schema is updated
+      const enabledFeatures = {
+        tasks: true,
+        events: true,
+        staff: true,
+        analytics: true,
+        messaging: true,
+        // Store user role and mode in enabled_features for now as a workaround
+        _userRole: userRole,
+        _assistantMode: assistantMode,
+        _specializedSettings: specializedSettings
+      };
+      
       const settings = {
         user_id: user.id,
-        user_role: userRole,
-        assistant_mode: assistantMode,
-        specialized_settings: specializedSettings,
-        tone: specializedSettings.communicationStyle || "balanced",
-        response_length: specializedSettings.detailLevel || "balanced",
-        // Ensure these default values are included
         assistant_name: "WAKTI AI",
+        tone: tone,
+        response_length: responseLength,
         proactiveness: true,
         suggestion_frequency: "medium",
-        enabled_features: {
-          tasks: true,
-          events: true,
-          staff: true,
-          analytics: true,
-          messaging: true
-        }
+        enabled_features: enabledFeatures
       };
       
       console.log("Saving AI settings:", settings);
