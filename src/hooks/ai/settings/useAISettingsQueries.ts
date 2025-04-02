@@ -95,37 +95,45 @@ export const useAISettingsQuery = (user: User | null) => {
           }
         };
         
-        // Add fallback support for new fields that might not be in the database yet
-        // We need to use type assertions and checking differently for the JSON data
-        const dbData = data as any; // Use any temporarily for safer property access
-
+        // Cast the entire data object to any to avoid TypeScript errors
+        const dbData = data as any;
+        
+        // Add user_role if it exists in the database or in the enabled_features
         if (dbData.user_role) {
           settings.user_role = dbData.user_role as AISettings["user_role"];
-        } else if (settings.enabled_features && 
-                  typeof settings.enabled_features === 'object' && 
-                  '_userRole' in settings.enabled_features) {
+        } else if (
+          settings.enabled_features && 
+          typeof settings.enabled_features === 'object' && 
+          '_userRole' in settings.enabled_features
+        ) {
           const userRole = settings.enabled_features._userRole;
           if (typeof userRole === 'string') {
             settings.user_role = userRole as AISettings["user_role"];
           }
         }
         
+        // Add assistant_mode if it exists in the database or in the enabled_features
         if (dbData.assistant_mode) {
           settings.assistant_mode = dbData.assistant_mode as AISettings["assistant_mode"];
-        } else if (settings.enabled_features && 
-                  typeof settings.enabled_features === 'object' && 
-                  '_assistantMode' in settings.enabled_features) {
+        } else if (
+          settings.enabled_features && 
+          typeof settings.enabled_features === 'object' && 
+          '_assistantMode' in settings.enabled_features
+        ) {
           const assistantMode = settings.enabled_features._assistantMode;
           if (typeof assistantMode === 'string') {
             settings.assistant_mode = assistantMode as AISettings["assistant_mode"];
           }
         }
         
+        // Add specialized_settings if it exists in the database or in the enabled_features
         if (dbData.specialized_settings) {
           settings.specialized_settings = dbData.specialized_settings as Record<string, any>;
-        } else if (settings.enabled_features && 
-                  typeof settings.enabled_features === 'object' && 
-                  '_specializedSettings' in settings.enabled_features) {
+        } else if (
+          settings.enabled_features && 
+          typeof settings.enabled_features === 'object' && 
+          '_specializedSettings' in settings.enabled_features
+        ) {
           const specializedSettings = settings.enabled_features._specializedSettings;
           if (specializedSettings && typeof specializedSettings === 'object') {
             settings.specialized_settings = specializedSettings as Record<string, any>;
