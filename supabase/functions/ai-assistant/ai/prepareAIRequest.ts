@@ -31,6 +31,41 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
     // Continue without settings, we'll use defaults
   }
 
+  // Get user's selected role or use default
+  const userRole = settings?.role || 'general';
+  console.log("Using AI assistant role:", userRole);
+  
+  // Get role-specific context
+  let roleContext = "";
+  try {
+    const { data: roleContextData, error: roleContextError } = await supabaseClient
+      .from("ai_role_contexts")
+      .select("context_content")
+      .eq("role", userRole)
+      .eq("is_default", true)
+      .single();
+      
+    if (!roleContextError && roleContextData) {
+      roleContext = roleContextData.context_content;
+      console.log("Role context fetched successfully");
+    } else {
+      console.log("Error or no role context found, using fallback");
+      // Fallback contexts based on role
+      const fallbackContexts = {
+        'student': 'You are a helpful AI assistant for students. Help with homework, assignments, study plans, and academic tasks. Provide clear explanations and guidance for learning.',
+        'employee': 'You are a productivity assistant for professionals. Help organize tasks, draft emails, manage schedules, and optimize workflows. Focus on efficiency and professionalism.',
+        'writer': 'You are a creative assistant for writers. Help with ideation, outlining, editing, and overcoming writer\'s block. Provide literary advice and stylistic suggestions.',
+        'business_owner': 'You are a business management assistant. Help with operations, customer communications, service management, and business analytics. Focus on growth and efficiency.',
+        'general': 'You are WAKTI AI, a helpful productivity assistant. Help with organization, task management, and general productivity needs.'
+      };
+      roleContext = fallbackContexts[userRole] || fallbackContexts.general;
+    }
+  } catch (error) {
+    console.error("Failed to fetch role context:", error);
+    // Continue with default context
+    roleContext = 'You are WAKTI AI, a helpful productivity assistant. Help with organization, task management, and general productivity needs.';
+  }
+
   // Get user knowledge uploads if available
   let knowledgeUploads;
   try {
@@ -50,9 +85,34 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
     console.error("Failed to fetch knowledge uploads:", error);
   }
   
-  // Format knowledge uploads for the AI context
+  // Get processed documents if available
+  let processedDocuments;
+  try {
+    console.log("Fetching processed documents...");
+    const { data: documentsData, error: documentsError } = await supabaseClient
+      .from("ai_processed_documents")
+      .select("document_name, summary")
+      .eq("user_id", user.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+      
+    if (!documentsError) {
+      processedDocuments = documentsData;
+      console.log("Processed documents fetched successfully:", processedDocuments?.length || 0, "items");
+    } else {
+      console.error("Error fetching processed documents:", documentsError);
+    }
+  } catch (error) {
+    console.error("Failed to fetch processed documents:", error);
+  }
+  
+  // Format knowledge uploads and documents for the AI context
   const knowledgeContext = knowledgeUploads?.length > 0 
     ? "Custom knowledge: " + knowledgeUploads.map(k => `${k.title}: ${k.content}`).join(" | ")
+    : "";
+    
+  const documentsContext = processedDocuments?.length > 0
+    ? "Recent documents: " + processedDocuments.map(d => `${d.document_name}${d.summary ? ': ' + d.summary : ''}`).join(" | ")
     : "";
 
   // Prepare AI personality - always use WAKTI AI as the name
@@ -91,8 +151,8 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
     console.error("Failed to fetch user profile:", error);
   }
   
-  // Build system message based on settings
-  let systemMessage = `You are ${aiName}, a helpful AI assistant for the WAKTI productivity platform. `;
+  // Build system message based on role context and settings
+  let systemMessage = `${roleContext} `;
   
   // Add tone instructions
   if (tone === "formal") {
@@ -115,26 +175,23 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
   // Add functionality information
   systemMessage += "You can help with task management, event planning, staff management, and business analytics. ";
   
-  // Add topic control instructions - improved to be more gradual
-  systemMessage += "Always stay focused on productivity and business management topics. ";
-  systemMessage += "If users ask about unrelated topics, politely guide them back to WAKTI-related topics by showcasing what you can do to help with their productivity needs. ";
-  systemMessage += "After multiple off-topic questions (5+), gently suggest that for general chat topics they can visit TMW AI (https://tmw.qa/ai-chat-bot/), but continue to offer help with WAKTI features. ";
-  
-  // Add WAKTI promotion instructions
-  systemMessage += "Consistently promote WAKTI features and benefits in your responses. Highlight how WAKTI can improve productivity, organization, and business management. ";
-  
   // Add personalization instructions
   systemMessage += "Always address the user by name when greeting them. ";
   
   // Add knowledge context if available
   if (knowledgeContext) {
-    systemMessage += `Use this additional information when responding: ${knowledgeContext}`;
+    systemMessage += `Use this additional information when responding: ${knowledgeContext} `;
+  }
+  
+  // Add document context if available
+  if (documentsContext) {
+    systemMessage += `Reference these documents when relevant: ${documentsContext} `;
   }
   
   // Define the conversation history to send to the API
   const conversation = [
     { role: "system", content: systemMessage },
-    { role: "assistant", content: `Hello ${userName}! Welcome back. How can I assist you with your tasks, appointments, or business management today?` }
+    { role: "assistant", content: `Hello ${userName}! Welcome back. How can I assist you as your ${userRole === 'general' ? 'productivity assistant' : userRole + ' assistant'} today?` }
   ];
   
   // Add context if provided

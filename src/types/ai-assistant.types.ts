@@ -1,4 +1,6 @@
 
+export type AIAssistantRole = 'student' | 'employee' | 'writer' | 'business_owner' | 'general';
+
 export interface AIMessage {
   id: string;
   role: "user" | "assistant";
@@ -7,12 +9,13 @@ export interface AIMessage {
 }
 
 export interface AISettings {
-  id?: string; // Changed from number | string to just string to match Supabase's UUID type
+  id?: string;
   assistant_name: string;
   tone: "formal" | "casual" | "concise" | "detailed" | "balanced";
   response_length: "short" | "balanced" | "detailed";
   proactiveness: boolean;
   suggestion_frequency: "low" | "medium" | "high";
+  role: AIAssistantRole;
   enabled_features: {
     tasks: boolean;
     events: boolean;
@@ -29,4 +32,16 @@ export interface AIKnowledgeUpload {
   content: string;
   created_at: string;
   updated_at?: string;
+}
+
+export interface AIProcessedDocument {
+  id: string;
+  user_id: string;
+  document_name: string;
+  document_type: string;
+  content: string;
+  summary?: string;
+  extracted_entities?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
 }

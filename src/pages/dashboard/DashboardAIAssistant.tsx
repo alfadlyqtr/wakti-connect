@@ -1,18 +1,20 @@
 
 import React, { useState, useEffect } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
-import { Bot } from "lucide-react";
+import { Bot, MessageSquare, FileText, Settings, History } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { AIAssistantUpgradeCard } from "@/components/ai/AIAssistantUpgradeCard";
 import { AIAssistantChatCard } from "@/components/ai/assistant";
 import { AIAssistantLoader } from "@/components/ai/assistant";
 import { AIAssistantHistoryCard } from "@/components/ai/AIAssistantHistoryCard";
+import { AIAssistantDocumentsCard } from "@/components/ai/AIAssistantDocumentsCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { AISettingsProvider } from "@/components/settings/ai";
 import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
+import { AIAssistantRole } from "@/types/ai-assistant.types";
 
 const DashboardAIAssistant = () => {
   const { user } = useAuth();
@@ -20,13 +22,64 @@ const DashboardAIAssistant = () => {
     messages, 
     sendMessage, 
     isLoading, 
+    aiSettings,
+    updateSettings,
     canUseAI: hookCanUseAI, 
     clearMessages 
   } = useAIAssistant();
   const [inputMessage, setInputMessage] = useState("");
   const [isChecking, setIsChecking] = useState(true);
   const [canAccess, setCanAccess] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<AIAssistantRole>("general");
   const isMobile = !useBreakpoint().includes("md");
+
+  // Initialize role from settings
+  useEffect(() => {
+    if (aiSettings?.role) {
+      setSelectedRole(aiSettings.role);
+    }
+  }, [aiSettings]);
+
+  // Handle role change
+  const handleRoleChange = async (role: AIAssistantRole) => {
+    setSelectedRole(role);
+    
+    // Update settings in the database
+    if (aiSettings) {
+      try {
+        const updatedSettings = { ...aiSettings, role };
+        await updateSettings.mutateAsync(updatedSettings);
+      } catch (error) {
+        console.error("Failed to update AI role:", error);
+        toast({
+          title: "Error",
+          description: "Failed to update assistant role",
+          variant: "destructive",
+        });
+      }
+    }
+    
+    // Clear messages when role changes
+    clearMessages();
+  };
+
+  // Handle using document content in chat
+  const handleUseDocumentContent = (content: string) => {
+    // Truncate if too long and add to message input
+    const truncated = content.length > 500 
+      ? content.substring(0, 500) + "..." 
+      : content;
+      
+    setInputMessage(prev => 
+      (prev ? prev + "\n\n" : "") + 
+      "Please help me with this document content:\n\n" + truncated
+    );
+    
+    // Switch to chat tab
+    document.querySelector('[data-value="chat"]')?.dispatchEvent(
+      new MouseEvent('click', { bubbles: true })
+    );
+  };
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -133,9 +186,16 @@ const DashboardAIAssistant = () => {
           </div>
 
           <Tabs defaultValue="chat" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-2 overflow-x-auto">
-              <TabsTrigger value="chat" className="text-sm md:text-base py-1 md:py-1.5">Chat</TabsTrigger>
-              <TabsTrigger value="history" className="text-sm md:text-base py-1 md:py-1.5">History</TabsTrigger>
+            <TabsList className="grid w-full max-w-md grid-cols-3 overflow-x-auto">
+              <TabsTrigger value="chat" className="text-sm md:text-base py-1 md:py-1.5 flex items-center gap-1">
+                <MessageSquare className="h-4 w-4" /> Chat
+              </TabsTrigger>
+              <TabsTrigger value="documents" className="text-sm md:text-base py-1 md:py-1.5 flex items-center gap-1">
+                <FileText className="h-4 w-4" /> Documents
+              </TabsTrigger>
+              <TabsTrigger value="history" className="text-sm md:text-base py-1 md:py-1.5 flex items-center gap-1">
+                <History className="h-4 w-4" /> History
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="chat" className="mt-4 md:mt-6 space-y-4">
@@ -150,8 +210,17 @@ const DashboardAIAssistant = () => {
                   isLoading={isLoading}
                   canAccess={canAccess}
                   clearMessages={clearMessages}
+                  selectedRole={selectedRole}
+                  onRoleChange={handleRoleChange}
                 />
               )}
+            </TabsContent>
+
+            <TabsContent value="documents" className="mt-4 md:mt-6">
+              <AIAssistantDocumentsCard 
+                canAccess={canAccess} 
+                onUseDocumentContent={handleUseDocumentContent}
+              />
             </TabsContent>
 
             <TabsContent value="history" className="mt-4 md:mt-6">

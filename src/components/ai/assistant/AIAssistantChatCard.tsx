@@ -3,11 +3,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Bot, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AIMessage } from '@/types/ai-assistant.types';
+import { AIMessage, AIAssistantRole } from '@/types/ai-assistant.types';
 import { AIAssistantChat } from './AIAssistantChat';
 import { MessageInputForm } from './MessageInputForm';
 import { EmptyStateView } from './EmptyStateView';
 import { PoweredByTMW } from './PoweredByTMW';
+import { AIRoleSelector } from './AIRoleSelector';
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -17,6 +18,8 @@ interface AIAssistantChatCardProps {
   isLoading: boolean;
   canAccess: boolean;
   clearMessages: () => void;
+  selectedRole: AIAssistantRole;
+  onRoleChange: (role: AIAssistantRole) => void;
 }
 
 export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
@@ -26,7 +29,9 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   handleSendMessage,
   isLoading,
   canAccess,
-  clearMessages
+  clearMessages,
+  selectedRole,
+  onRoleChange
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
@@ -70,9 +75,14 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
         </div>
       </CardHeader>
       <CardContent className="p-0 flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-gray-50 to-white">
+        {/* Role Selector Bar */}
+        <div className="p-3 border-b bg-gray-50/80">
+          <AIRoleSelector selectedRole={selectedRole} onRoleChange={onRoleChange} />
+        </div>
+
         <div className="flex-1 overflow-y-auto p-3 sm:p-4">
           {messages.length === 0 && showSuggestions ? (
-            <EmptyStateView onPromptClick={handlePromptClick} />
+            <EmptyStateView onPromptClick={handlePromptClick} selectedRole={selectedRole} />
           ) : (
             <AIAssistantChat 
               messages={messages} 

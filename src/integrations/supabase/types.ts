@@ -65,6 +65,7 @@ export type Database = {
           id: string
           proactiveness: boolean | null
           response_length: string | null
+          role: Database["public"]["Enums"]["ai_assistant_role"]
           suggestion_frequency: string | null
           tone: string | null
           updated_at: string
@@ -77,6 +78,7 @@ export type Database = {
           id?: string
           proactiveness?: boolean | null
           response_length?: string | null
+          role?: Database["public"]["Enums"]["ai_assistant_role"]
           suggestion_frequency?: string | null
           tone?: string | null
           updated_at?: string
@@ -89,6 +91,7 @@ export type Database = {
           id?: string
           proactiveness?: boolean | null
           response_length?: string | null
+          role?: Database["public"]["Enums"]["ai_assistant_role"]
           suggestion_frequency?: string | null
           tone?: string | null
           updated_at?: string
@@ -144,6 +147,72 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      ai_processed_documents: {
+        Row: {
+          content: string
+          created_at: string
+          document_name: string
+          document_type: string
+          extracted_entities: Json | null
+          id: string
+          summary: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          document_name: string
+          document_type: string
+          extracted_entities?: Json | null
+          id?: string
+          summary?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          document_name?: string
+          document_type?: string
+          extracted_entities?: Json | null
+          id?: string
+          summary?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_role_contexts: {
+        Row: {
+          context_content: string
+          context_name: string
+          created_at: string
+          id: string
+          is_default: boolean
+          role: Database["public"]["Enums"]["ai_assistant_role"]
+          updated_at: string
+        }
+        Insert: {
+          context_content: string
+          context_name: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          role: Database["public"]["Enums"]["ai_assistant_role"]
+          updated_at?: string
+        }
+        Update: {
+          context_content?: string
+          context_name?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          role?: Database["public"]["Enums"]["ai_assistant_role"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1809,6 +1878,12 @@ export type Database = {
     }
     Enums: {
       account_type: "free" | "individual" | "business" | "staff"
+      ai_assistant_role:
+        | "student"
+        | "employee"
+        | "writer"
+        | "business_owner"
+        | "general"
       appointment_status: "scheduled" | "cancelled" | "completed"
       booking_status:
         | "pending"
