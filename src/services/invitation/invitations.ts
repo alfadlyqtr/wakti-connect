@@ -24,7 +24,7 @@ export const sendInvitation = async (
       // Process each recipient
       const invitationData = invitation.recipients.map(recipient => ({
         event_id: eventId,
-        invited_user_id: recipient.type === 'contact' ? recipient.id : null,
+        invited_user_id: recipient.type === 'user' ? recipient.id : null,
         email: recipient.type === 'email' ? recipient.email : null,
         shared_as_link: invitation.shared_as_link || false,
         status: 'pending' as 'pending' | 'accepted' | 'declined',
@@ -46,8 +46,13 @@ export const sendInvitation = async (
       results.push({
         id: `invitation-batch-${Date.now()}`,
         status: 'sent',
+        createdAt: new Date().toISOString(),
         recipients: {
-          successful,
+          total: successful.length,
+          accepted: 0,
+          pending: successful.length,
+          declined: 0,
+          successful: successful,
           failed: []
         }
       });

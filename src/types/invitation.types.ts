@@ -42,7 +42,7 @@ export interface InvitationRecipient {
   name: string;
   email?: string;
   userId?: string;
-  type: 'email' | 'user';
+  type: 'email' | 'user' | 'contact';
   status?: string;
 }
 
@@ -58,6 +58,7 @@ export interface InvitationRequest {
     };
   };
   recipients: InvitationRecipient[];
+  shared_as_link?: boolean;
   customization?: InvitationCustomization;
 }
 
@@ -70,21 +71,23 @@ export interface InvitationResponse {
     accepted: number;
     pending: number;
     declined: number;
+    successful?: string[];
+    failed?: string[];
   };
 }
 
 export interface InvitationCustomization {
-  theme: {
+  theme?: {
     primary: string;
     secondary: string;
     background: string;
   };
-  font: {
+  font?: {
     family: string;
     size: 'small' | 'medium' | 'large';
     color: string;
   };
-  buttons: {
+  buttons?: {
     accept: {
       background: string;
       color: string;
@@ -96,6 +99,19 @@ export interface InvitationCustomization {
       shape: 'square' | 'rounded' | 'pill';
     };
   };
+  // Legacy properties for backwards compatibility
+  backgroundType?: 'solid' | 'gradient' | 'image';
+  backgroundValue?: string;
+  fontFamily?: string;
+  fontSize?: 'small' | 'medium' | 'large';
+  textColor?: string;
+  textAlign?: 'left' | 'center' | 'right';
+  buttonStyles?: {
+    style: 'square' | 'rounded' | 'pill';
+    color: string;
+  };
+  layoutSize?: 'small' | 'medium' | 'large';
+  customEffects?: Record<string, any>;
   headerStyle?: string;
   animation?: string;
 }
@@ -107,4 +123,6 @@ export interface InvitationTemplate {
   customization: InvitationCustomization;
   createdAt: string;
   isDefault: boolean;
+  previewImage?: string;
+  defaultStyles?: any;
 }
