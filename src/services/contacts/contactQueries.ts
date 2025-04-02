@@ -33,7 +33,8 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
     
     // Transform the data to match our types
     const userContacts = contacts.map(contact => {
-      const contactData = contact.contact || {};
+      // Explicitly cast contact.contact to any to avoid TypeScript errors
+      const contactData = (contact.contact || {}) as any;
       
       // Make sure contact exists and has necessary properties
       const contactProfile = {
@@ -93,7 +94,8 @@ export const getContactRequests = async (userId: string): Promise<UserContact[]>
     
     // Transform the data to match our types
     const userContacts = contacts.map(contact => {
-      const contactData = contact.contact || {};
+      // Explicitly cast contact.contact to any to avoid TypeScript errors
+      const contactData = (contact.contact || {}) as any;
       
       // Make sure contact exists and has necessary properties
       const contactProfile = {
