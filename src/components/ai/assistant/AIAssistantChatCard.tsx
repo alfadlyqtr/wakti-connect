@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Bot, Trash2 } from 'lucide-react';
+import { Bot, Trash2, Settings, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AIMessage } from '@/types/ai-assistant.types';
 import { AIAssistantChat } from './AIAssistantChat';
@@ -9,6 +9,10 @@ import { useAISettings } from '@/components/settings/ai/context/AISettingsContex
 import { MessageInputForm } from './MessageInputForm';
 import { EmptyStateView } from './EmptyStateView';
 import { PoweredByTMW } from './PoweredByTMW';
+import { AISetupWizard } from '../setup/AISetupWizard';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { AIDocumentManager } from '../documents/AIDocumentManager';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -31,9 +35,40 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const [showSetupWizard, setShowSetupWizard] = useState(false);
+  const [activeDocument, setActiveDocument] = useState<any>(null);
+  const { settings } = useAISettings();
+  const { user } = useAuth();
+  
+  // Check if setup is needed (no settings or no userRole)
+  useEffect(() => {
+    if (canAccess && user && settings && !settings.user_role) {
+      setShowSetupWizard(true);
+    }
+  }, [canAccess, settings, user]);
   
   // Always use WAKTI AI as the assistant name regardless of settings
   const assistantName = "WAKTI AI";
+  
+  // Get personalized mode label if available
+  const getModeLabel = () => {
+    if (!settings?.assistant_mode) return "";
+    
+    switch (settings.assistant_mode) {
+      case "tutor":
+        return " • Tutor Mode";
+      case "content_creator":
+        return " • Content Creator";
+      case "project_manager":
+        return " • Project Manager";
+      case "business_manager":
+        return " • Business Manager";
+      case "personal_assistant":
+        return " • Personal Assistant";
+      default:
+        return "";
+    }
+  };
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -45,15 +80,88 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     setInputMessage(prompt);
     setShowSuggestions(false);
   };
+  
+  const handleDocumentProcessed = (document: any) => {
+    setActiveDocument(document);
+  };
+  
+  // Handle setup completion
+  const handleSetupComplete = () => {
+    setShowSetupWizard(false);
+    // Reload the page or fetch settings again
+    window.location.reload();
+  };
+
+  if (showSetupWizard) {
+    return (
+      <Card className="w-full h-[calc(80vh)] flex flex-col">
+        <CardContent className="p-4 flex-1 flex flex-col overflow-hidden">
+          <AISetupWizard onComplete={handleSetupComplete} />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full h-[calc(80vh)] flex flex-col">
       <CardHeader className="py-2 px-3 sm:py-3 sm:px-4 border-b flex-row justify-between items-center">
         <div className="flex items-center">
           <Bot className="w-5 h-5 mr-2 text-wakti-blue" />
-          <h3 className="font-medium text-sm md:text-base">Chat with {assistantName}</h3>
+          <h3 className="font-medium text-sm md:text-base">
+            Chat with {assistantName}
+            <span className="text-xs text-muted-foreground ml-1">
+              {getModeLabel()}
+            </span>
+          </h3>
         </div>
         <div className="flex gap-2">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7 sm:h-8 sm:w-8"
+                aria-label="Document Manager"
+                title="Document Manager"
+              >
+                <FileText className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="sm:max-w-md w-[90vw]">
+              <AIDocumentManager />
+            </SheetContent>
+          </Sheet>
+          
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-7 w-7 sm:h-8 sm:w-8"
+                aria-label="AI Settings"
+                title="AI Settings"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="sm:max-w-md w-[90vw]">
+              <div className="space-y-4 pt-4">
+                <h2 className="text-xl font-semibold">AI Assistant Settings</h2>
+                <p className="text-sm text-muted-foreground">
+                  Customize your AI experience
+                </p>
+                
+                <Button 
+                  onClick={() => setShowSetupWizard(true)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Reconfigure AI Assistant
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+          
           {messages.length > 0 && (
             <Button 
               variant="ghost" 
@@ -92,6 +200,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
           handleSendMessage={handleSendMessage}
           isLoading={isLoading}
           canAccess={canAccess}
+          onDocumentProcessed={handleDocumentProcessed}
         />
         
         <PoweredByTMW />
