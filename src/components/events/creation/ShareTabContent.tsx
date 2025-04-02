@@ -168,7 +168,7 @@ const ShareTabContent: React.FC<ShareTabProps> = ({
             <UsersIcon className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className={isMobile ? "sr-only" : ""}>Contacts</span>
           </TabsTrigger>
-          <TabsTrigger value={SHARE_TABS.LINKS} className="text-xs flex gap-1 items-center px-2 py-1.5 sm:px-3 sm:py-2">
+          <TabsTrigger value={SHARE_TABS.LINK} className="text-xs flex gap-1 items-center px-2 py-1.5 sm:px-3 sm:py-2">
             <CopyIcon className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className={isMobile ? "sr-only" : ""}>Link</span>
           </TabsTrigger>
@@ -251,7 +251,7 @@ const ShareTabContent: React.FC<ShareTabProps> = ({
           </div>
         </TabsContent>
 
-        <TabsContent value={SHARE_TABS.LINKS}>
+        <TabsContent value={SHARE_TABS.LINK}>
           <div className="space-y-3">
             <Label htmlFor="share-link" className="text-xs sm:text-sm">Shareable Link</Label>
             <div className="flex space-x-2">
@@ -294,7 +294,7 @@ const ShareTabContent: React.FC<ShareTabProps> = ({
                 value={shareableLink}
                 size={isMobile ? 140 : 180}
                 style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                fgColor={customization.font?.color || "#000000"}
+                fgColor={customization?.font?.color || "#000000"}
                 bgColor={"#ffffff"}
               />
             </div>

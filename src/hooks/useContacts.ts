@@ -194,10 +194,10 @@ export const useContacts = () => {
   };
 
   return {
-    contacts,
+    contacts: contacts as UserContact[] | undefined,
     isLoading,
     error,
-    pendingRequests,
+    pendingRequests: pendingRequests as UserContact[] | undefined,
     isLoadingRequests,
     autoApprove,
     isUpdatingAutoApprove,

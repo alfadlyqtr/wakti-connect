@@ -8,7 +8,7 @@ import FormTabs from "./creation/FormTabs";
 import FormActions from "./creation/FormActions";
 import { InvitationRecipient } from "@/types/invitation.types";
 import useEditEventEffect from "./hooks/useEditEventEffect";
-import { EventCreationFormProps, EventFormTab } from "@/types/form.types";
+import { EventFormTab } from "@/types/form.types";
 
 interface EventCreationFormProps {
   editEvent?: any;
@@ -48,7 +48,6 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     <div className="container mx-auto mt-10">
       <FormHeader 
         isEdit={isEditMode} 
-        isLoading={isLoadingEvent}
         onCancel={onCancel}
       />
       

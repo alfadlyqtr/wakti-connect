@@ -1,7 +1,6 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { UserContact, ContactRequestStatus } from '@/types/invitation.types';
-import { formatErrorMessage } from '@/lib/utils';
 
 export const getUserContacts = async (): Promise<UserContact[]> => {
   try {
@@ -31,7 +30,7 @@ export const getUserContacts = async (): Promise<UserContact[]> => {
     
     if (error) {
       console.error('Error fetching user contacts:', error);
-      throw new Error(formatErrorMessage(error));
+      throw new Error(error.message);
     }
     
     // Transform the data to match the UserContact interface
@@ -48,7 +47,7 @@ export const getUserContacts = async (): Promise<UserContact[]> => {
         avatarUrl: contact.contactProfile?.avatar_url || '',
         accountType: contact.contactProfile?.account_type || 'free'
       }
-    })) as UserContact[];
+    }));
   } catch (error) {
     console.error('Error in getUserContacts:', error);
     throw error;
@@ -82,7 +81,7 @@ export const getContactRequests = async (): Promise<UserContact[]> => {
     
     if (error) {
       console.error('Error fetching contact requests:', error);
-      throw new Error(formatErrorMessage(error));
+      throw new Error(error.message);
     }
     
     // Transform the data to match the UserContact interface
@@ -98,7 +97,7 @@ export const getContactRequests = async (): Promise<UserContact[]> => {
         avatarUrl: contact.contactProfile?.avatar_url || '',
         accountType: contact.contactProfile?.account_type || 'free'
       }
-    })) as UserContact[];
+    }));
   } catch (error) {
     console.error('Error in getContactRequests:', error);
     throw error;
@@ -127,7 +126,7 @@ export const checkContactRequestStatus = async (contactId: string): Promise<Cont
         return { requestExists: false, requestStatus: 'none' };
       }
       console.error('Error checking contact request status:', error);
-      throw new Error(formatErrorMessage(error));
+      throw new Error(error.message);
     }
     
     return {

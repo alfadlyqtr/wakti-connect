@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { UserSearch, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { UserContact } from "@/types/invitation.types";
 
 // Import the components
 import ContactsList from "@/components/contacts/ContactsList";

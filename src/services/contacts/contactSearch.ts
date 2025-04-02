@@ -1,7 +1,6 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { UserSearchResult, ContactRequestStatus } from '@/types/invitation.types';
-import { formatErrorMessage } from '@/lib/utils';
 
 export const searchUsers = async (searchTerm: string): Promise<UserSearchResult[]> => {
   try {
@@ -22,7 +21,7 @@ export const searchUsers = async (searchTerm: string): Promise<UserSearchResult[
     
     if (error) {
       console.error('Error searching users:', error);
-      throw new Error(formatErrorMessage(error));
+      throw new Error(error.message);
     }
     
     if (!Array.isArray(data)) {
@@ -60,7 +59,7 @@ export const checkContactRequest = async (userId: string): Promise<ContactReques
     
     if (error) {
       console.error('Error checking contact request:', error);
-      throw new Error(formatErrorMessage(error));
+      throw new Error(error.message);
     }
     
     if (!data) {

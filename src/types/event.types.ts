@@ -1,192 +1,84 @@
 
-export interface Event {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string | null;
-  location: string | null;
-  location_type?: 'manual' | 'google_maps';
-  maps_url?: string;
-  location_coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
-  start_time: string;
-  end_time: string;
-  is_all_day: boolean;
-  status: EventStatus;
-  customization: EventCustomization;
-  is_recalled: boolean;
-  created_at: string;
-  updated_at: string;
-  invitations?: EventInvitation[];
-}
+import { z } from 'zod';
 
-export type EventStatus = "draft" | "sent" | "accepted" | "declined" | "recalled";
-
-export type EventTab = "my-events" | "invited-events" | "draft-events";
-
-export type EventFormTab = "details" | "customize" | "share";
-
-export interface EventFormValues {
-  title: string;
-  description?: string;
-  location?: string;
-  startDate?: Date;
-  endDate?: Date;
-  isAllDay?: boolean;
-}
-
-// Validation schema for event form
-import { z } from "zod";
-
+// Define the event schema for form validation
 export const eventSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   location: z.string().optional(),
   startDate: z.date().optional(),
   endDate: z.date().optional(),
-  isAllDay: z.boolean().optional(),
+  isAllDay: z.boolean().optional().default(false)
 });
 
-export interface EventFormData {
-  title: string;
-  description?: string;
-  location?: string;
-  location_type?: 'manual' | 'google_maps';
-  maps_url?: string;
-  location_coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
-  status?: EventStatus;
-  start_time?: string;
-  end_time?: string;
-  is_all_day?: boolean;
-  customization?: EventCustomization;
-  invitees?: string[];
-  
-  // Form-specific fields (used in form UI but transformed before API calls)
-  date?: Date;
-  startTime?: string;
-  endTime?: string;
-  isAllDay?: boolean;
-}
+// Define the form values type from the schema
+export type EventFormValues = z.infer<typeof eventSchema>;
 
-export interface EventsResult {
-  events: Event[];
-  userRole: "free" | "individual" | "business";
-}
-
-export interface EventInvitation {
-  id: string;
-  event_id: string;
-  invited_user_id?: string;
-  email?: string;
-  status: 'pending' | 'accepted' | 'declined';
-  shared_as_link?: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface EventWithInvitations {
+// Define the event type
+export interface Event {
   id: string;
   title: string;
   description?: string;
   location?: string;
   start_time: string;
   end_time: string;
-  is_all_day?: boolean;
-  status?: string;
-  customization?: any;
-  created_at?: string;
-  updated_at?: string;
+  is_all_day: boolean;
+  status: 'draft' | 'published' | 'cancelled';
   user_id: string;
-  is_recalled?: boolean;
-  event_invitations: EventInvitation[];
+  created_at: string;
+  updated_at: string;
+  customization?: EventCustomization;
+  invitations?: any[];
 }
 
-export interface ShareOptions {
-  qrCode?: string;
-  shareableLink?: string;
-  emails?: string[];
-}
-
-// EventCustomization interface
+// Event customization interface
 export interface EventCustomization {
-  background: {
-    type: 'color' | 'gradient' | 'image';
-    value: string;
-    angle?: number;
-    direction?: string;
+  background?: {
+    type?: 'solid' | 'gradient' | 'image';
+    value?: string;
   };
-  font: {
-    family: string;
-    size: 'small' | 'medium' | 'large';
-    color: string;
-    weight?: 'normal' | 'medium' | 'bold';
-    alignment?: 'left' | 'center' | 'right';
+  font?: {
+    family?: string;
+    size?: string;
+    color?: string;
   };
-  headerFont?: {
-    family: string;
-    size: 'small' | 'medium' | 'large';
-    color: string;
-    weight?: 'normal' | 'medium' | 'bold';
+  header?: {
+    style?: string;
+    alignment?: string;
+    size?: string;
   };
-  descriptionFont?: {
-    family: string;
-    size: 'small' | 'medium' | 'large';
-    color: string;
-    weight?: 'normal' | 'medium' | 'bold';
-  };
-  dateTimeFont?: {
-    family: string;
-    size: 'small' | 'medium' | 'large';
-    color: string;
-    weight?: 'normal' | 'medium' | 'bold';
-  };
-  buttons: {
-    accept: {
-      background: string;
-      color: string;
-      shape: 'rounded' | 'pill' | 'square';
-    };
-    decline: {
-      background: string;
-      color: string;
-      shape: 'rounded' | 'pill' | 'square';
-    };
-  };
-  utilityButtons?: {
-    [key in 'calendar' | 'map' | 'qr']?: {
-      background: string;
-      color: string;
-      shape: 'rounded' | 'pill' | 'square';
-    };
-  };
-  headerStyle: 'banner' | 'simple' | 'minimal';
-  headerImage?: string;
-  animation: 'fade' | 'slide' | 'pop';
-  cardEffect?: {
-    type: string;
+  buttons?: {
+    style?: string;
+    color?: string;
     borderRadius?: string;
+  };
+  effects?: {
+    shadow?: string;
     border?: boolean;
     borderColor?: string;
+    borderRadius?: string;
   };
-  elementAnimations?: {
-    text: string;
-    buttons: string;
-    icons: string;
-    delay: string;
+  animations?: {
+    text?: 'pop' | 'fade' | 'slide' | 'none';
+    buttons?: 'pop' | 'fade' | 'slide' | 'none';
+    icons?: 'pop' | 'fade' | 'slide' | 'none';
+    delay?: 'none' | 'staggered' | 'sequence';
   };
-  mapDisplay?: 'button' | 'qrcode' | 'both';
-  branding?: {
-    logo?: string;
-    slogan?: string;
+  features?: {
+    showBranding?: boolean;
+    showMapLocation?: boolean;
+    showCountdown?: boolean;
+    interactiveRSVP?: boolean;
   };
-  enableChatbot?: boolean;
-  enableAddToCalendar?: boolean;
-  showAddToCalendarButton?: boolean;
-  showAcceptDeclineButtons?: boolean;
-  poweredByColor?: string;
+}
+
+// Event with invitations interface
+export interface EventWithInvitations extends Event {
+  invitations: Array<{
+    id: string;
+    email?: string;
+    invited_user_id?: string;
+    status: 'pending' | 'accepted' | 'declined';
+    shared_as_link: boolean;
+  }>;
 }

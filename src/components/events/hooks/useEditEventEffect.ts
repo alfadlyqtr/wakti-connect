@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { UseFormReturn } from 'react-hook-form';
-import { EventFormValues } from '@/types/event.types';
+import { EventFormValues, Event } from '@/types/event.types';
 import { InvitationRecipient } from '@/types/invitation.types';
-import { useEvents } from '@/hooks/useEvents';
+import { supabase } from '@/integrations/supabase/client';
 
 const useEditEventEffect = (
   form: UseFormReturn<EventFormValues>,
@@ -13,7 +13,29 @@ const useEditEventEffect = (
 ) => {
   const [isLoading, setIsLoading] = useState(false);
   const { eventId } = useParams<{ eventId: string }>();
-  const { getEventById } = useEvents();
+  
+  const getEventById = async (id: string): Promise<Event | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select(`
+          *,
+          invitations:event_invitations(*)
+        `)
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching event:", error);
+        throw error;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error("Error in getEventById:", error);
+      throw error;
+    }
+  };
   
   useEffect(() => {
     if (!eventId) return;
@@ -74,7 +96,7 @@ const useEditEventEffect = (
     };
     
     fetchEventData();
-  }, [eventId, form, setRecipients, setIsEditMode, getEventById]);
+  }, [eventId, form, setRecipients, setIsEditMode]);
   
   return { isLoading };
 };
