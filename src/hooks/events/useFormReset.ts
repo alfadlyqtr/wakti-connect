@@ -46,7 +46,7 @@ export const useFormReset = ({
     setMapsUrl('');
     setCustomization({
       background: {
-        type: 'color',
+        type: 'solid',
         value: '#ffffff',
       },
       font: {

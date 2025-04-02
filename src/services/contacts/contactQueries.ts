@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { UserContact } from '@/types/invitation.types';
+import { UserContact, ContactRequestStatus } from '@/types/invitation.types';
 
 export const getUserContacts = async (): Promise<UserContact[]> => {
   try {
@@ -8,7 +8,7 @@ export const getUserContacts = async (): Promise<UserContact[]> => {
     if (!session.session) {
       throw new Error('You must be logged in to view contacts');
     }
-    
+
     const { data, error } = await supabase
       .from('user_contacts')
       .select(`
@@ -17,7 +17,7 @@ export const getUserContacts = async (): Promise<UserContact[]> => {
         contact_id,
         status,
         staff_relation_id,
-        contactProfile:contact_id(
+        profiles:contact_id(
           id,
           full_name,
           display_name,
@@ -27,25 +27,25 @@ export const getUserContacts = async (): Promise<UserContact[]> => {
       `)
       .eq('user_id', session.session.user.id)
       .order('created_at', { ascending: false });
-    
+
     if (error) {
       console.error('Error fetching user contacts:', error);
       throw new Error(error.message);
     }
-    
+
     // Transform the data to match the UserContact interface
     return data.map((contact) => ({
       id: contact.id,
       userId: contact.user_id,
       contactId: contact.contact_id,
-      status: contact.status as "accepted" | "pending" | "rejected",
+      status: contact.status as 'pending' | 'accepted' | 'rejected',
       staffRelationId: contact.staff_relation_id,
       contactProfile: {
-        id: contact.contactProfile?.id || '',
-        fullName: contact.contactProfile?.full_name || '',
-        displayName: contact.contactProfile?.display_name || '',
-        avatarUrl: contact.contactProfile?.avatar_url || '',
-        accountType: contact.contactProfile?.account_type || 'free'
+        id: contact.profiles?.id || '',
+        fullName: contact.profiles?.full_name || '',
+        displayName: contact.profiles?.display_name || '',
+        avatarUrl: contact.profiles?.avatar_url || '',
+        accountType: contact.profiles?.account_type || 'free'
       }
     }));
   } catch (error) {
@@ -60,7 +60,7 @@ export const getContactRequests = async (): Promise<UserContact[]> => {
     if (!session.session) {
       throw new Error('You must be logged in to view contact requests');
     }
-    
+
     const { data, error } = await supabase
       .from('user_contacts')
       .select(`
@@ -68,7 +68,7 @@ export const getContactRequests = async (): Promise<UserContact[]> => {
         user_id,
         contact_id,
         status,
-        contactProfile:user_id(
+        profiles:user_id(
           id,
           full_name,
           display_name,
@@ -78,24 +78,24 @@ export const getContactRequests = async (): Promise<UserContact[]> => {
       `)
       .eq('contact_id', session.session.user.id)
       .order('created_at', { ascending: false });
-    
+
     if (error) {
       console.error('Error fetching contact requests:', error);
       throw new Error(error.message);
     }
-    
+
     // Transform the data to match the UserContact interface
     return data.map((contact) => ({
       id: contact.id,
       userId: contact.user_id,
       contactId: contact.contact_id,
-      status: contact.status as "accepted" | "pending" | "rejected",
+      status: contact.status as 'pending' | 'accepted' | 'rejected',
       contactProfile: {
-        id: contact.contactProfile?.id || '',
-        fullName: contact.contactProfile?.full_name || '',
-        displayName: contact.contactProfile?.display_name || '',
-        avatarUrl: contact.contactProfile?.avatar_url || '',
-        accountType: contact.contactProfile?.account_type || 'free'
+        id: contact.profiles?.id || '',
+        fullName: contact.profiles?.full_name || '',
+        displayName: contact.profiles?.display_name || '',
+        avatarUrl: contact.profiles?.avatar_url || '',
+        accountType: contact.profiles?.account_type || 'free'
       }
     }));
   } catch (error) {
@@ -104,33 +104,27 @@ export const getContactRequests = async (): Promise<UserContact[]> => {
   }
 };
 
-export const checkContactRequestStatus = async (contactId: string): Promise<{ requestExists: boolean; requestStatus: string }> => {
+export const checkContactRequestStatus = async (contactId: string): Promise<ContactRequestStatus> => {
   try {
     const { data: session } = await supabase.auth.getSession();
     if (!session.session) {
       throw new Error('You must be logged in to check contact status');
     }
-    
+
     const userId = session.session.user.id;
-    
+
     const { data, error } = await supabase
       .from('user_contacts')
       .select('id, status')
-      .or(`and(user_id.eq.${userId},contact_id.eq.${contactId}),and(user_id.eq.${contactId},contact_id.eq.${userId})`)
+      .or(`user_id.eq.${userId},contact_id.eq.${userId}`)
+      .or(`user_id.eq.${contactId},contact_id.eq.${contactId}`)
       .maybeSingle();
-    
+
     if (error) {
-      if (error.code === 'PGRST116') {
-        // No results found
-        return {
-          requestExists: false,
-          requestStatus: 'none'
-        };
-      }
       console.error('Error checking contact request status:', error);
       throw new Error(error.message);
     }
-    
+
     return {
       requestExists: !!data,
       requestStatus: data?.status || 'none'

@@ -1,5 +1,6 @@
+
 import { useState, useCallback } from 'react';
-import { useRouter } from 'next/router';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { toast } from '@/components/ui/use-toast';
 import { getInvitationCustomization, saveInvitationCustomization } from '@/services/invitation';
@@ -9,18 +10,17 @@ import { supabase } from '@/integrations/supabase/client';
 export const useInvitationBuilder = (eventId?: string, invitationId?: string) => {
   const [isLoading, setIsLoading] = useState(false);
   const [customization, setCustomization] = useState<InvitationCustomization>({
-    font: {
-      family: 'system-ui, sans-serif',
-      size: 'medium',
-      color: '#333333',
-    },
-    buttonStyle: 'rounded',
-    buttonColor: '#3B82F6',
+    backgroundType: 'solid',
+    backgroundValue: '#ffffff',
+    fontFamily: 'system-ui, sans-serif',
+    fontSize: 'medium',
+    textAlign: 'left',
+    buttonStyles: { style: 'rounded', color: '#3B82F6' },
     layoutSize: 'medium',
-    effects: {}
+    customEffects: {}
   });
   
-  const router = useRouter();
+  const navigate = useNavigate();
   
   const form = useForm({
     defaultValues: {
@@ -124,7 +124,7 @@ export const useInvitationBuilder = (eventId?: string, invitationId?: string) =>
         description: 'Invitation created successfully',
       });
       
-      router.push('/dashboard/events');
+      navigate('/dashboard/events');
     } catch (error) {
       console.error('Error creating invitation:', error);
       toast({
@@ -135,7 +135,7 @@ export const useInvitationBuilder = (eventId?: string, invitationId?: string) =>
     } finally {
       setIsLoading(false);
     }
-  }, [router]);
+  }, [navigate]);
   
   return {
     form,

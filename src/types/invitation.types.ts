@@ -51,7 +51,9 @@ export interface InvitationRecipient {
   id: string;
   name: string;
   email?: string;
-  type: 'contact' | 'email';
+  userId?: string;
+  type: 'contact' | 'email' | 'user';
+  status?: 'accepted' | 'declined' | 'pending';
 }
 
 export interface InvitationRequest {

@@ -1,536 +1,503 @@
 
 import React, { useState } from 'react';
-import { Event, EventCustomization } from '@/types/event.types';
-import { format } from 'date-fns';
-import { useRouter } from 'next/router';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { useRouter } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, MapPin, Check, X } from 'lucide-react';
-import { useEvents } from '@/hooks/useEvents';
+import { 
+  Calendar, 
+  MapPin, 
+  ArrowRight, 
+  CheckCircle, 
+  XCircle, 
+  Clock, 
+  Trash2, 
+  Edit, 
+  Eye, 
+  Users
+} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { EventCustomization, Event, EventStatus } from '@/types/event.types';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
-interface EventCardProps {
+export interface EventCardProps {
   event: Event;
-  isPreview?: boolean;
-  onResponse?: (status: 'accepted' | 'declined') => void;
+  onCardClick?: () => void;
+  onDelete?: (eventId: string) => Promise<void>;
+  onEdit?: (event: Event) => void;
+  onViewResponses?: (eventId: string) => void;
+  onAccept?: (eventId: string) => void;
+  onDecline?: (eventId: string) => void;
 }
 
-const EventCard: React.FC<EventCardProps> = ({ 
-  event, 
-  isPreview = false,
-  onResponse
+const EventCard: React.FC<EventCardProps> = ({
+  event,
+  onCardClick,
+  onDelete,
+  onEdit,
+  onViewResponses,
+  onAccept,
+  onDecline
 }) => {
-  const router = useRouter();
-  const { respondToInvitation } = useEvents();
   const [isLoading, setIsLoading] = useState(false);
-
-  const formatDate = (dateStr: string) => {
-    try {
-      const date = new Date(dateStr);
-      return format(date, 'EEEE, MMMM d, yyyy');
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'Invalid date';
-    }
-  };
-
-  const formatTime = (dateStr: string) => {
-    try {
-      const date = new Date(dateStr);
-      return format(date, 'h:mm a');
-    } catch (error) {
-      console.error('Error formatting time:', error);
-      return 'Invalid time';
-    }
-  };
-
-  const handleResponse = async (status: 'accepted' | 'declined') => {
-    if (isPreview || isLoading) return;
-    
-    try {
-      setIsLoading(true);
-      await respondToInvitation(event.id, status);
-      if (onResponse) {
-        onResponse(status);
-      }
-    } catch (error) {
-      console.error('Error responding to invitation:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Apply default customization if needed
-  const customization: EventCustomization = event.customization || {
-    background: {
-      type: 'solid',
-      value: '#ffffff'
-    },
-    font: {
-      family: 'system-ui, sans-serif',
-      size: 'medium',
-      color: '#333333'
-    },
+  const router = useRouter || { push: () => {} }; // Fallback if router is not available
+  
+  // Default customization values if not provided
+  const customization = event.customization || {
+    background: { type: 'solid' as BackgroundType, value: '#ffffff' },
+    font: { family: 'sans-serif', size: 'medium', color: '#333333', weight: 'normal' },
     buttons: {
-      accept: {
-        background: '#4CAF50',
-        color: '#ffffff',
-        shape: 'rounded'
-      },
-      decline: {
-        background: '#f44336',
-        color: '#ffffff',
-        shape: 'rounded'
-      }
-    },
-    animation: 'fade'
+      accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' as ButtonShape },
+      decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' as ButtonShape }
+    }
   };
-
-  // Use specific font settings or fall back to the general font settings
-  const headerFont = customization.headerFont || customization.font;
-  const descriptionFont = customization.descriptionFont || customization.font;
-  const dateTimeFont = customization.dateTimeFont || customization.font;
-
-  // Generate styles for background
+  
+  // Destructure font objects with fallbacks
+  const { 
+    headerFont = customization.font, 
+    descriptionFont = customization.font, 
+    dateTimeFont = customization.font 
+  } = customization;
+  
+  // Format the date for display
+  const formatEventDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return format(date, "EEEE, MMMM d, yyyy");
+    } catch (e) {
+      return dateString;
+    }
+  };
+  
+  // Format the time for display
+  const formatEventTime = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return format(date, "h:mm a");
+    } catch (e) {
+      return "";
+    }
+  };
+  
+  // Get background style
   const getBackgroundStyle = () => {
-    const bg = customization.background || {};
+    if (!customization.background) return {};
     
-    if (!bg.type || !bg.value) {
-      return { backgroundColor: '#ffffff' };
+    if (customization.background.type === 'solid') {
+      return { backgroundColor: customization.background.value || '#ffffff' };
+    } else if (customization.background.type === 'gradient') {
+      if (customization.background.direction) {
+        return { backgroundImage: customization.background.value };
+      } else if (customization.background.angle !== undefined) {
+        return { backgroundImage: customization.background.value };
+      }
+      return { backgroundImage: customization.background.value || 'linear-gradient(to right, #f7f7f7, #e3e3e3)' };
+    } else if (customization.background.type === 'image') {
+      return { backgroundImage: `url(${customization.background.value})`, backgroundSize: 'cover', backgroundPosition: 'center' };
     }
-
-    // Convert 'color' to 'solid' for backwards compatibility
-    const bgType = bg.type === 'color' ? 'solid' : bg.type;
     
-    switch (bgType) {
-      case 'solid':
-        return { backgroundColor: bg.value };
-      case 'gradient':
-        if (bg.direction) {
-          return { backgroundImage: `linear-gradient(${bg.direction}, ${bg.value})` };
-        } else if (bg.angle !== undefined) {
-          return { backgroundImage: `linear-gradient(${bg.angle}deg, ${bg.value})` };
-        }
-        return { backgroundImage: bg.value };
-      case 'image':
-        return { 
-          backgroundImage: `url(${bg.value})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        };
-      default:
-        return { backgroundColor: '#ffffff' };
+    return { backgroundColor: '#ffffff' };
+  };
+  
+  // Handle card click
+  const handleCardClick = () => {
+    if (onCardClick) {
+      onCardClick();
     }
   };
-
-  // Generate card header based on header style
-  const renderHeader = () => {
-    const headerStyle = customization.headerStyle || 'simple';
-    const hasHeaderImage = customization.headerImage && customization.headerImage.length > 0;
+  
+  // Determine if header should be shown
+  const shouldShowHeader = customization.headerStyle !== 'minimal';
+  
+  // Get animation class
+  const getAnimationClass = (animationType?: string, delay: number = 0) => {
+    if (!animationType || animationType === 'none') return '';
     
-    // Animation classes
-    const textAnimation = customization.elementAnimations?.text || 'fade';
-    const animationClass = textAnimation === 'fade' ? 'animate-fade-in' :
-                         textAnimation === 'slide' ? 'animate-slide-in' :
-                         textAnimation === 'pop' ? 'animate-scale-in' : '';
+    const baseClass = animationType === 'fade' ? 'animate-fade-in' : 
+                      animationType === 'slide' ? 'animate-slide-in' :
+                      animationType === 'pop' ? 'animate-pop-in' : '';
     
-    if (headerStyle === 'banner' && hasHeaderImage) {
-      return (
-        <CardHeader 
-          className="p-0 overflow-hidden" 
-          style={{ 
-            backgroundImage: `url(${customization.headerImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            minHeight: '120px'
-          }}
-        >
-          <div className={`bg-black/50 p-6 text-white ${animationClass}`}>
-            <h3 className="text-2xl font-semibold" style={{
-              fontFamily: headerFont?.family,
-              fontSize: getFontSize(headerFont?.size, 'large'),
-              color: headerFont?.color || 'white',
-              fontWeight: headerFont?.weight || 'bold'
-            }}>
-              {event.title}
-            </h3>
-            {event.status === 'accepted' || event.status === 'declined' ? (
-              <div className="mt-2 text-sm">
-                Status: <span className={`font-medium ${event.status === 'accepted' ? 'text-green-300' : 'text-red-300'}`}>
-                  {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-                </span>
-              </div>
-            ) : null}
-          </div>
-        </CardHeader>
-      );
-    } else {
-      // Simple or minimal header
-      return (
-        <CardHeader>
-          <h3 className={`text-2xl font-semibold ${animationClass}`} style={{
-            fontFamily: headerFont?.family,
-            fontSize: getFontSize(headerFont?.size, 'large'),
-            color: headerFont?.color || '#333333',
-            fontWeight: headerFont?.weight || 'bold'
-          }}>
-            {event.title}
-          </h3>
-          {hasHeaderImage && (
-            <div className="mt-4 rounded-md overflow-hidden">
+    return `${baseClass} ${delay > 0 ? `animation-delay-${delay}` : ''}`;
+  };
+  
+  // Get element animation class
+  const getElementAnimation = (element: 'text' | 'buttons' | 'icons') => {
+    if (!customization.elementAnimations) return '';
+    return getAnimationClass(customization.elementAnimations[element], 0);
+  };
+  
+  return (
+    <Card 
+      className={cn(
+        "overflow-hidden transition-all duration-300 h-full flex flex-col",
+        onCardClick && "cursor-pointer hover:shadow-md",
+        getCardEffectClasses()
+      )}
+      style={getBackgroundStyle()}
+      onClick={handleCardClick}
+    >
+      {shouldShowHeader && (
+        <CardHeader className={cn(
+          "relative pt-6",
+          customization.headerStyle === 'banner' && "bg-primary/10 pb-16",
+          getElementAnimation('text')
+        )}>
+          {customization.headerImage && (
+            <div className="absolute inset-0 w-full h-full">
               <img 
                 src={customization.headerImage} 
-                alt={event.title} 
-                className="w-full h-auto object-cover"
+                alt="Event header" 
+                className="w-full h-full object-cover opacity-50"
+              />
+              <div className="absolute inset-0 bg-black/10"></div>
+            </div>
+          )}
+          
+          <CardTitle style={{ 
+            fontFamily: headerFont.family || 'inherit', 
+            fontSize: getFontSize(headerFont.size || 'large'), 
+            color: headerFont.color || '#333333',
+            fontWeight: getFontWeight(headerFont.weight || 'bold'),
+            textAlign: customization.font.alignment as any || 'left',
+            position: 'relative',
+            zIndex: 10
+          }}>
+            {event.title}
+          </CardTitle>
+          
+          {event.description && (
+            <CardDescription style={{ 
+              fontFamily: descriptionFont.family || 'inherit', 
+              fontSize: getFontSize(descriptionFont.size || 'medium'),
+              color: descriptionFont.color || '#666666',
+              fontWeight: getFontWeight(descriptionFont.weight || 'normal'),
+              position: 'relative',
+              zIndex: 10
+            }} className={getElementAnimation('text')}>
+              {event.description}
+            </CardDescription>
+          )}
+          
+          {customization.branding && customization.branding.logo && (
+            <div className="absolute top-2 right-2">
+              <img 
+                src={customization.branding.logo} 
+                alt="Branding" 
+                className="h-8 w-auto"
               />
             </div>
           )}
-          {event.status === 'accepted' || event.status === 'declined' ? (
-            <div className={`mt-2 text-sm ${animationClass}`}>
-              Status: <span className={`font-medium ${event.status === 'accepted' ? 'text-green-600' : 'text-red-600'}`}>
-                {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
-              </span>
-            </div>
-          ) : null}
         </CardHeader>
-      );
-    }
-  };
-
-  // Function to get branding footer
-  const renderBranding = () => {
-    if (customization.branding && 
-        (customization.branding.logo || customization.branding.slogan)) {
-      const textAnimation = customization.elementAnimations?.text || 'fade';
-      const animationClass = textAnimation === 'fade' ? 'animate-fade-in' :
-                           textAnimation === 'slide' ? 'animate-slide-in' :
-                           textAnimation === 'pop' ? 'animate-scale-in' : '';
+      )}
       
-      return (
-        <div className={`text-center text-sm mt-4 pt-4 border-t ${animationClass}`}>
-          <div className="flex flex-col items-center space-y-2">
-            {customization.branding.logo && (
-              <img 
-                src={customization.branding.logo} 
-                alt="Brand" 
-                className="h-8 w-auto"
-              />
-            )}
-            {customization.branding.slogan && (
-              <p className="opacity-70" style={{ color: customization.font?.color || '#666666' }}>
-                {customization.branding.slogan}
+      <CardContent className={cn(
+        "flex-1 space-y-4 pt-6",
+        customization.headerStyle === 'banner' && "-mt-12 relative z-10 rounded-t-xl bg-card shadow",
+        !shouldShowHeader && "pt-6",
+        getAnimationClass(customization.animation)
+      )}>
+        {!shouldShowHeader && (
+          <div className={getElementAnimation('text')}>
+            <h3 style={{ 
+              fontFamily: headerFont.family || 'inherit', 
+              fontSize: getFontSize(headerFont.size || 'large'), 
+              color: headerFont.color || '#333333',
+              fontWeight: getFontWeight(headerFont.weight || 'bold')
+            }}>
+              {event.title}
+            </h3>
+            
+            {event.description && (
+              <p style={{ 
+                fontFamily: descriptionFont.family || 'inherit', 
+                fontSize: getFontSize(descriptionFont.size || 'medium'),
+                color: descriptionFont.color || '#666666',
+                fontWeight: getFontWeight(descriptionFont.weight || 'normal')
+              }} className="mt-1">
+                {event.description}
               </p>
             )}
           </div>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Define animation class based on animation setting
-  const getAnimationClass = () => {
-    const animationType = customization.animation || 'fade';
-    
-    switch (animationType) {
-      case 'fade':
-        return 'animate-fade-in';
-      case 'slide':
-        return 'animate-slide-in';
-      case 'pop':
-        return 'animate-scale-in';
-      default:
-        return '';
-    }
-  };
-
-  // Define card effect styles
-  const getCardEffectStyles = () => {
-    const cardEffect = customization.cardEffect || { 
-      type: 'shadow',
-      borderRadius: 'medium'
-    };
-    
-    let styles: React.CSSProperties = {};
-    
-    // Border radius
-    switch (cardEffect.borderRadius) {
-      case 'none':
-        styles.borderRadius = '0';
-        break;
-      case 'small':
-        styles.borderRadius = '0.25rem';
-        break;
-      case 'medium':
-        styles.borderRadius = '0.5rem';
-        break;
-      case 'large':
-        styles.borderRadius = '1rem';
-        break;
-      default:
-        styles.borderRadius = '0.5rem';
-    }
-    
-    // Card effect type
-    switch (cardEffect.type) {
-      case 'shadow':
-        styles.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)';
-        break;
-      case 'matte':
-        styles.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.05)';
-        styles.background = 'rgba(255, 255, 255, 0.9)';
-        break;
-      case 'gloss':
-        styles.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
-        styles.background = 'rgba(255, 255, 255, 0.95)';
-        styles.backdropFilter = 'blur(10px)';
-        break;
-    }
-    
-    // Border
-    if (cardEffect.border) {
-      styles.border = `1px solid ${cardEffect.borderColor || '#e2e8f0'}`;
-    }
-    
-    return styles;
-  };
-
-  // Utility button style (for map buttons etc)
-  const getUtilityButtonStyle = (buttonType: 'calendar' | 'map' | 'qr') => {
-    const defaultStyle = {
-      background: '#f1f5f9',
-      color: '#475569',
-      shape: 'rounded'
-    };
-    
-    const buttonStyle = customization.utilityButtons?.[buttonType] || defaultStyle;
-    
-    return {
-      backgroundColor: buttonStyle.background,
-      color: buttonStyle.color,
-      borderRadius: 
-        buttonStyle.shape === 'pill' ? '9999px' :
-        buttonStyle.shape === 'rounded' ? '0.375rem' : 
-        '0'
-    };
-  };
-
-  // Helper to get font size from string
-  const getFontSize = (size?: string, fallback = 'medium') => {
-    switch (size || fallback) {
-      case 'small':
-        return '0.875rem';
-      case 'medium':
-        return '1rem';
-      case 'large':
-        return '1.25rem';
-      case 'xlarge':
-        return '1.5rem';
-      default:
-        return '1rem';
-    }
-  };
-
-  // Main card render
-  return (
-    <Card 
-      className={`overflow-hidden ${getAnimationClass()}`}
-      style={{
-        ...getBackgroundStyle(),
-        ...getCardEffectStyles(),
-        fontFamily: customization.font?.family || 'system-ui, sans-serif'
-      }}
-    >
-      {renderHeader()}
-      
-      <CardContent className="pt-6">
-        {/* Event description */}
-        {event.description && (
-          <div className="mb-4">
-            <p style={{
-              fontFamily: descriptionFont?.family,
-              fontSize: getFontSize(descriptionFont?.size),
-              color: descriptionFont?.color || '#4b5563',
-              fontWeight: descriptionFont?.weight || 'normal',
-              textAlign: (descriptionFont?.alignment || 'left') as any
-            }} className={`${customization.elementAnimations?.text === 'fade' ? 'animate-fade-in' : 
-                         customization.elementAnimations?.text === 'slide' ? 'animate-slide-in' : 
-                         customization.elementAnimations?.text === 'pop' ? 'animate-scale-in' : ''}`}>
-              {event.description}
-            </p>
-          </div>
         )}
         
-        {/* Date and time info */}
-        <div className="space-y-3 mt-4">
-          <div className={`flex items-center space-x-2 ${
-            customization.elementAnimations?.text === 'fade' ? 'animate-fade-in delay-75' : 
-            customization.elementAnimations?.text === 'slide' ? 'animate-slide-in delay-75' : 
-            customization.elementAnimations?.text === 'pop' ? 'animate-scale-in delay-75' : ''
-          }`}>
-            <Calendar className={`h-5 w-5 ${
-              customization.elementAnimations?.icons === 'fade' ? 'animate-fade-in delay-150' : 
-              customization.elementAnimations?.icons === 'slide' ? 'animate-slide-in delay-150' : 
-              customization.elementAnimations?.icons === 'pop' ? 'animate-scale-in delay-150' : ''
-            }`} style={{ color: dateTimeFont?.color || '#4b5563' }} />
-            <span style={{
-              fontFamily: dateTimeFont?.family,
-              fontSize: getFontSize(dateTimeFont?.size, 'medium'),
-              color: dateTimeFont?.color || '#4b5563',
-              fontWeight: dateTimeFont?.weight || 'normal'
+        <div className="space-y-2">
+          <div className={cn("flex items-center", getElementAnimation('text'))}>
+            <Calendar className={cn("mr-2 h-4 w-4 text-muted-foreground", getElementAnimation('icons'))} />
+            <span style={{ 
+              fontFamily: dateTimeFont.family || 'inherit', 
+              fontSize: getFontSize(dateTimeFont.size || 'small'),
+              color: dateTimeFont.color || '#666666',
+              fontWeight: getFontWeight(dateTimeFont.weight || 'normal')
             }}>
-              {formatDate(event.start_time)}
+              {formatEventDate(event.start_time)}
             </span>
           </div>
           
           {!event.is_all_day && (
-            <div className={`flex items-center space-x-2 ${
-              customization.elementAnimations?.text === 'fade' ? 'animate-fade-in delay-100' : 
-              customization.elementAnimations?.text === 'slide' ? 'animate-slide-in delay-100' : 
-              customization.elementAnimations?.text === 'pop' ? 'animate-scale-in delay-100' : ''
-            }`}>
-              <Clock className={`h-5 w-5 ${
-                customization.elementAnimations?.icons === 'fade' ? 'animate-fade-in delay-200' : 
-                customization.elementAnimations?.icons === 'slide' ? 'animate-slide-in delay-200' : 
-                customization.elementAnimations?.icons === 'pop' ? 'animate-scale-in delay-200' : ''
-              }`} style={{ color: dateTimeFont?.color || '#4b5563' }} />
-              <span style={{
-                fontFamily: dateTimeFont?.family,
-                fontSize: getFontSize(dateTimeFont?.size, 'medium'),
-                color: dateTimeFont?.color || '#4b5563',
-                fontWeight: dateTimeFont?.weight || 'normal'
+            <div className={cn("flex items-center", getElementAnimation('text'))}>
+              <Clock className={cn("mr-2 h-4 w-4 text-muted-foreground", getElementAnimation('icons'))} />
+              <span style={{ 
+                fontFamily: dateTimeFont.family || 'inherit', 
+                fontSize: getFontSize(dateTimeFont.size || 'small'),
+                color: dateTimeFont.color || '#666666',
+                fontWeight: getFontWeight(dateTimeFont.weight || 'normal')
               }}>
-                {formatTime(event.start_time)} - {formatTime(event.end_time)}
+                {formatEventTime(event.start_time)} - {formatEventTime(event.end_time)}
               </span>
             </div>
           )}
           
           {event.location && (
-            <div className={`flex items-center space-x-2 ${
-              customization.elementAnimations?.text === 'fade' ? 'animate-fade-in delay-150' : 
-              customization.elementAnimations?.text === 'slide' ? 'animate-slide-in delay-150' : 
-              customization.elementAnimations?.text === 'pop' ? 'animate-scale-in delay-150' : ''
-            }`}>
-              <MapPin className={`h-5 w-5 ${
-                customization.elementAnimations?.icons === 'fade' ? 'animate-fade-in delay-300' : 
-                customization.elementAnimations?.icons === 'slide' ? 'animate-slide-in delay-300' : 
-                customization.elementAnimations?.icons === 'pop' ? 'animate-scale-in delay-300' : ''
-              }`} style={{ color: dateTimeFont?.color || '#4b5563' }} />
-              <span style={{
-                fontFamily: dateTimeFont?.family,
-                fontSize: getFontSize(dateTimeFont?.size, 'medium'),
-                color: dateTimeFont?.color || '#4b5563',
-                fontWeight: dateTimeFont?.weight || 'normal'
+            <div className={cn("flex items-center", getElementAnimation('text'))}>
+              <MapPin className={cn("mr-2 h-4 w-4 text-muted-foreground", getElementAnimation('icons'))} />
+              <span style={{ 
+                fontFamily: customization.font.family || 'inherit', 
+                fontSize: getFontSize(customization.font.size || 'small'),
+                color: customization.font.color || '#666666',
+                fontWeight: getFontWeight(customization.font.weight || 'normal')
               }}>
                 {event.location}
               </span>
             </div>
           )}
         </div>
-
-        {/* Chatbot section */}
+        
         {customization.enableChatbot && (
-          <div className={`mt-6 p-4 bg-gray-50 rounded-lg ${
-            customization.elementAnimations?.text === 'fade' ? 'animate-fade-in delay-200' : 
-            customization.elementAnimations?.text === 'slide' ? 'animate-slide-in delay-200' : 
-            customization.elementAnimations?.text === 'pop' ? 'animate-scale-in delay-200' : ''
-          }`}>
-            <h4 className="text-sm font-medium mb-2">Have questions?</h4>
-            <Button 
-              variant="outline" 
-              className={`w-full ${
-                customization.elementAnimations?.buttons === 'fade' ? 'animate-fade-in delay-250' : 
-                customization.elementAnimations?.buttons === 'slide' ? 'animate-slide-in delay-250' : 
-                customization.elementAnimations?.buttons === 'pop' ? 'animate-scale-in delay-250' : ''
-              }`}
-              onClick={() => {/* Implement chatbot open */}}
-            >
-              Chat with Event Assistant
+          <div className={cn("mt-4 p-3 bg-primary/5 rounded-md", getElementAnimation('text'))}>
+            <p className={cn("text-sm", getElementAnimation('text'))}>
+              AI assistant available to answer questions about this event
+            </p>
+            <Button variant="ghost" size="sm" className={cn("mt-2", getElementAnimation('buttons'))}>
+              Chat with Assistant
             </Button>
           </div>
         )}
-        
-        {renderBranding()}
       </CardContent>
       
-      <CardFooter className="flex flex-col gap-4">
-        {/* Calendar and map buttons */}
-        <div className={`w-full flex flex-wrap gap-2 justify-center ${
-          customization.elementAnimations?.buttons === 'fade' ? 'animate-fade-in delay-300' : 
-          customization.elementAnimations?.buttons === 'slide' ? 'animate-slide-in delay-300' : 
-          customization.elementAnimations?.buttons === 'pop' ? 'animate-scale-in delay-300' : ''
-        }`}>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="flex-1"
-            style={getUtilityButtonStyle('calendar')}
-            onClick={() => {/* Add to calendar functionality */}}
-          >
-            <Calendar className="mr-2 h-4 w-4" /> Add to Calendar
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            style={getUtilityButtonStyle('map')}
-            onClick={() => {/* Open map functionality */}}
-          >
-            <MapPin className="mr-2 h-4 w-4" /> View on Map
-          </Button>
-        </div>
+      <CardFooter className={cn(
+        "flex flex-wrap gap-2 pt-0 pb-4 px-6",
+        customization.headerStyle === 'banner' && "bg-card",
+        getElementAnimation('buttons')
+      )}>
+        {event.status === "sent" && getResponseButtons()}
         
-        {/* Accept/Decline buttons */}
-        {(customization.showAcceptDeclineButtons !== false) && 
-         !isPreview && 
-         (event.status !== 'accepted' && event.status !== 'declined') && (
-          <div className={`w-full flex gap-3 mt-2 ${
-            customization.elementAnimations?.buttons === 'fade' ? 'animate-fade-in delay-400' : 
-            customization.elementAnimations?.buttons === 'slide' ? 'animate-slide-in delay-400' : 
-            customization.elementAnimations?.buttons === 'pop' ? 'animate-scale-in delay-400' : ''
-          }`}>
-            <Button
-              className="flex-1"
-              style={{
-                backgroundColor: customization.buttons.decline?.background || '#f44336',
-                color: customization.buttons.decline?.color || '#ffffff',
-                borderRadius: 
-                  customization.buttons.decline?.shape === 'pill' ? '9999px' :
-                  customization.buttons.decline?.shape === 'rounded' ? '0.375rem' : 
-                  '0'
-              }}
-              onClick={() => handleResponse('declined')}
-              disabled={isLoading}
-            >
-              <X className="mr-2 h-4 w-4" /> Decline
-            </Button>
-            
-            <Button
-              className="flex-1"
-              style={{
-                backgroundColor: customization.buttons.accept?.background || '#4CAF50',
-                color: customization.buttons.accept?.color || '#ffffff',
-                borderRadius: 
-                  customization.buttons.accept?.shape === 'pill' ? '9999px' :
-                  customization.buttons.accept?.shape === 'rounded' ? '0.375rem' : 
-                  '0'
-              }}
-              onClick={() => handleResponse('accepted')}
-              disabled={isLoading}
-            >
-              <Check className="mr-2 h-4 w-4" /> Accept
-            </Button>
-          </div>
-        )}
+        {getActionButtons()}
       </CardFooter>
       
-      {/* Powered by footer */}
-      <div className="text-center text-xs opacity-60 py-2" 
-        style={{ color: customization.poweredByColor || '#666666' }}>
+      <div className="text-center text-xs text-muted-foreground p-1" style={{ 
+        color: customization.poweredByColor || '#666' 
+      }}>
         Powered by WAKTI
       </div>
     </Card>
   );
+  
+  // Helper function to get response buttons
+  function getResponseButtons() {
+    if (!customization.showAcceptDeclineButtons) return null;
+    
+    if (event.status === "accepted" || event.status === "declined") {
+      return (
+        <div className="w-full flex items-center justify-center space-x-2">
+          <div className={cn(
+            "px-3 py-1.5 rounded flex items-center space-x-1",
+            event.status === "accepted" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700",
+            getElementAnimation('text')
+          )}>
+            {event.status === "accepted" ? (
+              <CheckCircle className={cn("h-4 w-4 mr-1", getElementAnimation('icons'))} />
+            ) : (
+              <XCircle className={cn("h-4 w-4 mr-1", getElementAnimation('icons'))} />
+            )}
+            <span>{event.status === "accepted" ? "You've accepted" : "You've declined"}</span>
+          </div>
+        </div>
+      );
+    }
+    
+    return (
+      <>
+        {onDecline && (
+          <Button
+            variant="outline"
+            className={getElementAnimation('buttons')}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDecline(event.id);
+            }}
+            style={{
+              backgroundColor: customization.buttons.decline.background,
+              color: customization.buttons.decline.color,
+              borderRadius: 
+                customization.buttons.decline.shape === 'rounded' ? '0.375rem' : 
+                customization.buttons.decline.shape === 'pill' ? '9999px' : '0',
+              borderWidth: 0
+            }}
+          >
+            <XCircle className={cn("mr-2 h-4 w-4", getElementAnimation('icons'))} />
+            Decline
+          </Button>
+        )}
+        
+        {onAccept && (
+          <Button
+            variant="default"
+            className={getElementAnimation('buttons')}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAccept(event.id);
+            }}
+            style={{
+              backgroundColor: customization.buttons.accept.background,
+              color: customization.buttons.accept.color,
+              borderRadius: 
+                customization.buttons.accept.shape === 'rounded' ? '0.375rem' : 
+                customization.buttons.accept.shape === 'pill' ? '9999px' : '0',
+              borderWidth: 0
+            }}
+          >
+            <CheckCircle className={cn("mr-2 h-4 w-4", getElementAnimation('icons'))} />
+            Accept
+          </Button>
+        )}
+      </>
+    );
+  }
+  
+  // Helper function to get action buttons
+  function getActionButtons() {
+    const actionButtons = [];
+    
+    if (onEdit) {
+      actionButtons.push(
+        <Button
+          key="edit"
+          variant="ghost"
+          size="sm"
+          className={getElementAnimation('buttons')}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(event);
+          }}
+        >
+          <Edit className={cn("mr-1 h-4 w-4", getElementAnimation('icons'))} />
+          Edit
+        </Button>
+      );
+    }
+    
+    if (onViewResponses) {
+      actionButtons.push(
+        <Button
+          key="responses"
+          variant="ghost"
+          size="sm"
+          className={getElementAnimation('buttons')}
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewResponses(event.id);
+          }}
+        >
+          <Users className={cn("mr-1 h-4 w-4", getElementAnimation('icons'))} />
+          Responses
+        </Button>
+      );
+    }
+    
+    if (onDelete) {
+      actionButtons.push(
+        <Button
+          key="delete"
+          variant="ghost"
+          size="sm"
+          className={getElementAnimation('buttons')}
+          onClick={async (e) => {
+            e.stopPropagation();
+            try {
+              setIsLoading(true);
+              await onDelete(event.id);
+            } finally {
+              setIsLoading(false);
+            }
+          }}
+          disabled={isLoading}
+        >
+          <Trash2 className={cn("mr-1 h-4 w-4", getElementAnimation('icons'))} />
+          {isLoading ? "Deleting..." : "Delete"}
+        </Button>
+      );
+    }
+    
+    return actionButtons.length > 0 ? (
+      <div className="w-full flex flex-wrap justify-end gap-2 mt-2">
+        {actionButtons}
+      </div>
+    ) : null;
+  }
+  
+  // Helper function to get card effect classes
+  function getCardEffectClasses() {
+    if (!customization.cardEffect) return '';
+    
+    const classes = [];
+    
+    // Shadow effect
+    if (customization.cardEffect.type === 'shadow') {
+      classes.push('shadow-md');
+    }
+    
+    // Matte effect
+    if (customization.cardEffect.type === 'matte') {
+      classes.push('bg-opacity-90');
+    }
+    
+    // Gloss effect
+    if (customization.cardEffect.type === 'gloss') {
+      classes.push('backdrop-filter backdrop-blur-sm bg-opacity-80');
+    }
+    
+    // Border radius
+    if (customization.cardEffect.borderRadius) {
+      const radius = {
+        'none': 'rounded-none',
+        'small': 'rounded-sm',
+        'medium': 'rounded-md',
+        'large': 'rounded-lg'
+      }[customization.cardEffect.borderRadius];
+      
+      if (radius) classes.push(radius);
+    }
+    
+    // Border
+    if (customization.cardEffect.border) {
+      classes.push('border');
+      if (customization.cardEffect.borderColor) {
+        classes.push(`border-[${customization.cardEffect.borderColor}]`);
+      }
+    }
+    
+    return classes.join(' ');
+  }
+  
+  // Helper functions for font styling
+  function getFontSize(size?: string) {
+    switch (size) {
+      case 'small': return '0.875rem';
+      case 'medium': return '1rem';
+      case 'large': return '1.25rem';
+      case 'xlarge': return '1.5rem';
+      default: return '1rem';
+    }
+  }
+  
+  function getFontWeight(weight?: string) {
+    switch (weight) {
+      case 'light': return '300';
+      case 'normal': return '400';
+      case 'medium': return '500';
+      case 'bold': return '700';
+      default: return '400';
+    }
+  }
 };
 
 export default EventCard;

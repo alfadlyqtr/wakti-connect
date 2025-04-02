@@ -14,7 +14,7 @@ export const useEventBasics = () => {
   // Default customization state
   const [customization, setCustomization] = useState<EventCustomization>({
     background: {
-      type: 'color',
+      type: 'solid',
       value: '#ffffff',
     },
     font: {

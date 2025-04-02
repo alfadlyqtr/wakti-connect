@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 
 // Define the event schema for form validation
@@ -29,7 +28,7 @@ export type ButtonShape = "rounded" | "pill" | "square";
 // Event card effect types
 export type CardEffectType = "shadow" | "matte" | "gloss";
 
-// Event form data type
+// Define the type for form data sent to API
 export interface EventFormData {
   title: string;
   description?: string;
@@ -42,28 +41,14 @@ export interface EventFormData {
   is_all_day?: boolean;
   status?: EventStatus;
   customization?: EventCustomization;
+  location_type?: 'manual' | 'google_maps';
+  maps_url?: string;
   invitations?: Array<{
     email?: string;
-    userId?: string;
+    invited_user_id?: string;
+    status?: "accepted" | "declined" | "pending";
+    shared_as_link?: boolean;
   }>;
-}
-
-// Define the event type
-export interface Event {
-  id: string;
-  title: string;
-  description?: string;
-  location?: string;
-  start_time: string;
-  end_time: string;
-  is_all_day: boolean;
-  status: EventStatus;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-  customization: EventCustomization;
-  invitations?: EventInvitation[];
-  is_recalled?: boolean;
 }
 
 // Background type definition with solid instead of color
@@ -121,12 +106,12 @@ export interface EventCustomization {
   
   // Button styles
   buttons: {
-    accept?: {
+    accept: {
       background: string;
       color: string;
       shape: ButtonShape;
     };
-    decline?: {
+    decline: {
       background: string;
       color: string;
       shape: ButtonShape;
@@ -207,4 +192,22 @@ export interface EventInvitation {
   event_id: string;
   created_at: string;
   updated_at: string;
+}
+
+// Define the event type
+export interface Event {
+  id: string;
+  title: string;
+  description?: string;
+  location?: string;
+  start_time: string;
+  end_time: string;
+  is_all_day: boolean;
+  status: EventStatus;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  customization: EventCustomization;
+  invitations?: EventInvitation[];
+  is_recalled?: boolean;
 }

@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { EventFormValues, EventCustomization, EventFormData, EventStatus } from "@/types/event.types";
+import { EventFormValues, EventCustomization, EventStatus, EventFormData } from "@/types/event.types";
 import { InvitationRecipient } from "@/types/invitation.types";
 import { useEvents } from "@/hooks/useEvents";
 import { toast } from "@/components/ui/use-toast";
@@ -79,22 +79,29 @@ export const useEventSubmission = ({
       endDateTime.setHours(23, 59, 59, 999);
     }
     
+    // Determine status based on recipients and current state
+    const status: EventStatus = editEvent?.status === 'draft' && recipients.length === 0 
+      ? 'draft' 
+      : recipients.length > 0 ? 'sent' : 'draft';
+      
     return {
-      title: title, // Ensure title is explicitly added from the current state
-      description: description, // Ensure description is also explicitly added
+      title: title,
+      description: description,
       startDate: selectedDate,
       isAllDay: isAllDay,
       location: location,
       start_time: startDateTime.toISOString(),
       end_time: endDateTime.toISOString(),
       is_all_day: isAllDay,
+      status: status,
       location_type: locationType,
       maps_url: locationType === 'google_maps' ? mapsUrl : undefined,
       customization: customization,
       // Add invitations for recipients if available
       invitations: recipients.length > 0 ? recipients.map(recipient => ({
         email: recipient.email,
-        userId: recipient.userId
+        invited_user_id: recipient.userId,
+        status: 'pending'
       })) : undefined
     };
   };
@@ -130,13 +137,6 @@ export const useEventSubmission = ({
       
       // More logging
       console.log("Processed form data:", completeFormData);
-      
-      // Determine status based on recipients and current state
-      const status: EventStatus = editEvent?.status === 'draft' && recipients.length === 0 
-        ? 'draft' 
-        : recipients.length > 0 ? 'sent' : 'draft';
-      
-      completeFormData.status = status;
       
       let result;
       

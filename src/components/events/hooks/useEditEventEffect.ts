@@ -1,9 +1,8 @@
 
 import { useEffect } from 'react';
 import { UseFormReturn } from 'react-hook-form';
-import { Event, EventFormValues, EventCustomization } from '@/types/event.types';
+import { Event, EventFormValues } from '@/types/event.types';
 import { InvitationRecipient } from '@/types/invitation.types';
-import { parse } from 'date-fns';
 
 interface UseEditEventEffectProps {
   editEvent?: Event | null;
@@ -41,6 +40,7 @@ const useEditEventEffect = ({
       if (editEvent.invitations && editEvent.invitations.length > 0) {
         const eventRecipients: InvitationRecipient[] = editEvent.invitations.map(invite => ({
           id: invite.id,
+          name: invite.email || `User ${invite.invited_user_id?.substring(0, 6)}`,
           email: invite.email || '',
           userId: invite.invited_user_id || '',
           type: invite.email ? 'email' : 'user',

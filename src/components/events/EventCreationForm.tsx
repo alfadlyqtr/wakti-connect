@@ -8,9 +8,10 @@ import FormTabs from "./creation/FormTabs";
 import FormActions from "./creation/FormActions";
 import { InvitationRecipient } from "@/types/invitation.types";
 import useEditEventEffect from "./hooks/useEditEventEffect";
+import { Event } from "@/types/event.types";
 
 interface EventCreationFormProps {
-  editEvent?: any;
+  editEvent?: Event | null;
   onCancel?: () => void;
   onSuccess?: () => void;
 }
@@ -37,11 +38,12 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
   });
   
   // Use the hook to load event data if in edit mode
-  const { isLoading: isLoadingEvent } = useEditEventEffect(
+  const { isLoading: isLoadingEvent } = useEditEventEffect({
+    editEvent,
     form,
     setRecipients,
     setIsEditMode
-  );
+  });
 
   const onSubmit = (data: EventFormValues) => {
     console.log("Form submitted:", data);
@@ -61,7 +63,28 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
         <FormTabs 
           activeTab={activeTab} 
           setActiveTab={setActiveTab} 
-          form={form}
+          title={form.watch("title")}
+          description={form.watch("description")}
+          selectedDate={form.watch("startDate")}
+          location={form.watch("location")}
+          startTime="09:00" // You should get this from a state or form
+          endTime="10:00"   // You should get this from a state or form
+          customization={{
+            background: { type: 'solid', value: '#ffffff' },
+            font: { family: 'sans-serif', size: 'medium', color: '#333333' },
+            buttons: {
+              accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
+              decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' }
+            }
+          }}
+          onCustomizationChange={(customization) => console.log("Customization changed:", customization)}
+          recipients={recipients}
+          addRecipient={(recipient) => setRecipients([...recipients, recipient])}
+          removeRecipient={(index) => {
+            const newRecipients = [...recipients];
+            newRecipients.splice(index, 1);
+            setRecipients(newRecipients);
+          }}
         />
         
         <FormActions 
@@ -76,10 +99,6 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
           isSubmitting={form.formState.isSubmitting}
           showSubmit={activeTab === "share"}
           submitLabel={isEditMode ? "Update Event" : "Create Event"}
-          form={form}
-          activeTab={activeTab}
-          recipients={recipients}
-          isEditMode={isEditMode}
         />
       </form>
     </div>

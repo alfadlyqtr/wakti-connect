@@ -2,10 +2,10 @@
 import React from "react";
 import BackgroundSelector from "../BackgroundSelector";
 import AnimationSelector from "../AnimationSelector";
-import { EventCustomization } from "@/types/event.types";
+import { EventCustomization, AnimationType } from "@/types/event.types";
 import { Label } from "@/components/ui/label";
 import { ImagePlus, X } from "lucide-react";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@/components/ui/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 
@@ -81,7 +81,7 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
         backgroundValue={customization.background.value}
         backgroundAngle={customization.background.angle}
         backgroundDirection={customization.background.direction}
-        onBackgroundChange={onBackgroundChange}
+        onBackgroundChange={(type, value) => onBackgroundChange(type as any, value)}
         onBackgroundAngleChange={onBackgroundAngleChange}
         onBackgroundDirectionChange={onBackgroundDirectionChange}
       />
@@ -126,8 +126,12 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
       <Separator className="my-6" />
 
       <AnimationSelector
-        value={customization.animation}
-        onChange={onAnimationChange}
+        value={customization.animation as 'fade' | 'slide' | 'pop'}
+        onChange={(animation) => {
+          if (animation !== 'none') {
+            onAnimationChange(animation as 'fade' | 'slide' | 'pop');
+          }
+        }}
       />
     </div>
   );

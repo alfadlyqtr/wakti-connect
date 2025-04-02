@@ -12,19 +12,13 @@ interface TextTabProps {
   onDateTimeFontChange?: (property: 'family' | 'size' | 'color' | 'weight', value: string) => void;
 }
 
-// Update this interface to include alignment
-interface FontSelectorProps {
-  font: {
-    family: string;
-    size: string;
-    color: string;
-    weight?: string;
-    alignment?: string;
-  };
-  onFontChange: (property: string, value: string) => void;
-  showAlignment?: boolean;
-  showWeight?: boolean;
-  previewText?: string;
+// Define FontProps interface to match component expectations
+export interface FontProps {
+  family: string;
+  size?: string;
+  color?: string;
+  weight?: string;
+  alignment?: string;
 }
 
 const TextTab: React.FC<TextTabProps> = ({
@@ -54,6 +48,15 @@ const TextTab: React.FC<TextTabProps> = ({
     }
   };
 
+  // Ensure font objects have required properties with defaults
+  const mainFont: FontProps = {
+    family: customization.font.family || 'system-ui, sans-serif',
+    size: customization.font.size,
+    color: customization.font.color,
+    weight: customization.font.weight,
+    alignment: customization.font.alignment
+  };
+
   return (
     <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -69,7 +72,7 @@ const TextTab: React.FC<TextTabProps> = ({
             These settings apply to all text by default, but can be overridden in the specific tabs.
           </div>
           <FontSelector 
-            font={customization.font}
+            font={mainFont}
             onFontChange={(property, value) => handleFontChange(onFontChange, property, value)}
             showAlignment={true}
             showWeight={true}
@@ -82,7 +85,7 @@ const TextTab: React.FC<TextTabProps> = ({
           </div>
           <FontSelector 
             font={{
-              family: customization.headerFont?.family || customization.font.family,
+              family: customization.headerFont?.family || customization.font.family || 'system-ui, sans-serif',
               size: customization.headerFont?.size || customization.font.size,
               color: customization.headerFont?.color || customization.font.color,
               weight: customization.headerFont?.weight || customization.font.weight || 'normal'
@@ -100,7 +103,7 @@ const TextTab: React.FC<TextTabProps> = ({
           </div>
           <FontSelector 
             font={{
-              family: customization.descriptionFont?.family || customization.font.family,
+              family: customization.descriptionFont?.family || customization.font.family || 'system-ui, sans-serif',
               size: customization.descriptionFont?.size || customization.font.size,
               color: customization.descriptionFont?.color || customization.font.color,
               weight: customization.descriptionFont?.weight || customization.font.weight || 'normal'
@@ -118,7 +121,7 @@ const TextTab: React.FC<TextTabProps> = ({
           </div>
           <FontSelector 
             font={{
-              family: customization.dateTimeFont?.family || customization.font.family,
+              family: customization.dateTimeFont?.family || customization.font.family || 'system-ui, sans-serif',
               size: customization.dateTimeFont?.size || customization.font.size,
               color: customization.dateTimeFont?.color || customization.font.color,
               weight: customization.dateTimeFont?.weight || customization.font.weight || 'normal'

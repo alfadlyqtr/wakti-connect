@@ -5,6 +5,7 @@ import { EventFormTab, EventCustomization } from "@/types/event.types";
 import DetailsTabContent from "../details/DetailsTabContent";
 import CustomizeTab from "../customize/CustomizeTab";
 import ShareTabContent from "../sharing/ShareTabContent";
+import { InvitationRecipient } from "@/types/invitation.types";
 
 export interface FormTabsProps {
   activeTab: EventFormTab;
@@ -15,8 +16,8 @@ export interface FormTabsProps {
   location?: string;
   customization?: EventCustomization;
   onCustomizationChange?: (customization: EventCustomization) => void;
-  recipients?: any[]; // The recipients list
-  addRecipient?: (recipient: any) => void;
+  recipients?: InvitationRecipient[]; 
+  addRecipient?: (recipient: InvitationRecipient) => void;
   removeRecipient?: (index: number) => void;
   startTime?: string;
   endTime?: string;

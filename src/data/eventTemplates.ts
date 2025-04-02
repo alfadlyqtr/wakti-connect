@@ -1,30 +1,33 @@
 
 import { EventCustomization } from "@/types/event.types";
 
+// Interfaces for event templates
 export interface EventTemplate {
   id: string;
   name: string;
   description: string;
-  preview: string; // URL to preview image
+  previewImageUrl: string;
   customization: EventCustomization;
-  type?: string; // Adding type property for filtering
+  isPremium: boolean;
 }
 
-const eventTemplates: EventTemplate[] = [
+// Default event templates
+export const eventTemplates: EventTemplate[] = [
   {
-    id: "minimal",
-    name: "Minimal",
-    description: "Clean and simple design with minimal styling",
-    preview: "/templates/minimal.jpg",
+    id: "template-1",
+    name: "Minimal White",
+    description: "Clean, simple white template with minimal design",
+    previewImageUrl: "/images/templates/minimal-white.jpg",
     customization: {
       background: {
-        type: "color",
+        type: "solid",
         value: "#ffffff"
       },
       font: {
-        family: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        family: "Inter, sans-serif",
         size: "medium",
         color: "#333333",
+        weight: "normal",
         alignment: "left"
       },
       buttons: {
@@ -39,221 +42,172 @@ const eventTemplates: EventTemplate[] = [
           shape: "rounded"
         }
       },
-      headerStyle: "simple",
+      headerStyle: "minimal",
       animation: "fade"
     },
-    type: "other"
+    isPremium: false
   },
   {
-    id: "modern",
-    name: "Modern",
-    description: "Contemporary design with gradient background",
-    preview: "/templates/modern.jpg",
+    id: "template-2",
+    name: "Gradient Purple",
+    description: "Vibrant purple gradient with modern typography",
+    previewImageUrl: "/images/templates/gradient-purple.jpg",
     customization: {
       background: {
         type: "gradient",
-        value: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
+        value: "linear-gradient(135deg, #6366f1, #8b5cf6)"
       },
       font: {
-        family: "Helvetica, sans-serif",
+        family: "Poppins, sans-serif",
         size: "medium",
-        color: "#333333",
-        alignment: "center"
-      },
-      buttons: {
-        accept: {
-          background: "#3498db",
-          color: "#ffffff",
-          shape: "pill"
-        },
-        decline: {
-          background: "#e74c3c",
-          color: "#ffffff",
-          shape: "pill"
-        }
-      },
-      headerStyle: "simple",
-      animation: "fade"
-    },
-    type: "meeting"
-  },
-  {
-    id: "bold",
-    name: "Bold",
-    description: "Strong colors with impactful design",
-    preview: "/templates/bold.jpg",
-    customization: {
-      background: {
-        type: "color",
-        value: "#2c3e50"
-      },
-      font: {
-        family: "Impact, sans-serif",
-        size: "large",
         color: "#ffffff",
+        weight: "normal",
         alignment: "center"
       },
       buttons: {
         accept: {
-          background: "#2ecc71",
+          background: "#10B981",
           color: "#ffffff",
-          shape: "square"
+          shape: "pill"
         },
         decline: {
-          background: "#e74c3c",
+          background: "#EF4444",
           color: "#ffffff",
-          shape: "square"
+          shape: "pill"
         }
       },
       headerStyle: "banner",
       animation: "slide"
     },
-    type: "party"
+    isPremium: false
   },
   {
-    id: "playful",
-    name: "Playful",
-    description: "Fun, colorful design for casual events",
-    preview: "/templates/playful.jpg",
+    id: "template-3",
+    name: "Business Blue",
+    description: "Professional blue theme perfect for corporate events",
+    previewImageUrl: "/images/templates/business-blue.jpg",
     customization: {
       background: {
-        type: "gradient",
-        value: "linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%)"
+        type: "solid",
+        value: "#f8fafc"
       },
       font: {
-        family: "Comic Sans MS, cursive",
+        family: "system-ui, sans-serif",
         size: "medium",
-        color: "#333333",
-        alignment: "center"
-      },
-      buttons: {
-        accept: {
-          background: "#00b894",
-          color: "#ffffff",
-          shape: "rounded"
-        },
-        decline: {
-          background: "#d63031",
-          color: "#ffffff",
-          shape: "rounded"
-        }
-      },
-      headerStyle: "minimal",
-      animation: "pop"
-    },
-    type: "birthday"
-  },
-  {
-    id: "formal",
-    name: "Formal",
-    description: "Elegant design for professional events",
-    preview: "/templates/formal.jpg",
-    customization: {
-      background: {
-        type: "color",
-        value: "#f8f9fa"
-      },
-      font: {
-        family: "Georgia, serif",
-        size: "medium",
-        color: "#212529",
+        color: "#1e293b",
+        weight: "normal",
         alignment: "left"
       },
       buttons: {
         accept: {
-          background: "#343a40",
+          background: "#0284c7",
           color: "#ffffff",
           shape: "rounded"
         },
         decline: {
-          background: "#6c757d",
+          background: "#64748b",
           color: "#ffffff",
           shape: "rounded"
         }
       },
       headerStyle: "simple",
+      headerImage: "/images/templates/business-header.jpg",
       animation: "fade"
     },
-    type: "graduation"
+    isPremium: false
   },
   {
-    id: "luxury",
-    name: "Luxury Gala",
-    description: "Elegant design for upscale events and galas",
-    preview: "/templates/luxury.jpg",
+    id: "template-4",
+    name: "Dark Mode",
+    description: "Sleek dark theme with modern accents",
+    previewImageUrl: "/images/templates/dark-mode.jpg",
     customization: {
       background: {
-        type: "gradient",
-        value: "linear-gradient(135deg, #2c3e50 0%, #4a5568 50%, #2c3e50 100%)",
-        angle: 135,
-        direction: "to-bottom-right"
+        type: "solid",
+        value: "#1e293b"
       },
       font: {
-        family: "Georgia, serif",
+        family: "Inter, sans-serif",
         size: "medium",
         color: "#e2e8f0",
-        alignment: "center",
-        weight: "normal"
-      },
-      headerFont: {
-        family: "Times New Roman, serif",
-        size: "large",
-        color: "#efd79f", // Gold color
-        weight: "bold"
-      },
-      descriptionFont: {
-        family: "Georgia, serif",
-        size: "medium",
-        color: "#e2e8f0",
-        weight: "normal"
-      },
-      dateTimeFont: {
-        family: "Georgia, serif",
-        size: "medium",
-        color: "#efd79f", // Gold color
-        weight: "medium"
+        weight: "normal",
+        alignment: "left"
       },
       buttons: {
         accept: {
-          background: "#efd79f", // Gold
-          color: "#2c3e50",
+          background: "#22c55e",
+          color: "#ffffff",
+          shape: "rounded"
+        },
+        decline: {
+          background: "#ef4444",
+          color: "#ffffff",
+          shape: "rounded"
+        }
+      },
+      headerStyle: "minimal",
+      animation: "slide"
+    },
+    isPremium: true
+  },
+  {
+    id: "template-5",
+    name: "Sunset Gradient",
+    description: "Warm sunset colors with elegant design",
+    previewImageUrl: "/images/templates/sunset-gradient.jpg",
+    customization: {
+      background: {
+        type: "gradient",
+        value: "linear-gradient(135deg, #f59e0b, #ef4444)",
+        angle: 135
+      },
+      font: {
+        family: "Montserrat, sans-serif",
+        size: "medium",
+        color: "#ffffff",
+        weight: "normal",
+        alignment: "center"
+      },
+      buttons: {
+        accept: {
+          background: "#ffffff",
+          color: "#ef4444",
           shape: "pill"
         },
         decline: {
-          background: "#2c3e50",
-          color: "#e2e8f0",
+          background: "rgba(255, 255, 255, 0.2)",
+          color: "#ffffff",
           shape: "pill"
         }
       },
       headerStyle: "banner",
-      animation: "fade", // Changed from "scale" to "fade" to match allowed types
-      branding: {
-        slogan: "Luxury Event Experience"
-      },
+      animation: "pop",
       cardEffect: {
-        type: "gloss",
+        type: "shadow",
         borderRadius: "medium",
-        border: true,
-        borderColor: "#efd79f"
-      },
-      elementAnimations: {
-        text: "fade",
-        buttons: "fade", // Changed from "scale" to "fade" to match allowed types
-        icons: "fade",
-        delay: "staggered"
-      },
-      mapDisplay: "both",
-      showAcceptDeclineButtons: true,
-      showAddToCalendarButton: true
+        border: false
+      }
     },
-    type: "wedding"
+    isPremium: true
   }
 ];
 
-export function getTemplates(): EventTemplate[] {
-  return eventTemplates;
-}
-
-export function getTemplateById(id: string): EventTemplate | undefined {
+// Helper function to get a template by ID
+export const getTemplateById = (id: string): EventTemplate | undefined => {
   return eventTemplates.find(template => template.id === id);
-}
+};
+
+// Helper function to get all available templates
+export const getAllTemplates = (): EventTemplate[] => {
+  return eventTemplates;
+};
+
+// Helper function to get free templates only
+export const getFreeTemplates = (): EventTemplate[] => {
+  return eventTemplates.filter(template => !template.isPremium);
+};
+
+// Helper function to get premium templates only
+export const getPremiumTemplates = (): EventTemplate[] => {
+  return eventTemplates.filter(template => template.isPremium);
+};
