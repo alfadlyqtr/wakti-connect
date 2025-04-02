@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,8 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useContacts } from "@/hooks/useContacts";
-import { InvitationRecipient } from "@/types/invitation.types";
-import { UserContact } from "@/types/invitation.types";
+import { InvitationRecipient, UserContact } from "@/types/invitation.types";
 import { PlusCircle, X, Check, User, Mail } from "lucide-react";
 
 interface RecipientSelectorProps {
@@ -47,13 +45,14 @@ const RecipientSelector: React.FC<RecipientSelectorProps> = ({
     onAddRecipient({
       id: contact.contactId,
       name,
-      type: 'contact'
+      type: 'user', // Changed from 'contact' to 'user' to match the type definition
+      userId: contact.contactId // Add userId for event submission
     });
   };
   
   const isContactSelected = (contactId: string) => {
     return selectedRecipients.some(
-      r => r.type === 'contact' && r.id === contactId
+      r => (r.type === 'user' && r.id === contactId) || r.userId === contactId
     );
   };
   
@@ -76,7 +75,7 @@ const RecipientSelector: React.FC<RecipientSelectorProps> = ({
                 key={`${recipient.type}-${recipient.id || recipient.email}`}
                 className="flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-sm"
               >
-                {recipient.type === 'contact' ? (
+                {recipient.type === 'user' ? (
                   <User className="h-3.5 w-3.5 text-muted-foreground" />
                 ) : (
                   <Mail className="h-3.5 w-3.5 text-muted-foreground" />

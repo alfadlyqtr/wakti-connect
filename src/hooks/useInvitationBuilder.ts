@@ -1,11 +1,10 @@
-
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { toast } from '@/components/ui/use-toast';
 import { getInvitationCustomization, saveInvitationCustomization } from '@/services/invitation';
 import { InvitationCustomization } from '@/types/invitation.types';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 export const useInvitationBuilder = (eventId?: string, invitationId?: string) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -14,6 +13,7 @@ export const useInvitationBuilder = (eventId?: string, invitationId?: string) =>
     backgroundValue: '#ffffff',
     fontFamily: 'system-ui, sans-serif',
     fontSize: 'medium',
+    textColor: '#000000',
     textAlign: 'left',
     buttonStyles: { style: 'rounded', color: '#3B82F6' },
     layoutSize: 'medium',

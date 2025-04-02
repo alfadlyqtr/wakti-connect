@@ -1,55 +1,55 @@
-
 import { supabase } from '@/lib/supabase';
 import { InvitationCustomization } from '@/types/invitation.types';
-import { parseEventCustomization, stringifyEventCustomization } from '@/services/event/eventHelpers';
+import { EventCustomization, BackgroundType } from '@/types/event.types';
+
+// Helper function to safely convert the EventCustomization to a JSON object
+const convertEventCustomization = (customization: EventCustomization): any => {
+  return {
+    background: {
+      type: customization.background.type,
+      value: customization.background.value,
+      angle: customization.background.angle,
+      direction: customization.background.direction
+    },
+    font: {
+      family: customization.font.family,
+      size: customization.font.size, 
+      color: customization.font.color,
+      weight: customization.font.weight,
+      alignment: customization.font.alignment
+    },
+    buttons: {
+      accept: { ...customization.buttons.accept },
+      decline: { ...customization.buttons.decline }
+    },
+    // Include other properties as needed
+    headerImage: customization.headerImage,
+    headerStyle: customization.headerStyle,
+    animation: customization.animation,
+    cardEffect: customization.cardEffect,
+    branding: customization.branding,
+    enableChatbot: customization.enableChatbot,
+    showAcceptDeclineButtons: customization.showAcceptDeclineButtons
+  };
+};
 
 /**
- * Gets customization data for an invitation
+ * Get invitation customization by invitation ID
  */
 export const getInvitationCustomization = async (invitationId: string): Promise<InvitationCustomization | null> => {
   try {
-    const { data: invitation, error } = await supabase
-      .from('event_invitations')
-      .select('event_id')
-      .eq('id', invitationId)
+    const { data, error } = await supabase
+      .from('invitation_customizations')
+      .select('*')
+      .eq('invitation_id', invitationId)
       .single();
-      
+    
     if (error) {
-      console.error('Error fetching invitation:', error);
+      console.error('Error fetching invitation customization:', error);
       return null;
     }
     
-    const { data: event, error: eventError } = await supabase
-      .from('events')
-      .select('customization')
-      .eq('id', invitation.event_id)
-      .single();
-      
-    if (eventError) {
-      console.error('Error fetching event customization:', eventError);
-      return null;
-    }
-    
-    // Parse the customization string if needed
-    const eventCustomization = parseEventCustomization(event.customization);
-    
-    // Convert to invitation customization format
-    const invitationCustomization: InvitationCustomization = {
-      backgroundType: eventCustomization.background.type,
-      backgroundValue: eventCustomization.background.value,
-      fontFamily: eventCustomization.font.family,
-      fontSize: eventCustomization.font.size,
-      textColor: eventCustomization.font.color,
-      textAlign: eventCustomization.font.alignment || 'left',
-      buttonStyles: {
-        style: eventCustomization.buttons.accept.shape,
-        color: eventCustomization.buttons.accept.background
-      },
-      layoutSize: 'medium',
-      customEffects: {}
-    };
-    
-    return invitationCustomization;
+    return data as InvitationCustomization;
   } catch (error) {
     console.error('Error in getInvitationCustomization:', error);
     return null;
@@ -57,65 +57,28 @@ export const getInvitationCustomization = async (invitationId: string): Promise<
 };
 
 /**
- * Saves customization data for an invitation
+ * Save invitation customization
  */
-export const saveInvitationCustomization = async (
-  invitationId: string, 
-  customization: InvitationCustomization
-): Promise<InvitationCustomization | null> => {
+export const saveInvitationCustomization = async (invitationId: string, customization: InvitationCustomization): Promise<InvitationCustomization | null> => {
   try {
-    const { data: invitation, error } = await supabase
-      .from('event_invitations')
-      .select('event_id')
-      .eq('id', invitationId)
+    // Convert EventCustomization to a safe JSON format
+    const safeCustomization = convertEventCustomization(customization as EventCustomization);
+    
+    const { data, error } = await supabase
+      .from('invitation_customizations')
+      .upsert(
+        { invitation_id: invitationId, customization: safeCustomization },
+        { onConflict: 'invitation_id' }
+      )
+      .select('*')
       .single();
-      
+    
     if (error) {
-      console.error('Error fetching invitation:', error);
+      console.error('Error saving invitation customization:', error);
       return null;
     }
     
-    // Convert invitation customization to event customization format
-    const eventCustomization = {
-      background: {
-        type: customization.backgroundType,
-        value: customization.backgroundValue
-      },
-      font: {
-        family: customization.fontFamily,
-        size: customization.fontSize,
-        color: customization.textColor,
-        alignment: customization.textAlign
-      },
-      buttons: {
-        accept: {
-          background: customization.buttonStyles.color,
-          color: '#ffffff',
-          shape: customization.buttonStyles.style
-        },
-        decline: {
-          background: '#f44336',
-          color: '#ffffff',
-          shape: customization.buttonStyles.style
-        }
-      }
-    };
-    
-    // Stringify the customization object
-    const customizationString = stringifyEventCustomization(eventCustomization);
-    
-    // Update the event's customization
-    const { error: updateError } = await supabase
-      .from('events')
-      .update({ customization: customizationString })
-      .eq('id', invitation.event_id);
-      
-    if (updateError) {
-      console.error('Error updating event customization:', updateError);
-      return null;
-    }
-    
-    return customization;
+    return data as InvitationCustomization;
   } catch (error) {
     console.error('Error in saveInvitationCustomization:', error);
     return null;

@@ -100,7 +100,7 @@ export const useEventSubmission = ({
       // Add invitations for recipients if available
       invitations: recipients.length > 0 ? recipients.map(recipient => ({
         email: recipient.email,
-        invited_user_id: recipient.userId,
+        invited_user_id: recipient.userId || recipient.id, // Use userId or fall back to id
         status: 'pending' as const
       })) : undefined
     };

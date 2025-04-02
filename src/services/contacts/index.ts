@@ -1,5 +1,4 @@
-
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { getUserContacts, getContactRequests } from './contactQueries';
 import { UserContact } from '@/types/invitation.types';
 
@@ -8,12 +7,30 @@ export { searchUsers, checkContactRequest } from './contactSearch';
 
 // Fetch contacts data
 export const fetchContacts = async (): Promise<UserContact[]> => {
-  return getUserContacts();
+  try {
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.user?.id) {
+      throw new Error('User not authenticated');
+    }
+    return getUserContacts(session.user.id);
+  } catch (error) {
+    console.error('Error fetching contacts:', error);
+    return [];
+  }
 };
 
 // Fetch pending requests
 export const fetchPendingRequests = async (): Promise<UserContact[]> => {
-  return getContactRequests();
+  try {
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.user?.id) {
+      throw new Error('User not authenticated');
+    }
+    return getContactRequests(session.user.id);
+  } catch (error) {
+    console.error('Error fetching pending requests:', error);
+    return [];
+  }
 };
 
 // Send contact request

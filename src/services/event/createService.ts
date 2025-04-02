@@ -1,97 +1,93 @@
 
-import { EventFormData, Event, EventStatus } from '@/types/event.types';
-import { supabase } from '@/lib/supabase';
-import { prepareEventForStorage, transformDatabaseEvent } from './eventHelpers';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from "@/components/ui/use-toast";
+import { Event, EventFormData, EventStatus } from "@/types/event.types";
+import { supabase } from "@/lib/supabase";
 
-/**
- * Creates a new event with the given data
- */
-export const createEvent = async (formData: EventFormData): Promise<Event> => {
+// Helper functions
+const getUserProfile = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session?.user) {
+    throw new Error("You must be logged in to create events");
+  }
+  
+  return {
+    userId: session.user.id,
+    userRole: 'individual' // Default to individual for now
+  };
+};
+
+// Create a new event
+export const createEvent = async (formData: EventFormData): Promise<Event | null> => {
   try {
-    // Get the authenticated user
-    const { data: { user } } = await supabase.auth.getUser();
+    const { userId } = await getUserProfile();
     
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
-    // Format dates for database
-    const startDate = formData.startDate;
-    let startDateString = startDate.toISOString();
-    let endDateString = formData.endDate ? formData.endDate.toISOString() : startDateString;
-    
-    // If not all day, apply the specific times
-    if (!formData.isAllDay && formData.startTime) {
-      const [startHours, startMinutes] = formData.startTime.split(':').map(Number);
-      const startDateWithTime = new Date(startDate);
-      startDateWithTime.setHours(startHours, startMinutes, 0);
-      startDateString = startDateWithTime.toISOString();
-      
-      if (formData.endTime) {
-        const [endHours, endMinutes] = formData.endTime.split(':').map(Number);
-        const endDateWithTime = formData.endDate ? new Date(formData.endDate) : new Date(startDate);
-        endDateWithTime.setHours(endHours, endMinutes, 0);
-        endDateString = endDateWithTime.toISOString();
-      }
+    // Format the event data
+    let startTimestamp = formData.start_time;
+    if (!startTimestamp && formData.startDate) {
+      // Convert startDate to ISO string if start_time is not provided
+      startTimestamp = new Date(formData.startDate).toISOString();
     }
     
-    // Prepare the event data
+    let endTimestamp = formData.end_time;
+    if (!endTimestamp && formData.endDate) {
+      // Convert endDate to ISO string if end_time is not provided
+      endTimestamp = new Date(formData.endDate).toISOString();
+    }
+    
+    // Prepare the event object for insertion
     const eventData = {
       title: formData.title,
-      description: formData.description || '',
-      location: formData.location || '',
-      location_type: formData.location_type || 'manual',
-      maps_url: formData.maps_url || '',
-      start_time: startDateString,
-      end_time: endDateString,
+      description: formData.description,
+      start_time: startTimestamp,
+      end_time: endTimestamp,
       is_all_day: formData.isAllDay,
-      status: (formData.status || 'draft') as EventStatus,
-      user_id: user.id,
-      customization: prepareEventForStorage(formData.customization)
+      location: formData.location,
+      location_type: formData.location_type,
+      maps_url: formData.maps_url,
+      status: formData.status as EventStatus,
+      user_id: userId,
+      customization: formData.customization
     };
     
     // Insert the event into the database
     const { data: event, error } = await supabase
       .from('events')
       .insert(eventData)
-      .select('*')
+      .select()
       .single();
-      
+    
     if (error) {
-      console.error('Error creating event:', error);
-      throw error;
+      console.error("Error creating event:", error);
+      throw new Error(error.message);
     }
     
-    // Prepare invitation data if there are recipients
+    // If there are invitations, add them
     if (formData.invitations && formData.invitations.length > 0) {
-      const invitations = formData.invitations.map(invite => ({
+      const invitationData = formData.invitations.map(invitation => ({
         event_id: event.id,
-        email: invite.email || '',
-        invited_user_id: invite.invited_user_id || null,
-        status: 'pending',
-        shared_as_link: invite.shared_as_link || false
+        email: invitation.email,
+        invited_user_id: invitation.invited_user_id,
+        status: invitation.status || 'pending',
+        shared_as_link: invitation.shared_as_link || false
       }));
       
-      // Insert invitations
       const { error: invitationError } = await supabase
         .from('event_invitations')
-        .insert(invitations);
-        
+        .insert(invitationData);
+      
       if (invitationError) {
-        console.error('Error creating invitations:', invitationError);
         toast({
-          title: 'Invitations Not Sent',
-          description: 'The event was created but there was an issue sending invitations.',
-          variant: 'destructive',
+          title: "Warning",
+          description: "Event created but there was an issue sending invitations",
+          variant: "destructive",
         });
       }
     }
     
-    // Transform the event data for the frontend
-    return transformDatabaseEvent(event);
-  } catch (error) {
-    console.error('Error in createEvent:', error);
-    throw error;
+    return event;
+  } catch (error: any) {
+    console.error("Error in createEvent:", error);
+    return null;
   }
 };

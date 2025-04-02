@@ -1,8 +1,7 @@
-
-import { supabase } from '@/lib/supabase';
-import { Event, EventFormData, EventStatus } from '@/types/event.types';
+import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
+import { Event, EventFormData, EventStatus } from "@/types/event.types";
 import { transformDatabaseEvent, prepareEventForStorage } from './eventHelpers';
-import { toast } from '@/components/ui/use-toast';
 
 /**
  * Updates an existing event in the database

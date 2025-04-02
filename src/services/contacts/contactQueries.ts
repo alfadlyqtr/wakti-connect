@@ -1,5 +1,6 @@
+
 import { supabase } from '@/lib/supabase';
-import { UserContact } from '@/types/contact.types';
+import { UserContact } from '@/types/invitation.types';
 
 /**
  * Get all contacts for a user
@@ -65,11 +66,11 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
 };
 
 /**
- * Get all contacts who have the user as a contact
+ * Get all pending contact requests for a user
  */
-export const getReversedUserContacts = async (userId: string): Promise<UserContact[]> => {
+export const getContactRequests = async (userId: string): Promise<UserContact[]> => {
   try {
-    // Get all users who have this user as a contact
+    // Get all users who have this user as a contact with pending status
     const { data: contacts, error } = await supabase
       .from('user_contacts')
       .select(`
@@ -77,6 +78,7 @@ export const getReversedUserContacts = async (userId: string): Promise<UserConta
         user_id,
         contact_id,
         status,
+        staff_relation_id,
         contact:user_id (
           id,
           full_name,
@@ -85,10 +87,11 @@ export const getReversedUserContacts = async (userId: string): Promise<UserConta
           account_type
         )
       `)
-      .eq('contact_id', userId);
+      .eq('contact_id', userId)
+      .eq('status', 'pending');
     
     if (error) {
-      console.error('Error fetching reversed user contacts:', error);
+      console.error('Error fetching contact requests:', error);
       return [];
     }
     
@@ -108,6 +111,7 @@ export const getReversedUserContacts = async (userId: string): Promise<UserConta
         userId: contact.user_id,
         contactId: contact.contact_id,
         status: contact.status as "accepted" | "pending" | "rejected",
+        staffRelationId: contact.staff_relation_id,
         contactProfile: {
           id: contactProfile.id,
           fullName: contactProfile.full_name,
@@ -120,7 +124,7 @@ export const getReversedUserContacts = async (userId: string): Promise<UserConta
     
     return userContacts;
   } catch (error) {
-    console.error('Error in getReversedUserContacts:', error);
+    console.error('Error in getContactRequests:', error);
     return [];
   }
 };
