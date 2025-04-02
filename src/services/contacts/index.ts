@@ -42,7 +42,7 @@ export const fetchPendingRequests = async (): Promise<UserContact[]> => {
 export const sendContactRequest = async (contactId: string): Promise<boolean> => {
   try {
     const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
+    if (!sessionData.session?.user) {
       throw new Error('You must be logged in to send contact requests');
     }
     
@@ -76,7 +76,7 @@ export const sendContactRequest = async (contactId: string): Promise<boolean> =>
 export const respondToContactRequest = async (requestId: string, accept: boolean): Promise<boolean> => {
   try {
     const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
+    if (!sessionData.session?.user) {
       throw new Error('You must be logged in to respond to contact requests');
     }
     
@@ -104,7 +104,7 @@ export const respondToContactRequest = async (requestId: string, accept: boolean
 export const syncStaffBusinessContacts = async (): Promise<boolean> => {
   try {
     const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
+    if (!sessionData.session?.user) {
       throw new Error('You must be logged in to sync contacts');
     }
     
