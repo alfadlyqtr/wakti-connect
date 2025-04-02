@@ -14,6 +14,8 @@ export const syncStaffBusinessContacts = async (): Promise<{success: boolean; me
   }
 
   try {
+    console.log("Starting staff-business contacts sync for user:", session.user.id);
+    
     // Call the updated stored function to sync contacts
     const { error } = await supabase
       .rpc('update_existing_staff_contacts');
@@ -23,6 +25,7 @@ export const syncStaffBusinessContacts = async (): Promise<{success: boolean; me
       return { success: false, message: error.message };
     }
     
+    console.log("Staff contacts synchronized successfully");
     return { success: true, message: "Staff contacts synchronized successfully" };
   } catch (error) {
     console.error("Exception syncing staff-business contacts:", error);
@@ -41,6 +44,8 @@ export const ensureStaffContacts = async (): Promise<{success: boolean; message:
   }
 
   try {
+    console.log("Checking if user is staff member:", session.user.id);
+    
     // Check if the current user is a staff member with explicit table reference
     const { data: staffData, error: staffError } = await supabase
       .from('business_staff')
@@ -50,12 +55,16 @@ export const ensureStaffContacts = async (): Promise<{success: boolean; message:
       .maybeSingle();
     
     if (staffError) {
+      console.error("Error checking staff status:", staffError);
       return { success: false, message: staffError.message };
     }
     
     if (!staffData) {
+      console.log("User is not a staff member");
       return { success: false, message: "Not a staff member" }; 
     }
+    
+    console.log("User is a staff member of business:", staffData.business_id);
     
     // Ensure staff is connected to business
     const result = await syncStaffBusinessContacts();

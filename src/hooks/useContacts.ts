@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { UserContact } from "@/types/invitation.types";
@@ -61,14 +60,19 @@ export const useContacts = () => {
   });
 
   async function fetchContacts() {
-    const sessionResponse = await fetch('/api/auth/session');
-    const sessionData = await sessionResponse.json();
-    
-    if (!sessionData?.user?.id) {
-      throw new Error('Not authenticated');
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.user?.id) {
+        throw new Error('Not authenticated');
+      }
+      
+      console.log('Fetching contacts for authenticated user:', session.user.id);
+      return getUserContacts(session.user.id);
+    } catch (error) {
+      console.error('Error in fetchContacts:', error);
+      throw error;
     }
-    
-    return getUserContacts(sessionData.user.id);
   }
 
   // Get pending contact requests
@@ -82,14 +86,18 @@ export const useContacts = () => {
   });
 
   async function fetchPendingRequests() {
-    const sessionResponse = await fetch('/api/auth/session');
-    const sessionData = await sessionResponse.json();
-    
-    if (!sessionData?.user?.id) {
-      throw new Error('Not authenticated');
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.user?.id) {
+        throw new Error('Not authenticated');
+      }
+      
+      return getContactRequests(session.user.id);
+    } catch (error) {
+      console.error('Error in fetchPendingRequests:', error);
+      throw error;
     }
-    
-    return getContactRequests(sessionData.user.id);
   }
 
   // Fetch auto-approve setting

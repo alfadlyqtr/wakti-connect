@@ -7,6 +7,8 @@ import { UserContact } from '@/types/invitation.types';
  */
 export const getUserContacts = async (userId: string): Promise<UserContact[]> => {
   try {
+    console.log('Fetching contacts for user:', userId);
+    
     // Get all user's contacts with accepted status
     const { data: contacts, error } = await supabase
       .from('user_contacts')
@@ -16,7 +18,7 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
         contact_id,
         status,
         staff_relation_id,
-        contact:contact_id (
+        profiles:contact_id (
           id,
           full_name,
           display_name,
@@ -34,10 +36,12 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
       return [];
     }
     
+    console.log(`Found ${contacts?.length || 0} contacts:`, contacts);
+    
     // Transform the data to match our types
     const userContacts = contacts.map(contact => {
-      // Explicitly cast contact.contact to any to avoid TypeScript errors
-      const contactData = (contact.contact || {}) as any;
+      // Explicitly cast contact.profiles to any to avoid TypeScript errors
+      const contactData = (contact.profiles || {}) as any;
       
       // Make sure contact exists and has necessary properties
       const contactProfile = {
@@ -60,6 +64,7 @@ export const getUserContacts = async (userId: string): Promise<UserContact[]> =>
       };
     });
     
+    console.log('Transformed contacts:', userContacts);
     return userContacts;
   } catch (error) {
     console.error('Error in getUserContacts:', error);
@@ -81,7 +86,7 @@ export const getContactRequests = async (userId: string): Promise<UserContact[]>
         contact_id,
         status,
         staff_relation_id,
-        contact:user_id (
+        profiles:user_id (
           id,
           full_name,
           display_name,
@@ -101,8 +106,8 @@ export const getContactRequests = async (userId: string): Promise<UserContact[]>
     
     // Transform the data to match our types
     const userContacts = contacts.map(contact => {
-      // Explicitly cast contact.contact to any to avoid TypeScript errors
-      const contactData = (contact.contact || {}) as any;
+      // Explicitly cast contact.profiles to any to avoid TypeScript errors
+      const contactData = (contact.profiles || {}) as any;
       
       // Make sure contact exists and has necessary properties
       const contactProfile = {

@@ -6,6 +6,7 @@ import { StaffFormValues } from "@/components/staff/dialog/StaffFormSchema";
 import { checkCoAdminLimit } from "./staffLimits";
 import { uploadStaffAvatar } from "./avatarUpload";
 import { CreateStaffResult } from "./types";
+import { syncStaffBusinessContacts } from "@/services/contacts/contactSync";
 
 export const useCreateStaffMutation = () => {
   const queryClient = useQueryClient();
@@ -19,6 +20,7 @@ export const useCreateStaffMutation = () => {
         if (!session) throw new Error("Not authenticated");
         
         const businessId = session.user.id;
+        console.log("Creating staff member for business:", businessId);
         
         // If trying to create a co-admin, check the limit
         if (values.isCoAdmin) {
@@ -46,6 +48,8 @@ export const useCreateStaffMutation = () => {
         if (authError) throw authError;
         if (!authData.user) throw new Error("Failed to create user account");
         
+        console.log("Created user account for staff:", authData.user.id);
+        
         // Upload avatar if provided
         let avatarUrl = null;
         if (values.avatar) {
@@ -72,24 +76,32 @@ export const useCreateStaffMutation = () => {
         
         if (staffError) throw staffError;
         
-        // The trigger will handle creating necessary contacts automatically if they are active
-        // But we can manually handle it if we want to customize the behavior based on user preference
-        if (values.addToContacts === false) {
-          // If user chose not to add to contacts, we need to ensure contacts are NOT created
-          // This could be a follow-up API call to remove any auto-created contacts
-          // (This would be needed if trigger created contacts that we don't want)
-          console.log("User opted not to add staff to contacts");
-        }
-          
-        // Update profile table
-        await supabase
+        console.log("Created staff record:", staffData);
+        
+        // Update profile table explicitly (important for contact syncing!)
+        const { error: profileError } = await supabase
           .from('profiles')
-          .update({
+          .upsert({
+            id: authData.user.id,
             account_type: 'staff',
             avatar_url: avatarUrl,
+            full_name: values.fullName,
+            display_name: values.fullName,
+            email: values.email,
             updated_at: new Date().toISOString()
-          })
-          .eq('id', authData.user.id);
+          });
+          
+        if (profileError) {
+          console.error("Error updating profile:", profileError);
+        }
+        
+        // Force sync contacts to ensure staff is connected
+        try {
+          const syncResult = await syncStaffBusinessContacts();
+          console.log("Contact sync result:", syncResult);
+        } catch (syncError) {
+          console.error("Error syncing contacts:", syncError);
+        }
           
         toast({
           title: "Staff Account Created",

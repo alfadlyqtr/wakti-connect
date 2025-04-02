@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { syncStaffBusinessContacts } from "@/services/contacts/contactSync";
 
 interface UseStaffSyncOptions {
   onSuccess?: () => void;
@@ -14,6 +15,24 @@ export const useStaffSync = ({ onSuccess }: UseStaffSyncOptions = {}) => {
   const syncStaffRecords = async () => {
     try {
       setIsSyncing(true);
+      
+      // First try the direct DB function approach
+      const syncResult = await syncStaffBusinessContacts();
+      
+      if (syncResult.success) {
+        toast({
+          title: "Staff Contacts Synced",
+          description: "Staff contacts have been successfully synchronized.",
+          variant: "default"
+        });
+        
+        if (onSuccess) {
+          onSuccess();
+        }
+        return;
+      }
+      
+      // If the direct approach failed, fall back to the edge function
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session) {
         toast({
