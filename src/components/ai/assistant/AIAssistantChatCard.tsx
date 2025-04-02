@@ -95,7 +95,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   if (showSetupWizard) {
     return (
       <Card className="w-full h-[calc(80vh)] flex flex-col">
-        <CardContent className="p-4 flex-1 flex flex-col overflow-hidden">
+        <CardContent className="p-4 flex-1 overflow-y-auto">
           <AISetupWizard onComplete={handleSetupComplete} />
         </CardContent>
       </Card>
