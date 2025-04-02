@@ -1,5 +1,5 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { UserSearchResult, ContactRequestStatus, ContactRequestStatusValue } from '@/types/invitation.types';
 
 export const searchUsers = async (searchTerm: string): Promise<UserSearchResult[]> => {

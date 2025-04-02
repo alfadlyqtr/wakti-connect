@@ -1,5 +1,4 @@
-
-import { supabase } from "@/lib/supabase";
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Synchronizes staff-business contacts when a user is part of a business

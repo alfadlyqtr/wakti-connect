@@ -1,11 +1,10 @@
-
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { toast } from '@/components/ui/use-toast';
 import { getInvitationCustomization, saveInvitationCustomization } from '@/services/invitation';
 import { InvitationCustomization } from '@/types/invitation.types';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useInvitationBuilder = (eventId?: string, invitationId?: string) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -35,13 +34,11 @@ export const useInvitationBuilder = (eventId?: string, invitationId?: string) =>
     }
   });
   
-  // Load existing invitation data if invitationId is provided
   const loadInvitation = useCallback(async () => {
     if (!invitationId) return;
     
     setIsLoading(true);
     try {
-      // Load invitation details
       const { data: invitationData, error: invitationError } = await supabase
         .from('event_invitations')
         .select('*, event:event_id(*)')
@@ -56,7 +53,6 @@ export const useInvitationBuilder = (eventId?: string, invitationId?: string) =>
         throw new Error('Invitation not found');
       }
       
-      // Load event data
       const event = invitationData.event;
       if (event) {
         form.reset({
@@ -70,7 +66,6 @@ export const useInvitationBuilder = (eventId?: string, invitationId?: string) =>
         });
       }
       
-      // Load customization
       const customizationData = await getInvitationCustomization(invitationId);
       if (customizationData) {
         setCustomization(customizationData);
@@ -87,7 +82,6 @@ export const useInvitationBuilder = (eventId?: string, invitationId?: string) =>
     }
   }, [invitationId, form]);
   
-  // Save customization changes
   const saveCustomization = useCallback(async () => {
     if (!invitationId) return;
     
@@ -114,12 +108,9 @@ export const useInvitationBuilder = (eventId?: string, invitationId?: string) =>
     }
   }, [invitationId, customization]);
   
-  // Handle form submission
   const handleSubmit = useCallback(async (data) => {
     setIsLoading(true);
     try {
-      // TBD: Implement invitation creation logic
-      
       toast({
         title: 'Success',
         description: 'Invitation created successfully',
