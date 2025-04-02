@@ -48,8 +48,10 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   useEffect(() => {
     if (canAccess && user && settings) {
       // Try to check for specialized settings
-      const hasUserRole = settings.enabled_features && 
-        (settings.enabled_features._userRole || settings.user_role);
+      const hasUserRole = settings.user_role || 
+        (settings.enabled_features && 
+         typeof settings.enabled_features === 'object' && 
+         '_userRole' in settings.enabled_features);
       
       if (!hasUserRole) {
         setShowSetupWizard(true);
@@ -65,8 +67,15 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     if (!settings) return "";
     
     // Try to get from new fields first, then fallback to enabled_features
-    const assistantMode = settings.assistant_mode || 
-      (settings.enabled_features && settings.enabled_features._assistantMode) || "";
+    let assistantMode = settings.assistant_mode || "";
+    
+    // Check if enabled_features exists and has the _assistantMode property
+    if (!assistantMode && 
+        settings.enabled_features && 
+        typeof settings.enabled_features === 'object' && 
+        '_assistantMode' in settings.enabled_features) {
+      assistantMode = settings.enabled_features._assistantMode as string;
+    }
     
     switch (assistantMode) {
       case "tutor":

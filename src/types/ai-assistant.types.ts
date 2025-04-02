@@ -19,6 +19,10 @@ export interface AISettings {
     staff: boolean;
     analytics: boolean;
     messaging: boolean;
+    _userRole?: string;
+    _assistantMode?: string;
+    _specializedSettings?: Record<string, any>;
+    [key: string]: any; // Allow for additional custom properties
   };
   // Add new fields for enhanced AI personalization
   user_role?: "student" | "professional" | "business_owner" | "other";
