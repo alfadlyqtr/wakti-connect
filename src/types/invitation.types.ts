@@ -87,12 +87,12 @@ export interface InvitationCustomization {
   customEffects?: {
     shadow?: string;
   };
-  invitationId?: string;
   creatorId?: string;
   createdAt?: string;
   updatedAt?: string;
   headerImage?: string;
   mapLocation?: string;
+  invitationId?: string;
 }
 
 export interface InvitationStyle {

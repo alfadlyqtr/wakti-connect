@@ -11,18 +11,10 @@ export const searchUsers = async (query: string): Promise<UserSearchResult[]> =>
   }
   
   try {
-    // Call the stored function using direct SQL query since we can't use RPC for custom functions
+    // Use a simpler query approach to avoid nested join issues
     const { data, error } = await supabase
       .from('profiles')
-      .select(`
-        id,
-        full_name,
-        display_name,
-        avatar_url,
-        account_type,
-        business_name,
-        email:auth.users!id(email)
-      `)
+      .select('id, full_name, display_name, avatar_url, account_type, business_name')
       .or(`full_name.ilike.%${query}%,display_name.ilike.%${query}%,business_name.ilike.%${query}%`)
       .eq('is_searchable', true)
       .limit(10);
@@ -33,7 +25,7 @@ export const searchUsers = async (query: string): Promise<UserSearchResult[]> =>
     }
     
     if (!data || !Array.isArray(data)) {
-      console.warn("Unexpected response format from search_users:", data);
+      console.warn("Unexpected response format from search:", data);
       return [];
     }
     
@@ -42,10 +34,10 @@ export const searchUsers = async (query: string): Promise<UserSearchResult[]> =>
       id: user.id,
       fullName: user.full_name,
       displayName: user.display_name,
-      email: user.email?.[0]?.email,
       avatarUrl: user.avatar_url,
       accountType: user.account_type,
-      businessName: user.business_name
+      businessName: user.business_name,
+      email: undefined // We don't get email in this query for privacy reasons
     }));
   } catch (error) {
     console.error("Exception during user search:", error);

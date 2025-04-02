@@ -1,90 +1,100 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { InvitationCustomization } from "@/types/invitation.types";
-import { fromTable } from "@/integrations/supabase/helper";
 
 /**
- * Create a customization for an invitation
+ * Save customization settings for an invitation/event
  */
-export const createInvitationCustomization = async (
-  templateId: string,
-  customizationData: Partial<InvitationCustomization>
-): Promise<InvitationCustomization | null> => {
+export const saveInvitationCustomization = async (
+  invitationId: string,
+  customization: Partial<InvitationCustomization>
+): Promise<boolean> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: session } = await supabase.auth.getSession();
     
     if (!session?.user) {
-      throw new Error("No authenticated user");
+      throw new Error("Not authenticated");
     }
     
-    // Get the template default styles
-    const { data: template } = await fromTable('invitation_templates')
-      .select('*')
-      .eq('id', templateId)
+    // First check if customization already exists for this invitation
+    const { data: existing } = await supabase
+      .from('invitation_customizations')
+      .select('id')
+      .eq('invitation_id', invitationId)
       .single();
     
-    if (!template) {
-      throw new Error("Template not found");
-    }
-    
-    // Create a customization with template defaults + custom overrides
-    const newCustomization = {
+    // Prepare the data for upsert
+    const customizationData = {
+      invitation_id: invitationId,
       creator_id: session.user.id,
-      background_type: customizationData.backgroundType || template.default_styles.background.type,
-      background_value: customizationData.backgroundValue || template.default_styles.background.value,
-      font_family: customizationData.fontFamily || template.default_styles.fontFamily,
-      font_size: customizationData.fontSize || template.default_styles.fontSize,
-      text_align: customizationData.textAlign || template.default_styles.textAlign,
-      button_styles: customizationData.buttonStyles || template.default_styles.buttons,
-      layout_size: customizationData.layoutSize || 'medium',
-      header_image: customizationData.customEffects?.shadow || null,
-      map_location: null,
-      custom_effects: customizationData.customEffects || null
+      background_type: customization.backgroundType,
+      background_value: customization.backgroundValue,
+      font_family: customization.fontFamily,
+      font_size: customization.fontSize,
+      text_align: customization.textAlign,
+      button_styles: customization.buttonStyles,
+      layout_size: customization.layoutSize,
+      custom_effects: customization.customEffects,
+      header_image: customization.headerImage,
+      map_location: customization.mapLocation,
+      updated_at: new Date().toISOString()
     };
     
-    const { data, error } = await fromTable('invitation_customizations')
-      .insert(newCustomization)
-      .select()
-      .single();
+    let result;
     
-    if (error) {
-      throw error;
+    if (existing) {
+      // Update existing customization
+      result = await supabase
+        .from('invitation_customizations')
+        .update(customizationData)
+        .eq('id', existing.id);
+    } else {
+      // Insert new customization
+      result = await supabase
+        .from('invitation_customizations')
+        .insert({
+          ...customizationData,
+          created_at: new Date().toISOString()
+        });
     }
     
-    return {
-      backgroundType: data.background_type,
-      backgroundValue: data.background_value,
-      fontFamily: data.font_family,
-      fontSize: data.font_size,
-      textAlign: data.text_align,
-      buttonStyles: data.button_styles,
-      layoutSize: data.layout_size,
-      customEffects: data.custom_effects,
-      creatorId: data.creator_id,
-      invitationId: data.invitation_id,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at
-    };
+    if (result.error) {
+      console.error("Error saving invitation customization:", result.error);
+      return false;
+    }
+    
+    return true;
   } catch (error) {
-    console.error("Error creating invitation customization:", error);
-    return null;
+    console.error("Exception saving invitation customization:", error);
+    return false;
   }
 };
 
 /**
- * Get customization for an invitation
+ * Get customization settings for an invitation/event
  */
-export const getInvitationCustomization = async (invitationId: string): Promise<InvitationCustomization | null> => {
+export const getInvitationCustomization = async (
+  invitationId: string
+): Promise<InvitationCustomization | null> => {
   try {
-    const { data, error } = await fromTable('invitation_customizations')
+    const { data, error } = await supabase
+      .from('invitation_customizations')
       .select('*')
       .eq('invitation_id', invitationId)
-      .maybeSingle();
+      .single();
     
-    if (error || !data) {
-      return null;
+    if (error) {
+      if (error.code === 'PGRST116') { // No rows returned
+        return null;
+      }
+      
+      console.error("Error fetching invitation customization:", error);
+      throw error;
     }
     
+    if (!data) return null;
+    
+    // Transform database fields to camelCase for the frontend
     return {
       backgroundType: data.background_type,
       backgroundValue: data.background_value,
@@ -95,12 +105,14 @@ export const getInvitationCustomization = async (invitationId: string): Promise<
       layoutSize: data.layout_size,
       customEffects: data.custom_effects,
       creatorId: data.creator_id,
-      invitationId: data.invitation_id,
       createdAt: data.created_at,
-      updatedAt: data.updated_at
+      updatedAt: data.updated_at,
+      headerImage: data.header_image,
+      mapLocation: data.map_location,
+      invitationId: data.invitation_id
     };
   } catch (error) {
-    console.error("Error getting invitation customization:", error);
+    console.error("Exception fetching invitation customization:", error);
     return null;
   }
 };

@@ -22,7 +22,7 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
       contact_id,
       status,
       staff_relation_id,
-      profiles:contact_id(
+      profiles(
         id, 
         full_name, 
         display_name, 
@@ -43,6 +43,9 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
     // Handle potential null values or missing relations
     const profileData = contact.profiles || {};
     
+    // Safely access properties with type checks
+    const profile = typeof profileData === 'object' ? profileData : {};
+    
     return {
       id: contact.id,
       userId: contact.user_id,
@@ -51,10 +54,10 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
       staffRelationId: contact.staff_relation_id,
       contactProfile: {
         id: contact.contact_id,
-        fullName: profileData.full_name,
-        displayName: profileData.display_name,
-        avatarUrl: profileData.avatar_url,
-        accountType: profileData.account_type
+        fullName: typeof profile === 'object' && 'full_name' in profile ? profile.full_name : undefined,
+        displayName: typeof profile === 'object' && 'display_name' in profile ? profile.display_name : undefined,
+        avatarUrl: typeof profile === 'object' && 'avatar_url' in profile ? profile.avatar_url : undefined,
+        accountType: typeof profile === 'object' && 'account_type' in profile ? profile.account_type : undefined
       }
     };
   });
@@ -77,7 +80,7 @@ export const fetchPendingRequests = async (): Promise<UserContact[]> => {
       user_id,
       contact_id,
       status,
-      profiles:user_id(
+      profiles(
         id, 
         full_name, 
         display_name, 
@@ -98,6 +101,9 @@ export const fetchPendingRequests = async (): Promise<UserContact[]> => {
     // Handle potential null values or missing relations
     const profileData = contact.profiles || {};
     
+    // Safely access properties with type checks
+    const profile = typeof profileData === 'object' ? profileData : {};
+    
     return {
       id: contact.id,
       userId: contact.user_id,
@@ -105,10 +111,10 @@ export const fetchPendingRequests = async (): Promise<UserContact[]> => {
       status: contact.status as 'pending' | 'accepted' | 'rejected',
       contactProfile: {
         id: contact.user_id,
-        fullName: profileData.full_name,
-        displayName: profileData.display_name,
-        avatarUrl: profileData.avatar_url,
-        accountType: profileData.account_type
+        fullName: typeof profile === 'object' && 'full_name' in profile ? profile.full_name : undefined,
+        displayName: typeof profile === 'object' && 'display_name' in profile ? profile.display_name : undefined,
+        avatarUrl: typeof profile === 'object' && 'avatar_url' in profile ? profile.avatar_url : undefined,
+        accountType: typeof profile === 'object' && 'account_type' in profile ? profile.account_type : undefined
       }
     };
   });

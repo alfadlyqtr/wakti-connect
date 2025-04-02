@@ -1,129 +1,53 @@
-
-import React from "react";
-import { Card } from "@/components/ui/card";
-import { useEventForm } from "@/hooks/useEventForm";
-import UpgradeCard from "./creation/UpgradeCard";
-import { Event } from "@/types/event.types";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { eventSchema, EventFormValues } from "@/types/event.types";
 import FormHeader from "./creation/FormHeader";
 import FormTabs from "./creation/FormTabs";
-import { useEditEventEffect } from "./hooks/useEditEventEffect";
-import { EventFormTab, ShareTab } from "@/types/form.types";
-import { useIsMobile } from "@/hooks/use-mobile";
+import FormActions from "./creation/FormActions";
+import { InvitationRecipient } from "@/types/invitation.types";
+import useEditEventEffect from "./hooks/useEditEventEffect";
 
-interface EventCreationFormProps {
-  editEvent?: Event | null;
-  onCancel?: () => void;
-  onSuccess?: () => void; // New callback for success handling
-}
-
-const EventCreationForm: React.FC<EventCreationFormProps> = ({ 
-  editEvent = null,
-  onCancel,
-  onSuccess
-}) => {
-  const isMobile = useIsMobile();
+const EventCreationForm = () => {
+  const [activeTab, setActiveTab] = useState<string>("details");
+  const [recipients, setRecipients] = useState<InvitationRecipient[]>([]);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
   
-  const {
-    register,
-    handleSubmit,
-    errors,
-    isSubmitting,
-    activeTab,
-    setActiveTab,
-    isAllDay,
-    setIsAllDay,
-    selectedDate,
-    setSelectedDate,
-    startTime,
-    setStartTime,
-    endTime,
-    setEndTime,
-    recipients,
-    location,
-    locationType,
-    mapsUrl,
-    customization,
-    setCustomization,
-    shareTab,
-    setShareTab,
-    canCreateEvents,
-    addRecipient,
-    removeRecipient,
-    handleLocationChange,
-    handleNextTab,
-    handlePrevTab,
-    handleSendEmail,
-    onSubmit,
-    setValue,
-    title,
-    description,
-    setTitle,
-    setDescription
-  } = useEventForm(editEvent, onSuccess);
-
-  // Use our custom hook for initializing the form with edit data
-  useEditEventEffect({
-    editEvent,
-    setTitle,
-    setDescription,
-    setValue,
-    setSelectedDate,
-    setIsAllDay,
-    setStartTime,
-    setEndTime,
-    handleLocationChange,
-    setCustomization,
-    addRecipient
+  const form = useForm<EventFormValues>({
+    resolver: zodResolver(eventSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      location: "",
+      startDate: undefined,
+      endDate: undefined,
+      isAllDay: false,
+    }
   });
-
-  // If user can't create events, show upgrade message
-  if (!canCreateEvents) {
-    return <UpgradeCard />;
-  }
-
+  
+  // Use the hook to load event data if in edit mode
+  const { isLoading: isLoadingEvent } = useEditEventEffect(
+    form,
+    setRecipients,
+    setIsEditMode
+  );
+  
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <Card className="w-full overflow-hidden">
-        <FormHeader isEdit={!!editEvent} onCancel={onCancel} />
-        
-        <div className={isMobile ? "px-2 py-2" : "px-4 py-4"}>
-          <FormTabs
-            activeTab={activeTab as EventFormTab}
-            setActiveTab={setActiveTab}
-            register={register}
-            errors={errors}
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            startTime={startTime}
-            setStartTime={setStartTime}
-            endTime={endTime}
-            setEndTime={setEndTime}
-            isAllDay={isAllDay}
-            setIsAllDay={setIsAllDay}
-            location={location}
-            locationType={locationType}
-            mapsUrl={mapsUrl}
-            handleLocationChange={handleLocationChange}
-            handleNextTab={handleNextTab}
-            handlePrevTab={handlePrevTab}
-            customization={customization}
-            setCustomization={setCustomization}
-            shareTab={shareTab as ShareTab}
-            setShareTab={setShareTab}
-            recipients={recipients}
-            addRecipient={addRecipient}
-            removeRecipient={removeRecipient}
-            handleSendEmail={handleSendEmail}
-            isSubmitting={isSubmitting}
-            title={title}
-            description={description}
-            setTitle={setTitle}
-            setDescription={setDescription}
-            isEdit={!!editEvent}
-          />
-        </div>
-      </Card>
-    </form>
+    <div className="container mx-auto mt-10">
+      <FormHeader isEditMode={isEditMode} isLoading={isLoadingEvent} />
+      
+      <FormTabs 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+      />
+      
+      <FormActions 
+        form={form}
+        activeTab={activeTab}
+        recipients={recipients}
+        isEditMode={isEditMode}
+      />
+    </div>
   );
 };
 

@@ -1,78 +1,60 @@
 
-import React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { contactFormSchema, ContactFormValues } from "./FormSchema";
-import ContactSuccessDialog from "./ContactSuccessDialog";
-import ContactFormFields from "./ContactFormFields";
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { contactFormSchema, ContactFormValues } from "@/components/contact/FormSchema";
+import ContactFormFields from "@/components/contact/ContactFormFields";
+import ContactSuccessDialog from "@/components/contact/ContactSuccessDialog";
 
 const ContactForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-
+  
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
     defaultValues: {
       name: "",
       email: "",
-      phone: "",
       subject: "",
-      message: ""
+      message: "",
+      phone: ""
     }
   });
 
   const onSubmit = async (data: ContactFormValues) => {
     setIsSubmitting(true);
+    
     try {
-      // In a real app, you would send this to an API
-      console.log("Form data:", data);
+      // Simulate API call with timeout
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Show success dialog
+      // Show success message
       setShowSuccessDialog(true);
       form.reset();
     } catch (error) {
-      console.error("Error submitting form:", error);
+      toast.error("Something went wrong. Please try again.");
+      console.error("Contact form submission error:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <>
-      <Card className="w-full max-w-md">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-4 pt-6">
-              <ContactFormFields form={form} />
-            </CardContent>
-            <CardFooter>
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Sending..." : "Send Message"}
-              </Button>
-            </CardFooter>
-          </form>
-        </Form>
-      </Card>
-
+    <div className="bg-card rounded-lg border p-6">
+      <h2 className="text-2xl font-bold mb-6">Send Us a Message</h2>
+      
+      <ContactFormFields 
+        form={form} 
+        isSubmitting={isSubmitting} 
+        onSubmit={onSubmit} 
+      />
+      
       <ContactSuccessDialog 
         open={showSuccessDialog} 
         onOpenChange={setShowSuccessDialog} 
       />
-    </>
+    </div>
   );
 };
 

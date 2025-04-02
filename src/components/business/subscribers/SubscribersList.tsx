@@ -36,11 +36,22 @@ const SubscribersList = ({ businessId }: SubscribersListProps) => {
       {(subscribers && subscribers.length > 0) ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {subscribers.map((subscriber) => {
-            // Safely access profile properties with proper type checking
+            // Handle profile as potentially undefined or having different types
             const profile = subscriber.profile || {};
-            const avatarUrl = typeof profile === 'object' ? profile.avatar_url || '' : '';
-            const displayName = typeof profile === 'object' ? profile.display_name || '' : '';
-            const fullName = typeof profile === 'object' ? profile.full_name || '' : '';
+            
+            // Define fallback values and safely access properties
+            const avatarUrl = typeof profile === 'object' && 'avatar_url' in profile 
+              ? String(profile.avatar_url || '') 
+              : '';
+              
+            const displayName = typeof profile === 'object' && 'display_name' in profile 
+              ? String(profile.display_name || '') 
+              : '';
+              
+            const fullName = typeof profile === 'object' && 'full_name' in profile 
+              ? String(profile.full_name || '') 
+              : '';
+              
             const nameInitials = (displayName || fullName || "User").slice(0, 2).toUpperCase();
             const subscriberName = displayName || fullName || "User";
             
