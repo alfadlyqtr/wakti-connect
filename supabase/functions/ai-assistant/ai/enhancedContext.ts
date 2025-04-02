@@ -37,7 +37,7 @@ export async function enrichUserContext(supabaseClient: any, userId: string): Pr
     // Get enhanced AI settings
     const { data: aiSettings, error: aiError } = await supabaseClient
       .from("ai_assistant_settings")
-      .select("user_role, assistant_mode, specialized_settings")
+      .select("user_role, assistant_mode, specialized_settings, enabled_features")
       .eq("user_id", userId)
       .single();
     
@@ -61,8 +61,14 @@ export async function enrichUserContext(supabaseClient: any, userId: string): Pr
       }
     }
     
-    // Determine appropriate user role if not explicitly set
+    // Determine appropriate user role, checking all possible storage locations
     let userRole = aiSettings?.user_role;
+    if (!userRole && aiSettings?.enabled_features && 
+        typeof aiSettings.enabled_features === 'object' && 
+        '_userRole' in aiSettings.enabled_features) {
+      userRole = aiSettings.enabled_features._userRole;
+    }
+    
     if (!userRole) {
       if (accountType === 'business') {
         userRole = 'business_owner';
@@ -73,23 +79,39 @@ export async function enrichUserContext(supabaseClient: any, userId: string): Pr
       }
     }
     
-    // Determine appropriate assistant mode if not explicitly set
+    // Determine appropriate assistant mode, checking all possible storage locations
     let assistantMode = aiSettings?.assistant_mode;
+    if (!assistantMode && aiSettings?.enabled_features && 
+        typeof aiSettings.enabled_features === 'object' && 
+        '_assistantMode' in aiSettings.enabled_features) {
+      assistantMode = aiSettings.enabled_features._assistantMode;
+    }
+    
     if (!assistantMode) {
       if (userRole === 'student') {
         assistantMode = 'tutor';
       } else if (userRole === 'business_owner') {
         assistantMode = isBusinessWithStaff ? 'business_manager' : 'business_assistant';
+      } else if (userRole === 'other') {
+        assistantMode = 'text_generator';
       } else {
         assistantMode = 'personal_assistant';
       }
+    }
+    
+    // Get specialized settings from all possible storage locations
+    let specializedSettings = aiSettings?.specialized_settings;
+    if (!specializedSettings && aiSettings?.enabled_features && 
+        typeof aiSettings.enabled_features === 'object' && 
+        '_specializedSettings' in aiSettings.enabled_features) {
+      specializedSettings = aiSettings.enabled_features._specializedSettings;
     }
     
     return {
       accountType,
       userRole,
       assistantMode,
-      specializedSettings: aiSettings?.specialized_settings || {}
+      specializedSettings: specializedSettings || {}
     };
   } catch (error) {
     console.error("Error in enrichUserContext:", error);
@@ -121,6 +143,12 @@ export function buildRoleSpecificPrompt(userContext: UserRoleContext): string {
         "Focus on growing the business and streamlining operations.";
       break;
       
+    case 'other':
+      basePrompt += "You specialize in creating professional written content like email signatures, templates, " +
+        "business documents, and correspondence. You excel at formatting text beautifully and providing " +
+        "multiple content options tailored to the user's specific needs and branding.";
+      break;
+      
     default:
       basePrompt += "You help with task management, event planning, and productivity optimization. " +
         "You can assist with personal and professional organization.";
@@ -150,6 +178,14 @@ export function buildRoleSpecificPrompt(userContext: UserRoleContext): string {
       basePrompt += " In business manager mode, you assist with staff coordination, " +
         "business analytics, customer relationships, and operational optimization. " +
         "You provide insights to improve business performance and growth.";
+      break;
+      
+    case 'text_generator':
+      basePrompt += " In text generator mode, you specialize in creating professional written content " +
+        "like email signatures, templates, business documents, and correspondence. " +
+        "You format text beautifully and provide multiple options when creating content. " +
+        "When asked to create an email signature, you use the user's personal information " +
+        "to create tailored, professional-looking signatures.";
       break;
   }
   

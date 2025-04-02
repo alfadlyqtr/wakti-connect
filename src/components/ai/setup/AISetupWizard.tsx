@@ -11,9 +11,10 @@ import { ProfessionalSetup } from "./ProfessionalSetup";
 import { BusinessSetup } from "./BusinessSetup";
 import { RoleSelection } from "./RoleSelection";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { TextCreatorSetup } from "./TextCreatorSetup";
 
 export type UserRole = "student" | "professional" | "business_owner" | "other";
-export type AssistantMode = "tutor" | "content_creator" | "project_manager" | "business_manager" | "personal_assistant";
+export type AssistantMode = "tutor" | "content_creator" | "project_manager" | "business_manager" | "personal_assistant" | "text_generator";
 
 interface AISetupWizardProps {
   onComplete: () => void;
@@ -56,6 +57,9 @@ export const AISetupWizard: React.FC<AISetupWizardProps> = ({
         break;
       case "professional":
         setAssistantMode("personal_assistant");
+        break;
+      case "other":
+        setAssistantMode("text_generator");
         break;
       default:
         setAssistantMode("personal_assistant");
@@ -121,6 +125,7 @@ export const AISetupWizard: React.FC<AISetupWizardProps> = ({
         staff: true,
         analytics: true,
         messaging: true,
+        text_generation: assistantMode === "text_generator" || assistantMode === "content_creator",
         // Store user role and mode in enabled_features for now as a workaround
         _userRole: userRole,
         _assistantMode: assistantMode,
@@ -134,7 +139,10 @@ export const AISetupWizard: React.FC<AISetupWizardProps> = ({
         response_length: responseLength,
         proactiveness: true,
         suggestion_frequency: "medium",
-        enabled_features: enabledFeatures
+        enabled_features: enabledFeatures,
+        user_role: userRole,
+        assistant_mode: assistantMode,
+        specialized_settings: specializedSettings
       };
       
       console.log("Saving AI settings:", settings);
@@ -225,7 +233,7 @@ export const AISetupWizard: React.FC<AISetupWizardProps> = ({
         <CardContent className="pb-4">
           <ScrollArea className="h-full max-h-[60vh] pr-4 overflow-y-auto">
             {step === 1 && (
-              <RoleSelection onSelect={handleRoleSelect} />
+              <RoleSelection onSelect={handleRoleSelect} initialAccountType={initialAccountType} />
             )}
             
             {step === 2 && (
@@ -316,6 +324,31 @@ export const AISetupWizard: React.FC<AISetupWizardProps> = ({
                       </Button>
                     </>
                   )}
+                  
+                  {userRole === "other" && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-start h-auto p-4 text-left" 
+                        onClick={() => handleModeSelect("text_generator")}
+                      >
+                        <span className="font-bold">Email & Signature Creator</span>
+                        <span className="text-sm text-muted-foreground">
+                          Creates email signatures, templates, and professional correspondence
+                        </span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="flex flex-col items-start h-auto p-4 text-left" 
+                        onClick={() => handleModeSelect("content_creator")}
+                      >
+                        <span className="font-bold">Document Creator</span>
+                        <span className="text-sm text-muted-foreground">
+                          Helps draft documents, reports, and other written content
+                        </span>
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -330,6 +363,9 @@ export const AISetupWizard: React.FC<AISetupWizardProps> = ({
                 )}
                 {userRole === "business_owner" && (
                   <BusinessSetup onChange={handleSpecializedSettingsChange} />
+                )}
+                {userRole === "other" && (
+                  <TextCreatorSetup onChange={handleSpecializedSettingsChange} />
                 )}
               </>
             )}

@@ -19,6 +19,7 @@ export interface AISettings {
     staff: boolean;
     analytics: boolean;
     messaging: boolean;
+    text_generation: boolean; // NEW: For email signatures, templates
     _userRole?: string;
     _assistantMode?: string;
     _specializedSettings?: Record<string, any>;
@@ -26,7 +27,7 @@ export interface AISettings {
   };
   // Add new fields for enhanced AI personalization
   user_role?: "student" | "professional" | "business_owner" | "other";
-  assistant_mode?: "tutor" | "content_creator" | "project_manager" | "business_manager" | "personal_assistant";
+  assistant_mode?: "tutor" | "content_creator" | "project_manager" | "business_manager" | "personal_assistant" | "text_generator";
   specialized_settings?: Record<string, any>;
 }
 
