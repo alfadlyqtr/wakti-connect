@@ -1,173 +1,173 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { AIMessage } from "@/types/ai-assistant.types";
 
-export async function fetchUserProfile(userId: string) {
+// Fetch user profile information
+export const fetchUserProfile = async (userId: string) => {
   try {
     const { data, error } = await supabase
       .from("profiles")
-      .select("full_name, display_name, business_name, account_type")
+      .select("full_name, display_name")
       .eq("id", userId)
       .single();
-      
+    
     if (error) throw error;
     
-    // Determine first name from available fields
-    let firstName = "there";
+    let firstName = "User";
+    
     if (data.display_name) {
-      firstName = data.display_name.split(' ')[0];
+      const nameParts = data.display_name.split(" ");
+      firstName = nameParts[0];
     } else if (data.full_name) {
-      firstName = data.full_name.split(' ')[0];
-    } else if (data.business_name) {
-      firstName = data.business_name;
+      const nameParts = data.full_name.split(" ");
+      firstName = nameParts[0];
     }
     
-    return {
-      firstName,
-      accountType: data.account_type || "free",
-      fullProfile: data
-    };
+    return { firstName };
   } catch (error) {
     console.error("Error fetching user profile:", error);
-    return { firstName: "there", accountType: "free", fullProfile: null };
+    return { firstName: "User" };
   }
-}
+};
 
-export async function callAIAssistant(
-  token: string, 
-  message: string, 
-  userName: string = "",
-  context: any = null
-) {
+// Call AI Assistant
+export const callAIAssistant = async (token: string, message: string, userName: string = "", context: any = {}) => {
   try {
-    const response = await supabase.functions.invoke("ai-assistant", {
-      body: { message, userName, context },
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`, {
+      method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({ message, userName, context }),
     });
     
-    if (response.error) {
-      throw new Error(response.error.message || "Unknown AI assistant error");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Error: ${response.status}`);
     }
     
-    return response.data;
+    return await response.json();
   } catch (error) {
     console.error("Error calling AI assistant:", error);
     throw error;
   }
-}
+};
 
-// Helper to detect off-topic messages
-export function checkIfOffTopic(message: string): boolean {
-  const message_lower = message.toLowerCase();
-  
-  // Keywords that likely indicate on-topic questions
-  const onTopicKeywords = [
-    'task', 'event', 'appointment', 'schedule', 'booking', 
-    'business', 'customer', 'client', 'staff', 'employee',
-    'analytics', 'report', 'dashboard', 'productivity', 'wakti',
-    'organize', 'manage', 'reminder', 'deadline', 'project',
-    'performance', 'meeting', 'calendar', 'todo', 'to-do',
-    'contact', 'message', 'email', 'notification', 'work'
+// Check if a message appears to be off-topic
+export const checkIfOffTopic = (message: string): boolean => {
+  // List of keywords and patterns related to WAKTI functionality
+  const waktiKeywords = [
+    'task', 'event', 'appointment', 'schedule', 'booking', 'business',
+    'reminder', 'to-do', 'todo', 'priority', 'deadline', 'meeting',
+    'project', 'staff', 'customer', 'client', 'service', 'wakti'
   ];
   
-  // Check if the message contains any on-topic keywords
-  const containsOnTopicKeyword = onTopicKeywords.some(keyword => 
-    message_lower.includes(keyword)
+  // Convert to lowercase for case-insensitive matching
+  const lowerMessage = message.toLowerCase();
+  
+  // Check if any WAKTI keyword is present in the message
+  const containsWaktiKeyword = waktiKeywords.some(keyword => 
+    lowerMessage.includes(keyword)
   );
   
-  // Definitely off-topic categories and their keywords
-  const offTopicCategories = [
-    // General chatbot requests
-    ['tell me a joke', 'tell me a story', 'entertain me', 'trivia', 'fun fact'],
-    // Controversial topics
-    ['politics', 'religion', 'controversial'],
-    // Content generation not related to productivity
-    ['write a poem', 'song lyrics', 'fiction', 'creative writing'],
-    // Generic knowledge questions
-    ['what is the capital', 'how many people', 'who invented', 'when was']
-  ];
-  
-  // Check if the message matches any definitely off-topic patterns
-  const isDefinitelyOffTopic = offTopicCategories.some(category => 
-    category.some(phrase => message_lower.includes(phrase))
-  );
-  
-  // If it contains on-topic keywords, it's likely on-topic
-  if (containsOnTopicKeyword) {
+  // If message contains WAKTI keywords, it's on-topic
+  if (containsWaktiKeyword) {
     return false;
   }
   
-  // If it matches definite off-topic patterns, it's off-topic
-  if (isDefinitelyOffTopic) {
-    return true;
+  // Check for greeting patterns (which are acceptable)
+  const greetingPatterns = [
+    /^hi\b/i, /^hello\b/i, /^hey\b/i, /^greetings/i,
+    /^good morning/i, /^good afternoon/i, /^good evening/i
+  ];
+  
+  const isGreeting = greetingPatterns.some(pattern => 
+    pattern.test(lowerMessage)
+  );
+  
+  if (isGreeting && lowerMessage.length < 20) {
+    return false; // Simple greetings are fine
   }
   
-  // For everything else, check message length as a heuristic
-  // Very short, generic messages are more likely to be off-topic
-  if (message.length < 15 && !containsOnTopicKeyword) {
-    return true;
+  // Questions about capabilities are on-topic
+  if (lowerMessage.includes('what can you do') || 
+      lowerMessage.includes('how can you help') || 
+      lowerMessage.includes('your capabilities')) {
+    return false;
   }
   
-  // Default to assuming it's on-topic
-  return false;
-}
+  // Check for problematic patterns that suggest off-topic requests
+  const offTopicPatterns = [
+    /tell me about (.{10,})/i, // General knowledge questions
+    /what is (.{10,})/i,       // Definition questions
+    /who is/i,                 // Person questions
+    /where is/i,               // Location questions
+    /when was/i,               // Historical questions
+    /how to (.{10,})/i,        // General how-to questions
+    /explain/i,                // Explanation requests
+    /meaning of/i,             // Definition requests
+    /difference between/i,     // Comparison requests
+    /write (.{10,})/i,         // General writing requests
+    /generate (.{10,})/i,      // Generation requests unrelated to WAKTI
+    /create (.{10,})/i,        // Creation requests unrelated to WAKTI
+  ];
+  
+  // If it matches an off-topic pattern and has no WAKTI keywords, likely off-topic
+  return offTopicPatterns.some(pattern => pattern.test(lowerMessage));
+};
 
-// Generate text suggestions based on a topic
-export function generateTextSuggestions(topic: string, tone: string = "professional") {
-  switch (topic) {
-    case "email_signature":
-      return `
-Best regards,
-[Your Name]
-[Your Position] | [Company Name]
-Phone: [Your Phone Number]
-Email: [Your Email]
-[Website or LinkedIn URL]
-      `.trim();
-    
-    case "meeting_request":
-      return `
-Subject: Request for Meeting - [Brief Topic]
-
-Dear [Name],
-
-I hope this email finds you well. I would like to schedule a meeting to discuss [specific topic/project]. 
-
-Would you be available for a [duration] meeting on [suggested date/time]? If not, please let me know what dates and times would work better for you.
-
-The agenda for our meeting would include:
-1. [Agenda item 1]
-2. [Agenda item 2]
-3. [Agenda item 3]
-
-I look forward to your response.
-
-Best regards,
-[Your Name]
-      `.trim();
-    
-    case "customer_follow_up":
-      return `
-Subject: Follow-Up: [Reference to Previous Interaction]
-
-Dear [Customer Name],
-
-Thank you for [visiting our store/contacting our support team/your recent purchase] on [date]. I wanted to personally reach out to ensure that [your experience was satisfactory/your questions were answered/you're enjoying your purchase].
-
-[Ask a specific question about their experience or product]
-
-If you have any further questions or concerns, please don't hesitate to contact me directly.
-
-Thank you for choosing [Company Name]. We value your business and look forward to serving you again.
-
-Warm regards,
-[Your Name]
-[Your Position]
-[Your Contact Information]
-      `.trim();
-    
-    default:
-      return "I can help you craft various types of content. Let me know what specific type of text you need assistance with!";
+// Process documents
+export const processDocument = async (file: File) => {
+  if (!file) return null;
+  
+  // Check file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error("File too large. Maximum size is 5MB.");
   }
-}
+  
+  // Check file type
+  const allowedTypes = [
+    'application/pdf', 
+    'application/msword', 
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain',
+    'text/csv',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  ];
+  
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error("Unsupported file type. Please upload PDF, Word, TXT, CSV, or Excel files.");
+  }
+  
+  try {
+    // For this MVP, we'll just read text files directly
+    // For PDFs and other formats, we'd normally use a service like Supabase Functions
+    if (file.type === 'text/plain') {
+      const text = await file.text();
+      
+      // Create a simple document object
+      return {
+        id: Date.now().toString(),
+        title: file.name,
+        content: text.slice(0, 5000), // Limit content size
+        document_type: 'text',
+        created_at: new Date().toISOString()
+      };
+    }
+    
+    // For other file types, we'll just create a placeholder
+    // In a real implementation, you'd process these through a Supabase function
+    return {
+      id: Date.now().toString(),
+      title: file.name,
+      content: `This is a placeholder for the content of ${file.name}`,
+      document_type: file.type,
+      created_at: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error("Error processing document:", error);
+    throw new Error("Failed to process document. Please try again.");
+  }
+};
