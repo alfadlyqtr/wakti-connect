@@ -55,6 +55,7 @@ export const useUpdateAISettings = (user: User | null) => {
             staff: true,
             analytics: true,
             messaging: true,
+            text_generation: true,
           }
         };
         
@@ -85,6 +86,7 @@ export const useUpdateAISettings = (user: User | null) => {
             staff: true,
             analytics: true,
             messaging: true,
+            text_generation: true,
           }
         };
         

@@ -33,6 +33,7 @@ export const createDefaultSettings = async (): Promise<void> => {
         staff: true,
         analytics: true,
         messaging: true,
+        text_generation: true,
       }
     };
     
