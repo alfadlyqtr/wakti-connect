@@ -13,9 +13,12 @@ export function MessageContent({ content, timestamp, isUser }: MessageContentPro
   return (
     <div
       className={cn(
-        "rounded-lg p-2 sm:p-3 text-xs sm:text-sm max-w-[75%] sm:max-w-md break-words overflow-hidden",
-        isUser ? "bg-wakti-blue text-white" : "bg-muted"
+        "rounded-lg p-2 sm:p-3 text-xs sm:text-sm max-w-[75%] sm:max-w-md break-words overflow-hidden shadow-sm transition-all",
+        isUser 
+          ? "bg-wakti-blue text-white animate-slide-in-right" 
+          : "bg-muted animate-fade-in border border-muted"
       )}
+      style={{ animationDuration: "0.3s" }}
     >
       <div className="prose prose-xs sm:prose-sm max-w-none dark:prose-invert overflow-auto max-h-[400px] thin-scrollbar">
         <Markdown>{content}</Markdown>

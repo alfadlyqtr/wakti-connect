@@ -22,8 +22,12 @@ export const SuggestionPrompts: React.FC<SuggestionPromptsProps> = ({ onPromptCl
         <Button
           key={index}
           variant="outline"
-          className="justify-start text-left h-auto py-3 px-4 text-sm"
+          className="justify-start text-left h-auto py-3 px-4 text-sm hover:bg-wakti-blue/10 hover:border-wakti-blue/30 transition-all"
           onClick={() => onPromptClick(prompt)}
+          style={{ 
+            animationDelay: `${index * 100}ms`,
+            animation: 'fade-in 0.5s ease-out forwards'
+          }}
         >
           {prompt}
         </Button>

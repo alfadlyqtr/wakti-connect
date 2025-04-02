@@ -10,8 +10,10 @@ export interface EmptyStateViewProps {
 export const EmptyStateView: React.FC<EmptyStateViewProps> = ({ onPromptClick }) => {
   return (
     <div className="h-full flex flex-col">
-      <div className="text-center my-8">
-        <Bot className="w-12 h-12 mx-auto text-wakti-blue opacity-80" />
+      <div className="text-center my-8 animate-fade-in">
+        <div className="w-16 h-16 bg-wakti-blue/10 rounded-full flex items-center justify-center mx-auto mb-3">
+          <Bot className="w-8 h-8 text-wakti-blue" />
+        </div>
         <h3 className="mt-4 text-lg font-medium">
           How can I help you today?
         </h3>
