@@ -1,6 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
-import { UserSearchResult, ContactRequestStatus } from '@/types/invitation.types';
+import { UserSearchResult, ContactRequestStatus, ContactRequestStatusValue } from '@/types/invitation.types';
 
 export const searchUsers = async (searchTerm: string): Promise<UserSearchResult[]> => {
   try {
@@ -73,8 +73,8 @@ export const checkContactRequest = async (contactId: string): Promise<ContactReq
     
     // Make sure we only return valid status values
     const validStatus = (data.status === 'accepted' || data.status === 'pending' || data.status === 'rejected') 
-      ? data.status 
-      : 'none';
+      ? data.status as ContactRequestStatusValue
+      : 'none' as ContactRequestStatusValue;
     
     return {
       requestExists: true,

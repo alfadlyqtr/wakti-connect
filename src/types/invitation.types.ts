@@ -1,6 +1,6 @@
 
 // Types for the contacts system
-export type ContactRequestStatus = "accepted" | "pending" | "rejected" | "none";
+export type ContactRequestStatusValue = "accepted" | "pending" | "rejected" | "none";
 
 export interface ContactProfile {
   id: string;
@@ -33,5 +33,78 @@ export interface UserSearchResult {
 
 export interface ContactRequestStatus {
   requestExists: boolean;
-  requestStatus: "accepted" | "pending" | "rejected" | "none";
+  requestStatus: ContactRequestStatusValue;
+}
+
+// Invitation types
+export interface InvitationRecipient {
+  id: string;
+  name: string;
+  email?: string;
+  userId?: string;
+  type: 'email' | 'user';
+  status?: string;
+}
+
+export interface InvitationRequest {
+  title: string;
+  description?: string;
+  eventDate: string;
+  locationInfo?: {
+    address?: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
+  };
+  recipients: InvitationRecipient[];
+  customization?: InvitationCustomization;
+}
+
+export interface InvitationResponse {
+  id: string;
+  status: 'sent' | 'draft' | 'cancelled';
+  createdAt: string;
+  recipients: {
+    total: number;
+    accepted: number;
+    pending: number;
+    declined: number;
+  };
+}
+
+export interface InvitationCustomization {
+  theme: {
+    primary: string;
+    secondary: string;
+    background: string;
+  };
+  font: {
+    family: string;
+    size: 'small' | 'medium' | 'large';
+    color: string;
+  };
+  buttons: {
+    accept: {
+      background: string;
+      color: string;
+      shape: 'square' | 'rounded' | 'pill';
+    };
+    decline: {
+      background: string;
+      color: string;
+      shape: 'square' | 'rounded' | 'pill';
+    };
+  };
+  headerStyle?: string;
+  animation?: string;
+}
+
+export interface InvitationTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  customization: InvitationCustomization;
+  createdAt: string;
+  isDefault: boolean;
 }

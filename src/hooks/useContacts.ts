@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { UserContact } from "@/types/invitation.types";
@@ -49,16 +48,14 @@ export const useContacts = () => {
   });
 
   async function fetchContacts() {
-    const { data: session } = await queryClient.fetchQuery({
-      queryKey: ['session'],
-      queryFn: async () => await fetch('/api/auth/session')
-    });
+    const sessionResponse = await fetch('/api/auth/session');
+    const sessionData = await sessionResponse.json();
     
-    if (!session?.user?.id) {
+    if (!sessionData?.user?.id) {
       throw new Error('Not authenticated');
     }
     
-    return getUserContacts(session.user.id);
+    return getUserContacts(sessionData.user.id);
   }
 
   // Get pending contact requests
@@ -72,16 +69,14 @@ export const useContacts = () => {
   });
 
   async function fetchPendingRequests() {
-    const { data: session } = await queryClient.fetchQuery({
-      queryKey: ['session'],
-      queryFn: async () => await fetch('/api/auth/session')
-    });
+    const sessionResponse = await fetch('/api/auth/session');
+    const sessionData = await sessionResponse.json();
     
-    if (!session?.user?.id) {
+    if (!sessionData?.user?.id) {
       throw new Error('Not authenticated');
     }
     
-    return getContactRequests(session.user.id);
+    return getContactRequests(sessionData.user.id);
   }
 
   // Fetch auto-approve setting
