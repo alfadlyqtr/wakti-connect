@@ -1,16 +1,27 @@
-
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { ColorPickerInput } from "../inputs/ColorPickerInput";
-import { useCustomization } from "../context";
-import { Button } from "@/components/ui/button";
 import { BackgroundType, AnimationType } from "@/types/event.types";
 
+interface BackgroundTabProps {
+  backgroundType: BackgroundType;
+  backgroundValue: string;
+  backgroundAngle?: number;
+  backgroundDirection?: string;
+  headerImage?: string;
+  animation?: AnimationType;
+  onBackgroundChange: (type: "gradient" | "image" | "color", value: string) => void;
+  onBackgroundAngleChange: (angle: number) => void;
+  onBackgroundDirectionChange: (direction: string) => void;
+  onHeaderImageChange: (imageUrl: string) => void;
+  onAnimationChange: (value: "fade" | "slide" | "pop") => void;
+}
+
 const backgroundOptions = [
-  { id: "solid", label: "Solid" },
+  { id: "color", label: "Solid" },
   { id: "gradient", label: "Gradient" },
   { id: "image", label: "Image" },
 ];
@@ -33,18 +44,26 @@ const gradientDirections = [
   { id: "to-tl", label: "↖ Top Left" },
 ];
 
-const BackgroundTab = () => {
-  const {
-    customization,
-    handleBackgroundChange,
-    handleBackgroundAngleChange,
-    handleBackgroundDirectionChange,
-    handleHeaderImageChange,
-    handleAnimationChange,
-  } = useCustomization();
+const BackgroundTab: React.FC<BackgroundTabProps> = ({
+  backgroundType,
+  backgroundValue,
+  backgroundAngle = 135,
+  backgroundDirection = "to-r",
+  headerImage,
+  animation,
+  onBackgroundChange,
+  onBackgroundAngleChange,
+  onBackgroundDirectionChange,
+  onHeaderImageChange,
+  onAnimationChange
+}) => {
+  // Convert BackgroundType to the string types expected by the handler
+  const getDisplayType = (type: BackgroundType): "color" | "gradient" | "image" => {
+    if (type === "solid") return "color";
+    return type as "gradient" | "image";
+  };
 
-  // Default to solid if type is not set
-  const backgroundType = customization.background?.type || "solid";
+  const displayType = getDisplayType(backgroundType);
 
   return (
     <div className="space-y-6">
@@ -55,10 +74,10 @@ const BackgroundTab = () => {
         </p>
         
         <RadioGroup
-          value={backgroundType}
+          value={displayType}
           onValueChange={(value) => {
-            handleBackgroundChange(value as BackgroundType, 
-              value === "solid" ? "#ffffff" : 
+            onBackgroundChange(value as "color" | "gradient" | "image", 
+              value === "color" ? "#ffffff" : 
               value === "gradient" ? "linear-gradient(135deg, #6366f1, #8b5cf6)" : 
               "https://example.com/placeholder.jpg"
             );
@@ -75,30 +94,30 @@ const BackgroundTab = () => {
       </div>
 
       {/* Conditional fields based on selected background type */}
-      {backgroundType === "solid" && (
+      {displayType === "color" && (
         <div className="space-y-4">
           <Label>Background Color</Label>
           <ColorPickerInput
-            value={customization.background?.value || "#ffffff"}
-            onChange={(value) => handleBackgroundChange("solid", value)}
+            value={backgroundValue}
+            onChange={(value) => onBackgroundChange("color", value)}
           />
         </div>
       )}
 
-      {backgroundType === "gradient" && (
+      {displayType === "gradient" && (
         <div className="space-y-4">
           <div>
             <Label>Gradient Angle</Label>
             <div className="flex items-center space-x-2 mt-2">
               <Slider
-                value={[customization.background?.angle || 135]}
+                value={[backgroundAngle]}
                 min={0}
                 max={360}
                 step={1}
-                onValueChange={(value) => handleBackgroundAngleChange(value[0])}
+                onValueChange={(value) => onBackgroundAngleChange(value[0])}
               />
               <span className="text-sm font-medium w-12 text-right">
-                {customization.background?.angle || 135}°
+                {backgroundAngle}°
               </span>
             </div>
           </div>
@@ -106,8 +125,8 @@ const BackgroundTab = () => {
           <div>
             <Label>Gradient Direction</Label>
             <RadioGroup
-              value={customization.background?.direction || "to-r"}
-              onValueChange={handleBackgroundDirectionChange}
+              value={backgroundDirection}
+              onValueChange={onBackgroundDirectionChange}
               className="grid grid-cols-2 gap-2 mt-2"
             >
               {gradientDirections.map((direction) => (
@@ -121,21 +140,21 @@ const BackgroundTab = () => {
         </div>
       )}
 
-      {backgroundType === "image" && (
+      {displayType === "image" && (
         <div className="space-y-4">
           <Label>Image URL</Label>
           <Input
-            value={customization.background?.value || ""}
-            onChange={(e) => handleBackgroundChange("image", e.target.value)}
+            value={backgroundValue}
+            onChange={(e) => onBackgroundChange("image", e.target.value)}
             placeholder="Enter image URL"
           />
           
-          {customization.headerImage && (
+          {headerImage && (
             <div className="flex flex-col space-y-2">
               <Label>Header Image</Label>
               <Input
-                value={customization.headerImage}
-                onChange={(e) => handleHeaderImageChange(e.target.value)}
+                value={headerImage}
+                onChange={(e) => onHeaderImageChange(e.target.value)}
                 placeholder="Enter header image URL"
               />
             </div>
@@ -151,14 +170,10 @@ const BackgroundTab = () => {
         </p>
 
         <RadioGroup
-          value={customization.animation || "fade"}
+          value={animation || "none"}
           onValueChange={(value) => {
-            const animationType = value as AnimationType;
-            if (animationType !== "none") {
-              handleAnimationChange(animationType);
-            } else {
-              // Handle 'none' separately if needed
-              handleAnimationChange(undefined);
+            if (value !== "none") {
+              onAnimationChange(value as "fade" | "slide" | "pop");
             }
           }}
           className="grid grid-cols-2 gap-4"

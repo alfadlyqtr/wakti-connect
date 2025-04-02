@@ -1,209 +1,172 @@
-
 import React from "react";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCustomization } from "../context";
-import { ColorPickerInput } from "../inputs/ColorPickerInput";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { ColorPickerInput } from "../inputs/ColorPickerInput";
+import { TextAlign } from "@/types/event.types";
 
-const fontFamilies = [
-  { id: "inter", label: "Inter", value: 'Inter, sans-serif' },
-  { id: "roboto", label: "Roboto", value: 'Roboto, sans-serif' },
-  { id: "poppins", label: "Poppins", value: 'Poppins, sans-serif' },
-  { id: "system", label: "System UI", value: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-];
-
-const fontSizes = [
-  { id: "small", label: "Small" },
-  { id: "medium", label: "Medium" },
-  { id: "large", label: "Large" },
-  { id: "xlarge", label: "Extra Large" },
-];
-
-const fontWeights = [
-  { id: "light", label: "Light" },
-  { id: "normal", label: "Normal" },
-  { id: "medium", label: "Medium" },
-  { id: "bold", label: "Bold" },
-];
-
-const textAlignments = [
-  { id: "left", label: "Left" },
-  { id: "center", label: "Center" },
-  { id: "right", label: "Right" },
-];
-
+// Define font properties interface
 export interface FontProps {
   family: string;
   size: string;
   color: string;
   weight?: string;
-  label?: string;
-  handleFamilyChange: (value: string) => void;
-  handleSizeChange: (value: string) => void;
-  handleColorChange: (value: string) => void;
-  handleWeightChange?: (value: string) => void;
+  alignment?: TextAlign;
 }
 
-const FontSection: React.FC<FontProps> = ({
-  family,
-  size,
-  color,
-  weight = "normal",
-  label = "Font",
-  handleFamilyChange,
-  handleSizeChange,
-  handleColorChange,
-  handleWeightChange,
-}) => {
-  return (
-    <div className="space-y-4">
-      <h3 className="text-base font-medium">{label}</h3>
-      
-      <div className="grid grid-cols-1 gap-4">
-        <div className="space-y-2">
-          <Label>Font Family</Label>
-          <Select value={family} onValueChange={handleFamilyChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select font family" />
-            </SelectTrigger>
-            <SelectContent>
-              {fontFamilies.map((font) => (
-                <SelectItem key={font.id} value={font.value}>
-                  {font.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="space-y-2">
-          <Label>Font Size</Label>
-          <RadioGroup value={size} onValueChange={handleSizeChange} className="flex space-x-4">
-            {fontSizes.map((fSize) => (
-              <div key={fSize.id} className="flex items-center space-x-2">
-                <RadioGroupItem value={fSize.id} id={`size-${fSize.id}`} />
-                <Label htmlFor={`size-${fSize.id}`}>{fSize.label}</Label>
-              </div>
-            ))}
-          </RadioGroup>
-        </div>
-        
-        {handleWeightChange && (
-          <div className="space-y-2">
-            <Label>Font Weight</Label>
-            <RadioGroup value={weight} onValueChange={handleWeightChange} className="flex space-x-4">
-              {fontWeights.map((fWeight) => (
-                <div key={fWeight.id} className="flex items-center space-x-2">
-                  <RadioGroupItem value={fWeight.id} id={`weight-${fWeight.id}`} />
-                  <Label htmlFor={`weight-${fWeight.id}`}>{fWeight.label}</Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-        )}
-        
-        <div className="space-y-2">
-          <Label>Text Color</Label>
-          <ColorPickerInput value={color} onChange={handleColorChange} />
-        </div>
-      </div>
-    </div>
-  );
-};
+interface TextTabProps {
+  font: FontProps;
+  headerFont?: FontProps;
+  descriptionFont?: FontProps;
+  dateTimeFont?: FontProps;
+  onFontChange: (property: "family" | "size" | "color" | "weight" | "alignment", value: string) => void;
+  onHeaderFontChange: (property: "family" | "size" | "color" | "weight", value: string) => void;
+  onDescriptionFontChange: (property: "family" | "size" | "color" | "weight", value: string) => void;
+  onDateTimeFontChange: (property: "family" | "size" | "color" | "weight", value: string) => void;
+}
 
-const TextTab = () => {
-  const {
-    customization,
-    handleFontChange,
-    handleHeaderFontChange,
-    handleDescriptionFontChange,
-    handleDateTimeFontChange,
-  } = useCustomization();
+// Font family options
+const fontFamilies = [
+  { value: "system-ui, sans-serif", label: "System UI" },
+  { value: "'Arial', sans-serif", label: "Arial" },
+  { value: "'Helvetica', sans-serif", label: "Helvetica" },
+  { value: "'Georgia', serif", label: "Georgia" },
+  { value: "'Verdana', sans-serif", label: "Verdana" },
+  { value: "'Roboto', sans-serif", label: "Roboto" },
+  { value: "'Montserrat', sans-serif", label: "Montserrat" },
+  { value: "'Open Sans', sans-serif", label: "Open Sans" },
+];
+
+// Font size options
+const fontSizes = [
+  { value: "small", label: "Small" },
+  { value: "medium", label: "Medium" },
+  { value: "large", label: "Large" },
+  { value: "xlarge", label: "Extra Large" },
+];
+
+// Font weight options
+const fontWeights = [
+  { value: "light", label: "Light" },
+  { value: "normal", label: "Normal" },
+  { value: "medium", label: "Medium" },
+  { value: "bold", label: "Bold" },
+];
+
+// Text align options
+const textAligns = [
+  { value: "left", label: "Left" },
+  { value: "center", label: "Center" },
+  { value: "right", label: "Right" },
+  { value: "justify", label: "Justify" },
+];
+
+const TextTab: React.FC<TextTabProps> = ({
+  font,
+  headerFont,
+  descriptionFont,
+  dateTimeFont,
+  onFontChange,
+  onHeaderFontChange,
+  onDescriptionFontChange,
+  onDateTimeFontChange,
+}) => {
+  // Ensure we have valid font objects with defaults
+  const ensuredFont: FontProps = {
+    family: font?.family || "system-ui, sans-serif",
+    size: font?.size || "medium",
+    color: font?.color || "#333333",
+    weight: font?.weight || "normal",
+    alignment: font?.alignment || "left"
+  };
+
+  const ensuredHeaderFont = headerFont || ensuredFont;
+  const ensuredDescriptionFont = descriptionFont || ensuredFont;
+  const ensuredDateTimeFont = dateTimeFont || ensuredFont;
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="main">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="main">Main Text</TabsTrigger>
-          <TabsTrigger value="title">Title</TabsTrigger>
-          <TabsTrigger value="description">Description</TabsTrigger>
-          <TabsTrigger value="dateTime">Date & Time</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="main" className="space-y-4 pt-4">
-          <FontSection
-            family={customization.font.family}
-            size={customization.font.size}
-            color={customization.font.color}
-            weight={customization.font.weight}
-            handleFamilyChange={(value) => handleFontChange('family', value)}
-            handleSizeChange={(value) => handleFontChange('size', value)}
-            handleColorChange={(value) => handleFontChange('color', value)}
-            handleWeightChange={(value) => handleFontChange('weight', value)}
-            label="Main Font Settings"
-          />
-          
-          <div className="space-y-2">
-            <Label>Text Alignment</Label>
-            <RadioGroup
-              value={customization.font.alignment || 'left'}
-              onValueChange={(value) => handleFontChange('alignment', value)}
-              className="flex space-x-4"
-            >
-              {textAlignments.map((alignment) => (
-                <div key={alignment.id} className="flex items-center space-x-2">
-                  <RadioGroupItem value={alignment.id} id={`alignment-${alignment.id}`} />
-                  <Label htmlFor={`alignment-${alignment.id}`}>{alignment.label}</Label>
-                </div>
-              ))}
-            </RadioGroup>
+      <div>
+        <h3 className="text-lg font-medium">General Text</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Customize the appearance of your event text
+        </p>
+
+        <div className="space-y-4">
+          <div>
+            <Label>Font Family</Label>
+            <Select onValueChange={(value) => onFontChange("family", value)}>
+              <SelectTrigger className="mt-2">
+                <SelectValue placeholder="Select a font" />
+              </SelectTrigger>
+              <SelectContent>
+                {fontFamilies.map((font) => (
+                  <SelectItem key={font.value} value={font.value}>
+                    {font.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="title" className="space-y-4 pt-4">
-          <FontSection
-            family={customization.headerFont?.family || customization.font.family}
-            size={customization.headerFont?.size || customization.font.size}
-            color={customization.headerFont?.color || customization.font.color}
-            weight={customization.headerFont?.weight || customization.font.weight}
-            handleFamilyChange={(value) => handleHeaderFontChange('family', value)}
-            handleSizeChange={(value) => handleHeaderFontChange('size', value)}
-            handleColorChange={(value) => handleHeaderFontChange('color', value)}
-            handleWeightChange={(value) => handleHeaderFontChange('weight', value)}
-            label="Title Font Settings"
-          />
-        </TabsContent>
-        
-        <TabsContent value="description" className="space-y-4 pt-4">
-          <FontSection
-            family={customization.descriptionFont?.family || customization.font.family}
-            size={customization.descriptionFont?.size || customization.font.size}
-            color={customization.descriptionFont?.color || customization.font.color}
-            weight={customization.descriptionFont?.weight || customization.font.weight}
-            handleFamilyChange={(value) => handleDescriptionFontChange('family', value)}
-            handleSizeChange={(value) => handleDescriptionFontChange('size', value)}
-            handleColorChange={(value) => handleDescriptionFontChange('color', value)}
-            handleWeightChange={(value) => handleDescriptionFontChange('weight', value)}
-            label="Description Font Settings"
-          />
-        </TabsContent>
-        
-        <TabsContent value="dateTime" className="space-y-4 pt-4">
-          <FontSection
-            family={customization.dateTimeFont?.family || customization.font.family}
-            size={customization.dateTimeFont?.size || customization.font.size}
-            color={customization.dateTimeFont?.color || customization.font.color}
-            weight={customization.dateTimeFont?.weight || customization.font.weight}
-            handleFamilyChange={(value) => handleDateTimeFontChange('family', value)}
-            handleSizeChange={(value) => handleDateTimeFontChange('size', value)}
-            handleColorChange={(value) => handleDateTimeFontChange('color', value)}
-            handleWeightChange={(value) => handleDateTimeFontChange('weight', value)}
-            label="Date & Time Font Settings"
-          />
-        </TabsContent>
-      </Tabs>
+
+          <div>
+            <Label>Font Size</Label>
+            <Select onValueChange={(value) => onFontChange("size", value)}>
+              <SelectTrigger className="mt-2">
+                <SelectValue placeholder="Select a size" />
+              </SelectTrigger>
+              <SelectContent>
+                {fontSizes.map((size) => (
+                  <SelectItem key={size.value} value={size.value}>
+                    {size.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Font Weight</Label>
+            <Select onValueChange={(value) => onFontChange("weight", value)}>
+              <SelectTrigger className="mt-2">
+                <SelectValue placeholder="Select a weight" />
+              </SelectTrigger>
+              <SelectContent>
+                {fontWeights.map((weight) => (
+                  <SelectItem key={weight.value} value={weight.value}>
+                    {weight.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Text Color</Label>
+            <ColorPickerInput
+              value={ensuredFont.color}
+              onChange={(value) => onFontChange("color", value)}
+            />
+          </div>
+
+          <div>
+            <Label>Text Alignment</Label>
+            <Select onValueChange={(value) => onFontChange("alignment", value)}>
+              <SelectTrigger className="mt-2">
+                <SelectValue placeholder="Select alignment" />
+              </SelectTrigger>
+              <SelectContent>
+                {textAligns.map((align) => (
+                  <SelectItem key={align.value} value={align.value}>
+                    {align.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

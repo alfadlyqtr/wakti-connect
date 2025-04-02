@@ -15,7 +15,7 @@ import {
   Users
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { EventCustomization, Event, EventStatus, BackgroundType, ButtonShape } from '@/types/event.types';
+import { EventCustomization, Event, EventStatus, BackgroundType, ButtonShape, TextAlign } from '@/types/event.types';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -209,7 +209,8 @@ const EventCard: React.FC<EventCardProps> = ({
                 fontFamily: descriptionFont?.family || 'inherit', 
                 fontSize: getFontSize(descriptionFont?.size || 'medium'),
                 color: descriptionFont?.color || '#666666',
-                fontWeight: getFontWeight(descriptionFont?.weight || 'normal')
+                fontWeight: getFontWeight(descriptionFont?.weight || 'normal'),
+                textAlign: (customization.font?.alignment || 'left') as TextAlign
               }} className="mt-1">
                 {event.description}
               </p>

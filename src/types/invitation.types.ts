@@ -1,113 +1,33 @@
 
-export interface UserContactProfile {
-  id: string;
-  fullName?: string;
-  displayName?: string;
-  avatarUrl?: string;
-  accountType?: string;
-}
+import { ButtonShape, TextAlign } from './event.types';
 
-export interface UserContact {
-  id: string;
-  userId: string;
-  contactId: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  staffRelationId?: string;
-  contactProfile?: UserContactProfile;
-}
-
-export interface BusinessSubscription {
-  id: string;
-  business_id: string;
-  subscriber_id: string;
-  created_at: string;
-  business_profile: {
-    id: string;
-    business_name?: string;
-    display_name?: string;
-    full_name?: string;
-    avatar_url?: string;
-    account_type: string;
-  } | null;
-}
-
-export interface UserSearchResult {
-  id: string;
-  fullName?: string;
-  displayName?: string;
-  email?: string;
-  avatarUrl?: string;
-  accountType: string;
-  businessName?: string;
-}
-
-export interface ContactRequestStatus {
-  requestExists: boolean;
-  requestStatus: string;
-}
-
-// Invitation system types
 export interface InvitationRecipient {
-  id: string;
+  id?: string;
   name: string;
   email?: string;
-  userId?: string;
-  type: 'contact' | 'email' | 'user';
-  status?: 'accepted' | 'declined' | 'pending';
-}
-
-export interface InvitationRequest {
-  recipients: InvitationRecipient[];
-  shared_as_link?: boolean;
-}
-
-export interface InvitationResponse {
-  id: string;
-  status: 'sent' | 'failed';
-  recipients: {
-    successful: string[];
-    failed: string[];
-  };
-}
-
-export interface InvitationTemplate {
-  id: string;
-  name: string;
-  previewImage: string;
-  defaultStyles: any;
-  createdAt: string;
+  invited_user_id?: string;
+  type: 'email' | 'user';
+  status?: 'pending' | 'accepted' | 'declined';
 }
 
 export interface InvitationCustomization {
-  backgroundType?: 'solid' | 'gradient' | 'image';
-  backgroundValue?: string;
-  fontFamily?: string;
-  fontSize?: string;
-  textAlign?: string;
-  buttonStyles?: any;
-  layoutSize?: 'small' | 'medium' | 'large';
-  customEffects?: {
-    shadow?: string;
+  backgroundType: string;
+  backgroundValue: string;
+  fontFamily: string;
+  fontSize: string;
+  textColor: string;
+  textAlign?: TextAlign;
+  buttonStyles: {
+    style: ButtonShape;
+    color: string;
   };
-  creatorId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  headerImage?: string;
-  mapLocation?: string;
-  invitationId?: string;
+  layoutSize: 'small' | 'medium' | 'large';
+  customEffects: Record<string, any>;
 }
 
-export interface InvitationStyle {
-  background: {
-    type: string;
-    value: string;
-  };
-  font: string;
-  colors: {
-    primary: string;
-    secondary: string;
-    text: string;
-    accent: string;
-  };
-  layout: string;
+export interface InvitationPreviewProps {
+  customization: InvitationCustomization;
+  title: string;
+  description?: string;
+  eventDate?: string;
 }

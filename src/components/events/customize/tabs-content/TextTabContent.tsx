@@ -3,7 +3,7 @@ import React from "react";
 import { useCustomization } from "../context";
 import TextTab from "../tabs/TextTab";
 
-const TextTabContent: React.FC = () => {
+const TextTabContent = () => {
   const {
     customization,
     handleFontChange,
@@ -13,8 +13,11 @@ const TextTabContent: React.FC = () => {
   } = useCustomization();
 
   return (
-    <TextTab 
-      customization={customization}
+    <TextTab
+      font={customization.font}
+      headerFont={customization.headerFont}
+      descriptionFont={customization.descriptionFont}
+      dateTimeFont={customization.dateTimeFont}
       onFontChange={handleFontChange}
       onHeaderFontChange={handleHeaderFontChange}
       onDescriptionFontChange={handleDescriptionFontChange}

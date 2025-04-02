@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+// Define text alignment type
+export type TextAlign = 'left' | 'center' | 'right' | 'justify';
+
 // Define the event schema for form validation
 export const eventSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -79,7 +82,7 @@ export interface EventCustomization {
     size: string;
     color: string;
     weight?: string;
-    alignment?: string;
+    alignment?: TextAlign;
   };
   
   // Specific font customizations

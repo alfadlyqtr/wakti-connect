@@ -1,110 +1,97 @@
 
+import { EventFormData, Event, EventStatus } from '@/types/event.types';
 import { supabase } from '@/lib/supabase';
-import { Event, EventFormData, EventStatus } from '@/types/event.types';
-import { transformDatabaseEvent, prepareEventForStorage } from './eventHelpers';
+import { prepareEventForStorage, transformDatabaseEvent } from './eventHelpers';
 import { toast } from '@/components/ui/use-toast';
 
 /**
- * Creates a new event in the database
+ * Creates a new event with the given data
  */
-export const createEvent = async (formData: EventFormData): Promise<Event | null> => {
+export const createEvent = async (formData: EventFormData): Promise<Event> => {
   try {
-    // Get the current user
+    // Get the authenticated user
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      throw new Error("You must be logged in to create events");
+      throw new Error('User not authenticated');
+    }
+
+    // Format dates for database
+    const startDate = formData.startDate;
+    let startDateString = startDate.toISOString();
+    let endDateString = formData.endDate ? formData.endDate.toISOString() : startDateString;
+    
+    // If not all day, apply the specific times
+    if (!formData.isAllDay && formData.startTime) {
+      const [startHours, startMinutes] = formData.startTime.split(':').map(Number);
+      const startDateWithTime = new Date(startDate);
+      startDateWithTime.setHours(startHours, startMinutes, 0);
+      startDateString = startDateWithTime.toISOString();
+      
+      if (formData.endTime) {
+        const [endHours, endMinutes] = formData.endTime.split(':').map(Number);
+        const endDateWithTime = formData.endDate ? new Date(formData.endDate) : new Date(startDate);
+        endDateWithTime.setHours(endHours, endMinutes, 0);
+        endDateString = endDateWithTime.toISOString();
+      }
     }
     
     // Prepare the event data
-    const { title, description, startDate, location, customization, invitations, isAllDay, location_type, maps_url } = formData;
-    
-    // Extract start and end times from formData or create from the date
-    const startDateTime = new Date(startDate);
-    const endDateTime = new Date(startDate);
-    
-    if (formData.start_time && formData.end_time) {
-      // Use provided start_time and end_time if available
-      // They are already ISO strings
-    } else if (!isAllDay) {
-      // Set default times for non-all-day events
-      startDateTime.setHours(9, 0, 0);
-      endDateTime.setHours(10, 0, 0);
-    } else {
-      // For all-day events
-      startDateTime.setHours(0, 0, 0, 0);
-      endDateTime.setHours(23, 59, 59, 999);
-    }
-    
-    // Determine status based on invitations
-    const status: EventStatus = invitations && invitations.length > 0 ? "sent" : "draft";
-    
-    // Prepare the event for storage
-    const eventData = prepareEventForStorage({
-      title,
-      description,
-      start_time: formData.start_time || startDateTime.toISOString(),
-      end_time: formData.end_time || endDateTime.toISOString(),
-      is_all_day: isAllDay,
-      location,
-      location_type,
-      maps_url,
-      status,
+    const eventData = {
+      title: formData.title,
+      description: formData.description || '',
+      location: formData.location || '',
+      location_type: formData.location_type || 'manual',
+      maps_url: formData.maps_url || '',
+      start_time: startDateString,
+      end_time: endDateString,
+      is_all_day: formData.isAllDay,
+      status: (formData.status || 'draft') as EventStatus,
       user_id: user.id,
-      customization
-    });
+      customization: prepareEventForStorage(formData.customization)
+    };
     
     // Insert the event into the database
-    const { data: eventResult, error: eventError } = await supabase
+    const { data: event, error } = await supabase
       .from('events')
       .insert(eventData)
       .select('*')
       .single();
-    
-    if (eventError) {
-      console.error("Error creating event:", eventError);
-      throw new Error(`Failed to create event: ${eventError.message}`);
+      
+    if (error) {
+      console.error('Error creating event:', error);
+      throw error;
     }
     
-    // Handle invitations if provided
-    if (invitations && invitations.length > 0 && eventResult) {
-      const invitationsToInsert = invitations.map(invitation => ({
-        event_id: eventResult.id,
-        email: invitation.email,
-        invited_user_id: invitation.invited_user_id,
-        status: invitation.status || 'pending',
-        shared_as_link: invitation.shared_as_link || false
+    // Prepare invitation data if there are recipients
+    if (formData.invitations && formData.invitations.length > 0) {
+      const invitations = formData.invitations.map(invite => ({
+        event_id: event.id,
+        email: invite.email || '',
+        invited_user_id: invite.invited_user_id || null,
+        status: 'pending',
+        shared_as_link: invite.shared_as_link || false
       }));
       
-      // Insert all invitations
+      // Insert invitations
       const { error: invitationError } = await supabase
         .from('event_invitations')
-        .insert(invitationsToInsert);
-      
+        .insert(invitations);
+        
       if (invitationError) {
+        console.error('Error creating invitations:', invitationError);
         toast({
-          title: "Warning",
-          description: `Event created but some invitations failed: ${invitationError.message}`,
-          variant: "destructive"
+          title: 'Invitations Not Sent',
+          description: 'The event was created but there was an issue sending invitations.',
+          variant: 'destructive',
         });
       }
     }
     
-    // Fetch the event with invitations to return
-    const { data: fullEvent, error: fetchError } = await supabase
-      .from('events')
-      .select('*, invitations:event_invitations(*)')
-      .eq('id', eventResult.id)
-      .single();
-    
-    if (fetchError) {
-      console.error("Error fetching created event:", fetchError);
-      return transformDatabaseEvent(eventResult);
-    }
-    
-    return transformDatabaseEvent(fullEvent);
-  } catch (error: any) {
-    console.error("Create event error:", error);
+    // Transform the event data for the frontend
+    return transformDatabaseEvent(event);
+  } catch (error) {
+    console.error('Error in createEvent:', error);
     throw error;
   }
 };

@@ -1,15 +1,13 @@
+import { supabase } from '@/lib/supabase';
+import { UserContact } from '@/types/contact.types';
 
-import { supabase } from '@/integrations/supabase/client';
-import { UserContact, ContactRequestStatus } from '@/types/invitation.types';
-
-export const getUserContacts = async (): Promise<UserContact[]> => {
+/**
+ * Get all contacts for a user
+ */
+export const getUserContacts = async (userId: string): Promise<UserContact[]> => {
   try {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session) {
-      throw new Error('You must be logged in to view contacts');
-    }
-
-    const { data, error } = await supabase
+    // Get all user's contacts
+    const { data: contacts, error } = await supabase
       .from('user_contacts')
       .select(`
         id,
@@ -17,7 +15,7 @@ export const getUserContacts = async (): Promise<UserContact[]> => {
         contact_id,
         status,
         staff_relation_id,
-        profiles:contact_id(
+        contact:contact_id (
           id,
           full_name,
           display_name,
@@ -25,50 +23,61 @@ export const getUserContacts = async (): Promise<UserContact[]> => {
           account_type
         )
       `)
-      .eq('user_id', session.session.user.id)
-      .order('created_at', { ascending: false });
-
+      .eq('user_id', userId);
+    
     if (error) {
       console.error('Error fetching user contacts:', error);
-      throw new Error(error.message);
+      return [];
     }
-
-    // Transform the data to match the UserContact interface
-    return data.map((contact) => ({
-      id: contact.id,
-      userId: contact.user_id,
-      contactId: contact.contact_id,
-      status: contact.status as 'pending' | 'accepted' | 'rejected',
-      staffRelationId: contact.staff_relation_id,
-      contactProfile: {
-        id: contact.profiles?.id || '',
-        fullName: contact.profiles?.full_name || '',
-        displayName: contact.profiles?.display_name || '',
-        avatarUrl: contact.profiles?.avatar_url || '',
-        accountType: contact.profiles?.account_type || 'free'
-      }
-    }));
+    
+    // Transform the data to match our types
+    const userContacts = contacts.map(contact => {
+      // Handle possible null values in contact data
+      const contactProfile = contact.contact || {
+        id: null,
+        full_name: null,
+        display_name: null,
+        avatar_url: null,
+        account_type: null
+      };
+      
+      return {
+        id: contact.id,
+        userId: contact.user_id,
+        contactId: contact.contact_id,
+        status: contact.status as "accepted" | "pending" | "rejected",
+        staffRelationId: contact.staff_relation_id,
+        contactProfile: {
+          id: contactProfile.id,
+          fullName: contactProfile.full_name,
+          displayName: contactProfile.display_name,
+          avatarUrl: contactProfile.avatar_url,
+          accountType: contactProfile.account_type
+        }
+      };
+    });
+    
+    return userContacts;
   } catch (error) {
     console.error('Error in getUserContacts:', error);
-    throw error;
+    return [];
   }
 };
 
-export const getContactRequests = async (): Promise<UserContact[]> => {
+/**
+ * Get all contacts who have the user as a contact
+ */
+export const getReversedUserContacts = async (userId: string): Promise<UserContact[]> => {
   try {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session) {
-      throw new Error('You must be logged in to view contact requests');
-    }
-
-    const { data, error } = await supabase
+    // Get all users who have this user as a contact
+    const { data: contacts, error } = await supabase
       .from('user_contacts')
       .select(`
         id,
         user_id,
         contact_id,
         status,
-        profiles:user_id(
+        contact:user_id (
           id,
           full_name,
           display_name,
@@ -76,67 +85,42 @@ export const getContactRequests = async (): Promise<UserContact[]> => {
           account_type
         )
       `)
-      .eq('contact_id', session.session.user.id)
-      .order('created_at', { ascending: false });
-
+      .eq('contact_id', userId);
+    
     if (error) {
-      console.error('Error fetching contact requests:', error);
-      throw new Error(error.message);
+      console.error('Error fetching reversed user contacts:', error);
+      return [];
     }
-
-    // Transform the data to match the UserContact interface
-    return data.map((contact) => ({
-      id: contact.id,
-      userId: contact.user_id,
-      contactId: contact.contact_id,
-      status: contact.status as 'pending' | 'accepted' | 'rejected',
-      contactProfile: {
-        id: contact.profiles?.id || '',
-        fullName: contact.profiles?.full_name || '',
-        displayName: contact.profiles?.display_name || '',
-        avatarUrl: contact.profiles?.avatar_url || '',
-        accountType: contact.profiles?.account_type || 'free'
-      }
-    }));
-  } catch (error) {
-    console.error('Error in getContactRequests:', error);
-    throw error;
-  }
-};
-
-export const checkContactRequestStatus = async (contactId: string): Promise<ContactRequestStatus> => {
-  try {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session) {
-      throw new Error('You must be logged in to check contact status');
-    }
-
-    const userId = session.session.user.id;
-
-    const { data, error } = await supabase
-      .from('user_contacts')
-      .select('id, status')
-      .or(`user_id.eq.${userId},contact_id.eq.${userId}`)
-      .or(`user_id.eq.${contactId},contact_id.eq.${contactId}`)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error checking contact request status:', error);
-      throw new Error(error.message);
-    }
-
-    return {
-      requestExists: !!data,
-      requestStatus: data?.status || 'none'
-    };
-  } catch (error) {
-    console.error('Error in checkContactRequestStatus:', error);
-    if (error instanceof Error && error.message.includes('single row')) {
-      return {
-        requestExists: false,
-        requestStatus: 'none'
+    
+    // Transform the data to match our types
+    const userContacts = contacts.map(contact => {
+      // Handle possible null values in contact data
+      const contactProfile = contact.contact || {
+        id: null,
+        full_name: null,
+        display_name: null,
+        avatar_url: null,
+        account_type: null
       };
-    }
-    throw error;
+      
+      return {
+        id: contact.id,
+        userId: contact.user_id,
+        contactId: contact.contact_id,
+        status: contact.status as "accepted" | "pending" | "rejected",
+        contactProfile: {
+          id: contactProfile.id,
+          fullName: contactProfile.full_name,
+          displayName: contactProfile.display_name,
+          avatarUrl: contactProfile.avatar_url,
+          accountType: contactProfile.account_type
+        }
+      };
+    });
+    
+    return userContacts;
+  } catch (error) {
+    console.error('Error in getReversedUserContacts:', error);
+    return [];
   }
 };
