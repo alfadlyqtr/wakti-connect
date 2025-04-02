@@ -1,105 +1,107 @@
 
-import { useEffect } from "react";
-import { Event } from "@/types/event.types";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
 import { InvitationRecipient } from "@/types/invitation.types";
+import { EventWithInvitations } from "@/types/event.types";
 
-interface UseEditEventEffectProps {
-  editEvent: Event | null;
-  setTitle: (title: string) => void;
-  setDescription: (description: string) => void;
-  setValue: (name: string, value: any) => void;
-  setSelectedDate: (date: Date) => void;
-  setIsAllDay: (isAllDay: boolean) => void;
-  setStartTime: (time: string) => void;
-  setEndTime: (time: string) => void;
-  handleLocationChange: (location: string, type: 'manual' | 'google_maps', mapsUrl?: string) => void;
-  setCustomization: (customization: any) => void;
-  addRecipient: (recipient: InvitationRecipient) => void;
-}
+type EventFormValues = {
+  title: string;
+  description?: string;
+  startTime: Date;
+  endTime: Date;
+  isAllDay: boolean;
+  location?: string;
+  recipients: InvitationRecipient[];
+};
 
-export const useEditEventEffect = ({
-  editEvent,
-  setTitle,
-  setDescription,
-  setValue,
-  setSelectedDate,
-  setIsAllDay,
-  setStartTime,
-  setEndTime,
-  handleLocationChange,
-  setCustomization,
-  addRecipient
-}: UseEditEventEffectProps) => {
+const useEditEventEffect = (
+  form: any,
+  setIsLoading: (loading: boolean) => void,
+  setBackgroundImage: (url: string | null) => void,
+  setTemplateId: (id: string | null) => void,
+  setCustomizationId: (id: string | null) => void,
+  setActiveTab: (tab: string) => void
+) => {
+  const params = useParams<{ id: string }>();
+  const queryClient = useQueryClient();
+  const [originalEvent, setOriginalEvent] = useState<EventWithInvitations | null>(null);
+
   useEffect(() => {
-    if (editEvent) {
-      // Populate form with edit event data
-      setTitle(editEvent.title || '');
-      setDescription(editEvent.description || '');
-      setValue('title', editEvent.title || '');
-      setValue('description', editEvent.description || '');
+    const loadEventData = async () => {
+      if (!params.id) return;
       
-      // Set date and time
-      if (editEvent.start_time) {
-        const startDate = new Date(editEvent.start_time);
-        setSelectedDate(startDate);
-        
-        if (!editEvent.is_all_day) {
-          const hours = startDate.getHours().toString().padStart(2, '0');
-          const minutes = startDate.getMinutes().toString().padStart(2, '0');
-          setStartTime(`${hours}:${minutes}`);
-        }
-      }
+      setIsLoading(true);
       
-      if (editEvent.end_time) {
-        const endDate = new Date(editEvent.end_time);
-        
-        if (!editEvent.is_all_day) {
-          const hours = endDate.getHours().toString().padStart(2, '0');
-          const minutes = endDate.getMinutes().toString().padStart(2, '0');
-          setEndTime(`${hours}:${minutes}`);
-        }
-      }
-      
-      // Set all day flag
-      setIsAllDay(editEvent.is_all_day);
-      
-      // Set location
-      if (editEvent.location) {
-        handleLocationChange(
-          editEvent.location,
-          editEvent.location_type || 'manual',
-          editEvent.maps_url
+      try {
+        // Try to get event from query cache first
+        const cachedEvent = queryClient.getQueryData<EventWithInvitations[]>(['sentInvitations'])?.find(
+          event => event.id === params.id
         );
+        
+        if (cachedEvent) {
+          applyEventData(cachedEvent);
+          setOriginalEvent(cachedEvent);
+        } else {
+          // Fetch event directly if not in cache
+          const { data: event } = await fetch(`/api/events/${params.id}`).then(res => res.json());
+          
+          if (event) {
+            applyEventData(event);
+            setOriginalEvent(event);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load event:", error);
+      } finally {
+        setIsLoading(false);
       }
+    };
+    
+    loadEventData();
+  }, [params.id, queryClient, setIsLoading, form, setBackgroundImage, setTemplateId, setCustomizationId]);
+  
+  const applyEventData = (event: EventWithInvitations) => {
+    if (!event) return;
+    
+    // Parse dates
+    const startTime = new Date(event.start_time);
+    const endTime = new Date(event.end_time);
+    
+    // Set form values
+    form.reset({
+      title: event.title,
+      description: event.description || '',
+      startTime,
+      endTime,
+      isAllDay: event.is_all_day || false,
+      location: event.location || '',
+      recipients: event.event_invitations?.map(invitation => ({
+        id: invitation.invited_user_id || invitation.email || '',
+        name: invitation.invited_user_id ? 'Contact' : (invitation.email || ''),
+        email: invitation.email,
+        type: invitation.invited_user_id ? 'contact' : 'email'
+      })) || []
+    });
+    
+    // Set customization data if available
+    if (event.customization) {
+      setTemplateId(event.customization.templateId || null);
+      setCustomizationId(event.customization.id || null);
       
-      // Set customization
-      if (editEvent.customization) {
-        setCustomization(editEvent.customization);
-      }
-      
-      // Set invitations if available
-      if (editEvent.invitations && editEvent.invitations.length > 0) {
-        editEvent.invitations.forEach(invitation => {
-          const recipient: InvitationRecipient = {
-            type: invitation.invited_user_id ? 'contact' : 'email',
-            id: invitation.invited_user_id || invitation.email || '',
-            status: invitation.status
-          };
-          addRecipient(recipient);
-        });
+      if (event.customization.backgroundType === 'image') {
+        setBackgroundImage(event.customization.backgroundValue || null);
       }
     }
-  }, [
-    editEvent, 
-    setTitle, 
-    setDescription, 
-    setValue, 
-    setSelectedDate, 
-    setIsAllDay, 
-    setStartTime, 
-    setEndTime, 
-    handleLocationChange, 
-    setCustomization, 
-    addRecipient
-  ]);
+    
+    // Move to the first tab
+    setActiveTab('details');
+  };
+  
+  return {
+    originalEventId: params.id,
+    originalEvent
+  };
 };
+
+export default useEditEventEffect;

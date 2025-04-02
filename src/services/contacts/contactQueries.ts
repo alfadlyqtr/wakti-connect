@@ -22,7 +22,7 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
       contact_id,
       status,
       staff_relation_id,
-      contactProfile:contact_id(
+      profiles:contact_id(
         id, 
         full_name, 
         display_name, 
@@ -39,20 +39,25 @@ export const fetchContacts = async (): Promise<UserContact[]> => {
   }
   
   // Transform the data to match our interface
-  return data.map(contact => ({
-    id: contact.id,
-    userId: contact.user_id,
-    contactId: contact.contact_id,
-    status: contact.status as 'pending' | 'accepted' | 'rejected',
-    staffRelationId: contact.staff_relation_id,
-    contactProfile: contact.contactProfile ? {
-      id: contact.contactProfile.id,
-      fullName: contact.contactProfile.full_name,
-      displayName: contact.contactProfile.display_name,
-      avatarUrl: contact.contactProfile.avatar_url,
-      accountType: contact.contactProfile.account_type
-    } : undefined
-  }));
+  return data.map(contact => {
+    // Handle potential null values or missing relations
+    const profileData = contact.profiles || {};
+    
+    return {
+      id: contact.id,
+      userId: contact.user_id,
+      contactId: contact.contact_id,
+      status: contact.status as 'pending' | 'accepted' | 'rejected',
+      staffRelationId: contact.staff_relation_id,
+      contactProfile: {
+        id: contact.contact_id,
+        fullName: profileData.full_name,
+        displayName: profileData.display_name,
+        avatarUrl: profileData.avatar_url,
+        accountType: profileData.account_type
+      }
+    };
+  });
 };
 
 /**
@@ -72,7 +77,7 @@ export const fetchPendingRequests = async (): Promise<UserContact[]> => {
       user_id,
       contact_id,
       status,
-      contactProfile:contact_id(
+      profiles:user_id(
         id, 
         full_name, 
         display_name, 
@@ -89,17 +94,22 @@ export const fetchPendingRequests = async (): Promise<UserContact[]> => {
   }
   
   // Transform the data to match our interface
-  return data.map(contact => ({
-    id: contact.id,
-    userId: contact.user_id,
-    contactId: contact.contact_id,
-    status: contact.status as 'pending' | 'accepted' | 'rejected',
-    contactProfile: contact.contactProfile ? {
-      id: contact.contactProfile.id,
-      fullName: contact.contactProfile.full_name,
-      displayName: contact.contactProfile.display_name,
-      avatarUrl: contact.contactProfile.avatar_url,
-      accountType: contact.contactProfile.account_type
-    } : undefined
-  }));
+  return data.map(contact => {
+    // Handle potential null values or missing relations
+    const profileData = contact.profiles || {};
+    
+    return {
+      id: contact.id,
+      userId: contact.user_id,
+      contactId: contact.contact_id,
+      status: contact.status as 'pending' | 'accepted' | 'rejected',
+      contactProfile: {
+        id: contact.user_id,
+        fullName: profileData.full_name,
+        displayName: profileData.display_name,
+        avatarUrl: profileData.avatar_url,
+        accountType: profileData.account_type
+      }
+    };
+  });
 };

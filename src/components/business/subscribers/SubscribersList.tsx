@@ -36,10 +36,11 @@ const SubscribersList = ({ businessId }: SubscribersListProps) => {
       {(subscribers && subscribers.length > 0) ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {subscribers.map((subscriber) => {
-            // Safely access profile properties with fallbacks
-            const avatarUrl = subscriber.profile?.avatar_url || '';
-            const displayName = subscriber.profile?.display_name || '';
-            const fullName = subscriber.profile?.full_name || '';
+            // Safely access profile properties with proper type checking
+            const profile = subscriber.profile || {};
+            const avatarUrl = typeof profile === 'object' ? profile.avatar_url || '' : '';
+            const displayName = typeof profile === 'object' ? profile.display_name || '' : '';
+            const fullName = typeof profile === 'object' ? profile.full_name || '' : '';
             const nameInitials = (displayName || fullName || "User").slice(0, 2).toUpperCase();
             const subscriberName = displayName || fullName || "User";
             

@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Helmet } from "react-helmet-async";
-import { Container } from "@/components/ui/container";
+import Container from "@/components/ui/container";
 import ContactHero from "@/components/contact/ContactHero";
 import ContactForm from "@/components/contact/ContactForm";
 import ContactInfo from "@/components/contact/ContactInfo";

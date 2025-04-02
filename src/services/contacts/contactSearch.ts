@@ -11,10 +11,21 @@ export const searchUsers = async (query: string): Promise<UserSearchResult[]> =>
   }
   
   try {
-    // Call the stored function using raw SQL
-    const { data, error } = await supabase.rpc('search_users', { 
-      search_query: query.trim() 
-    });
+    // Call the stored function using direct SQL query since we can't use RPC for custom functions
+    const { data, error } = await supabase
+      .from('profiles')
+      .select(`
+        id,
+        full_name,
+        display_name,
+        avatar_url,
+        account_type,
+        business_name,
+        email:auth.users!id(email)
+      `)
+      .or(`full_name.ilike.%${query}%,display_name.ilike.%${query}%,business_name.ilike.%${query}%`)
+      .eq('is_searchable', true)
+      .limit(10);
     
     if (error) {
       console.error("Error searching users:", error);
@@ -31,7 +42,7 @@ export const searchUsers = async (query: string): Promise<UserSearchResult[]> =>
       id: user.id,
       fullName: user.full_name,
       displayName: user.display_name,
-      email: user.email,
+      email: user.email?.[0]?.email,
       avatarUrl: user.avatar_url,
       accountType: user.account_type,
       businessName: user.business_name
@@ -53,25 +64,25 @@ export const checkContactRequest = async (contactId: string): Promise<ContactReq
   }
   
   try {
-    // Call the stored function using raw SQL
-    const { data, error } = await supabase.rpc('check_contact_request', { 
-      user_id_param: session.user.id, 
-      contact_id_param: contactId 
-    });
+    // Check if contact request exists by querying the table directly
+    const { data, error } = await supabase
+      .from('user_contacts')
+      .select('status')
+      .or(`and(user_id.eq.${session.user.id},contact_id.eq.${contactId}),and(user_id.eq.${contactId},contact_id.eq.${session.user.id})`)
+      .limit(1);
     
     if (error) {
       console.error("Error checking contact request:", error);
       throw error;
     }
     
-    if (!data || !Array.isArray(data) || data.length === 0) {
-      console.warn("Unexpected response format from check_contact_request:", data);
+    if (!data || data.length === 0) {
       return { requestExists: false, requestStatus: 'none' };
     }
     
     return {
-      requestExists: data[0].request_exists,
-      requestStatus: data[0].request_status
+      requestExists: true,
+      requestStatus: data[0].status
     };
   } catch (error) {
     console.error("Exception checking contact request:", error);

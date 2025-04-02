@@ -37,8 +37,8 @@ export const createInvitationCustomization = async (
       text_align: customizationData.textAlign || template.default_styles.textAlign,
       button_styles: customizationData.buttonStyles || template.default_styles.buttons,
       layout_size: customizationData.layoutSize || 'medium',
-      header_image: customizationData.headerImage || null,
-      map_location: customizationData.mapLocation || null,
+      header_image: customizationData.customEffects?.shadow || null,
+      map_location: null,
       custom_effects: customizationData.customEffects || null
     };
     
@@ -51,10 +51,7 @@ export const createInvitationCustomization = async (
       throw error;
     }
     
-    const result: InvitationCustomization = {
-      id: data.id,
-      invitationId: data.invitation_id,
-      creatorId: data.creator_id,
+    return {
       backgroundType: data.background_type,
       backgroundValue: data.background_value,
       fontFamily: data.font_family,
@@ -62,14 +59,12 @@ export const createInvitationCustomization = async (
       textAlign: data.text_align,
       buttonStyles: data.button_styles,
       layoutSize: data.layout_size,
-      headerImage: data.header_image,
-      mapLocation: data.map_location,
       customEffects: data.custom_effects,
+      creatorId: data.creator_id,
+      invitationId: data.invitation_id,
       createdAt: data.created_at,
       updatedAt: data.updated_at
     };
-    
-    return result;
   } catch (error) {
     console.error("Error creating invitation customization:", error);
     return null;
@@ -90,10 +85,7 @@ export const getInvitationCustomization = async (invitationId: string): Promise<
       return null;
     }
     
-    const result: InvitationCustomization = {
-      id: data.id,
-      invitationId: data.invitation_id,
-      creatorId: data.creator_id,
+    return {
       backgroundType: data.background_type,
       backgroundValue: data.background_value,
       fontFamily: data.font_family,
@@ -101,14 +93,12 @@ export const getInvitationCustomization = async (invitationId: string): Promise<
       textAlign: data.text_align,
       buttonStyles: data.button_styles,
       layoutSize: data.layout_size,
-      headerImage: data.header_image,
-      mapLocation: data.map_location,
       customEffects: data.custom_effects,
+      creatorId: data.creator_id,
+      invitationId: data.invitation_id,
       createdAt: data.created_at,
       updatedAt: data.updated_at
     };
-    
-    return result;
   } catch (error) {
     console.error("Error getting invitation customization:", error);
     return null;
