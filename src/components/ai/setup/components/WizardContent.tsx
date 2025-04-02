@@ -7,13 +7,13 @@ import { SpecializedSettingsStep } from "./SpecializedSettingsStep";
 import { useAISetup } from "../context/AISetupContext";
 
 export const WizardContent: React.FC = () => {
-  const { step, initialAccountType } = useAISetup();
+  const { step, initialAccountType, handleRoleSelect } = useAISetup();
 
   return (
     <ScrollArea className="h-full max-h-[60vh] pr-4 overflow-y-auto">
       {step === 1 && (
         <RoleSelection 
-          onSelect={(role) => useAISetup().handleRoleSelect(role)} 
+          onSelect={handleRoleSelect} 
           initialAccountType={initialAccountType} 
         />
       )}
