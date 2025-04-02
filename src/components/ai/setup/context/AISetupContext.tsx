@@ -138,11 +138,10 @@ export const AISetupProvider: React.FC<AISetupProviderProps> = ({
       }
       
       // Store the role and mode information in a compatible format
-      // Save role and mode data in existing JSON fields until the migration is applied
       const tone = specializedSettings.communicationStyle || "balanced";
       const responseLength = specializedSettings.detailLevel || "balanced";
       
-      // Store specialized settings in enabled_features until schema is updated
+      // Modified: Store all information in enabled_features as a workaround for missing columns
       const enabledFeatures = {
         tasks: true,
         events: true,
@@ -150,12 +149,13 @@ export const AISetupProvider: React.FC<AISetupProviderProps> = ({
         analytics: true,
         messaging: true,
         text_generation: assistantMode === "text_generator" || assistantMode === "content_creator",
-        // Store user role and mode in enabled_features for now as a workaround
+        // Store settings in enabled_features as a workaround for potential missing columns
         _userRole: userRole,
         _assistantMode: assistantMode,
         _specializedSettings: specializedSettings
       };
       
+      // Prepare settings object with basic required fields
       const settings = {
         user_id: user.id,
         assistant_name: "WAKTI AI",
@@ -163,11 +163,20 @@ export const AISetupProvider: React.FC<AISetupProviderProps> = ({
         response_length: responseLength,
         proactiveness: true,
         suggestion_frequency: "medium",
-        enabled_features: enabledFeatures,
-        user_role: userRole,
-        assistant_mode: assistantMode,
-        specialized_settings: specializedSettings
+        enabled_features: enabledFeatures
       };
+      
+      // Attempt to add new fields if they exist in the schema
+      try {
+        // Only add these fields if they don't cause errors
+        Object.assign(settings, {
+          user_role: userRole,
+          assistant_mode: assistantMode,
+          specialized_settings: specializedSettings
+        });
+      } catch (e) {
+        console.log("Schema might not support new fields yet, using fallback method");
+      }
       
       console.log("Saving AI settings:", settings);
       

@@ -57,7 +57,7 @@ export const useAISettingsQuery = (user: User | null) => {
           .from("ai_assistant_settings")
           .select("*")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           // Only log error if it's not "no rows returned" which is expected for first-time users
@@ -94,6 +94,25 @@ export const useAISettingsQuery = (user: User | null) => {
             text_generation: true,
           }
         };
+        
+        // Add fallback support for new fields that might not be in the database yet
+        if (data.user_role) {
+          settings.user_role = data.user_role as AISettings["user_role"];
+        } else if (data.enabled_features && '_userRole' in data.enabled_features) {
+          settings.user_role = data.enabled_features._userRole as AISettings["user_role"];
+        }
+        
+        if (data.assistant_mode) {
+          settings.assistant_mode = data.assistant_mode as AISettings["assistant_mode"];
+        } else if (data.enabled_features && '_assistantMode' in data.enabled_features) {
+          settings.assistant_mode = data.enabled_features._assistantMode as AISettings["assistant_mode"];
+        }
+        
+        if (data.specialized_settings) {
+          settings.specialized_settings = data.specialized_settings;
+        } else if (data.enabled_features && '_specializedSettings' in data.enabled_features) {
+          settings.specialized_settings = data.enabled_features._specializedSettings;
+        }
         
         return settings;
       } catch (error) {

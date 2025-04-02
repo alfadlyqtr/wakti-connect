@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Bot, Trash2, Settings, FileText } from 'lucide-react';
@@ -88,6 +87,8 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
         return " • Business Manager";
       case "personal_assistant":
         return " • Personal Assistant";
+      case "text_generator":
+        return " • Text Generator";
       default:
         return "";
     }
