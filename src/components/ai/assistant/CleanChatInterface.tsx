@@ -17,6 +17,10 @@ interface CleanChatInterfaceProps {
   userName?: string;
   isSpeaking?: boolean;
   canAccess: boolean;
+  isListening?: boolean;
+  onStartListening?: () => void;
+  onStopListening?: () => void;
+  recognitionSupported?: boolean;
 }
 
 export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
@@ -28,7 +32,11 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   selectedRole,
   userName,
   isSpeaking = false,
-  canAccess
+  canAccess,
+  isListening = false,
+  onStartListening,
+  onStopListening,
+  recognitionSupported = false
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFirstMessage = messages.length === 0;
@@ -102,6 +110,21 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             </div>
           )}
           
+          {/* Listening indicator */}
+          {isListening && (
+            <div className="flex items-start gap-3">
+              <div className="h-9 w-9 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 animate-pulse">
+                <div className="h-4 w-4 bg-white rounded-full"></div>
+              </div>
+              <div className="p-3 bg-muted rounded-lg max-w-[80%]">
+                <p className="text-sm text-muted-foreground">Listening...</p>
+                {inputMessage && (
+                  <p className="text-sm font-medium mt-1">{inputMessage}</p>
+                )}
+              </div>
+            </div>
+          )}
+          
           {/* Loading indicator */}
           {isLoading && (
             <div className="flex items-start gap-3">
@@ -125,6 +148,10 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
           handleSendMessage={handleSendMessage}
           isLoading={isLoading}
           canAccess={canAccess}
+          isListening={isListening}
+          onStartListening={onStartListening}
+          onStopListening={onStopListening}
+          recognitionSupported={recognitionSupported}
         />
       </CardContent>
     </Card>

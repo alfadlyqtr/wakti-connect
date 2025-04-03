@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useAIChatOperations } from "./operations/useAIChatOperations";
 import { AIMessage } from "@/types/ai-assistant.types";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
 /**

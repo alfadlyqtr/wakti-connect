@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -376,6 +377,10 @@ const DashboardAIAssistant = () => {
                       userName={userName}
                       isSpeaking={speaking}
                       canAccess={canAccess}
+                      isListening={isListening}
+                      onStartListening={startListening}
+                      onStopListening={stopListening}
+                      recognitionSupported={recognitionSupported}
                     />
                   </TabsContent>
                   
