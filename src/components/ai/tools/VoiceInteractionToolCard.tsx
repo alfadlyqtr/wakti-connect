@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Mic, Square, Volume2, AlertTriangle, RefreshCcw } from 'lucide-react';
@@ -20,6 +20,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
 }) => {
   const [transcribedText, setTranscribedText] = useState("");
   const [openAIConfigured, setOpenAIConfigured] = useState<boolean | null>(null);
+  const [apiKeyErrorDetails, setApiKeyErrorDetails] = useState<string | null>(null);
   const { toast } = useToast();
   
   // Use browser-based speech recognition
@@ -43,10 +44,8 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     stopListening: stopOpenAIListening,
     isProcessing,
     supportsVoice,
-    openAIVoiceSupported,
-    apiKeyStatus,
-    apiKeyErrorDetails,
-    retryApiKeyValidation
+    isSpeaking,
+    canUseSpeechSynthesis
   } = useVoiceInteraction();
   
   // Combined state for UI
@@ -58,11 +57,40 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
       description: "Checking if the OpenAI API key is properly configured...",
     });
     
-    const success = await retryApiKeyValidation();
-    
-    if (success) {
-      setOpenAIConfigured(true);
+    try {
+      const testResponse = await supabase.functions.invoke("ai-voice-to-text", {
+        body: { test: true }
+      });
+      
+      if (testResponse.error) {
+        setOpenAIConfigured(false);
+        setApiKeyErrorDetails(testResponse.error.message || "API key test failed");
+        toast({
+          title: "OpenAI API Key Issue",
+          description: "Your OpenAI API key may not be properly configured. Voice features will be limited.",
+          variant: "destructive",
+        });
+      } else {
+        setOpenAIConfigured(true);
+        setApiKeyErrorDetails(null);
+        toast({
+          title: "OpenAI API Key Valid",
+          description: "Enhanced voice features are available.",
+          variant: "success",
+        });
+        return true;
+      }
+    } catch (error) {
+      setOpenAIConfigured(false);
+      setApiKeyErrorDetails("Connection error. Check your internet connection.");
+      toast({
+        title: "Connection Error",
+        description: "Could not verify OpenAI API configuration. Check your internet connection.",
+        variant: "destructive",
+      });
     }
+    
+    return false;
   };
   
   // Check if OpenAI is properly configured
@@ -78,6 +106,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
         if (testResponse.error) {
           console.warn("OpenAI API configuration test failed:", testResponse.error);
           setOpenAIConfigured(false);
+          setApiKeyErrorDetails(testResponse.error.message || "API key test failed");
           
           // Only show the toast if this is the first load
           toast({
@@ -88,10 +117,12 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
         } else {
           console.log("OpenAI API configuration test passed");
           setOpenAIConfigured(true);
+          setApiKeyErrorDetails(null);
         }
       } catch (error) {
         console.warn("Could not verify OpenAI API configuration:", error);
         setOpenAIConfigured(false);
+        setApiKeyErrorDetails("Connection error. Check your internet connection.");
         
         toast({
           title: "Connection Error",
@@ -123,7 +154,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     setTranscribedText("");
     
     // Try OpenAI voice first if configured
-    if (openAIVoiceSupported) {
+    if (openAIConfigured) {
       console.log("Starting OpenAI voice recognition");
       startOpenAIListening();
     } else if (supported) {
@@ -173,7 +204,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
   }
   
   const renderApiKeyStatus = () => {
-    if (!openAIVoiceSupported) {
+    if (openAIConfigured === false) {
       return (
         <div className="flex items-center text-amber-600 mb-2">
           <AlertTriangle className="h-4 w-4 mr-2 flex-shrink-0" />
@@ -227,7 +258,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
           </p>
         )}
         
-        {apiKeyStatus !== 'valid' && (
+        {openAIConfigured === false && (
           <div className="text-xs flex items-center text-amber-600">
             <AlertTriangle className="h-3 w-3 mr-1" />
             Using browser voice (OpenAI unavailable)
@@ -252,7 +283,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
         <CardTitle className="flex items-center gap-2">
           <Volume2 className="h-5 w-5 text-wakti-blue" />
           Voice Interaction
-          {apiKeyStatus !== 'valid' && (
+          {openAIConfigured === false && (
             <span className="text-xs text-amber-600 font-normal flex items-center ml-2">
               <AlertTriangle className="h-3 w-3 mr-1" />
               Enhanced voice features unavailable
@@ -305,7 +336,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
           )}
         </div>
         
-        {apiKeyStatus !== 'valid' && (
+        {openAIConfigured === false && (
           <div className="text-sm bg-amber-50 border border-amber-200 rounded-md p-3 text-amber-700">
             <p className="flex items-center mb-2">
               <AlertTriangle className="h-4 w-4 mr-2 flex-shrink-0" />

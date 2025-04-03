@@ -64,18 +64,17 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   };
 
   // Stop recording
-  const stopRecording = async () => {
+  const stopRecording = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
     
     setIsRecording(false);
     
-    // Stop voice recording and get the transcript
-    const transcript = await stopListening();
+    // Stop voice recording
+    stopListening();
     
-    if (transcript) {
-      setTranscribedText(transcript);
+    if (lastTranscript) {
       toast({
         title: "Recording completed",
         description: `${formatTime(recordingTime)} of audio transcribed.`,

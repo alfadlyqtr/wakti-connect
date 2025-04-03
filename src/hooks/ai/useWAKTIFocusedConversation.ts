@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { v4 as uuidv4 } from 'uuid';
+import { fromTable } from '@/integrations/supabase/helper';
 
 interface ConversationContext {
   id: string;
@@ -25,8 +26,7 @@ export const useWAKTIFocusedConversation = () => {
       setIsLoading(true);
       try {
         // Try to get an existing active session from the last hour
-        const { data: existingContext, error: fetchError } = await supabase
-          .from('ai_conversation_contexts')
+        const { data: existingContext, error: fetchError } = await fromTable('ai_conversation_contexts')
           .select('*')
           .eq('user_id', user.id)
           .gt('last_interaction', new Date(Date.now() - 60 * 60 * 1000).toISOString())
@@ -41,12 +41,16 @@ export const useWAKTIFocusedConversation = () => {
         
         if (existingContext) {
           // Use existing context
-          setContext(existingContext);
+          setContext({
+            id: existingContext.id,
+            wakti_focus_level: existingContext.wakti_focus_level,
+            last_wakti_topic: existingContext.last_wakti_topic,
+            session_id: existingContext.session_id
+          });
           setSessionId(existingContext.session_id);
           
           // Update the last interaction time
-          await supabase
-            .from('ai_conversation_contexts')
+          await fromTable('ai_conversation_contexts')
             .update({ 
               last_interaction: new Date().toISOString(),
               updated_at: new Date().toISOString()
@@ -58,8 +62,7 @@ export const useWAKTIFocusedConversation = () => {
           const newSessionId = uuidv4();
           setSessionId(newSessionId);
           
-          const { data: newContext, error: insertError } = await supabase
-            .from('ai_conversation_contexts')
+          const { data: newContext, error: insertError } = await fromTable('ai_conversation_contexts')
             .insert({
               user_id: user.id,
               session_id: newSessionId,
@@ -74,7 +77,14 @@ export const useWAKTIFocusedConversation = () => {
             throw insertError;
           }
           
-          setContext(newContext);
+          if (newContext) {
+            setContext({
+              id: newContext.id,
+              wakti_focus_level: newContext.wakti_focus_level,
+              last_wakti_topic: newContext.last_wakti_topic,
+              session_id: newContext.session_id
+            });
+          }
         }
       } catch (error) {
         console.error('Error in conversation context setup:', error);
@@ -97,8 +107,7 @@ export const useWAKTIFocusedConversation = () => {
         last_interaction: new Date().toISOString()
       };
       
-      const { error } = await supabase
-        .from('ai_conversation_contexts')
+      const { error } = await fromTable('ai_conversation_contexts')
         .update(updatedContext)
         .eq('id', context.id);
         
@@ -109,7 +118,8 @@ export const useWAKTIFocusedConversation = () => {
       
       setContext({
         ...context,
-        ...updatedContext
+        wakti_focus_level: updatedContext.wakti_focus_level,
+        last_wakti_topic: updatedContext.last_wakti_topic
       });
     } catch (error) {
       console.error('Error updating focus level:', error);
