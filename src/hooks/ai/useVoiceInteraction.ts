@@ -23,6 +23,9 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   const [temporaryTranscript, setTemporaryTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [supportsVoice, setSupportsVoice] = useState(false);
+  const [openAIVoiceSupported, setOpenAIVoiceSupported] = useState<boolean>(false);
+  const [apiKeyStatus, setApiKeyStatus] = useState<'checking' | 'valid' | 'invalid' | 'unknown'>('checking');
+  const [apiKeyErrorDetails, setApiKeyErrorDetails] = useState<string | null>(null);
   
   const { toast } = useToast();
   const { speak, speaking: isSpeaking, cancel: stopSpeaking, supported: synthesisSupported } = useSpeechSynthesis();
@@ -55,6 +58,80 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     
     checkSupport();
   }, []);
+  
+  // Check if OpenAI voice-to-text is supported (API key is valid)
+  useEffect(() => {
+    const checkApiKey = async () => {
+      try {
+        setApiKeyStatus('checking');
+        const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
+          body: { test: true }
+        });
+        
+        if (error || (data && data.error)) {
+          console.warn('OpenAI API key validation failed:', error || data.error);
+          setOpenAIVoiceSupported(false);
+          setApiKeyStatus('invalid');
+          setApiKeyErrorDetails(
+            (error && error.message) || 
+            (data && data.error) || 
+            'API key validation failed'
+          );
+        } else {
+          console.log('OpenAI API key is valid');
+          setOpenAIVoiceSupported(true);
+          setApiKeyStatus('valid');
+          setApiKeyErrorDetails(null);
+        }
+      } catch (err) {
+        console.error('Error checking OpenAI API key:', err);
+        setOpenAIVoiceSupported(false);
+        setApiKeyStatus('unknown');
+        setApiKeyErrorDetails('Connection error');
+      }
+    };
+    
+    if (supportsVoice) {
+      checkApiKey();
+    }
+  }, [supportsVoice]);
+  
+  // Retry API key validation
+  const retryApiKeyValidation = useCallback(async () => {
+    try {
+      setApiKeyStatus('checking');
+      const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
+        body: { test: true }
+      });
+      
+      if (error || (data && data.error)) {
+        setOpenAIVoiceSupported(false);
+        setApiKeyStatus('invalid');
+        setApiKeyErrorDetails(
+          (error && error.message) || 
+          (data && data.error) || 
+          'API key validation failed'
+        );
+        return false;
+      } else {
+        setOpenAIVoiceSupported(true);
+        setApiKeyStatus('valid');
+        setApiKeyErrorDetails(null);
+        toast({
+          title: 'API Key Valid',
+          description: 'OpenAI API key is valid for voice recognition',
+          variant: 'success'
+        });
+        return true;
+      }
+    } catch (err) {
+      console.error('Error checking OpenAI API key:', err);
+      setOpenAIVoiceSupported(false);
+      setApiKeyStatus('unknown');
+      setApiKeyErrorDetails('Connection error');
+      return false;
+    }
+  }, [toast]);
   
   // Clean up resources when component unmounts
   useEffect(() => {
@@ -133,8 +210,12 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       });
     } finally {
       setIsProcessing(false);
+      // If continuous listening is enabled, restart listening
+      if (continuousListening && !isListening) {
+        setTimeout(startListening, 500);
+      }
     }
-  }, [onTranscriptComplete, continuousListening, toast]);
+  }, [onTranscriptComplete, continuousListening, toast, isListening]);
   
   const startListening = useCallback(async () => {
     if (isListening || isProcessing) {
@@ -163,7 +244,7 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         setIsListening(true);
         setTemporaryTranscript('Listening...');
         
-        // Set a maximum recording time (10 seconds)
+        // Set a maximum recording time (30 seconds to capture more content)
         if (silenceTimeoutRef.current) {
           window.clearTimeout(silenceTimeoutRef.current);
         }
@@ -171,12 +252,16 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
           if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
             stopListening();
           }
-        }, 10000);
+        }, 30000);
       };
       
       mediaRecorder.onstop = async () => {
+        setIsListening(false);
+        
         if (!audioChunksRef.current.length) {
-          setIsListening(false);
+          if (continuousListening) {
+            startListening();
+          }
           return;
         }
         
@@ -185,11 +270,8 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         // Only process if we have a significant amount of audio data
         if (audioBlob.size > 1000) {
           await processSpeech(audioBlob);
-        } else {
-          setIsListening(false);
-          if (continuousListening) {
-            startListening();
-          }
+        } else if (continuousListening) {
+          startListening();
         }
         
         // Clean up
@@ -200,7 +282,7 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       };
       
       // Start recording
-      mediaRecorder.start();
+      mediaRecorder.start(100); // Collect data in 100ms chunks for more responsive transcription
       
     } catch (e) {
       console.error('Error starting voice recognition:', e);
@@ -254,6 +336,10 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     stopSpeaking,
     isSpeaking,
     resetTranscript: () => setLastTranscript(''),
-    canUseSpeechSynthesis: synthesisSupported
+    canUseSpeechSynthesis: synthesisSupported,
+    openAIVoiceSupported,
+    apiKeyStatus,
+    apiKeyErrorDetails,
+    retryApiKeyValidation
   };
 };

@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { v4 as uuidv4 } from 'uuid';
-import { fromTable } from '@/integrations/supabase/helper';
 
 interface ConversationContext {
   id: string;
@@ -26,7 +25,8 @@ export const useWAKTIFocusedConversation = () => {
       setIsLoading(true);
       try {
         // Try to get an existing active session from the last hour
-        const { data: existingContext, error: fetchError } = await fromTable('ai_conversation_contexts')
+        const { data: existingContext, error: fetchError } = await supabase
+          .from('ai_conversation_contexts')
           .select('*')
           .eq('user_id', user.id)
           .gt('last_interaction', new Date(Date.now() - 60 * 60 * 1000).toISOString())
@@ -50,7 +50,8 @@ export const useWAKTIFocusedConversation = () => {
           setSessionId(existingContext.session_id);
           
           // Update the last interaction time
-          await fromTable('ai_conversation_contexts')
+          await supabase
+            .from('ai_conversation_contexts')
             .update({ 
               last_interaction: new Date().toISOString(),
               updated_at: new Date().toISOString()
@@ -62,7 +63,8 @@ export const useWAKTIFocusedConversation = () => {
           const newSessionId = uuidv4();
           setSessionId(newSessionId);
           
-          const { data: newContext, error: insertError } = await fromTable('ai_conversation_contexts')
+          const { data: newContext, error: insertError } = await supabase
+            .from('ai_conversation_contexts')
             .insert({
               user_id: user.id,
               session_id: newSessionId,
@@ -107,7 +109,8 @@ export const useWAKTIFocusedConversation = () => {
         last_interaction: new Date().toISOString()
       };
       
-      const { error } = await fromTable('ai_conversation_contexts')
+      const { error } = await supabase
+        .from('ai_conversation_contexts')
         .update(updatedContext)
         .eq('id', context.id);
         

@@ -2,12 +2,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, FileDown, Copy, Check, FileText } from 'lucide-react';
+import { Mic, MicOff, FileDown, Copy, Check, FileText, Loader2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { supabase } from '@/integrations/supabase/client';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface MeetingSummaryToolProps {
   onUseSummary?: (summary: string) => void;
@@ -20,18 +22,27 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   const [summary, setSummary] = useState('');
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [copied, setCopied] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const summaryRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<number | null>(null);
   const { toast } = useToast();
   
-  // Use the voice interaction hook for recording
+  // Use the voice interaction hook for recording with continuous listening
   const { 
     startListening, 
     stopListening, 
     supportsVoice, 
     isListening,
     lastTranscript,
-    isProcessing
-  } = useVoiceInteraction();
+    isProcessing,
+    openAIVoiceSupported
+  } = useVoiceInteraction({
+    continuousListening: true,
+    onTranscriptComplete: (text) => {
+      // Append to existing transcript instead of replacing
+      setTranscribedText(prev => prev ? `${prev}\n${text}` : text);
+    }
+  });
 
   // Start recording
   const startRecording = () => {
@@ -50,7 +61,11 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     setSummary('');
     
     // Start timer
-    timerRef.current = setInterval(() => {
+    if (timerRef.current) {
+      window.clearInterval(timerRef.current);
+    }
+    
+    timerRef.current = window.setInterval(() => {
       setRecordingTime(prev => prev + 1);
     }, 1000);
     
@@ -59,14 +74,15 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     
     toast({
       title: "Recording started",
-      description: "Speak clearly to ensure accurate transcription.",
+      description: "Speak clearly to ensure accurate transcription. Recording will continue until you stop it.",
     });
   };
 
   // Stop recording
   const stopRecording = () => {
     if (timerRef.current) {
-      clearInterval(timerRef.current);
+      window.clearInterval(timerRef.current);
+      timerRef.current = null;
     }
     
     setIsRecording(false);
@@ -74,7 +90,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     // Stop voice recording
     stopListening();
     
-    if (lastTranscript) {
+    if (transcribedText) {
       toast({
         title: "Recording completed",
         description: `${formatTime(recordingTime)} of audio transcribed.`,
@@ -98,8 +114,8 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       // Call the AI assistant to summarize the transcript
       const response = await supabase.functions.invoke("ai-assistant", {
         body: {
-          message: `Please summarize the following meeting transcript into key points, action items, and decisions. Format it with markdown headings and bullet points: ${transcribedText}`,
-          context: "This is a meeting transcript that needs to be summarized."
+          message: `Please summarize the following meeting transcript into key points, action items, decisions, and participants. Format it with markdown headings and bullet points, and highlight important items: ${transcribedText}`,
+          context: "This is a meeting transcript that needs to be summarized with visual highlights."
         }
       });
       
@@ -176,36 +192,87 @@ ${aiSummary}
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Export as PDF (simulate)
-  const exportAsPDF = () => {
-    toast({
-      title: "PDF export",
-      description: "Your meeting summary would be exported as PDF here.",
-    });
+  // Export as PDF
+  const exportAsPDF = async () => {
+    if (!summary || !summaryRef.current) return;
+    
+    setIsExporting(true);
+    
+    try {
+      const summaryElement = summaryRef.current;
+      
+      // Add some styling for better PDF output
+      const originalStyle = summaryElement.style.cssText;
+      summaryElement.style.padding = '20px';
+      summaryElement.style.backgroundColor = '#ffffff';
+      summaryElement.style.color = '#000000';
+      summaryElement.style.maxWidth = '800px';
+      summaryElement.style.margin = '0 auto';
+      
+      const canvas = await html2canvas(summaryElement, {
+        scale: 2, // Higher scale for better quality
+        logging: false,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      });
+      
+      // Reset the original style
+      summaryElement.style.cssText = originalStyle;
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // Calculate aspect ratio
+      const imgWidth = 210; // A4 width in mm (portrait)
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save(`Meeting_Summary_${new Date().toISOString().slice(0, 10)}.pdf`);
+      
+      toast({
+        title: "PDF Exported",
+        description: "Your meeting summary has been exported as a PDF file.",
+        variant: "success"
+      });
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export the summary as PDF. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // Send summary to chat
   const sendToChat = () => {
     if (onUseSummary && summary) {
       onUseSummary(summary);
+      toast({
+        title: "Summary Sent",
+        description: "Meeting summary sent to chat.",
+      });
     }
   };
-  
-  // Update transcribedText when lastTranscript changes
-  useEffect(() => {
-    if (lastTranscript && isRecording) {
-      setTranscribedText(lastTranscript);
-    }
-  }, [lastTranscript, isRecording]);
   
   // Clean up on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) {
-        clearInterval(timerRef.current);
+        window.clearInterval(timerRef.current);
+      }
+      // Stop listening if component unmounts while recording
+      if (isRecording) {
+        stopListening();
       }
     };
-  }, []);
+  }, [isRecording, stopListening]);
 
   return (
     <Card>
@@ -220,11 +287,11 @@ ${aiSummary}
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Recording controls */}
-        <div className="flex justify-center gap-4 p-4">
+        <div className="flex justify-center gap-4 p-2">
           {isRecording ? (
             <Button 
               variant="destructive" 
-              className="flex items-center gap-2" 
+              className="flex items-center gap-2 animate-pulse" 
               onClick={stopRecording}
               disabled={isProcessing}
             >
@@ -247,10 +314,13 @@ ${aiSummary}
         {/* Transcription display */}
         {transcribedText && (
           <div className="space-y-2">
-            <h3 className="text-sm font-medium">Transcribed Text:</h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-sm font-medium">Transcribed Text:</h3>
+              {isRecording && <span className="text-xs text-green-500 animate-pulse">Recording in progress...</span>}
+            </div>
             <Textarea 
               value={transcribedText} 
-              className="h-24 resize-none bg-muted/30"
+              className="h-28 resize-none bg-muted/30 font-mono text-sm"
               readOnly
             />
             
@@ -262,13 +332,7 @@ ${aiSummary}
               >
                 {isSummarizing ? (
                   <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                      className="mr-2"
-                    >
-                      <FileText className="h-4 w-4" />
-                    </motion.div>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Summarizing...
                   </>
                 ) : (
@@ -283,9 +347,18 @@ ${aiSummary}
         {summary && (
           <div className="space-y-2">
             <h3 className="text-sm font-medium">Meeting Summary:</h3>
-            <div className="bg-muted/30 rounded-md p-3 whitespace-pre-line text-sm">
-              {summary}
-            </div>
+            <div 
+              ref={summaryRef}
+              className="bg-muted/30 rounded-md p-3 whitespace-pre-line text-sm prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ 
+                __html: summary
+                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                  .replace(/^### (.*?)$/gm, '<h3 class="text-lg font-bold text-wakti-blue mt-3">$1</h3>')
+                  .replace(/^## (.*?)$/gm, '<h2 class="text-xl font-bold mb-2">$1</h2>')
+                  .replace(/^- (.*?)$/gm, '<li class="ml-4">$1</li>')
+                  .replace(/\n\n/g, '<br />')
+              }}
+            />
           </div>
         )}
       </CardContent>
@@ -307,9 +380,19 @@ ${aiSummary}
             size="sm" 
             className="flex items-center gap-1"
             onClick={exportAsPDF}
+            disabled={isExporting}
           >
-            <FileDown className="h-4 w-4" />
-            Export as PDF
+            {isExporting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <FileDown className="h-4 w-4" />
+                Export as PDF
+              </>
+            )}
           </Button>
           <Button 
             size="sm" 
