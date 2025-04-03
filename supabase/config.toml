@@ -44,18 +44,15 @@ enabled = true
 [functions]
 enabled = false
 
+# Correct format for function definitions
 [functions.ai-assistant]
 verify_jwt = true
-port = 54401
 
 [functions.ai-text-to-voice]
 verify_jwt = true
-port = 54402
 
 [functions.ai-voice-to-text]
 verify_jwt = true
-port = 54403
 
 [functions.fetch-staff-members]
 verify_jwt = true
-port = 54404

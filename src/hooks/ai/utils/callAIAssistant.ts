@@ -28,16 +28,9 @@ export const callAIAssistant = async (token: string, message: string, userName: 
         currentPage = "job-cards";
       }
       
-      // Try to check if the interface_state table exists before trying to use it
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.id) {
-        try {
-          // Store the current page info in context without saving to database
-          context += `Current page: ${currentPage}. `;
-        } catch (error) {
-          console.warn("Error setting interface context:", error);
-        }
-      }
+      // Store the current page info in context without saving to database
+      context += `Current page: ${currentPage}. `;
+      
     } catch (error) {
       console.warn("Error setting interface context:", error);
       // Continue without this context

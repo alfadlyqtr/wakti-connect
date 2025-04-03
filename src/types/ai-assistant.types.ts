@@ -1,5 +1,4 @@
-
-// AI Assistant role types
+// AI Assistant role types - must match what's in the database
 export type AIAssistantRole = "student" | "business_owner" | "general" | "employee" | "writer" | "professional" | "creator";
 
 // AI settings interface

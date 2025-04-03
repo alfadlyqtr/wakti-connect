@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { Task } from "@/types/task.types";
+import { Task, TaskStatus } from "@/types/task.types";
 
 // System command types and structure
 export type CommandType = 'create_task' | 'view_tasks' | 'schedule_event' | 'check_calendar' | 
@@ -207,7 +207,31 @@ export const getUserTasks = async (): Promise<Task[]> => {
       
     if (error) throw error;
     
-    return data || [];
+    // Properly cast the tasks to ensure status is correctly typed
+    const typedTasks: Task[] = (data || []).map(task => ({
+      ...task,
+      status: task.status as TaskStatus, // Ensure status is properly typed
+      priority: task.priority,
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      due_date: task.due_date,
+      due_time: task.due_time,
+      user_id: task.user_id,
+      created_at: task.created_at,
+      updated_at: task.updated_at,
+      completed_at: task.completed_at,
+      is_recurring: task.is_recurring,
+      is_recurring_instance: task.is_recurring_instance,
+      parent_recurring_id: task.parent_recurring_id,
+      subtasks: task.subtasks,
+      snooze_count: task.snooze_count,
+      snoozed_until: task.snoozed_until,
+      archived_at: task.archived_at,
+      archive_reason: task.archive_reason
+    }));
+    
+    return typedTasks;
   } catch (error) {
     console.error('Error fetching tasks:', error);
     return [];

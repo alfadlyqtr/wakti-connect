@@ -22,12 +22,15 @@ export const useUpdateAISettings = (user: User | null) => {
       
       // Ensure the role is a valid database enum value
       // If it's not one of the allowed values, default to "general"
-      const roleValue = (["student", "business_owner", "general", "employee", "writer"] as const).includes(
-        newSettings.role as ValidRoleType) 
-        ? newSettings.role as ValidRoleType 
-        : "general" as ValidRoleType;
+      let roleValue = newSettings.role;
       
-      // First prepare the basic settings object (without knowledge_profile)
+      // Make sure the role is one of the database-allowed values
+      if (!["student", "business_owner", "general", "employee", "writer"].includes(roleValue)) {
+        console.warn(`Role '${roleValue}' is not valid for the database, defaulting to 'general'`);
+        roleValue = "general";
+      }
+      
+      // Prepare the basic settings object (without knowledge_profile)
       const baseSettings = {
         user_id: user.id,
         assistant_name: newSettings.assistant_name,
@@ -53,7 +56,6 @@ export const useUpdateAISettings = (user: User | null) => {
         console.log("Settings updated successfully");
         
         // Convert to AISettings type and add knowledge_profile from the original newSettings
-        // since it's not stored in the database but maintained in the frontend
         const updatedSettings: AISettings = {
           id: data.id,
           user_id: user.id,
