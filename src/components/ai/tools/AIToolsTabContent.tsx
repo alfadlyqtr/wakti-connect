@@ -1,9 +1,9 @@
 
 import React from "react";
 import { DocumentAnalysisToolCard } from "./DocumentAnalysisToolCard";
-import { ImageAnalysisToolCard } from "./ImageAnalysisToolCard";
 import { VoiceInteractionToolCard } from "./VoiceInteractionToolCard";
-import { KnowledgeBaseToolCard } from "./KnowledgeBaseToolCard";
+import { KnowledgeProfileToolCard } from "./KnowledgeProfileToolCard";
+import { QuickToolsCard } from "./QuickToolsCard";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
 
 interface AIToolsTabContentProps {
@@ -15,18 +15,32 @@ interface AIToolsTabContentProps {
 export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
   canAccess,
   onUseDocumentContent,
-  selectedRole,
+  selectedRole
 }) => {
+  if (!canAccess) {
+    return (
+      <div className="p-4 bg-muted rounded-lg text-center">
+        <p>AI tools are only available for Business and Individual plans.</p>
+      </div>
+    );
+  }
+
+  const handleSpeechRecognized = (text: string) => {
+    onUseDocumentContent(text);
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <DocumentAnalysisToolCard 
-        canAccess={canAccess} 
-        onUseDocumentContent={onUseDocumentContent}
-        selectedRole={selectedRole}
+    <div className="space-y-6">
+      <QuickToolsCard 
+        selectedRole={selectedRole} 
+        onToolSelect={onUseDocumentContent} 
       />
-      <ImageAnalysisToolCard />
-      <VoiceInteractionToolCard />
-      <KnowledgeBaseToolCard />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <VoiceInteractionToolCard onSpeechRecognized={handleSpeechRecognized} />
+        <KnowledgeProfileToolCard selectedRole={selectedRole} />
+        <DocumentAnalysisToolCard onUseContent={onUseDocumentContent} />
+      </div>
     </div>
   );
 };

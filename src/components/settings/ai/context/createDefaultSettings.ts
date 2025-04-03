@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { AIAssistantRole } from "@/types/ai-assistant.types";
 
 /**
  * Creates default AI settings for a user
@@ -48,7 +47,10 @@ export const createDefaultSettings = async (): Promise<void> => {
         proactiveness: defaultSettings.proactiveness,
         suggestion_frequency: defaultSettings.suggestion_frequency,
         role: defaultSettings.role,
-        enabled_features: defaultSettings.enabled_features
+        enabled_features: defaultSettings.enabled_features,
+        knowledge_profile: {
+          role: defaultSettings.role
+        }
       })
       .select()
       .maybeSingle();

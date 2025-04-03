@@ -38,7 +38,6 @@ function processBase64Chunks(base64String: string, chunkSize = 32768) {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -50,14 +49,6 @@ serve(async (req) => {
       throw new Error('No audio data provided');
     }
 
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!apiKey) {
-      console.error("OpenAI API key is not configured in environment variables");
-      throw new Error('OpenAI API key is not configured. Please contact the administrator.');
-    }
-
-    console.log("Received audio data, processing...");
-
     // Process audio in chunks
     const binaryAudio = processBase64Chunks(audio);
     
@@ -67,25 +58,20 @@ serve(async (req) => {
     formData.append('file', blob, 'audio.webm');
     formData.append('model', 'whisper-1');
 
-    console.log("Sending request to OpenAI Whisper API...");
-
     // Send to OpenAI
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
       },
       body: formData,
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("OpenAI API error:", errorText);
-      throw new Error(`OpenAI API error: ${errorText}`);
+      throw new Error(`OpenAI API error: ${await response.text()}`);
     }
 
     const result = await response.json();
-    console.log("Transcription successful:", result.text);
 
     return new Response(
       JSON.stringify({ text: result.text }),
@@ -93,7 +79,6 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("Error in voice-to-text function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

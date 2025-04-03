@@ -36,7 +36,8 @@ export const useUpdateAISettings = (user: User | null) => {
         proactiveness: newSettings.proactiveness,
         suggestion_frequency: newSettings.suggestion_frequency,
         role: roleValue, // Use the validated role value
-        enabled_features: newSettings.enabled_features
+        enabled_features: newSettings.enabled_features,
+        knowledge_profile: newSettings.knowledge_profile
       };
 
       // If we have an id, update the existing record
@@ -50,7 +51,8 @@ export const useUpdateAISettings = (user: User | null) => {
             proactiveness: settingsForUpdate.proactiveness,
             suggestion_frequency: settingsForUpdate.suggestion_frequency,
             role: settingsForUpdate.role,
-            enabled_features: settingsForUpdate.enabled_features
+            enabled_features: settingsForUpdate.enabled_features,
+            knowledge_profile: settingsForUpdate.knowledge_profile
           })
           .eq("user_id", user.id)
           .select()
@@ -76,7 +78,8 @@ export const useUpdateAISettings = (user: User | null) => {
             staff: true,
             analytics: true,
             messaging: true,
-          }
+          },
+          knowledge_profile: data.knowledge_profile || { role: data.role }
         };
         
         return updatedSettings;
@@ -92,7 +95,8 @@ export const useUpdateAISettings = (user: User | null) => {
             proactiveness: settingsForUpdate.proactiveness,
             suggestion_frequency: settingsForUpdate.suggestion_frequency,
             role: settingsForUpdate.role,
-            enabled_features: settingsForUpdate.enabled_features
+            enabled_features: settingsForUpdate.enabled_features,
+            knowledge_profile: settingsForUpdate.knowledge_profile
           })
           .select()
           .single();
@@ -117,7 +121,8 @@ export const useUpdateAISettings = (user: User | null) => {
             staff: true,
             analytics: true,
             messaging: true,
-          }
+          },
+          knowledge_profile: data.knowledge_profile || { role: data.role }
         };
         
         return createdSettings;
