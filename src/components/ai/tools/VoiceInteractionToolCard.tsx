@@ -140,7 +140,6 @@ export function VoiceInteractionToolCard({ onSpeechRecognized, compact = false }
       <CardContent className="space-y-4">
         <div className="flex flex-col space-y-2">
           <Label>Voice Style</Label>
-          {/* Fixed RadioGroup implementation */}
           <RadioGroup 
             defaultValue={voiceStyle}
             onValueChange={setVoiceStyle}
