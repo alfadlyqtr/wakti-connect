@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -75,7 +76,8 @@ const DashboardAIAssistant = () => {
     startListening,
     stopListening,
     speakText,
-    stopSpeaking
+    stopSpeaking,
+    retryApiKeyValidation
   } = useVoiceInteraction();
 
   useEffect(() => {

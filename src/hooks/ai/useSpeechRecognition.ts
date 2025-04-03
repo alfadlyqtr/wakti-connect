@@ -140,6 +140,21 @@ export const useSpeechRecognition = (options?: SpeechRecognitionOptions) => {
     return recognition;
   }, [options?.language, options?.continuous, options?.interimResults, toast, isListening]);
   
+  // Function to stop listening - define this BEFORE it's used
+  const stopListening = useCallback(() => {
+    if (!supported || !recognitionRef.current) return;
+    
+    try {
+      recognitionRef.current.stop();
+      console.log("Stopped browser speech recognition");
+    } catch (error) {
+      console.error("Error stopping speech recognition:", error);
+      
+      // Force reset the isListening state
+      setIsListening(false);
+    }
+  }, [supported]);
+  
   // Function to start listening
   const startListening = useCallback(() => {
     if (!supported) {
@@ -212,21 +227,6 @@ export const useSpeechRecognition = (options?: SpeechRecognitionOptions) => {
       }
     }
   }, [supported, initializeRecognition, toast, permissionStatus, options?.maxAudioDuration, isListening, stopListening]);
-  
-  // Function to stop listening
-  const stopListening = useCallback(() => {
-    if (!supported || !recognitionRef.current) return;
-    
-    try {
-      recognitionRef.current.stop();
-      console.log("Stopped browser speech recognition");
-    } catch (error) {
-      console.error("Error stopping speech recognition:", error);
-      
-      // Force reset the isListening state
-      setIsListening(false);
-    }
-  }, [supported]);
   
   // Function to reset transcript
   const resetTranscript = useCallback(() => {
