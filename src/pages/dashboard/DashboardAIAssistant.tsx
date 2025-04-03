@@ -1,23 +1,24 @@
 
 import React, { useState, useEffect } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
-import { Bot, MessageSquare, FileText, Settings, History, Upload, PanelLeft } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Bot, Cog, Info, MessageCircle, History, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AIAssistantUpgradeCard } from "@/components/ai/AIAssistantUpgradeCard";
 import { AIAssistantChatCard } from "@/components/ai/assistant";
 import { AIAssistantLoader } from "@/components/ai/assistant";
-import { AIAssistantHistoryCard } from "@/components/ai/AIAssistantHistoryCard";
-import { AIAssistantDocumentsCard } from "@/components/ai/AIAssistantDocumentsCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { AISettingsProvider } from "@/components/settings/ai";
 import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getTimeBasedGreeting } from "@/lib/dateUtils";
 import { Button } from "@/components/ui/button";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 
 const DashboardAIAssistant = () => {
   const { user } = useAuth();
@@ -34,9 +35,9 @@ const DashboardAIAssistant = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [canAccess, setCanAccess] = useState(false);
   const [selectedRole, setSelectedRole] = useState<AIAssistantRole>("general");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const breakpoint = useBreakpoint();
   const isMobile = !breakpoint.includes("md");
+  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name;
 
   // Initialize role from settings
   useEffect(() => {
@@ -44,15 +45,6 @@ const DashboardAIAssistant = () => {
       setSelectedRole(aiSettings.role);
     }
   }, [aiSettings]);
-
-  // Automatically collapse sidebar on mobile
-  useEffect(() => {
-    if (isMobile) {
-      setSidebarOpen(false);
-    } else {
-      setSidebarOpen(true);
-    }
-  }, [isMobile]);
 
   // Handle role change
   const handleRoleChange = async (role: AIAssistantRole) => {
@@ -75,24 +67,6 @@ const DashboardAIAssistant = () => {
     
     // Clear messages when role changes
     clearMessages();
-  };
-
-  // Handle using document content in chat
-  const handleUseDocumentContent = (content: string) => {
-    // Truncate if too long and add to message input
-    const truncated = content.length > 500 
-      ? content.substring(0, 500) + "..." 
-      : content;
-      
-    setInputMessage(prev => 
-      (prev ? prev + "\n\n" : "") + 
-      "Please help me with this document content:\n\n" + truncated
-    );
-    
-    // Switch to chat tab if on mobile
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
   };
 
   useEffect(() => {
@@ -181,9 +155,6 @@ const DashboardAIAssistant = () => {
     return <AIAssistantLoader />;
   }
 
-  // Get a personalized greeting for the user
-  const greeting = getTimeBasedGreeting(user?.user_metadata?.full_name);
-
   return (
     <StaffRoleGuard 
       disallowStaff={true}
@@ -192,95 +163,96 @@ const DashboardAIAssistant = () => {
     >
       <AISettingsProvider>
         <div className="space-y-4 md:space-y-6">
-          <div className="flex flex-col gap-1 md:gap-2 mb-4">
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl md:text-3xl font-bold tracking-tight">WAKTI AI Assistant</h1>
-              <Bot className="h-5 w-5 md:h-6 md:w-6 text-wakti-blue" />
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-4">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl md:text-2xl font-bold tracking-tight text-primary">Intelligent AI Assistant</h1>
+                <Bot className="h-5 w-5 md:h-6 md:w-6 text-wakti-blue" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Your personal AI helper for tasks, planning, and assistance
+              </p>
             </div>
-            <p className="text-sm md:text-base text-muted-foreground">
-              {greeting} How can I help you today?
-            </p>
+            
+            <div className="flex items-center gap-2 mt-2 md:mt-0">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8">
+                      <Info className="mr-1 h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">AI Capabilities</span>
+                      <span className="sm:hidden">Info</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-sm">
+                    <p>WAKTI AI can help with scheduling, task management, planning, and more</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <Button variant="outline" size="sm" className="h-8" asChild>
+                <a href="/dashboard/settings?tab=ai-assistant">
+                  <Cog className="mr-1 h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Customize AI</span>
+                  <span className="sm:hidden">Settings</span>
+                </a>
+              </Button>
+            </div>
           </div>
 
           {!canAccess ? (
             <AIAssistantUpgradeCard />
           ) : (
-            <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-              {/* Left Sidebar / Tools Panel */}
-              <div className={`${sidebarOpen ? 'block' : 'hidden md:block'} md:w-1/3 lg:w-1/4 space-y-4`}>
-                {/* Role Selector Card */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg flex items-center">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Assistant Modes
-                    </CardTitle>
-                    <CardDescription>Choose the right assistant for your needs</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <Tabs defaultValue="chat" className="w-full">
-                      <TabsList className="grid w-full grid-cols-3 mb-4">
-                        <TabsTrigger value="chat" className="text-sm flex items-center gap-1">
-                          <MessageSquare className="h-4 w-4" /> Chat
-                        </TabsTrigger>
-                        <TabsTrigger value="documents" className="text-sm flex items-center gap-1">
-                          <FileText className="h-4 w-4" /> Documents
-                        </TabsTrigger>
-                        <TabsTrigger value="history" className="text-sm flex items-center gap-1">
-                          <History className="h-4 w-4" /> History
-                        </TabsTrigger>
-                      </TabsList>
-
-                      <TabsContent value="chat">
-                        <div className="text-sm text-muted-foreground mb-2">
-                          Chat with your AI assistant and get personalized help.
-                        </div>
-                      </TabsContent>
-
-                      <TabsContent value="documents">
-                        <AIAssistantDocumentsCard 
-                          canAccess={canAccess} 
-                          onUseDocumentContent={handleUseDocumentContent}
-                          selectedRole={selectedRole}
-                          compact={true}
-                        />
-                      </TabsContent>
-
-                      <TabsContent value="history">
-                        <AIAssistantHistoryCard 
-                          canAccess={canAccess}
-                          compact={true} 
-                        />
-                      </TabsContent>
-                    </Tabs>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Main Chat Window - Central Area */}
-              <div className={`${sidebarOpen ? 'md:w-2/3 lg:w-3/4' : 'w-full'} relative`}>
-                {/* Mobile toggle for sidebar */}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="absolute -left-3 top-4 z-10 h-8 w-8 rounded-full border md:hidden"
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                >
-                  <PanelLeft className="h-4 w-4" />
-                  <span className="sr-only">Toggle sidebar</span>
-                </Button>
-
-                <AIAssistantChatCard
-                  messages={messages}
-                  inputMessage={inputMessage}
-                  setInputMessage={setInputMessage}
-                  handleSendMessage={handleSendMessage}
-                  isLoading={isLoading}
-                  canAccess={canAccess}
-                  clearMessages={clearMessages}
-                  selectedRole={selectedRole}
-                  onRoleChange={handleRoleChange}
-                />
+            <div className="mx-auto max-w-6xl">
+              <AIAssistantChatCard
+                messages={messages}
+                inputMessage={inputMessage}
+                setInputMessage={setInputMessage}
+                handleSendMessage={handleSendMessage}
+                isLoading={isLoading}
+                canAccess={canAccess}
+                clearMessages={clearMessages}
+                selectedRole={selectedRole}
+                onRoleChange={handleRoleChange}
+                userName={userName}
+              />
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div className="bg-blue-50 p-4 rounded-lg shadow-sm">
+                  <div className="flex items-center mb-2">
+                    <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
+                      <MessageCircle className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <h3 className="font-medium">Smart Conversations</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    AI remembers your preferences and adapts to your communication style.
+                  </p>
+                </div>
+                
+                <div className="bg-purple-50 p-4 rounded-lg shadow-sm">
+                  <div className="flex items-center mb-2">
+                    <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-2">
+                      <Sparkles className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <h3 className="font-medium">Personalized Assistance</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Get recommendations and insights tailored to your business needs.
+                  </p>
+                </div>
+                
+                <div className="bg-green-50 p-4 rounded-lg shadow-sm">
+                  <div className="flex items-center mb-2">
+                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mr-2">
+                      <History className="h-4 w-4 text-green-600" />
+                    </div>
+                    <h3 className="font-medium">Continuous Learning</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    AI gets better with each interaction to serve you more effectively.
+                  </p>
+                </div>
               </div>
             </div>
           )}
