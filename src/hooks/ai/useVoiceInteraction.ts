@@ -1,7 +1,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 export const useVoiceInteraction = () => {
   const [isListening, setIsListening] = useState(false);
@@ -13,6 +13,7 @@ export const useVoiceInteraction = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const { toast } = useToast();
 
   // Check if browser supports Speech Recognition
   useEffect(() => {
@@ -100,7 +101,7 @@ export const useVoiceInteraction = () => {
         variant: "destructive",
       });
     }
-  }, [supportsVoice]);
+  }, [supportsVoice, toast]);
 
   // Stop listening and process the audio
   const stopListening = useCallback(async () => {
@@ -125,13 +126,6 @@ export const useVoiceInteraction = () => {
           const base64Audio = await blobToBase64(audioBlob);
           
           // Call the voice-to-text function
-          const { data: { session } } = await supabase.auth.getSession();
-          const token = session?.access_token;
-          
-          if (!token) {
-            throw new Error("Authentication required");
-          }
-          
           const response = await supabase.functions.invoke("ai-voice-to-text", {
             body: { audio: base64Audio }
           });
@@ -163,18 +157,11 @@ export const useVoiceInteraction = () => {
         }
       }, 500);
     });
-  }, []);
+  }, [toast]);
 
   // Convert text to speech
   const speakText = useCallback(async (text: string, options: { voice?: string; addToQueue?: boolean } = {}) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
-      if (!token) {
-        throw new Error("Authentication required");
-      }
-      
       const response = await supabase.functions.invoke("ai-text-to-voice", {
         body: { 
           text, 
@@ -206,7 +193,7 @@ export const useVoiceInteraction = () => {
       });
       return false;
     }
-  }, [isSpeaking]);
+  }, [isSpeaking, toast]);
 
   // Play audio from base64
   const playAudio = useCallback((base64Audio: string) => {

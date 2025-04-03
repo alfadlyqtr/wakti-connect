@@ -1,11 +1,13 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, FileDown, Copy, Check, FileText } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
+import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
+import { supabase } from '@/integrations/supabase/client';
 
 interface MeetingSummaryToolProps {
   onUseSummary?: (summary: string) => void;
@@ -20,9 +22,28 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+  
+  // Use the voice interaction hook for recording
+  const { 
+    startListening, 
+    stopListening, 
+    supportsVoice, 
+    isListening,
+    lastTranscript,
+    isProcessing
+  } = useVoiceInteraction();
 
   // Start recording
   const startRecording = () => {
+    if (!supportsVoice) {
+      toast({
+        title: "Voice recording not supported",
+        description: "Your browser doesn't support voice recording. Try using Chrome or Edge.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsRecording(true);
     setRecordingTime(0);
     setTranscribedText('');
@@ -33,7 +54,9 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       setRecordingTime(prev => prev + 1);
     }, 1000);
     
-    // Simulate recording and transcription
+    // Start voice recording
+    startListening();
+    
     toast({
       title: "Recording started",
       description: "Speak clearly to ensure accurate transcription.",
@@ -41,32 +64,72 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   };
 
   // Stop recording
-  const stopRecording = () => {
+  const stopRecording = async () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
     
     setIsRecording(false);
     
-    // Simulate transcription result
-    const mockTranscription = "This is a sample transcription of what would be captured from your meeting. In a real implementation, this would be the actual transcribed text from the meeting audio. The AI would then process this text to generate a concise summary highlighting the key points, action items, decisions made, and follow-up tasks.";
+    // Stop voice recording and get the transcript
+    const transcript = await stopListening();
     
-    setTranscribedText(mockTranscription);
-    toast({
-      title: "Recording completed",
-      description: `${formatTime(recordingTime)} of audio transcribed.`,
-    });
+    if (transcript) {
+      setTranscribedText(transcript);
+      toast({
+        title: "Recording completed",
+        description: `${formatTime(recordingTime)} of audio transcribed.`,
+      });
+    } else {
+      toast({
+        title: "Transcription failed",
+        description: "Could not transcribe the audio. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  // Generate summary
-  const generateSummary = () => {
+  // Generate summary using AI
+  const generateSummary = async () => {
     if (!transcribedText) return;
     
     setIsSummarizing(true);
     
-    // Simulate AI processing time
-    setTimeout(() => {
-      const mockSummary = `
+    try {
+      // Call the AI assistant to summarize the transcript
+      const response = await supabase.functions.invoke("ai-assistant", {
+        body: {
+          message: `Please summarize the following meeting transcript into key points, action items, and decisions. Format it with markdown headings and bullet points: ${transcribedText}`,
+          context: "This is a meeting transcript that needs to be summarized."
+        }
+      });
+      
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to generate summary");
+      }
+      
+      const aiSummary = response.data.response;
+      
+      // Add header with metadata
+      const summaryWithHeader = `
+## Meeting Summary
+- **Date**: ${new Date().toLocaleDateString()}
+- **Duration**: ${formatTime(recordingTime)}
+
+${aiSummary}
+      `;
+      
+      setSummary(summaryWithHeader);
+    } catch (error) {
+      console.error("Error generating summary:", error);
+      toast({
+        title: "Summary Error",
+        description: "Failed to generate meeting summary. Please try again.",
+        variant: "destructive"
+      });
+      
+      // Use a fallback summary for demo purposes
+      const fallbackSummary = `
 ## Meeting Summary
 - **Date**: ${new Date().toLocaleDateString()}
 - **Duration**: ${formatTime(recordingTime)}
@@ -86,9 +149,10 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
 - Remote work policy extended through end of year
       `;
       
-      setSummary(mockSummary);
+      setSummary(fallbackSummary);
+    } finally {
       setIsSummarizing(false);
-    }, 2000);
+    }
   };
 
   // Format seconds to MM:SS
@@ -127,6 +191,22 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       onUseSummary(summary);
     }
   };
+  
+  // Update transcribedText when lastTranscript changes
+  useEffect(() => {
+    if (lastTranscript && isRecording) {
+      setTranscribedText(lastTranscript);
+    }
+  }, [lastTranscript, isRecording]);
+  
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <Card>
@@ -147,6 +227,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
               variant="destructive" 
               className="flex items-center gap-2" 
               onClick={stopRecording}
+              disabled={isProcessing}
             >
               <MicOff className="h-4 w-4" />
               Stop Recording ({formatTime(recordingTime)})
@@ -156,7 +237,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
               variant="default" 
               className="flex items-center gap-2 bg-wakti-blue hover:bg-wakti-blue/90" 
               onClick={startRecording}
-              disabled={isSummarizing}
+              disabled={isSummarizing || !supportsVoice}
             >
               <Mic className="h-4 w-4" />
               Start Recording

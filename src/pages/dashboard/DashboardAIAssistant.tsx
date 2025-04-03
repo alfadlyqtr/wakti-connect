@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,12 +14,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CleanChatInterface } from "@/components/ai/assistant/CleanChatInterface";
 import { EnhancedToolsTab } from "@/components/ai/tools/EnhancedToolsTab";
 import { RoleSpecificKnowledge } from "@/components/ai/tools/RoleSpecificKnowledge";
-import { useSpeechSynthesis } from "@/hooks/ai/useSpeechSynthesis";
-import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
 import { MeetingSummaryTool } from "@/components/ai/tools/MeetingSummaryTool";
 import { QuickToolsCard } from "@/components/ai/tools/QuickToolsCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AIRoleSelector } from "@/components/ai/assistant/AIRoleSelector";
+import { useVoiceInteraction } from "@/hooks/ai/useVoiceInteraction";
 import { 
   MessageSquare, 
   Wrench, 
@@ -34,8 +32,8 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { VoiceInteractionToolCard } from "@/components/ai/tools/VoiceInteractionToolCard";
 
 const DashboardAIAssistant = () => {
   const { user } = useAuth();
@@ -60,21 +58,18 @@ const DashboardAIAssistant = () => {
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name;
   const { toast } = useToast();
   
-  // Speech synthesis hook
-  const { speak, cancel, speaking, supported: speechSupported } = useSpeechSynthesis({
-    rate: 1,
-    pitch: 1
-  });
-  
-  // Speech recognition hook
-  const { 
-    transcript, 
-    isListening, 
-    startListening, 
-    stopListening, 
-    resetTranscript,
-    supported: recognitionSupported
-  } = useSpeechRecognition();
+  // Voice interaction hooks
+  const {
+    isListening,
+    supportsVoice,
+    lastTranscript,
+    isProcessing,
+    isSpeaking,
+    startListening,
+    stopListening,
+    speakText,
+    stopSpeaking
+  } = useVoiceInteraction();
 
   // Initialize role from settings
   useEffect(() => {
@@ -108,7 +103,7 @@ const DashboardAIAssistant = () => {
   
   // Effect for text-to-speech of new messages
   useEffect(() => {
-    if (!isSpeechEnabled || !speechSupported || messages.length === 0) return;
+    if (!isSpeechEnabled || messages.length === 0) return;
     
     // Find the latest assistant message
     const latestAssistantMessage = [...messages]
@@ -117,33 +112,23 @@ const DashboardAIAssistant = () => {
     
     if (latestAssistantMessage) {
       // Speak the message
-      speak(latestAssistantMessage.content);
+      speakText(latestAssistantMessage.content);
     }
-  }, [messages, isSpeechEnabled, speechSupported, speak]);
+  }, [messages, isSpeechEnabled, speakText]);
   
   // Effect to handle speech recognition results
   useEffect(() => {
-    if (transcript && !isListening) {
-      setInputMessage(transcript);
+    if (lastTranscript && !isListening) {
+      setInputMessage(lastTranscript);
     }
-  }, [transcript, isListening]);
+  }, [lastTranscript, isListening]);
   
   // Toggle speech
   const handleToggleSpeech = () => {
-    if (speaking) {
-      cancel();
+    if (isSpeaking) {
+      stopSpeaking();
     }
     setSpeechEnabled(!isSpeechEnabled);
-  };
-  
-  // Toggle voice input
-  const handleToggleVoiceInput = () => {
-    if (isListening) {
-      stopListening();
-    } else {
-      resetTranscript();
-      startListening();
-    }
   };
 
   useEffect(() => {
@@ -266,7 +251,7 @@ const DashboardAIAssistant = () => {
                 <CardHeader className="pb-2 flex flex-row items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${getRoleColor()} flex items-center justify-center`}>
-                      {speaking ? (
+                      {isSpeaking ? (
                         <motion.div
                           animate={{ scale: [1, 1.2, 1] }}
                           transition={{ repeat: Infinity, duration: 1 }}
@@ -288,26 +273,36 @@ const DashboardAIAssistant = () => {
                   
                   <div className="flex items-center gap-4">
                     {/* Speech controls */}
-                    {speechSupported && (
+                    {supportsVoice && (
                       <div className="flex items-center gap-2">
-                        <Label htmlFor="speech-toggle" className="text-sm cursor-pointer">
-                          {isSpeechEnabled ? "Voice On" : "Voice Off"}
-                        </Label>
                         <Switch
                           id="speech-toggle"
                           checked={isSpeechEnabled}
                           onCheckedChange={handleToggleSpeech}
                           className="data-[state=checked]:bg-green-500"
                         />
+                        <label htmlFor="speech-toggle" className="text-sm cursor-pointer">
+                          {isSpeechEnabled ? (
+                            <span className="flex items-center gap-1">
+                              <Volume2 className="h-4 w-4 text-green-500" />
+                              Voice On
+                            </span>
+                          ) : (
+                            <span className="flex items-center gap-1">
+                              <VolumeX className="h-4 w-4" />
+                              Voice Off
+                            </span>
+                          )}
+                        </label>
                       </div>
                     )}
                     
                     {/* Voice input */}
-                    {recognitionSupported && (
+                    {supportsVoice && (
                       <motion.div 
                         whileTap={{ scale: 0.95 }}
                         className={`h-8 w-8 rounded-full ${isListening ? 'bg-red-500' : 'bg-wakti-blue'} flex items-center justify-center cursor-pointer`}
-                        onClick={handleToggleVoiceInput}
+                        onClick={isListening ? stopListening : startListening}
                       >
                         <Mic className="h-4 w-4 text-white" />
                         {isListening && (
@@ -375,12 +370,12 @@ const DashboardAIAssistant = () => {
                       handleSendMessage={handleSendMessage}
                       selectedRole={selectedRole}
                       userName={userName}
-                      isSpeaking={speaking}
+                      isSpeaking={isSpeaking}
                       canAccess={canAccess}
                       isListening={isListening}
                       onStartListening={startListening}
                       onStopListening={stopListening}
-                      recognitionSupported={recognitionSupported}
+                      recognitionSupported={supportsVoice}
                     />
                   </TabsContent>
                   
@@ -400,6 +395,11 @@ const DashboardAIAssistant = () => {
                         />
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Voice Interaction Tool */}
+                          <VoiceInteractionToolCard
+                            onSpeechRecognized={handleToolContent}
+                          />
+                          
                           {/* Meeting Summary Tool */}
                           <MeetingSummaryTool onUseSummary={handleToolContent} />
                           
