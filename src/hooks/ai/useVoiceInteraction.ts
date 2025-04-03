@@ -11,6 +11,8 @@ export const useVoiceInteraction = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [audioQueue, setAudioQueue] = useState<string[]>([]);
   const [openAIVoiceSupported, setOpenAIVoiceSupported] = useState<boolean | null>(null);
+  const [apiKeyStatus, setApiKeyStatus] = useState<'untested' | 'valid' | 'invalid' | 'error'>('untested');
+  const [apiKeyErrorDetails, setApiKeyErrorDetails] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -42,23 +44,55 @@ export const useVoiceInteraction = () => {
     // Check if OpenAI voice functions are configured
     const checkOpenAIConfig = async () => {
       try {
+        console.log("Testing OpenAI API key for voice functionality...");
+        
+        // First, try the voice-to-text endpoint
         const testResponse = await supabase.functions.invoke("ai-voice-to-text", {
           body: { test: true }
         });
         
-        setOpenAIVoiceSupported(!testResponse.error);
-        
         if (testResponse.error) {
-          console.warn("OpenAI voice features may not be available:", testResponse.error);
-        } else {
-          console.log("OpenAI voice features are available");
+          console.warn("OpenAI voice features API key test failed:", testResponse.error);
+          setOpenAIVoiceSupported(false);
+          setApiKeyStatus('invalid');
+          setApiKeyErrorDetails(testResponse.error.message || "OpenAI API key validation failed");
+          throw new Error(testResponse.error.message || "OpenAI API key validation failed");
         }
+        
+        // If that succeeds, try the text-to-voice endpoint
+        const ttsTestResponse = await supabase.functions.invoke("ai-text-to-voice", {
+          body: { test: true }
+        });
+        
+        if (ttsTestResponse.error) {
+          console.warn("OpenAI text-to-speech API key test failed:", ttsTestResponse.error);
+          setOpenAIVoiceSupported(false);
+          setApiKeyStatus('invalid');
+          setApiKeyErrorDetails(ttsTestResponse.error.message || "OpenAI API key validation failed for text-to-speech");
+          throw new Error(ttsTestResponse.error.message || "OpenAI API key validation failed for text-to-speech");
+        }
+        
+        // Both tests passed
+        console.log("OpenAI voice features API key validated successfully");
+        setOpenAIVoiceSupported(true);
+        setApiKeyStatus('valid');
+        setApiKeyErrorDetails(null);
       } catch (error) {
-        console.warn("Could not verify OpenAI voice support:", error);
+        console.warn("OpenAI voice features unavailable:", error);
         setOpenAIVoiceSupported(false);
+        setApiKeyStatus('error');
+        setApiKeyErrorDetails(error instanceof Error ? error.message : "Unknown error validating OpenAI API key");
+        
+        // Display toast notification only once
+        toast({
+          title: "Voice Features Unavailable",
+          description: "OpenAI API key verification failed. Voice features will be limited.",
+          variant: "destructive",
+        });
       }
     };
     
+    // Run the API key check
     checkOpenAIConfig();
     
     return () => {
@@ -67,7 +101,7 @@ export const useVoiceInteraction = () => {
         audioRef.current.onended = null;
       }
     };
-  }, []);
+  }, [toast]);
 
   // Process audio queue
   useEffect(() => {
@@ -158,6 +192,9 @@ export const useVoiceInteraction = () => {
               
               if (response.error) {
                 console.warn("OpenAI transcription failed, falling back to browser:", response.error);
+                setApiKeyStatus('error');
+                setApiKeyErrorDetails(response.error.message);
+                setOpenAIVoiceSupported(false);
                 throw new Error(response.error.message || "Error processing speech");
               }
               
@@ -167,6 +204,7 @@ export const useVoiceInteraction = () => {
               return;
             } catch (error) {
               console.warn("OpenAI transcription failed, falling back to browser:", error);
+              setOpenAIVoiceSupported(false);
               // Continue to browser-based transcription as fallback
             }
           }
@@ -219,6 +257,8 @@ export const useVoiceInteraction = () => {
         }
       }
 
+      console.log("Attempting to generate speech with text:", text.substring(0, 30) + "...");
+      
       const response = await supabase.functions.invoke("ai-text-to-voice", {
         body: { 
           text, 
@@ -227,10 +267,21 @@ export const useVoiceInteraction = () => {
       });
       
       if (response.error) {
+        console.error("Text-to-voice error:", response.error);
+        
+        // Update our state to reflect the API key issue
+        setOpenAIVoiceSupported(false);
+        setApiKeyStatus('error');
+        setApiKeyErrorDetails(response.error.message);
+        
         throw new Error(response.error.message || "Error generating speech");
       }
       
       const audioContent = response.data.audioContent;
+      
+      if (!audioContent) {
+        throw new Error("No audio content returned from the API");
+      }
       
       if (options.addToQueue || isSpeaking) {
         // Add to queue if already speaking or requested to queue
@@ -318,6 +369,63 @@ export const useVoiceInteraction = () => {
     setLastTranscript("");
   }, []);
 
+  // Retry OpenAI API key validation
+  const retryApiKeyValidation = useCallback(async () => {
+    setApiKeyStatus('untested');
+    setApiKeyErrorDetails(null);
+    
+    try {
+      console.log("Retrying OpenAI API key validation...");
+      
+      // Try both endpoints
+      const [sttResponse, ttsResponse] = await Promise.all([
+        supabase.functions.invoke("ai-voice-to-text", { body: { test: true } }),
+        supabase.functions.invoke("ai-text-to-voice", { body: { test: true } })
+      ]);
+      
+      if (sttResponse.error || ttsResponse.error) {
+        const errorMsg = sttResponse.error?.message || ttsResponse.error?.message || "API key validation failed";
+        setApiKeyStatus('invalid');
+        setApiKeyErrorDetails(errorMsg);
+        setOpenAIVoiceSupported(false);
+        
+        toast({
+          title: "API Key Validation Failed",
+          description: errorMsg,
+          variant: "destructive",
+        });
+        
+        return false;
+      }
+      
+      // Both tests passed
+      setApiKeyStatus('valid');
+      setApiKeyErrorDetails(null);
+      setOpenAIVoiceSupported(true);
+      
+      toast({
+        title: "API Key Validation Successful",
+        description: "OpenAI voice features are now available.",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("Error validating API key:", error);
+      
+      setApiKeyStatus('error');
+      setApiKeyErrorDetails(error instanceof Error ? error.message : "Unknown error");
+      setOpenAIVoiceSupported(false);
+      
+      toast({
+        title: "API Key Validation Error",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+      
+      return false;
+    }
+  }, [toast]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -341,10 +449,13 @@ export const useVoiceInteraction = () => {
     isProcessing,
     isSpeaking,
     openAIVoiceSupported,
+    apiKeyStatus,
+    apiKeyErrorDetails,
     startListening,
     stopListening,
     speakText,
     stopSpeaking,
-    clearTranscript
+    clearTranscript,
+    retryApiKeyValidation
   };
 };

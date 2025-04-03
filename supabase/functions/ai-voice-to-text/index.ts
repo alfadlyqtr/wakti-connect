@@ -64,6 +64,27 @@ serve(async (req) => {
         throw new Error('OpenAI API key appears to be invalid. It should start with "sk-"');
       }
       
+      // Try a simple API request to test connectivity and permissions
+      try {
+        const response = await fetch('https://api.openai.com/v1/models', {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("OpenAI API test failed:", errorData);
+          throw new Error(errorData.error?.message || 'API test failed');
+        }
+        
+        console.log("OpenAI API key validation passed and API connectivity confirmed");
+      } catch (error) {
+        console.error("OpenAI API test error:", error);
+        throw new Error(`API test failed: ${error.message}`);
+      }
+      
       console.log("OpenAI API key validation passed");
       return new Response(
         JSON.stringify({ success: true, message: "OpenAI API key format is valid" }),
@@ -83,6 +104,12 @@ serve(async (req) => {
     if (!apiKey) {
       console.error("OPENAI_API_KEY is not set");
       throw new Error('OpenAI API key is not configured');
+    }
+    
+    // Validate API key format
+    if (!apiKey.startsWith('sk-') || apiKey.length < 20) {
+      console.error("OPENAI_API_KEY format validation failed");
+      throw new Error('OpenAI API key appears to be invalid');
     }
     
     console.log("Processing audio data");

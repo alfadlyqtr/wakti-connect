@@ -29,6 +29,12 @@ serve(async (req) => {
         throw new Error('OpenAI API key is not configured');
       }
       
+      // Validate API key format
+      if (!apiKey.startsWith('sk-') || apiKey.length < 20) {
+        console.error("OPENAI_API_KEY appears to be invalid");
+        throw new Error('OpenAI API key appears to be invalid. It should start with "sk-"');
+      }
+      
       // Test the OpenAI API with a very small request
       try {
         const testResponse = await fetch('https://api.openai.com/v1/audio/speech', {
@@ -74,6 +80,12 @@ serve(async (req) => {
     if (!apiKey) {
       console.error("OPENAI_API_KEY is not set");
       throw new Error('OpenAI API key is not configured');
+    }
+    
+    // Validate API key format
+    if (!apiKey.startsWith('sk-') || apiKey.length < 20) {
+      console.error("OPENAI_API_KEY format validation failed");
+      throw new Error('OpenAI API key appears to be invalid');
     }
 
     console.log(`Generating speech for text: "${text.substring(0, 50)}..."${text.length > 50 ? '...' : ''}`);

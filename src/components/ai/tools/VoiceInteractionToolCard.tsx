@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, Square, Volume2, AlertTriangle } from 'lucide-react';
+import { Mic, Square, Volume2, AlertTriangle, RefreshCcw } from 'lucide-react';
 import { useSpeechRecognition } from '@/hooks/ai/useSpeechRecognition';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { motion } from 'framer-motion';
@@ -43,28 +43,66 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     stopListening: stopOpenAIListening,
     isProcessing,
     supportsVoice,
-    openAIVoiceSupported
+    openAIVoiceSupported,
+    apiKeyStatus,
+    apiKeyErrorDetails,
+    retryApiKeyValidation
   } = useVoiceInteraction();
   
   // Combined state for UI
   const isListening = browserIsListening || openAIIsListening;
   
+  const handleApiKeyRetry = async () => {
+    toast({
+      title: "Testing OpenAI API Key",
+      description: "Checking if the OpenAI API key is properly configured...",
+    });
+    
+    const success = await retryApiKeyValidation();
+    
+    if (success) {
+      setOpenAIConfigured(true);
+    }
+  };
+  
   // Check if OpenAI is properly configured
   useEffect(() => {
     const checkOpenAIConfig = async () => {
       try {
+        console.log("Testing OpenAI API configuration...");
+        
         const testResponse = await supabase.functions.invoke("ai-voice-to-text", {
           body: { test: true }
         });
-        setOpenAIConfigured(!testResponse.error);
+        
+        if (testResponse.error) {
+          console.warn("OpenAI API configuration test failed:", testResponse.error);
+          setOpenAIConfigured(false);
+          
+          // Only show the toast if this is the first load
+          toast({
+            title: "OpenAI API Key Issue",
+            description: "Your OpenAI API key may not be properly configured. Voice features will be limited.",
+            variant: "destructive",
+          });
+        } else {
+          console.log("OpenAI API configuration test passed");
+          setOpenAIConfigured(true);
+        }
       } catch (error) {
         console.warn("Could not verify OpenAI API configuration:", error);
         setOpenAIConfigured(false);
+        
+        toast({
+          title: "Connection Error",
+          description: "Could not verify OpenAI API configuration. Check your internet connection.",
+          variant: "destructive",
+        });
       }
     };
     
     checkOpenAIConfig();
-  }, []);
+  }, [toast]);
   
   // Update transcript from browser-based recognition
   useEffect(() => {
@@ -86,10 +124,18 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     
     // Try OpenAI voice first if configured
     if (openAIVoiceSupported) {
+      console.log("Starting OpenAI voice recognition");
       startOpenAIListening();
-    } else {
+    } else if (supported) {
       // Fall back to browser-based recognition
+      console.log("Falling back to browser-based speech recognition");
       startBrowserListening();
+    } else {
+      toast({
+        title: "Speech Recognition Unavailable",
+        description: "Neither OpenAI nor browser-based speech recognition is available.",
+        variant: "destructive",
+      });
     }
   };
   
@@ -126,6 +172,30 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     );
   }
   
+  const renderApiKeyStatus = () => {
+    if (!openAIVoiceSupported) {
+      return (
+        <div className="flex items-center text-amber-600 mb-2">
+          <AlertTriangle className="h-4 w-4 mr-2 flex-shrink-0" />
+          <div className="text-sm">
+            <p className="font-medium">OpenAI API Key Issue</p>
+            <p className="text-xs">{apiKeyErrorDetails || "API key not configured or invalid"}</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-1 h-7 text-xs" 
+              onClick={handleApiKeyRetry}
+            >
+              <RefreshCcw className="h-3 w-3 mr-1" />
+              Retry API Key Check
+            </Button>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+  
   if (compact) {
     return (
       <div className="space-y-2">
@@ -157,10 +227,18 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
           </p>
         )}
         
-        {openAIVoiceSupported === false && (
+        {apiKeyStatus !== 'valid' && (
           <div className="text-xs flex items-center text-amber-600">
             <AlertTriangle className="h-3 w-3 mr-1" />
             Using browser voice (OpenAI unavailable)
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-5 ml-1 px-1"
+              onClick={handleApiKeyRetry}
+            >
+              <RefreshCcw className="h-3 w-3" />
+            </Button>
           </div>
         )}
       </div>
@@ -174,7 +252,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
         <CardTitle className="flex items-center gap-2">
           <Volume2 className="h-5 w-5 text-wakti-blue" />
           Voice Interaction
-          {openAIVoiceSupported === false && (
+          {apiKeyStatus !== 'valid' && (
             <span className="text-xs text-amber-600 font-normal flex items-center ml-2">
               <AlertTriangle className="h-3 w-3 mr-1" />
               Enhanced voice features unavailable
@@ -183,6 +261,8 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {renderApiKeyStatus()}
+        
         <div className="flex justify-center">
           <Button 
             onClick={isListening ? handleStopListening : handleStartListening}
@@ -225,14 +305,23 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
           )}
         </div>
         
-        {openAIVoiceSupported === false && (
+        {apiKeyStatus !== 'valid' && (
           <div className="text-sm bg-amber-50 border border-amber-200 rounded-md p-3 text-amber-700">
-            <p className="flex items-center">
+            <p className="flex items-center mb-2">
               <AlertTriangle className="h-4 w-4 mr-2 flex-shrink-0" />
               <span>
-                Using browser-based speech recognition. For enhanced voice features, ensure the OpenAI API key is set in Supabase secrets.
+                Using browser-based speech recognition. For enhanced voice features, ensure the OpenAI API key is set correctly in Supabase secrets.
               </span>
             </p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleApiKeyRetry}
+              className="text-xs"
+            >
+              <RefreshCcw className="h-3 w-3 mr-1" />
+              Retry API Key Check
+            </Button>
           </div>
         )}
         
