@@ -66,7 +66,6 @@ serve(async (req) => {
       
       // Try a simple API request to test connectivity and permissions
       try {
-        console.log("Testing API key with a models request");
         const response = await fetch('https://api.openai.com/v1/models', {
           headers: {
             'Authorization': `Bearer ${apiKey}`,
@@ -80,27 +79,6 @@ serve(async (req) => {
           throw new Error(errorData.error?.message || 'API test failed');
         }
         
-        // If we get here, the API key works - test a small audio request
-        console.log("API key works for models endpoint, testing audio endpoint");
-        const audioTestResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'whisper-1',
-          }),
-        });
-        
-        // We expect this to fail with a 400 (missing file), but it should indicate the endpoint is accessible
-        console.log("Audio endpoint response:", audioTestResponse.status);
-        if (audioTestResponse.status !== 400 && audioTestResponse.status !== 200) {
-          const audioError = await audioTestResponse.json();
-          console.error("OpenAI Audio API test unexpected error:", audioError);
-          throw new Error(audioError.error?.message || 'Audio API test failed unexpectedly');
-        }
-        
         console.log("OpenAI API key validation passed and API connectivity confirmed");
       } catch (error) {
         console.error("OpenAI API test error:", error);
@@ -109,7 +87,7 @@ serve(async (req) => {
       
       console.log("OpenAI API key validation passed");
       return new Response(
-        JSON.stringify({ success: true, message: "OpenAI API key format is valid and API is accessible" }),
+        JSON.stringify({ success: true, message: "OpenAI API key format is valid" }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
