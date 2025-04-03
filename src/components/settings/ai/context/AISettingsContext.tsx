@@ -33,40 +33,15 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, [aiSettings]);
 
   const updateSettings = async (newSettings: AISettings) => {
-    try {
-      // Execute the mutation and wait for it to complete
-      await updateSettingsMutation.mutateAsync(newSettings);
-      setError(null);
-      return true;
-    } catch (error) {
-      console.error("Error updating settings:", error);
-      setError(error instanceof Error ? error.message : "Unknown error occurred");
-      return false;
-    }
+    return handleUpdateSettings(updateSettingsMutation, newSettings, setError);
   };
   
   const addKnowledge = async (title: string, content: string) => {
-    try {
-      await addKnowledgeMutation.mutateAsync({ title, content });
-      setError(null);
-      return true;
-    } catch (error) {
-      console.error("Error adding knowledge:", error);
-      setError(error instanceof Error ? error.message : "Unknown error occurred");
-      return false;
-    }
+    return handleAddKnowledge(addKnowledgeMutation, title, content, setError);
   };
   
   const deleteKnowledge = async (id: string) => {
-    try {
-      await deleteKnowledgeMutation.mutateAsync(id);
-      setError(null);
-      return true;
-    } catch (error) {
-      console.error("Error deleting knowledge:", error);
-      setError(error instanceof Error ? error.message : "Unknown error occurred");
-      return false;
-    }
+    return handleDeleteKnowledge(deleteKnowledgeMutation, id, setError);
   };
   
   const createDefaultSettings = async () => {
