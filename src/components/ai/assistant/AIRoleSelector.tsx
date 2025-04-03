@@ -1,87 +1,74 @@
 
 import React from 'react';
-import { Check, GraduationCap, Briefcase, PenTool, Building, User } from 'lucide-react';
 import { AIAssistantRole } from '@/types/ai-assistant.types';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { 
+  BookOpen, 
+  Briefcase, 
+  PenTool, 
+  Building2, 
+  HelpCircle,
+  Sparkles
+} from 'lucide-react';
 
 interface AIRoleSelectorProps {
   selectedRole: AIAssistantRole;
   onRoleChange: (role: AIAssistantRole) => void;
 }
 
-interface RoleOption {
-  value: AIAssistantRole;
-  label: string;
-  icon: React.ReactNode;
-  description: string;
-}
-
-export const AIRoleSelector = ({ selectedRole, onRoleChange }: AIRoleSelectorProps) => {
-  const roleOptions: RoleOption[] = [
-    {
-      value: 'student',
-      label: 'Student',
-      icon: <GraduationCap className="h-4 w-4" />,
-      description: 'Homework, study plans & assignments'
+export const AIRoleSelector: React.FC<AIRoleSelectorProps> = ({ selectedRole, onRoleChange }) => {
+  const roles: { role: AIAssistantRole; label: string; icon: React.ReactNode; color: string }[] = [
+    { 
+      role: 'student', 
+      label: 'Student', 
+      icon: <BookOpen className="h-4 w-4" />,
+      color: 'bg-blue-100 text-blue-700 hover:bg-blue-200 data-[state=selected]:bg-blue-200'
     },
-    {
-      value: 'professional',
-      label: 'Professional',
+    { 
+      role: 'professional', 
+      label: 'Work', 
       icon: <Briefcase className="h-4 w-4" />,
-      description: 'Emails, tasks & workplace productivity'
+      color: 'bg-purple-100 text-purple-700 hover:bg-purple-200 data-[state=selected]:bg-purple-200'
     },
-    {
-      value: 'creator',
-      label: 'Creator',
+    { 
+      role: 'creator', 
+      label: 'Creator', 
       icon: <PenTool className="h-4 w-4" />,
-      description: 'Creative writing & content creation'
+      color: 'bg-green-100 text-green-700 hover:bg-green-200 data-[state=selected]:bg-green-200'
     },
-    {
-      value: 'business_owner',
-      label: 'Business',
-      icon: <Building className="h-4 w-4" />,
-      description: 'Operations & management support'
+    { 
+      role: 'business_owner', 
+      label: 'Business', 
+      icon: <Building2 className="h-4 w-4" />,
+      color: 'bg-amber-100 text-amber-700 hover:bg-amber-200 data-[state=selected]:bg-amber-200'
     },
-    {
-      value: 'general',
-      label: 'General',
-      icon: <User className="h-4 w-4" />,
-      description: 'All-purpose assistant'
+    { 
+      role: 'general', 
+      label: 'General', 
+      icon: <HelpCircle className="h-4 w-4" />,
+      color: 'bg-gray-100 text-gray-700 hover:bg-gray-200 data-[state=selected]:bg-gray-200'
     }
   ];
 
   return (
-    <div className="w-full overflow-auto pb-2">
-      <div className="flex flex-nowrap gap-2 md:flex-wrap">
-        {roleOptions.map((option) => (
-          <button
-            key={option.value}
-            onClick={() => onRoleChange(option.value)}
-            className={cn(
-              "flex flex-col items-center justify-center min-w-[120px] p-3 rounded-lg border transition-all",
-              selectedRole === option.value
-                ? "border-wakti-blue bg-wakti-blue/5 text-wakti-blue"
-                : "border-gray-200 hover:border-wakti-blue/50 hover:bg-wakti-blue/5"
-            )}
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2 overflow-x-auto p-1 rounded-lg bg-gray-100/50 border">
+        {roles.map((role) => (
+          <Button
+            key={role.role}
+            size="sm"
+            variant={selectedRole === role.role ? "default" : "ghost"}
+            onClick={() => onRoleChange(role.role)}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-md ${
+              selectedRole === role.role 
+                ? 'bg-gradient-to-br from-wakti-blue to-wakti-blue/90 text-white' 
+                : `${role.color}`
+            }`}
           >
-            <div className="relative mb-1">
-              <div className={cn(
-                "p-2 rounded-full",
-                selectedRole === option.value ? "bg-wakti-blue/10" : "bg-gray-100"
-              )}>
-                {option.icon}
-              </div>
-              {selectedRole === option.value && (
-                <div className="absolute -top-1 -right-1 bg-wakti-blue text-white rounded-full p-0.5">
-                  <Check className="h-3 w-3" />
-                </div>
-              )}
-            </div>
-            <span className="text-sm font-medium">{option.label}</span>
-            <span className="text-xs text-muted-foreground mt-1 text-center">
-              {option.description}
-            </span>
-          </button>
+            {role.icon}
+            <span className="text-xs font-medium">{role.label}</span>
+            {selectedRole === role.role && <Sparkles className="h-3 w-3 ml-1 opacity-70" />}
+          </Button>
         ))}
       </div>
     </div>

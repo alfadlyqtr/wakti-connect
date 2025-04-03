@@ -3,7 +3,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { AIAssistantChatCard } from '../AIAssistantChatCard';
 import { vi } from 'vitest';
-import { AIMessage } from '@/types/ai-assistant.types';
+import { AIMessage, AIAssistantRole } from '@/types/ai-assistant.types';
 
 // Mock AIRoleSelector
 vi.mock('../AIRoleSelector', () => ({
@@ -48,7 +48,7 @@ describe('AIAssistantChatCard', () => {
     isLoading: false,
     canAccess: true,
     clearMessages: mockClearMessages,
-    selectedRole: 'general' as const,
+    selectedRole: 'general' as AIAssistantRole,
     onRoleChange: mockOnRoleChange
   };
   

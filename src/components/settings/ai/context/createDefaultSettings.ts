@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { AISettings } from "@/types/ai-assistant.types";
 
 /**
  * Creates default AI settings for a user
@@ -21,7 +20,7 @@ export const createDefaultSettings = async (): Promise<void> => {
     }
     
     // Create default settings for the user
-    const defaultSettings: Omit<AISettings, "id"> = {
+    const defaultSettings = {
       assistant_name: "WAKTI",
       tone: "balanced",
       response_length: "balanced",

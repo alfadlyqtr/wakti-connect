@@ -51,22 +51,22 @@ export const useUpdateAISettings = (user: User | null) => {
         console.log("Settings updated successfully");
         
         // Convert to AISettings type
-        const updatedSettings: AISettings = {
+        const updatedSettings = {
           id: data.id,
           assistant_name: data.assistant_name || "WAKTI",
-          tone: (data.tone as AISettings["tone"]) || "balanced",
-          response_length: (data.response_length as AISettings["response_length"]) || "balanced",
+          tone: data.tone || "balanced",
+          response_length: data.response_length || "balanced",
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
-          suggestion_frequency: (data.suggestion_frequency as AISettings["suggestion_frequency"]) || "medium",
-          role: (data.role as AISettings["role"]) || "general",
-          enabled_features: data.enabled_features as AISettings["enabled_features"] || {
+          suggestion_frequency: data.suggestion_frequency || "medium",
+          role: data.role || "general",
+          enabled_features: data.enabled_features || {
             tasks: true,
             events: true,
             staff: true,
             analytics: true,
             messaging: true,
           }
-        };
+        } as AISettings;
         
         return updatedSettings;
       } else {
@@ -91,22 +91,22 @@ export const useUpdateAISettings = (user: User | null) => {
         console.log("Settings created successfully");
         
         // Convert to AISettings type
-        const createdSettings: AISettings = {
+        const createdSettings = {
           id: data.id,
           assistant_name: data.assistant_name || "WAKTI",
-          tone: (data.tone as AISettings["tone"]) || "balanced",
-          response_length: (data.response_length as AISettings["response_length"]) || "balanced",
+          tone: data.tone || "balanced", 
+          response_length: data.response_length || "balanced",
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
-          suggestion_frequency: (data.suggestion_frequency as AISettings["suggestion_frequency"]) || "medium",
-          role: (data.role as AISettings["role"]) || "general",
-          enabled_features: data.enabled_features as AISettings["enabled_features"] || {
+          suggestion_frequency: data.suggestion_frequency || "medium",
+          role: data.role || "general",
+          enabled_features: data.enabled_features || {
             tasks: true,
             events: true,
             staff: true,
             analytics: true,
             messaging: true,
           }
-        };
+        } as AISettings;
         
         return createdSettings;
       }

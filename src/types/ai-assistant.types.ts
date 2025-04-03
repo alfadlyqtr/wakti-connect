@@ -56,7 +56,7 @@ export interface RoleContext {
 export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
   student: {
     welcomeMessage: "Hi there! I'm your academic assistant. What are you studying today?",
-    description: "I can help with homework, research papers, study plans, and learning new subjects.",
+    description: "I can help with homework, research papers, study plans, and learning new subjects. Upload study materials for analysis or ask about any academic topic.",
     suggestedPrompts: [
       "Help me create a study plan for my final exams",
       "Explain this math concept: [your topic]",
@@ -69,7 +69,7 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
   },
   professional: {
     welcomeMessage: "Welcome! I'm your workplace productivity assistant. How can I help you be more effective today?",
-    description: "I can help with emails, presentations, meeting notes, task management, and workplace productivity.",
+    description: "I can help with work emails, presentations, meeting notes, task management, and workplace productivity. Upload documents for analysis or ask about any work-related topic.",
     suggestedPrompts: [
       "Draft an email to my team about the project update",
       "Help me prepare talking points for my meeting",
@@ -82,7 +82,7 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
   },
   creator: {
     welcomeMessage: "Welcome, creative mind! What are we creating today?",
-    description: "I can help with writing, content creation, brainstorming ideas, and creative projects.",
+    description: "I can help with writing, content creation, brainstorming ideas, and creative projects. Share your creative work for feedback or ask for inspiration on any topic.",
     suggestedPrompts: [
       "Help me brainstorm ideas for my blog post about [topic]",
       "I need help outlining my story about [concept]",
@@ -95,7 +95,7 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
   },
   business_owner: {
     welcomeMessage: "Welcome! I'm your business management assistant. How can I help your business succeed today?",
-    description: "I can help with operations, customer service, marketing, staff management, and business analytics.",
+    description: "I can help with operations, customer service, marketing, staff management, and business analytics. Upload business documents for analysis or ask about any business topic.",
     suggestedPrompts: [
       "Create a response template for customer inquiries",
       "Help me draft a job description for a new position",
@@ -108,7 +108,7 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
   },
   general: {
     welcomeMessage: "Hello! I'm your WAKTI AI assistant. How can I help you today?",
-    description: "I can help with a variety of tasks, from scheduling to organization to information gathering.",
+    description: "I can help with a variety of tasks, from scheduling to organization to information gathering. Upload documents for analysis or ask me about any topic you need help with.",
     suggestedPrompts: [
       "Help me plan my day",
       "Create a shopping list for me",
@@ -120,3 +120,31 @@ export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
     toolsAvailable: ["Task Manager", "Schedule Helper", "Information Finder", "Personal Assistant"]
   }
 };
+
+export interface AIAssistantProfile {
+  student?: {
+    educationLevel?: string;
+    institution?: string;
+    major?: string;
+    year?: string;
+    subjects?: string[];
+  };
+  professional?: {
+    industry?: string;
+    role?: string;
+    skills?: string[];
+    tools?: string[];
+  };
+  creator?: {
+    creativeFields?: string[];
+    platforms?: string[];
+    audience?: string;
+    style?: string;
+  };
+  business?: {
+    industry?: string;
+    companySize?: string;
+    services?: string[];
+    goals?: string[];
+  };
+}
