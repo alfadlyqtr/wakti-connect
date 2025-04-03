@@ -1,30 +1,19 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Bot, Trash2, Settings, PanelLeftClose, PanelLeftOpen, Volume2, VolumeX, ImagePlus } from 'lucide-react';
+import { Bot, Trash2, Settings, PanelLeftClose, PanelLeftOpen, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AIMessage, AIAssistantRole, OpenAIVoices } from '@/types/ai-assistant.types';
+import { AIMessage, AIAssistantRole } from '@/types/ai-assistant.types';
 import { AIAssistantChat } from './AIAssistantChat';
 import { MessageInputForm } from './MessageInputForm';
 import { EmptyStateView } from './EmptyStateView';
 import { PoweredByTMW } from './PoweredByTMW';
 import { AIRoleSelector } from './AIRoleSelector';
 import { getTimeBasedGreeting } from '@/lib/dateUtils';
+import { useSpeechSynthesis } from '@/hooks/ai/useSpeechSynthesis';
 import { AIAssistantMouthAnimation } from '../animation/AIAssistantMouthAnimation';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
-import { useOpenAITextToSpeech } from '@/hooks/ai/useOpenAITextToSpeech';
-import { useImageGeneration } from '@/hooks/ai/useImageGeneration';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -55,19 +44,11 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [speechEnabled, setSpeechEnabled] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState('alloy');
+  const [currentSpeechMessage, setCurrentSpeechMessage] = useState<string | null>(null);
   
-  // Use the new hook for text-to-speech
-  const { 
-    speak, 
-    stop, 
-    isSpeaking,
-    isLoading: isSpeechLoading 
-  } = useOpenAITextToSpeech({
-    voice: selectedVoice,
-    onStart: () => console.log("Speech started"),
-    onFinish: () => console.log("Speech finished"),
-    onError: (error) => console.error("Speech error:", error)
+  const { speak, cancel, speaking, supported: speechSupported } = useSpeechSynthesis({
+    rate: 1,
+    pitch: 1
   });
 
   const getRoleTitle = () => {
@@ -97,23 +78,17 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   }, [messages]);
   
   useEffect(() => {
-    if (!speechEnabled || messages.length === 0) {
-      // Stop any ongoing speech if speech is disabled
-      if (isSpeaking) {
-        stop();
-      }
-      return;
-    }
+    if (!speechEnabled || !speechSupported || messages.length === 0) return;
     
     const latestAssistantMessage = [...messages]
       .reverse()
       .find(msg => msg.role === 'assistant');
     
-    if (latestAssistantMessage && !latestAssistantMessage.isImage) {
-      // Only speak text messages, not image messages
+    if (latestAssistantMessage && latestAssistantMessage.content !== currentSpeechMessage) {
       speak(latestAssistantMessage.content);
+      setCurrentSpeechMessage(latestAssistantMessage.content);
     }
-  }, [messages, speechEnabled, speak, stop, isSpeaking]);
+  }, [messages, speechEnabled, speechSupported, speak, currentSpeechMessage]);
 
   const handlePromptClick = (prompt: string) => {
     setInputMessage(prompt);
@@ -124,8 +99,8 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     const newState = !speechEnabled;
     setSpeechEnabled(newState);
     
-    if (!newState && isSpeaking) {
-      stop();
+    if (!newState && speaking) {
+      cancel();
     }
     
     if (newState && messages.length > 0) {
@@ -133,8 +108,9 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
         .reverse()
         .find(msg => msg.role === 'assistant');
       
-      if (latestAssistantMessage && !latestAssistantMessage.isImage) {
+      if (latestAssistantMessage) {
         speak(latestAssistantMessage.content);
+        setCurrentSpeechMessage(latestAssistantMessage.content);
       }
     }
   };
@@ -146,7 +122,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
       <div className="py-2 px-3 sm:py-3 sm:px-4 border-b flex justify-between items-center bg-gradient-to-r from-white to-gray-50">
         <div className="flex items-center">
           <div className={`h-9 w-9 rounded-full bg-gradient-to-br ${getRoleColor()} flex items-center justify-center flex-shrink-0 mr-2 shadow-sm`}>
-            {isSpeaking ? (
+            {speaking ? (
               <AIAssistantMouthAnimation isActive={true} isSpeaking={true} />
             ) : (
               <Bot className="h-5 w-5 text-white" />
@@ -179,54 +155,27 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
         </div>
         
         <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="h-7 w-7 sm:h-8 sm:w-8 hover:bg-blue-50 hover:text-blue-500 transition-colors"
-                aria-label="Voice settings"
-                title="Voice settings"
-              >
-                {speechEnabled ? (
-                  <Volume2 className="h-4 w-4 text-green-500" />
-                ) : (
-                  <VolumeX className="h-4 w-4" />
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Voice Settings</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <div className="p-2 flex items-center justify-between">
-                <span className="text-sm">Enable Speech</span>
-                <Switch
-                  checked={speechEnabled}
-                  onCheckedChange={toggleSpeech}
-                  className="data-[state=checked]:bg-green-500"
-                />
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-xs text-muted-foreground">Voice Selection</DropdownMenuLabel>
-                {OpenAIVoices.map((voice) => (
-                  <DropdownMenuItem
-                    key={voice.id}
-                    className={`flex justify-between items-center ${selectedVoice === voice.id ? 'bg-muted' : ''}`}
-                    onClick={() => setSelectedVoice(voice.id)}
+          {speechSupported && (
+            <div className="flex items-center mr-1">
+              <Switch
+                checked={speechEnabled}
+                onCheckedChange={toggleSpeech}
+                className="data-[state=checked]:bg-green-500"
+              />
+              <span className="ml-1.5">
+                {speaking ? (
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ repeat: Infinity, duration: 1 }}
                   >
-                    <div>
-                      <p className="text-sm font-medium">{voice.name}</p>
-                      <p className="text-xs text-muted-foreground">{voice.description}</p>
-                    </div>
-                    {selectedVoice === voice.id && (
-                      <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                    )}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                    <Volume2 className="h-4 w-4 text-green-500" />
+                  </motion.div>
+                ) : (
+                  <VolumeX className="h-4 w-4 text-gray-400" />
+                )}
+              </span>
+            </div>
+          )}
           
           <Button 
             variant="ghost" 

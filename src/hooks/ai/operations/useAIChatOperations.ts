@@ -14,19 +14,6 @@ export const useAIChatOperations = () => {
   // Mutation for sending a message to AI Assistant
   const sendMessage = useMutation({
     mutationFn: async (messageText: string) => {
-      // Check if this is an image message (format: ![alt](url))
-      const isImageMessage = messageText.match(/!\[.*?\]\(.*?\)/);
-      let imageUrl = null;
-      let imageAlt = "";
-      
-      if (isImageMessage) {
-        const match = messageText.match(/!\[(.*?)\]\((.*?)\)/);
-        if (match) {
-          imageAlt = match[1] || "Generated image";
-          imageUrl = match[2];
-        }
-      }
-      
       // Create unique IDs for messages
       const userMessageId = uuidv4();
       const aiMessageId = uuidv4();
@@ -35,10 +22,8 @@ export const useAIChatOperations = () => {
       const userMessage: AIMessage = {
         id: userMessageId,
         role: "user",
-        content: isImageMessage ? `Generated image: ${imageAlt}` : messageText,
-        timestamp: new Date(),
-        imageUrl: imageUrl,
-        isImage: !!isImageMessage
+        content: messageText,
+        timestamp: new Date()
       };
       
       setMessages(prevMessages => [...prevMessages, userMessage]);
@@ -50,20 +35,7 @@ export const useAIChatOperations = () => {
         // Artificially add a small delay to see the loading state
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // For image messages, create a direct AI response without API call
-        if (isImageMessage) {
-          const aiMessage: AIMessage = {
-            id: aiMessageId,
-            role: "assistant",
-            content: `I've added the image to our conversation. ${imageAlt ? `It shows: ${imageAlt}` : ''} Is there anything specific about this image you'd like to discuss?`,
-            timestamp: new Date()
-          };
-          
-          setMessages(prevMessages => [...prevMessages, aiMessage]);
-          return aiMessage;
-        }
-        
-        // For regular messages, make the API call
+        // Make the API call
         const response = await callAIAssistant(token, messageText);
         
         // Create and add AI message to the messages array

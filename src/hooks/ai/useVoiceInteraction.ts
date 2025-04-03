@@ -13,7 +13,6 @@ export const useVoiceInteraction = () => {
   const [openAIVoiceSupported, setOpenAIVoiceSupported] = useState<boolean | null>(null);
   const [apiKeyStatus, setApiKeyStatus] = useState<'untested' | 'valid' | 'invalid' | 'error'>('untested');
   const [apiKeyErrorDetails, setApiKeyErrorDetails] = useState<string | null>(null);
-  const [validationAttempts, setValidationAttempts] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -45,13 +44,7 @@ export const useVoiceInteraction = () => {
     // Check if OpenAI voice functions are configured
     const checkOpenAIConfig = async () => {
       try {
-        // Prevent running multiple times
-        if (validationAttempts > 0 && (apiKeyStatus === 'valid' || apiKeyStatus === 'invalid')) {
-          return;
-        }
-        
-        setValidationAttempts(prev => prev + 1);
-        console.log("Testing OpenAI API key for voice functionality...", validationAttempts);
+        console.log("Testing OpenAI API key for voice functionality...");
         
         // First, try the voice-to-text endpoint
         const testResponse = await supabase.functions.invoke("ai-voice-to-text", {
@@ -66,8 +59,6 @@ export const useVoiceInteraction = () => {
           throw new Error(testResponse.error.message || "OpenAI API key validation failed");
         }
         
-        console.log("Voice-to-text test passed:", testResponse.data);
-        
         // If that succeeds, try the text-to-voice endpoint
         const ttsTestResponse = await supabase.functions.invoke("ai-text-to-voice", {
           body: { test: true }
@@ -81,8 +72,6 @@ export const useVoiceInteraction = () => {
           throw new Error(ttsTestResponse.error.message || "OpenAI API key validation failed for text-to-speech");
         }
         
-        console.log("Text-to-voice test passed:", ttsTestResponse.data);
-        
         // Both tests passed
         console.log("OpenAI voice features API key validated successfully");
         setOpenAIVoiceSupported(true);
@@ -94,14 +83,12 @@ export const useVoiceInteraction = () => {
         setApiKeyStatus('error');
         setApiKeyErrorDetails(error instanceof Error ? error.message : "Unknown error validating OpenAI API key");
         
-        // Only show toast notification on first attempt
-        if (validationAttempts <= 1) {
-          toast({
-            title: "Voice Features Unavailable",
-            description: "OpenAI API key verification failed. Voice features will be limited.",
-            variant: "destructive",
-          });
-        }
+        // Display toast notification only once
+        toast({
+          title: "Voice Features Unavailable",
+          description: "OpenAI API key verification failed. Voice features will be limited.",
+          variant: "destructive",
+        });
       }
     };
     
@@ -114,7 +101,7 @@ export const useVoiceInteraction = () => {
         audioRef.current.onended = null;
       }
     };
-  }, [toast, validationAttempts]);
+  }, [toast]);
 
   // Process audio queue
   useEffect(() => {
@@ -205,14 +192,10 @@ export const useVoiceInteraction = () => {
               
               if (response.error) {
                 console.warn("OpenAI transcription failed, falling back to browser:", response.error);
-                
-                // Update state but don't throw to allow fallback
                 setApiKeyStatus('error');
                 setApiKeyErrorDetails(response.error.message);
                 setOpenAIVoiceSupported(false);
-                
-                // Instead of throwing, try the fallback approach
-                throw new Error("Using browser fallback");
+                throw new Error(response.error.message || "Error processing speech");
               }
               
               const text = response.data.text || "";
@@ -227,49 +210,15 @@ export const useVoiceInteraction = () => {
           }
           
           // If OpenAI transcription is not available or failed, fall back to browser-based transcription
-          // Here we'll implement a simple fallback that just informs the user
+          // Note: This would require implementing a browser-based speech recognition as fallback
+          // For now, just show a message that OpenAI transcription failed
           toast({
-            title: "Using Browser Voice Recognition",
-            description: "OpenAI voice processing unavailable. Using limited browser capabilities.",
+            title: "Voice Processing",
+            description: "OpenAI voice processing is currently unavailable.",
           });
           
-          // Use the browser's SpeechRecognition API if available
-          if (window.SpeechRecognition || window.webkitSpeechRecognition) {
-            try {
-              const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-              const recognition = new SpeechRecognition();
-              recognition.lang = 'en-US';
-              
-              // Create a URL from the audio blob
-              const audioUrl = URL.createObjectURL(audioBlob);
-              
-              // Create an audio element to play the recording
-              const audio = new Audio(audioUrl);
-              
-              // Set up the recognition
-              recognition.onresult = (event) => {
-                const transcript = event.results[0][0].transcript;
-                setLastTranscript(transcript);
-                resolve(transcript);
-              };
-              
-              recognition.onerror = (event) => {
-                console.error("Browser speech recognition error:", event.error);
-                reject(new Error("Browser speech recognition failed"));
-              };
-              
-              // Start recognition and play the audio
-              recognition.start();
-              audio.play();
-            } catch (error) {
-              console.error("Browser speech recognition failed:", error);
-              setLastTranscript("Voice processing unavailable. Please ensure microphone permissions are granted.");
-              resolve("");
-            }
-          } else {
-            setLastTranscript("Voice processing unavailable. Please ensure OpenAI API key is set in Supabase secrets.");
-            resolve("");
-          }
+          setLastTranscript("Voice processing unavailable. Please ensure OpenAI API key is set in Supabase secrets.");
+          resolve("");
           
         } catch (error) {
           console.error("Error processing voice:", error);
@@ -424,7 +373,6 @@ export const useVoiceInteraction = () => {
   const retryApiKeyValidation = useCallback(async () => {
     setApiKeyStatus('untested');
     setApiKeyErrorDetails(null);
-    setValidationAttempts(0);
     
     try {
       console.log("Retrying OpenAI API key validation...");
@@ -434,10 +382,6 @@ export const useVoiceInteraction = () => {
         supabase.functions.invoke("ai-voice-to-text", { body: { test: true } }),
         supabase.functions.invoke("ai-text-to-voice", { body: { test: true } })
       ]);
-      
-      // Log the full response objects for debugging
-      console.log("Voice-to-text response:", sttResponse);
-      console.log("Text-to-voice response:", ttsResponse);
       
       if (sttResponse.error || ttsResponse.error) {
         const errorMsg = sttResponse.error?.message || ttsResponse.error?.message || "API key validation failed";

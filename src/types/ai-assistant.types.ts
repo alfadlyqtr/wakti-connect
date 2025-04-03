@@ -21,9 +21,6 @@ export interface AIMessage {
   role: "user" | "assistant" | "system" | "error";
   content: string;
   timestamp: Date;
-  imageUrl?: string; // Add imageUrl for image-based messages
-  revisedPrompt?: string; // Store the revised prompt used to generate the image
-  isImage?: boolean; // Flag to indicate this is an image-based message
 }
 
 // AI knowledge upload interface
@@ -280,19 +277,3 @@ export interface AIVoiceSettings {
   speed: number;
   autoPlay: boolean;
 }
-
-// NEW: Image generation options
-export interface AIImageGenerationOptions {
-  style: 'vivid' | 'natural';
-  size: '1024x1024' | '1024x1792' | '1792x1024';
-}
-
-// NEW: Available OpenAI TTS voices
-export const OpenAIVoices = [
-  { id: 'alloy', name: 'Alloy', description: 'Versatile, balanced voice' },
-  { id: 'echo', name: 'Echo', description: 'Soft, gentle voice' },
-  { id: 'fable', name: 'Fable', description: 'Narrative, warm voice' },
-  { id: 'onyx', name: 'Onyx', description: 'Authoritative, deep voice' },
-  { id: 'nova', name: 'Nova', description: 'Energetic, passionate voice' },
-  { id: 'shimmer', name: 'Shimmer', description: 'Clear, optimistic voice' }
-];
