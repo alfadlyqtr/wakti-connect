@@ -16,7 +16,53 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voice } = await req.json();
+    // Check if this is a test request
+    const body = await req.json();
+    
+    if (body.test === true) {
+      console.log("Running OpenAI API key test");
+      
+      // Check if OpenAI API key is available
+      const apiKey = Deno.env.get('OPENAI_API_KEY');
+      if (!apiKey) {
+        console.error("OPENAI_API_KEY is not set");
+        throw new Error('OpenAI API key is not configured');
+      }
+      
+      // Test the OpenAI API with a very small request
+      try {
+        const testResponse = await fetch('https://api.openai.com/v1/audio/speech', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'tts-1',
+            input: 'Test',
+            voice: 'alloy',
+            response_format: 'mp3',
+          }),
+        });
+        
+        if (!testResponse.ok) {
+          const errorData = await testResponse.json();
+          console.error("OpenAI API test failed:", errorData);
+          throw new Error(errorData.error?.message || 'API test failed');
+        }
+        
+        console.log("OpenAI API key test successful");
+        return new Response(
+          JSON.stringify({ success: true, message: "OpenAI API key is valid" }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (error) {
+        console.error("OpenAI API test error:", error);
+        throw new Error(`API test failed: ${error.message}`);
+      }
+    }
+    
+    const { text, voice } = body;
 
     if (!text) {
       console.error("No text provided");

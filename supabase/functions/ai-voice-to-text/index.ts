@@ -41,11 +41,37 @@ serve(async (req) => {
   console.log("Voice-to-text function called");
   
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { audio } = await req.json();
+    // Check if this is a test request
+    const body = await req.json();
+    
+    if (body.test === true) {
+      console.log("Running OpenAI API key test");
+      
+      // Check if OpenAI API key is available
+      const apiKey = Deno.env.get('OPENAI_API_KEY');
+      if (!apiKey) {
+        console.error("OPENAI_API_KEY is not set");
+        throw new Error('OpenAI API key is not configured');
+      }
+      
+      // Basic validation of the API key format
+      if (!apiKey.startsWith('sk-') || apiKey.length < 20) {
+        console.error("OPENAI_API_KEY appears to be invalid");
+        throw new Error('OpenAI API key appears to be invalid. It should start with "sk-"');
+      }
+      
+      console.log("OpenAI API key validation passed");
+      return new Response(
+        JSON.stringify({ success: true, message: "OpenAI API key format is valid" }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const { audio } = body;
     
     if (!audio) {
       console.error("No audio data provided");
