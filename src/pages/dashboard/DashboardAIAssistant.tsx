@@ -220,6 +220,7 @@ const DashboardAIAssistant = () => {
               <AIAssistantDocumentsCard 
                 canAccess={canAccess} 
                 onUseDocumentContent={handleUseDocumentContent}
+                selectedRole={selectedRole}
               />
             </TabsContent>
 

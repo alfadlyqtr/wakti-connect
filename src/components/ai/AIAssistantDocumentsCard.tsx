@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { AIAssistantUpgradeCard } from "./AIAssistantUpgradeCard";
 import { AIDocumentProcessor } from "./assistant/AIDocumentProcessor";
 import { supabase } from "@/integrations/supabase/client";
-import { AIProcessedDocument } from "@/types/ai-assistant.types";
+import { AIProcessedDocument, AIAssistantRole } from "@/types/ai-assistant.types";
 import { File, Trash, Calendar, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -13,12 +13,48 @@ import { formatDistanceToNow } from "date-fns";
 interface AIAssistantDocumentsCardProps {
   canAccess: boolean;
   onUseDocumentContent?: (content: string) => void;
+  selectedRole?: AIAssistantRole;
 }
 
-export function AIAssistantDocumentsCard({ canAccess, onUseDocumentContent }: AIAssistantDocumentsCardProps) {
+export function AIAssistantDocumentsCard({ 
+  canAccess, 
+  onUseDocumentContent,
+  selectedRole = 'general'
+}: AIAssistantDocumentsCardProps) {
   const [documents, setDocuments] = useState<AIProcessedDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  // Role-specific titles and descriptions
+  const getRoleSpecificContent = () => {
+    switch (selectedRole) {
+      case 'student':
+        return {
+          title: "Study Material Processing",
+          description: "Upload class notes, assignments, and study materials for AI analysis"
+        };
+      case 'professional':
+        return {
+          title: "Work Document Processing",
+          description: "Upload emails, reports, and work documents for AI processing"
+        };
+      case 'creator':
+        return {
+          title: "Content Document Processing",
+          description: "Upload drafts, outlines, and research for AI review"
+        };
+      case 'business_owner':
+        return {
+          title: "Business Document Processing",
+          description: "Upload business plans, reports, and documents for AI analysis"
+        };
+      default:
+        return {
+          title: "Document Processing",
+          description: "Upload and process documents for AI analysis"
+        };
+    }
+  };
 
   const fetchDocuments = async () => {
     setIsLoading(true);
@@ -85,16 +121,18 @@ export function AIAssistantDocumentsCard({ canAccess, onUseDocumentContent }: AI
     }
   };
 
+  const { title, description } = getRoleSpecificContent();
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Document Processing</CardTitle>
-        <CardDescription>Upload and process documents for AI analysis</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {canAccess ? (
           <>
-            <AIDocumentProcessor onDocumentProcessed={handleDocumentProcessed} />
+            <AIDocumentProcessor onDocumentProcessed={handleDocumentProcessed} selectedRole={selectedRole} />
             
             <div className="mt-8">
               <h3 className="text-lg font-medium mb-4">Processed Documents</h3>

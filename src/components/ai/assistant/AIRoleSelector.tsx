@@ -25,16 +25,16 @@ export const AIRoleSelector = ({ selectedRole, onRoleChange }: AIRoleSelectorPro
       description: 'Homework, study plans & assignments'
     },
     {
-      value: 'employee',
-      label: 'Employee',
+      value: 'professional',
+      label: 'Professional',
       icon: <Briefcase className="h-4 w-4" />,
-      description: 'Emails, tasks & professional workflow'
+      description: 'Emails, tasks & workplace productivity'
     },
     {
-      value: 'writer',
-      label: 'Writer',
+      value: 'creator',
+      label: 'Creator',
       icon: <PenTool className="h-4 w-4" />,
-      description: 'Creative writing & editing assistance'
+      description: 'Creative writing & content creation'
     },
     {
       value: 'business_owner',

@@ -52,10 +52,10 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
       console.log("Error or no role context found, using fallback");
       // Fallback contexts based on role
       const fallbackContexts = {
-        'student': 'You are a helpful AI assistant for students. Help with homework, assignments, study plans, and academic tasks. Provide clear explanations and guidance for learning.',
-        'employee': 'You are a productivity assistant for professionals. Help organize tasks, draft emails, manage schedules, and optimize workflows. Focus on efficiency and professionalism.',
-        'writer': 'You are a creative assistant for writers. Help with ideation, outlining, editing, and overcoming writer\'s block. Provide literary advice and stylistic suggestions.',
-        'business_owner': 'You are a business management assistant. Help with operations, customer communications, service management, and business analytics. Focus on growth and efficiency.',
+        'student': 'You are an academic assistant for students. Help with homework, assignments, study plans, and academic tasks. Provide clear explanations and educational guidance. Focus on helping the student learn and understand the material rather than just providing answers.',
+        'professional': 'You are a productivity assistant for professionals. Help organize tasks, draft emails, manage schedules, and optimize workflows. Focus on efficiency, professionalism, and workplace productivity. Provide concise, actionable advice.',
+        'creator': 'You are a creative assistant for content creators and writers. Help with brainstorming, drafting, editing, and overcoming creative blocks. Provide stylistic suggestions and creative inspiration. Focus on helping the user express their ideas effectively.',
+        'business_owner': 'You are a business management assistant. Help with operations, customer communications, service management, and business analytics. Focus on growth, efficiency, and effective business practices. Provide practical, results-oriented advice.',
         'general': 'You are WAKTI AI, a helpful productivity assistant. Help with organization, task management, and general productivity needs.'
       };
       roleContext = fallbackContexts[userRole] || fallbackContexts.general;
@@ -91,7 +91,7 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
     console.log("Fetching processed documents...");
     const { data: documentsData, error: documentsError } = await supabaseClient
       .from("ai_processed_documents")
-      .select("document_name, summary")
+      .select("document_name, summary, role_context")
       .eq("user_id", user.id)
       .order('created_at', { ascending: false })
       .limit(5);
@@ -112,11 +112,30 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
     : "";
     
   const documentsContext = processedDocuments?.length > 0
-    ? "Recent documents: " + processedDocuments.map(d => `${d.document_name}${d.summary ? ': ' + d.summary : ''}`).join(" | ")
+    ? "Recent documents: " + processedDocuments.map(d => `${d.document_name}${d.summary ? ': ' + d.summary : ''} ${d.role_context ? '[Context: ' + d.role_context + ']' : ''}`).join(" | ")
     : "";
 
-  // Prepare AI personality - always use WAKTI AI as the name
-  const aiName = "WAKTI AI";
+  // Prepare AI personality - always use WAKTI AI as the name regardless of the role
+  let aiName;
+  
+  // Get role-specific assistant name
+  switch (userRole) {
+    case 'student':
+      aiName = "WAKTI Study Assistant";
+      break;
+    case 'professional':
+      aiName = "WAKTI Productivity Assistant";
+      break;
+    case 'creator':
+      aiName = "WAKTI Creator Assistant";
+      break;
+    case 'business_owner':
+      aiName = "WAKTI Business Assistant";
+      break;
+    default:
+      aiName = "WAKTI AI";
+  }
+  
   const tone = settings?.tone || "balanced";
   const responseLength = settings?.response_length || "balanced";
   
@@ -172,8 +191,18 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
     systemMessage += "Provide comprehensive and thorough responses. ";
   }
   
-  // Add functionality information
-  systemMessage += "You can help with task management, event planning, staff management, and business analytics. ";
+  // Add role-specific functionality guidance
+  if (userRole === 'student') {
+    systemMessage += "Focus on educational support, study planning, homework assistance, and knowledge building. Explain concepts clearly and help with academic tasks. ";
+  } else if (userRole === 'professional') {
+    systemMessage += "Focus on workplace productivity, email drafting, meeting preparation, and professional task management. Help streamline work processes. ";
+  } else if (userRole === 'creator') {
+    systemMessage += "Focus on content creation, creative writing, editing, and idea development. Help overcome creative blocks and refine content. ";
+  } else if (userRole === 'business_owner') {
+    systemMessage += "Focus on business operations, customer service, marketing, staff management, and business analytics. Help improve business processes. ";
+  } else {
+    systemMessage += "You can help with task management, event planning, scheduling, and productivity. ";
+  }
   
   // Add personalization instructions
   systemMessage += "Always address the user by name when greeting them. ";
@@ -188,10 +217,24 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
     systemMessage += `Reference these documents when relevant: ${documentsContext} `;
   }
   
+  // Create personalized greetings for each role
+  let greetingMessage;
+  if (userRole === 'student') {
+    greetingMessage = `Hello ${userName}! I'm your study assistant. How can I help with your learning and academic needs today?`;
+  } else if (userRole === 'professional') {
+    greetingMessage = `Hello ${userName}! I'm your workplace productivity assistant. How can I help optimize your professional tasks today?`;
+  } else if (userRole === 'creator') {
+    greetingMessage = `Hello ${userName}! I'm your creative assistant. What are we creating or refining today?`;
+  } else if (userRole === 'business_owner') {
+    greetingMessage = `Hello ${userName}! I'm your business management assistant. How can I help your business succeed today?`;
+  } else {
+    greetingMessage = `Hello ${userName}! Welcome back. How can I assist you with your productivity needs today?`;
+  }
+  
   // Define the conversation history to send to the API
   const conversation = [
     { role: "system", content: systemMessage },
-    { role: "assistant", content: `Hello ${userName}! Welcome back. How can I assist you as your ${userRole === 'general' ? 'productivity assistant' : userRole + ' assistant'} today?` }
+    { role: "assistant", content: greetingMessage }
   ];
   
   // Add context if provided

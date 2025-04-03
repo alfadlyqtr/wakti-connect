@@ -2,7 +2,7 @@
 import React from 'react';
 import { Bot } from 'lucide-react';
 import { SuggestionPrompts } from './SuggestionPrompts';
-import { AIAssistantRole } from '@/types/ai-assistant.types';
+import { AIAssistantRole, RoleContexts } from '@/types/ai-assistant.types';
 
 export interface EmptyStateViewProps {
   onPromptClick: (prompt: string) => void;
@@ -10,23 +10,7 @@ export interface EmptyStateViewProps {
 }
 
 export const EmptyStateView: React.FC<EmptyStateViewProps> = ({ onPromptClick, selectedRole }) => {
-  // Role-specific welcome messages
-  const roleMessages = {
-    student: "Need help with assignments or study planning?",
-    employee: "Looking to boost your productivity at work?",
-    writer: "Need inspiration or writing assistance?",
-    business_owner: "Need help managing your business operations?",
-    general: "How can I help you today?"
-  };
-
-  // Role-specific descriptions
-  const roleDescriptions = {
-    student: "Ask me about homework, assignments, study plans, or any academic tasks. I'm here to help you learn and excel.",
-    employee: "Ask me to help organize tasks, draft emails, manage your schedule, or optimize your workflow.",
-    writer: "Ask me for help with ideas, outlines, editing, or overcoming writer's block. I'm here to support your creative process.",
-    business_owner: "Ask me about operations, customer communications, service management, or business analytics.",
-    general: "Ask me anything about tasks, scheduling, or your business. I'm here to make your workflow easier."
-  };
+  const roleContext = RoleContexts[selectedRole];
 
   return (
     <div className="h-full flex flex-col">
@@ -35,11 +19,19 @@ export const EmptyStateView: React.FC<EmptyStateViewProps> = ({ onPromptClick, s
           <Bot className="w-8 h-8 text-wakti-blue" />
         </div>
         <h3 className="mt-4 text-lg font-medium">
-          {roleMessages[selectedRole]}
+          {roleContext.description}
         </h3>
-        <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-          {roleDescriptions[selectedRole]}
-        </p>
+        
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          {roleContext.toolsAvailable.map((tool, index) => (
+            <div 
+              key={index} 
+              className="px-3 py-1 bg-wakti-blue/10 text-wakti-blue text-xs rounded-full"
+            >
+              {tool}
+            </div>
+          ))}
+        </div>
       </div>
       
       <SuggestionPrompts onPromptClick={onPromptClick} selectedRole={selectedRole} />

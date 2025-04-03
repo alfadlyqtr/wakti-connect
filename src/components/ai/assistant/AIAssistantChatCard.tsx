@@ -36,8 +36,16 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   
-  // Always use WAKTI AI as the assistant name regardless of settings
-  const assistantName = "WAKTI AI";
+  // Get role-specific title
+  const getRoleTitle = () => {
+    switch (selectedRole) {
+      case 'student': return 'WAKTI Study Assistant';
+      case 'professional': return 'WAKTI Productivity Assistant';
+      case 'creator': return 'WAKTI Creator Assistant';
+      case 'business_owner': return 'WAKTI Business Assistant';
+      default: return 'WAKTI AI Assistant';
+    }
+  };
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -57,7 +65,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
           <div className="w-6 h-6 rounded-full bg-wakti-blue/10 flex items-center justify-center mr-2">
             <Bot className="w-3.5 h-3.5 text-wakti-blue" />
           </div>
-          <h3 className="font-medium text-sm md:text-base">{assistantName}</h3>
+          <h3 className="font-medium text-sm md:text-base">{getRoleTitle()}</h3>
         </div>
         <div className="flex gap-2">
           {messages.length > 0 && (
@@ -91,6 +99,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
               setInputMessage={setInputMessage}
               handleSendMessage={handleSendMessage}
               canAccess={canAccess}
+              selectedRole={selectedRole}
             />
           )}
           

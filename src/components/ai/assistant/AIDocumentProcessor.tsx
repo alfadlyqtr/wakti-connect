@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,18 +6,37 @@ import { Upload, FileText, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { AIAssistantRole } from "@/types/ai-assistant.types";
 
 interface AIDocumentProcessorProps {
   onDocumentProcessed?: (content: string) => void;
+  selectedRole?: AIAssistantRole;
 }
 
 export const AIDocumentProcessor: React.FC<AIDocumentProcessorProps> = ({ 
-  onDocumentProcessed 
+  onDocumentProcessed,
+  selectedRole = 'general'
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+  
+  // Role-specific document processing messages
+  const getRoleDocumentUploadText = () => {
+    switch (selectedRole) {
+      case 'student':
+        return "Upload study materials, assignments, or notes for analysis";
+      case 'professional':
+        return "Upload work documents, emails, or reports for processing";
+      case 'creator':
+        return "Upload content drafts, outlines, or research for review";
+      case 'business_owner':
+        return "Upload business documents, reports, or plans for analysis";
+      default:
+        return "Upload a document for AI analysis";
+    }
+  };
   
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -64,7 +84,7 @@ export const AIDocumentProcessor: React.FC<AIDocumentProcessorProps> = ({
             document_name: file.name,
             document_type: file.type,
             content: content,
-            // For simplicity, we're not doing actual AI processing here
+            role_context: selectedRole, // Add the role context
             summary: content.length > 500 ? content.substring(0, 500) + "..." : content
           });
         
@@ -73,7 +93,20 @@ export const AIDocumentProcessor: React.FC<AIDocumentProcessorProps> = ({
       
       // Notify parent component
       if (onDocumentProcessed) {
-        onDocumentProcessed(content);
+        // Add role-specific processing prompt
+        let processedContent = content;
+        
+        if (selectedRole === 'student') {
+          processedContent = `This is a document for studying/homework purposes: ${content}`;
+        } else if (selectedRole === 'professional') {
+          processedContent = `This is a professional workplace document: ${content}`;
+        } else if (selectedRole === 'creator') {
+          processedContent = `This is a creative content document: ${content}`;
+        } else if (selectedRole === 'business_owner') {
+          processedContent = `This is a business document: ${content}`;
+        }
+        
+        onDocumentProcessed(processedContent);
       }
       
       toast({
@@ -137,6 +170,7 @@ export const AIDocumentProcessor: React.FC<AIDocumentProcessorProps> = ({
           variant="outline"
           onClick={() => fileInputRef.current?.click()}
           disabled={isProcessing}
+          className="mt-2"
         >
           {isProcessing ? (
             <>
@@ -151,7 +185,10 @@ export const AIDocumentProcessor: React.FC<AIDocumentProcessorProps> = ({
           )}
         </Button>
         <p className="text-sm text-muted-foreground">
-          Upload a .pdf, .txt, .doc, or .docx file (max 10MB)
+          {getRoleDocumentUploadText()}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Accepts .pdf, .txt, .doc, or .docx files (max 10MB)
         </p>
       </CardContent>
     </Card>
