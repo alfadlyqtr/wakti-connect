@@ -26,7 +26,7 @@ export const createDefaultSettings = async (): Promise<void> => {
       response_length: "balanced",
       proactiveness: true,
       suggestion_frequency: "medium",
-      role: "general", // Use string literal that matches database enum
+      role: "general", // This must match the database enum exactly
       enabled_features: {
         tasks: true,
         events: true,

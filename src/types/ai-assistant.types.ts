@@ -1,5 +1,6 @@
 
-export type AIAssistantRole = 'student' | 'professional' | 'creator' | 'business_owner' | 'general';
+// Define AIAssistantRole to match the database enum exactly
+export type AIAssistantRole = "student" | "business_owner" | "general" | "employee" | "writer" | "professional" | "creator";
 
 export interface AIMessage {
   id: string;
@@ -8,143 +9,80 @@ export interface AIMessage {
   timestamp: Date;
 }
 
-export interface AISettings {
-  id?: string;
-  assistant_name: string;
-  tone: "formal" | "casual" | "concise" | "detailed" | "balanced";
-  response_length: "short" | "balanced" | "detailed";
-  proactiveness: boolean;
-  suggestion_frequency: "low" | "medium" | "high";
-  role: AIAssistantRole;
-  enabled_features: {
-    tasks: boolean;
-    events: boolean;
-    staff: boolean;
-    analytics: boolean;
-    messaging: boolean;
-  };
-}
-
-export interface AIKnowledgeUpload {
-  id: string;
-  user_id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  updated_at?: string;
-}
-
-export interface AIProcessedDocument {
-  id: string;
-  user_id: string;
-  document_name: string;
-  document_type: string;
-  content: string;
-  summary?: string;
-  extracted_entities?: Record<string, any>;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface RoleContext {
-  welcomeMessage: string;
+// Role contextualization information
+export const RoleContexts: Record<AIAssistantRole, { 
   description: string;
-  suggestedPrompts: string[];
-  toolsAvailable: string[];
-}
-
-export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
+  suggestions: string[];
+  icon?: string;
+}> = {
   student: {
-    welcomeMessage: "Hi there! I'm your academic assistant. What are you studying today?",
-    description: "I can help with homework, research papers, study plans, and learning new subjects. Upload study materials for analysis or ask about any academic topic.",
-    suggestedPrompts: [
-      "Help me create a study plan for my final exams",
-      "Explain this math concept: [your topic]",
-      "I need help with my essay on [topic]",
-      "Help me prepare for my presentation on [subject]",
-      "Can you quiz me on [subject]?",
-      "Create flashcards for me about [topic]"
-    ],
-    toolsAvailable: ["Document Analysis", "Subject Explorer", "Study Planner", "Citation Helper"]
+    description: "Your AI study companion to help you learn, research, and excel in your education.",
+    suggestions: [
+      "Help me understand quantum physics for my exam tomorrow",
+      "Can you explain photosynthesis in simple terms?",
+      "Create a study plan for my final exams in 3 weeks",
+      "I need to write a 1000-word essay about climate change",
+      "What are good note-taking techniques for college lectures?"
+    ]
   },
   professional: {
-    welcomeMessage: "Welcome! I'm your workplace productivity assistant. How can I help you be more effective today?",
-    description: "I can help with work emails, presentations, meeting notes, task management, and workplace productivity. Upload documents for analysis or ask about any work-related topic.",
-    suggestedPrompts: [
-      "Draft an email to my team about the project update",
-      "Help me prepare talking points for my meeting",
-      "I need to organize my tasks by priority",
-      "Draft a professional response to this client feedback",
-      "Create a weekly work plan for me",
-      "Generate a summary of these meeting notes"
-    ],
-    toolsAvailable: ["Email Assistant", "Meeting Planner", "Task Organizer", "Document Analysis"]
+    description: "Your productivity assistant for work tasks, meetings, and professional development.",
+    suggestions: [
+      "Draft an email to my team about the project delay",
+      "Summarize these meeting notes into key action items",
+      "Help me prepare for my performance review next week",
+      "What's the most effective way to structure my workday?",
+      "How do I give constructive feedback to a colleague?"
+    ]
   },
   creator: {
-    welcomeMessage: "Welcome, creative mind! What are we creating today?",
-    description: "I can help with writing, content creation, brainstorming ideas, and creative projects. Share your creative work for feedback or ask for inspiration on any topic.",
-    suggestedPrompts: [
-      "Help me brainstorm ideas for my blog post about [topic]",
-      "I need help outlining my story about [concept]",
-      "Write a catchy headline for my article about [topic]",
-      "Help me edit this paragraph for clarity",
-      "Create a content calendar for my social media",
-      "Give me feedback on this creative piece"
-    ],
-    toolsAvailable: ["Content Generator", "Editor's Assistant", "Idea Generator", "Social Media Helper"]
+    description: "Your creative companion for content creation, design, and artistic development.",
+    suggestions: [
+      "Generate ideas for my next blog post about sustainable living",
+      "Help me outline a podcast script about technology trends",
+      "What are some color palettes that would work for a wellness brand?",
+      "Give me feedback on this design concept I'm working on",
+      "How can I grow my audience on social media?"
+    ]
   },
   business_owner: {
-    welcomeMessage: "Welcome! I'm your business management assistant. How can I help your business succeed today?",
-    description: "I can help with operations, customer service, marketing, staff management, and business analytics. Upload business documents for analysis or ask about any business topic.",
-    suggestedPrompts: [
-      "Create a response template for customer inquiries",
-      "Help me draft a job description for a new position",
-      "I need to plan my marketing strategy for Q3",
-      "Create a template for our weekly business review",
-      "Draft a business update email for my team",
-      "Help me optimize my service pricing structure"
-    ],
-    toolsAvailable: ["Customer Service Helper", "Staff Manager", "Analytics Dashboard", "Marketing Assistant"]
+    description: "Your business advisor for strategy, operations, and growth opportunities.",
+    suggestions: [
+      "What's the best way to follow up with potential clients?",
+      "Create a 30-day marketing plan for my new service",
+      "Help me draft a job description for a marketing coordinator",
+      "What metrics should I track for my online store?",
+      "How can I improve customer retention for my business?"
+    ]
   },
   general: {
-    welcomeMessage: "Hello! I'm your WAKTI AI assistant. How can I help you today?",
-    description: "I can help with a variety of tasks, from scheduling to organization to information gathering. Upload documents for analysis or ask me about any topic you need help with.",
-    suggestedPrompts: [
-      "Help me plan my day",
-      "Create a shopping list for me",
-      "I need to organize my digital files",
-      "Draft a personal email to a friend",
-      "Help me find information about [topic]",
-      "Create a checklist for my upcoming trip"
-    ],
-    toolsAvailable: ["Task Manager", "Schedule Helper", "Information Finder", "Personal Assistant"]
+    description: "Your all-purpose assistant for any questions, tasks, or information you need.",
+    suggestions: [
+      "What should I make for dinner with chicken and vegetables?",
+      "I need gift ideas for my mom's birthday",
+      "Help me plan a weekend trip to the mountains",
+      "What are some good exercises I can do at home?",
+      "Tell me about the history of jazz music"
+    ]
+  },
+  employee: {
+    description: "Your workplace companion to help you excel in your role and career growth.",
+    suggestions: [
+      "How do I ask for a raise professionally?",
+      "What skills should I develop for career advancement?",
+      "Help me prepare for a job interview tomorrow",
+      "Draft a resignation letter that's professional",
+      "How can I better manage my work-life balance?"
+    ]
+  },
+  writer: {
+    description: "Your writing assistant for creative projects, professional documents, and content creation.",
+    suggestions: [
+      "Help me brainstorm ideas for a short story",
+      "Can you proofread this paragraph for errors?",
+      "What's a good structure for a persuasive essay?",
+      "Give me some creative writing prompts",
+      "How can I make my writing more engaging?"
+    ]
   }
 };
-
-export interface AIAssistantProfile {
-  student?: {
-    educationLevel?: string;
-    institution?: string;
-    major?: string;
-    year?: string;
-    subjects?: string[];
-  };
-  professional?: {
-    industry?: string;
-    role?: string;
-    skills?: string[];
-    tools?: string[];
-  };
-  creator?: {
-    creativeFields?: string[];
-    platforms?: string[];
-    audience?: string;
-    style?: string;
-  };
-  business?: {
-    industry?: string;
-    companySize?: string;
-    services?: string[];
-    goals?: string[];
-  };
-}

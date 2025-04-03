@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
-import { Bot, MessageSquare, FileText, Settings, History } from "lucide-react";
+import { Bot, MessageSquare, FileText, Settings, History, Upload, PanelLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { AIAssistantUpgradeCard } from "@/components/ai/AIAssistantUpgradeCard";
@@ -15,6 +15,9 @@ import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { AISettingsProvider } from "@/components/settings/ai";
 import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getTimeBasedGreeting } from "@/lib/dateUtils";
+import { Button } from "@/components/ui/button";
 
 const DashboardAIAssistant = () => {
   const { user } = useAuth();
@@ -31,7 +34,9 @@ const DashboardAIAssistant = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [canAccess, setCanAccess] = useState(false);
   const [selectedRole, setSelectedRole] = useState<AIAssistantRole>("general");
-  const isMobile = !useBreakpoint().includes("md");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const breakpoint = useBreakpoint();
+  const isMobile = !breakpoint.includes("md");
 
   // Initialize role from settings
   useEffect(() => {
@@ -39,6 +44,15 @@ const DashboardAIAssistant = () => {
       setSelectedRole(aiSettings.role);
     }
   }, [aiSettings]);
+
+  // Automatically collapse sidebar on mobile
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarOpen(false);
+    } else {
+      setSidebarOpen(true);
+    }
+  }, [isMobile]);
 
   // Handle role change
   const handleRoleChange = async (role: AIAssistantRole) => {
@@ -75,10 +89,10 @@ const DashboardAIAssistant = () => {
       "Please help me with this document content:\n\n" + truncated
     );
     
-    // Switch to chat tab
-    document.querySelector('[data-value="chat"]')?.dispatchEvent(
-      new MouseEvent('click', { bubbles: true })
-    );
+    // Switch to chat tab if on mobile
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
   };
 
   useEffect(() => {
@@ -167,6 +181,9 @@ const DashboardAIAssistant = () => {
     return <AIAssistantLoader />;
   }
 
+  // Get a personalized greeting for the user
+  const greeting = getTimeBasedGreeting(user?.user_metadata?.full_name);
+
   return (
     <StaffRoleGuard 
       disallowStaff={true}
@@ -175,33 +192,84 @@ const DashboardAIAssistant = () => {
     >
       <AISettingsProvider>
         <div className="space-y-4 md:space-y-6">
-          <div className="flex flex-col gap-1 md:gap-2">
+          <div className="flex flex-col gap-1 md:gap-2 mb-4">
             <div className="flex items-center gap-2">
               <h1 className="text-xl md:text-3xl font-bold tracking-tight">WAKTI AI Assistant</h1>
               <Bot className="h-5 w-5 md:h-6 md:w-6 text-wakti-blue" />
             </div>
             <p className="text-sm md:text-base text-muted-foreground">
-              Your AI-powered productivity assistant for tasks, events, and business management
+              {greeting} How can I help you today?
             </p>
           </div>
 
-          <Tabs defaultValue="chat" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-3 overflow-x-auto">
-              <TabsTrigger value="chat" className="text-sm md:text-base py-1 md:py-1.5 flex items-center gap-1">
-                <MessageSquare className="h-4 w-4" /> Chat
-              </TabsTrigger>
-              <TabsTrigger value="documents" className="text-sm md:text-base py-1 md:py-1.5 flex items-center gap-1">
-                <FileText className="h-4 w-4" /> Documents
-              </TabsTrigger>
-              <TabsTrigger value="history" className="text-sm md:text-base py-1 md:py-1.5 flex items-center gap-1">
-                <History className="h-4 w-4" /> History
-              </TabsTrigger>
-            </TabsList>
+          {!canAccess ? (
+            <AIAssistantUpgradeCard />
+          ) : (
+            <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+              {/* Left Sidebar / Tools Panel */}
+              <div className={`${sidebarOpen ? 'block' : 'hidden md:block'} md:w-1/3 lg:w-1/4 space-y-4`}>
+                {/* Role Selector Card */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Assistant Modes
+                    </CardTitle>
+                    <CardDescription>Choose the right assistant for your needs</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <Tabs defaultValue="chat" className="w-full">
+                      <TabsList className="grid w-full grid-cols-3 mb-4">
+                        <TabsTrigger value="chat" className="text-sm flex items-center gap-1">
+                          <MessageSquare className="h-4 w-4" /> Chat
+                        </TabsTrigger>
+                        <TabsTrigger value="documents" className="text-sm flex items-center gap-1">
+                          <FileText className="h-4 w-4" /> Documents
+                        </TabsTrigger>
+                        <TabsTrigger value="history" className="text-sm flex items-center gap-1">
+                          <History className="h-4 w-4" /> History
+                        </TabsTrigger>
+                      </TabsList>
 
-            <TabsContent value="chat" className="mt-4 md:mt-6 space-y-4">
-              {!canAccess ? (
-                <AIAssistantUpgradeCard />
-              ) : (
+                      <TabsContent value="chat">
+                        <div className="text-sm text-muted-foreground mb-2">
+                          Chat with your AI assistant and get personalized help.
+                        </div>
+                      </TabsContent>
+
+                      <TabsContent value="documents">
+                        <AIAssistantDocumentsCard 
+                          canAccess={canAccess} 
+                          onUseDocumentContent={handleUseDocumentContent}
+                          selectedRole={selectedRole}
+                          compact={true}
+                        />
+                      </TabsContent>
+
+                      <TabsContent value="history">
+                        <AIAssistantHistoryCard 
+                          canAccess={canAccess}
+                          compact={true} 
+                        />
+                      </TabsContent>
+                    </Tabs>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Main Chat Window - Central Area */}
+              <div className={`${sidebarOpen ? 'md:w-2/3 lg:w-3/4' : 'w-full'} relative`}>
+                {/* Mobile toggle for sidebar */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute -left-3 top-4 z-10 h-8 w-8 rounded-full border md:hidden"
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                >
+                  <PanelLeft className="h-4 w-4" />
+                  <span className="sr-only">Toggle sidebar</span>
+                </Button>
+
                 <AIAssistantChatCard
                   messages={messages}
                   inputMessage={inputMessage}
@@ -213,21 +281,9 @@ const DashboardAIAssistant = () => {
                   selectedRole={selectedRole}
                   onRoleChange={handleRoleChange}
                 />
-              )}
-            </TabsContent>
-
-            <TabsContent value="documents" className="mt-4 md:mt-6">
-              <AIAssistantDocumentsCard 
-                canAccess={canAccess} 
-                onUseDocumentContent={handleUseDocumentContent}
-                selectedRole={selectedRole}
-              />
-            </TabsContent>
-
-            <TabsContent value="history" className="mt-4 md:mt-6">
-              <AIAssistantHistoryCard canAccess={canAccess} />
-            </TabsContent>
-          </Tabs>
+              </div>
+            </div>
+          )}
         </div>
       </AISettingsProvider>
     </StaffRoleGuard>

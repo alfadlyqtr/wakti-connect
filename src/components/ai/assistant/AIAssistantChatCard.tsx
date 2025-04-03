@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Bot, Trash2, Settings, Image } from 'lucide-react';
+import { Bot, Trash2, Settings, Image, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AIMessage, AIAssistantRole } from '@/types/ai-assistant.types';
 import { AIAssistantChat } from './AIAssistantChat';
@@ -35,6 +35,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Get role-specific title and styles
   const getRoleTitle = () => {
@@ -68,8 +69,30 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     setShowSuggestions(false);
   };
 
+  const handleFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      
+      // Handle file upload logic - for now just add a message about it
+      setInputMessage(prev => `${prev ? prev + '\n\n' : ''}I've uploaded an image/document. Can you help me analyze it?`);
+      
+      // Reset the input
+      e.target.value = '';
+    }
+  };
+
+  const handleCameraCapture = () => {
+    // In a real implementation, this would trigger device camera
+    alert("Camera functionality would be implemented here");
+  };
+
   return (
-    <Card className="w-full h-[calc(80vh)] flex flex-col shadow-md border-wakti-blue/10 overflow-hidden">
+    <Card className="w-full h-[calc(75vh)] flex flex-col shadow-md border-wakti-blue/10 overflow-hidden rounded-xl">
       <CardHeader className="py-2 px-3 sm:py-3 sm:px-4 border-b flex-row justify-between items-center bg-gradient-to-r from-white to-gray-50">
         <div className="flex items-center">
           <div className={`h-9 w-9 rounded-full bg-gradient-to-br ${getRoleColor()} flex items-center justify-center flex-shrink-0 mr-2 shadow-sm`}>
@@ -129,13 +152,46 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
           <div ref={messagesEndRef} />
         </div>
         
-        <MessageInputForm
-          inputMessage={inputMessage}
-          setInputMessage={setInputMessage}
-          handleSendMessage={handleSendMessage}
-          isLoading={isLoading}
-          canAccess={canAccess}
+        {/* File Input Hidden Element */}
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileChange} 
+          className="hidden" 
+          accept="image/*,.pdf,.doc,.docx"
         />
+        
+        {/* Enhanced Message Input Form with Upload Buttons */}
+        <div className="border-t">
+          <div className="px-3 py-2 flex items-center gap-1 bg-gray-50/80">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full"
+              onClick={handleFileUpload}
+              title="Upload file or image"
+            >
+              <Image className="h-4 w-4 text-muted-foreground" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full"
+              onClick={handleCameraCapture}
+              title="Take a photo"
+            >
+              <Camera className="h-4 w-4 text-muted-foreground" />
+            </Button>
+            <span className="text-xs text-muted-foreground ml-1">Upload or capture for analysis</span>
+          </div>
+          <MessageInputForm
+            inputMessage={inputMessage}
+            setInputMessage={setInputMessage}
+            handleSendMessage={handleSendMessage}
+            isLoading={isLoading}
+            canAccess={canAccess}
+          />
+        </div>
         
         <PoweredByTMW />
       </CardContent>
