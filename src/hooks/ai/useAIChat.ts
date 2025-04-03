@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useAIChatOperations } from "./operations/useAIChatOperations";
 import { AIMessage } from "@/types/ai-assistant.types";
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/components/ui/use-toast";
 
 /**
@@ -16,7 +16,6 @@ export const useAIChat = () => {
     isLoading
   } = useAIChatOperations();
   
-  const supabase = useSupabaseClient();
   const { toast } = useToast();
   
   // Enhanced integration: Get application context for better responses
@@ -44,7 +43,7 @@ export const useAIChat = () => {
       console.error("Error fetching application context:", error);
       return null;
     }
-  }, [supabase]);
+  }, []);
   
   // Enhanced sendMessage that includes application context
   const sendEnhancedMessage = useCallback(async (messageText: string) => {
