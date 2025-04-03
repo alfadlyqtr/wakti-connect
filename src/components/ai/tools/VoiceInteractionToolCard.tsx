@@ -1,381 +1,148 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Mic, Square, Volume2, AlertTriangle, RefreshCcw } from 'lucide-react';
-import { useSpeechRecognition } from '@/hooks/ai/useSpeechRecognition';
-import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
-import { motion } from 'framer-motion';
-import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState } from "react";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Mic, Volume2, VolumeX, Loader2, CheckCircle2 } from "lucide-react";
+import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
+import { motion } from "framer-motion";
+import { Switch } from "@/components/ui/switch";
 
 interface VoiceInteractionToolCardProps {
-  onSpeechRecognized: (text: string) => void;
-  compact?: boolean;
+  onSpeechRecognized?: (text: string) => void;
 }
 
-export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> = ({
-  onSpeechRecognized,
-  compact = false
-}) => {
-  const [transcribedText, setTranscribedText] = useState("");
-  const [openAIConfigured, setOpenAIConfigured] = useState<boolean | null>(null);
-  const [isInitialCheck, setIsInitialCheck] = useState(true);
-  const { toast } = useToast();
-  
-  // Use browser-based speech recognition
+export function VoiceInteractionToolCard({ onSpeechRecognized }: VoiceInteractionToolCardProps) {
+  const [voiceStyle, setVoiceStyle] = useState<string>("natural");
   const {
     transcript,
-    isListening: browserIsListening,
-    startListening: startBrowserListening,
-    stopListening: stopBrowserListening,
+    isListening,
+    startListening,
+    stopListening,
     resetTranscript,
-    supported
+    supported,
   } = useSpeechRecognition({
     continuous: true,
-    interimResults: true
+    interimResults: true,
   });
-  
-  // Use OpenAI based voice interaction
-  const {
-    lastTranscript,
-    isListening: openAIIsListening,
-    startListening: startOpenAIListening,
-    stopListening: stopOpenAIListening,
-    isProcessing,
-    supportsVoice,
-    openAIVoiceSupported,
-    apiKeyStatus,
-    apiKeyErrorDetails,
-    retryApiKeyValidation
-  } = useVoiceInteraction();
-  
-  // Combined state for UI
-  const isListening = browserIsListening || openAIIsListening;
-  
-  const handleApiKeyRetry = async () => {
-    setIsInitialCheck(false);
-    toast({
-      title: "Testing OpenAI API Key",
-      description: "Checking if the OpenAI API key is properly configured...",
-    });
-    
-    const success = await retryApiKeyValidation();
-    
-    if (success) {
-      setOpenAIConfigured(true);
-      toast({
-        title: "API Key Validation Successful",
-        description: "OpenAI voice features are now available.",
-        variant: "success",
-      });
-    } else {
-      toast({
-        title: "API Key Validation Failed",
-        description: "Please check your OpenAI API key in Supabase secrets.",
-        variant: "destructive",
-      });
+
+  const handleStopListening = () => {
+    stopListening();
+    if (transcript && onSpeechRecognized) {
+      onSpeechRecognized(transcript);
     }
   };
-  
-  // Check if OpenAI is properly configured
-  useEffect(() => {
-    const checkOpenAIConfig = async () => {
-      try {
-        console.log("Testing OpenAI API configuration...");
-        
-        const testResponse = await supabase.functions.invoke("ai-voice-to-text", {
-          body: { test: true }
-        });
-        
-        console.log("OpenAI API configuration test response:", testResponse);
-        
-        if (testResponse.error) {
-          console.warn("OpenAI API configuration test failed:", testResponse.error);
-          setOpenAIConfigured(false);
-          
-          // Only show the toast if this is the first load
-          if (isInitialCheck) {
-            toast({
-              title: "OpenAI API Key Issue",
-              description: "Your OpenAI API key may not be properly configured. Voice features will be limited.",
-              variant: "destructive",
-            });
-            setIsInitialCheck(false);
-          }
-        } else {
-          console.log("OpenAI API configuration test passed");
-          setOpenAIConfigured(true);
-        }
-      } catch (error) {
-        console.warn("Could not verify OpenAI API configuration:", error);
-        setOpenAIConfigured(false);
-        
-        if (isInitialCheck) {
-          toast({
-            title: "Connection Error",
-            description: "Could not verify OpenAI API configuration. Check your internet connection.",
-            variant: "destructive",
-          });
-          setIsInitialCheck(false);
-        }
-      }
-    };
-    
-    if (isInitialCheck) {
-      checkOpenAIConfig();
-    }
-  }, [toast, isInitialCheck]);
-  
-  // Update transcript from browser-based recognition
-  useEffect(() => {
-    if (transcript) {
-      setTranscribedText(transcript);
-    }
-  }, [transcript]);
-  
-  // Update transcript from OpenAI-based recognition
-  useEffect(() => {
-    if (lastTranscript) {
-      setTranscribedText(lastTranscript);
-    }
-  }, [lastTranscript]);
-  
-  // Monitor openAIVoiceSupported changes
-  useEffect(() => {
-    console.log("OpenAI voice supported:", openAIVoiceSupported);
-    if (openAIVoiceSupported !== null) {
-      setOpenAIConfigured(openAIVoiceSupported);
-    }
-  }, [openAIVoiceSupported]);
-  
-  const handleStartListening = () => {
+
+  const handleClearTranscript = () => {
     resetTranscript();
-    setTranscribedText("");
-    
-    // Try OpenAI voice first if configured
-    if (openAIVoiceSupported) {
-      console.log("Starting OpenAI voice recognition");
-      startOpenAIListening();
-    } else if (supported) {
-      // Fall back to browser-based recognition
-      console.log("Falling back to browser-based speech recognition");
-      startBrowserListening();
-    } else {
-      toast({
-        title: "Speech Recognition Unavailable",
-        description: "Neither OpenAI nor browser-based speech recognition is available.",
-        variant: "destructive",
-      });
-    }
   };
-  
-  const handleStopListening = async () => {
-    if (openAIIsListening) {
-      await stopOpenAIListening();
-    } else if (browserIsListening) {
-      stopBrowserListening();
-    }
-    
-    if (transcribedText.trim()) {
-      onSpeechRecognized(transcribedText);
-    }
-  };
-  
-  const voiceSupported = supported || supportsVoice;
-  
-  if (!voiceSupported) {
-    return compact ? (
-      <div className="text-xs text-muted-foreground p-2 border rounded-md">
-        Speech recognition is not supported in your browser.
-      </div>
-    ) : (
+
+  if (!supported) {
+    return (
       <Card>
         <CardHeader>
-          <CardTitle>Voice Interaction</CardTitle>
+          <CardTitle>Voice Input</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-muted-foreground py-4">
-            Speech recognition is not supported in your browser.
-          </p>
+          <div className="p-6 text-center">
+            <VolumeX className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium">Speech Recognition Not Supported</h3>
+            <p className="text-sm text-muted-foreground mt-2">
+              Your browser doesn't support speech recognition features.
+              Try using a modern browser like Chrome, Edge, or Safari.
+            </p>
+          </div>
         </CardContent>
       </Card>
     );
   }
-  
-  const renderApiKeyStatus = () => {
-    if (!openAIVoiceSupported) {
-      return (
-        <div className="flex items-center text-amber-600 mb-2">
-          <AlertTriangle className="h-4 w-4 mr-2 flex-shrink-0" />
-          <div className="text-sm">
-            <p className="font-medium">OpenAI API Key Issue</p>
-            <p className="text-xs">{apiKeyErrorDetails || "API key not configured or invalid"}</p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mt-1 h-7 text-xs" 
-              onClick={handleApiKeyRetry}
-            >
-              <RefreshCcw className="h-3 w-3 mr-1" />
-              Retry API Key Check
-            </Button>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
-  
-  if (compact) {
-    return (
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <span className="text-xs">Voice Input</span>
-          <Button 
-            variant={isListening ? "destructive" : "default"}
-            size="sm"
-            className="h-7 text-xs"
-            onClick={isListening ? handleStopListening : handleStartListening}
-          >
-            {isListening ? (
-              <>
-                <Square className="h-3 w-3 mr-1" />
-                Stop
-              </>
-            ) : (
-              <>
-                <Mic className="h-3 w-3 mr-1" />
-                Speak
-              </>
-            )}
-          </Button>
-        </div>
-        
-        {isListening && (
-          <p className="text-xs italic">
-            {transcribedText || "Listening..."}
-          </p>
-        )}
-        
-        {apiKeyStatus !== 'valid' && (
-          <div className="text-xs flex items-center text-amber-600">
-            <AlertTriangle className="h-3 w-3 mr-1" />
-            Using browser voice (OpenAI unavailable)
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-5 ml-1 px-1"
-              onClick={handleApiKeyRetry}
-            >
-              <RefreshCcw className="h-3 w-3" />
-            </Button>
-          </div>
-        )}
-      </div>
-    );
-  }
-  
-  // Regular (non-compact) UI
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Volume2 className="h-5 w-5 text-wakti-blue" />
-          Voice Interaction
-          {apiKeyStatus !== 'valid' && (
-            <span className="text-xs text-amber-600 font-normal flex items-center ml-2">
-              <AlertTriangle className="h-3 w-3 mr-1" />
-              Enhanced voice features unavailable
-            </span>
-          )}
+        <CardTitle className="flex items-center">
+          <Volume2 className="mr-2 h-5 w-5 text-wakti-blue" />
+          Voice to Text
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {renderApiKeyStatus()}
-        
-        <div className="flex justify-center">
-          <Button 
-            onClick={isListening ? handleStopListening : handleStartListening}
-            variant={isListening ? "destructive" : "default"}
-            className="relative"
-            size="lg"
+        <div className="flex flex-col space-y-2">
+          <Label>Voice Style</Label>
+          <RadioGroup 
+            value={voiceStyle} 
+            onValueChange={setVoiceStyle}
+            className="flex flex-col space-y-1"
           >
-            {isListening ? (
-              <>
-                <Square className="h-4 w-4 mr-2" />
-                Stop Listening
-                <motion.div
-                  className="absolute inset-0 rounded-md border-2 border-red-500"
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                />
-              </>
-            ) : (
-              <>
-                <Mic className="h-4 w-4 mr-2" />
-                Start Listening
-              </>
-            )}
-          </Button>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="natural" id="natural-voice" />
+              <Label htmlFor="natural-voice">Natural</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="clear" id="clear-voice" />
+              <Label htmlFor="clear-voice">Clear & Precise</Label>
+            </div>
+          </RadioGroup>
         </div>
-        
-        <div className={`rounded-md p-3 bg-muted/50 min-h-[100px] relative ${isListening ? 'border-2 border-primary' : 'border border-border'}`}>
-          {isListening && !transcribedText && (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              <p>Listening...</p>
+
+        <div className="p-4 border rounded-md bg-muted/30 min-h-[100px] relative">
+          {isListening && (
+            <div className="absolute top-2 right-2 flex items-center text-xs text-red-500 animate-pulse">
+              <span className="h-2 w-2 rounded-full bg-red-500 mr-1" />
+              Recording...
             </div>
           )}
-          {transcribedText && (
-            <p className="text-sm">{transcribedText}</p>
-          )}
-          {!isListening && !transcribedText && (
-            <p className="text-muted-foreground text-center">
-              Click "Start Listening" and speak. Your words will appear here.
-            </p>
-          )}
+          <p className="text-sm whitespace-pre-wrap">
+            {transcript || "Speak to convert your voice to text..."}
+          </p>
         </div>
-        
-        {apiKeyStatus !== 'valid' && (
-          <div className="text-sm bg-amber-50 border border-amber-200 rounded-md p-3 text-amber-700">
-            <p className="flex items-center mb-2">
-              <AlertTriangle className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span>
-                Using browser-based speech recognition. For enhanced voice features, ensure the OpenAI API key is set correctly in Supabase secrets.
-              </span>
-            </p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleApiKeyRetry}
-              className="text-xs"
+
+        <div className="flex justify-center gap-2 mt-4">
+          {!isListening ? (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-wakti-blue text-white hover:bg-wakti-blue/90 transition-colors"
+              onClick={startListening}
+              disabled={isListening}
             >
-              <RefreshCcw className="h-3 w-3 mr-1" />
-              Retry API Key Check
-            </Button>
-          </div>
-        )}
-        
-        <div className="flex justify-end">
-          <Button 
-            variant="secondary" 
-            onClick={() => {
-              if (transcribedText.trim()) {
-                onSpeechRecognized(transcribedText);
-                toast({
-                  title: "Text sent to chat",
-                  description: "Your spoken text has been sent to the chat",
-                });
-                setTranscribedText("");
-                resetTranscript();
-              }
-            }}
-            disabled={!transcribedText.trim()}
-          >
-            Use in Conversation
-          </Button>
+              <Mic className="h-6 w-6" />
+            </motion.button>
+          ) : (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
+              onClick={handleStopListening}
+            >
+              <div className="relative">
+                <Mic className="h-6 w-6" />
+                <motion.div
+                  className="absolute -inset-2 rounded-full border-2 border-white opacity-75"
+                  animate={{ scale: [1, 1.3, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                />
+              </div>
+            </motion.button>
+          )}
         </div>
       </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleClearTranscript}
+          disabled={!transcript}
+        >
+          Clear
+        </Button>
+        {transcript && (
+          <Button 
+            size="sm"
+            onClick={() => onSpeechRecognized && onSpeechRecognized(transcript)}
+          >
+            Use Text
+          </Button>
+        )}
+      </CardFooter>
     </Card>
   );
-};
+}
