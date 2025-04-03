@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { 
   BookOpen, 
   Briefcase, 
-  PenTool, 
+  PenNib, 
   Building2, 
   HelpCircle,
   Sparkles
@@ -25,15 +25,15 @@ export const AIRoleSelector: React.FC<AIRoleSelectorProps> = ({ selectedRole, on
       color: 'bg-blue-100 text-blue-700 hover:bg-blue-200 data-[state=selected]:bg-blue-200'
     },
     { 
-      role: 'professional', 
+      role: 'employee', 
       label: 'Work', 
       icon: <Briefcase className="h-4 w-4" />,
       color: 'bg-purple-100 text-purple-700 hover:bg-purple-200 data-[state=selected]:bg-purple-200'
     },
     { 
-      role: 'creator', 
+      role: 'writer', 
       label: 'Creator', 
-      icon: <PenTool className="h-4 w-4" />,
+      icon: <PenNib className="h-4 w-4" />,
       color: 'bg-green-100 text-green-700 hover:bg-green-200 data-[state=selected]:bg-green-200'
     },
     { 

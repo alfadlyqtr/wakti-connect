@@ -41,10 +41,11 @@ refresh_token_reuse_interval = 10
 [realtime]
 enabled = true
 
+# Functions configuration
+# DO NOT use 'enabled = false/true' directly under [functions]
 [functions]
-enabled = false
 
-# Correct format for function definitions
+# Individual function configurations
 [functions.ai-assistant]
 verify_jwt = true
 

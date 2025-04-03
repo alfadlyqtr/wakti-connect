@@ -1,113 +1,105 @@
 
 import React from "react";
-import { Sparkles } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AIAssistantRole, RoleContexts } from "@/types/ai-assistant.types";
-import * as Icons from "lucide-react"; 
+import { 
+  LucideIcon, 
+  Rocket, 
+  BookOpen, 
+  Calendar, 
+  Clock, 
+  Users, 
+  BarChart, 
+  FileText, 
+  MessageSquare,
+  Search,
+  ClipboardCheck,
+  CheckSquare,
+  HelpCircle,
+  Lightbulb,
+  Edit,
+  CalendarClock,
+  Mail,
+  ListChecks,
+  Hash,
+  HeartHandshake,
+  Settings,
+} from "lucide-react";
 
 interface QuickToolsCardProps {
   selectedRole: AIAssistantRole;
-  onToolSelect: (prompt: string) => void;
+  onToolClick: (toolDescription: string) => void;
 }
 
-// Dynamic icon component to render icons by name
-const DynamicIcon = ({ name }: { name: string }) => {
-  const IconComponent = (Icons as any)[name] || Icons.HelpCircle;
-  return <IconComponent className="h-5 w-5" />;
-};
-
-// Generate tool-specific prompt based on tool name and role
-const getToolPrompt = (toolName: string, role: AIAssistantRole): string => {
-  const prompts: Record<string, Record<string, string>> = {
-    student: {
-      "Homework Helper": "I need help with my homework on ",
-      "Study Planner": "Create a study plan for me for ",
-      "Note Summarizer": "Summarize these notes for me: ",
-      "Research Assistant": "Help me research this topic: "
-    },
-    professional: {
-      "Email Composer": "Help me write a professional email about ",
-      "Meeting Scheduler": "I need to schedule a meeting for ",
-      "Task Prioritizer": "Help me prioritize these tasks: ",
-      "Document Creator": "Help me create a document for "
-    },
-    business_owner: {
-      "Staff Scheduler": "Help me create a schedule for my staff for ",
-      "Customer Service": "Draft a response to this customer inquiry: ",
-      "Business Analytics": "Analyze this business data for me: ",
-      "Service Manager": "Help me optimize this service: "
-    },
-    general: {
-      "Day Planner": "Help me plan my day including ",
-      "Task Creator": "Create a task list for ",
-      "Event Organizer": "Help me organize this event: ",
-      "Quick Answer": "I need a quick answer about "
-    },
-    creator: {
-      "Content Generator": "Generate content ideas for ",
-      "Content Calendar": "Create a content calendar for ",
-      "Caption Writer": "Write a caption for my post about ",
-      "Hashtag Generator": "Suggest hashtags for content about "
-    },
-    employee: {
-      "Time Tracker": "Help me track my time for ",
-      "Task Reporter": "Help me report these completed tasks: ",
-      "Meeting Organizer": "Organize a meeting about ",
-      "Work Log": "Create a work log for today including "
-    },
-    writer: {
-      "Email Writer": "Help me write an email about ",
-      "Text Editor": "Edit this text for clarity: ",
-      "Outline Generator": "Create an outline for ",
-      "Grammar Checker": "Check the grammar in this text: "
-    }
-  };
-
-  // Return default prompt if specific one not found
-  return prompts[role]?.[toolName] || "Help me with ";
+// Map string icon names to Lucide components
+const iconMap: Record<string, LucideIcon> = {
+  BookOpen,
+  Calendar,
+  FileText,
+  Search,
+  Clock,
+  ClipboardCheck,
+  Users,
+  CheckSquare,
+  CalendarClock,
+  HelpCircle,
+  Lightbulb,
+  Edit,
+  BarChart,
+  HeartHandshake,
+  Settings,
+  Mail,
+  ListChecks,
+  MessageSquare,
+  Hash,
 };
 
 export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({ 
-  selectedRole,
-  onToolSelect
+  selectedRole, 
+  onToolClick 
 }) => {
+  // Get role context
   const roleContext = RoleContexts[selectedRole];
-  const quickTools = roleContext.quickTools || [];
   
-  const handleToolClick = (toolName: string) => {
-    const prompt = getToolPrompt(toolName, selectedRole);
-    onToolSelect(prompt);
-  };
-
+  // Default tools if role doesn't have specific ones
+  const defaultTools = [
+    { name: "Quick Help", description: "Get assistance with basic tasks", icon: "HelpCircle" },
+    { name: "Task Creator", description: "Create a new task", icon: "CheckSquare" },
+    { name: "Calendar", description: "Manage your schedule", icon: "Calendar" },
+  ];
+  
+  // Use role-specific tools or fall back to default
+  const tools = roleContext.quickTools || defaultTools;
+  
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-amber-500" />
+        <CardTitle className="text-lg flex items-center">
+          <Rocket className="h-5 w-5 mr-2" />
           Quick Tools
         </CardTitle>
-        <CardDescription>
-          Get faster assistance with these specialized tools
-        </CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-2 gap-2">
-        {quickTools.map((tool, index) => (
-          <Button
-            key={index}
-            variant="outline"
-            className="flex-col h-auto py-4 justify-start items-center gap-2 bg-muted/40 hover:bg-muted transition-colors"
-            onClick={() => handleToolClick(tool.name)}
-          >
-            <div className="h-10 w-10 rounded-full bg-accent flex items-center justify-center">
-              <DynamicIcon name={tool.icon} />
-            </div>
-            <div className="text-center">
-              <h4 className="font-medium text-sm">{tool.name}</h4>
-              <p className="text-xs text-muted-foreground">{tool.description}</p>
-            </div>
-          </Button>
-        ))}
+        {tools.map((tool, index) => {
+          // Get icon component
+          const IconComponent = tool.icon in iconMap ? iconMap[tool.icon] : Rocket;
+          
+          return (
+            <Button
+              key={index}
+              variant="outline"
+              className="h-auto py-3 flex flex-col items-center justify-center text-center gap-2 hover:bg-wakti-blue/5 hover:border-wakti-blue/20"
+              onClick={() => onToolClick(tool.description)}
+            >
+              <IconComponent className="h-5 w-5 text-wakti-blue mb-1" />
+              <div>
+                <p className="font-medium text-sm">{tool.name}</p>
+                <p className="text-xs text-muted-foreground">{tool.description}</p>
+              </div>
+            </Button>
+          );
+        })}
       </CardContent>
     </Card>
   );

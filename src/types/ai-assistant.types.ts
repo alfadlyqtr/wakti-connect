@@ -1,5 +1,5 @@
 // AI Assistant role types - must match what's in the database
-export type AIAssistantRole = "student" | "business_owner" | "general" | "employee" | "writer" | "professional" | "creator";
+export type AIAssistantRole = "student" | "business_owner" | "general" | "employee" | "writer";
 
 // AI settings interface
 export interface AISettings {
@@ -155,52 +155,6 @@ export const RoleContexts: Record<AIAssistantRole, {
       { name: "Editor Helper", description: "Get editing assistance", icon: "Edit" },
       { name: "Writing Scheduler", description: "Plan writing sessions", icon: "Calendar" },
       { name: "Research Tool", description: "Find relevant information", icon: "Search" }
-    ]
-  },
-  "professional": {
-    title: "Work Assistant",
-    description: "Help with workplace tasks and professional projects",
-    icon: "briefcase",
-    welcomeMessage: "Hello! I'm your Work Assistant. I can help organize your professional tasks, meetings, and projects. How can I assist with your work today?",
-    commandSuggestions: [
-      "Create a task for the quarterly report",
-      "Schedule a client meeting next week",
-      "Remind me to prepare for tomorrow's presentation"
-    ],
-    suggestedPrompts: [
-      "Help me prepare for my presentation",
-      "Draft an email to the team",
-      "Create a project timeline",
-      "What's my meeting schedule for tomorrow?"
-    ],
-    quickTools: [
-      { name: "Email Composer", description: "Write professional emails", icon: "Mail" },
-      { name: "Meeting Scheduler", description: "Organize meetings", icon: "CalendarClock" },
-      { name: "Task Prioritizer", description: "Prioritize your workload", icon: "ListChecks" },
-      { name: "Document Creator", description: "Create work documents", icon: "FileText" }
-    ]
-  },
-  "creator": {
-    title: "Creative Assistant",
-    description: "Help with content creation and creative projects",
-    icon: "pen-tool",
-    welcomeMessage: "Hello! I'm your Creative Assistant. I can help with content planning, creative ideas, and managing your creative projects. What creative endeavor are you working on today?",
-    commandSuggestions: [
-      "Create a content calendar for next month",
-      "Schedule a photoshoot for Friday",
-      "Remind me to edit my podcast tomorrow"
-    ],
-    suggestedPrompts: [
-      "Help me brainstorm content ideas",
-      "Create a posting schedule for social media",
-      "Give me caption ideas for my photo",
-      "Create a task for editing my video"
-    ],
-    quickTools: [
-      { name: "Content Generator", description: "Generate content ideas", icon: "Lightbulb" },
-      { name: "Content Calendar", description: "Plan content schedule", icon: "Calendar" },
-      { name: "Caption Writer", description: "Create engaging captions", icon: "MessageSquare" },
-      { name: "Hashtag Generator", description: "Generate relevant hashtags", icon: "Hash" }
     ]
   }
 };

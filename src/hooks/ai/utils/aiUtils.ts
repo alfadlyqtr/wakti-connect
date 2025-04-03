@@ -1,7 +1,31 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
-import { Task, TaskStatus } from "@/types/task.types";
+
+// Define TaskStatus and TaskPriority types to match database expectations
+export type TaskStatus = 'pending' | 'completed' | 'in_progress';
+export type TaskPriority = 'high' | 'urgent' | 'medium' | 'normal';
+
+// Define the Task interface
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  due_date: string | null;
+  due_time: string | null;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+  is_recurring: boolean;
+  is_recurring_instance: boolean;
+  parent_recurring_id: string | null;
+  snoozed_until: string | null;
+  snooze_count: number;
+  archived_at: string | null;
+  archive_reason: string | null;
+}
 
 // System command types and structure
 export type CommandType = 'create_task' | 'view_tasks' | 'schedule_event' | 'check_calendar' | 
@@ -207,11 +231,11 @@ export const getUserTasks = async (): Promise<Task[]> => {
       
     if (error) throw error;
     
-    // Properly cast the tasks to ensure status is correctly typed
+    // Properly cast the tasks to ensure status and priority are correctly typed
     const typedTasks: Task[] = (data || []).map(task => ({
       ...task,
-      status: task.status as TaskStatus, // Ensure status is properly typed
-      priority: task.priority,
+      status: task.status as TaskStatus,
+      priority: task.priority as TaskPriority,
       id: task.id,
       title: task.title,
       description: task.description,
@@ -224,7 +248,6 @@ export const getUserTasks = async (): Promise<Task[]> => {
       is_recurring: task.is_recurring,
       is_recurring_instance: task.is_recurring_instance,
       parent_recurring_id: task.parent_recurring_id,
-      subtasks: task.subtasks,
       snooze_count: task.snooze_count,
       snoozed_until: task.snoozed_until,
       archived_at: task.archived_at,

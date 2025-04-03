@@ -31,7 +31,7 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
     employeeCount: settings?.knowledge_profile?.employeeCount || "1-10"
   });
   
-  const [professionalProfile, setProfessionalProfile] = useState({
+  const [employeeProfile, setEmployeeProfile] = useState({
     field: settings?.knowledge_profile?.field || "",
     experienceLevel: settings?.knowledge_profile?.experienceLevel || "mid-level",
     skills: settings?.knowledge_profile?.skills || ""
@@ -51,8 +51,8 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
         case "business_owner":
           knowledgeProfile = businessProfile;
           break;
-        case "professional":
-          knowledgeProfile = professionalProfile;
+        case "employee":
+          knowledgeProfile = employeeProfile;
           break;
         default:
           knowledgeProfile = {}; 
@@ -87,8 +87,8 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
     switch (selectedRole) {
       case "student": return <GraduationCap className="h-5 w-5 text-blue-500" />;
       case "business_owner": return <Building2 className="h-5 w-5 text-amber-500" />;
-      case "professional": return <Briefcase className="h-5 w-5 text-purple-500" />;
-      case "creator": return <Book className="h-5 w-5 text-green-500" />;
+      case "employee": return <Briefcase className="h-5 w-5 text-purple-500" />;
+      case "writer": return <Book className="h-5 w-5 text-green-500" />;
       default: return <User className="h-5 w-5 text-gray-500" />;
     }
   };
@@ -192,7 +192,7 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
           </div>
         );
         
-      case "professional":
+      case "employee":
         return (
           <div className="space-y-4">
             <div>
@@ -200,16 +200,16 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
               <Input 
                 id="field" 
                 placeholder="e.g., Marketing, Engineering, Finance" 
-                value={professionalProfile.field}
-                onChange={(e) => setProfessionalProfile({...professionalProfile, field: e.target.value})}
+                value={employeeProfile.field}
+                onChange={(e) => setEmployeeProfile({...employeeProfile, field: e.target.value})}
               />
             </div>
             
             <div>
               <Label htmlFor="experienceLevel">Experience Level</Label>
               <Select 
-                value={professionalProfile.experienceLevel}
-                onValueChange={(value) => setProfessionalProfile({...professionalProfile, experienceLevel: value})}
+                value={employeeProfile.experienceLevel}
+                onValueChange={(value) => setEmployeeProfile({...employeeProfile, experienceLevel: value})}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select experience level" />
@@ -229,8 +229,8 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
               <Input 
                 id="skills" 
                 placeholder="e.g., Project Management, Data Analysis" 
-                value={professionalProfile.skills}
-                onChange={(e) => setProfessionalProfile({...professionalProfile, skills: e.target.value})}
+                value={employeeProfile.skills}
+                onChange={(e) => setEmployeeProfile({...employeeProfile, skills: e.target.value})}
               />
             </div>
           </div>
@@ -261,7 +261,7 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
       <CardContent>
         {renderProfileForm()}
       </CardContent>
-      {(selectedRole === "student" || selectedRole === "business_owner" || selectedRole === "professional") && (
+      {(selectedRole === "student" || selectedRole === "business_owner" || selectedRole === "employee") && (
         <CardFooter className="flex justify-end pt-0">
           <Button 
             onClick={handleSaveProfile} 
