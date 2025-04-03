@@ -27,8 +27,8 @@ export const useUpdateAISettings = (user: User | null) => {
         ? newSettings.role as ValidRoleType 
         : "general" as ValidRoleType;
       
-      // Prepare settings for Supabase
-      const settingsForUpdate = {
+      // First prepare the basic settings object (without knowledge_profile)
+      const baseSettings = {
         user_id: user.id,
         assistant_name: newSettings.assistant_name,
         tone: newSettings.tone,
@@ -37,6 +37,11 @@ export const useUpdateAISettings = (user: User | null) => {
         suggestion_frequency: newSettings.suggestion_frequency,
         role: roleValue, // Use the validated role value
         enabled_features: newSettings.enabled_features,
+      };
+      
+      // Then add knowledge_profile if it exists
+      const settingsForUpdate = {
+        ...baseSettings,
         knowledge_profile: newSettings.knowledge_profile
       };
 
@@ -44,16 +49,7 @@ export const useUpdateAISettings = (user: User | null) => {
       if (newSettings.id) {
         const { data, error } = await supabase
           .from("ai_assistant_settings")
-          .update({
-            assistant_name: settingsForUpdate.assistant_name,
-            tone: settingsForUpdate.tone,
-            response_length: settingsForUpdate.response_length,
-            proactiveness: settingsForUpdate.proactiveness,
-            suggestion_frequency: settingsForUpdate.suggestion_frequency,
-            role: settingsForUpdate.role,
-            enabled_features: settingsForUpdate.enabled_features,
-            knowledge_profile: settingsForUpdate.knowledge_profile
-          })
+          .update(settingsForUpdate)
           .eq("user_id", user.id)
           .select()
           .single();
@@ -87,17 +83,7 @@ export const useUpdateAISettings = (user: User | null) => {
         // No id, so insert a new record
         const { data, error } = await supabase
           .from("ai_assistant_settings")
-          .insert({
-            user_id: settingsForUpdate.user_id,
-            assistant_name: settingsForUpdate.assistant_name,
-            tone: settingsForUpdate.tone,
-            response_length: settingsForUpdate.response_length,
-            proactiveness: settingsForUpdate.proactiveness,
-            suggestion_frequency: settingsForUpdate.suggestion_frequency,
-            role: settingsForUpdate.role,
-            enabled_features: settingsForUpdate.enabled_features,
-            knowledge_profile: settingsForUpdate.knowledge_profile
-          })
+          .insert(settingsForUpdate)
           .select()
           .single();
 

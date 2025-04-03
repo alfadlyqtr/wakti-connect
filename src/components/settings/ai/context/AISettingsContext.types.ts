@@ -1,18 +1,18 @@
 
 import { AISettings, AIKnowledgeUpload } from "@/types/ai-assistant.types";
 
-export type AISettingsContextType = {
+export interface AISettingsContextType {
   settings: AISettings | null;
   isLoadingSettings: boolean;
   isUpdatingSettings: boolean;
   isAddingKnowledge: boolean;
-  knowledgeUploads?: AIKnowledgeUpload[];
+  knowledgeUploads: AIKnowledgeUpload[] | null;
   isLoadingKnowledge: boolean;
-  canUseAI: boolean;
+  canUseAI: boolean | undefined;
   error: string | null;
-  updateSettings: (newSettings: AISettings) => Promise<void>;
-  addKnowledge: (title: string, content: string) => Promise<void>;
-  deleteKnowledge: (id: string) => Promise<void>;
+  updateSettings: (newSettings: AISettings) => Promise<boolean>;
+  addKnowledge: (title: string, content: string) => Promise<boolean>;
+  deleteKnowledge: (id: string) => Promise<boolean>;
   createDefaultSettings: () => Promise<void>;
   isCreatingSettings: boolean;
-};
+}

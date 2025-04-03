@@ -44,7 +44,7 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
     if (!settings) return;
     
     try {
-      await updateSettings.mutateAsync({
+      await updateSettings({
         ...settings,
         knowledge_profile: {
           ...formData,
