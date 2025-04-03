@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { AIMessage, AIAssistantRole } from "@/types/ai-assistant.types";
 import { AIAssistantMessage } from "../message/AIAssistantMessage";
 import { Loader2 } from "lucide-react";
@@ -21,6 +21,7 @@ interface CleanChatInterfaceProps {
   onStartListening?: () => void;
   onStopListening?: () => void;
   recognitionSupported?: boolean;
+  onSendVoiceMessage?: (text: string) => void;
 }
 
 export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
@@ -36,10 +37,12 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   isListening = false,
   onStartListening,
   onStopListening,
-  recognitionSupported = false
+  recognitionSupported = false,
+  onSendVoiceMessage
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFirstMessage = messages.length === 0;
+  const [voiceToVoiceEnabled, setVoiceToVoiceEnabled] = useState(false);
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -47,6 +50,18 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+  
+  // Handle voice-to-voice conversation
+  useEffect(() => {
+    if (voiceToVoiceEnabled && !isLoading && !isSpeaking && inputMessage && onSendVoiceMessage) {
+      const handler = setTimeout(() => {
+        onSendVoiceMessage(inputMessage);
+        setInputMessage('');
+      }, 500);
+      
+      return () => clearTimeout(handler);
+    }
+  }, [voiceToVoiceEnabled, inputMessage, isLoading, isSpeaking, onSendVoiceMessage, setInputMessage]);
   
   // Get welcome message based on role
   const getWelcomeMessage = () => {
@@ -79,6 +94,15 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
     role: "assistant",
     content: getWelcomeMessage(),
     timestamp: new Date(),
+  };
+  
+  const handleToggleVoiceToVoice = (enabled: boolean) => {
+    setVoiceToVoiceEnabled(enabled);
+    
+    // If enabling and we have the ability to listen
+    if (enabled && onStartListening && !isListening) {
+      onStartListening();
+    }
   };
   
   return (
@@ -152,6 +176,8 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
           onStartListening={onStartListening}
           onStopListening={onStopListening}
           recognitionSupported={recognitionSupported}
+          voiceToVoiceEnabled={voiceToVoiceEnabled}
+          onToggleVoiceToVoice={handleToggleVoiceToVoice}
         />
       </CardContent>
     </Card>

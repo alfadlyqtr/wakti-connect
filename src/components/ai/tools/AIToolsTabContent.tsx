@@ -4,6 +4,7 @@ import { DocumentAnalysisToolCard } from "./DocumentAnalysisToolCard";
 import { VoiceInteractionToolCard } from "./VoiceInteractionToolCard";
 import { KnowledgeProfileToolCard } from "./KnowledgeProfileToolCard";
 import { QuickToolsCard } from "./QuickToolsCard";
+import { ImageGenerationToolCard } from "./ImageGenerationToolCard";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
 
 interface AIToolsTabContentProps {
@@ -38,6 +39,7 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <VoiceInteractionToolCard onSpeechRecognized={handleSpeechRecognized} />
+        <ImageGenerationToolCard onPromptUse={onUseDocumentContent} />
         <KnowledgeProfileToolCard selectedRole={selectedRole} />
         <DocumentAnalysisToolCard 
           canAccess={canAccess}

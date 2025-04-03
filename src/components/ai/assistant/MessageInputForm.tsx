@@ -1,7 +1,10 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Send, Mic, MicOff } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Mic, MicOff, SendHorizonal, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
 
 interface MessageInputFormProps {
   inputMessage: string;
@@ -13,6 +16,8 @@ interface MessageInputFormProps {
   onStartListening?: () => void;
   onStopListening?: () => void;
   recognitionSupported?: boolean;
+  voiceToVoiceEnabled?: boolean;
+  onToggleVoiceToVoice?: (enabled: boolean) => void;
 }
 
 export const MessageInputForm: React.FC<MessageInputFormProps> = ({
@@ -24,67 +29,74 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   isListening = false,
   onStartListening,
   onStopListening,
-  recognitionSupported = false
+  recognitionSupported = false,
+  voiceToVoiceEnabled = false,
+  onToggleVoiceToVoice
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   
-  const handleVoiceToggle = () => {
-    if (isListening) {
-      onStopListening?.();
-    } else {
-      onStartListening?.();
-    }
-  };
-  
   return (
-    <form 
-      onSubmit={handleSendMessage} 
-      className="p-2 sm:p-3 border-t flex items-center gap-2 bg-white"
-    >
-      <div className={`flex-1 rounded-lg border bg-background px-3 py-2 text-sm ${isFocused ? 'ring-2 ring-ring ring-offset-0' : ''}`}>
-        <input
-          type="text"
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          placeholder={canAccess ? "Type your message..." : "Upgrade to use AI Assistant"}
-          className="w-full bg-transparent outline-none"
-          disabled={!canAccess || isLoading}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-        />
-      </div>
-      
-      {recognitionSupported && canAccess && (
-        <Button
-          type="button"
-          size="icon"
-          variant={isListening ? "destructive" : "outline"}
-          onClick={handleVoiceToggle}
-          disabled={isLoading || !canAccess}
-          className="relative"
-        >
-          {isListening ? (
-            <>
-              <MicOff className="h-4 w-4" />
-              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-            </>
-          ) : (
-            <Mic className="h-4 w-4" />
-          )}
-        </Button>
+    <div className={cn(
+      "flex flex-col mt-auto p-3 border-t border-border/50 bg-card transition-all",
+      isFocused ? "bg-background" : ""
+    )}>
+      {recognitionSupported && onToggleVoiceToVoice && (
+        <div className="flex items-center justify-end mb-2 space-x-2">
+          <span className="text-xs text-muted-foreground">Voice conversation</span>
+          <Switch 
+            checked={voiceToVoiceEnabled}
+            onCheckedChange={onToggleVoiceToVoice}
+            className="data-[state=checked]:bg-green-500"
+          />
+        </div>
       )}
       
-      <Button 
-        type="submit" 
-        size="icon"
-        disabled={!inputMessage.trim() || isLoading || !canAccess}
+      <form 
+        onSubmit={handleSendMessage}
+        className="flex items-end gap-2"
       >
-        {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Send className="h-4 w-4" />
-        )}
-      </Button>
-    </form>
+        <Textarea
+          value={inputMessage}
+          onChange={(e) => setInputMessage(e.target.value)}
+          placeholder={canAccess ? "Type your message..." : "Upgrade to access AI assistant"}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          className="min-h-[50px] max-h-[200px] p-3 focus-visible:ring-wakti-blue border-muted-foreground/20"
+          rows={1}
+          disabled={isLoading || !canAccess || isListening}
+        />
+        
+        <div className="flex items-center gap-1">
+          {recognitionSupported && onStartListening && onStopListening && (
+            <Button
+              type="button"
+              size="icon"
+              variant={isListening ? "destructive" : "outline"}
+              className={cn(
+                "rounded-full transition-all",
+                isListening && "animate-pulse"
+              )}
+              onClick={isListening ? onStopListening : onStartListening}
+              disabled={isLoading || !canAccess}
+            >
+              {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            </Button>
+          )}
+          
+          <Button
+            type="submit"
+            size="icon"
+            className="rounded-full bg-wakti-blue hover:bg-wakti-blue/90"
+            disabled={isLoading || !inputMessage.trim() || !canAccess || isListening}
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <SendHorizonal className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };

@@ -57,3 +57,6 @@ verify_jwt = true
 
 [functions.fetch-staff-members]
 verify_jwt = true
+
+[functions.ai-image-generation]
+verify_jwt = true

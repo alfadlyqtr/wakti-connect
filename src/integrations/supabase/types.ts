@@ -99,6 +99,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_conversation_contexts: {
+        Row: {
+          created_at: string
+          id: string
+          last_interaction: string
+          last_wakti_topic: string | null
+          session_id: string
+          updated_at: string
+          user_id: string
+          wakti_focus_level: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_interaction?: string
+          last_wakti_topic?: string | null
+          session_id: string
+          updated_at?: string
+          user_id: string
+          wakti_focus_level?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_interaction?: string
+          last_wakti_topic?: string | null
+          session_id?: string
+          updated_at?: string
+          user_id?: string
+          wakti_focus_level?: number
+        }
+        Relationships: []
+      }
       ai_conversations: {
         Row: {
           created_at: string
@@ -119,6 +152,39 @@ export type Database = {
           id?: string
           message?: string
           response?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_generated_images: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          model: string
+          prompt: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          model?: string
+          prompt: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          model?: string
+          prompt?: string
+          status?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

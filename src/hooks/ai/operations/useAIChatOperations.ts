@@ -4,12 +4,26 @@ import { useMutation } from "@tanstack/react-query";
 import { AIMessage } from "@/types/ai-assistant.types";
 import { callAIAssistant } from "../utils/callAIAssistant";
 import { v4 as uuidv4 } from "uuid";
+import { useAuth } from "@/hooks/useAuth";
+import { useWAKTIFocusedConversation } from "../useWAKTIFocusedConversation";
+
+const WAKTI_TOPICS = [
+  "task management", "to-do lists", "appointments", "bookings", 
+  "calendar", "scheduling", "contacts", "business management",
+  "staff", "productivity", "organization", "time management"
+];
 
 /**
  * Hook containing chat operations for AI Assistant
  */
 export const useAIChatOperations = () => {
   const [messages, setMessages] = useState<AIMessage[]>([]);
+  const { user } = useAuth();
+  const { 
+    prepareMessageWithContext, 
+    increaseFocus, 
+    decreaseFocus 
+  } = useWAKTIFocusedConversation();
   
   // Mutation for sending a message to AI Assistant
   const sendMessage = useMutation({
@@ -18,7 +32,26 @@ export const useAIChatOperations = () => {
       const userMessageId = uuidv4();
       const aiMessageId = uuidv4();
       
-      // Create and add user message to the messages array
+      // Analyze if the message is about WAKTI topics
+      const isWaktiRelated = WAKTI_TOPICS.some(topic => 
+        messageText.toLowerCase().includes(topic)
+      );
+      
+      // If message is related to WAKTI, increase focus
+      if (isWaktiRelated) {
+        const topic = WAKTI_TOPICS.find(topic => 
+          messageText.toLowerCase().includes(topic)
+        );
+        await increaseFocus(topic);
+      } else {
+        // If not related, slightly decrease focus
+        await decreaseFocus();
+      }
+      
+      // Prepare message with WAKTI context
+      const contextualMessage = prepareMessageWithContext(messageText);
+      
+      // Create and add user message to the messages array (show original message to user)
       const userMessage: AIMessage = {
         id: userMessageId,
         role: "user",
@@ -32,11 +65,13 @@ export const useAIChatOperations = () => {
         // Get the token for authentication
         const token = "placeholder-token"; // This should come from auth context
         
+        const userName = user?.user_metadata?.full_name || user?.user_metadata?.name;
+        
         // Artificially add a small delay to see the loading state
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Make the API call
-        const response = await callAIAssistant(token, messageText);
+        // Make the API call with contextual message
+        const response = await callAIAssistant(token, contextualMessage, userName);
         
         // Create and add AI message to the messages array
         const aiMessage: AIMessage = {
