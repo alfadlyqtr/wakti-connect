@@ -20,6 +20,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
 }) => {
   const [transcribedText, setTranscribedText] = useState("");
   const [openAIConfigured, setOpenAIConfigured] = useState<boolean | null>(null);
+  const [isInitialCheck, setIsInitialCheck] = useState(true);
   const { toast } = useToast();
   
   // Use browser-based speech recognition
@@ -53,6 +54,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
   const isListening = browserIsListening || openAIIsListening;
   
   const handleApiKeyRetry = async () => {
+    setIsInitialCheck(false);
     toast({
       title: "Testing OpenAI API Key",
       description: "Checking if the OpenAI API key is properly configured...",
@@ -62,6 +64,17 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     
     if (success) {
       setOpenAIConfigured(true);
+      toast({
+        title: "API Key Validation Successful",
+        description: "OpenAI voice features are now available.",
+        variant: "success",
+      });
+    } else {
+      toast({
+        title: "API Key Validation Failed",
+        description: "Please check your OpenAI API key in Supabase secrets.",
+        variant: "destructive",
+      });
     }
   };
   
@@ -75,16 +88,21 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
           body: { test: true }
         });
         
+        console.log("OpenAI API configuration test response:", testResponse);
+        
         if (testResponse.error) {
           console.warn("OpenAI API configuration test failed:", testResponse.error);
           setOpenAIConfigured(false);
           
           // Only show the toast if this is the first load
-          toast({
-            title: "OpenAI API Key Issue",
-            description: "Your OpenAI API key may not be properly configured. Voice features will be limited.",
-            variant: "destructive",
-          });
+          if (isInitialCheck) {
+            toast({
+              title: "OpenAI API Key Issue",
+              description: "Your OpenAI API key may not be properly configured. Voice features will be limited.",
+              variant: "destructive",
+            });
+            setIsInitialCheck(false);
+          }
         } else {
           console.log("OpenAI API configuration test passed");
           setOpenAIConfigured(true);
@@ -93,16 +111,21 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
         console.warn("Could not verify OpenAI API configuration:", error);
         setOpenAIConfigured(false);
         
-        toast({
-          title: "Connection Error",
-          description: "Could not verify OpenAI API configuration. Check your internet connection.",
-          variant: "destructive",
-        });
+        if (isInitialCheck) {
+          toast({
+            title: "Connection Error",
+            description: "Could not verify OpenAI API configuration. Check your internet connection.",
+            variant: "destructive",
+          });
+          setIsInitialCheck(false);
+        }
       }
     };
     
-    checkOpenAIConfig();
-  }, [toast]);
+    if (isInitialCheck) {
+      checkOpenAIConfig();
+    }
+  }, [toast, isInitialCheck]);
   
   // Update transcript from browser-based recognition
   useEffect(() => {
@@ -117,6 +140,14 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
       setTranscribedText(lastTranscript);
     }
   }, [lastTranscript]);
+  
+  // Monitor openAIVoiceSupported changes
+  useEffect(() => {
+    console.log("OpenAI voice supported:", openAIVoiceSupported);
+    if (openAIVoiceSupported !== null) {
+      setOpenAIConfigured(openAIVoiceSupported);
+    }
+  }, [openAIVoiceSupported]);
   
   const handleStartListening = () => {
     resetTranscript();

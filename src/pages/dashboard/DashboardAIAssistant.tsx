@@ -60,6 +60,7 @@ const DashboardAIAssistant = () => {
   const [activeTab, setActiveTab] = useState<string>("chat");
   const [isSpeechEnabled, setSpeechEnabled] = useState(false);
   const [showToolbar, setShowToolbar] = useState(true);
+  const [debugMode, setDebugMode] = useState(false);
   const breakpoint = useBreakpoint();
   const isMobile = !breakpoint.includes("md");
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name;
@@ -210,8 +211,25 @@ const DashboardAIAssistant = () => {
   };
 
   const handleToolContent = (content: string) => {
+    console.log("Using content from tool:", content.substring(0, 30) + "...");
     setInputMessage(content);
     setActiveTab("chat");
+  };
+  
+  const toggleDebugMode = () => {
+    setDebugMode(!debugMode);
+    console.log("Debug mode:", !debugMode);
+    
+    if (!debugMode) {
+      console.log({
+        canAccess,
+        hookCanUseAI,
+        openAIConfigStatus: "See voice interaction logs",
+        selectedRole,
+        activeTab,
+        isSpeechEnabled
+      });
+    }
   };
 
   if (isChecking) {
@@ -237,6 +255,34 @@ const DashboardAIAssistant = () => {
     >
       <AISettingsProvider>
         <div className="space-y-4">
+          {import.meta.env.DEV && (
+            <div className="bg-gray-100 p-2 text-xs border rounded-md mb-2">
+              <button 
+                onClick={toggleDebugMode}
+                className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+              >
+                {debugMode ? "Hide Debug Info" : "Show Debug Info"}
+              </button>
+              
+              {debugMode && (
+                <div className="mt-2 space-y-1">
+                  <div>Access: {canAccess ? "Yes" : "No"}</div>
+                  <div>Hook Access: {hookCanUseAI ? "Yes" : "No"}</div>
+                  <div>Role: {selectedRole}</div>
+                  <div>Speech: {isSpeechEnabled ? "Enabled" : "Disabled"}</div>
+                  <div>
+                    <button 
+                      onClick={() => retryApiKeyValidation()}
+                      className="px-2 py-1 bg-blue-100 rounded text-blue-700 hover:bg-blue-200"
+                    >
+                      Retry API Key Check
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
           {!canAccess ? (
             <AIAssistantUpgradeCard />
           ) : (
