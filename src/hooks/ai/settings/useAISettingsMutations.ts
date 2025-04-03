@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { User } from "@/hooks/auth";
-import { AISettings } from "@/types/ai-assistant.types";
+import { AISettings, AIAssistantRole } from "@/types/ai-assistant.types";
 
 /**
  * Mutation hook for updating AI settings
@@ -17,9 +17,6 @@ export const useUpdateAISettings = (user: User | null) => {
 
       console.log("Updating AI settings:", newSettings);
       
-      // Convert role to string for database compatibility
-      const dbRole = newSettings.role as string;
-      
       // Prepare settings for Supabase
       const settingsForUpdate = {
         user_id: user.id,
@@ -28,7 +25,7 @@ export const useUpdateAISettings = (user: User | null) => {
         response_length: newSettings.response_length,
         proactiveness: newSettings.proactiveness,
         suggestion_frequency: newSettings.suggestion_frequency,
-        role: dbRole, // Use string version for database
+        role: newSettings.role, // This is already an AIAssistantRole
         enabled_features: newSettings.enabled_features
       };
 
@@ -62,7 +59,7 @@ export const useUpdateAISettings = (user: User | null) => {
           response_length: data.response_length || "balanced",
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
           suggestion_frequency: data.suggestion_frequency || "medium",
-          role: data.role as AISettings["role"] || "general",
+          role: data.role as AIAssistantRole || "general",
           enabled_features: data.enabled_features || {
             tasks: true,
             events: true,
@@ -84,7 +81,7 @@ export const useUpdateAISettings = (user: User | null) => {
             response_length: settingsForUpdate.response_length,
             proactiveness: settingsForUpdate.proactiveness,
             suggestion_frequency: settingsForUpdate.suggestion_frequency,
-            role: settingsForUpdate.role, // String version for database
+            role: settingsForUpdate.role,
             enabled_features: settingsForUpdate.enabled_features
           })
           .select()
@@ -103,7 +100,7 @@ export const useUpdateAISettings = (user: User | null) => {
           response_length: data.response_length || "balanced",
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
           suggestion_frequency: data.suggestion_frequency || "medium",
-          role: data.role as AISettings["role"] || "general",
+          role: data.role as AIAssistantRole || "general",
           enabled_features: data.enabled_features || {
             tasks: true,
             events: true,

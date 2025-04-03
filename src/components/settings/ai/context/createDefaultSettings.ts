@@ -37,9 +37,7 @@ export const createDefaultSettings = async (): Promise<void> => {
       }
     };
     
-    // Convert role to string for database compatibility
-    const dbRole = defaultSettings.role;
-    
+    // Insert the settings
     const { data, error } = await supabase
       .from("ai_assistant_settings")
       .insert({
@@ -49,7 +47,7 @@ export const createDefaultSettings = async (): Promise<void> => {
         response_length: defaultSettings.response_length,
         proactiveness: defaultSettings.proactiveness,
         suggestion_frequency: defaultSettings.suggestion_frequency,
-        role: dbRole, // This should be compatible with the database enum
+        role: defaultSettings.role, // This has been type-asserted above
         enabled_features: defaultSettings.enabled_features
       })
       .select()
