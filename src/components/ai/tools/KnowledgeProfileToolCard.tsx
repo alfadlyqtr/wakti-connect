@@ -261,7 +261,7 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
       <CardContent>
         {renderProfileForm()}
       </CardContent>
-      {selectedRole !== "general" && selectedRole !== "creator" && (
+      {(selectedRole === "student" || selectedRole === "business_owner" || selectedRole === "professional") && (
         <CardFooter className="flex justify-end pt-0">
           <Button 
             onClick={handleSaveProfile} 

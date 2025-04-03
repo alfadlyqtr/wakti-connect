@@ -1,6 +1,6 @@
 
 // AI Assistant role types
-export type AIAssistantRole = "student" | "business_owner" | "general" | "employee" | "writer";
+export type AIAssistantRole = "student" | "business_owner" | "general" | "employee" | "writer" | "professional" | "creator";
 
 // AI settings interface
 export interface AISettings {
@@ -40,6 +40,8 @@ export const RoleContexts: Record<AIAssistantRole, {
   icon: string;
   welcomeMessage?: string;
   commandSuggestions?: string[];
+  suggestedPrompts?: string[];
+  quickTools?: Array<{name: string; description: string; icon: string;}>;
 }> = {
   "student": {
     title: "Study Assistant",
@@ -50,6 +52,18 @@ export const RoleContexts: Record<AIAssistantRole, {
       "Create a task for my math homework",
       "Schedule a study session for tomorrow at 4pm",
       "Help me organize my assignments by due date"
+    ],
+    suggestedPrompts: [
+      "Create a study plan for my upcoming exams",
+      "Help me summarize this chapter",
+      "What's the best way to memorize formulas?",
+      "Create a task for my essay due next week"
+    ],
+    quickTools: [
+      { name: "Homework Helper", description: "Get help with assignments", icon: "BookOpen" },
+      { name: "Study Planner", description: "Create study schedules", icon: "Calendar" },
+      { name: "Note Summarizer", description: "Summarize your notes", icon: "FileText" },
+      { name: "Research Assistant", description: "Help with research", icon: "Search" }
     ]
   },
   "business_owner": {
@@ -61,6 +75,18 @@ export const RoleContexts: Record<AIAssistantRole, {
       "Show me my business analytics",
       "Create a task to follow up with clients",
       "View my staff status"
+    ],
+    suggestedPrompts: [
+      "Generate a performance report for my business",
+      "Create a task to review customer feedback",
+      "Help me schedule staff for next week",
+      "What's my business growth looking like?"
+    ],
+    quickTools: [
+      { name: "Staff Scheduler", description: "Organize staff schedules", icon: "Users" },
+      { name: "Business Analytics", description: "Review performance metrics", icon: "BarChart" },
+      { name: "Customer Service", description: "Manage customer interactions", icon: "HeartHandshake" },
+      { name: "Service Manager", description: "Optimize your services", icon: "Settings" }
     ]
   },
   "general": {
@@ -72,6 +98,18 @@ export const RoleContexts: Record<AIAssistantRole, {
       "Create a task to buy groceries",
       "Show me my tasks for today",
       "Schedule a meeting with Sarah"
+    ],
+    suggestedPrompts: [
+      "Help me organize my day",
+      "Create a shopping list task",
+      "Schedule a reminder for tomorrow",
+      "How can I improve my productivity?"
+    ],
+    quickTools: [
+      { name: "Day Planner", description: "Plan your daily schedule", icon: "Calendar" },
+      { name: "Task Creator", description: "Create and organize tasks", icon: "CheckSquare" },
+      { name: "Event Organizer", description: "Manage your events", icon: "CalendarClock" },
+      { name: "Quick Answer", description: "Get instant information", icon: "HelpCircle" }
     ]
   },
   "employee": {
@@ -83,6 +121,18 @@ export const RoleContexts: Record<AIAssistantRole, {
       "Show me my assigned tasks",
       "Create a task for the client project",
       "View my work schedule"
+    ],
+    suggestedPrompts: [
+      "Track my hours for today",
+      "Create a task for the team meeting notes",
+      "Help me log my completed work",
+      "What's on my agenda for today?"
+    ],
+    quickTools: [
+      { name: "Time Tracker", description: "Track your work hours", icon: "Clock" },
+      { name: "Task Reporter", description: "Report completed tasks", icon: "ClipboardCheck" },
+      { name: "Meeting Organizer", description: "Organize team meetings", icon: "Users" },
+      { name: "Work Log", description: "Log your daily work", icon: "FileText" }
     ]
   },
   "writer": {
@@ -94,6 +144,64 @@ export const RoleContexts: Record<AIAssistantRole, {
       "Create a task for my article draft",
       "Schedule time for editing tomorrow",
       "Organize my writing deadlines"
+    ],
+    suggestedPrompts: [
+      "Help me outline an article",
+      "Create a writing schedule",
+      "Give me feedback on this paragraph",
+      "Create a task for my book chapter"
+    ],
+    quickTools: [
+      { name: "Content Generator", description: "Generate writing ideas", icon: "Lightbulb" },
+      { name: "Editor Helper", description: "Get editing assistance", icon: "Edit" },
+      { name: "Writing Scheduler", description: "Plan writing sessions", icon: "Calendar" },
+      { name: "Research Tool", description: "Find relevant information", icon: "Search" }
+    ]
+  },
+  "professional": {
+    title: "Work Assistant",
+    description: "Help with workplace tasks and professional projects",
+    icon: "briefcase",
+    welcomeMessage: "Hello! I'm your Work Assistant. I can help organize your professional tasks, meetings, and projects. How can I assist with your work today?",
+    commandSuggestions: [
+      "Create a task for the quarterly report",
+      "Schedule a client meeting next week",
+      "Remind me to prepare for tomorrow's presentation"
+    ],
+    suggestedPrompts: [
+      "Help me prepare for my presentation",
+      "Draft an email to the team",
+      "Create a project timeline",
+      "What's my meeting schedule for tomorrow?"
+    ],
+    quickTools: [
+      { name: "Email Composer", description: "Write professional emails", icon: "Mail" },
+      { name: "Meeting Scheduler", description: "Organize meetings", icon: "CalendarClock" },
+      { name: "Task Prioritizer", description: "Prioritize your workload", icon: "ListChecks" },
+      { name: "Document Creator", description: "Create work documents", icon: "FileText" }
+    ]
+  },
+  "creator": {
+    title: "Creative Assistant",
+    description: "Help with content creation and creative projects",
+    icon: "pen-tool",
+    welcomeMessage: "Hello! I'm your Creative Assistant. I can help with content planning, creative ideas, and managing your creative projects. What creative endeavor are you working on today?",
+    commandSuggestions: [
+      "Create a content calendar for next month",
+      "Schedule a photoshoot for Friday",
+      "Remind me to edit my podcast tomorrow"
+    ],
+    suggestedPrompts: [
+      "Help me brainstorm content ideas",
+      "Create a posting schedule for social media",
+      "Give me caption ideas for my photo",
+      "Create a task for editing my video"
+    ],
+    quickTools: [
+      { name: "Content Generator", description: "Generate content ideas", icon: "Lightbulb" },
+      { name: "Content Calendar", description: "Plan content schedule", icon: "Calendar" },
+      { name: "Caption Writer", description: "Create engaging captions", icon: "MessageSquare" },
+      { name: "Hashtag Generator", description: "Generate relevant hashtags", icon: "Hash" }
     ]
   }
 };

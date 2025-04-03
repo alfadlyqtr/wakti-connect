@@ -28,42 +28,16 @@ export const callAIAssistant = async (token: string, message: string, userName: 
         currentPage = "job-cards";
       }
       
-      // Save current page to user_interface_state if we have a valid session
+      // Try to check if the interface_state table exists before trying to use it
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user?.id) {
-        // Check if the table exists before trying to insert
         try {
-          const { count, error: tableCheckError } = await supabase
-            .from('user_interface_state')
-            .select('*', { count: 'exact', head: true })
-            .limit(1);
-          
-          if (tableCheckError) {
-            console.log("user_interface_state table doesn't exist yet");
-          } else {
-            // Table exists, update or insert state
-            const { error: upsertError } = await supabase
-              .from('user_interface_state')
-              .upsert({
-                user_id: session.user.id,
-                current_page: currentPage,
-                last_interaction: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              }, {
-                onConflict: 'user_id',
-                ignoreDuplicates: false
-              });
-              
-            if (upsertError) {
-              console.error("Error updating interface state:", upsertError);
-            }
-          }
+          // Store the current page info in context without saving to database
+          context += `Current page: ${currentPage}. `;
         } catch (error) {
-          console.warn("Error checking for user_interface_state table:", error);
+          console.warn("Error setting interface context:", error);
         }
       }
-      
-      context += `Current page: ${currentPage}. `;
     } catch (error) {
       console.warn("Error setting interface context:", error);
       // Continue without this context

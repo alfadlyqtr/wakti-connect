@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAIMessages } from "../messages/useAIMessages";
+import { callAIAssistant } from "../utils/callAIAssistant";
 import { 
-  callAIAssistant, 
   checkIfOffTopic, 
   detectSystemCommand,
   getUserTasks,

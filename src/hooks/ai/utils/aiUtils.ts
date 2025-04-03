@@ -18,15 +18,20 @@ export const fetchUserProfile = async (userId: string): Promise<{ firstName: str
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('first_name, last_name, business_name, account_type')
+      .select('full_name, business_name, account_type')
       .eq('id', userId)
       .single();
       
     if (error) throw error;
     
+    // Split full_name into first and last name components
+    const nameParts = data?.full_name?.split(' ') || ['', ''];
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+    
     return { 
-      firstName: data?.first_name || '',
-      lastName: data?.last_name || '',
+      firstName,
+      lastName,
       businessName: data?.business_name
     };
   } catch (error) {
@@ -170,7 +175,7 @@ export const detectSystemCommand = (message: string): CommandInfo => {
   }
   
   // Check business status
-  if (lowercaseMessage.match(/check\s+(my\s+)?business|business\s+status|business\s+overview|business\s+summary/i)) {
+  if (lowercaseMessage.match(/check\s+(my\s+)?business|business\s+status|business\s+overview|how's\s+(my\s+)?business/i)) {
     return {
       isCommand: true,
       type: 'check_business',
@@ -178,299 +183,333 @@ export const detectSystemCommand = (message: string): CommandInfo => {
     };
   }
   
-  // Not a recognized command
   return {
     isCommand: false,
-    type: 'none',
-    params: {}
+    type: 'none'
   };
 };
 
-// Function to get user tasks from the database
+// Fetch user tasks
 export const getUserTasks = async (): Promise<Task[]> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user.id;
     
-    if (!session) {
-      throw new Error("You must be logged in to view tasks");
+    if (!userId) {
+      throw new Error('User is not authenticated');
     }
     
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
-      .eq('user_id', session.user.id)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
       
     if (error) throw error;
     
-    return data as Task[];
+    return data || [];
   } catch (error) {
-    console.error("Error fetching tasks:", error);
-    toast({
-      title: "Error fetching tasks",
-      description: error instanceof Error ? error.message : "An unexpected error occurred",
-      variant: "destructive"
-    });
+    console.error('Error fetching tasks:', error);
     return [];
   }
 };
 
-// Format tasks for display in AI assistant
+// Format tasks for AI display
 export const formatTasksForDisplay = (tasks: Task[]): string => {
-  if (tasks.length === 0) {
-    return "You don't have any tasks currently.";
+  if (!tasks || tasks.length === 0) {
+    return "You don't have any tasks yet. Would you like me to help you create one?";
   }
   
-  const pendingTasks = tasks.filter(task => task.status === 'pending' || task.status === 'in-progress');
+  // Group tasks by status
+  const pendingTasks = tasks.filter(task => task.status === 'pending');
   const completedTasks = tasks.filter(task => task.status === 'completed');
   
-  let message = "📋 **Your Tasks**\n\n";
+  let result = `📋 **Your Tasks**\n\n`;
   
   if (pendingTasks.length > 0) {
-    message += "**Pending Tasks:**\n";
+    result += `**Pending Tasks (${pendingTasks.length})**\n`;
     pendingTasks.slice(0, 5).forEach((task, index) => {
-      const priority = task.priority === 'urgent' ? '🔴' : task.priority === 'high' ? '🟠' : task.priority === 'medium' ? '🟡' : '🟢';
-      message += `${index + 1}. ${priority} ${task.title}${task.due_date ? ` - Due: ${new Date(task.due_date).toLocaleDateString()}` : ''}\n`;
+      const dueInfo = task.due_date ? ` - Due: ${new Date(task.due_date).toLocaleDateString()}` : '';
+      const priorityInfo = task.priority !== 'normal' ? ` - Priority: ${task.priority}` : '';
+      result += `${index + 1}. ${task.title}${dueInfo}${priorityInfo}\n`;
     });
     
     if (pendingTasks.length > 5) {
-      message += `...and ${pendingTasks.length - 5} more pending tasks.\n`;
+      result += `...and ${pendingTasks.length - 5} more pending tasks.\n`;
     }
     
-    message += "\n";
+    result += '\n';
   }
   
   if (completedTasks.length > 0) {
-    message += "**Recently Completed:**\n";
+    result += `**Completed Tasks (${completedTasks.length})**\n`;
     completedTasks.slice(0, 3).forEach((task, index) => {
-      message += `${index + 1}. ✅ ${task.title}\n`;
+      result += `${index + 1}. ${task.title}\n`;
     });
     
     if (completedTasks.length > 3) {
-      message += `...and ${completedTasks.length - 3} more completed tasks.\n`;
+      result += `...and ${completedTasks.length - 3} more completed tasks.\n`;
     }
   }
   
-  return message;
+  result += `\nWould you like to create a new task or see more details about a specific task?`;
+  
+  return result;
 };
 
-// Get analytics overview from database
-export const getAnalyticsOverview = async (): Promise<string> => {
+// Get upcoming events
+export const getUpcomingEvents = async (): Promise<string> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user.id;
     
-    if (!session) {
-      throw new Error("You must be logged in to view analytics");
+    if (!userId) {
+      throw new Error('User is not authenticated');
     }
     
-    // Task analytics
-    const { data: tasks, error: tasksError } = await supabase
-      .from('tasks')
-      .select('status, priority, created_at')
-      .eq('user_id', session.user.id);
-      
-    if (tasksError) throw tasksError;
-    
-    // Get event analytics if events table exists
-    let events = [];
+    // Check if events table exists
+    let hasEventsTable = false;
     try {
-      const { data: eventsData, error: eventsError } = await supabase
+      const { count } = await supabase
         .from('events')
-        .select('status, start_time')
-        .eq('user_id', session.user.id);
-        
-      if (!eventsError) {
-        events = eventsData || [];
-      }
+        .select('id', { count: 'exact', head: true })
+        .limit(1);
+      
+      hasEventsTable = count !== null;
     } catch (error) {
-      console.warn("Events table might not exist yet:", error);
+      console.warn('Events table may not exist yet:', error);
     }
     
-    // Format analytics data
-    const pendingTasksCount = tasks.filter(t => t.status === 'pending').length;
-    const completedTasksCount = tasks.filter(t => t.status === 'completed').length;
-    const highPriorityCount = tasks.filter(t => t.priority === 'high' || t.priority === 'urgent').length;
+    if (!hasEventsTable) {
+      return "📅 The calendar and events feature is being set up. Once ready, you'll be able to schedule and manage events here.";
+    }
     
-    // Calculate task completion rate
-    const completionRate = tasks.length > 0 
-      ? Math.round((completedTasksCount / tasks.length) * 100) 
-      : 0;
-    
-    // Format upcoming events if any
     const today = new Date();
     const nextWeek = new Date();
     nextWeek.setDate(today.getDate() + 7);
     
-    const upcomingEvents = events.filter(e => {
-      const eventDate = new Date(e.start_time);
-      return eventDate >= today && eventDate <= nextWeek;
+    const { data: events, error } = await supabase
+      .from('events')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('start_time', today.toISOString())
+      .lte('start_time', nextWeek.toISOString())
+      .order('start_time', { ascending: true });
+      
+    if (error) throw error;
+    
+    if (!events || events.length === 0) {
+      return "📅 You don't have any upcoming events in the next 7 days. Would you like me to help you schedule an event?";
+    }
+    
+    let result = `📅 **Your Upcoming Events**\n\n`;
+    
+    events.forEach((event, index) => {
+      const eventDate = new Date(event.start_time).toLocaleDateString();
+      const eventTime = new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      result += `${index + 1}. **${event.title}** - ${eventDate} at ${eventTime}\n`;
+      if (event.location) {
+        result += `   📍 ${event.location}\n`;
+      }
+      if (event.description) {
+        result += `   📝 ${event.description}\n`;
+      }
+      result += '\n';
     });
     
-    // Create analytics message
-    let message = "📊 **Analytics Overview**\n\n";
-    message += `**Task Summary:**\n`;
-    message += `- Pending tasks: ${pendingTasksCount}\n`;
-    message += `- Completed tasks: ${completedTasksCount}\n`;
-    message += `- High priority items: ${highPriorityCount}\n`;
-    message += `- Task completion rate: ${completionRate}%\n\n`;
+    result += `Would you like to schedule a new event or see more details about a specific event?`;
     
-    if (upcomingEvents.length > 0) {
-      message += `**Upcoming Events:**\n`;
-      message += `- Next 7 days: ${upcomingEvents.length} events\n\n`;
-    }
-    
-    message += `This is a simplified overview. Would you like more detailed analytics on specific areas?`;
-    
-    return message;
+    return result;
   } catch (error) {
-    console.error("Error fetching analytics:", error);
-    return "I couldn't retrieve your analytics data at this moment. Please try again later.";
+    console.error('Error fetching events:', error);
+    return "I couldn't retrieve your calendar information at the moment. Would you like to try again?";
   }
 };
 
-// Get upcoming events from database
-export const getUpcomingEvents = async (): Promise<string> => {
+// Get analytics overview
+export const getAnalyticsOverview = async (): Promise<string> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user.id;
     
-    if (!session) {
-      throw new Error("You must be logged in to view events");
+    if (!userId) {
+      throw new Error('User is not authenticated');
     }
     
-    try {
-      const { data: events, error: eventsError } = await supabase
-        .from('events')
-        .select('title, start_time, end_time, location, is_all_day')
-        .eq('user_id', session.user.id)
-        .gte('start_time', new Date().toISOString())
-        .order('start_time', { ascending: true })
-        .limit(5);
-        
-      if (eventsError) throw eventsError;
-      
-      if (!events || events.length === 0) {
-        return "You don't have any upcoming events scheduled.";
-      }
-      
-      let message = "📅 **Your Upcoming Events**\n\n";
-      
-      events.forEach((event, index) => {
-        const eventDate = new Date(event.start_time);
-        const formattedDate = eventDate.toLocaleDateString();
-        const formattedTime = event.is_all_day 
-          ? "All day" 
-          : `${new Date(event.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${new Date(event.end_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-        
-        message += `${index + 1}. **${event.title}**\n`;
-        message += `   📆 ${formattedDate} | ⏰ ${formattedTime}\n`;
-        
-        if (event.location) {
-          message += `   📍 ${event.location}\n`;
-        }
-        
-        message += "\n";
-      });
-      
-      return message;
-    } catch (error) {
-      console.warn("Events table might not exist yet:", error);
-      return "The events feature is still being set up. Would you like me to help you schedule an event once it's ready?";
-    }
-  } catch (error) {
-    console.error("Error fetching events:", error);
-    return "I couldn't retrieve your events at this moment. Please try again later.";
-  }
-};
-
-// Get business dashboard summary
-export const getBusinessSummary = async (): Promise<string> => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      throw new Error("You must be logged in to view business data");
-    }
-    
-    // Check if user has a business profile
-    const { data: profile, error: profileError } = await supabase
+    // Check if user is a business
+    const { data: profile } = await supabase
       .from('profiles')
-      .select('account_type, business_name')
-      .eq('id', session.user.id)
+      .select('account_type')
+      .eq('id', userId)
       .single();
       
-    if (profileError) throw profileError;
-    
-    if (profile.account_type !== 'business') {
-      return "You don't currently have a business account. Would you like information about upgrading to access business features?";
+    if (profile?.account_type !== 'business') {
+      // For non-business users, show productivity analytics
+      const { data: tasks } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', userId);
+        
+      const totalTasks = tasks?.length || 0;
+      const completedTasks = tasks?.filter(task => task.status === 'completed').length || 0;
+      const pendingTasks = tasks?.filter(task => task.status === 'pending').length || 0;
+      const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+      
+      return `📊 **Your Productivity Overview**
+
+**Task Completion:** ${completionRate}% (${completedTasks}/${totalTasks})
+**Pending Tasks:** ${pendingTasks}
+**Completed Tasks:** ${completedTasks}
+
+Would you like me to help you organize your pending tasks or create new ones?`;
     }
     
-    // Try to get staff count
-    let staffCount = 0;
+    // Check if business analytics table exists 
+    let hasAnalyticsTable = false;
     try {
-      const { count, error: staffError } = await supabase
-        .from('staff_relations')
+      const { count } = await supabase
+        .from('business_analytics')
         .select('id', { count: 'exact', head: true })
-        .eq('business_id', session.user.id);
-        
-      if (!staffError) {
-        staffCount = count || 0;
-      }
+        .limit(1);
+      
+      hasAnalyticsTable = count !== null;
     } catch (error) {
-      console.warn("Staff relations table might not exist yet:", error);
+      console.warn('Business analytics table may not exist yet:', error);
     }
     
-    // Try to get customer/subscriber count
-    let subscriberCount = 0;
-    try {
-      const { count, error: subscriberError } = await supabase
-        .from('business_subscribers')
-        .select('id', { count: 'exact', head: true })
-        .eq('business_id', session.user.id);
-        
-      if (!subscriberError) {
-        subscriberCount = count || 0;
-      }
-    } catch (error) {
-      console.warn("Business subscribers table might not exist yet:", error);
+    if (!hasAnalyticsTable) {
+      return "📊 Business analytics features are being set up. Once ready, you'll be able to view detailed insights about your business performance here.";
     }
     
-    // Get recent job cards if they exist
-    let recentJobCards = [];
-    try {
-      const { data: jobCards, error: jobCardsError } = await supabase
-        .from('job_cards')
-        .select('created_at, amount')
-        .eq('business_id', session.user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-        
-      if (!jobCardsError) {
-        recentJobCards = jobCards || [];
-      }
-    } catch (error) {
-      console.warn("Job cards table might not exist yet:", error);
+    // For business users, fetch business analytics
+    const { data: analytics, error: analyticsError } = await supabase
+      .from('business_analytics')
+      .select('*')
+      .eq('business_id', userId)
+      .single();
+      
+    if (analyticsError) {
+      console.error('Error fetching business analytics:', analyticsError);
+      return "📊 I couldn't retrieve your business analytics at the moment. The analytics features might still be setting up. Please check back later.";
     }
     
-    // Calculate total revenue from job cards
-    const totalRevenue = recentJobCards.reduce((sum, card) => sum + (card.amount || 0), 0);
+    // Get staff data
+    const { data: staff } = await supabase
+      .from('business_staff')
+      .select('*')
+      .eq('business_id', userId)
+      .eq('status', 'active');
+      
+    const staffCount = staff?.length || 0;
     
-    // Format business summary
-    let message = `💼 **Business Dashboard: ${profile.business_name || 'Your Business'}**\n\n`;
+    // Get subscriber count
+    const { data: subscribers } = await supabase
+      .from('business_subscribers')
+      .select('id')
+      .eq('business_id', userId);
+      
+    const subscriberCount = subscribers?.length || 0;
     
-    message += `**Quick Stats:**\n`;
-    message += `- Staff members: ${staffCount}\n`;
-    message += `- Subscribers/Customers: ${subscriberCount}\n`;
-    
-    if (recentJobCards.length > 0) {
-      message += `- Recent job cards: ${recentJobCards.length}\n`;
-      message += `- Revenue from recent jobs: ${totalRevenue.toFixed(2)}\n\n`;
-    }
-    
-    message += `Would you like more detailed information about specific aspects of your business?`;
-    
-    return message;
+    // Format the business analytics overview
+    return `📊 **Your Business Overview**
+
+**Subscribers:** ${analytics?.subscriber_count || subscriberCount} 
+**Staff Members:** ${analytics?.staff_count || staffCount}
+**Task Completion Rate:** ${analytics?.task_completion_rate || 0}%
+
+Would you like to see more detailed analytics or specific information about your business performance?`;
   } catch (error) {
-    console.error("Error fetching business summary:", error);
-    return "I couldn't retrieve your business data at this moment. Please try again later.";
+    console.error('Error generating analytics overview:', error);
+    return "I couldn't retrieve your analytics information at the moment. Would you like to try again?";
+  }
+};
+
+// Get business summary
+export const getBusinessSummary = async (): Promise<string> => {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user.id;
+    
+    if (!userId) {
+      throw new Error('User is not authenticated');
+    }
+    
+    // Check if user is a business
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('account_type, business_name')
+      .eq('id', userId)
+      .single();
+      
+    if (profile?.account_type !== 'business') {
+      return "This command is available for business accounts only. Would you like information about upgrading to a business plan?";
+    }
+    
+    // Get services count
+    const { data: services, error: servicesError } = await supabase
+      .from('business_services')
+      .select('id')
+      .eq('business_id', userId);
+      
+    const servicesCount = services?.length || 0;
+    
+    // Get staff count
+    const { data: staff, error: staffError } = await supabase
+      .from('business_staff')
+      .select('id, status')
+      .eq('business_id', userId);
+      
+    const activeStaffCount = staff?.filter(s => s.status === 'active').length || 0;
+    
+    // Get bookings count (if table exists)
+    let bookingsCount = 0;
+    let pendingBookingsCount = 0;
+    
+    try {
+      const { data: bookings } = await supabase
+        .from('bookings')
+        .select('id, status')
+        .eq('business_id', userId);
+        
+      bookingsCount = bookings?.length || 0;
+      pendingBookingsCount = bookings?.filter(b => b.status === 'pending').length || 0;
+    } catch (error) {
+      console.warn('Bookings table may not exist yet:', error);
+    }
+    
+    return `🏢 **${profile?.business_name || 'Your Business'} Overview**
+
+**Services:** ${servicesCount} services configured
+**Staff:** ${activeStaffCount} active staff members
+**Bookings:** ${bookingsCount} total (${pendingBookingsCount} pending)
+
+Would you like to manage your services, staff, or bookings?`;
+  } catch (error) {
+    console.error('Error generating business summary:', error);
+    return "I couldn't retrieve your business information at the moment. Would you like to try again?";
+  }
+};
+
+// For possible future use: Interface with a business page
+export const getBusinessPageStatus = async (userId: string): Promise<string> => {
+  try {
+    const { data, error } = await supabase
+      .from('business_pages')
+      .select('is_published, page_title')
+      .eq('business_id', userId)
+      .maybeSingle();
+      
+    if (error) throw error;
+    
+    if (!data) {
+      return "You don't have a business page set up yet. Would you like me to help you create one?";
+    }
+    
+    return data.is_published 
+      ? `Your business page "${data.page_title}" is published and available to visitors.` 
+      : `Your business page "${data.page_title}" is created but not published yet.`;
+  } catch (error) {
+    console.error('Error checking business page status:', error);
+    return "I couldn't check your business page status at the moment.";
   }
 };

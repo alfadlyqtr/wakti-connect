@@ -10,9 +10,8 @@ export interface SuggestionPromptsProps {
 
 export const SuggestionPrompts: React.FC<SuggestionPromptsProps> = ({ onPromptClick, selectedRole }) => {
   // Get the appropriate suggestions from RoleContexts
-  // First try suggestedPrompts, fall back to suggestions if needed
   const promptsData = RoleContexts[selectedRole];
-  const suggestedPrompts = promptsData.suggestedPrompts || promptsData.suggestions || [];
+  const suggestedPrompts = promptsData.suggestedPrompts || promptsData.commandSuggestions || [];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-auto mb-4">
