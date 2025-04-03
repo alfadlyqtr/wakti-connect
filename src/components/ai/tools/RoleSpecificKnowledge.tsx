@@ -161,7 +161,7 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
       <CardContent>
         <Tabs 
           value={activeTab} 
-          onValueChange={(value) => setActiveTab(value as AIAssistantRole)} 
+          onValueChange={(value: AIAssistantRole) => setActiveTab(value)} 
           className="w-full"
         >
           <TabsList className="grid grid-cols-5 mb-4">

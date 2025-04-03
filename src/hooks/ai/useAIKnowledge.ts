@@ -4,14 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { AIKnowledgeUpload } from "@/types/ai-assistant.types";
+import { AIKnowledgeUpload, AIAssistantRole } from "@/types/ai-assistant.types";
 
 export const useAIKnowledge = () => {
   const { user } = useAuth();
 
   // Add knowledge for AI assistant
   const addKnowledge = useMutation({
-    mutationFn: async ({ title, content }: { title: string; content: string }) => {
+    mutationFn: async ({ title, content, role }: { 
+      title: string; 
+      content: string;
+      role?: AIAssistantRole;
+    }) => {
       if (!user) throw new Error("User not authenticated");
 
       const { data, error } = await supabase
@@ -20,6 +24,7 @@ export const useAIKnowledge = () => {
           user_id: user.id,
           title,
           content,
+          role,
         })
         .select()
         .single();

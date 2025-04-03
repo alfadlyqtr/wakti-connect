@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,12 +17,14 @@ interface EnhancedToolsTabProps {
   selectedRole: AIAssistantRole;
   onUseContent: (content: string) => void;
   canAccess: boolean;
+  compact?: boolean;
 }
 
 export const EnhancedToolsTab: React.FC<EnhancedToolsTabProps> = ({
   selectedRole,
   onUseContent,
-  canAccess
+  canAccess,
+  compact = false
 }) => {
   const [meetingTranscript, setMeetingTranscript] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -108,6 +109,21 @@ export const EnhancedToolsTab: React.FC<EnhancedToolsTabProps> = ({
           </p>
         </CardContent>
       </Card>
+    );
+  }
+  
+  if (compact) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center text-sm mb-1">
+          <Bot className="h-4 w-4 mr-1.5 text-wakti-blue" />
+          <span className="font-medium">AI Tools</span>
+        </div>
+        <VoiceInteractionToolCard 
+          onSpeechRecognized={handleSpeechRecognized}
+          compact={true}
+        />
+      </div>
     );
   }
   
