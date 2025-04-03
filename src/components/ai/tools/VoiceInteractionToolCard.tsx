@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ interface VoiceInteractionToolCardProps {
 
 export function VoiceInteractionToolCard({ onSpeechRecognized, compact = false }: VoiceInteractionToolCardProps) {
   const [voiceStyle, setVoiceStyle] = useState<string>("natural");
+  const [mounted, setMounted] = useState(false);
   const {
     transcript,
     isListening,
@@ -27,6 +28,11 @@ export function VoiceInteractionToolCard({ onSpeechRecognized, compact = false }
     continuous: true,
     interimResults: true,
   });
+
+  // Use useEffect to set mounted state after component is mounted
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleStopListening = () => {
     stopListening();
@@ -128,7 +134,7 @@ export function VoiceInteractionToolCard({ onSpeechRecognized, compact = false }
     );
   }
 
-  // Regular mode rendering
+  // Regular mode rendering with client-side-only RadioGroup
   return (
     <Card>
       <CardHeader>
@@ -140,20 +146,28 @@ export function VoiceInteractionToolCard({ onSpeechRecognized, compact = false }
       <CardContent className="space-y-4">
         <div className="flex flex-col space-y-2">
           <Label>Voice Style</Label>
-          <RadioGroup 
-            defaultValue={voiceStyle}
-            onValueChange={setVoiceStyle}
-            className="flex flex-col space-y-1"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="natural" id="natural-voice" />
-              <Label htmlFor="natural-voice">Natural</Label>
+          {mounted ? (
+            <RadioGroup 
+              key="voice-style-group"
+              defaultValue={voiceStyle}
+              onValueChange={setVoiceStyle}
+              className="flex flex-col space-y-1"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="natural" id="natural-voice" />
+                <Label htmlFor="natural-voice">Natural</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="clear" id="clear-voice" />
+                <Label htmlFor="clear-voice">Clear & Precise</Label>
+              </div>
+            </RadioGroup>
+          ) : (
+            <div className="flex flex-col space-y-1 animate-pulse">
+              <div className="h-6 w-full bg-muted rounded"></div>
+              <div className="h-6 w-full bg-muted rounded"></div>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="clear" id="clear-voice" />
-              <Label htmlFor="clear-voice">Clear & Precise</Label>
-            </div>
-          </RadioGroup>
+          )}
         </div>
 
         <div className="p-4 border rounded-md bg-muted/30 min-h-[100px] relative">
