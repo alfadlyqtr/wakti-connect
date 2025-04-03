@@ -11,9 +11,10 @@ import { Switch } from "@/components/ui/switch";
 
 interface VoiceInteractionToolCardProps {
   onSpeechRecognized?: (text: string) => void;
+  compact?: boolean;
 }
 
-export function VoiceInteractionToolCard({ onSpeechRecognized }: VoiceInteractionToolCardProps) {
+export function VoiceInteractionToolCard({ onSpeechRecognized, compact = false }: VoiceInteractionToolCardProps) {
   const [voiceStyle, setVoiceStyle] = useState<string>("natural");
   const {
     transcript,
@@ -58,6 +59,76 @@ export function VoiceInteractionToolCard({ onSpeechRecognized }: VoiceInteractio
     );
   }
 
+  // Compact mode rendering
+  if (compact) {
+    return (
+      <Card className="p-3">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Volume2 className="h-4 w-4 text-wakti-blue" />
+              <span className="text-sm font-medium">Voice to Text</span>
+            </div>
+            {isListening && (
+              <span className="text-xs text-red-500 flex items-center">
+                <span className="h-2 w-2 rounded-full bg-red-500 mr-1 animate-pulse" />
+                Recording...
+              </span>
+            )}
+          </div>
+          
+          <div className="min-h-[60px] p-2 border rounded-md bg-muted/30 text-xs">
+            {transcript || "Speak to convert voice to text..."}
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <div className="flex gap-1">
+              {!isListening ? (
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-wakti-blue text-white hover:bg-wakti-blue/90 transition-colors"
+                  onClick={startListening}
+                >
+                  <Mic className="h-4 w-4" />
+                </motion.button>
+              ) : (
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
+                  onClick={handleStopListening}
+                >
+                  <Mic className="h-4 w-4" />
+                </motion.button>
+              )}
+            </div>
+            
+            <div className="flex gap-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleClearTranscript}
+                disabled={!transcript}
+                className="h-8 text-xs px-2"
+              >
+                Clear
+              </Button>
+              {transcript && (
+                <Button 
+                  size="sm"
+                  onClick={() => onSpeechRecognized && onSpeechRecognized(transcript)}
+                  className="h-8 text-xs px-2"
+                >
+                  Use
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  // Regular mode rendering
   return (
     <Card>
       <CardHeader>
