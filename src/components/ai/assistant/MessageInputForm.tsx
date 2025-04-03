@@ -57,7 +57,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
           onChange={handleChangeMessage}
           onKeyDown={handleKeyDown}
           placeholder="Type your message..."
-          className="resize-none pr-24 py-2 min-h-[40px] max-h-[150px] rounded-lg bg-muted/30"
+          className="resize-none pr-32 py-2 min-h-[40px] max-h-[150px] rounded-lg bg-muted/30"
           disabled={isLoading || !canAccess}
         />
         
@@ -69,7 +69,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
                   type="button"
                   size="icon"
                   variant="ghost"
-                  className="h-7 w-7 text-muted-foreground hover:bg-blue-50 hover:text-blue-600"
+                  className="h-7 w-7 bg-blue-50 text-blue-600 hover:bg-blue-100"
                   disabled={isLoading || !canAccess}
                 >
                   <Paperclip className="h-4 w-4" />
@@ -88,7 +88,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
                   type="button"
                   size="icon"
                   variant="ghost"
-                  className="h-7 w-7 text-muted-foreground hover:bg-green-50 hover:text-green-600"
+                  className="h-7 w-7 bg-green-50 text-green-600 hover:bg-green-100"
                   disabled={isLoading || !canAccess}
                 >
                   <Camera className="h-4 w-4" />
@@ -107,7 +107,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
                   type="button"
                   size="icon"
                   variant="ghost"
-                  className="h-7 w-7 text-muted-foreground hover:bg-purple-50 hover:text-purple-600"
+                  className="h-7 w-7 bg-purple-50 text-purple-600 hover:bg-purple-100"
                   disabled={isLoading || !canAccess}
                 >
                   <Mic className="h-4 w-4" />
