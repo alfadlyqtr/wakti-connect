@@ -25,7 +25,7 @@ export const useUpdateAISettings = (user: User | null) => {
         response_length: newSettings.response_length,
         proactiveness: newSettings.proactiveness,
         suggestion_frequency: newSettings.suggestion_frequency,
-        role: newSettings.role,
+        role: newSettings.role, // This should match the database enum type
         enabled_features: newSettings.enabled_features
       };
 
@@ -33,7 +33,15 @@ export const useUpdateAISettings = (user: User | null) => {
       if (newSettings.id) {
         const { data, error } = await supabase
           .from("ai_assistant_settings")
-          .update(settingsForUpdate)
+          .update({
+            assistant_name: settingsForUpdate.assistant_name,
+            tone: settingsForUpdate.tone,
+            response_length: settingsForUpdate.response_length,
+            proactiveness: settingsForUpdate.proactiveness,
+            suggestion_frequency: settingsForUpdate.suggestion_frequency,
+            role: settingsForUpdate.role,
+            enabled_features: settingsForUpdate.enabled_features
+          })
           .eq("user_id", user.id)
           .select()
           .single();
@@ -65,7 +73,16 @@ export const useUpdateAISettings = (user: User | null) => {
         // No id, so insert a new record
         const { data, error } = await supabase
           .from("ai_assistant_settings")
-          .insert(settingsForUpdate)
+          .insert({
+            user_id: settingsForUpdate.user_id,
+            assistant_name: settingsForUpdate.assistant_name,
+            tone: settingsForUpdate.tone,
+            response_length: settingsForUpdate.response_length,
+            proactiveness: settingsForUpdate.proactiveness,
+            suggestion_frequency: settingsForUpdate.suggestion_frequency,
+            role: settingsForUpdate.role,
+            enabled_features: settingsForUpdate.enabled_features
+          })
           .select()
           .single();
 

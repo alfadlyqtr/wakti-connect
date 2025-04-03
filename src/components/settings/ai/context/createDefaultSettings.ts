@@ -27,7 +27,7 @@ export const createDefaultSettings = async (): Promise<void> => {
       response_length: "balanced",
       proactiveness: true,
       suggestion_frequency: "medium",
-      role: "general", // Include the role property
+      role: "general", // Use string literal that matches database enum
       enabled_features: {
         tasks: true,
         events: true,
@@ -41,7 +41,13 @@ export const createDefaultSettings = async (): Promise<void> => {
       .from("ai_assistant_settings")
       .insert({
         user_id: session.user.id,
-        ...defaultSettings
+        assistant_name: defaultSettings.assistant_name,
+        tone: defaultSettings.tone,
+        response_length: defaultSettings.response_length,
+        proactiveness: defaultSettings.proactiveness,
+        suggestion_frequency: defaultSettings.suggestion_frequency,
+        role: defaultSettings.role,
+        enabled_features: defaultSettings.enabled_features
       })
       .select()
       .maybeSingle();

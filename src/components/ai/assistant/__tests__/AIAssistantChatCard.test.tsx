@@ -3,6 +3,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { AIAssistantChatCard } from '../AIAssistantChatCard';
 import { vi } from 'vitest';
+import { AIMessage } from '@/types/ai-assistant.types';
 
 // Mock AIRoleSelector
 vi.mock('../AIRoleSelector', () => ({
@@ -40,7 +41,7 @@ describe('AIAssistantChatCard', () => {
   const mockOnRoleChange = vi.fn();
   
   const defaultProps = {
-    messages: [],
+    messages: [] as AIMessage[],
     inputMessage: '',
     setInputMessage: mockSetInputMessage,
     handleSendMessage: mockHandleSendMessage,
@@ -67,7 +68,7 @@ describe('AIAssistantChatCard', () => {
   it('renders chat when messages exist', () => {
     const props = {
       ...defaultProps,
-      messages: [{ id: '1', role: 'assistant', content: 'Hello', timestamp: new Date() }],
+      messages: [{ id: '1', role: 'assistant' as const, content: 'Hello', timestamp: new Date() }],
     };
     
     render(<AIAssistantChatCard {...props} />);
@@ -87,7 +88,7 @@ describe('AIAssistantChatCard', () => {
   it('shows clear button when messages exist', () => {
     const props = {
       ...defaultProps,
-      messages: [{ id: '1', role: 'assistant', content: 'Hello', timestamp: new Date() }],
+      messages: [{ id: '1', role: 'assistant' as const, content: 'Hello', timestamp: new Date() }],
     };
     
     render(<AIAssistantChatCard {...props} />);
@@ -98,7 +99,7 @@ describe('AIAssistantChatCard', () => {
   it('calls clearMessages when clear button is clicked', () => {
     const props = {
       ...defaultProps,
-      messages: [{ id: '1', role: 'assistant', content: 'Hello', timestamp: new Date() }],
+      messages: [{ id: '1', role: 'assistant' as const, content: 'Hello', timestamp: new Date() }],
     };
     
     render(<AIAssistantChatCard {...props} />);
