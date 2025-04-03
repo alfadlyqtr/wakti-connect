@@ -25,7 +25,7 @@ export const useUpdateAISettings = (user: User | null) => {
         response_length: newSettings.response_length,
         proactiveness: newSettings.proactiveness,
         suggestion_frequency: newSettings.suggestion_frequency,
-        role: newSettings.role, // This should match the database enum type
+        role: newSettings.role as unknown as string, // Type coercion for database compatibility
         enabled_features: newSettings.enabled_features
       };
 
@@ -80,7 +80,7 @@ export const useUpdateAISettings = (user: User | null) => {
             response_length: settingsForUpdate.response_length,
             proactiveness: settingsForUpdate.proactiveness,
             suggestion_frequency: settingsForUpdate.suggestion_frequency,
-            role: settingsForUpdate.role,
+            role: settingsForUpdate.role as unknown as string, // Cast to handle Supabase enum compatibility
             enabled_features: settingsForUpdate.enabled_features
           })
           .select()

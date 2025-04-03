@@ -46,7 +46,7 @@ export const createDefaultSettings = async (): Promise<void> => {
         response_length: defaultSettings.response_length,
         proactiveness: defaultSettings.proactiveness,
         suggestion_frequency: defaultSettings.suggestion_frequency,
-        role: defaultSettings.role,
+        role: defaultSettings.role as unknown as string, // Type coercion for database compatibility
         enabled_features: defaultSettings.enabled_features
       })
       .select()

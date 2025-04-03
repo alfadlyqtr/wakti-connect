@@ -13,14 +13,14 @@ export const AIPersonalityTab: React.FC = () => {
   
   if (!settings) return null;
 
-  const handleToneChange = (value: "formal" | "casual" | "concise" | "detailed" | "balanced") => {
+  const handleToneChange = (value: "professional" | "friendly" | "balanced" | "formal" | "casual") => {
     updateSettings({
       ...settings,
       tone: value,
     });
   };
 
-  const handleResponseLengthChange = (value: "short" | "balanced" | "detailed") => {
+  const handleResponseLengthChange = (value: "concise" | "balanced" | "detailed") => {
     updateSettings({
       ...settings,
       response_length: value,
@@ -69,12 +69,12 @@ export const AIPersonalityTab: React.FC = () => {
               <Label htmlFor="casual" className="cursor-pointer">Casual & Friendly</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="concise" id="concise" />
-              <Label htmlFor="concise" className="cursor-pointer">Concise & Direct</Label>
+              <RadioGroupItem value="professional" id="professional" />
+              <Label htmlFor="professional" className="cursor-pointer">Professional</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="detailed" id="detailed" />
-              <Label htmlFor="detailed" className="cursor-pointer">Detailed & Informative</Label>
+              <RadioGroupItem value="friendly" id="friendly" />
+              <Label htmlFor="friendly" className="cursor-pointer">Friendly</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="balanced" id="balanced" />
@@ -90,8 +90,8 @@ export const AIPersonalityTab: React.FC = () => {
             onValueChange={handleResponseLengthChange}
           >
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="short" id="short" />
-              <Label htmlFor="short" className="cursor-pointer">Short & Quick Responses</Label>
+              <RadioGroupItem value="concise" id="concise" />
+              <Label htmlFor="concise" className="cursor-pointer">Short & Quick Responses</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="balanced" id="balanced_length" />
