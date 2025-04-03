@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Bot, Trash2, Settings, PanelLeftClose, PanelLeftOpen, Volume2, VolumeX } from 'lucide-react';
@@ -47,13 +46,11 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const [speechEnabled, setSpeechEnabled] = useState(false);
   const [currentSpeechMessage, setCurrentSpeechMessage] = useState<string | null>(null);
   
-  // Speech synthesis hook
   const { speak, cancel, speaking, supported: speechSupported } = useSpeechSynthesis({
     rate: 1,
     pitch: 1
   });
-  
-  // Get role-specific title and styles
+
   const getRoleTitle = () => {
     switch (selectedRole) {
       case 'student': return 'Study Assistant';
@@ -63,7 +60,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
       default: return 'AI Assistant';
     }
   };
-  
+
   const getRoleColor = () => {
     switch (selectedRole) {
       case 'student': return 'from-blue-600 to-blue-500';
@@ -80,17 +77,14 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     }
   }, [messages]);
   
-  // Effect for text-to-speech of new messages
   useEffect(() => {
     if (!speechEnabled || !speechSupported || messages.length === 0) return;
     
-    // Find the latest assistant message
     const latestAssistantMessage = [...messages]
       .reverse()
       .find(msg => msg.role === 'assistant');
     
     if (latestAssistantMessage && latestAssistantMessage.content !== currentSpeechMessage) {
-      // Speak the message
       speak(latestAssistantMessage.content);
       setCurrentSpeechMessage(latestAssistantMessage.content);
     }
@@ -105,12 +99,10 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     const newState = !speechEnabled;
     setSpeechEnabled(newState);
     
-    // If turning off, cancel any ongoing speech
     if (!newState && speaking) {
       cancel();
     }
     
-    // If turning on, speak the latest message
     if (newState && messages.length > 0) {
       const latestAssistantMessage = [...messages]
         .reverse()
@@ -168,7 +160,6 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
               <Switch
                 checked={speechEnabled}
                 onCheckedChange={toggleSpeech}
-                size="sm"
                 className="data-[state=checked]:bg-green-500"
               />
               <span className="ml-1.5">
@@ -209,7 +200,6 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
       </div>
       
       <CardContent className="p-0 flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-gray-50/50 to-white">
-        {/* Role Selector Bar */}
         <div className="p-3 border-b bg-white">
           <AIRoleSelector selectedRole={selectedRole} onRoleChange={onRoleChange} />
         </div>
@@ -232,7 +222,6 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
           <div ref={messagesEndRef} />
         </div>
         
-        {/* Message Input Form */}
         <MessageInputForm
           inputMessage={inputMessage}
           setInputMessage={setInputMessage}

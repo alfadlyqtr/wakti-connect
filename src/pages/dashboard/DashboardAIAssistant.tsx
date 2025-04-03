@@ -35,6 +35,13 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { VoiceInteractionToolCard } from "@/components/ai/tools/VoiceInteractionToolCard";
 
+interface EnhancedToolsTabProps {
+  selectedRole: AIAssistantRole;
+  onUseContent: (content: string) => void;
+  canAccess: boolean;
+  compact?: boolean;
+}
+
 const DashboardAIAssistant = () => {
   const { user } = useAuth();
   const { 
@@ -58,7 +65,6 @@ const DashboardAIAssistant = () => {
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name;
   const { toast } = useToast();
   
-  // Voice interaction hooks
   const {
     isListening,
     supportsVoice,
@@ -71,18 +77,15 @@ const DashboardAIAssistant = () => {
     stopSpeaking
   } = useVoiceInteraction();
 
-  // Initialize role from settings
   useEffect(() => {
     if (aiSettings?.role) {
       setSelectedRole(aiSettings.role);
     }
   }, [aiSettings]);
 
-  // Handle role change
   const handleRoleChange = async (role: AIAssistantRole) => {
     setSelectedRole(role);
     
-    // Update settings in the database
     if (aiSettings) {
       try {
         const updatedSettings = { ...aiSettings, role };
@@ -97,33 +100,27 @@ const DashboardAIAssistant = () => {
       }
     }
     
-    // Clear messages when role changes
     clearMessages();
   };
-  
-  // Effect for text-to-speech of new messages
+
   useEffect(() => {
     if (!isSpeechEnabled || messages.length === 0) return;
     
-    // Find the latest assistant message
     const latestAssistantMessage = [...messages]
       .reverse()
       .find(msg => msg.role === "assistant");
     
     if (latestAssistantMessage) {
-      // Speak the message
       speakText(latestAssistantMessage.content);
     }
   }, [messages, isSpeechEnabled, speakText]);
-  
-  // Effect to handle speech recognition results
+
   useEffect(() => {
     if (lastTranscript && !isListening) {
       setInputMessage(lastTranscript);
     }
   }, [lastTranscript, isListening]);
-  
-  // Toggle speech
+
   const handleToggleSpeech = () => {
     if (isSpeaking) {
       stopSpeaking();
@@ -208,11 +205,10 @@ const DashboardAIAssistant = () => {
     }
     
     console.log("Sending message:", inputMessage);
-    await sendMessage.mutateAsync(inputMessage);
+    await sendMessage(inputMessage);
     setInputMessage("");
   };
-  
-  // Handle content from tools
+
   const handleToolContent = (content: string) => {
     setInputMessage(content);
     setActiveTab("chat");
@@ -223,7 +219,6 @@ const DashboardAIAssistant = () => {
     return <AIAssistantLoader />;
   }
 
-  // Get role-specific color
   const getRoleColor = () => {
     switch (selectedRole) {
       case "student": return "from-blue-600 to-blue-500";
@@ -246,7 +241,6 @@ const DashboardAIAssistant = () => {
             <AIAssistantUpgradeCard />
           ) : (
             <div className="mx-auto max-w-5xl">
-              {/* Main header with controls */}
               <Card className="mb-4">
                 <CardHeader className="pb-2 flex flex-row items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -272,7 +266,6 @@ const DashboardAIAssistant = () => {
                   </div>
                   
                   <div className="flex items-center gap-4">
-                    {/* Speech controls */}
                     {supportsVoice && (
                       <div className="flex items-center gap-2">
                         <Switch
@@ -297,7 +290,6 @@ const DashboardAIAssistant = () => {
                       </div>
                     )}
                     
-                    {/* Voice input */}
                     {supportsVoice && (
                       <motion.div 
                         whileTap={{ scale: 0.95 }}
@@ -315,7 +307,6 @@ const DashboardAIAssistant = () => {
                       </motion.div>
                     )}
                     
-                    {/* Toggle toolbar */}
                     <button
                       onClick={() => setShowToolbar(!showToolbar)}
                       className="text-muted-foreground hover:text-foreground p-1"
@@ -334,7 +325,6 @@ const DashboardAIAssistant = () => {
                 )}
               </Card>
               
-              {/* Main content with tabs */}
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="mx-auto mb-4 grid w-full max-w-md grid-cols-3">
                   <TabsTrigger value="chat" className="flex items-center gap-2">
@@ -361,7 +351,6 @@ const DashboardAIAssistant = () => {
                   transition={{ duration: 0.3 }}
                 >
                   <TabsContent value="chat" className="focus-visible:outline-none">
-                    {/* Clean Chat Interface */}
                     <CleanChatInterface
                       messages={messages}
                       isLoading={isLoading}
@@ -380,7 +369,6 @@ const DashboardAIAssistant = () => {
                   </TabsContent>
                   
                   <TabsContent value="tools" className="space-y-6 focus-visible:outline-none">
-                    {/* Quick Tools */}
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -395,15 +383,12 @@ const DashboardAIAssistant = () => {
                         />
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Voice Interaction Tool */}
                           <VoiceInteractionToolCard
                             onSpeechRecognized={handleToolContent}
                           />
                           
-                          {/* Meeting Summary Tool */}
                           <MeetingSummaryTool onUseSummary={handleToolContent} />
                           
-                          {/* Other tools from EnhancedToolsTab */}
                           <EnhancedToolsTab
                             selectedRole={selectedRole}
                             onUseContent={handleToolContent}

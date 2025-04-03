@@ -30,6 +30,7 @@ export interface AIKnowledgeUpload {
   title: string;
   content: string;
   created_at: string;
+  role?: AIAssistantRole; // Added role property for role-specific knowledge
 }
 
 // Role contexts for AI assistant personalization

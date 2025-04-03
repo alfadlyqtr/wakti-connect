@@ -7,6 +7,11 @@ import { AIMessage, AISettings, AIKnowledgeUpload } from "@/types/ai-assistant.t
 // Re-export types for backward compatibility
 export type { AIMessage, AISettings, AIKnowledgeUpload };
 
+// Interface for the sendMessage function that reflects the actual implementation
+interface SendMessageFunction {
+  (messageText: string): Promise<AIMessage>;
+}
+
 export const useAIAssistant = () => {
   const { messages, sendMessage, isLoading, clearMessages } = useAIChat();
   const { aiSettings, isLoadingSettings, updateSettings, canUseAI } = useAISettings();

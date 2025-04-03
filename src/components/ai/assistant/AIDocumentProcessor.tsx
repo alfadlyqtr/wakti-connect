@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText, Upload, File, Image, CheckCircle2 } from "lucide-react";
@@ -47,9 +46,9 @@ export const AIDocumentProcessor: React.FC<AIDocumentProcessorProps> = ({
     switch (selectedRole) {
       case "student":
         return "Upload documents, notes or images for analysis";
-      case "professional":
+      case "employee":
         return "Upload work documents, reports or presentations";
-      case "creator":
+      case "writer":
         return "Upload creative content, drafts or inspiration images";
       case "business_owner":
         return "Upload business documents, reports or marketing materials";

@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { AIAssistantRole } from "@/types/ai-assistant.types";
 
 export const createDefaultSettings = async () => {
   try {
@@ -15,7 +16,7 @@ export const createDefaultSettings = async () => {
     const defaultSettings = {
       user_id: user.id,
       assistant_name: "WAKTI",
-      role: "general", // Using "general" as it's a safe default value that exists in the database
+      role: "general" as AIAssistantRole, // Using proper type assertion
       tone: "balanced",
       response_length: "balanced",
       proactiveness: true,

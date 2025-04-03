@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,7 +21,7 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
   selectedRole,
   canAccess
 }) => {
-  const [activeTab, setActiveTab] = useState(selectedRole);
+  const [activeTab, setActiveTab] = useState<AIAssistantRole>(selectedRole);
   const { toast } = useToast();
   const { knowledgeUploads, isLoadingKnowledge, deleteKnowledge, addKnowledge } = useAIKnowledge();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -37,7 +36,6 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
     
     const file = files[0];
     
-    // Check file size (limit to 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "File too large",
@@ -47,7 +45,6 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
       return;
     }
     
-    // Check file type
     if (!/\.(txt|pdf|docx|md)$/i.test(file.name)) {
       toast({
         title: "Unsupported file type",
@@ -67,13 +64,13 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
         
         await addKnowledge.mutateAsync({
           title: file.name,
-          content: content.slice(0, 100000), // Limit content size
-          role: activeTab as AIAssistantRole,
+          content: content.slice(0, 100000),
+          role: activeTab,
         });
         
         toast({
           title: "Knowledge added",
-          description: `${file.name} has been added to your ${getRoleName(activeTab as AIAssistantRole)} knowledge`,
+          description: `${file.name} has been added to your ${getRoleName(activeTab)} knowledge`,
         });
       };
       
@@ -87,7 +84,6 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
       });
     }
     
-    // Reset the file input
     e.target.value = '';
   };
   
@@ -129,7 +125,7 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
   };
   
   const filteredKnowledge = knowledgeUploads?.filter(item => 
-    item.role === activeTab || !item.role // Include items without role in all tabs
+    item.role === activeTab || !item.role
   );
   
   if (!canAccess) {
@@ -163,7 +159,11 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
       </CardHeader>
       
       <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={(value) => setActiveTab(value as AIAssistantRole)} 
+          className="w-full"
+        >
           <TabsList className="grid grid-cols-5 mb-4">
             <TabsTrigger value="general" className="flex items-center gap-1">
               <Bot className="h-4 w-4" />
@@ -198,7 +198,7 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
           <div className="mb-4">
             <Button onClick={handleFileSelect} className="w-full">
               <Upload className="h-4 w-4 mr-2" />
-              Upload Knowledge for {getRoleName(activeTab as AIAssistantRole)}
+              Upload Knowledge for {getRoleName(activeTab)}
             </Button>
             <input 
               type="file" 
@@ -210,7 +210,7 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
           </div>
           
           <div className="space-y-2">
-            <h3 className="text-sm font-medium">{getRoleName(activeTab as AIAssistantRole)} Knowledge Items</h3>
+            <h3 className="text-sm font-medium">{getRoleName(activeTab)} Knowledge Items</h3>
             
             {isLoadingKnowledge ? (
               Array(3).fill(0).map((_, i) => (
@@ -244,7 +244,7 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
               ))
             ) : (
               <div className="text-center py-8 text-muted-foreground border rounded-md">
-                <p>No knowledge items for {getRoleName(activeTab as AIAssistantRole)} yet.</p>
+                <p>No knowledge items for {getRoleName(activeTab)} yet.</p>
                 <p className="text-sm">Upload documents to enhance the AI's knowledge.</p>
               </div>
             )}
