@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -84,7 +85,7 @@ export const useSpeechRecognition = (options?: SpeechRecognitionOptions) => {
       });
     };
     
-    recognition.onerror = (event: SpeechRecognitionError) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error('Speech recognition error:', event.error);
       setIsListening(false);
       
