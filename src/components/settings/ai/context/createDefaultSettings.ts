@@ -2,83 +2,52 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
-/**
- * Creates default AI settings for a user
- */
-export const createDefaultSettings = async (): Promise<void> => {
+export const createDefaultSettings = async () => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { user } } = await supabase.auth.getUser();
     
-    if (!session) {
-      const errorMsg = "No active session. Please log in again.";
-      toast({
-        title: "Error creating settings",
-        description: errorMsg,
-        variant: "destructive",
-      });
-      throw new Error(errorMsg);
+    if (!user) {
+      throw new Error("User not authenticated");
     }
     
-    // Create default settings for the user
     const defaultSettings = {
+      user_id: user.id,
       assistant_name: "WAKTI",
+      role: "general",
       tone: "balanced",
       response_length: "balanced",
       proactiveness: true,
       suggestion_frequency: "medium",
-      role: "general" as "student" | "business_owner" | "general" | "employee" | "writer", // Explicitly use literal type matching DB expectations
       enabled_features: {
         tasks: true,
         events: true,
         staff: true,
         analytics: true,
         messaging: true,
-      }
+      },
+      knowledge_profile: { role: "general" }
     };
     
-    // Insert the settings
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("ai_assistant_settings")
-      .insert({
-        user_id: session.user.id,
-        assistant_name: defaultSettings.assistant_name,
-        tone: defaultSettings.tone,
-        response_length: defaultSettings.response_length,
-        proactiveness: defaultSettings.proactiveness,
-        suggestion_frequency: defaultSettings.suggestion_frequency,
-        role: defaultSettings.role,
-        enabled_features: defaultSettings.enabled_features,
-        knowledge_profile: {
-          role: defaultSettings.role
-        }
-      })
-      .select()
-      .maybeSingle();
+      .insert(defaultSettings);
       
-    if (error) {
-      console.error("Error creating default settings:", error);
-      const errorMsg = `Unable to create settings: ${error.message}`;
-      toast({
-        title: "Error creating settings",
-        description: errorMsg,
-        variant: "destructive",
-      });
-      throw new Error(errorMsg);
-    }
+    if (error) throw error;
     
     toast({
-      title: "Default settings created",
-      description: "Your AI assistant settings have been created with default values",
+      title: "Settings created",
+      description: "Default AI assistant settings have been created."
     });
+    
+    // Refresh the page to load the new settings
     window.location.reload();
-  } catch (err) {
-    console.error("Error in createDefaultSettings:", err);
-    const errorMsg = "An unexpected error occurred. Please try again.";
+    
+  } catch (error) {
+    console.error("Error creating default settings:", error);
     toast({
       title: "Error creating settings",
-      description: errorMsg,
-      variant: "destructive",
+      description: error instanceof Error ? error.message : "An unknown error occurred",
+      variant: "destructive"
     });
-    throw err;
   }
 };

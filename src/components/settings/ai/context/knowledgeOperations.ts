@@ -1,8 +1,9 @@
 
+import { AIKnowledgeUpload } from "@/types/ai-assistant.types";
 import { UseMutationResult } from "@tanstack/react-query";
 
 export const handleAddKnowledge = async (
-  addKnowledgeMutation: UseMutationResult<any, Error, any, unknown>,
+  addKnowledgeMutation: UseMutationResult<any, Error, { title: string; content: string }, unknown>,
   title: string,
   content: string,
   setError: (error: string | null) => void

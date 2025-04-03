@@ -42,7 +42,7 @@ export const useUpdateAISettings = (user: User | null) => {
       // Then add knowledge_profile if it exists
       const settingsForUpdate = {
         ...baseSettings,
-        knowledge_profile: newSettings.knowledge_profile
+        knowledge_profile: newSettings.knowledge_profile || { role: roleValue }
       };
 
       // If we have an id, update the existing record
