@@ -6,26 +6,50 @@ interface SpeechRecognitionOptions {
   language?: string;
   continuous?: boolean;
   interimResults?: boolean;
+  maxAudioDuration?: number; // Maximum audio duration in seconds
 }
 
 export const useSpeechRecognition = (options?: SpeechRecognitionOptions) => {
   const [transcript, setTranscript] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [supported, setSupported] = useState(false);
+  const [validationChecked, setValidationChecked] = useState(false);
+  const [permissionStatus, setPermissionStatus] = useState<PermissionState | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const { toast } = useToast();
   
-  // Check for browser support on mount
+  // Check for browser support and permissions on mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    // Test if SpeechRecognition is available
-    const isSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-    setSupported(isSupported);
+    const checkSupport = async () => {
+      // Test if SpeechRecognition is available
+      const isSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+      setSupported(isSupported);
+      
+      if (!isSupported) {
+        console.warn('Speech recognition is not supported in this browser');
+        return;
+      }
+      
+      // Check microphone permission if supported
+      try {
+        if (navigator.permissions) {
+          const permissionResult = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+          setPermissionStatus(permissionResult.state);
+          
+          permissionResult.onchange = () => {
+            setPermissionStatus(permissionResult.state);
+          };
+        }
+      } catch (error) {
+        console.warn('Could not check microphone permission:', error);
+      }
+      
+      setValidationChecked(true);
+    };
     
-    if (!isSupported) {
-      console.warn('Speech recognition is not supported in this browser');
-    }
+    checkSupport();
   }, []);
   
   // Initialize recognition instance with event handlers
@@ -68,7 +92,7 @@ export const useSpeechRecognition = (options?: SpeechRecognitionOptions) => {
         if (result.isFinal || !options?.interimResults) {
           setTranscript(transcriptText);
         } else if (options?.interimResults) {
-          setTranscript(prev => transcriptText);
+          setTranscript(transcriptText);
         }
       }
     };
@@ -78,6 +102,7 @@ export const useSpeechRecognition = (options?: SpeechRecognitionOptions) => {
       setIsListening(false);
       
       if (event.error === 'not-allowed') {
+        setPermissionStatus('denied');
         toast({
           title: "Microphone Access Denied",
           description: "Please allow microphone access to use voice input.",
@@ -126,6 +151,16 @@ export const useSpeechRecognition = (options?: SpeechRecognitionOptions) => {
       return;
     }
     
+    // Request microphone permission explicitly if not granted
+    if (permissionStatus === 'denied') {
+      toast({
+        title: "Microphone Permission Required",
+        description: "Please enable microphone access in your browser settings.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
       // Clear previous transcript when starting fresh
       setTranscript('');
@@ -142,15 +177,41 @@ export const useSpeechRecognition = (options?: SpeechRecognitionOptions) => {
       // Start listening
       recognitionRef.current.start();
       console.log("Started browser speech recognition");
+      
+      // Set a timeout if maxAudioDuration is provided
+      if (options?.maxAudioDuration) {
+        setTimeout(() => {
+          if (isListening) {
+            stopListening();
+            toast({
+              title: "Maximum Recording Time Reached",
+              description: "Your voice input has reached the maximum allowed time.",
+            });
+          }
+        }, options.maxAudioDuration * 1000);
+      }
     } catch (error) {
       console.error('Failed to start speech recognition:', error);
-      toast({
-        title: "Error",
-        description: "Failed to start speech recognition. Try refreshing the page.",
-        variant: "destructive",
-      });
+      
+      // Try to recover by recreating the recognition instance
+      try {
+        if (recognitionRef.current) {
+          recognitionRef.current = null;
+        }
+        recognitionRef.current = initializeRecognition();
+        if (recognitionRef.current) {
+          recognitionRef.current.start();
+        }
+      } catch (retryError) {
+        console.error('Failed to recover speech recognition:', retryError);
+        toast({
+          title: "Error",
+          description: "Failed to start speech recognition. Try refreshing the page.",
+          variant: "destructive",
+        });
+      }
     }
-  }, [supported, initializeRecognition, toast]);
+  }, [supported, initializeRecognition, toast, permissionStatus, options?.maxAudioDuration, isListening, stopListening]);
   
   // Function to stop listening
   const stopListening = useCallback(() => {
@@ -161,6 +222,9 @@ export const useSpeechRecognition = (options?: SpeechRecognitionOptions) => {
       console.log("Stopped browser speech recognition");
     } catch (error) {
       console.error("Error stopping speech recognition:", error);
+      
+      // Force reset the isListening state
+      setIsListening(false);
     }
   }, [supported]);
   
@@ -168,6 +232,24 @@ export const useSpeechRecognition = (options?: SpeechRecognitionOptions) => {
   const resetTranscript = useCallback(() => {
     setTranscript('');
   }, []);
+  
+  // Function to explicitly request microphone permission
+  const requestMicrophonePermission = useCallback(async () => {
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      setPermissionStatus('granted');
+      return true;
+    } catch (error) {
+      console.error('Microphone permission denied:', error);
+      setPermissionStatus('denied');
+      toast({
+        title: "Microphone Access Denied",
+        description: "You need to allow microphone access to use voice input.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  }, [toast]);
   
   // Clean up on unmount
   useEffect(() => {
@@ -189,6 +271,9 @@ export const useSpeechRecognition = (options?: SpeechRecognitionOptions) => {
     startListening,
     stopListening,
     resetTranscript,
-    supported
+    supported,
+    permissionStatus,
+    requestMicrophonePermission,
+    validationChecked
   };
 };

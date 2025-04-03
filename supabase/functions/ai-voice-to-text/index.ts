@@ -1,184 +1,175 @@
 
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Process base64 in chunks to prevent memory issues
-function processBase64Chunks(base64String: string, chunkSize = 32768) {
-  const chunks: Uint8Array[] = [];
-  let position = 0;
-  
-  while (position < base64String.length) {
-    const chunk = base64String.slice(position, position + chunkSize);
-    const binaryChunk = atob(chunk);
-    const bytes = new Uint8Array(binaryChunk.length);
-    
-    for (let i = 0; i < binaryChunk.length; i++) {
-      bytes[i] = binaryChunk.charCodeAt(i);
-    }
-    
-    chunks.push(bytes);
-    position += chunkSize;
-  }
-
-  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.length;
-  }
-
-  return result;
-}
-
 serve(async (req) => {
-  console.log("Voice-to-text function called");
-  
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Check if this is a test request
-    const body = await req.json();
-    
-    if (body.test === true) {
-      console.log("Running OpenAI API key test");
-      
-      // Check if OpenAI API key is available
-      const apiKey = Deno.env.get('OPENAI_API_KEY');
-      if (!apiKey) {
-        console.error("OPENAI_API_KEY is not set");
-        throw new Error('OpenAI API key is not configured');
-      }
-      
-      // Basic validation of the API key format
-      if (!apiKey.startsWith('sk-') || apiKey.length < 20) {
-        console.error("OPENAI_API_KEY appears to be invalid");
-        throw new Error('OpenAI API key appears to be invalid. It should start with "sk-"');
-      }
-      
-      // Try a simple API request to test connectivity and permissions
-      try {
-        console.log("Testing API key with a models request");
-        const response = await fetch('https://api.openai.com/v1/models', {
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("OpenAI API test failed:", errorData);
-          throw new Error(errorData.error?.message || 'API test failed');
-        }
-        
-        // If we get here, the API key works - test a small audio request
-        console.log("API key works for models endpoint, testing audio endpoint");
-        const audioTestResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'whisper-1',
-          }),
-        });
-        
-        // We expect this to fail with a 400 (missing file), but it should indicate the endpoint is accessible
-        console.log("Audio endpoint response:", audioTestResponse.status);
-        if (audioTestResponse.status !== 400 && audioTestResponse.status !== 200) {
-          const audioError = await audioTestResponse.json();
-          console.error("OpenAI Audio API test unexpected error:", audioError);
-          throw new Error(audioError.error?.message || 'Audio API test failed unexpectedly');
-        }
-        
-        console.log("OpenAI API key validation passed and API connectivity confirmed");
-      } catch (error) {
-        console.error("OpenAI API test error:", error);
-        throw new Error(`API test failed: ${error.message}`);
-      }
-      
-      console.log("OpenAI API key validation passed");
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAIApiKey) {
       return new Response(
-        JSON.stringify({ success: true, message: "OpenAI API key format is valid and API is accessible" }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          error: "OpenAI API key is not configured",
+          errorDetails: "The OPENAI_API_KEY is missing from Supabase secrets"
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
+
+    // Parse request body
+    const requestData = await req.json();
     
-    const { audio } = body;
-    
-    if (!audio) {
-      console.error("No audio data provided");
-      throw new Error('No audio data provided');
+    // Check if this is a test request
+    if (requestData.test === true) {
+      console.log("Running OpenAI API key test");
+      try {
+        // Test the API key by checking available models
+        const testResponse = await fetch("https://api.openai.com/v1/models", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${openAIApiKey}`
+          }
+        });
+        
+        if (!testResponse.ok) {
+          const errorData = await testResponse.json();
+          console.error("OpenAI API test error:", errorData);
+          return new Response(
+            JSON.stringify({ 
+              error: "Invalid OpenAI API key", 
+              errorDetails: errorData.error?.message || "The API key test failed"
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+          );
+        }
+        
+        console.log("API key works for models endpoint, testing audio endpoint");
+        
+        // Test TTS endpoint with minimal content to verify API key works for audio
+        try {
+          const audioTestResponse = await fetch("https://api.openai.com/v1/audio/speech", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${openAIApiKey}`
+            },
+            body: JSON.stringify({
+              model: "tts-1",
+              input: "Hello",
+              voice: "alloy"
+            })
+          });
+          
+          console.log("Audio endpoint response:", audioTestResponse.status);
+          
+          if (!audioTestResponse.ok) {
+            const audioErrorData = await audioTestResponse.json();
+            console.error("OpenAI Audio API test unexpected error:", audioErrorData);
+            return new Response(
+              JSON.stringify({ 
+                success: false, 
+                error: "API key valid but audio functionality unavailable",
+                errorDetails: audioErrorData.error?.message
+              }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          
+          console.log("OpenAI API key validation passed and API connectivity confirmed");
+          return new Response(
+            JSON.stringify({ success: true, validConnection: true }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (audioError) {
+          console.error("OpenAI Audio API test error:", audioError);
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              error: "API key valid but audio test failed",
+              errorDetails: audioError.message
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } catch (error) {
+        console.error("OpenAI API test error:", error);
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: "Failed to validate API key",
+            errorDetails: error.message
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
-    // Check if OpenAI API key is available
-    const apiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!apiKey) {
-      console.error("OPENAI_API_KEY is not set");
-      throw new Error('OpenAI API key is not configured');
+    // Normal text-to-speech request
+    const { text, voice = "alloy", model = "tts-1", responseFormat = "mp3" } = requestData;
+    
+    if (!text) {
+      return new Response(
+        JSON.stringify({ error: "Text is required" }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
-    
-    // Validate API key format
-    if (!apiKey.startsWith('sk-') || apiKey.length < 20) {
-      console.error("OPENAI_API_KEY format validation failed");
-      throw new Error('OpenAI API key appears to be invalid');
-    }
-    
-    console.log("Processing audio data");
-    // Process audio in chunks
-    const binaryAudio = processBase64Chunks(audio);
-    
-    // Prepare form data
-    const formData = new FormData();
-    const blob = new Blob([binaryAudio], { type: 'audio/webm' });
-    formData.append('file', blob, 'audio.webm');
-    formData.append('model', 'whisper-1');
 
-    console.log("Sending request to OpenAI");
-    // Send to OpenAI
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
+    // Call OpenAI TTS API
+    const response = await fetch("https://api.openai.com/v1/audio/speech", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${openAIApiKey}`
       },
-      body: formData,
+      body: JSON.stringify({
+        model,
+        input: text,
+        voice,
+        response_format: responseFormat
+      })
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`OpenAI API error: ${errorText}`);
-      throw new Error(`OpenAI API error: ${errorText}`);
+      const errorData = await response.json();
+      console.error("OpenAI TTS API error:", errorData);
+      return new Response(
+        JSON.stringify({ 
+          error: "Failed to generate speech", 
+          errorDetails: errorData.error?.message || "Unknown error from OpenAI TTS API"
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: response.status }
+      );
     }
 
-    const result = await response.json();
-    console.log("Transcription successful:", result.text?.substring(0, 50) + "...");
-
-    return new Response(
-      JSON.stringify({ text: result.text }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    // Get the audio data as ArrayBuffer
+    const audioArrayBuffer = await response.arrayBuffer();
+    
+    // Convert to base64
+    const base64Audio = btoa(
+      String.fromCharCode(...new Uint8Array(audioArrayBuffer))
     );
 
+    return new Response(
+      JSON.stringify({ audioContent: base64Audio }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
-    console.error("Voice-to-text error:", error.message);
+    console.error("Error in voice-to-text function:", error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        details: "Please check the OpenAI API key in Supabase secrets" 
+        error: "An unexpected error occurred", 
+        errorDetails: error.message 
       }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
