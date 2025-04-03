@@ -27,7 +27,7 @@ export const createDefaultSettings = async (): Promise<void> => {
       response_length: "balanced",
       proactiveness: true,
       suggestion_frequency: "medium",
-      role: "general" as AIAssistantRole, // Type assertion to ensure it matches the enum exactly
+      role: "general", // Using string directly as the role value
       enabled_features: {
         tasks: true,
         events: true,
@@ -47,7 +47,7 @@ export const createDefaultSettings = async (): Promise<void> => {
         response_length: defaultSettings.response_length,
         proactiveness: defaultSettings.proactiveness,
         suggestion_frequency: defaultSettings.suggestion_frequency,
-        role: defaultSettings.role, // This has been type-asserted above
+        role: defaultSettings.role,
         enabled_features: defaultSettings.enabled_features
       })
       .select()

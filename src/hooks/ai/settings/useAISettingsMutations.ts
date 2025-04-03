@@ -25,7 +25,7 @@ export const useUpdateAISettings = (user: User | null) => {
         response_length: newSettings.response_length,
         proactiveness: newSettings.proactiveness,
         suggestion_frequency: newSettings.suggestion_frequency,
-        role: newSettings.role, // This is already an AIAssistantRole
+        role: newSettings.role as string, // Cast to string to avoid type issues
         enabled_features: newSettings.enabled_features
       };
 
@@ -53,14 +53,14 @@ export const useUpdateAISettings = (user: User | null) => {
         // Convert to AISettings type
         const updatedSettings: AISettings = {
           id: data.id,
-          user_id: user.id, // Add user_id explicitly
+          user_id: user.id,
           assistant_name: data.assistant_name || "WAKTI",
           tone: data.tone || "balanced",
           response_length: data.response_length || "balanced",
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
           suggestion_frequency: data.suggestion_frequency || "medium",
           role: data.role as AIAssistantRole || "general",
-          enabled_features: data.enabled_features || {
+          enabled_features: data.enabled_features as Record<string, boolean> || {
             tasks: true,
             events: true,
             staff: true,
@@ -94,14 +94,14 @@ export const useUpdateAISettings = (user: User | null) => {
         // Convert to AISettings type
         const createdSettings: AISettings = {
           id: data.id,
-          user_id: user.id, // Add user_id explicitly
+          user_id: user.id,
           assistant_name: data.assistant_name || "WAKTI",
           tone: data.tone || "balanced", 
           response_length: data.response_length || "balanced",
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
           suggestion_frequency: data.suggestion_frequency || "medium",
           role: data.role as AIAssistantRole || "general",
-          enabled_features: data.enabled_features || {
+          enabled_features: data.enabled_features as Record<string, boolean> || {
             tasks: true,
             events: true,
             staff: true,
