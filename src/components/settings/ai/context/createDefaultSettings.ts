@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { AIAssistantRole } from "@/types/ai-assistant.types";
 
 /**
  * Creates default AI settings for a user
@@ -26,7 +27,7 @@ export const createDefaultSettings = async (): Promise<void> => {
       response_length: "balanced",
       proactiveness: true,
       suggestion_frequency: "medium",
-      role: "general", // This must match the database enum exactly
+      role: "general" as AIAssistantRole, // Type assertion to ensure it matches the enum exactly
       enabled_features: {
         tasks: true,
         events: true,

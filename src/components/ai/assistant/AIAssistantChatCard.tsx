@@ -79,7 +79,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
       const file = files[0];
       
       // Handle file upload logic - for now just add a message about it
-      setInputMessage(prev => `${prev ? prev + '\n\n' : ''}I've uploaded an image/document. Can you help me analyze it?`);
+      setInputMessage(`${inputMessage ? inputMessage + '\n\n' : ''}I've uploaded an image/document. Can you help me analyze it?`);
       
       // Reset the input
       e.target.value = '';
