@@ -5,6 +5,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { User } from "@/hooks/auth";
 import { AISettings, AIAssistantRole } from "@/types/ai-assistant.types";
 
+// Define the valid role types based on the database constraints
+type ValidRoleType = "student" | "business_owner" | "general" | "employee" | "writer";
+
 /**
  * Mutation hook for updating AI settings
  */
@@ -17,6 +20,13 @@ export const useUpdateAISettings = (user: User | null) => {
 
       console.log("Updating AI settings:", newSettings);
       
+      // Ensure the role is a valid database enum value
+      // If it's not one of the allowed values, default to "general"
+      const roleValue = (["student", "business_owner", "general", "employee", "writer"] as const).includes(
+        newSettings.role as ValidRoleType) 
+        ? newSettings.role as ValidRoleType 
+        : "general" as ValidRoleType;
+      
       // Prepare settings for Supabase
       const settingsForUpdate = {
         user_id: user.id,
@@ -25,7 +35,7 @@ export const useUpdateAISettings = (user: User | null) => {
         response_length: newSettings.response_length,
         proactiveness: newSettings.proactiveness,
         suggestion_frequency: newSettings.suggestion_frequency,
-        role: newSettings.role as string, // Cast to string to avoid type issues
+        role: roleValue, // Use the validated role value
         enabled_features: newSettings.enabled_features
       };
 

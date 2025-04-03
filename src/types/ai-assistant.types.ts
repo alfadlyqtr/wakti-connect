@@ -1,4 +1,3 @@
-
 export type AIAssistantRole = "student" | "professional" | "creator" | "business_owner" | "general" | "employee" | "writer";
 
 export interface AIMessage {

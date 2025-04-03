@@ -27,7 +27,7 @@ export const createDefaultSettings = async (): Promise<void> => {
       response_length: "balanced",
       proactiveness: true,
       suggestion_frequency: "medium",
-      role: "general", // Using string directly as the role value
+      role: "general" as "student" | "business_owner" | "general" | "employee" | "writer", // Explicitly use literal type matching DB expectations
       enabled_features: {
         tasks: true,
         events: true,
