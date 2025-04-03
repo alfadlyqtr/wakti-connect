@@ -1,105 +1,100 @@
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AIAssistantRole, RoleContexts } from "@/types/ai-assistant.types";
 import { 
-  LucideIcon, 
-  Rocket, 
-  BookOpen, 
   Calendar, 
-  Clock, 
-  Users, 
-  BarChart, 
+  CheckSquare, 
   FileText, 
-  MessageSquare,
-  Search,
-  ClipboardCheck,
-  CheckSquare,
-  HelpCircle,
-  Lightbulb,
-  Edit,
-  CalendarClock,
-  Mail,
-  ListChecks,
-  Hash,
-  HeartHandshake,
-  Settings,
+  HelpCircle, 
+  Users, 
+  Clock, 
+  ClipboardCheck, 
+  Lightbulb, 
+  Edit, 
+  Search, 
+  BookOpen, 
+  BarChart, 
+  HeartHandshake, 
+  Settings
 } from "lucide-react";
 
 interface QuickToolsCardProps {
   selectedRole: AIAssistantRole;
-  onToolClick: (toolDescription: string) => void;
+  onToolClick?: (toolDescription: string) => void;
+  onToolSelect?: (toolDescription: string) => void;
 }
 
-// Map string icon names to Lucide components
-const iconMap: Record<string, LucideIcon> = {
-  BookOpen,
-  Calendar,
-  FileText,
-  Search,
-  Clock,
-  ClipboardCheck,
-  Users,
-  CheckSquare,
-  CalendarClock,
-  HelpCircle,
-  Lightbulb,
-  Edit,
-  BarChart,
-  HeartHandshake,
-  Settings,
-  Mail,
-  ListChecks,
-  MessageSquare,
-  Hash,
-};
-
-export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({ 
-  selectedRole, 
-  onToolClick 
+export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
+  selectedRole,
+  onToolClick,
+  onToolSelect
 }) => {
-  // Get role context
   const roleContext = RoleContexts[selectedRole];
   
-  // Default tools if role doesn't have specific ones
-  const defaultTools = [
-    { name: "Quick Help", description: "Get assistance with basic tasks", icon: "HelpCircle" },
-    { name: "Task Creator", description: "Create a new task", icon: "CheckSquare" },
-    { name: "Calendar", description: "Manage your schedule", icon: "Calendar" },
-  ];
-  
-  // Use role-specific tools or fall back to default
-  const tools = roleContext.quickTools || defaultTools;
-  
+  // Function to get Lucide icon by name
+  const getIconByName = (iconName: string) => {
+    switch (iconName) {
+      case "Calendar": return <Calendar className="h-5 w-5" />;
+      case "CheckSquare": return <CheckSquare className="h-5 w-5" />;
+      case "FileText": return <FileText className="h-5 w-5" />;
+      case "HelpCircle": return <HelpCircle className="h-5 w-5" />;
+      case "Users": return <Users className="h-5 w-5" />;
+      case "Clock": return <Clock className="h-5 w-5" />;
+      case "ClipboardCheck": return <ClipboardCheck className="h-5 w-5" />;
+      case "Lightbulb": return <Lightbulb className="h-5 w-5" />;
+      case "Edit": return <Edit className="h-5 w-5" />;
+      case "Search": return <Search className="h-5 w-5" />;
+      case "BookOpen": return <BookOpen className="h-5 w-5" />;
+      case "BarChart": return <BarChart className="h-5 w-5" />;
+      case "HeartHandshake": return <HeartHandshake className="h-5 w-5" />;
+      case "Settings": return <Settings className="h-5 w-5" />;
+      case "CalendarClock": return <Calendar className="h-5 w-5" />;
+      default: return <HelpCircle className="h-5 w-5" />;
+    }
+  };
+
+  const handleToolClicked = (description: string) => {
+    if (onToolClick) {
+      onToolClick(description);
+    }
+    if (onToolSelect) {
+      onToolSelect(description);
+    }
+  };
+
+  if (!roleContext.quickTools || roleContext.quickTools.length === 0) {
+    return null;
+  }
+
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center">
-          <Rocket className="h-5 w-5 mr-2" />
-          Quick Tools
-        </CardTitle>
+    <Card className="border-dashed">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg">Quick Tools</CardTitle>
+        <CardDescription>
+          Select a tool to help with your {roleContext.title.toLowerCase()} tasks
+        </CardDescription>
       </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-2">
-        {tools.map((tool, index) => {
-          // Get icon component
-          const IconComponent = tool.icon in iconMap ? iconMap[tool.icon] : Rocket;
-          
-          return (
+      <CardContent>
+        <div className="grid grid-cols-2 gap-3">
+          {roleContext.quickTools.map((tool, index) => (
             <Button
               key={index}
               variant="outline"
-              className="h-auto py-3 flex flex-col items-center justify-center text-center gap-2 hover:bg-wakti-blue/5 hover:border-wakti-blue/20"
-              onClick={() => onToolClick(tool.description)}
+              className="h-auto py-3 px-4 flex flex-col items-center justify-center text-center gap-2"
+              onClick={() => handleToolClicked(tool.description)}
             >
-              <IconComponent className="h-5 w-5 text-wakti-blue mb-1" />
-              <div>
-                <p className="font-medium text-sm">{tool.name}</p>
-                <p className="text-xs text-muted-foreground">{tool.description}</p>
+              <div className="text-wakti-blue">
+                {getIconByName(tool.icon)}
+              </div>
+              <div className="flex flex-col">
+                <span className="font-medium">{tool.name}</span>
+                <span className="text-xs text-muted-foreground">{tool.description}</span>
               </div>
             </Button>
-          );
-        })}
+          ))}
+        </div>
       </CardContent>
     </Card>
   );
