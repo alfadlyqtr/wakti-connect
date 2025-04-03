@@ -39,17 +39,11 @@ export const useUpdateAISettings = (user: User | null) => {
         enabled_features: newSettings.enabled_features,
       };
       
-      // Then add knowledge_profile if it exists
-      const settingsForUpdate = {
-        ...baseSettings,
-        knowledge_profile: newSettings.knowledge_profile || { role: roleValue }
-      };
-
       // If we have an id, update the existing record
       if (newSettings.id) {
         const { data, error } = await supabase
           .from("ai_assistant_settings")
-          .update(settingsForUpdate)
+          .update(baseSettings)
           .eq("user_id", user.id)
           .select()
           .single();
@@ -58,7 +52,8 @@ export const useUpdateAISettings = (user: User | null) => {
         
         console.log("Settings updated successfully");
         
-        // Convert to AISettings type
+        // Convert to AISettings type and add knowledge_profile from the original newSettings
+        // since it's not stored in the database but maintained in the frontend
         const updatedSettings: AISettings = {
           id: data.id,
           user_id: user.id,
@@ -75,7 +70,7 @@ export const useUpdateAISettings = (user: User | null) => {
             analytics: true,
             messaging: true,
           },
-          knowledge_profile: data.knowledge_profile || { role: data.role }
+          knowledge_profile: newSettings.knowledge_profile || { role: data.role }
         };
         
         return updatedSettings;
@@ -83,7 +78,7 @@ export const useUpdateAISettings = (user: User | null) => {
         // No id, so insert a new record
         const { data, error } = await supabase
           .from("ai_assistant_settings")
-          .insert(settingsForUpdate)
+          .insert(baseSettings)
           .select()
           .single();
 
@@ -108,7 +103,7 @@ export const useUpdateAISettings = (user: User | null) => {
             analytics: true,
             messaging: true,
           },
-          knowledge_profile: data.knowledge_profile || { role: data.role }
+          knowledge_profile: newSettings.knowledge_profile || { role: data.role }
         };
         
         return createdSettings;

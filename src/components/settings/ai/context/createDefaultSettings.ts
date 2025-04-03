@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { AIAssistantRole } from "@/types/ai-assistant.types";
 
 export const createDefaultSettings = async () => {
   try {
@@ -13,7 +14,7 @@ export const createDefaultSettings = async () => {
     const defaultSettings = {
       user_id: user.id,
       assistant_name: "WAKTI",
-      role: "general",
+      role: "general" as AIAssistantRole,
       tone: "balanced",
       response_length: "balanced",
       proactiveness: true,
@@ -24,8 +25,8 @@ export const createDefaultSettings = async () => {
         staff: true,
         analytics: true,
         messaging: true,
-      },
-      knowledge_profile: { role: "general" }
+      }
+      // Remove knowledge_profile from default settings as it's not supported by the database
     };
     
     const { error } = await supabase
