@@ -17,19 +17,24 @@ import {
   BookOpen, 
   BarChart, 
   HeartHandshake, 
-  Settings
+  Settings,
+  Mic,
+  FileType,
+  List
 } from "lucide-react";
 
 interface QuickToolsCardProps {
   selectedRole: AIAssistantRole;
   onToolClick?: (toolDescription: string) => void;
   onToolSelect?: (toolDescription: string) => void;
+  compact?: boolean;
 }
 
 export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
   selectedRole,
   onToolClick,
-  onToolSelect
+  onToolSelect,
+  compact = false
 }) => {
   const roleContext = RoleContexts[selectedRole];
   
@@ -51,6 +56,9 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
       case "HeartHandshake": return <HeartHandshake className="h-5 w-5" />;
       case "Settings": return <Settings className="h-5 w-5" />;
       case "CalendarClock": return <Calendar className="h-5 w-5" />;
+      case "Mic": return <Mic className="h-5 w-5" />;
+      case "FileType": return <FileType className="h-5 w-5" />;
+      case "List": return <List className="h-5 w-5" />;
       default: return <HelpCircle className="h-5 w-5" />;
     }
   };
@@ -66,6 +74,28 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
 
   if (!roleContext.quickTools || roleContext.quickTools.length === 0) {
     return null;
+  }
+
+  // Use a more compact version if needed
+  if (compact) {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {roleContext.quickTools.slice(0, 4).map((tool, index) => (
+          <Button
+            key={index}
+            variant="outline"
+            size="sm"
+            className="h-auto py-2 px-3 flex items-center justify-start gap-2"
+            onClick={() => handleToolClicked(tool.description)}
+          >
+            <div className="text-wakti-blue">
+              {getIconByName(tool.icon)}
+            </div>
+            <span className="font-medium text-xs">{tool.name}</span>
+          </Button>
+        ))}
+      </div>
+    );
   }
 
   return (

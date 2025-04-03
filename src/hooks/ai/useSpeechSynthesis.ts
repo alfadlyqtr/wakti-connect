@@ -1,95 +1,121 @@
 
 import { useState, useEffect, useCallback } from 'react';
+import { useToast } from '@/components/ui/use-toast';
 
 interface SpeechSynthesisOptions {
+  voice?: string;
   rate?: number;
   pitch?: number;
   volume?: number;
-  voice?: SpeechSynthesisVoice;
 }
 
 export const useSpeechSynthesis = (options?: SpeechSynthesisOptions) => {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [speaking, setSpeaking] = useState(false);
   const [supported, setSupported] = useState(false);
-  
-  // Initialize and check support
+  const { toast } = useToast();
+
+  // Initialize speech synthesis
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    if (typeof window === 'undefined') return;
+    
+    // Check if browser supports speech synthesis
+    if ('speechSynthesis' in window) {
       setSupported(true);
       
       // Get available voices
-      const voicesChanged = () => {
-        const availableVoices = window.speechSynthesis.getVoices();
-        setVoices(availableVoices);
+      const updateVoices = () => {
+        setVoices(window.speechSynthesis.getVoices());
       };
       
       // Chrome loads voices asynchronously
-      window.speechSynthesis.onvoiceschanged = voicesChanged;
-      voicesChanged();
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = updateVoices;
+      }
       
-      // Clean up
-      return () => {
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.onvoiceschanged = null;
-      };
+      updateVoices();
+    } else {
+      console.warn('Speech synthesis not supported in this browser');
+      setSupported(false);
     }
+    
+    // Cleanup on unmount
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
   }, []);
-  
-  // Speak function
-  const speak = useCallback((text: string, speakOptions?: SpeechSynthesisOptions) => {
-    if (!supported) return;
+
+  // Function to speak text
+  const speak = useCallback((text: string) => {
+    if (!supported || !text) return;
     
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
     
-    // Create utterance
+    // Create a new utterance
     const utterance = new SpeechSynthesisUtterance(text);
     
-    // Apply options
-    const mergedOptions = { ...options, ...speakOptions };
-    if (mergedOptions.rate) utterance.rate = mergedOptions.rate;
-    if (mergedOptions.pitch) utterance.pitch = mergedOptions.pitch;
-    if (mergedOptions.volume) utterance.volume = mergedOptions.volume;
-    if (mergedOptions.voice) utterance.voice = mergedOptions.voice;
-    
-    // Set preferred voice if not specified
-    if (!utterance.voice) {
-      // Try to find a good English voice
-      const preferredVoice = voices.find(voice => 
-        voice.lang.includes('en') && voice.name.includes('Google') ||
-        voice.name.includes('Samantha') ||
-        voice.name.includes('Daniel')
-      );
-      
-      if (preferredVoice) {
-        utterance.voice = preferredVoice;
+    // Set voice if specified and available
+    if (options?.voice && voices.length > 0) {
+      const voice = voices.find(v => v.name === options.voice);
+      if (voice) {
+        utterance.voice = voice;
       }
     }
     
-    // Add event handlers
+    // Set other speech properties
+    utterance.rate = options?.rate || 1;
+    utterance.pitch = options?.pitch || 1;
+    utterance.volume = options?.volume || 1;
+    
+    // Set up event handlers
     utterance.onstart = () => setSpeaking(true);
     utterance.onend = () => setSpeaking(false);
-    utterance.onerror = () => setSpeaking(false);
+    utterance.onerror = (event) => {
+      console.error('Speech synthesis error:', event);
+      setSpeaking(false);
+      toast({
+        title: "Error",
+        description: "There was an error with speech synthesis.",
+        variant: "destructive",
+      });
+    };
     
-    // Speak
+    // Start speaking
     window.speechSynthesis.speak(utterance);
-    
-    return utterance;
-  }, [supported, options, voices]);
-  
-  // Stop speaking
+  }, [supported, voices, options, toast]);
+
+  // Function to stop speaking
   const cancel = useCallback(() => {
     if (!supported) return;
+    
     window.speechSynthesis.cancel();
     setSpeaking(false);
   }, [supported]);
-  
+
+  // Function to pause speaking
+  const pause = useCallback(() => {
+    if (!supported) return;
+    
+    window.speechSynthesis.pause();
+  }, [supported]);
+
+  // Function to resume speaking
+  const resume = useCallback(() => {
+    if (!supported) return;
+    
+    window.speechSynthesis.resume();
+  }, [supported]);
+
   return {
-    supported,
     voices,
+    speaking,
+    supported,
     speak,
     cancel,
-    speaking
+    pause,
+    resume
   };
 };

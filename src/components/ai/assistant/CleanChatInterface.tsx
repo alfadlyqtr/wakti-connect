@@ -4,7 +4,6 @@ import { AIMessage, AIAssistantRole } from "@/types/ai-assistant.types";
 import { AIAssistantMessage } from "../message/AIAssistantMessage";
 import { Loader2 } from "lucide-react";
 import { getTimeBasedGreeting } from "@/lib/dateUtils";
-import { QuickToolsCard } from "../tools/QuickToolsCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageInputForm } from "./MessageInputForm";
 
@@ -85,11 +84,6 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
                 message={welcomeMessage} 
                 isActive={true}
                 isSpeaking={isSpeaking}
-              />
-              
-              <QuickToolsCard 
-                selectedRole={selectedRole}
-                onToolClick={(tool) => setInputMessage(tool)}
               />
             </div>
           )}
