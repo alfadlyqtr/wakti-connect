@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
-import { Bot, Cog, Info, MessageCircle, History, Sparkles } from "lucide-react";
+import { Bot, Cog, Info, MessageCircle, History, Sparkles, FileText, Camera, Mic } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AIAssistantUpgradeCard } from "@/components/ai/AIAssistantUpgradeCard";
 import { AIAssistantChatCard } from "@/components/ai/assistant";
@@ -13,6 +13,10 @@ import { AISettingsProvider } from "@/components/settings/ai";
 import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
 import { Button } from "@/components/ui/button";
+import { AIAssistantDocumentsCard } from "@/components/ai/AIAssistantDocumentsCard";
+import { AIAssistantHistoryCard } from "@/components/ai/AIAssistantHistoryCard";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { 
   Tooltip,
   TooltipContent,
@@ -35,6 +39,7 @@ const DashboardAIAssistant = () => {
   const [isChecking, setIsChecking] = useState(true);
   const [canAccess, setCanAccess] = useState(false);
   const [selectedRole, setSelectedRole] = useState<AIAssistantRole>("general");
+  const [activeTab, setActiveTab] = useState<string>("chat");
   const breakpoint = useBreakpoint();
   const isMobile = !breakpoint.includes("md");
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name;
@@ -45,6 +50,11 @@ const DashboardAIAssistant = () => {
       setSelectedRole(aiSettings.role);
     }
   }, [aiSettings]);
+
+  // Handle document content
+  const handleUseDocumentContent = (content: string) => {
+    setInputMessage((prev) => prev ? `${prev}\n\n${content}` : content);
+  };
 
   // Handle role change
   const handleRoleChange = async (role: AIAssistantRole) => {
@@ -163,14 +173,16 @@ const DashboardAIAssistant = () => {
     >
       <AISettingsProvider>
         <div className="space-y-4 md:space-y-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-2">
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
-                <h1 className="text-xl md:text-2xl font-bold tracking-tight text-primary">Intelligent AI Assistant</h1>
+                <h1 className="text-xl md:text-2xl font-bold tracking-tight text-primary">
+                  WAKTI AI Assistant
+                </h1>
                 <Bot className="h-5 w-5 md:h-6 md:w-6 text-wakti-blue" />
               </div>
               <p className="text-sm text-muted-foreground">
-                Your personal AI helper for tasks, planning, and assistance
+                Good morning{userName ? `, ${userName}` : ""}! How can I help you today?
               </p>
             </div>
             
@@ -204,55 +216,179 @@ const DashboardAIAssistant = () => {
             <AIAssistantUpgradeCard />
           ) : (
             <div className="mx-auto max-w-6xl">
-              <AIAssistantChatCard
-                messages={messages}
-                inputMessage={inputMessage}
-                setInputMessage={setInputMessage}
-                handleSendMessage={handleSendMessage}
-                isLoading={isLoading}
-                canAccess={canAccess}
-                clearMessages={clearMessages}
-                selectedRole={selectedRole}
-                onRoleChange={handleRoleChange}
-                userName={userName}
-              />
+              <Tabs defaultValue="chat" value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="mb-2 justify-start">
+                  <TabsTrigger value="chat" className="flex items-center">
+                    <MessageCircle className="h-4 w-4 mr-1.5" />
+                    <span>Chat</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="tools" className="flex items-center">
+                    <FileText className="h-4 w-4 mr-1.5" />
+                    <span>Tools</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="history" className="flex items-center">
+                    <History className="h-4 w-4 mr-1.5" />
+                    <span>History</span>
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="chat" className="mt-0">
+                  <div className="grid grid-cols-1 gap-4">
+                    <AIAssistantChatCard
+                      messages={messages}
+                      inputMessage={inputMessage}
+                      setInputMessage={setInputMessage}
+                      handleSendMessage={handleSendMessage}
+                      isLoading={isLoading}
+                      canAccess={canAccess}
+                      clearMessages={clearMessages}
+                      selectedRole={selectedRole}
+                      onRoleChange={handleRoleChange}
+                      userName={userName}
+                    />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="tools" className="mt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg flex items-center">
+                          <FileText className="h-5 w-5 mr-2 text-blue-600" />
+                          Document Analysis
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Upload documents for the AI to analyze and extract information.
+                        </p>
+                        <AIAssistantDocumentsCard 
+                          canAccess={canAccess} 
+                          onUseDocumentContent={handleUseDocumentContent}
+                          selectedRole={selectedRole}
+                        />
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg flex items-center">
+                          <Camera className="h-5 w-5 mr-2 text-green-600" />
+                          Image Analysis
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Take photos or upload images for the AI to analyze.
+                        </p>
+                        <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                          <Camera className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                          <p className="text-sm font-medium">Click to take a photo or upload an image</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            JPG, PNG, or GIF up to 10MB
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg flex items-center">
+                          <Mic className="h-5 w-5 mr-2 text-purple-600" />
+                          Voice Interaction
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Speak to the AI assistant and get voice responses back.
+                        </p>
+                        <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                          <Mic className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                          <p className="text-sm font-medium">Click to start voice recording</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Ask questions or give commands with your voice
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg flex items-center">
+                          <Sparkles className="h-5 w-5 mr-2 text-amber-500" />
+                          Knowledge Base
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Teach the AI about your business, projects, and preferences.
+                        </p>
+                        <div className="space-y-2">
+                          <div className="rounded-md border p-3 hover:bg-accent transition-colors cursor-pointer">
+                            <h4 className="text-sm font-medium">Business Information</h4>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Add details about your services, products, and operations
+                            </p>
+                          </div>
+                          <div className="rounded-md border p-3 hover:bg-accent transition-colors cursor-pointer">
+                            <h4 className="text-sm font-medium">Personal Preferences</h4>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Teach the AI about your style, schedule, and work habits
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="history" className="mt-0">
+                  <AIAssistantHistoryCard canAccess={canAccess} />
+                </TabsContent>
+              </Tabs>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                <div className="bg-blue-50 p-4 rounded-lg shadow-sm">
-                  <div className="flex items-center mb-2">
-                    <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
-                      <MessageCircle className="h-4 w-4 text-blue-600" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <Card className="bg-blue-50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center mb-2">
+                      <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
+                        <MessageCircle className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <h3 className="font-medium">Smart Conversations</h3>
                     </div>
-                    <h3 className="font-medium">Smart Conversations</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    AI remembers your preferences and adapts to your communication style.
-                  </p>
-                </div>
+                    <p className="text-sm text-muted-foreground">
+                      AI remembers your preferences and adapts to your communication style.
+                    </p>
+                  </CardContent>
+                </Card>
                 
-                <div className="bg-purple-50 p-4 rounded-lg shadow-sm">
-                  <div className="flex items-center mb-2">
-                    <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-2">
-                      <Sparkles className="h-4 w-4 text-purple-600" />
+                <Card className="bg-purple-50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center mb-2">
+                      <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-2">
+                        <Sparkles className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <h3 className="font-medium">Personalized Assistance</h3>
                     </div>
-                    <h3 className="font-medium">Personalized Assistance</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Get recommendations and insights tailored to your business needs.
-                  </p>
-                </div>
+                    <p className="text-sm text-muted-foreground">
+                      Get recommendations and insights tailored to your specific needs.
+                    </p>
+                  </CardContent>
+                </Card>
                 
-                <div className="bg-green-50 p-4 rounded-lg shadow-sm">
-                  <div className="flex items-center mb-2">
-                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mr-2">
-                      <History className="h-4 w-4 text-green-600" />
+                <Card className="bg-green-50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center mb-2">
+                      <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mr-2">
+                        <History className="h-4 w-4 text-green-600" />
+                      </div>
+                      <h3 className="font-medium">Continuous Learning</h3>
                     </div>
-                    <h3 className="font-medium">Continuous Learning</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    AI gets better with each interaction to serve you more effectively.
-                  </p>
-                </div>
+                    <p className="text-sm text-muted-foreground">
+                      AI gets better with each interaction to serve you more effectively.
+                    </p>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           )}
