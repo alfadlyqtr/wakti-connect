@@ -5,12 +5,19 @@ import { AIMessage } from "@/types/ai-assistant.types";
 import { MessageAvatar } from "./MessageAvatar";
 import { MessageContent } from "./MessageContent";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AIAssistantMouthAnimation } from "../animation/AIAssistantMouthAnimation";
 
 interface AIAssistantMessageProps {
   message: AIMessage;
+  isActive?: boolean;
+  isSpeaking?: boolean;
 }
 
-export function AIAssistantMessage({ message }: AIAssistantMessageProps) {
+export function AIAssistantMessage({ 
+  message, 
+  isActive = false, 
+  isSpeaking = false
+}: AIAssistantMessageProps) {
   const isUser = message.role === "user";
   const isMobile = useIsMobile();
 
@@ -21,7 +28,13 @@ export function AIAssistantMessage({ message }: AIAssistantMessageProps) {
         isUser ? "justify-end" : "justify-start"
       )}
     >
-      {!isUser && !isMobile && <MessageAvatar isUser={isUser} />}
+      {!isUser && !isMobile && (
+        isActive ? (
+          <AIAssistantMouthAnimation isActive={true} isSpeaking={isSpeaking} />
+        ) : (
+          <MessageAvatar isUser={isUser} />
+        )
+      )}
       
       <div className="flex flex-col gap-1">
         <MessageContent 

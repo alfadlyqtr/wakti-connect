@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AIMessage, AIAssistantRole, RoleContexts } from '@/types/ai-assistant.types';
 import { AIAssistantMessage } from '../message/AIAssistantMessage';
 import { Loader2 } from 'lucide-react';
 import { getTimeBasedGreeting } from '@/lib/dateUtils';
+import { QuickToolsCard } from '../tools/QuickToolsCard';
 
 export interface AIAssistantChatProps {
   messages: AIMessage[];
@@ -24,6 +25,9 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
   canAccess,
   selectedRole
 }) => {
+  // State to track which message is currently being "spoken"
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
+  
   // Determine if it's the first message (welcome message)
   const isFirstMessage = messages.length <= 1;
   
@@ -50,6 +54,39 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
     return `${timeGreeting}! ${baseMessage}`;
   };
   
+  // Effect to simulate "speaking" animation for the latest assistant message
+  useEffect(() => {
+    if (messages.length === 0) return;
+    
+    // Find the latest assistant message
+    const latestAssistantMessage = [...messages]
+      .reverse()
+      .find(msg => msg.role === 'assistant');
+    
+    if (latestAssistantMessage) {
+      // Set this message as the speaking message
+      setSpeakingMessageId(latestAssistantMessage.id);
+      
+      // Simulate speaking time based on message length (1 second per 20 characters)
+      const speakingTime = Math.min(
+        Math.max(latestAssistantMessage.content.length / 20, 3), 
+        10
+      ) * 1000;
+      
+      // Clear the speaking state after the calculated time
+      const timer = setTimeout(() => {
+        setSpeakingMessageId(null);
+      }, speakingTime);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [messages]);
+  
+  // Function to handle quick tool selection
+  const handleToolClick = (toolDescription: string) => {
+    setInputMessage(toolDescription);
+  };
+  
   // If there are no messages (besides welcome), show role context welcome message
   if (isFirstMessage) {
     const welcomeMessage: AIMessage = {
@@ -60,10 +97,19 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
     };
     
     return (
-      <div className="space-y-4 w-full flex flex-col">
-        <AIAssistantMessage message={welcomeMessage} />
+      <div className="space-y-8 w-full flex flex-col">
+        <AIAssistantMessage 
+          message={welcomeMessage} 
+          isActive={true}
+          isSpeaking={speakingMessageId === "role-welcome"}
+        />
         
-        {/* We've moved quick tools out as requested */}
+        <div className="mt-4">
+          <QuickToolsCard
+            selectedRole={selectedRole}
+            onToolClick={handleToolClick}
+          />
+        </div>
       </div>
     );
   }
@@ -71,7 +117,12 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
   return (
     <div className="space-y-4 w-full flex flex-col">
       {messages.map((message) => (
-        <AIAssistantMessage key={message.id} message={message} />
+        <AIAssistantMessage 
+          key={message.id} 
+          message={message} 
+          isActive={message.role === 'assistant'}
+          isSpeaking={message.id === speakingMessageId}
+        />
       ))}
       
       {isLoading && (
