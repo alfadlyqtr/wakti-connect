@@ -1,11 +1,11 @@
 
-// This file defines the types for the AI assistant feature
+// AI Assistant role types
+export type AIAssistantRole = "student" | "business_owner" | "general" | "employee" | "writer";
 
-export type AIAssistantRole = "student" | "professional" | "creator" | "business_owner" | "general" | "employee" | "writer";
-
+// AI settings interface
 export interface AISettings {
   id?: string;
-  user_id?: string;
+  user_id: string;
   assistant_name: string;
   role: AIAssistantRole;
   tone: string;
@@ -13,20 +13,18 @@ export interface AISettings {
   proactiveness: boolean;
   suggestion_frequency: string;
   enabled_features: Record<string, boolean>;
-  knowledge_profile?: Record<string, any>; // Add knowledge profile field
-  created_at?: string;
-  updated_at?: string;
+  knowledge_profile?: any; // This is used client-side only, not stored in DB
 }
 
+// AI message interface
 export interface AIMessage {
   id: string;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system" | "error";
   content: string;
   timestamp: Date;
-  isSystem?: boolean;
-  isError?: boolean;
 }
 
+// AI knowledge upload interface
 export interface AIKnowledgeUpload {
   id: string;
   user_id: string;
@@ -35,142 +33,185 @@ export interface AIKnowledgeUpload {
   created_at: string;
 }
 
-// Define quick tool type
-interface QuickTool {
-  name: string;
-  description: string;
-  icon: string;
-}
-
-// Define role context type
-interface RoleContext {
+// Role contexts for AI assistant personalization
+export const RoleContexts: Record<AIAssistantRole, {
   title: string;
   description: string;
+  icon: string;
   welcomeMessage?: string;
-  suggestions?: string[];
-  suggestedPrompts?: string[];
-  quickTools?: QuickTool[];
-}
-
-// Define the role contexts for different assistant roles
-export const RoleContexts: Record<AIAssistantRole, RoleContext> = {
-  student: {
+  commandSuggestions?: string[];
+}> = {
+  "student": {
     title: "Study Assistant",
-    description: "I'm here to help with your studies, homework, and academic research.",
-    welcomeMessage: "Hello! I'm your Study Assistant. I can help with homework, study plans, research, and more.",
-    suggestedPrompts: [
-      "Create a study plan for my upcoming exam",
-      "Help me understand this topic...",
-      "Summarize these notes for me",
-      "Create a quiz about this subject"
-    ],
-    quickTools: [
-      { name: "Homework Helper", description: "Get help with assignments", icon: "BookOpen" },
-      { name: "Study Planner", description: "Create study schedules", icon: "Calendar" },
-      { name: "Note Summarizer", description: "Condense your notes", icon: "FileText" },
-      { name: "Research Assistant", description: "Find sources & info", icon: "Search" }
+    description: "Help with learning, assignments, and study planning",
+    icon: "graduation-cap",
+    welcomeMessage: "Hello! I'm your Study Assistant. I can help with homework, study planning, and educational questions. How can I assist with your learning today?",
+    commandSuggestions: [
+      "Create a task for my math homework",
+      "Schedule a study session for tomorrow at 4pm",
+      "Help me organize my assignments by due date"
     ]
   },
-  professional: {
-    title: "Work Assistant",
-    description: "I'm here to boost your productivity and help with professional tasks.",
-    welcomeMessage: "Hi there! I'm your Work Assistant. I can help with emails, scheduling, task management, and more.",
-    suggestedPrompts: [
-      "Draft an email to my team about...",
-      "Help me prioritize these tasks",
-      "Create a meeting agenda for tomorrow",
-      "Proofread this document for me"
-    ],
-    quickTools: [
-      { name: "Email Composer", description: "Create professional emails", icon: "Mail" },
-      { name: "Meeting Scheduler", description: "Plan your meetings", icon: "CalendarRange" },
-      { name: "Task Prioritizer", description: "Organize your workload", icon: "ListChecks" },
-      { name: "Document Creator", description: "Generate documents", icon: "FileEdit" }
-    ]
-  },
-  creator: {
-    title: "Creative Assistant",
-    description: "I'm here to spark ideas and help with your creative projects.",
-    welcomeMessage: "Welcome! I'm your Creative Assistant. I can help with content ideas, design suggestions, and creative workflows.",
-    suggestedPrompts: [
-      "Generate content ideas for my social media",
-      "Help me outline a blog post about...",
-      "Suggest a color palette for my design",
-      "Create a content calendar for next month"
-    ],
-    quickTools: [
-      { name: "Content Generator", description: "Get fresh ideas", icon: "Sparkles" },
-      { name: "Content Calendar", description: "Plan your content", icon: "Calendar" },
-      { name: "Caption Writer", description: "Craft engaging captions", icon: "Quote" },
-      { name: "Hashtag Generator", description: "Find relevant hashtags", icon: "Hash" }
-    ]
-  },
-  business_owner: {
+  "business_owner": {
     title: "Business Assistant",
-    description: "I'm here to help you manage and grow your business effectively.",
-    welcomeMessage: "Hi there! I'm your Business Assistant. I can help with staff management, customer service, analytics, and more.",
-    suggestedPrompts: [
-      "Create a staff schedule for next week",
-      "Draft a response to this customer complaint",
-      "Analyze these sales numbers for me",
-      "Suggest ways to improve my service offering"
-    ],
-    quickTools: [
-      { name: "Staff Scheduler", description: "Manage your team", icon: "Users" },
-      { name: "Customer Service", description: "Improve client relations", icon: "HeartHandshake" },
-      { name: "Business Analytics", description: "Understand your data", icon: "BarChart" },
-      { name: "Service Manager", description: "Optimize your offerings", icon: "Settings" }
+    description: "Help with operations, staff, and business analytics",
+    icon: "briefcase",
+    welcomeMessage: "Hello! I'm your Business Assistant. I can help manage your tasks, staff, bookings, and provide business insights. What aspect of your business can I assist with today?",
+    commandSuggestions: [
+      "Show me my business analytics",
+      "Create a task to follow up with clients",
+      "View my staff status"
     ]
   },
-  general: {
-    title: "Personal Assistant",
-    description: "I'm here to help with a variety of tasks and questions throughout your day.",
-    welcomeMessage: "Hello! I'm your Personal Assistant. How can I help you today?",
-    suggestedPrompts: [
-      "Help me plan my day",
-      "Create a to-do list for me",
-      "I need a quick answer about...",
-      "Help me organize this event"
-    ],
-    quickTools: [
-      { name: "Day Planner", description: "Organize your schedule", icon: "CalendarCheck" },
-      { name: "Task Creator", description: "Create to-do lists", icon: "ListTodo" },
-      { name: "Event Organizer", description: "Plan gatherings", icon: "PartyPopper" },
-      { name: "Quick Answer", description: "Get fast information", icon: "Search" }
+  "general": {
+    title: "Productivity Assistant",
+    description: "Help with tasks, scheduling, and general productivity",
+    icon: "list-check",
+    welcomeMessage: "Hello! I'm your Productivity Assistant. I can help manage your tasks, schedule events, and boost your productivity. How can I assist you today?",
+    commandSuggestions: [
+      "Create a task to buy groceries",
+      "Show me my tasks for today",
+      "Schedule a meeting with Sarah"
     ]
   },
-  employee: {
+  "employee": {
     title: "Work Assistant",
-    description: "I'm here to help you with your work tasks and responsibilities.",
-    welcomeMessage: "Hi there! I'm your Work Assistant. I can help you manage tasks, track your time, and stay organized.",
-    suggestedPrompts: [
-      "Help me track my hours for today",
-      "Create a report for the tasks I completed",
-      "Draft a message to my supervisor about...",
-      "Organize my work schedule for this week"
-    ],
-    quickTools: [
-      { name: "Time Tracker", description: "Log your hours", icon: "Clock" },
-      { name: "Task Reporter", description: "Document your work", icon: "ClipboardCheck" },
-      { name: "Meeting Organizer", description: "Plan work meetings", icon: "Users" },
-      { name: "Work Log", description: "Track daily activities", icon: "FileText" }
+    description: "Help with workplace tasks and team coordination",
+    icon: "users",
+    welcomeMessage: "Hello! I'm your Work Assistant. I can help manage your work assignments, coordinate with your team, and track your job cards. How can I support your workday?",
+    commandSuggestions: [
+      "Show me my assigned tasks",
+      "Create a task for the client project",
+      "View my work schedule"
     ]
   },
-  writer: {
-    title: "Writing Assistant",
-    description: "I'm here to help with all your writing needs and creative text projects.",
-    welcomeMessage: "Hello! I'm your Writing Assistant. I can help with drafting, editing, and improving your written content.",
-    suggestedPrompts: [
-      "Help me draft an email about...",
-      "Edit this paragraph for clarity",
-      "Create an outline for my blog post",
-      "Check the grammar in this text"
-    ],
-    quickTools: [
-      { name: "Email Writer", description: "Craft effective emails", icon: "Mail" },
-      { name: "Text Editor", description: "Polish your writing", icon: "FileEdit" },
-      { name: "Outline Generator", description: "Structure your content", icon: "List" },
-      { name: "Grammar Checker", description: "Fix language errors", icon: "Check" }
+  "writer": {
+    title: "Creative Assistant",
+    description: "Help with content creation and creative projects",
+    icon: "pen-nib",
+    welcomeMessage: "Hello! I'm your Creative Assistant. I can help organize your writing projects, manage deadlines, and keep track of your creative tasks. What are you working on today?",
+    commandSuggestions: [
+      "Create a task for my article draft",
+      "Schedule time for editing tomorrow",
+      "Organize my writing deadlines"
     ]
   }
 };
+
+// AI System Commands for task management and other WAKTI features
+export interface SystemCommand {
+  name: string;
+  description: string;
+  examples: string[];
+  systemOnly?: boolean; // If true, only accessible to the system, not directly to users
+}
+
+export const SystemCommands: Record<string, SystemCommand> = {
+  "create_task": {
+    name: "Create Task",
+    description: "Creates a new task in your task list",
+    examples: [
+      "Create a task to buy groceries",
+      "Add a task for project research due tomorrow",
+      "New task: call client at high priority"
+    ]
+  },
+  "view_tasks": {
+    name: "View Tasks",
+    description: "Shows your current tasks",
+    examples: [
+      "Show my tasks",
+      "View pending tasks",
+      "List all my tasks"
+    ]
+  },
+  "schedule_event": {
+    name: "Schedule Event",
+    description: "Creates a new event in your calendar",
+    examples: [
+      "Schedule a meeting tomorrow at 3pm",
+      "Create an event for doctor appointment on Friday",
+      "Add team meeting to calendar for next Monday"
+    ]
+  },
+  "check_calendar": {
+    name: "Check Calendar",
+    description: "Shows your upcoming events",
+    examples: [
+      "Show my calendar",
+      "What events do I have today?",
+      "Check my schedule for next week"
+    ]
+  },
+  "manage_staff": {
+    name: "Manage Staff",
+    description: "View and manage your staff (Business accounts only)",
+    examples: [
+      "Show my staff status",
+      "View team members",
+      "Check staff availability"
+    ]
+  },
+  "view_analytics": {
+    name: "View Analytics",
+    description: "Shows business or productivity analytics",
+    examples: [
+      "Show my analytics",
+      "View business performance",
+      "Check my productivity stats"
+    ]
+  },
+  "search_contacts": {
+    name: "Search Contacts",
+    description: "Finds contacts in your network",
+    examples: [
+      "Find contact John Smith",
+      "Search for Sarah in my contacts",
+      "Look up client contact info"
+    ]
+  },
+  "view_bookings": {
+    name: "View Bookings",
+    description: "Shows your upcoming bookings or appointments",
+    examples: [
+      "Show my bookings",
+      "View upcoming appointments",
+      "Check my client bookings"
+    ]
+  },
+  "get_task_insights": {
+    name: "Get Task Insights",
+    description: "Provides insights about your task management patterns",
+    examples: [
+      "How's my task management?",
+      "Give me insights on my productivity",
+      "Analyze my task completion"
+    ],
+    systemOnly: true
+  },
+  "get_business_overview": {
+    name: "Get Business Overview",
+    description: "Provides an overview of business performance",
+    examples: [
+      "Show business overview",
+      "Give me a business summary",
+      "How is my business doing?"
+    ],
+    systemOnly: true
+  }
+};
+
+// AI productivity insights for task management
+export interface AIProductivityInsight {
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'positive';
+  message: string;
+}
+
+// System voice assistant settings
+export interface AIVoiceSettings {
+  enabled: boolean;
+  voiceId: string;
+  speed: number;
+  autoPlay: boolean;
+}

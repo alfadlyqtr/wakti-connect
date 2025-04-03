@@ -2,8 +2,28 @@
 export async function prepareAIRequest(user, message, context, supabaseClient) {
   console.log("Preparing AI request for user:", user.id);
   
-  // Check if message contains a special context flag
+  // Check if message contains special context flags
   const hasRemindContext = message.includes("[CONTEXT: remind_about_wakti_focus]");
+  let systemContext = {};
+  
+  // Extract system context if present
+  const systemContextMatch = message.match(/\[SYSTEM_CONTEXT: ([^\]]+)\]/);
+  if (systemContextMatch) {
+    // Remove the context flag before processing
+    message = message.replace(/\[SYSTEM_CONTEXT: [^\]]+\]/, "").trim();
+    
+    // Parse the system context
+    const contextParts = systemContextMatch[1].split(', ');
+    contextParts.forEach(part => {
+      const [key, value] = part.split('=');
+      if (key && value) {
+        systemContext[key] = value;
+      }
+    });
+    
+    console.log("Extracted system context:", systemContext);
+  }
+  
   if (hasRemindContext) {
     // Remove the context flag before processing
     message = message.replace("[CONTEXT: remind_about_wakti_focus]", "").trim();
@@ -106,6 +126,25 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
     console.error("Failed to fetch processed documents:", error);
   }
   
+  // Get user interface state (what page they're on, etc.) if available
+  let userInterfaceState;
+  try {
+    const { data: stateData, error: stateError } = await supabaseClient
+      .from("user_interface_state")
+      .select("current_page, last_interaction")
+      .eq("user_id", user.id)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .single();
+      
+    if (!stateError && stateData) {
+      userInterfaceState = stateData;
+      console.log("User interface state fetched:", userInterfaceState);
+    }
+  } catch (error) {
+    console.warn("Failed to fetch user interface state or table doesn't exist:", error);
+  }
+  
   // Format knowledge uploads and documents for the AI context
   const knowledgeContext = knowledgeUploads?.length > 0 
     ? "Custom knowledge: " + knowledgeUploads.map(k => `${k.title}: ${k.content}`).join(" | ")
@@ -145,7 +184,7 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
     console.log("Fetching user profile for greeting...");
     const { data: userProfile, error: profileError } = await supabaseClient
       .from("profiles")
-      .select("full_name, display_name, business_name")
+      .select("full_name, display_name, business_name, account_type")
       .eq("id", user.id)
       .single();
       
@@ -164,14 +203,49 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
         userName = userProfile.business_name.trim();
       }
       
+      // Add account type to system context
+      if (userProfile.account_type) {
+        systemContext.account_type = userProfile.account_type;
+      }
+      
       console.log("Selected user name for greeting:", userName);
     }
   } catch (error) {
     console.error("Failed to fetch user profile:", error);
   }
   
-  // Build system message based on role context and settings
+  // Enhanced system message with improved integrations
   let systemMessage = `${roleContext} `;
+  
+  // Add WAKTI system integration capabilities
+  systemMessage += `
+You are integrated with WAKTI's productivity systems and can directly help with:
+
+1. Tasks: Create, view, update, and manage user tasks
+2. Events & Calendar: Schedule events, check calendar, and manage appointments
+3. Business Tools: View analytics, manage staff, handle bookings
+4. Contact Management: Search and interact with contacts
+
+When users ask for help with these areas, offer to take actions on their behalf using commands.
+`;
+
+  // Add specific capabilities based on account type
+  if (systemContext.account_type === 'business') {
+    systemMessage += `
+Since this user has a Business account, you can also:
+- Help manage their staff and team members
+- Provide business analytics and performance insights 
+- Assist with service booking management
+- Support customer relationship functions
+`;
+  } else if (systemContext.account_type === 'individual') {
+    systemMessage += `
+Since this user has an Individual account, you can:
+- Provide personal task management and productivity optimization
+- Help with their calendar and scheduling
+- Support event creation and management
+`;
+  }
   
   // Add tone instructions
   if (tone === "formal") {
@@ -201,7 +275,38 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
   } else if (userRole === 'business_owner') {
     systemMessage += "Focus on business operations, customer service, marketing, staff management, and business analytics. Help improve business processes. ";
   } else {
-    systemMessage += "You can help with task management, event planning, scheduling, and productivity. ";
+    systemMessage += "Help with task management, event planning, scheduling, and productivity. ";
+  }
+  
+  // Add user interface state context if available
+  if (userInterfaceState) {
+    systemMessage += `The user is currently on the ${userInterfaceState.current_page} page of the WAKTI application. `;
+    
+    // Add specific guidance based on page
+    if (userInterfaceState.current_page === 'tasks') {
+      systemMessage += "You can offer specific help with task management, organization, and prioritization. ";
+    } else if (userInterfaceState.current_page === 'calendar' || userInterfaceState.current_page === 'events') {
+      systemMessage += "You can offer specific help with scheduling, event details, invitations, and calendar management. ";
+    } else if (userInterfaceState.current_page === 'staff') {
+      systemMessage += "You can offer specific help with staff management, permissions, and team coordination. ";
+    } else if (userInterfaceState.current_page === 'analytics') {
+      systemMessage += "You can offer help interpreting data, suggesting business improvements, and tracking performance. ";
+    } else if (userInterfaceState.current_page === 'ai-assistant') {
+      systemMessage += "You can showcase all your capabilities to help with productivity, task management, scheduling, and business operations. ";
+    }
+  }
+  
+  // Add system context information
+  if (Object.keys(systemContext).length > 0) {
+    systemMessage += "\nUser system context: ";
+    
+    if (systemContext.pending_tasks) {
+      systemMessage += `The user has ${systemContext.pending_tasks} pending tasks. `;
+    }
+    
+    if (systemContext.upcoming_events) {
+      systemMessage += `The user has ${systemContext.upcoming_events} upcoming events. `;
+    }
   }
   
   // Add personalization instructions
@@ -216,6 +321,17 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
   if (documentsContext) {
     systemMessage += `Reference these documents when relevant: ${documentsContext} `;
   }
+  
+  // Add active listening and proactive assistance guidance
+  systemMessage += `
+Be an active listener and assistant:
+1. When users express challenges or pain points, acknowledge them and offer specific solutions using WAKTI's features
+2. When you sense the user is struggling with a task, offer step-by-step guidance
+3. After answering questions, suggest relevant features they might not know about
+4. When discussing tasks or events, offer to create them directly using system commands
+
+Remember you can help create tasks, schedule events, check calendars, and provide analytics through direct system integration.
+`;
   
   // Create personalized greetings for each role
   let greetingMessage;

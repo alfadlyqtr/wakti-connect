@@ -8,10 +8,44 @@ import {
   checkIfOffTopic, 
   detectSystemCommand,
   getUserTasks,
-  formatTasksForDisplay
+  formatTasksForDisplay,
+  getAnalyticsOverview,
+  getUpcomingEvents,
+  getBusinessSummary,
+  CommandType
 } from "../utils/aiUtils";
 import { toast } from "@/components/ui/use-toast";
 import { useTaskContext } from "@/contexts/TaskContext";
+
+// Helper function to parse dates from natural language
+const parseNaturalDate = (dateString: string): Date | null => {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  
+  // Handle common date expressions
+  if (!dateString || dateString.toLowerCase() === 'today') {
+    return today;
+  } else if (dateString.toLowerCase() === 'tomorrow') {
+    return tomorrow;
+  } else if (dateString.toLowerCase().includes('next week')) {
+    const nextWeek = new Date(today);
+    nextWeek.setDate(today.getDate() + 7);
+    return nextWeek;
+  } else {
+    // Try to parse the date string
+    try {
+      const date = new Date(dateString);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    } catch (e) {
+      console.error("Error parsing date:", e);
+    }
+  }
+  
+  return null;
+};
 
 export const useAIChatOperations = (userId?: string, userName: string = "") => {
   const {
@@ -27,8 +61,8 @@ export const useAIChatOperations = (userId?: string, userName: string = "") => {
   const [isProcessingCommand, setIsProcessingCommand] = useState(false);
   const taskContext = useTaskContext();
 
-  // Handle system commands
-  const handleSystemCommand = async (message: string) => {
+  // Handle system commands with enhanced functionality
+  const handleSystemCommand = async (message: string): Promise<boolean> => {
     const commandInfo = detectSystemCommand(message);
     
     if (!commandInfo.isCommand) {
@@ -38,7 +72,9 @@ export const useAIChatOperations = (userId?: string, userName: string = "") => {
     setIsProcessingCommand(true);
     
     try {
-      switch (commandInfo.type) {
+      const commandType: CommandType = commandInfo.type;
+      
+      switch (commandType) {
         case 'create_task':
           if (commandInfo.params?.title) {
             // Create task using the TaskContext
@@ -49,12 +85,17 @@ export const useAIChatOperations = (userId?: string, userName: string = "") => {
               status: "pending",
               user_id: userId || "",
               created_at: new Date().toISOString(),
+              // Set due date if provided
+              ...(commandInfo.params.dueDate && { 
+                due_date: parseNaturalDate(commandInfo.params.dueDate)?.toISOString() 
+              }),
             });
             
             addSystemMessage(`✅ Task created: "${commandInfo.params.title}"`);
             return true;
           }
-          return false;
+          addSystemMessage(`❓ I need a task title. Try saying "Create a task called [task name]".`);
+          return true;
           
         case 'view_tasks':
           // Fetch tasks using the task service
@@ -64,16 +105,96 @@ export const useAIChatOperations = (userId?: string, userName: string = "") => {
           return true;
           
         case 'schedule_event':
-          // For now, just acknowledge - we'll implement this fully in a future update
           if (commandInfo.params?.title) {
-            addSystemMessage(`📅 I'll help you schedule an event: "${commandInfo.params.title}" (This feature is being implemented)`);
+            // Check if events feature is available
+            const { count, error: tableError } = await supabase
+              .from('events')
+              .select('id', { count: 'exact', head: true })
+              .limit(1);
+              
+            if (tableError) {
+              // Table doesn't exist yet
+              addSystemMessage(`📅 I'll help you schedule an event: "${commandInfo.params.title}". 
+              
+The events feature is being set up. In the meantime, you can create events from the Events section in your dashboard.`);
+              return true;
+            }
+            
+            // TODO: Implement complete event creation functionality
+            // For now we just acknowledge the intent
+            let responseMessage = `📅 I'll help you schedule an event: "${commandInfo.params.title}"`;
+            
+            if (commandInfo.params.date) {
+              responseMessage += ` on ${commandInfo.params.date}`;
+            }
+            
+            if (commandInfo.params.time) {
+              responseMessage += ` at ${commandInfo.params.time}`;
+            }
+            
+            if (commandInfo.params.participants) {
+              responseMessage += ` with ${commandInfo.params.participants}`;
+            }
+            
+            addSystemMessage(`${responseMessage}
+            
+Would you like to add more details to this event?`);
             return true;
           }
-          return false;
+          addSystemMessage(`❓ I need an event title. Try saying "Schedule an event called [event name]".`);
+          return true;
           
         case 'check_calendar':
-          // For now, just acknowledge - we'll implement this fully in a future update
-          addSystemMessage("📅 Here's your calendar for today: (This feature is being implemented)");
+          // Get upcoming events
+          const eventsMessage = await getUpcomingEvents();
+          addSystemMessage(eventsMessage);
+          return true;
+          
+        case 'manage_staff':
+          // Check if user is a business owner
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('account_type')
+            .eq('id', userId)
+            .single();
+            
+          if (profileError || profile?.account_type !== 'business') {
+            addSystemMessage(`👥 Staff management is available for Business accounts only. Would you like information about upgrading to a Business plan?`);
+            return true;
+          }
+          
+          // For now, just provide a link to the staff management page
+          addSystemMessage(`👥 You can manage your staff members in the Staff Management section of your dashboard. Would you like me to explain how to set up staff permissions?`);
+          return true;
+          
+        case 'view_analytics':
+          // Get analytics overview
+          const analyticsMessage = await getAnalyticsOverview();
+          addSystemMessage(analyticsMessage);
+          return true;
+          
+        case 'search_contacts':
+          if (!commandInfo.params?.query) {
+            addSystemMessage(`👥 Please specify who you're looking for. Try saying "Search for contact [name]".`);
+            return true;
+          }
+          
+          // Simple acknowledgement for now
+          // TODO: Implement actual contact search
+          addSystemMessage(`👥 I'm searching for contacts matching "${commandInfo.params.query}". This feature is being implemented and will be available soon.`);
+          return true;
+          
+        case 'view_bookings':
+          // Simple acknowledgement for now
+          // TODO: Implement booking overview
+          const periodText = commandInfo.params?.period || "upcoming";
+          addSystemMessage(`📒 I'm retrieving your ${periodText} bookings. This feature is being implemented and will be available soon.`);
+          return true;
+          
+        case 'check_business':
+          // Get business summary
+          const businessSummary = await getBusinessSummary();
+          addSystemMessage(businessSummary);
           return true;
           
         default:
@@ -135,6 +256,53 @@ export const useAIChatOperations = (userId?: string, userName: string = "") => {
       } else {
         // Reset counter when back on topic
         setOffTopicCount(0);
+      }
+      
+      // Add user's system context for better assistance
+      try {
+        // Check what features are active for the user
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('account_type')
+          .eq('id', userId)
+          .single();
+          
+        // Get pending tasks count
+        const { count: taskCount } = await supabase
+          .from('tasks')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('status', 'pending');
+          
+        // Try to get upcoming events count if available
+        let upcomingEventCount = 0;
+        try {
+          const { count, error: eventsError } = await supabase
+            .from('events')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .gte('start_time', new Date().toISOString());
+            
+          if (!eventsError) {
+            upcomingEventCount = count || 0;
+          }
+        } catch (error) {
+          console.warn("Events table might not exist yet:", error);
+        }
+        
+        // Add context about user's system state
+        let systemContext = `[SYSTEM_CONTEXT: `;
+        systemContext += `account_type=${profile?.account_type || 'free'}, `;
+        systemContext += `pending_tasks=${taskCount || 0}, `;
+        systemContext += `upcoming_events=${upcomingEventCount}`;
+        systemContext += `]`;
+        
+        // Append system context to message
+        message = message + " " + systemContext;
+        
+      } catch (error) {
+        console.warn("Error adding system context:", error);
+        // Continue without system context if there was an error
       }
       
       // Call the edge function
