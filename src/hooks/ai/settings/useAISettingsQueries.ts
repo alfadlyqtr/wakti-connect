@@ -80,12 +80,13 @@ export const useAISettingsQuery = (user: User | null) => {
         // Create a proper AISettings object from the database result
         const settings: AISettings = {
           id: data.id,
+          user_id: user.id, // Add user_id explicitly
           assistant_name: data.assistant_name || "WAKTI",
-          tone: (data.tone as AISettings["tone"]) || "balanced",
-          response_length: (data.response_length as AISettings["response_length"]) || "balanced",
+          tone: data.tone as AISettings["tone"] || "balanced",
+          response_length: data.response_length as AISettings["response_length"] || "balanced",
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
-          suggestion_frequency: (data.suggestion_frequency as AISettings["suggestion_frequency"]) || "medium",
-          role: (data.role as AISettings["role"]) || "general",
+          suggestion_frequency: data.suggestion_frequency as AISettings["suggestion_frequency"] || "medium",
+          role: data.role as AISettings["role"] || "general",
           enabled_features: data.enabled_features as AISettings["enabled_features"] || {
             tasks: true,
             events: true,

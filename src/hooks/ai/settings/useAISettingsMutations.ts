@@ -17,6 +17,9 @@ export const useUpdateAISettings = (user: User | null) => {
 
       console.log("Updating AI settings:", newSettings);
       
+      // Convert role to string for database compatibility
+      const dbRole = newSettings.role as string;
+      
       // Prepare settings for Supabase
       const settingsForUpdate = {
         user_id: user.id,
@@ -25,7 +28,7 @@ export const useUpdateAISettings = (user: User | null) => {
         response_length: newSettings.response_length,
         proactiveness: newSettings.proactiveness,
         suggestion_frequency: newSettings.suggestion_frequency,
-        role: newSettings.role as unknown as string, // Type coercion for database compatibility
+        role: dbRole, // Use string version for database
         enabled_features: newSettings.enabled_features
       };
 
@@ -51,14 +54,15 @@ export const useUpdateAISettings = (user: User | null) => {
         console.log("Settings updated successfully");
         
         // Convert to AISettings type
-        const updatedSettings = {
+        const updatedSettings: AISettings = {
           id: data.id,
+          user_id: user.id, // Add user_id explicitly
           assistant_name: data.assistant_name || "WAKTI",
           tone: data.tone || "balanced",
           response_length: data.response_length || "balanced",
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
           suggestion_frequency: data.suggestion_frequency || "medium",
-          role: data.role || "general",
+          role: data.role as AISettings["role"] || "general",
           enabled_features: data.enabled_features || {
             tasks: true,
             events: true,
@@ -66,7 +70,7 @@ export const useUpdateAISettings = (user: User | null) => {
             analytics: true,
             messaging: true,
           }
-        } as AISettings;
+        };
         
         return updatedSettings;
       } else {
@@ -80,7 +84,7 @@ export const useUpdateAISettings = (user: User | null) => {
             response_length: settingsForUpdate.response_length,
             proactiveness: settingsForUpdate.proactiveness,
             suggestion_frequency: settingsForUpdate.suggestion_frequency,
-            role: settingsForUpdate.role as unknown as string, // Cast to handle Supabase enum compatibility
+            role: settingsForUpdate.role, // String version for database
             enabled_features: settingsForUpdate.enabled_features
           })
           .select()
@@ -91,14 +95,15 @@ export const useUpdateAISettings = (user: User | null) => {
         console.log("Settings created successfully");
         
         // Convert to AISettings type
-        const createdSettings = {
+        const createdSettings: AISettings = {
           id: data.id,
+          user_id: user.id, // Add user_id explicitly
           assistant_name: data.assistant_name || "WAKTI",
           tone: data.tone || "balanced", 
           response_length: data.response_length || "balanced",
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
           suggestion_frequency: data.suggestion_frequency || "medium",
-          role: data.role || "general",
+          role: data.role as AISettings["role"] || "general",
           enabled_features: data.enabled_features || {
             tasks: true,
             events: true,
@@ -106,7 +111,7 @@ export const useUpdateAISettings = (user: User | null) => {
             analytics: true,
             messaging: true,
           }
-        } as AISettings;
+        };
         
         return createdSettings;
       }

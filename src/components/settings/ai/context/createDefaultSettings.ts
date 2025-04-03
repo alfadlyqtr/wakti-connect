@@ -37,6 +37,9 @@ export const createDefaultSettings = async (): Promise<void> => {
       }
     };
     
+    // Convert role to string for database compatibility
+    const dbRole = defaultSettings.role as string;
+    
     const { data, error } = await supabase
       .from("ai_assistant_settings")
       .insert({
@@ -46,7 +49,7 @@ export const createDefaultSettings = async (): Promise<void> => {
         response_length: defaultSettings.response_length,
         proactiveness: defaultSettings.proactiveness,
         suggestion_frequency: defaultSettings.suggestion_frequency,
-        role: defaultSettings.role as unknown as string, // Type coercion for database compatibility
+        role: dbRole, // Use the string version for database
         enabled_features: defaultSettings.enabled_features
       })
       .select()

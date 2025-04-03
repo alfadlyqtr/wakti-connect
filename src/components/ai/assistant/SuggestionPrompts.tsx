@@ -9,7 +9,8 @@ export interface SuggestionPromptsProps {
 }
 
 export const SuggestionPrompts: React.FC<SuggestionPromptsProps> = ({ onPromptClick, selectedRole }) => {
-  const suggestedPrompts = RoleContexts[selectedRole].suggestedPrompts;
+  // Use the suggestions property instead of suggestedPrompts (which we added as an alias)
+  const suggestedPrompts = RoleContexts[selectedRole].suggestedPrompts || RoleContexts[selectedRole].suggestions;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-auto mb-4">
