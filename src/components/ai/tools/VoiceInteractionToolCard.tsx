@@ -1,11 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, Square, Volume2 } from 'lucide-react';
+import { Mic, Square, Volume2, AlertTriangle } from 'lucide-react';
 import { useSpeechRecognition } from '@/hooks/ai/useSpeechRecognition';
+import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { motion } from 'framer-motion';
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VoiceInteractionToolCardProps {
   onSpeechRecognized: (text: string) => void;
@@ -17,13 +19,15 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
   compact = false
 }) => {
   const [transcribedText, setTranscribedText] = useState("");
+  const [openAIConfigured, setOpenAIConfigured] = useState<boolean | null>(null);
   const { toast } = useToast();
   
+  // Use browser-based speech recognition
   const {
     transcript,
-    isListening,
-    startListening,
-    stopListening,
+    isListening: browserIsListening,
+    startListening: startBrowserListening,
+    stopListening: stopBrowserListening,
     resetTranscript,
     supported
   } = useSpeechRecognition({
@@ -31,26 +35,79 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     interimResults: true
   });
   
-  React.useEffect(() => {
+  // Use OpenAI based voice interaction
+  const {
+    lastTranscript,
+    isListening: openAIIsListening,
+    startListening: startOpenAIListening,
+    stopListening: stopOpenAIListening,
+    isProcessing,
+    supportsVoice,
+    openAIVoiceSupported
+  } = useVoiceInteraction();
+  
+  // Combined state for UI
+  const isListening = browserIsListening || openAIIsListening;
+  
+  // Check if OpenAI is properly configured
+  useEffect(() => {
+    const checkOpenAIConfig = async () => {
+      try {
+        const testResponse = await supabase.functions.invoke("ai-voice-to-text", {
+          body: { test: true }
+        });
+        setOpenAIConfigured(!testResponse.error);
+      } catch (error) {
+        console.warn("Could not verify OpenAI API configuration:", error);
+        setOpenAIConfigured(false);
+      }
+    };
+    
+    checkOpenAIConfig();
+  }, []);
+  
+  // Update transcript from browser-based recognition
+  useEffect(() => {
     if (transcript) {
       setTranscribedText(transcript);
     }
   }, [transcript]);
   
+  // Update transcript from OpenAI-based recognition
+  useEffect(() => {
+    if (lastTranscript) {
+      setTranscribedText(lastTranscript);
+    }
+  }, [lastTranscript]);
+  
   const handleStartListening = () => {
     resetTranscript();
     setTranscribedText("");
-    startListening();
+    
+    // Try OpenAI voice first if configured
+    if (openAIVoiceSupported) {
+      startOpenAIListening();
+    } else {
+      // Fall back to browser-based recognition
+      startBrowserListening();
+    }
   };
   
-  const handleStopListening = () => {
-    stopListening();
+  const handleStopListening = async () => {
+    if (openAIIsListening) {
+      await stopOpenAIListening();
+    } else if (browserIsListening) {
+      stopBrowserListening();
+    }
+    
     if (transcribedText.trim()) {
       onSpeechRecognized(transcribedText);
     }
   };
   
-  if (!supported) {
+  const voiceSupported = supported || supportsVoice;
+  
+  if (!voiceSupported) {
     return compact ? (
       <div className="text-xs text-muted-foreground p-2 border rounded-md">
         Speech recognition is not supported in your browser.
@@ -99,6 +156,13 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
             {transcribedText || "Listening..."}
           </p>
         )}
+        
+        {openAIVoiceSupported === false && (
+          <div className="text-xs flex items-center text-amber-600">
+            <AlertTriangle className="h-3 w-3 mr-1" />
+            Using browser voice (OpenAI unavailable)
+          </div>
+        )}
       </div>
     );
   }
@@ -110,6 +174,12 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
         <CardTitle className="flex items-center gap-2">
           <Volume2 className="h-5 w-5 text-wakti-blue" />
           Voice Interaction
+          {openAIVoiceSupported === false && (
+            <span className="text-xs text-amber-600 font-normal flex items-center ml-2">
+              <AlertTriangle className="h-3 w-3 mr-1" />
+              Enhanced voice features unavailable
+            </span>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -154,6 +224,17 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
             </p>
           )}
         </div>
+        
+        {openAIVoiceSupported === false && (
+          <div className="text-sm bg-amber-50 border border-amber-200 rounded-md p-3 text-amber-700">
+            <p className="flex items-center">
+              <AlertTriangle className="h-4 w-4 mr-2 flex-shrink-0" />
+              <span>
+                Using browser-based speech recognition. For enhanced voice features, ensure the OpenAI API key is set in Supabase secrets.
+              </span>
+            </p>
+          </div>
+        )}
         
         <div className="flex justify-end">
           <Button 

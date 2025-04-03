@@ -38,6 +38,8 @@ function processBase64Chunks(base64String: string, chunkSize = 32768) {
 }
 
 serve(async (req) => {
+  console.log("Voice-to-text function called");
+  
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
@@ -46,9 +48,18 @@ serve(async (req) => {
     const { audio } = await req.json();
     
     if (!audio) {
+      console.error("No audio data provided");
       throw new Error('No audio data provided');
     }
 
+    // Check if OpenAI API key is available
+    const apiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!apiKey) {
+      console.error("OPENAI_API_KEY is not set");
+      throw new Error('OpenAI API key is not configured');
+    }
+    
+    console.log("Processing audio data");
     // Process audio in chunks
     const binaryAudio = processBase64Chunks(audio);
     
@@ -58,20 +69,24 @@ serve(async (req) => {
     formData.append('file', blob, 'audio.webm');
     formData.append('model', 'whisper-1');
 
+    console.log("Sending request to OpenAI");
     // Send to OpenAI
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: formData,
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${await response.text()}`);
+      const errorText = await response.text();
+      console.error(`OpenAI API error: ${errorText}`);
+      throw new Error(`OpenAI API error: ${errorText}`);
     }
 
     const result = await response.json();
+    console.log("Transcription successful:", result.text?.substring(0, 50) + "...");
 
     return new Response(
       JSON.stringify({ text: result.text }),
@@ -79,8 +94,12 @@ serve(async (req) => {
     );
 
   } catch (error) {
+    console.error("Voice-to-text error:", error.message);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: "Please check the OpenAI API key in Supabase secrets" 
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

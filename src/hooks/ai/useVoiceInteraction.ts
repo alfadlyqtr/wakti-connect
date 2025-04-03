@@ -10,6 +10,7 @@ export const useVoiceInteraction = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [audioQueue, setAudioQueue] = useState<string[]>([]);
+  const [openAIVoiceSupported, setOpenAIVoiceSupported] = useState<boolean | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -37,6 +38,28 @@ export const useVoiceInteraction = () => {
         }
       };
     }
+
+    // Check if OpenAI voice functions are configured
+    const checkOpenAIConfig = async () => {
+      try {
+        const testResponse = await supabase.functions.invoke("ai-voice-to-text", {
+          body: { test: true }
+        });
+        
+        setOpenAIVoiceSupported(!testResponse.error);
+        
+        if (testResponse.error) {
+          console.warn("OpenAI voice features may not be available:", testResponse.error);
+        } else {
+          console.log("OpenAI voice features are available");
+        }
+      } catch (error) {
+        console.warn("Could not verify OpenAI voice support:", error);
+        setOpenAIVoiceSupported(false);
+      }
+    };
+    
+    checkOpenAIConfig();
     
     return () => {
       // Cleanup
@@ -122,21 +145,42 @@ export const useVoiceInteraction = () => {
           // Create a blob from the audio chunks
           const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
           
-          // Convert to base64 for processing
-          const base64Audio = await blobToBase64(audioBlob);
-          
-          // Call the voice-to-text function
-          const response = await supabase.functions.invoke("ai-voice-to-text", {
-            body: { audio: base64Audio }
-          });
-          
-          if (response.error) {
-            throw new Error(response.error.message || "Error processing speech");
+          // Try OpenAI transcription if available
+          if (openAIVoiceSupported) {
+            try {
+              // Convert to base64 for processing
+              const base64Audio = await blobToBase64(audioBlob);
+              
+              // Call the voice-to-text function
+              const response = await supabase.functions.invoke("ai-voice-to-text", {
+                body: { audio: base64Audio }
+              });
+              
+              if (response.error) {
+                console.warn("OpenAI transcription failed, falling back to browser:", response.error);
+                throw new Error(response.error.message || "Error processing speech");
+              }
+              
+              const text = response.data.text || "";
+              setLastTranscript(text);
+              resolve(text);
+              return;
+            } catch (error) {
+              console.warn("OpenAI transcription failed, falling back to browser:", error);
+              // Continue to browser-based transcription as fallback
+            }
           }
           
-          const text = response.data.text || "";
-          setLastTranscript(text);
-          resolve(text);
+          // If OpenAI transcription is not available or failed, fall back to browser-based transcription
+          // Note: This would require implementing a browser-based speech recognition as fallback
+          // For now, just show a message that OpenAI transcription failed
+          toast({
+            title: "Voice Processing",
+            description: "OpenAI voice processing is currently unavailable.",
+          });
+          
+          setLastTranscript("Voice processing unavailable. Please ensure OpenAI API key is set in Supabase secrets.");
+          resolve("");
           
         } catch (error) {
           console.error("Error processing voice:", error);
@@ -157,11 +201,24 @@ export const useVoiceInteraction = () => {
         }
       }, 500);
     });
-  }, [toast]);
+  }, [toast, openAIVoiceSupported]);
 
   // Convert text to speech
   const speakText = useCallback(async (text: string, options: { voice?: string; addToQueue?: boolean } = {}) => {
     try {
+      // First check if OpenAI voice is supported
+      if (!openAIVoiceSupported) {
+        // If OpenAI voice is explicitly not supported (not null), show a toast
+        if (openAIVoiceSupported === false) {
+          toast({
+            title: "Text-to-Speech Unavailable",
+            description: "OpenAI API key required for voice features.",
+            variant: "destructive",
+          });
+          return false;
+        }
+      }
+
       const response = await supabase.functions.invoke("ai-text-to-voice", {
         body: { 
           text, 
@@ -188,12 +245,12 @@ export const useVoiceInteraction = () => {
       console.error("Error generating speech:", error);
       toast({
         title: "Text-to-Speech Error",
-        description: error instanceof Error ? error.message : "Failed to generate speech",
+        description: "OpenAI API key required for voice features.",
         variant: "destructive",
       });
       return false;
     }
-  }, [isSpeaking, toast]);
+  }, [isSpeaking, toast, openAIVoiceSupported]);
 
   // Play audio from base64
   const playAudio = useCallback((base64Audio: string) => {
@@ -283,6 +340,7 @@ export const useVoiceInteraction = () => {
     lastTranscript,
     isProcessing,
     isSpeaking,
+    openAIVoiceSupported,
     startListening,
     stopListening,
     speakText,
