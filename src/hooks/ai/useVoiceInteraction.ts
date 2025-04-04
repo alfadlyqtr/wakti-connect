@@ -33,7 +33,6 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const silenceTimeoutRef = useRef<number | null>(null);
-  const processingTimeoutRef = useRef<number | null>(null);
   const shouldResumeRef = useRef(false);
   
   // Check if browser supports voice recognition
@@ -63,10 +62,13 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   useEffect(() => {
     const checkApiKey = async () => {
       try {
+        console.log("Checking OpenAI API key validation...");
         setApiKeyStatus('checking');
         const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
           body: { test: true }
         });
+        
+        console.log("API key check response:", { data, error });
         
         if (error || (data && data.error)) {
           console.warn('OpenAI API key validation failed:', error || data.error);
@@ -99,10 +101,13 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   // Retry API key validation
   const retryApiKeyValidation = useCallback(async () => {
     try {
+      console.log("Retrying OpenAI API key validation...");
       setApiKeyStatus('checking');
       const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
         body: { test: true }
       });
+      
+      console.log("API key retry response:", { data, error });
       
       if (error || (data && data.error)) {
         setOpenAIVoiceSupported(false);
@@ -137,13 +142,14 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   useEffect(() => {
     return () => {
       if (mediaRecorderRef.current) {
-        mediaRecorderRef.current.stop();
+        try {
+          mediaRecorderRef.current.stop();
+        } catch (e) {
+          console.error("Error stopping media recorder:", e);
+        }
       }
       if (silenceTimeoutRef.current) {
         window.clearTimeout(silenceTimeoutRef.current);
-      }
-      if (processingTimeoutRef.current) {
-        window.clearTimeout(processingTimeoutRef.current);
       }
     };
   }, []);
@@ -175,9 +181,12 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       const base64Data = await base64Promise;
       
       // Send to our Supabase Edge Function
+      console.log("Sending audio to voice-to-text function...");
       const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
         body: { audio: base64Data }
       });
+      
+      console.log("Voice-to-text response:", { data, error });
       
       if (error) {
         throw new Error(error.message || 'Failed to convert speech to text');
@@ -185,11 +194,14 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       
       if (!data?.text) {
         // No text was returned, likely silence
+        console.log("No text was returned from voice-to-text function");
         if (continuousListening) {
           startListening();
         }
         return;
       }
+      
+      console.log("Received transcript:", data.text);
       
       // Set the transcript
       setLastTranscript(data.text);
@@ -219,18 +231,23 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   
   const startListening = useCallback(async () => {
     if (isListening || isProcessing) {
+      console.log("Already listening or processing, ignoring startListening call");
       return;
     }
     
     try {
+      console.log("Starting voice recording...");
       setError(null);
       audioChunksRef.current = [];
       
       // Request microphone access
+      console.log("Requesting microphone access...");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log("Microphone access granted");
       
-      // Create media recorder
-      const mediaRecorder = new MediaRecorder(stream);
+      // Create media recorder with options optimized for voice
+      const options = { mimeType: 'audio/webm' };
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
       
       // Set up recorder event handlers
@@ -241,6 +258,7 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       };
       
       mediaRecorder.onstart = () => {
+        console.log("MediaRecorder started");
         setIsListening(true);
         setTemporaryTranscript('Listening...');
         
@@ -249,16 +267,25 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
           window.clearTimeout(silenceTimeoutRef.current);
         }
         silenceTimeoutRef.current = window.setTimeout(() => {
+          console.log("Maximum recording time reached (30s)");
           if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
             stopListening();
           }
         }, 30000);
       };
       
+      mediaRecorder.onerror = (event) => {
+        console.error("MediaRecorder error:", event);
+        setError("Media recorder error");
+        stopListening();
+      };
+      
       mediaRecorder.onstop = async () => {
+        console.log("MediaRecorder stopped");
         setIsListening(false);
         
         if (!audioChunksRef.current.length) {
+          console.log("No audio chunks recorded");
           if (continuousListening) {
             startListening();
           }
@@ -266,11 +293,13 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         }
         
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        console.log(`Audio blob size: ${audioBlob.size} bytes`);
         
         // Only process if we have a significant amount of audio data
         if (audioBlob.size > 1000) {
           await processSpeech(audioBlob);
         } else if (continuousListening) {
+          console.log("Audio too short, restarting listening");
           startListening();
         }
         
@@ -282,6 +311,7 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       };
       
       // Start recording
+      console.log("Starting MediaRecorder...");
       mediaRecorder.start(100); // Collect data in 100ms chunks for more responsive transcription
       
     } catch (e) {
@@ -299,15 +329,23 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   }, [isListening, isProcessing, processSpeech, continuousListening, toast]);
   
   const stopListening = useCallback(() => {
+    console.log("Stopping voice recording...");
     if (silenceTimeoutRef.current) {
       window.clearTimeout(silenceTimeoutRef.current);
       silenceTimeoutRef.current = null;
     }
     
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
-      setTemporaryTranscript('Processing...');
+      try {
+        mediaRecorderRef.current.stop();
+        setTemporaryTranscript('Processing...');
+      } catch (e) {
+        console.error("Error stopping MediaRecorder:", e);
+        setIsListening(false);
+        setTemporaryTranscript('');
+      }
     } else {
+      console.log("MediaRecorder not active, just updating state");
       setIsListening(false);
       setTemporaryTranscript('');
     }

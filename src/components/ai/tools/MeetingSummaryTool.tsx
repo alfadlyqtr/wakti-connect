@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, FileDown, Copy, Check, FileText, Loader2 } from 'lucide-react';
+import { Mic, MicOff, FileDown, Copy, Check, FileText, Loader2, AlertCircle } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
@@ -23,8 +23,9 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [recordingError, setRecordingError] = useState<string | null>(null);
+  
   const summaryRef = useRef<HTMLDivElement>(null);
-  const timerRef = useRef<number | null>(null);
   const intervalRef = useRef<number | null>(null);
   const { toast } = useToast();
   
@@ -36,7 +37,10 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     isListening,
     lastTranscript,
     isProcessing,
-    openAIVoiceSupported
+    openAIVoiceSupported,
+    apiKeyStatus,
+    apiKeyErrorDetails,
+    retryApiKeyValidation
   } = useVoiceInteraction({
     continuousListening: true,
     onTranscriptComplete: (text) => {
@@ -46,7 +50,10 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   });
 
   // Start recording
-  const startRecording = () => {
+  const startRecording = async () => {
+    // Reset error state
+    setRecordingError(null);
+    
     if (!supportsVoice) {
       toast({
         title: "Voice recording not supported",
@@ -56,52 +63,90 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       return;
     }
     
-    setIsRecording(true);
-    setRecordingTime(0);
-    setTranscribedText('');
-    setSummary('');
-    
-    // Start timer with interval, ensuring to clear any existing interval first
-    if (intervalRef.current !== null) {
-      window.clearInterval(intervalRef.current);
-      intervalRef.current = null;
+    // Check if OpenAI API key is valid
+    if (apiKeyStatus === 'invalid') {
+      setRecordingError('OpenAI API key issue: ' + (apiKeyErrorDetails || 'API key not properly configured'));
+      toast({
+        title: "OpenAI API Key Issue",
+        description: "The OpenAI API key is not properly configured. Recording may not work correctly.",
+        variant: "destructive"
+      });
+      return;
     }
     
-    intervalRef.current = window.setInterval(() => {
-      setRecordingTime(prev => prev + 1);
-    }, 1000);
-    
-    // Start voice recording
-    startListening();
-    
-    toast({
-      title: "Recording started",
-      description: "Speak clearly to ensure accurate transcription. Recording will continue until you stop it.",
-    });
+    try {
+      setIsRecording(true);
+      setRecordingTime(0);
+      setTranscribedText('');
+      setSummary('');
+      
+      // Clear any existing timer
+      if (intervalRef.current !== null) {
+        window.clearInterval(intervalRef.current);
+      }
+      
+      // Start timer
+      intervalRef.current = window.setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      
+      // Start voice recording
+      await startListening();
+      
+      toast({
+        title: "Recording started",
+        description: "Speak clearly to ensure accurate transcription. Recording will continue until you stop it.",
+      });
+    } catch (error) {
+      console.error("Failed to start recording:", error);
+      setRecordingError(`Recording failed to start: ${error instanceof Error ? error.message : 'unknown error'}`);
+      setIsRecording(false);
+      
+      // Clear timer if it was started
+      if (intervalRef.current !== null) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      
+      toast({
+        title: "Recording Error",
+        description: "Failed to start recording. Please check browser permissions and try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Stop recording
-  const stopRecording = () => {
-    // Clear timer interval
-    if (intervalRef.current !== null) {
-      window.clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    
-    setIsRecording(false);
-    
-    // Stop voice recording
-    stopListening();
-    
-    if (transcribedText) {
+  const stopRecording = async () => {
+    try {
+      // Clear timer interval
+      if (intervalRef.current !== null) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      
+      setIsRecording(false);
+      
+      // Stop voice recording
+      await stopListening();
+      
+      if (transcribedText) {
+        toast({
+          title: "Recording completed",
+          description: `${formatTime(recordingTime)} of audio transcribed.`,
+        });
+      } else {
+        toast({
+          title: "Transcription processing",
+          description: "Processing the audio. This may take a moment.",
+        });
+      }
+    } catch (error) {
+      console.error("Error stopping recording:", error);
       toast({
-        title: "Recording completed",
-        description: `${formatTime(recordingTime)} of audio transcribed.`,
-      });
-    } else {
-      toast({
-        title: "Transcription processing",
-        description: "Processing the audio. This may take a moment.",
+        title: "Error",
+        description: "Failed to properly stop recording.",
+        variant: "destructive"
       });
     }
   };
@@ -263,30 +308,42 @@ ${aiSummary}
     }
   };
   
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        window.clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-      if (intervalRef.current) {
-        window.clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      // Stop listening if component unmounts while recording
-      if (isRecording) {
-        stopListening();
-      }
-    };
-  }, [isRecording, stopListening]);
-
   // Update transcribed text if we receive new text while stopped
   useEffect(() => {
     if (!isRecording && lastTranscript && !transcribedText) {
       setTranscribedText(lastTranscript);
     }
   }, [isRecording, lastTranscript, transcribedText]);
+  
+  // Retry API key validation
+  const handleRetryApiKey = async () => {
+    toast({
+      title: "Testing API Connection",
+      description: "Checking OpenAI API key configuration...",
+    });
+    
+    const success = await retryApiKeyValidation();
+    
+    if (success) {
+      setRecordingError(null);
+    }
+  };
+  
+  // Clean up resources when component unmounts
+  useEffect(() => {
+    return () => {
+      // Stop recording if active
+      if (isRecording) {
+        stopListening();
+      }
+      
+      // Clear any timers
+      if (intervalRef.current !== null) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [isRecording, stopListening]);
 
   return (
     <Card>
@@ -300,6 +357,33 @@ ${aiSummary}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* API Key error handling */}
+        {apiKeyStatus === 'invalid' && (
+          <div className="bg-amber-50 border border-amber-300 rounded-md p-3 text-sm flex items-start gap-2">
+            <AlertCircle className="text-amber-600 h-5 w-5 flex-shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="text-amber-800 font-medium">OpenAI API Key Issue</p>
+              <p className="text-amber-700">{apiKeyErrorDetails || 'API key not properly configured'}</p>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleRetryApiKey}
+                className="mt-1"
+              >
+                Test API Connection
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {/* Recording error display */}
+        {recordingError && !apiKeyStatus && (
+          <div className="bg-red-50 border border-red-300 rounded-md p-3 text-sm">
+            <p className="text-red-800 font-medium">Recording Error</p>
+            <p className="text-red-700">{recordingError}</p>
+          </div>
+        )}
+      
         {/* Recording controls */}
         <div className="flex justify-center gap-4 p-2">
           {isRecording ? (

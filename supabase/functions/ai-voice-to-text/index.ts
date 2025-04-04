@@ -55,17 +55,36 @@ serve(async (req) => {
       const apiKey = Deno.env.get('OPENAI_API_KEY');
       if (!apiKey) {
         console.error("OPENAI_API_KEY is not set");
-        throw new Error('OpenAI API key is not configured');
+        return new Response(
+          JSON.stringify({ 
+            error: 'OpenAI API key is not configured',
+            details: "Please add the OPENAI_API_KEY secret in Supabase Edge Function settings"
+          }),
+          { 
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
       }
       
       // Basic validation of the API key format
       if (!apiKey.startsWith('sk-') || apiKey.length < 20) {
         console.error("OPENAI_API_KEY appears to be invalid");
-        throw new Error('OpenAI API key appears to be invalid. It should start with "sk-"');
+        return new Response(
+          JSON.stringify({ 
+            error: 'OpenAI API key appears to be invalid. It should start with "sk-"',
+            details: "Please check the format of your OpenAI API key"
+          }),
+          { 
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
       }
       
       // Try a simple API request to test connectivity and permissions
       try {
+        console.log("Testing OpenAI API connectivity");
         const response = await fetch('https://api.openai.com/v1/models', {
           headers: {
             'Authorization': `Bearer ${apiKey}`,
@@ -76,7 +95,16 @@ serve(async (req) => {
         if (!response.ok) {
           const errorData = await response.json();
           console.error("OpenAI API test failed:", errorData);
-          throw new Error(errorData.error?.message || 'API test failed');
+          return new Response(
+            JSON.stringify({ 
+              error: errorData.error?.message || 'API test failed',
+              details: "The API key may be invalid or have restricted permissions"
+            }),
+            { 
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
         }
         
         console.log("OpenAI API key test successful");
@@ -86,7 +114,16 @@ serve(async (req) => {
         );
       } catch (error) {
         console.error("OpenAI API test error:", error);
-        throw new Error(`API test failed: ${error.message}`);
+        return new Response(
+          JSON.stringify({ 
+            error: `API test failed: ${error.message}`,
+            details: "There was a network or connectivity issue"
+          }),
+          { 
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
       }
     }
     
@@ -94,20 +131,44 @@ serve(async (req) => {
     
     if (!audio) {
       console.error("No audio data provided");
-      throw new Error('No audio data provided');
+      return new Response(
+        JSON.stringify({ error: 'No audio data provided' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
     // Check if OpenAI API key is available
     const apiKey = Deno.env.get('OPENAI_API_KEY');
     if (!apiKey) {
       console.error("OPENAI_API_KEY is not set");
-      throw new Error('OpenAI API key is not configured');
+      return new Response(
+        JSON.stringify({ 
+          error: 'OpenAI API key is not configured',
+          details: "Please add the OPENAI_API_KEY secret in Supabase Edge Function settings"
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
     
     // Validate API key format
     if (!apiKey.startsWith('sk-') || apiKey.length < 20) {
       console.error("OPENAI_API_KEY format validation failed");
-      throw new Error('OpenAI API key appears to be invalid');
+      return new Response(
+        JSON.stringify({ 
+          error: 'OpenAI API key appears to be invalid',
+          details: "Please check the format of your OpenAI API key"
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
     
     console.log("Processing audio data");
@@ -133,7 +194,16 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`OpenAI API error: ${errorText}`);
-      throw new Error(`OpenAI API error: ${errorText}`);
+      return new Response(
+        JSON.stringify({ 
+          error: `OpenAI API error: ${errorText}`,
+          details: "The API returned an error response"
+        }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
     const result = await response.json();
