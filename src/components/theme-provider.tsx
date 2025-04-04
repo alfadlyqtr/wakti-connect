@@ -2,13 +2,18 @@
 "use client"
 
 import * as React from "react"
-import { ThemeProvider as NextThemesProvider } from "next-themes"
-import { type ThemeProviderProps as NextThemeProviderProps } from "next-themes"
+import { ThemeProvider as NextThemesProvider, type ThemeProviderProps as NextThemesProviderProps } from "next-themes"
 
-// Define a specific type for our ThemeProvider that matches next-themes requirements
-export interface ThemeProviderProps extends Omit<NextThemeProviderProps, "attribute"> {
+// Define a specific type for our ThemeProvider with proper attribute types
+export interface ThemeProviderProps {
   children: React.ReactNode
-  attribute?: "class" | "data-theme" | "data-mode" | ["class", "data-theme"] | ["class", "data-mode"]
+  defaultTheme?: string
+  storageKey?: string
+  enableSystem?: boolean
+  disableTransitionOnChange?: boolean
+  forcedTheme?: string
+  themes?: string[]
+  attribute?: string | string[]
 }
 
 export function ThemeProvider({
