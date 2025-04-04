@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MessageInputForm } from "./MessageInputForm";
 import { AIVoiceVisualizer } from "../animation/AIVoiceVisualizer";
 import { AIAssistantMouthAnimation } from "../animation/AIAssistantMouthAnimation";
+import { FullscreenVoiceConversation } from "../voice/FullscreenVoiceConversation";
 
 interface CleanChatInterfaceProps {
   messages: AIMessage[];
@@ -49,6 +50,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFirstMessage = messages.length === 0;
   const [voiceToVoiceEnabled, setVoiceToVoiceEnabled] = useState(false);
+  const [showVoiceMode, setShowVoiceMode] = useState(false);
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -88,6 +90,24 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
       return () => clearTimeout(handler);
     }
   }, [voiceToVoiceEnabled, inputMessage, isLoading, isSpeaking, onSendVoiceMessage, setInputMessage]);
+
+  // Function to handle entering fullscreen voice mode
+  const handleEnterVoiceMode = useCallback(() => {
+    console.log("Entering fullscreen voice conversation mode");
+    setShowVoiceMode(true);
+    
+    // Stop any ongoing listening first
+    if (isListening && onStopListening) {
+      onStopListening();
+    }
+  }, [isListening, onStopListening]);
+  
+  // Function to handle voice message sending in voice mode
+  const handleVoiceModeMessage = useCallback(async (text: string) => {
+    if (onSendVoiceMessage) {
+      await onSendVoiceMessage(text);
+    }
+  }, [onSendVoiceMessage]);
   
   // Get welcome message based on role
   const getWelcomeMessage = () => {
@@ -122,112 +142,136 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
     timestamp: new Date(),
   };
   
+  // Get the last assistant message for TTS in voice mode
+  const getLastAssistantMessage = () => {
+    if (messages.length === 0) return getWelcomeMessage();
+    
+    const lastAssistantMessage = [...messages]
+      .reverse()
+      .find(msg => msg.role === "assistant");
+      
+    return lastAssistantMessage ? lastAssistantMessage.content : "";
+  };
+  
   return (
-    <Card className="flex-1 flex flex-col overflow-hidden">
-      <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* Welcome UI for empty state */}
-          {isFirstMessage && (
-            <div className="space-y-6">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0">
-                  <AIAssistantMouthAnimation isActive={true} isSpeaking={isSpeaking} />
-                </div>
-                <div className="flex-1">
-                  <AIAssistantMessage 
-                    message={welcomeMessage} 
-                    isActive={true}
-                    isSpeaking={isSpeaking}
-                  />
-                  {isSpeaking && (
-                    <div className="mt-2">
-                      <AIVoiceVisualizer isActive={true} isSpeaking={isSpeaking} />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Messages */}
-          {messages.length > 0 && (
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <div className="flex items-start gap-3" key={message.id}>
-                  {message.role === "assistant" && (
-                    <div className="flex-shrink-0">
-                      <AIAssistantMouthAnimation 
-                        isActive={true} 
-                        isSpeaking={isSpeaking && message.id === messages[messages.length - 1].id} 
-                      />
-                    </div>
-                  )}
+    <>
+      <Card className="flex-1 flex flex-col overflow-hidden">
+        <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {/* Welcome UI for empty state */}
+            {isFirstMessage && (
+              <div className="space-y-6">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0">
+                    <AIAssistantMouthAnimation isActive={true} isSpeaking={isSpeaking} />
+                  </div>
                   <div className="flex-1">
-                    <AIAssistantMessage
-                      message={message}
-                      isActive={message.role === "assistant"}
-                      isSpeaking={isSpeaking && message.id === messages[messages.length - 1].id && message.role === "assistant"}
+                    <AIAssistantMessage 
+                      message={welcomeMessage} 
+                      isActive={true}
+                      isSpeaking={isSpeaking}
                     />
-                    {isSpeaking && message.role === "assistant" && message.id === messages[messages.length - 1].id && (
+                    {isSpeaking && (
                       <div className="mt-2">
                         <AIVoiceVisualizer isActive={true} isSpeaking={isSpeaking} />
                       </div>
                     )}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            )}
+            
+            {/* Messages */}
+            {messages.length > 0 && (
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <div className="flex items-start gap-3" key={message.id}>
+                    {message.role === "assistant" && (
+                      <div className="flex-shrink-0">
+                        <AIAssistantMouthAnimation 
+                          isActive={true} 
+                          isSpeaking={isSpeaking && message.id === messages[messages.length - 1].id} 
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <AIAssistantMessage
+                        message={message}
+                        isActive={message.role === "assistant"}
+                        isSpeaking={isSpeaking && message.id === messages[messages.length - 1].id && message.role === "assistant"}
+                      />
+                      {isSpeaking && message.role === "assistant" && message.id === messages[messages.length - 1].id && (
+                        <div className="mt-2">
+                          <AIVoiceVisualizer isActive={true} isSpeaking={isSpeaking} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Listening indicator */}
+            {isListening && (
+              <div className="flex items-start gap-3">
+                <div className="h-9 w-9 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 animate-pulse">
+                  <div className="h-4 w-4 bg-white rounded-full"></div>
+                </div>
+                <div className="p-3 bg-muted rounded-lg max-w-[80%]">
+                  <p className="text-sm text-muted-foreground">Listening...</p>
+                  {inputMessage && (
+                    <p className="text-sm font-medium mt-1">{inputMessage}</p>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {/* Loading indicator */}
+            {isLoading && (
+              <div className="flex items-start gap-3">
+                <div className="h-9 w-9 rounded-full bg-wakti-blue flex items-center justify-center flex-shrink-0">
+                  <Loader2 className="h-5 w-5 text-white animate-spin" />
+                </div>
+                <div className="p-3 bg-muted rounded-lg max-w-[80%]">
+                  <p className="text-sm text-muted-foreground">Thinking...</p>
+                </div>
+              </div>
+            )}
+            
+            {/* Scroll anchor */}
+            <div ref={messagesEndRef} />
+          </div>
           
-          {/* Listening indicator */}
-          {isListening && (
-            <div className="flex items-start gap-3">
-              <div className="h-9 w-9 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 animate-pulse">
-                <div className="h-4 w-4 bg-white rounded-full"></div>
-              </div>
-              <div className="p-3 bg-muted rounded-lg max-w-[80%]">
-                <p className="text-sm text-muted-foreground">Listening...</p>
-                {inputMessage && (
-                  <p className="text-sm font-medium mt-1">{inputMessage}</p>
-                )}
-              </div>
-            </div>
-          )}
-          
-          {/* Loading indicator */}
-          {isLoading && (
-            <div className="flex items-start gap-3">
-              <div className="h-9 w-9 rounded-full bg-wakti-blue flex items-center justify-center flex-shrink-0">
-                <Loader2 className="h-5 w-5 text-white animate-spin" />
-              </div>
-              <div className="p-3 bg-muted rounded-lg max-w-[80%]">
-                <p className="text-sm text-muted-foreground">Thinking...</p>
-              </div>
-            </div>
-          )}
-          
-          {/* Scroll anchor */}
-          <div ref={messagesEndRef} />
-        </div>
-        
-        {/* Input form - with improved voice toggle functionality */}
-        <MessageInputForm
-          inputMessage={inputMessage}
-          setInputMessage={setInputMessage}
-          handleSendMessage={handleSendMessage}
-          isLoading={isLoading}
-          canAccess={canAccess}
-          isListening={isListening}
-          onStartListening={onStartListening}
-          onStopListening={onStopListening}
-          recognitionSupported={recognitionSupported}
-          voiceToVoiceEnabled={voiceToVoiceEnabled}
-          onToggleVoiceToVoice={handleVoiceToVoiceToggle}
-          onFileUpload={onFileUpload}
-          onCameraCapture={onCameraCapture}
-          isSpeaking={isSpeaking}
+          {/* Input form - with improved voice toggle functionality */}
+          <MessageInputForm
+            inputMessage={inputMessage}
+            setInputMessage={setInputMessage}
+            handleSendMessage={handleSendMessage}
+            isLoading={isLoading}
+            canAccess={canAccess}
+            isListening={isListening}
+            onStartListening={onStartListening}
+            onStopListening={onStopListening}
+            recognitionSupported={recognitionSupported}
+            voiceToVoiceEnabled={voiceToVoiceEnabled}
+            onToggleVoiceToVoice={handleVoiceToVoiceToggle}
+            onFileUpload={onFileUpload}
+            onCameraCapture={onCameraCapture}
+            isSpeaking={isSpeaking}
+            onEnterVoiceMode={handleEnterVoiceMode}
+          />
+        </CardContent>
+      </Card>
+      
+      {/* Fullscreen Voice Conversation Mode */}
+      {showVoiceMode && (
+        <FullscreenVoiceConversation
+          onClose={() => setShowVoiceMode(false)}
+          onSendMessage={handleVoiceModeMessage}
+          isChatLoading={isLoading}
+          lastAssistantMessage={getLastAssistantMessage()}
         />
-      </CardContent>
-    </Card>
+      )}
+    </>
   );
 };

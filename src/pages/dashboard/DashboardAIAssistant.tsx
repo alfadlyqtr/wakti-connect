@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -47,7 +46,6 @@ interface EnhancedToolsTabProps {
   compact?: boolean;
 }
 
-// ImageCapture API definition
 declare global {
   class ImageCapture {
     constructor(track: MediaStreamTrack);

@@ -2,7 +2,7 @@
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Mic, MicOff, SendHorizonal, Loader2, Camera, FileIcon, Upload, Volume2, VolumeX, Cog } from "lucide-react";
+import { Mic, MicOff, SendHorizonal, Loader2, Camera, FileIcon, Upload, Volume2, VolumeX, Cog, Headphones } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -29,6 +29,7 @@ interface MessageInputFormProps {
   onFileUpload?: (file: File) => Promise<void>;
   onCameraCapture?: () => Promise<void>;
   isSpeaking?: boolean;
+  onEnterVoiceMode?: () => void;
 }
 
 export const MessageInputForm: React.FC<MessageInputFormProps> = ({
@@ -45,7 +46,8 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   onToggleVoiceToVoice,
   onFileUpload,
   onCameraCapture,
-  isSpeaking = false
+  isSpeaking = false,
+  onEnterVoiceMode
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -66,8 +68,22 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       isFocused ? "bg-background" : ""
     )}>
       <div className="flex items-center justify-between mb-2">
-        {/* Voice conversation toggle */}
-        {recognitionSupported && onToggleVoiceToVoice && (
+        {/* Voice conversation button */}
+        {recognitionSupported && onEnterVoiceMode && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 px-2 bg-gradient-to-r from-indigo-100 to-purple-100"
+            onClick={onEnterVoiceMode}
+            disabled={!canAccess}
+          >
+            <Headphones className="h-3.5 w-3.5 mr-1 text-purple-600" />
+            <span className="text-xs text-purple-700">Voice Conversation</span>
+          </Button>
+        )}
+        
+        {/* Voice conversation toggle (deprecated but kept for backward compatibility) */}
+        {recognitionSupported && onToggleVoiceToVoice && !onEnterVoiceMode && (
           <div className="flex items-center space-x-2">
             <Switch 
               checked={voiceToVoiceEnabled}
@@ -96,7 +112,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
         {/* Voice settings popover */}
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-7 px-2">
+            <Button variant="outline" size="sm" className="h-7 px-2 ml-auto">
               <Cog className="h-3.5 w-3.5 mr-1" />
               <span className="text-xs">Voice Settings</span>
             </Button>
