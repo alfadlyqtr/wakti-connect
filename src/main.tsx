@@ -5,17 +5,11 @@ import './index.css'
 import './App.css'
 import { AuthProvider } from './hooks/auth'
 import { CurrencyProvider } from './contexts/CurrencyContext'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-
-// Create a client
-const queryClient = new QueryClient()
 
 createRoot(document.getElementById("root")!).render(
   <AuthProvider>
     <CurrencyProvider>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
+      <App />
     </CurrencyProvider>
   </AuthProvider>
 );
