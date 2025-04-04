@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-import { fromTable } from "@/integrations/supabase/helper";
 
 interface LoginFormProps {
   setError?: React.Dispatch<React.SetStateAction<string>>;
@@ -36,14 +35,17 @@ const LoginForm = ({ setError }: LoginFormProps = {}) => {
       
       if (error) throw error;
       
-      // After login, check if user is a staff member using helper
-      const { data: staffData } = await fromTable('business_staff')
+      // After login, check if user is a staff member
+      const { data: staffData, error: staffError } = await supabase
+        .from('business_staff')
         .select('id, business_id, role')
         .eq('staff_id', data.user.id)
         .eq('status', 'active')
         .maybeSingle();
         
-      if (staffData) {
+      if (staffError) {
+        console.error("Error checking staff status:", staffError);
+      } else if (staffData) {
         // Store staff status and info in localStorage for quicker access
         localStorage.setItem('isStaff', 'true');
         localStorage.setItem('staffRelationId', staffData.id);

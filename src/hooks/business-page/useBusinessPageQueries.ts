@@ -2,7 +2,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { BusinessPage, BusinessPageSection, BusinessSocialLink } from "@/types/business.types";
-import { fromTable } from "@/integrations/supabase/helper";
 
 // Fetch business page by slug (for public viewing)
 export const useBusinessPageQuery = (pageSlug?: string, isPreviewMode?: boolean) => {
@@ -13,7 +12,8 @@ export const useBusinessPageQuery = (pageSlug?: string, isPreviewMode?: boolean)
       
       console.log("Fetching business page with slug:", pageSlug, "Preview mode:", isPreviewMode);
       
-      let query = fromTable('business_pages')
+      let query = supabase
+        .from('business_pages')
         .select()
         .eq('page_slug', pageSlug);
       
@@ -47,7 +47,8 @@ export const useOwnerBusinessPageQuery = () => {
         throw new Error("No active session");
       }
       
-      const { data, error } = await fromTable('business_pages')
+      const { data, error } = await supabase
+        .from('business_pages')
         .select()
         .eq('business_id', session.user.id)
         .single();
@@ -69,7 +70,8 @@ export const usePageSectionsQuery = (pageId?: string) => {
     queryFn: async () => {
       if (!pageId) return [];
       
-      const { data, error } = await fromTable('business_page_sections')
+      const { data, error } = await supabase
+        .from('business_page_sections')
         .select()
         .eq('page_id', pageId)
         .order('section_order', { ascending: true });
@@ -97,7 +99,8 @@ export const useSocialLinksQuery = (businessId?: string) => {
       
       console.log("Fetching social links for business:", businessId);
       
-      const { data, error } = await fromTable('business_social_links')
+      const { data, error } = await supabase
+        .from('business_social_links')
         .select()
         .eq('business_id', businessId);
       
@@ -120,7 +123,8 @@ export const useContactSubmissionsQuery = (businessId?: string) => {
     queryFn: async () => {
       if (!businessId) return [];
       
-      const { data, error } = await fromTable('business_contact_submissions')
+      const { data, error } = await supabase
+        .from('business_contact_submissions')
         .select()
         .eq('business_id', businessId)
         .order('created_at', { ascending: false });
@@ -140,7 +144,8 @@ export const useContactSubmissionsQuery = (businessId?: string) => {
 export const useMarkSubmissionAsReadMutation = () => {
   return useMutation({
     mutationFn: async (submissionId: string) => {
-      const { data, error } = await fromTable('business_contact_submissions')
+      const { data, error } = await supabase
+        .from('business_contact_submissions')
         .update({ is_read: true })
         .eq('id', submissionId)
         .select()

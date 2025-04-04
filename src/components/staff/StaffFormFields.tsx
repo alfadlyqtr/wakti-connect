@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { fromTable } from "@/integrations/supabase/helper";
 import {
   FormField,
   FormItem,
@@ -45,7 +44,8 @@ const StaffFormFields = ({ form, isEditing = false }: StaffFormFieldsProps) => {
       if (!session) return;
       
       try {
-        const { data: coAdmins, error } = await fromTable('business_staff')
+        const { data: coAdmins, error } = await supabase
+          .from('business_staff')
           .select('id')
           .eq('business_id', session.user.id)
           .eq('role', 'co-admin')

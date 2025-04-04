@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { fromTable } from "@/integrations/supabase/helper";
 
 /**
  * Checks if the current user can message a given user
@@ -21,15 +20,18 @@ export const canMessageUser = async (userId: string): Promise<boolean> => {
     }
     
     // Get the current user's profile
-    const { data: profile } = await fromTable('profiles')
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
       .select('account_type')
       .eq('id', session.user.id)
       .single();
       
-    if (!profile) {
+    if (profileError || !profileData) {
       console.log("Current user profile not found");
       return false;
     }
+    
+    const profile = profileData as { account_type: string };
     
     // Business users can message anyone
     if (profile.account_type === 'business') {
@@ -44,7 +46,8 @@ export const canMessageUser = async (userId: string): Promise<boolean> => {
     }
     
     // First check contacts - this is the most common case
-    const { data: contactData } = await fromTable('user_contacts')
+    const { data: contactData } = await supabase
+      .from('user_contacts')
       .select('id')
       .or(`and(user_id.eq.${session.user.id},contact_id.eq.${userId},status.eq.accepted),and(user_id.eq.${userId},contact_id.eq.${session.user.id},status.eq.accepted)`)
       .maybeSingle();
@@ -55,19 +58,23 @@ export const canMessageUser = async (userId: string): Promise<boolean> => {
     }
     
     // Get the target user's profile
-    const { data: targetProfile } = await fromTable('profiles')
+    const { data: targetProfileData, error: targetProfileError } = await supabase
+      .from('profiles')
       .select('account_type')
       .eq('id', userId)
       .maybeSingle();
       
-    if (!targetProfile) {
+    if (targetProfileError || !targetProfileData) {
       console.log("Target user profile not found");
       return false;
     }
     
+    const targetProfile = targetProfileData as { account_type: string };
+    
     // Individual users messaging business: check subscription
     if (targetProfile.account_type === 'business') {
-      const { data: subscriptionData } = await fromTable('business_subscribers')
+      const { data: subscriptionData } = await supabase
+        .from('business_subscribers')
         .select('id')
         .eq('subscriber_id', session.user.id)
         .eq('business_id', userId)

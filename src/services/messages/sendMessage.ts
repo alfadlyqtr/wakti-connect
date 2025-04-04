@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { fromTable } from "@/integrations/supabase/helper";
 
 /**
  * Sends a message to another user
@@ -20,29 +19,40 @@ export const sendMessage = async (recipientId: string, content: string): Promise
     }
     
     // Check if user is allowed to send messages
-    const { data: profile } = await fromTable('profiles')
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
       .select('account_type')
       .eq('id', session.user.id)
       .single();
     
-    if (profile?.account_type === 'free') {
+    if (profileError || !profileData) {
+      throw new Error("User profile not found");
+    }
+    
+    const profile = profileData as { account_type: string };
+    
+    if (profile.account_type === 'free') {
       throw new Error("Free accounts cannot send messages");
     }
     
     // Get recipient profile to check if it exists
-    const { data: recipientProfile } = await fromTable('profiles')
+    const { data: recipientProfileData, error: recipientProfileError } = await supabase
+      .from('profiles')
       .select('account_type')
       .eq('id', recipientId)
       .maybeSingle();
       
-    if (!recipientProfile) {
+    if (recipientProfileError || !recipientProfileData) {
       throw new Error("Recipient not found");
     }
     
+    const recipientProfile = recipientProfileData as { account_type: string };
+    
     // If current user is business, allow them to message anyone
-    if (profile?.account_type === 'business') {
+    if (profile.account_type === 'business') {
       // Insert the message directly - business users have this privilege
-      const { error } = await fromTable('messages')
+      const { error } = await supabase
+        .from('messages')
         .insert({
           sender_id: session.user.id,
           recipient_id: recipientId,
@@ -56,8 +66,9 @@ export const sendMessage = async (recipientId: string, content: string): Promise
     
     // If current user is an individual account and recipient is an individual account,
     // check if they are contacts
-    if (profile?.account_type === 'individual' && recipientProfile?.account_type === 'individual') {
-      const { data: contactData } = await fromTable('user_contacts')
+    if (profile.account_type === 'individual' && recipientProfile.account_type === 'individual') {
+      const { data: contactData } = await supabase
+        .from('user_contacts')
         .select('id')
         .or(`and(user_id.eq.${session.user.id},contact_id.eq.${recipientId},status.eq.accepted),and(user_id.eq.${recipientId},contact_id.eq.${session.user.id},status.eq.accepted)`)
         .maybeSingle();
@@ -69,8 +80,9 @@ export const sendMessage = async (recipientId: string, content: string): Promise
     
     // If current user is an individual account and recipient is a business account,
     // check if user is subscribed to the business
-    if (profile?.account_type === 'individual' && recipientProfile?.account_type === 'business') {
-      const { data: subscriptionData } = await fromTable('business_subscribers')
+    if (profile.account_type === 'individual' && recipientProfile.account_type === 'business') {
+      const { data: subscriptionData } = await supabase
+        .from('business_subscribers')
         .select('id')
         .eq('subscriber_id', session.user.id)
         .eq('business_id', recipientId)
@@ -82,7 +94,8 @@ export const sendMessage = async (recipientId: string, content: string): Promise
     }
     
     // Insert the message
-    const { error } = await fromTable('messages')
+    const { error } = await supabase
+      .from('messages')
       .insert({
         sender_id: session.user.id,
         recipient_id: recipientId,
