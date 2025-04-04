@@ -2,10 +2,17 @@
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Mic, MicOff, SendHorizonal, Loader2, Camera, FileIcon, Upload } from "lucide-react";
+import { Mic, MicOff, SendHorizonal, Loader2, Camera, FileIcon, Upload, Volume2, VolumeX, Cog } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { VoiceSelector } from "../settings/VoiceSelector";
+import { useVoiceSettings } from "@/store/voiceSettings";
 
 interface MessageInputFormProps {
   inputMessage: string;
@@ -21,6 +28,7 @@ interface MessageInputFormProps {
   onToggleVoiceToVoice?: (enabled: boolean) => void;
   onFileUpload?: (file: File) => Promise<void>;
   onCameraCapture?: () => Promise<void>;
+  isSpeaking?: boolean;
 }
 
 export const MessageInputForm: React.FC<MessageInputFormProps> = ({
@@ -36,10 +44,12 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   voiceToVoiceEnabled = false,
   onToggleVoiceToVoice,
   onFileUpload,
-  onCameraCapture
+  onCameraCapture,
+  isSpeaking = false
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { voice, updateVoice, autoSilenceDetection, toggleAutoSilenceDetection } = useVoiceSettings();
   
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -55,19 +65,70 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       "flex flex-col mt-auto p-3 border-t border-border/50 bg-card transition-all",
       isFocused ? "bg-background" : ""
     )}>
-      {recognitionSupported && onToggleVoiceToVoice && (
-        <div className="flex items-center justify-end mb-2 space-x-2">
-          <span className="text-xs text-muted-foreground">Voice conversation</span>
-          <Switch 
-            checked={voiceToVoiceEnabled}
-            onCheckedChange={(checked) => {
-              console.log("Voice toggle changed to:", checked);
-              onToggleVoiceToVoice(checked);
-            }}
-            className="data-[state=checked]:bg-green-500"
-          />
-        </div>
-      )}
+      <div className="flex items-center justify-between mb-2">
+        {/* Voice conversation toggle */}
+        {recognitionSupported && onToggleVoiceToVoice && (
+          <div className="flex items-center space-x-2">
+            <Switch 
+              checked={voiceToVoiceEnabled}
+              onCheckedChange={(checked) => {
+                console.log("Voice toggle changed to:", checked);
+                onToggleVoiceToVoice(checked);
+              }}
+              className="data-[state=checked]:bg-green-500"
+            />
+            <span className="text-xs text-muted-foreground">
+              {voiceToVoiceEnabled ? (
+                <span className="flex items-center">
+                  <Volume2 className="h-3 w-3 mr-1 text-green-500" />
+                  Voice conversation
+                </span>
+              ) : (
+                <span className="flex items-center">
+                  <VolumeX className="h-3 w-3 mr-1" />
+                  Voice conversation
+                </span>
+              )}
+            </span>
+          </div>
+        )}
+        
+        {/* Voice settings popover */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="h-7 px-2">
+              <Cog className="h-3.5 w-3.5 mr-1" />
+              <span className="text-xs">Voice Settings</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80">
+            <div className="space-y-4">
+              <h4 className="font-medium text-sm">Voice Settings</h4>
+              
+              <VoiceSelector 
+                selectedVoice={voice} 
+                onVoiceChange={updateVoice} 
+                compact={true}
+              />
+              
+              <div className="flex items-center space-x-2">
+                <Switch 
+                  id="silence-detection"
+                  checked={autoSilenceDetection}
+                  onCheckedChange={toggleAutoSilenceDetection}
+                />
+                <label htmlFor="silence-detection" className="text-sm cursor-pointer">
+                  Auto silence detection
+                </label>
+              </div>
+              
+              <p className="text-xs text-muted-foreground">
+                With silence detection enabled, the system will automatically stop listening when you pause speaking.
+              </p>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
       
       <form 
         onSubmit={handleSendMessage}
@@ -81,7 +142,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
           onBlur={() => setIsFocused(false)}
           className="min-h-[50px] max-h-[200px] p-3 focus-visible:ring-wakti-blue border-muted-foreground/20"
           rows={1}
-          disabled={isLoading || !canAccess || isListening}
+          disabled={isLoading || !canAccess || isListening || (voiceToVoiceEnabled && (isListening || isSpeaking))}
         />
         
         <div className="flex items-center gap-1">
@@ -105,7 +166,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
                     variant="outline"
                     className="rounded-full"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={isLoading || !canAccess || isListening}
+                    disabled={isLoading || !canAccess || isListening || isSpeaking}
                   >
                     <Upload className="h-4 w-4" />
                   </Button>
@@ -128,7 +189,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
                     variant="outline"
                     className="rounded-full"
                     onClick={onCameraCapture}
-                    disabled={isLoading || !canAccess || isListening}
+                    disabled={isLoading || !canAccess || isListening || isSpeaking}
                   >
                     <Camera className="h-4 w-4" />
                   </Button>
@@ -154,7 +215,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
                       isListening && "animate-pulse"
                     )}
                     onClick={isListening ? onStopListening : onStartListening}
-                    disabled={isLoading || !canAccess}
+                    disabled={isLoading || !canAccess || isSpeaking}
                   >
                     {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                   </Button>
@@ -171,7 +232,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
             type="submit"
             size="icon"
             className="rounded-full bg-wakti-blue hover:bg-wakti-blue/90"
-            disabled={isLoading || !inputMessage.trim() || !canAccess || isListening}
+            disabled={isLoading || !inputMessage.trim() || !canAccess || isListening || isSpeaking}
           >
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />

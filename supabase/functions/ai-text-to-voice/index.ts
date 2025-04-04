@@ -87,8 +87,12 @@ serve(async (req) => {
       throw new Error('OpenAI API key appears to be invalid');
     }
 
+    // Validate the voice parameter - make sure it's one of the allowed values
+    const allowedVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
+    const selectedVoice = voice && allowedVoices.includes(voice) ? voice : 'alloy';
+    
     console.log(`Generating speech for text: "${text.substring(0, 50)}..."${text.length > 50 ? '...' : ''}`);
-    console.log(`Using voice: ${voice || 'alloy'}`);
+    console.log(`Using voice: ${selectedVoice}`);
     
     // Generate speech from text
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
@@ -100,7 +104,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'tts-1',
         input: text,
-        voice: voice || 'alloy',
+        voice: selectedVoice,
         response_format: 'mp3',
       }),
     });

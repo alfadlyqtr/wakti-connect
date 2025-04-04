@@ -6,6 +6,8 @@ import { Loader2 } from "lucide-react";
 import { getTimeBasedGreeting } from "@/lib/dateUtils";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageInputForm } from "./MessageInputForm";
+import { AIVoiceVisualizer } from "../animation/AIVoiceVisualizer";
+import { AIAssistantMouthAnimation } from "../animation/AIAssistantMouthAnimation";
 
 interface CleanChatInterfaceProps {
   messages: AIMessage[];
@@ -127,11 +129,23 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
           {/* Welcome UI for empty state */}
           {isFirstMessage && (
             <div className="space-y-6">
-              <AIAssistantMessage 
-                message={welcomeMessage} 
-                isActive={true}
-                isSpeaking={isSpeaking}
-              />
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                  <AIAssistantMouthAnimation isActive={true} isSpeaking={isSpeaking} />
+                </div>
+                <div className="flex-1">
+                  <AIAssistantMessage 
+                    message={welcomeMessage} 
+                    isActive={true}
+                    isSpeaking={isSpeaking}
+                  />
+                  {isSpeaking && (
+                    <div className="mt-2">
+                      <AIVoiceVisualizer isActive={true} isSpeaking={isSpeaking} />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
           
@@ -139,12 +153,28 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
           {messages.length > 0 && (
             <div className="space-y-4">
               {messages.map((message) => (
-                <AIAssistantMessage
-                  key={message.id}
-                  message={message}
-                  isActive={message.role === "assistant"}
-                  isSpeaking={isSpeaking && message.id === messages[messages.length - 1].id && message.role === "assistant"}
-                />
+                <div className="flex items-start gap-3" key={message.id}>
+                  {message.role === "assistant" && (
+                    <div className="flex-shrink-0">
+                      <AIAssistantMouthAnimation 
+                        isActive={true} 
+                        isSpeaking={isSpeaking && message.id === messages[messages.length - 1].id} 
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <AIAssistantMessage
+                      message={message}
+                      isActive={message.role === "assistant"}
+                      isSpeaking={isSpeaking && message.id === messages[messages.length - 1].id && message.role === "assistant"}
+                    />
+                    {isSpeaking && message.role === "assistant" && message.id === messages[messages.length - 1].id && (
+                      <div className="mt-2">
+                        <AIVoiceVisualizer isActive={true} isSpeaking={isSpeaking} />
+                      </div>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -195,6 +225,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
           onToggleVoiceToVoice={handleVoiceToVoiceToggle}
           onFileUpload={onFileUpload}
           onCameraCapture={onCameraCapture}
+          isSpeaking={isSpeaking}
         />
       </CardContent>
     </Card>

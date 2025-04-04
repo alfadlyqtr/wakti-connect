@@ -1,11 +1,16 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSpeechSynthesis } from './useSpeechSynthesis';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
+import { useVoiceSettings } from '@/store/voiceSettings';
 
 interface UseVoiceInteractionOptions {
   continuousListening?: boolean;
   autoResumeListening?: boolean;
+  autoSilenceDetection?: boolean;
+  silenceThreshold?: number; // in decibels
+  silenceTime?: number; // in milliseconds
   onTranscriptComplete?: (transcript: string) => void;
 }
 
@@ -13,8 +18,17 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   const { 
     continuousListening = false,
     autoResumeListening = false,
+    autoSilenceDetection: optionAutoSilenceDetection,
+    silenceThreshold = -45, // default silence threshold in dB
+    silenceTime = 1500, // default silence time in ms
     onTranscriptComplete 
   } = options;
+  
+  // Get voice settings from the store
+  const voiceSettings = useVoiceSettings();
+  const autoSilenceDetection = optionAutoSilenceDetection !== undefined 
+    ? optionAutoSilenceDetection 
+    : voiceSettings.autoSilenceDetection;
   
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -25,14 +39,22 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   const [openAIVoiceSupported, setOpenAIVoiceSupported] = useState<boolean>(false);
   const [apiKeyStatus, setApiKeyStatus] = useState<'checking' | 'valid' | 'invalid' | 'unknown'>('checking');
   const [apiKeyErrorDetails, setApiKeyErrorDetails] = useState<string | null>(null);
+  const [isSilent, setIsSilent] = useState(true);
+  const [averageVolume, setAverageVolume] = useState<number>(0);
   
   const { toast } = useToast();
-  const { speak, cancel: stopSpeaking, speaking: isSpeaking, supported: synthesisSupported } = useSpeechSynthesis();
+  const { speak, cancel: stopSpeaking, speaking: isSpeaking, supported: synthesisSupported } = useSpeechSynthesis({
+    voice: voiceSettings.voice
+  });
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const silenceTimeoutRef = useRef<number | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const silenceStartTimeRef = useRef<number | null>(null);
   const shouldResumeRef = useRef(false);
+  const volumeCheckIntervalRef = useRef<number | null>(null);
   
   // Check if browser supports voice recognition
   useEffect(() => {
@@ -168,6 +190,12 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       if (silenceTimeoutRef.current) {
         window.clearTimeout(silenceTimeoutRef.current);
       }
+      if (volumeCheckIntervalRef.current) {
+        window.clearInterval(volumeCheckIntervalRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
     };
   }, []);
   
@@ -179,6 +207,81 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       shouldResumeRef.current = false;
     }
   }, [isSpeaking, autoResumeListening]);
+  
+  // Calculate volume level from audio data
+  const calculateVolumeLevel = useCallback((audioData: Float32Array): number => {
+    // Calculate RMS volume
+    let sum = 0;
+    for (let i = 0; i < audioData.length; i++) {
+      sum += audioData[i] * audioData[i];
+    }
+    const rms = Math.sqrt(sum / audioData.length);
+    
+    // Convert to dB
+    const db = 20 * Math.log10(rms);
+    return db;
+  }, []);
+  
+  // Set up volume monitoring
+  const setupVolumeMonitoring = useCallback((stream: MediaStream) => {
+    if (!autoSilenceDetection) return null;
+    
+    try {
+      // Create audio context and analyser
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      analyserRef.current.fftSize = 1024;
+      
+      // Connect mic to analyser
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      source.connect(analyserRef.current);
+      
+      // Create processor to get audio data
+      const processor = audioContextRef.current.createScriptProcessor(2048, 1, 1);
+      processor.connect(audioContextRef.current.destination);
+      analyserRef.current.connect(processor);
+      
+      processor.onaudioprocess = (e) => {
+        const inputData = e.inputBuffer.getChannelData(0);
+        const volume = calculateVolumeLevel(inputData);
+        
+        // Calculate moving average
+        setAverageVolume(prev => prev * 0.8 + volume * 0.2);
+        
+        // Check for silence
+        if (volume < silenceThreshold) {
+          if (silenceStartTimeRef.current === null) {
+            silenceStartTimeRef.current = Date.now();
+          } else if (Date.now() - silenceStartTimeRef.current > silenceTime && !isSilent) {
+            console.log("Silence detected for threshold period", {
+              volume, 
+              threshold: silenceThreshold,
+              silenceTime
+            });
+            setIsSilent(true);
+            
+            // If automatic silence detection is enabled, stop listening and process audio
+            if (autoSilenceDetection && isListening && !isProcessing) {
+              console.log("Auto-stopping listening due to silence");
+              stopListening();
+            }
+          }
+        } else {
+          // Reset silence timer if sound is detected
+          silenceStartTimeRef.current = null;
+          setIsSilent(false);
+        }
+      };
+      
+      return () => {
+        processor.disconnect();
+        source.disconnect();
+      };
+    } catch (error) {
+      console.error("Error setting up volume monitoring:", error);
+      return null;
+    }
+  }, [autoSilenceDetection, silenceThreshold, silenceTime, isListening, isProcessing, calculateVolumeLevel]);
   
   const processSpeech = useCallback(async (audioBlob: Blob) => {
     try {
@@ -257,11 +360,16 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       console.log("Starting voice recording...");
       setError(null);
       audioChunksRef.current = [];
+      silenceStartTimeRef.current = null;
+      setIsSilent(false);
       
       // Request microphone access
       console.log("Requesting microphone access...");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       console.log("Microphone access granted");
+      
+      // Setup volume monitoring if enabled
+      const cleanupVolumeMonitoring = setupVolumeMonitoring(stream);
       
       // Try with mp3 format first (which is better supported by OpenAI), then fall back to webm
       let options;
@@ -324,6 +432,9 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         console.log("MediaRecorder stopped");
         setIsListening(false);
         
+        // Clean up volume monitoring
+        if (cleanupVolumeMonitoring) cleanupVolumeMonitoring();
+        
         if (!audioChunksRef.current.length) {
           console.log("No audio chunks recorded");
           if (continuousListening) {
@@ -366,13 +477,18 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         variant: 'destructive'
       });
     }
-  }, [isListening, isProcessing, processSpeech, continuousListening, toast]);
+  }, [isListening, isProcessing, processSpeech, continuousListening, toast, setupVolumeMonitoring]);
   
   const stopListening = useCallback(() => {
     console.log("Stopping voice recording...");
     if (silenceTimeoutRef.current) {
       window.clearTimeout(silenceTimeoutRef.current);
       silenceTimeoutRef.current = null;
+    }
+    
+    if (volumeCheckIntervalRef.current) {
+      window.clearInterval(volumeCheckIntervalRef.current);
+      volumeCheckIntervalRef.current = null;
     }
     
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
@@ -391,7 +507,7 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     }
   }, []);
   
-  const speakText = useCallback((text: string) => {
+  const speakText = useCallback((text: string, voice?: string) => {
     // If we're listening, stop and flag for resumption
     if (isListening && autoResumeListening) {
       console.log("Pausing listening to speak");
@@ -399,8 +515,53 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       stopListening();
     }
     
-    speak(text);
-  }, [speak, stopListening, isListening, autoResumeListening]);
+    // If voice is provided, use it, otherwise use the default from settings
+    const voiceToUse = voice || voiceSettings.voice;
+    
+    // First, try to use the Edge Function for text-to-speech if OpenAI is available
+    if (openAIVoiceSupported && apiKeyStatus === 'valid') {
+      console.log(`Using OpenAI for speech with voice ${voiceToUse}`);
+      
+      supabase.functions.invoke('ai-text-to-voice', {
+        body: { text, voice: voiceToUse }
+      }).then(({ data, error }) => {
+        if (error || (data && data.error)) {
+          console.error("Error using OpenAI for speech:", error || data.error);
+          // Fall back to browser speech synthesis
+          speak(text);
+        } else if (data && data.audioContent) {
+          // Play audio from base64
+          const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+          audio.onplay = () => {
+            console.log("AI speech started");
+          };
+          audio.onended = () => {
+            console.log("AI speech ended");
+            if (autoResumeListening && shouldResumeRef.current) {
+              console.log("Auto-resuming listening after AI speech");
+              setTimeout(() => {
+                startListening();
+                shouldResumeRef.current = false;
+              }, 500);
+            }
+          };
+          audio.play().catch(err => {
+            console.error("Error playing audio:", err);
+            // Fall back to browser speech synthesis
+            speak(text);
+          });
+        }
+      }).catch(err => {
+        console.error("Error calling text-to-voice function:", err);
+        // Fall back to browser speech synthesis
+        speak(text);
+      });
+    } else {
+      // Use browser's speech synthesis as fallback
+      console.log("Using browser speech synthesis as fallback");
+      speak(text);
+    }
+  }, [speak, stopListening, isListening, autoResumeListening, startListening, openAIVoiceSupported, apiKeyStatus, voiceSettings.voice]);
   
   return {
     isListening,
@@ -419,6 +580,8 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     openAIVoiceSupported,
     apiKeyStatus,
     apiKeyErrorDetails,
-    retryApiKeyValidation
+    retryApiKeyValidation,
+    isSilent,
+    averageVolume
   };
 };
