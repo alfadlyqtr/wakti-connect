@@ -28,12 +28,9 @@ export const VoiceTestPage = () => {
     isListening,
     lastTranscript,
     temporaryTranscript,
-    isSpeaking,
     supportsVoice,
     startListening,
     stopListening,
-    speakText,
-    stopSpeaking,
     apiKeyStatus
   } = useVoiceInteraction({
     continuousListening: true,
@@ -47,37 +44,16 @@ export const VoiceTestPage = () => {
   
   const handleSpeak = useCallback(() => {
     if (testText) {
-      console.log("Speaking text:", testText);
-      speakText(testText);
+      toast({
+        title: "Text-to-Speech Disabled",
+        description: "This feature has been temporarily disabled."
+      });
     }
-  }, [testText, speakText]);
+  }, [testText, toast]);
   
   const handleApiTest = async () => {
     try {
       const testResults = [];
-      
-      // Test speech synthesis
-      toast({
-        title: "Testing voice synthesis...",
-        description: "Checking connection to OpenAI TTS API"
-      });
-      
-      const speechResponse = await fetch('/api/v1/ai-text-to-voice', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          test: true 
-        })
-      });
-      
-      const speechData = await speechResponse.json();
-      if (speechData.success) {
-        testResults.push("✅ Text-to-Voice API connection successful");
-      } else {
-        testResults.push(`❌ Text-to-Voice API error: ${speechData.error || 'Unknown error'}`);
-      }
       
       // Test speech recognition
       toast({
@@ -126,7 +102,7 @@ export const VoiceTestPage = () => {
         <CardHeader>
           <CardTitle>Voice Interaction Test</CardTitle>
           <CardDescription>
-            Test voice synthesis and recognition features
+            Test voice recognition features
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -151,6 +127,7 @@ export const VoiceTestPage = () => {
                   selectedVoice={voice}
                   onVoiceChange={updateVoice}
                   label="Voice"
+                  disabled={true}
                 />
               </div>
               <div className="flex items-center justify-between space-x-2">
@@ -179,22 +156,23 @@ export const VoiceTestPage = () => {
               />
               <Button 
                 onClick={handleSpeak} 
-                disabled={!testText || isSpeaking}
+                disabled={!testText}
               >
-                {isSpeaking ? <VolumeX /> : <Volume2 />}
-                {isSpeaking ? "Stop" : "Speak"}
+                <Volume2 className="mr-2 h-4 w-4" />
+                Speak
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Text-to-speech functionality has been temporarily disabled
+            </p>
           </div>
           
-          {isSpeaking && (
-            <div className="flex items-center justify-center py-4 space-y-2">
-              <div className="flex flex-col items-center gap-3">
-                <AIAssistantMouthAnimation isActive={true} isSpeaking={true} size="medium" mood="happy" />
-                <AIVoiceVisualizer isActive={true} isSpeaking={true} />
-              </div>
+          <div className="flex items-center justify-center py-4 space-y-2">
+            <div className="flex flex-col items-center gap-3">
+              <AIAssistantMouthAnimation isActive={true} size="medium" />
+              <AIVoiceVisualizer isActive={true} />
             </div>
-          )}
+          </div>
   
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -244,4 +222,4 @@ export const VoiceTestPage = () => {
       </Card>
     </div>
   );
-};
+}
