@@ -24,6 +24,7 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
   isChatLoading = false,
   lastAssistantMessage = ''
 }) => {
+  // State for UI and settings
   const [showSettings, setShowSettings] = useState(false);
   const [userMessage, setUserMessage] = useState('');
   const [isProcessingResponse, setIsProcessingResponse] = useState(false);
@@ -42,7 +43,7 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
   // Reference to track if we should process the message
   const shouldProcessMessageRef = useRef(false);
   
-  // Voice interaction hook
+  // Voice interaction hook with enhanced settings
   const {
     isListening,
     lastTranscript,
@@ -54,13 +55,17 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
     speakText,
     stopSpeaking,
     isSilent,
-    averageVolume
+    averageVolume,
+    apiKeyStatus,
+    retryApiKeyValidation
   } = useVoiceInteraction({
     continuousListening: true,
     autoResumeListening: true,
     autoSilenceDetection,
+    silenceTime: 1200, // Shorter silence time for more responsive experience
     onTranscriptComplete: (transcript) => {
       if (transcript) {
+        console.log("Transcript complete:", transcript);
         setUserMessage(transcript);
         shouldProcessMessageRef.current = true;
       }
@@ -97,6 +102,7 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
   // Speak the assistant's response when it's received
   useEffect(() => {
     if (lastAssistantMessage && !isSpeaking && !isChatLoading) {
+      console.log("Speaking assistant message:", lastAssistantMessage.substring(0, 50) + "...");
       speakText(lastAssistantMessage);
     }
   }, [lastAssistantMessage, isSpeaking, isChatLoading, speakText]);
@@ -104,8 +110,10 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
   // Start listening when component mounts
   useEffect(() => {
     if (!isListening && supportsVoice) {
-      console.log("Starting voice conversation...");
-      startListening();
+      console.log("Starting voice conversation on mount...");
+      setTimeout(() => {
+        startListening();
+      }, 500); // Short delay to ensure all is ready
     }
     
     return () => {
@@ -133,6 +141,23 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
       return temporaryTranscript || "Listening...";
     } else {
       return "Voice conversation active";
+    }
+  };
+
+  // Handle API key validation retry
+  const handleApiKeyRetry = async () => {
+    toast({
+      title: "Checking OpenAI API key",
+      description: "Validating connection to OpenAI services..."
+    });
+    
+    const success = await retryApiKeyValidation();
+    if (success) {
+      toast({
+        title: "Connection restored",
+        description: "Voice features are now available",
+        variant: "success"
+      });
     }
   };
 
@@ -219,6 +244,17 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
                   onCheckedChange={toggleVisualFeedback}
                 />
               </div>
+              
+              {apiKeyStatus === 'invalid' && (
+                <div className="bg-amber-50 p-3 rounded-md border border-amber-200">
+                  <p className="text-sm text-amber-800 mb-2">
+                    There's an issue with the OpenAI API connection. Enhanced voice features may not work properly.
+                  </p>
+                  <Button size="sm" variant="outline" onClick={handleApiKeyRetry}>
+                    Retry Connection
+                  </Button>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -231,6 +267,7 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
               isActive={true} 
               isSpeaking={isSpeaking} 
               size="large" 
+              mood={isSpeaking ? "happy" : isListening ? "thinking" : "neutral"}
             />
           </div>
           

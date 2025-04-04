@@ -6,8 +6,9 @@ import { VoiceSelector } from '@/components/ai/settings/VoiceSelector';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Mic, Volume2, AudioWaveform } from 'lucide-react';
+import { Mic, Volume2, AudioWaveform, RefreshCcw } from 'lucide-react';
 import { AIAssistantMouthAnimation } from '@/components/ai/animation/AIAssistantMouthAnimation';
+import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 
 export const AIVoiceSettingsTab: React.FC = () => {
   const { 
@@ -22,12 +23,44 @@ export const AIVoiceSettingsTab: React.FC = () => {
   
   const { toast } = useToast();
   
+  const {
+    speakText,
+    stopSpeaking,
+    isSpeaking,
+    apiKeyStatus,
+    apiKeyErrorDetails,
+    retryApiKeyValidation
+  } = useVoiceInteraction({
+    autoResumeListening: false
+  });
+  
   const handleReset = () => {
     resetSettings();
     toast({
       title: "Settings Reset",
       description: "Voice settings have been reset to defaults",
     });
+  };
+  
+  const handleTestVoice = () => {
+    speakText("Hello! This is a test of the AI voice feature with the " + voice + " voice.", voice);
+  };
+  
+  const handleRetryApiKey = async () => {
+    toast({
+      title: "Testing OpenAI API Connection",
+      description: "Please wait while we verify the connection..."
+    });
+    
+    const success = await retryApiKeyValidation();
+    
+    if (success) {
+      toast({
+        title: "Connection Successful",
+        description: "OpenAI API key is valid for voice features",
+        variant: "success"
+      });
+    }
   };
   
   return (
@@ -47,9 +80,22 @@ export const AIVoiceSettingsTab: React.FC = () => {
           <div className="flex flex-col md:flex-row gap-6 md:items-center mb-4">
             <div className="flex flex-col items-center">
               <div className="mb-2">
-                <AIAssistantMouthAnimation isActive={true} isSpeaking={true} size="medium" />
+                <AIAssistantMouthAnimation 
+                  isActive={true} 
+                  isSpeaking={isSpeaking} 
+                  size="medium" 
+                />
               </div>
               <p className="text-xs text-center text-muted-foreground mt-2">Voice Preview</p>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="mt-2"
+                onClick={handleTestVoice}
+                disabled={isSpeaking}
+              >
+                {isSpeaking ? "Speaking..." : "Test Voice"}
+              </Button>
             </div>
             
             <div className="space-y-4 flex-1">
@@ -98,16 +144,31 @@ export const AIVoiceSettingsTab: React.FC = () => {
                 onCheckedChange={toggleVisualFeedback}
               />
             </div>
+            
+            {apiKeyStatus === 'invalid' && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 mt-4">
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-1 text-amber-800">
+                  <RefreshCcw className="h-4 w-4" />
+                  OpenAI API Connection Issue
+                </h4>
+                <p className="text-sm text-amber-700 mb-2">
+                  {apiKeyErrorDetails || "There's an issue with the OpenAI API connection. Voice features may be limited."}
+                </p>
+                <Button variant="outline" size="sm" onClick={handleRetryApiKey} className="mt-2">
+                  Test API Connection
+                </Button>
+              </div>
+            )}
           </div>
           
           <div className="rounded-lg border p-4 bg-muted/50">
             <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
               <AudioWaveform className="h-4 w-4 text-wakti-blue" />
-              New Voice Conversation Mode
+              Voice Conversation Mode
             </h4>
             <p className="text-sm">
-              Enter the new immersive voice conversation mode from the chat interface. 
-              It enables a hands-free experience with improved voice detection.
+              Enter the immersive voice conversation mode from the chat interface. 
+              It enables a hands-free experience with improved voice detection and speaking animations.
             </p>
             <div className="mt-3 flex items-center justify-between">
               <p className="text-xs text-muted-foreground">Access from the "Voice Conversation" button in chat</p>

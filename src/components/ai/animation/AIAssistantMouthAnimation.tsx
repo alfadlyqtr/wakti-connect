@@ -18,13 +18,13 @@ export const AIAssistantMouthAnimation: React.FC<AIAssistantMouthAnimationProps>
 }) => {
   const [animationState, setAnimationState] = useState(0);
   
-  // Animation effect
+  // Animation effect - more frequent updates for smoother animation
   useEffect(() => {
     if (!isActive || !isSpeaking) return;
     
     const interval = setInterval(() => {
       setAnimationState((prev) => (prev + 1) % 4);
-    }, 200);
+    }, 150); // Faster animation for more natural movement
     
     return () => clearInterval(interval);
   }, [isActive, isSpeaking]);
@@ -42,7 +42,7 @@ export const AIAssistantMouthAnimation: React.FC<AIAssistantMouthAnimationProps>
     } else {
       // Neutral mood with speaking animation
       if (isSpeaking) {
-        // Alternate between different mouth states for animation
+        // More expressive mouth states animation
         if (animationState === 0) return <Smile className="h-full w-full text-wakti-blue" />;
         if (animationState === 1) return <Meh className="h-full w-full text-wakti-blue" />;
         if (animationState === 2) return <Smile className="h-full w-full text-wakti-blue" />;
@@ -82,17 +82,18 @@ export const AIAssistantMouthAnimation: React.FC<AIAssistantMouthAnimationProps>
       <motion.div
         initial={{ scale: 0.8 }}
         animate={{ scale: isSpeaking ? [1, 1.1, 1] : 1 }}
-        transition={{ duration: 0.5, repeat: isSpeaking ? Infinity : 0 }}
+        transition={{ duration: 0.3, repeat: isSpeaking ? Infinity : 0 }}
         className={`${sizeClasses.container} rounded-full bg-white border-2 border-wakti-blue/20 flex items-center justify-center shadow-sm`}
       >
         {getMouthIcon()}
       </motion.div>
       
+      {/* Sound indicator */}
       {isSpeaking ? (
         <motion.div 
           className={`absolute -right-1 -bottom-1 ${sizeClasses.indicator} bg-green-100 rounded-full flex items-center justify-center`}
           animate={{ scale: [1, 1.2, 1] }}
-          transition={{ repeat: Infinity, duration: 1 }}
+          transition={{ repeat: Infinity, duration: 0.8 }}
         >
           <Volume2 className="h-3/5 w-3/5 text-green-600" />
         </motion.div>
