@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Container } from '@/components/ui/container';
+import Container from '@/components/ui/container';
 import ImageCaptureUpload from '@/components/ai/image/ImageCaptureUpload';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
