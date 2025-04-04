@@ -1,83 +1,46 @@
 
 import React from 'react';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
-
-export type VoiceOption = {
-  id: string;
-  name: string;
-  label: string;
-  accent?: string;
-  gender?: 'male' | 'female' | 'neutral';
-};
-
-// Voice options with different accents and genders
-const VOICE_OPTIONS: VoiceOption[] = [
-  { id: 'alloy', name: 'Alloy', label: 'Alloy (Neutral)', gender: 'neutral' },
-  { id: 'echo', name: 'Echo', label: 'Echo (Male)', gender: 'male' },
-  { id: 'fable', name: 'Fable', label: 'Fable (Male)', gender: 'male' },
-  { id: 'onyx', name: 'Onyx', label: 'Onyx (Male)', gender: 'male' },
-  { id: 'nova', name: 'Nova', label: 'Nova (Female)', gender: 'female' },
-  { id: 'shimmer', name: 'Shimmer', label: 'Shimmer (Female)', gender: 'female' },
-];
 
 interface VoiceSelectorProps {
   selectedVoice: string;
-  onVoiceChange: (voiceId: string) => void;
-  showLabel?: boolean;
-  compact?: boolean;
+  onVoiceChange: (voice: string) => void;
+  label?: string;
+  className?: string;
 }
 
 export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
   selectedVoice,
   onVoiceChange,
-  showLabel = true,
-  compact = false,
+  label = "Voice",
+  className = "",
 }) => {
-  const { toast } = useToast();
-  
-  const handleChange = (value: string) => {
-    onVoiceChange(value);
-    
-    const selectedOption = VOICE_OPTIONS.find(voice => voice.id === value);
-    if (selectedOption) {
-      toast({
-        title: "Voice Changed",
-        description: `AI will now speak with ${selectedOption.name} voice`,
-      });
-    }
-  };
+  const voices = [
+    { id: 'alloy', name: 'Alloy', description: 'Neutral and balanced' },
+    { id: 'echo', name: 'Echo', description: 'Mature and serious' },
+    { id: 'fable', name: 'Fable', description: 'Engaging storyteller' },
+    { id: 'onyx', name: 'Onyx', description: 'Deep and authoritative' },
+    { id: 'nova', name: 'Nova', description: 'Soft and friendly' },
+    { id: 'shimmer', name: 'Shimmer', description: 'Clear and expressive' },
+  ];
   
   return (
-    <div className={`space-y-2 ${compact ? 'flex items-center gap-3' : ''}`}>
-      {showLabel && (
-        <Label htmlFor="voice-select" className={compact ? 'text-sm m-0' : ''}>
-          AI Voice
-        </Label>
-      )}
-      
-      <Select value={selectedVoice} onValueChange={handleChange}>
-        <SelectTrigger id="voice-select" className={compact ? 'h-8 text-xs' : ''}>
-          <SelectValue placeholder="Select voice" />
+    <div className={className}>
+      {label && <Label className="mb-2">{label}</Label>}
+      <Select value={selectedVoice} onValueChange={onVoiceChange}>
+        <SelectTrigger>
+          <SelectValue placeholder="Select a voice" />
         </SelectTrigger>
         <SelectContent>
-          <SelectGroup>
-            <SelectLabel>Standard Voices</SelectLabel>
-            {VOICE_OPTIONS.map((voice) => (
-              <SelectItem key={voice.id} value={voice.id}>
-                {voice.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+          {voices.map((voice) => (
+            <SelectItem key={voice.id} value={voice.id}>
+              <div className="flex flex-col">
+                <span>{voice.name}</span>
+                <span className="text-xs text-muted-foreground">{voice.description}</span>
+              </div>
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>
