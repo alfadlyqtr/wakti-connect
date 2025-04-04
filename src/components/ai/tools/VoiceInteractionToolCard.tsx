@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,11 +41,10 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     isProcessing,
     supportsVoice,
     isSpeaking,
-    canUseSpeechSynthesis,
-    openAIVoiceSupported,
     apiKeyStatus,
     apiKeyErrorDetails,
-    retryApiKeyValidation
+    retryApiKeyValidation,
+    openAIVoiceSupported
   } = useVoiceInteraction();
   
   // Combined state for UI
@@ -210,7 +208,6 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     );
   }
   
-  // Regular (non-compact) UI
   return (
     <Card>
       <CardHeader>

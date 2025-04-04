@@ -34,13 +34,18 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   
   const { 
     supportsVoice,
-    openAIVoiceSupported,
     apiKeyStatus,
     apiKeyErrorDetails,
     retryApiKeyValidation
   } = useVoiceInteraction({
     continuousListening: false,
   });
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
 
   const startRecording = async () => {
     setRecordingError(null);
@@ -340,12 +345,6 @@ ${aiSummary}
     } finally {
       setIsSummarizing(false);
     }
-  };
-
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const copySummary = () => {
