@@ -47,38 +47,42 @@ serve(async (req) => {
       );
     }
 
-    // Create OpenAI API request based on whether we have a reference image or not
-    let openaiRequestBody = {};
+    let openaiRequestBody;
+    let endpoint = 'https://api.openai.com/v1/images/generations';
     
     if (referenceImage) {
-      // If we have a reference image, use the image variations API
-      console.log("Generating image with reference and prompt:", prompt);
+      console.log("Using reference image for style transfer with prompt:", prompt);
       
-      // Enhance the prompt for better results with reference image
-      const enhancedPrompt = `Based on the reference image, ${prompt}. Create a high quality artistic version.`;
+      // Convert base64 data URL to raw base64 string
+      const base64Image = referenceImage.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
+      
+      // For reference image, we use the image variations API with the image edited based on prompt
+      endpoint = 'https://api.openai.com/v1/images/variations';
       
       openaiRequestBody = {
-        prompt: enhancedPrompt,
-        model: "dall-e-3",
+        image: base64Image,
         n: 1,
         size: "1024x1024",
-        quality: "standard"
+        response_format: "url"
       };
+      
+      console.log("Using image variations API with reference image");
     } else {
       // Standard image generation without reference
-      console.log("Generating image with prompt:", prompt);
-      
       openaiRequestBody = {
         prompt: prompt,
         model: "dall-e-3",
         n: 1,
         size: "1024x1024",
-        quality: "standard"
+        quality: "standard",
+        response_format: "url"
       };
+      
+      console.log("Using standard image generation with prompt:", prompt);
     }
 
     // Call OpenAI API to generate image
-    const openaiResponse = await fetch("https://api.openai.com/v1/images/generations", {
+    const openaiResponse = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

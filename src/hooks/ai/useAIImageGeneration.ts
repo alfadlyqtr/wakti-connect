@@ -27,10 +27,13 @@ export const useAIImageGeneration = () => {
       setIsGenerating(true);
       try {
         // Include reference image if available
-        const payload = { 
-          prompt,
-          ...(referenceImage && { referenceImage: referenceImage.dataUrl })
+        const payload: { prompt: string; referenceImage?: string } = { 
+          prompt
         };
+        
+        if (referenceImage) {
+          payload.referenceImage = referenceImage.dataUrl;
+        }
 
         const { data, error } = await supabase.functions.invoke('ai-image-generation', {
           body: payload

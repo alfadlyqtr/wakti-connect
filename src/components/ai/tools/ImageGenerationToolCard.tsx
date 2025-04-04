@@ -69,6 +69,7 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter(device => device.kind === 'videoinput');
         setHasMultipleCameras(videoDevices.length > 1);
+        console.log(`Detected ${videoDevices.length} cameras`);
       } catch (error) {
         console.error("Error checking cameras:", error);
       }
@@ -79,7 +80,14 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
-    const result = await generateImage.mutateAsync(prompt);
+    
+    // Set default prompt based on whether we're using a reference image
+    let finalPrompt = prompt;
+    if (referenceImage && !finalPrompt.toLowerCase().includes('style')) {
+      finalPrompt += " in an artistic style";
+    }
+    
+    const result = await generateImage.mutateAsync(finalPrompt);
     
     // If the parent component needs to know about the generated image
     if (onImageGenerate && result) {
@@ -119,12 +127,14 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
         // Set the reference image
         setUploadedReferenceImage(reader.result, file.name);
         
-        // Set a default prompt for the uploaded image
-        setPrompt(`Enhance this image and apply an artistic style`);
+        // Set a default prompt if empty
+        if (!prompt) {
+          setPrompt(`Transform this image into an artistic style`);
+        }
         
         toast({
           title: "Image uploaded",
-          description: "You can now describe what you want to do with this image",
+          description: "You can now describe how you want to transform this image",
         });
       }
     };
@@ -158,6 +168,7 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
         stream.getTracks().forEach(track => track.stop());
       }
       
+      console.log(`Starting camera with facing mode: ${facingMode}`);
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode }
       });
@@ -168,6 +179,11 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
       }
     } catch (error) {
       console.error("Error starting camera stream:", error);
+      toast({
+        title: "Camera Error",
+        description: `Failed to access the ${facingMode === "user" ? "front" : "back"} camera.`,
+        variant: "destructive"
+      });
       throw error;
     }
   };
@@ -175,6 +191,7 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
   const switchCamera = async () => {
     const newFacingMode = facingMode === "user" ? "environment" : "user";
     setFacingMode(newFacingMode);
+    console.log(`Switching camera to: ${newFacingMode}`);
     
     try {
       await startCameraStream();
@@ -185,6 +202,8 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
         description: "Could not switch cameras. This device might only have one camera.",
         variant: "destructive"
       });
+      // Revert back if failed
+      setFacingMode(facingMode);
     }
   };
 
@@ -206,15 +225,17 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
         const imageDataUrl = canvas.toDataURL('image/jpeg');
         setCapturedReferenceImage(imageDataUrl);
         
-        // Set a default prompt for the captured image
-        setPrompt("Enhance this photo and apply an artistic style");
+        // Set a default prompt if empty
+        if (!prompt) {
+          setPrompt("Transform this photo into an artistic style");
+        }
         
         // Close camera
         closeCamera();
         
         toast({
           title: "Image captured",
-          description: "You can now describe what you want to do with this image",
+          description: "Now describe how you want to transform this image",
         });
       }
     }
@@ -226,6 +247,13 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
       setStreamActive(false);
     }
     setShowCamera(false);
+  };
+
+  // Generate default prompt suggestion based on whether we have a reference image
+  const getPlaceholderText = () => {
+    if (isListening) return "Listening...";
+    if (referenceImage) return "Describe how you want to transform this image...";
+    return "Describe the image you want to generate...";
   };
 
   return (
@@ -255,13 +283,15 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
               />
             </div>
             <div className="p-2 text-xs text-muted-foreground bg-muted/50">
-              {referenceImage.type === 'upload' ? 'Uploaded image' : 'Captured image'}
+              {referenceImage.type === 'upload' ? 
+                (referenceImage.fileName ? `Uploaded: ${referenceImage.fileName}` : 'Uploaded image') : 
+                'Captured image'}
             </div>
           </Card>
         )}
         
         <Textarea
-          placeholder={isListening ? "Listening..." : "Describe the image you want to generate..."}
+          placeholder={getPlaceholderText()}
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           className="min-h-[80px]"
@@ -279,7 +309,7 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Generating...
               </>
-            ) : "Generate Image"}
+            ) : (referenceImage ? "Transform Image" : "Generate Image")}
           </Button>
           
           {onPromptUse && (
@@ -322,7 +352,7 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
             variant="outline"
             size="icon"
             onClick={handleFileUpload}
-            title="Upload an image"
+            title="Upload an image to transform"
           >
             <Upload className="h-4 w-4" />
           </Button>
@@ -333,7 +363,7 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
             variant="outline"
             size="icon"
             onClick={openCamera}
-            title="Take a picture"
+            title="Take a picture to transform"
           >
             <Camera className="h-4 w-4" />
           </Button>
@@ -364,8 +394,8 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
       </div>
       
       {/* Camera Dialog */}
-      <Dialog open={showCamera} onOpenChange={setShowCamera}>
-        <DialogContent onInteractOutside={closeCamera}>
+      <Dialog open={showCamera} onOpenChange={(open) => !open && closeCamera()}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Take a Picture</DialogTitle>
           </DialogHeader>
