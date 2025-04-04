@@ -79,19 +79,38 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
   }, []);
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) return;
-    
-    // Set default prompt based on whether we're using a reference image
-    let finalPrompt = prompt;
-    if (referenceImage && !finalPrompt.toLowerCase().includes('style')) {
-      finalPrompt += " in an artistic style";
+    if (!prompt.trim()) {
+      toast({
+        title: "Empty prompt",
+        description: "Please enter a description for the image you want to generate",
+        variant: "destructive"
+      });
+      return;
     }
     
-    const result = await generateImage.mutateAsync(finalPrompt);
-    
-    // If the parent component needs to know about the generated image
-    if (onImageGenerate && result) {
-      onImageGenerate(result.imageUrl, result.prompt);
+    try {
+      console.log("Generating image with prompt:", prompt);
+      console.log("Reference image available:", !!referenceImage);
+      
+      // Set default prompt based on whether we're using a reference image
+      let finalPrompt = prompt;
+      if (referenceImage && !finalPrompt.toLowerCase().includes('style')) {
+        finalPrompt += " in an artistic style";
+      }
+      
+      const result = await generateImage.mutateAsync(finalPrompt);
+      
+      // If the parent component needs to know about the generated image
+      if (onImageGenerate && result) {
+        onImageGenerate(result.imageUrl, result.prompt);
+      }
+    } catch (error) {
+      console.error("Error in handleGenerate:", error);
+      toast({
+        title: "Generation failed",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive"
+      });
     }
   };
 
@@ -157,6 +176,7 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
         description: "Could not access your camera. Please check permissions.",
         variant: "destructive"
       });
+      setShowCamera(false);
     }
   };
 
@@ -166,6 +186,7 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
         // Stop the current stream first
         const stream = videoRef.current.srcObject as MediaStream;
         stream.getTracks().forEach(track => track.stop());
+        setStreamActive(false);
       }
       
       console.log(`Starting camera with facing mode: ${facingMode}`);
@@ -212,6 +233,9 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
       const video = videoRef.current;
       const canvas = canvasRef.current;
       
+      console.log("Taking picture from video stream");
+      console.log("Video dimensions:", video.videoWidth, "x", video.videoHeight);
+      
       // Set canvas dimensions to match video
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -221,28 +245,39 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
       if (context) {
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Convert to data URL
-        const imageDataUrl = canvas.toDataURL('image/jpeg');
-        setCapturedReferenceImage(imageDataUrl);
-        
-        // Set a default prompt if empty
-        if (!prompt) {
-          setPrompt("Transform this photo into an artistic style");
+        try {
+          // Convert to data URL
+          const imageDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+          console.log("Captured image data URL (truncated):", imageDataUrl.substring(0, 50) + "...");
+          setCapturedReferenceImage(imageDataUrl);
+          
+          // Set a default prompt if empty
+          if (!prompt) {
+            setPrompt("Transform this photo into an artistic style");
+          }
+          
+          // Close camera
+          closeCamera();
+          
+          toast({
+            title: "Image captured",
+            description: "Now describe how you want to transform this image",
+          });
+        } catch (error) {
+          console.error("Error converting canvas to data URL:", error);
+          toast({
+            title: "Error Processing Image", 
+            description: "Failed to process the captured image",
+            variant: "destructive"
+          });
         }
-        
-        // Close camera
-        closeCamera();
-        
-        toast({
-          title: "Image captured",
-          description: "Now describe how you want to transform this image",
-        });
       }
     }
   };
 
   const closeCamera = () => {
     if (videoRef.current && videoRef.current.srcObject instanceof MediaStream) {
+      console.log("Stopping camera stream");
       videoRef.current.srcObject.getTracks().forEach(track => track.stop());
       setStreamActive(false);
     }
@@ -285,7 +320,7 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
             <div className="p-2 text-xs text-muted-foreground bg-muted/50">
               {referenceImage.type === 'upload' ? 
                 (referenceImage.fileName ? `Uploaded: ${referenceImage.fileName}` : 'Uploaded image') : 
-                'Captured image'}
+                'Captured image'} - Ready to transform
             </div>
           </Card>
         )}
@@ -395,7 +430,7 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
       
       {/* Camera Dialog */}
       <Dialog open={showCamera} onOpenChange={(open) => !open && closeCamera()}>
-        <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent className="max-w-md" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Take a Picture</DialogTitle>
           </DialogHeader>

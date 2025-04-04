@@ -26,32 +26,44 @@ export const useAIImageGeneration = () => {
     mutationFn: async (prompt: string) => {
       setIsGenerating(true);
       try {
-        // Include reference image if available
+        console.log("Starting image generation with prompt:", prompt);
+        console.log("Reference image available:", !!referenceImage);
+
+        // Prepare payload
         const payload: { prompt: string; referenceImage?: string } = { 
           prompt
         };
         
+        // Include reference image if available
         if (referenceImage) {
           payload.referenceImage = referenceImage.dataUrl;
+          console.log("Including reference image in request");
         }
 
+        console.log("Calling edge function ai-image-generation");
         const { data, error } = await supabase.functions.invoke('ai-image-generation', {
           body: payload
         });
 
         if (error) {
+          console.error("Edge function error:", error);
           throw new Error(error.message || 'Failed to generate image');
         }
 
         if (data.error) {
+          console.error("API response error:", data.error);
           throw new Error(data.error);
         }
 
+        console.log("Image generation successful:", data);
         return {
           id: data.id,
           imageUrl: data.imageUrl,
           prompt
         };
+      } catch (error) {
+        console.error("Image generation error:", error);
+        throw error;
       } finally {
         setIsGenerating(false);
       }
@@ -65,6 +77,7 @@ export const useAIImageGeneration = () => {
       });
     },
     onError: (error) => {
+      console.error("Image generation error (from onError):", error);
       toast({
         title: "Image generation failed",
         description: error.message || "An error occurred while generating the image",
@@ -87,6 +100,9 @@ export const useAIImageGeneration = () => {
       fileName,
       type: 'upload'
     });
+    
+    // Clear any previously generated image
+    setGeneratedImage(null);
   };
 
   const setCapturedReferenceImage = (dataUrl: string) => {
@@ -94,6 +110,9 @@ export const useAIImageGeneration = () => {
       dataUrl,
       type: 'camera'
     });
+    
+    // Clear any previously generated image
+    setGeneratedImage(null);
   };
 
   return {

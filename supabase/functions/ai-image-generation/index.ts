@@ -19,9 +19,9 @@ serve(async (req) => {
     const requestData = await req.json();
     const { prompt, referenceImage } = requestData;
 
-    if (!prompt) {
+    if (!prompt && !referenceImage) {
       return new Response(
-        JSON.stringify({ error: "Prompt is required" }),
+        JSON.stringify({ error: "Either a prompt or a reference image is required" }),
         { 
           status: 400, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
@@ -47,31 +47,60 @@ serve(async (req) => {
       );
     }
 
-    let openaiRequestBody;
     let endpoint = 'https://api.openai.com/v1/images/generations';
-    
+    let openaiRequestBody;
+
     if (referenceImage) {
-      console.log("Using reference image for style transfer with prompt:", prompt);
+      console.log("Processing with reference image");
       
-      // Convert base64 data URL to raw base64 string
-      const base64Image = referenceImage.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
-      
-      // For reference image, we use the image variations API with the image edited based on prompt
-      endpoint = 'https://api.openai.com/v1/images/variations';
-      
-      openaiRequestBody = {
-        image: base64Image,
-        n: 1,
-        size: "1024x1024",
-        response_format: "url"
-      };
-      
-      console.log("Using image variations API with reference image");
+      try {
+        // Remove the data URL prefix
+        let base64Image = referenceImage.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
+        
+        // For images from camera, we need to do a simple transformation
+        if (referenceImage.startsWith('data:image/jpeg')) {
+          endpoint = 'https://api.openai.com/v1/images/generations';
+          
+          // Use DALL-E 3 with the original image as part of the prompt
+          openaiRequestBody = {
+            model: "dall-e-3",
+            prompt: `${prompt}. Use this reference image for style inspiration.`,
+            n: 1,
+            size: "1024x1024",
+            quality: "standard",
+            response_format: "url"
+          };
+          
+          console.log("Using DALL-E 3 with descriptive prompt for reference image");
+        } else {
+          // Standard image generation with prompt
+          endpoint = 'https://api.openai.com/v1/images/generations';
+          openaiRequestBody = {
+            model: "dall-e-3",
+            prompt: prompt,
+            n: 1,
+            size: "1024x1024",
+            quality: "standard",
+            response_format: "url"
+          };
+          
+          console.log("Using standard DALL-E 3 image generation with prompt:", prompt);
+        }
+      } catch (error) {
+        console.error("Error processing reference image:", error);
+        return new Response(
+          JSON.stringify({ error: `Failed to process reference image: ${error.message}` }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          }
+        );
+      }
     } else {
       // Standard image generation without reference
       openaiRequestBody = {
-        prompt: prompt,
         model: "dall-e-3",
+        prompt: prompt,
         n: 1,
         size: "1024x1024",
         quality: "standard",
@@ -80,6 +109,14 @@ serve(async (req) => {
       
       console.log("Using standard image generation with prompt:", prompt);
     }
+
+    console.log("Making OpenAI API request to endpoint:", endpoint);
+    console.log("Request body:", JSON.stringify({
+      ...openaiRequestBody,
+      model: openaiRequestBody.model,
+      n: openaiRequestBody.n,
+      size: openaiRequestBody.size
+    }));
 
     // Call OpenAI API to generate image
     const openaiResponse = await fetch(endpoint, {
