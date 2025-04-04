@@ -9,32 +9,42 @@ const corsHeaders = {
 
 // Process base64 in chunks to prevent memory issues
 function processBase64Chunks(base64String: string, chunkSize = 32768) {
-  const chunks: Uint8Array[] = [];
-  let position = 0;
+  if (!base64String || typeof base64String !== 'string') {
+    console.error("Invalid base64 input:", typeof base64String);
+    throw new Error('Invalid base64 input');
+  }
   
-  while (position < base64String.length) {
-    const chunk = base64String.slice(position, position + chunkSize);
-    const binaryChunk = atob(chunk);
-    const bytes = new Uint8Array(binaryChunk.length);
+  try {
+    const chunks: Uint8Array[] = [];
+    let position = 0;
     
-    for (let i = 0; i < binaryChunk.length; i++) {
-      bytes[i] = binaryChunk.charCodeAt(i);
+    while (position < base64String.length) {
+      const chunk = base64String.slice(position, position + chunkSize);
+      const binaryChunk = atob(chunk);
+      const bytes = new Uint8Array(binaryChunk.length);
+      
+      for (let i = 0; i < binaryChunk.length; i++) {
+        bytes[i] = binaryChunk.charCodeAt(i);
+      }
+      
+      chunks.push(bytes);
+      position += chunkSize;
     }
-    
-    chunks.push(bytes);
-    position += chunkSize;
+
+    const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+
+    for (const chunk of chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+
+    return result;
+  } catch (e) {
+    console.error("Error processing base64 chunks:", e);
+    throw new Error(`Failed to process audio data: ${e.message}`);
   }
-
-  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.length;
-  }
-
-  return result;
 }
 
 serve(async (req) => {
@@ -132,7 +142,10 @@ serve(async (req) => {
     if (!audio) {
       console.error("No audio data provided");
       return new Response(
-        JSON.stringify({ error: 'No audio data provided' }),
+        JSON.stringify({ 
+          error: 'No audio data provided',
+          details: "The request must include audio data"
+        }),
         { 
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -172,13 +185,57 @@ serve(async (req) => {
     }
     
     console.log("Processing audio data");
+    
+    // Validate minimum audio length
+    if (audio.length < 100) {
+      console.warn("Audio data is too short");
+      return new Response(
+        JSON.stringify({ 
+          text: "",
+          warning: "Audio is too short to transcribe" 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
     // Process audio in chunks
-    const binaryAudio = processBase64Chunks(audio);
+    let binaryAudio;
+    try {
+      binaryAudio = processBase64Chunks(audio);
+    } catch (error) {
+      console.error("Error processing audio:", error);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to process audio data',
+          details: error.message
+        }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    // Simple validation to ensure we have valid audio data
+    if (binaryAudio.length < 1000) {
+      console.warn("Processed audio is too small:", binaryAudio.length, "bytes");
+      return new Response(
+        JSON.stringify({ 
+          text: "",
+          warning: "Audio is too short to transcribe" 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
     
     // Prepare form data
     const formData = new FormData();
-    const blob = new Blob([binaryAudio], { type: 'audio/mp3' }); // Changed to mp3 format
-    formData.append('file', blob, 'audio.mp3'); // Changed to mp3 format
+    const blob = new Blob([binaryAudio], { type: 'audio/mp3' }); // Use mp3 which works better with OpenAI
+    formData.append('file', blob, 'audio.mp3');
     formData.append('model', 'whisper-1');
     
     console.log("Audio blob size:", blob.size, "bytes");
@@ -196,13 +253,27 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`OpenAI API error: ${errorText}`);
+      
+      // Special handling for "audio file is too short" error
+      if (errorText.includes('audio_too_short')) {
+        return new Response(
+          JSON.stringify({ 
+            text: "",
+            warning: "Audio is too short to transcribe" 
+          }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      
       return new Response(
         JSON.stringify({ 
           error: `OpenAI API error: ${errorText}`,
-          details: "The API returned an error response"
+          details: "The OpenAI API returned an error response"
         }),
         { 
-          status: 500,
+          status: response.status,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
@@ -217,11 +288,11 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("Voice-to-text error:", error.message);
+    console.error("Voice-to-text error:", error.message, error.stack);
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        details: "Please check the OpenAI API key in Supabase secrets" 
+        details: "An unexpected error occurred in the voice-to-text function" 
       }),
       {
         status: 500,
