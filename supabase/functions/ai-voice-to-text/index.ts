@@ -79,17 +79,15 @@ serve(async (req) => {
           throw new Error(errorData.error?.message || 'API test failed');
         }
         
-        console.log("OpenAI API key validation passed and API connectivity confirmed");
+        console.log("OpenAI API key test successful");
+        return new Response(
+          JSON.stringify({ success: true, message: "OpenAI API key is valid" }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       } catch (error) {
         console.error("OpenAI API test error:", error);
         throw new Error(`API test failed: ${error.message}`);
       }
-      
-      console.log("OpenAI API key validation passed");
-      return new Response(
-        JSON.stringify({ success: true, message: "OpenAI API key format is valid" }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
     }
     
     const { audio } = body;

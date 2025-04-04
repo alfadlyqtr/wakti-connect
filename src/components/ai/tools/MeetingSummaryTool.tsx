@@ -25,6 +25,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   const [isExporting, setIsExporting] = useState(false);
   const summaryRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
+  const intervalRef = useRef<number | null>(null);
   const { toast } = useToast();
   
   // Use the voice interaction hook for recording with continuous listening
@@ -60,12 +61,13 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     setTranscribedText('');
     setSummary('');
     
-    // Start timer
-    if (timerRef.current) {
-      window.clearInterval(timerRef.current);
+    // Start timer with interval, ensuring to clear any existing interval first
+    if (intervalRef.current !== null) {
+      window.clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
     
-    timerRef.current = window.setInterval(() => {
+    intervalRef.current = window.setInterval(() => {
       setRecordingTime(prev => prev + 1);
     }, 1000);
     
@@ -80,9 +82,10 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
 
   // Stop recording
   const stopRecording = () => {
-    if (timerRef.current) {
-      window.clearInterval(timerRef.current);
-      timerRef.current = null;
+    // Clear timer interval
+    if (intervalRef.current !== null) {
+      window.clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
     
     setIsRecording(false);
@@ -97,9 +100,8 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       });
     } else {
       toast({
-        title: "Transcription failed",
-        description: "Could not transcribe the audio. Please try again.",
-        variant: "destructive"
+        title: "Transcription processing",
+        description: "Processing the audio. This may take a moment.",
       });
     }
   };
@@ -265,7 +267,12 @@ ${aiSummary}
   useEffect(() => {
     return () => {
       if (timerRef.current) {
-        window.clearInterval(timerRef.current);
+        window.clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
       // Stop listening if component unmounts while recording
       if (isRecording) {
@@ -273,6 +280,13 @@ ${aiSummary}
       }
     };
   }, [isRecording, stopListening]);
+
+  // Update transcribed text if we receive new text while stopped
+  useEffect(() => {
+    if (!isRecording && lastTranscript && !transcribedText) {
+      setTranscribedText(lastTranscript);
+    }
+  }, [isRecording, lastTranscript, transcribedText]);
 
   return (
     <Card>

@@ -28,7 +28,7 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   const [apiKeyErrorDetails, setApiKeyErrorDetails] = useState<string | null>(null);
   
   const { toast } = useToast();
-  const { speak, speaking: isSpeaking, cancel: stopSpeaking, supported: synthesisSupported } = useSpeechSynthesis();
+  const { speak, cancel: stopSpeaking, speaking: isSpeaking, supported: synthesisSupported } = useSpeechSynthesis();
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
