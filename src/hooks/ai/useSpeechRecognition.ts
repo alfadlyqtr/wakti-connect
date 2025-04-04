@@ -22,9 +22,10 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
   // Check if browser supports speech recognition
   useEffect(() => {
     // Check for the SpeechRecognition API
-    const isSpeechRecognitionSupported = 
+    const isSpeechRecognitionSupported = typeof window !== 'undefined' && (
       'SpeechRecognition' in window || 
-      'webkitSpeechRecognition' in window;
+      'webkitSpeechRecognition' in window
+    );
     
     setSupported(isSpeechRecognitionSupported);
   }, []);
@@ -36,47 +37,51 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
       return;
     }
     
-    // Reset transcript
-    setTranscript('');
-    setError(null);
-    
-    // Create speech recognition instance
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    
-    // Configure
-    recognition.continuous = continuous;
-    recognition.interimResults = interimResults;
-    recognition.lang = lang;
-    
-    // Set up events
-    recognition.onstart = () => {
-      console.log("Speech recognition started");
-      setIsListening(true);
-    };
-    
-    recognition.onresult = (event) => {
-      const lastResultIndex = event.results.length - 1;
-      const lastResult = event.results[lastResultIndex];
-      const recognizedText = lastResult[0].transcript;
-      
-      setTranscript(recognizedText);
-      console.log("Recognized:", recognizedText);
-    };
-    
-    recognition.onerror = (event) => {
-      console.error("Speech recognition error:", event.error);
-      setError(`Speech recognition error: ${event.error}`);
-      setIsListening(false);
-    };
-    
-    recognition.onend = () => {
-      console.log("Speech recognition ended");
-      setIsListening(false);
-    };
-    
-    // Start listening
     try {
+      // Reset transcript
+      setTranscript('');
+      setError(null);
+      
+      // Create speech recognition instance
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        throw new Error("Speech recognition not available in this browser");
+      }
+      
+      const recognition = new SpeechRecognition();
+      
+      // Configure
+      recognition.continuous = continuous;
+      recognition.interimResults = interimResults;
+      recognition.lang = lang;
+      
+      // Set up events
+      recognition.onstart = () => {
+        console.log("Speech recognition started");
+        setIsListening(true);
+      };
+      
+      recognition.onresult = (event) => {
+        const lastResultIndex = event.results.length - 1;
+        const lastResult = event.results[lastResultIndex];
+        const recognizedText = lastResult[0].transcript;
+        
+        setTranscript(recognizedText);
+        console.log("Recognized:", recognizedText);
+      };
+      
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        setError(`Speech recognition error: ${event.error}`);
+        setIsListening(false);
+      };
+      
+      recognition.onend = () => {
+        console.log("Speech recognition ended");
+        setIsListening(false);
+      };
+      
+      // Start listening
       recognition.start();
       
       // Store recognition instance in window for stopping later
@@ -84,16 +89,24 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
     } catch (err) {
       console.error("Could not start speech recognition:", err);
       setError(`Could not start speech recognition: ${err instanceof Error ? err.message : String(err)}`);
+      setIsListening(false);
     }
   }, [supported, continuous, interimResults, lang]);
   
   // Stop listening
   const stopListening = useCallback(() => {
-    if ((window as any).__recognitionInstance) {
-      (window as any).__recognitionInstance.stop();
-      (window as any).__recognitionInstance = null;
+    console.log("Attempting to stop speech recognition");
+    try {
+      if ((window as any).__recognitionInstance) {
+        (window as any).__recognitionInstance.stop();
+        (window as any).__recognitionInstance = null;
+      }
+      setIsListening(false);
+    } catch (err) {
+      console.error("Error stopping speech recognition:", err);
+      // Force the listening state to false even if there was an error
+      setIsListening(false);
     }
-    setIsListening(false);
   }, []);
   
   // Reset transcript
@@ -104,9 +117,14 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
   // Clean up on unmount
   useEffect(() => {
     return () => {
-      if ((window as any).__recognitionInstance) {
-        (window as any).__recognitionInstance.stop();
-        (window as any).__recognitionInstance = null;
+      try {
+        if ((window as any).__recognitionInstance) {
+          (window as any).__recognitionInstance.stop();
+          (window as any).__recognitionInstance = null;
+        }
+        setIsListening(false);
+      } catch (err) {
+        console.error("Error cleaning up speech recognition:", err);
       }
     };
   }, []);

@@ -15,6 +15,7 @@ serve(async (req) => {
   try {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) {
+      console.error("OPENAI_API_KEY not found in environment variables");
       return new Response(
         JSON.stringify({ 
           valid: false, 
@@ -25,7 +26,15 @@ serve(async (req) => {
     }
 
     // Get test type from request
-    const { test = "completion" } = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch (err) {
+      console.error("Error parsing request body:", err);
+      body = { test: "completion" }; // Default if parsing fails
+    }
+    
+    const { test = "completion" } = body;
     let endpoint;
     let requestBody;
 
@@ -47,27 +56,42 @@ serve(async (req) => {
       };
     }
 
+    console.log(`Testing OpenAI API with endpoint: ${endpoint}`);
+    
     // Test the OpenAI API
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
 
-    if (response.ok) {
-      return new Response(
-        JSON.stringify({ valid: true }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    } else {
-      const errorData = await response.json().catch(() => ({ error: { message: "Unknown error" } }));
+      if (response.ok) {
+        console.log("OpenAI API test successful");
+        return new Response(
+          JSON.stringify({ valid: true }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } else {
+        const errorData = await response.json().catch(() => ({ error: { message: "Unknown error" } }));
+        console.error("OpenAI API error:", errorData);
+        return new Response(
+          JSON.stringify({ 
+            valid: false, 
+            message: errorData.error?.message || "API returned an error" 
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } catch (fetchError) {
+      console.error("Fetch error during OpenAI API test:", fetchError);
       return new Response(
         JSON.stringify({ 
           valid: false, 
-          message: errorData.error?.message || "API returned an error" 
+          message: `Network error: ${fetchError.message}` 
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );

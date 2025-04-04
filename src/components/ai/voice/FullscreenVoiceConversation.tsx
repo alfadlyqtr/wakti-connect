@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
@@ -5,7 +6,7 @@ import { useVoiceSettings } from '@/store/voiceSettings';
 import { Button } from '@/components/ui/button';
 import { VoiceSelector } from '@/components/ai/settings/VoiceSelector';
 import { Switch } from '@/components/ui/switch';
-import { Mic, MicOff, X, VolumeX, Volume2, Cog, ArrowLeft } from 'lucide-react';
+import { Mic, MicOff, X, VolumeX, Volume2, Cog, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { AIAssistantMouthAnimation } from '../animation/AIAssistantMouthAnimation';
 import { AIVoiceVisualizer } from '../animation/AIVoiceVisualizer';
 import { useToast } from '@/hooks/use-toast';
@@ -27,6 +28,7 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
   const [showSettings, setShowSettings] = useState(false);
   const [userMessage, setUserMessage] = useState('');
   const [isProcessingResponse, setIsProcessingResponse] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Get voice settings from store
@@ -55,7 +57,8 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
     stopSpeaking,
     isSilent,
     apiKeyStatus,
-    retryApiKeyValidation
+    retryApiKeyValidation,
+    apiKeyErrorDetails
   } = useVoiceInteraction({
     continuousListening: true,
     autoResumeListening: true,
@@ -76,6 +79,7 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
       const processUserMessage = async () => {
         setIsProcessingResponse(true);
         shouldProcessMessageRef.current = false;
+        setErrorMessage(null);
         
         try {
           console.log("Processing voice message:", userMessage);
@@ -83,6 +87,7 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
           setUserMessage('');
         } catch (error) {
           console.error("Error sending voice message:", error);
+          setErrorMessage("Could not process your message. Please try again.");
           toast({
             title: "Message failed",
             description: "Could not process your message. Please try again.",
@@ -107,31 +112,56 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
 
   // Start listening when component mounts
   useEffect(() => {
-    if (!isListening && supportsVoice) {
+    if (!isListening && supportsVoice && startListening) {
       console.log("Starting voice conversation on mount...");
-      setTimeout(() => {
-        startListening();
+      const timer = setTimeout(() => {
+        try {
+          startListening();
+        } catch (err) {
+          console.error("Error starting listening:", err);
+          setErrorMessage("Could not start voice recognition. Your browser may not support this feature.");
+          toast({
+            title: "Voice Recognition Error",
+            description: "Could not start voice recognition. Your browser may not support this feature.",
+            variant: "destructive"
+          });
+        }
       }, 500); // Short delay to ensure all is ready
+      
+      return () => clearTimeout(timer);
     }
     
     return () => {
-      stopListening();
-      stopSpeaking();
+      if (stopListening) stopListening();
+      if (stopSpeaking) stopSpeaking();
     };
-  }, [isListening, supportsVoice, startListening, stopListening, stopSpeaking]);
+  }, [isListening, supportsVoice, startListening, stopListening, stopSpeaking, toast]);
   
   // Toggle listening
   const handleToggleMic = useCallback(() => {
-    if (isListening) {
-      stopListening();
-    } else {
-      startListening();
+    try {
+      setErrorMessage(null);
+      if (isListening && stopListening) {
+        stopListening();
+      } else if (startListening) {
+        startListening();
+      }
+    } catch (err) {
+      console.error("Error toggling microphone:", err);
+      setErrorMessage("Could not toggle microphone. There may be a permissions issue.");
+      toast({
+        title: "Microphone Error",
+        description: "Could not toggle microphone. There may be a permissions issue.",
+        variant: "destructive"
+      });
     }
-  }, [isListening, startListening, stopListening]);
+  }, [isListening, startListening, stopListening, toast]);
 
   // Get appropriate status message based on current state
   const getStatusMessage = () => {
-    if (isChatLoading || isProcessingResponse) {
+    if (errorMessage) {
+      return errorMessage;
+    } else if (isChatLoading || isProcessingResponse) {
       return "Processing...";
     } else if (isSpeaking) {
       return "WAKTI AI is speaking...";
@@ -149,12 +179,21 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
       description: "Validating connection to OpenAI services..."
     });
     
-    const success = await retryApiKeyValidation();
-    if (success) {
+    try {
+      const success = await retryApiKeyValidation();
+      if (success) {
+        toast({
+          title: "Connection restored",
+          description: "Voice features are now available",
+          variant: "success"
+        });
+      }
+    } catch (err) {
+      console.error("API key validation error:", err);
       toast({
-        title: "Connection restored",
-        description: "Voice features are now available",
-        variant: "success"
+        title: "Connection Failed",
+        description: "Could not validate OpenAI connection",
+        variant: "destructive"
       });
     }
   };
@@ -245,8 +284,11 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
               
               {apiKeyStatus === 'invalid' && (
                 <div className="bg-amber-50 p-3 rounded-md border border-amber-200">
-                  <p className="text-sm text-amber-800 mb-2">
-                    There's an issue with the OpenAI API connection. Enhanced voice features may not work properly.
+                  <p className="text-sm text-amber-800 mb-2 flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                    <span>
+                      {apiKeyErrorDetails || "There's an issue with the OpenAI API connection. Enhanced voice features may not work properly."}
+                    </span>
                   </p>
                   <Button size="sm" variant="outline" onClick={handleApiKeyRetry}>
                     Retry Connection
@@ -316,6 +358,16 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
           {isSpeaking && visualFeedback && (
             <div className="mb-8 mt-4">
               <AIVoiceVisualizer isActive={true} isSpeaking={true} />
+            </div>
+          )}
+          
+          {/* Error message */}
+          {errorMessage && (
+            <div className="bg-destructive/10 p-3 rounded-md border border-destructive/30 mb-4">
+              <p className="text-sm text-destructive flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                <span>{errorMessage}</span>
+              </p>
             </div>
           )}
           

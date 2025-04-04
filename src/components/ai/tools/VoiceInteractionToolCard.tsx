@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
   compact = false
 }) => {
   const [transcribedText, setTranscribedText] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   
   // Use browser-based speech recognition
@@ -26,7 +28,8 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     startListening: startBrowserListening,
     stopListening: stopBrowserListening,
     resetTranscript,
-    supported
+    supported,
+    error: browserError
   } = useSpeechRecognition({
     continuous: true,
     interimResults: true
@@ -44,25 +47,38 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     apiKeyStatus,
     apiKeyErrorDetails,
     retryApiKeyValidation,
-    openAIVoiceSupported
+    openAIVoiceSupported,
+    canUseSpeechSynthesis
   } = useVoiceInteraction();
   
   // Combined state for UI
   const isListening = browserIsListening || openAIIsListening;
   
+  // Handle API key retry
   const handleApiKeyRetry = async () => {
+    setError(null);
     toast({
       title: "Testing OpenAI API Key",
       description: "Checking if the OpenAI API key is properly configured...",
     });
     
-    const success = await retryApiKeyValidation();
-    
-    if (success) {
+    try {
+      const success = await retryApiKeyValidation();
+      
+      if (success) {
+        toast({
+          title: "OpenAI API Key Valid",
+          description: "Enhanced voice features are available.",
+          variant: "success",
+        });
+      }
+    } catch (err) {
+      console.error("API key validation error:", err);
+      setError("Could not validate API key connection");
       toast({
-        title: "OpenAI API Key Valid",
-        description: "Enhanced voice features are available.",
-        variant: "success",
+        title: "Connection Failed",
+        description: "Could not validate OpenAI connection",
+        variant: "destructive"
       });
     }
   };
@@ -81,36 +97,68 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     }
   }, [lastTranscript]);
   
+  // Update error state if browser recognition has an error
+  useEffect(() => {
+    if (browserError) {
+      setError(browserError);
+    }
+  }, [browserError]);
+  
   const handleStartListening = () => {
     resetTranscript();
     setTranscribedText("");
+    setError(null);
     
-    // Try OpenAI voice first if configured
-    if (openAIVoiceSupported) {
-      console.log("Starting OpenAI voice recognition");
-      startOpenAIListening();
-    } else if (supported) {
-      // Fall back to browser-based recognition
-      console.log("Falling back to browser-based speech recognition");
-      startBrowserListening();
-    } else {
+    try {
+      // Try OpenAI voice first if configured
+      if (openAIVoiceSupported && startOpenAIListening) {
+        console.log("Starting OpenAI voice recognition");
+        startOpenAIListening();
+      } else if (supported && startBrowserListening) {
+        // Fall back to browser-based recognition
+        console.log("Falling back to browser-based speech recognition");
+        startBrowserListening();
+      } else {
+        console.error("No speech recognition method available");
+        setError("Speech recognition is not available in your browser");
+        toast({
+          title: "Speech Recognition Unavailable",
+          description: "Neither OpenAI nor browser-based speech recognition is available.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error("Error starting speech recognition:", err);
+      setError(`Speech recognition error: ${err instanceof Error ? err.message : String(err)}`);
       toast({
-        title: "Speech Recognition Unavailable",
-        description: "Neither OpenAI nor browser-based speech recognition is available.",
+        title: "Speech Recognition Error",
+        description: "Failed to start speech recognition",
         variant: "destructive",
       });
     }
   };
   
   const handleStopListening = async () => {
-    if (openAIIsListening) {
-      await stopOpenAIListening();
-    } else if (browserIsListening) {
-      stopBrowserListening();
-    }
-    
-    if (transcribedText.trim()) {
-      onSpeechRecognized(transcribedText);
+    try {
+      if (openAIIsListening && stopOpenAIListening) {
+        console.log("Stopping OpenAI speech recognition");
+        await stopOpenAIListening();
+      } else if (browserIsListening && stopBrowserListening) {
+        console.log("Stopping browser-based speech recognition");
+        stopBrowserListening();
+      }
+      
+      if (transcribedText.trim()) {
+        onSpeechRecognized(transcribedText);
+      }
+    } catch (err) {
+      console.error("Error stopping speech recognition:", err);
+      setError(`Error stopping speech recognition: ${err instanceof Error ? err.message : String(err)}`);
+      toast({
+        title: "Error",
+        description: "Failed to stop speech recognition",
+        variant: "destructive",
+      });
     }
   };
   
@@ -169,6 +217,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
             size="sm"
             className="h-7 text-xs"
             onClick={isListening ? handleStopListening : handleStartListening}
+            disabled={isProcessing}
           >
             {isListening ? (
               <>
@@ -187,6 +236,12 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
         {isListening && (
           <p className="text-xs italic">
             {transcribedText || "Listening..."}
+          </p>
+        )}
+        
+        {error && (
+          <p className="text-xs text-destructive">
+            {error}
           </p>
         )}
         
@@ -225,12 +280,22 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
       <CardContent className="space-y-4">
         {renderApiKeyStatus()}
         
+        {error && (
+          <div className="bg-destructive/10 p-3 rounded-md border border-destructive/30">
+            <p className="text-sm text-destructive flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+              <span>{error}</span>
+            </p>
+          </div>
+        )}
+        
         <div className="flex justify-center">
           <Button 
             onClick={isListening ? handleStopListening : handleStartListening}
             variant={isListening ? "destructive" : "default"}
             className="relative"
             size="lg"
+            disabled={isProcessing}
           >
             {isListening ? (
               <>

@@ -157,7 +157,9 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         if (autoResumeListening) {
           // Short delay before resuming listening
           setTimeout(() => {
-            startListening();
+            if (startListening) {
+              startListening();
+            }
           }, 500);
         }
       };
@@ -229,9 +231,9 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     transcript,
     temporaryTranscript,
     lastTranscript,
-    startListening: recognitionSupported ? startListening : undefined,
-    stopListening: recognitionSupported ? stopListening : undefined,
-    resetTranscript: recognitionSupported ? resetTranscript : undefined,
+    startListening,
+    stopListening,
+    resetTranscript,
     speakText,
     stopSpeaking,
     isSpeaking,
