@@ -2,9 +2,9 @@
 "use client"
 
 import * as React from "react"
-import { ThemeProvider as NextThemesProvider, type ThemeProviderProps as NextThemesProviderProps } from "next-themes"
+import { ThemeProvider as NextThemesProvider } from "next-themes"
 
-// Define a specific type for our ThemeProvider with proper attribute types
+// Define our own ThemeProviderProps interface to match what NextThemesProvider expects
 export interface ThemeProviderProps {
   children: React.ReactNode
   defaultTheme?: string
@@ -13,7 +13,7 @@ export interface ThemeProviderProps {
   disableTransitionOnChange?: boolean
   forcedTheme?: string
   themes?: string[]
-  attribute?: string | string[]
+  attribute?: string // Changed from string | string[] to just string
 }
 
 export function ThemeProvider({
