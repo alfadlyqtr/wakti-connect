@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, Square, Volume2, AlertTriangle, RefreshCcw } from 'lucide-react';
+import { Mic, Square, AlertTriangle, RefreshCcw } from 'lucide-react';
 import { useSpeechRecognition } from '@/hooks/ai/useSpeechRecognition';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { motion } from 'framer-motion';
@@ -43,12 +43,9 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     stopListening: stopOpenAIListening,
     isProcessing,
     supportsVoice,
-    isSpeaking,
     apiKeyStatus,
     apiKeyErrorDetails,
-    retryApiKeyValidation,
-    openAIVoiceSupported,
-    canUseSpeechSynthesis
+    retryApiKeyValidation
   } = useVoiceInteraction();
   
   // Combined state for UI
@@ -68,7 +65,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
       if (success) {
         toast({
           title: "OpenAI API Key Valid",
-          description: "Enhanced voice features are available.",
+          description: "Voice-to-text features are available.",
           variant: "success",
         });
       }
@@ -111,7 +108,7 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     
     try {
       // Try OpenAI voice first if configured
-      if (openAIVoiceSupported && startOpenAIListening) {
+      if (apiKeyStatus === 'valid' && startOpenAIListening) {
         console.log("Starting OpenAI voice recognition");
         startOpenAIListening();
       } else if (supported && startBrowserListening) {
@@ -267,8 +264,8 @@ export const VoiceInteractionToolCard: React.FC<VoiceInteractionToolCardProps> =
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Volume2 className="h-5 w-5 text-wakti-blue" />
-          Voice Interaction
+          <Mic className="h-5 w-5 text-wakti-blue" />
+          Voice Recognition
           {apiKeyStatus === 'invalid' && (
             <span className="text-xs text-amber-600 font-normal flex items-center ml-2">
               <AlertTriangle className="h-3 w-3 mr-1" />

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,13 +26,10 @@ import {
   Wrench, 
   BookCopy,
   Bot,
-  Volume2, 
-  VolumeX, 
   Mic,
   PanelLeftClose,
   PanelLeftOpen,
-  Camera,
-  Upload
+  Camera
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
@@ -70,7 +68,6 @@ const DashboardAIAssistant = () => {
   const [canAccess, setCanAccess] = useState(false);
   const [selectedRole, setSelectedRole] = useState<AIAssistantRole>("general");
   const [activeTab, setActiveTab] = useState<string>("chat");
-  const [isSpeechEnabled, setSpeechEnabled] = useState(false);
   const [showToolbar, setShowToolbar] = useState(true);
   const [showCamera, setShowCamera] = useState(false);
   const [imageCapture, setImageCapture] = useState<ImageCapture | null>(null);
@@ -88,16 +85,13 @@ const DashboardAIAssistant = () => {
     supportsVoice,
     lastTranscript,
     isProcessing,
-    isSpeaking,
     startListening,
-    stopListening,
-    speakText,
-    stopSpeaking
+    stopListening
   } = useVoiceInteraction({
     continuousListening: false,
-    autoResumeListening: isSpeechEnabled,
+    autoResumeListening: false,
     onTranscriptComplete: (transcript) => {
-      if (isSpeechEnabled && transcript) {
+      if (transcript) {
         sendVoiceMessage(transcript);
       } else {
         setInputMessage(transcript);
@@ -130,27 +124,6 @@ const DashboardAIAssistant = () => {
     
     clearMessages();
   };
-
-  const handleToggleSpeech = useCallback(() => {
-    console.log("Toggling speech from", isSpeechEnabled, "to", !isSpeechEnabled);
-    if (isSpeaking) {
-      stopSpeaking();
-    }
-    setSpeechEnabled(prevState => !prevState);
-  }, [isSpeechEnabled, isSpeaking, stopSpeaking]);
-
-  useEffect(() => {
-    if (!isSpeechEnabled || messages.length === 0) return;
-    
-    const latestAssistantMessage = [...messages]
-      .reverse()
-      .find(msg => msg.role === "assistant");
-    
-    if (latestAssistantMessage) {
-      console.log("Speaking latest assistant message");
-      speakText(latestAssistantMessage.content);
-    }
-  }, [messages, isSpeechEnabled, speakText]);
 
   const handleFileUpload = useCallback(async (file: File) => {
     try {
@@ -365,16 +338,7 @@ const DashboardAIAssistant = () => {
                 <CardHeader className="pb-2 flex flex-row items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${getRoleColor()} flex items-center justify-center`}>
-                      {isSpeaking ? (
-                        <motion.div
-                          animate={{ scale: [1, 1.2, 1] }}
-                          transition={{ repeat: Infinity, duration: 1 }}
-                        >
-                          <Volume2 className="h-5 w-5 text-white" />
-                        </motion.div>
-                      ) : (
-                        <Bot className="h-5 w-5 text-white" />
-                      )}
+                      <Bot className="h-5 w-5 text-white" />
                     </div>
                     <div>
                       <CardTitle className="flex items-center">
@@ -386,30 +350,6 @@ const DashboardAIAssistant = () => {
                   </div>
                   
                   <div className="flex items-center gap-4">
-                    {supportsVoice && (
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          id="speech-toggle"
-                          checked={isSpeechEnabled}
-                          onCheckedChange={handleToggleSpeech}
-                          className="data-[state=checked]:bg-green-500"
-                        />
-                        <label htmlFor="speech-toggle" className="text-sm cursor-pointer">
-                          {isSpeechEnabled ? (
-                            <span className="flex items-center gap-1">
-                              <Volume2 className="h-4 w-4 text-green-500" />
-                              Voice On
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1">
-                              <VolumeX className="h-4 w-4" />
-                              Voice Off
-                            </span>
-                          )}
-                        </label>
-                      </div>
-                    )}
-                    
                     {supportsVoice && (
                       <motion.div 
                         whileTap={{ scale: 0.95 }}
@@ -479,7 +419,6 @@ const DashboardAIAssistant = () => {
                       handleSendMessage={handleSendMessage}
                       selectedRole={selectedRole}
                       userName={userName}
-                      isSpeaking={isSpeaking}
                       canAccess={canAccess}
                       isListening={isListening}
                       onStartListening={startListening}

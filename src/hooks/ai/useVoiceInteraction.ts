@@ -22,8 +22,7 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     onTranscriptComplete 
   } = options;
   
-  const { voice, autoSilenceDetection: storeAutoSilenceDetection } = useVoiceSettings();
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const { autoSilenceDetection: storeAutoSilenceDetection } = useVoiceSettings();
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastTranscript, setLastTranscript] = useState('');
   const [temporaryTranscript, setTemporaryTranscript] = useState('');
@@ -32,7 +31,6 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   const [isSilent, setIsSilent] = useState(false);
   const [averageVolume, setAverageVolume] = useState(0);
   const { toast } = useToast();
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   
   // Use the passed autoSilenceDetection or fall back to the store value
   const effectiveAutoSilenceDetection = optionAutoSilenceDetection !== undefined 
@@ -54,8 +52,6 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
 
   // We'll expose these derived capabilities for components to check
   const supportsVoice = recognitionSupported;
-  const canUseSpeechSynthesis = typeof window !== 'undefined' && 'speechSynthesis' in window;
-  const openAIVoiceSupported = apiKeyStatus === 'valid';
   
   // Update temporary transcript when speech is being recognized
   useEffect(() => {
@@ -69,7 +65,7 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     setApiKeyStatus('checking');
     try {
       const { data, error } = await supabase.functions.invoke('test-openai-connection', {
-        body: { test: 'tts' }
+        body: { test: 'whisper' }
       });
       
       if (error) {
@@ -111,91 +107,6 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     }
   }, [isListening, transcript, onTranscriptComplete, resetTranscript]);
   
-  // Stop speaking if component unmounts
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
-  
-  // Function to speak text
-  const speakText = useCallback(async (text: string) => {
-    if (!text || apiKeyStatus !== 'valid') {
-      return;
-    }
-    
-    setIsProcessing(true);
-    
-    try {
-      // Create audio element if it doesn't exist
-      if (!audioRef.current) {
-        audioRef.current = new Audio();
-      } else {
-        // Stop any current audio
-        audioRef.current.pause();
-      }
-      
-      const { data, error } = await supabase.functions.invoke('text-to-speech', {
-        body: { text, voice }
-      });
-      
-      if (error) {
-        throw new Error(error.message);
-      }
-      
-      if (!data || !data.audioUrl) {
-        throw new Error('No audio URL returned');
-      }
-      
-      // Set up audio event handlers
-      audioRef.current.onplay = () => setIsSpeaking(true);
-      audioRef.current.onended = () => {
-        setIsSpeaking(false);
-        if (autoResumeListening) {
-          // Short delay before resuming listening
-          setTimeout(() => {
-            startListening();
-          }, 500);
-        }
-      };
-      audioRef.current.onerror = (e) => {
-        console.error('Audio playback error:', e);
-        setIsSpeaking(false);
-      };
-      
-      // Play the audio
-      audioRef.current.src = data.audioUrl;
-      await audioRef.current.play();
-      
-    } catch (error) {
-      console.error('Error in text-to-speech:', error);
-      setIsSpeaking(false);
-      toast({
-        title: 'Speech Error',
-        description: error instanceof Error ? error.message : 'Failed to speak text',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [voice, autoResumeListening, apiKeyStatus, toast]);
-  
-  // Function to stop speaking
-  const stopSpeaking = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      setIsSpeaking(false);
-    }
-  }, []);
-  
-  // Function to retry API key validation
-  const retryApiKeyValidation = async () => {
-    return await checkApiKeyValidity();
-  };
-
   // Start listening wrapper function
   const startListening = useCallback(() => {
     if (startSpeechRecognition) {
@@ -246,16 +157,11 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     startListening,
     stopListening,
     resetTranscript,
-    speakText,
-    stopSpeaking,
-    isSpeaking,
     isProcessing,
     supportsVoice,
-    canUseSpeechSynthesis,
-    openAIVoiceSupported,
     apiKeyStatus,
     apiKeyErrorDetails,
-    retryApiKeyValidation,
+    retryApiKeyValidation: checkApiKeyValidity,
     isSilent,
     averageVolume
   };
