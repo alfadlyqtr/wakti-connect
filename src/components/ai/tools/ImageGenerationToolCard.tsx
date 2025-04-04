@@ -1,34 +1,42 @@
 
-import React, { useState, useRef } from "react";
-import { ImageIcon, Loader2, X, Mic, Camera, Upload, MicOff } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { ImageIcon, Loader2, X, Mic, Camera, Upload, MicOff, SwitchCamera } from "lucide-react";
 import { AIToolCard } from "./AIToolCard";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAIImageGeneration } from "@/hooks/ai/useAIImageGeneration";
 import { Card } from "@/components/ui/card";
 import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
 interface ImageGenerationToolCardProps {
   onPromptUse?: (prompt: string) => void;
+  onImageGenerate?: (imageUrl: string, prompt: string) => void;
 }
 
 export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = ({
-  onPromptUse
+  onPromptUse,
+  onImageGenerate
 }) => {
   const [prompt, setPrompt] = useState("");
   const { 
     generateImage, 
     isGenerating, 
     generatedImage,
-    clearGeneratedImage
+    clearGeneratedImage,
+    referenceImage,
+    setUploadedReferenceImage,
+    setCapturedReferenceImage,
+    clearReferenceImage
   } = useAIImageGeneration();
   const [showCamera, setShowCamera] = useState(false);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+  const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
+  const [streamActive, setStreamActive] = useState(false);
   const { toast } = useToast();
 
   // Speech recognition for voice input
@@ -44,15 +52,39 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
   });
 
   // Update prompt when transcript changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (transcript) {
       setPrompt(transcript);
     }
   }, [transcript]);
 
+  // Check for multiple cameras
+  useEffect(() => {
+    const checkCameras = async () => {
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+          return;
+        }
+        
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        setHasMultipleCameras(videoDevices.length > 1);
+      } catch (error) {
+        console.error("Error checking cameras:", error);
+      }
+    };
+    
+    checkCameras();
+  }, []);
+
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
-    await generateImage.mutateAsync(prompt);
+    const result = await generateImage.mutateAsync(prompt);
+    
+    // If the parent component needs to know about the generated image
+    if (onImageGenerate && result) {
+      onImageGenerate(result.imageUrl, result.prompt);
+    }
   };
 
   const handleUsePrompt = () => {
@@ -84,8 +116,12 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
+        // Set the reference image
+        setUploadedReferenceImage(reader.result, file.name);
+        
         // Set a default prompt for the uploaded image
-        setPrompt(`Generate an image similar to this uploaded reference`);
+        setPrompt(`Enhance this image and apply an artistic style`);
+        
         toast({
           title: "Image uploaded",
           description: "You can now describe what you want to do with this image",
@@ -93,23 +129,60 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
       }
     };
     reader.readAsDataURL(file);
+    
+    // Reset the input value so the same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const openCamera = async () => {
     try {
       setShowCamera(true);
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
+      await startCameraStream();
     } catch (error) {
       console.error("Error accessing camera:", error);
       toast({
         title: "Camera Error",
         description: "Could not access your camera. Please check permissions.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const startCameraStream = async () => {
+    try {
+      if (streamActive && videoRef.current?.srcObject) {
+        // Stop the current stream first
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+      }
+      
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode }
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setStreamActive(true);
+      }
+    } catch (error) {
+      console.error("Error starting camera stream:", error);
+      throw error;
+    }
+  };
+
+  const switchCamera = async () => {
+    const newFacingMode = facingMode === "user" ? "environment" : "user";
+    setFacingMode(newFacingMode);
+    
+    try {
+      await startCameraStream();
+    } catch (error) {
+      console.error("Error switching camera:", error);
+      toast({
+        title: "Camera Switch Failed",
+        description: "Could not switch cameras. This device might only have one camera.",
         variant: "destructive"
       });
     }
@@ -131,12 +204,12 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
         
         // Convert to data URL
         const imageDataUrl = canvas.toDataURL('image/jpeg');
-        setCapturedImage(imageDataUrl);
+        setCapturedReferenceImage(imageDataUrl);
         
         // Set a default prompt for the captured image
-        setPrompt("Generate an image based on this captured photo");
+        setPrompt("Enhance this photo and apply an artistic style");
         
-        // Close camera and stop the stream
+        // Close camera
         closeCamera();
         
         toast({
@@ -150,6 +223,7 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
   const closeCamera = () => {
     if (videoRef.current && videoRef.current.srcObject instanceof MediaStream) {
       videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      setStreamActive(false);
     }
     setShowCamera(false);
   };
@@ -162,6 +236,30 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
       iconColor="text-purple-500"
     >
       <div className="space-y-3">
+        {/* Reference image display (if any) */}
+        {referenceImage && (
+          <Card className="relative overflow-hidden mt-3 border-dashed">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 bg-black/20 hover:bg-black/40 text-white rounded-full z-10"
+              onClick={clearReferenceImage}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <div className="aspect-square relative">
+              <img 
+                src={referenceImage.dataUrl} 
+                alt={referenceImage.type === 'upload' ? referenceImage.fileName || 'Uploaded image' : 'Captured image'}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="p-2 text-xs text-muted-foreground bg-muted/50">
+              {referenceImage.type === 'upload' ? 'Uploaded image' : 'Captured image'}
+            </div>
+          </Card>
+        )}
+        
         <Textarea
           placeholder={isListening ? "Listening..." : "Describe the image you want to generate..."}
           value={prompt}
@@ -263,29 +361,6 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
             </div>
           </Card>
         )}
-        
-        {capturedImage && (
-          <Card className="relative overflow-hidden mt-3 border-dashed">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 bg-black/20 hover:bg-black/40 text-white rounded-full z-10"
-              onClick={() => setCapturedImage(null)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-            <div className="aspect-square relative">
-              <img 
-                src={capturedImage} 
-                alt="Captured"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="p-2 text-xs text-muted-foreground bg-muted/50">
-              Captured image
-            </div>
-          </Card>
-        )}
       </div>
       
       {/* Camera Dialog */}
@@ -304,10 +379,22 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
               />
             </div>
             <canvas ref={canvasRef} className="hidden" />
-            <div className="flex justify-center gap-2">
-              <Button variant="outline" onClick={closeCamera}>Cancel</Button>
+            <DialogFooter className="flex justify-between">
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={closeCamera}>Cancel</Button>
+                {hasMultipleCameras && (
+                  <Button 
+                    variant="outline" 
+                    onClick={switchCamera}
+                    title={facingMode === "user" ? "Switch to back camera" : "Switch to front camera"}
+                  >
+                    <SwitchCamera className="h-4 w-4 mr-2" />
+                    {facingMode === "user" ? "Back Camera" : "Front Camera"}
+                  </Button>
+                )}
+              </div>
               <Button onClick={takePicture}>Take Picture</Button>
-            </div>
+            </DialogFooter>
           </div>
         </DialogContent>
       </Dialog>

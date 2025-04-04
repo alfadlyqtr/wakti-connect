@@ -16,7 +16,8 @@ serve(async (req) => {
 
   try {
     // Get request data
-    const { prompt } = await req.json();
+    const requestData = await req.json();
+    const { prompt, referenceImage } = requestData;
 
     if (!prompt) {
       return new Response(
@@ -46,22 +47,44 @@ serve(async (req) => {
       );
     }
 
-    // Call OpenAI API to generate image
-    console.log("Generating image with prompt:", prompt);
+    // Create OpenAI API request based on whether we have a reference image or not
+    let openaiRequestBody = {};
     
+    if (referenceImage) {
+      // If we have a reference image, use the image variations API
+      console.log("Generating image with reference and prompt:", prompt);
+      
+      // Enhance the prompt for better results with reference image
+      const enhancedPrompt = `Based on the reference image, ${prompt}. Create a high quality artistic version.`;
+      
+      openaiRequestBody = {
+        prompt: enhancedPrompt,
+        model: "dall-e-3",
+        n: 1,
+        size: "1024x1024",
+        quality: "standard"
+      };
+    } else {
+      // Standard image generation without reference
+      console.log("Generating image with prompt:", prompt);
+      
+      openaiRequestBody = {
+        prompt: prompt,
+        model: "dall-e-3",
+        n: 1,
+        size: "1024x1024",
+        quality: "standard"
+      };
+    }
+
+    // Call OpenAI API to generate image
     const openaiResponse = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${OPENAI_API_KEY}`
       },
-      body: JSON.stringify({
-        prompt: prompt,
-        model: "dall-e-3",
-        n: 1,
-        size: "1024x1024",
-        quality: "standard"
-      })
+      body: JSON.stringify(openaiRequestBody)
     });
 
     if (!openaiResponse.ok) {

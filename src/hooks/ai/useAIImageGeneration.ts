@@ -10,17 +10,30 @@ export interface GeneratedImage {
   prompt: string;
 }
 
+export interface UploadedReferenceImage {
+  dataUrl: string;
+  fileName?: string;
+  type: 'upload' | 'camera';
+}
+
 export const useAIImageGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<GeneratedImage | null>(null);
+  const [referenceImage, setReferenceImage] = useState<UploadedReferenceImage | null>(null);
   const { toast } = useToast();
 
   const generateImage = useMutation({
     mutationFn: async (prompt: string) => {
       setIsGenerating(true);
       try {
+        // Include reference image if available
+        const payload = { 
+          prompt,
+          ...(referenceImage && { referenceImage: referenceImage.dataUrl })
+        };
+
         const { data, error } = await supabase.functions.invoke('ai-image-generation', {
-          body: { prompt }
+          body: payload
         });
 
         if (error) {
@@ -61,10 +74,33 @@ export const useAIImageGeneration = () => {
     setGeneratedImage(null);
   };
 
+  const clearReferenceImage = () => {
+    setReferenceImage(null);
+  };
+
+  const setUploadedReferenceImage = (dataUrl: string, fileName?: string) => {
+    setReferenceImage({
+      dataUrl,
+      fileName,
+      type: 'upload'
+    });
+  };
+
+  const setCapturedReferenceImage = (dataUrl: string) => {
+    setReferenceImage({
+      dataUrl,
+      type: 'camera'
+    });
+  };
+
   return {
     generateImage,
     isGenerating,
     generatedImage,
-    clearGeneratedImage
+    clearGeneratedImage,
+    referenceImage,
+    setUploadedReferenceImage,
+    setCapturedReferenceImage,
+    clearReferenceImage
   };
 };
