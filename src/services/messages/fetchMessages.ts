@@ -42,16 +42,23 @@ export const fetchMessages = async (otherUserId: string): Promise<Message[]> => 
       .eq('is_read', false);
     
     // Map the data safely with fallbacks for potentially undefined fields
-    return (data || []).map(msg => ({
-      id: msg.id || '',
-      content: msg.content || '',
-      senderId: msg.sender_id || '',
-      recipientId: msg.recipient_id || '',
-      isRead: msg.is_read || false,
-      createdAt: msg.created_at || '',
-      senderName: msg.profiles !== null && typeof msg.profiles === 'object' ? msg.profiles.display_name || '' : '',
-      senderAvatar: msg.profiles !== null && typeof msg.profiles === 'object' ? msg.profiles.avatar_url || '' : ''
-    }));
+    return (data || []).map(msg => {
+      // First, safely extract profile data
+      const profileData = msg.profiles as { display_name?: string; avatar_url?: string } | null;
+      const senderName = profileData?.display_name || '';
+      const senderAvatar = profileData?.avatar_url || '';
+      
+      return {
+        id: msg.id || '',
+        content: msg.content || '',
+        senderId: msg.sender_id || '',
+        recipientId: msg.recipient_id || '',
+        isRead: msg.is_read || false,
+        createdAt: msg.created_at || '',
+        senderName,
+        senderAvatar
+      };
+    });
   } catch (error) {
     console.error("Error fetching messages:", error);
     return [];
