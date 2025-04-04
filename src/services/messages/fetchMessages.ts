@@ -41,7 +41,7 @@ export const fetchMessages = async (otherUserId: string): Promise<Message[]> => 
       .eq('recipient_id', currentUserId)
       .eq('is_read', false);
     
-    // Map the data safely
+    // Map the data safely with fallbacks for potentially undefined fields
     return (data || []).map(msg => ({
       id: msg.id || '',
       content: msg.content || '',
