@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSpeechSynthesis } from './useSpeechSynthesis';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 interface UseVoiceInteractionOptions {
   continuousListening?: boolean;
@@ -157,6 +157,7 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   // Handle automatic resume after speaking completes
   useEffect(() => {
     if (autoResumeListening && !isSpeaking && shouldResumeRef.current) {
+      console.log("Auto-resuming listening after speaking");
       startListening();
       shouldResumeRef.current = false;
     }
@@ -376,6 +377,7 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   const speakText = useCallback((text: string) => {
     // If we're listening, stop and flag for resumption
     if (isListening && autoResumeListening) {
+      console.log("Pausing listening to speak");
       shouldResumeRef.current = true;
       stopListening();
     }

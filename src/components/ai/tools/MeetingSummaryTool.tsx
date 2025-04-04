@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,6 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   
   const { toast } = useToast();
   
-  // Use the voice interaction hook for validation only
   const { 
     supportsVoice,
     openAIVoiceSupported,
@@ -44,9 +42,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     continuousListening: false,
   });
 
-  // Manual start recording implementation
   const startRecording = async () => {
-    // Reset error state and data
     setRecordingError(null);
     setTranscribedText('');
     setSummary('');
@@ -61,7 +57,6 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       return;
     }
     
-    // Check if OpenAI API key is valid
     if (apiKeyStatus === 'invalid') {
       setRecordingError('OpenAI API key issue: ' + (apiKeyErrorDetails || 'API key not properly configured'));
       toast({
@@ -73,39 +68,32 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     }
     
     try {
-      // Request microphone access
       console.log("Requesting microphone access...");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       console.log("Microphone access granted");
       
-      // Start timer
       setIsRecording(true);
       setRecordingTime(0);
       
-      // Clear any existing timer
       if (intervalRef.current !== null) {
         window.clearInterval(intervalRef.current);
       }
       
-      // Start timer
       intervalRef.current = window.setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
       
-      // Create media recorder with options optimized for voice
       const options = { mimeType: 'audio/mp3' };
       
       try {
         const mediaRecorder = new MediaRecorder(stream, options);
         mediaRecorderRef.current = mediaRecorder;
       } catch (e) {
-        // Fallback to default format if mp3 is not supported
         console.log("MP3 format not supported, using default format");
         const mediaRecorder = new MediaRecorder(stream);
         mediaRecorderRef.current = mediaRecorder;
       }
       
-      // Set up recorder event handlers
       mediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data && event.data.size > 0) {
           console.log(`Received audio chunk: ${event.data.size} bytes`);
@@ -126,13 +114,11 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       mediaRecorderRef.current.onstop = () => {
         console.log("MediaRecorder stopped");
         
-        // Process the recording after stop
         if (audioChunksRef.current.length > 0) {
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/mp3' });
           setAudioData(audioBlob);
           console.log(`Final audio blob created: ${audioBlob.size} bytes`);
           
-          // Process immediately
           if (audioBlob.size > 1000) {
             processAudioData(audioBlob);
           } else {
@@ -153,11 +139,9 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           });
         }
         
-        // Clean up
         stopMediaTracks(stream);
       };
       
-      // Start recording with small time slices for more responsive recording
       mediaRecorderRef.current.start(1000);
       console.log("Recording started");
       
@@ -170,7 +154,6 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       setRecordingError(`Recording failed to start: ${error instanceof Error ? error.message : 'unknown error'}`);
       setIsRecording(false);
       
-      // Clear timer if it was started
       if (intervalRef.current !== null) {
         window.clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -184,17 +167,14 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     }
   };
 
-  // Helper function to stop media tracks
   const stopMediaTracks = (stream: MediaStream) => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
     }
   };
 
-  // Stop recording
   const stopRecording = () => {
     try {
-      // Clear timer interval
       if (intervalRef.current !== null) {
         window.clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -202,7 +182,6 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       
       setIsRecording(false);
       
-      // Stop recording if active
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
         console.log("Stopping MediaRecorder...");
         mediaRecorderRef.current.stop();
@@ -223,23 +202,20 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       });
     }
   };
-  
-  // Process audio data
+
   const processAudioData = async (audioBlob: Blob) => {
     try {
       console.log("Processing audio data, size:", audioBlob.size, "bytes");
       
-      // Convert blob to base64
       const reader = new FileReader();
       
       reader.onloadend = async () => {
         try {
           const base64 = reader.result as string;
-          const base64Data = base64.split(',')[1]; // Remove the data URL prefix
+          const base64Data = base64.split(',')[1];
           
           console.log("Audio converted to base64, sending to voice-to-text function...");
           
-          // Send to our Supabase Edge Function
           const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
             body: { audio: base64Data }
           });
@@ -251,7 +227,6 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           }
           
           if (!data?.text) {
-            // No text was returned, likely silence
             setRecordingError("No speech detected in the recording");
             toast({
               title: "No speech detected",
@@ -263,7 +238,6 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           
           console.log("Received transcript:", data.text);
           
-          // Set the transcript
           setTranscribedText(data.text);
           
           toast({
@@ -306,14 +280,12 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     }
   };
 
-  // Generate summary using AI
   const generateSummary = async () => {
     if (!transcribedText) return;
     
     setIsSummarizing(true);
     
     try {
-      // Call the AI assistant to summarize the transcript
       const response = await supabase.functions.invoke("ai-assistant", {
         body: {
           message: `Please summarize the following meeting transcript into key points, action items, decisions, and participants. Format it with markdown headings and bullet points, and highlight important items: ${transcribedText}`,
@@ -327,7 +299,6 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       
       const aiSummary = response.data.response;
       
-      // Add header with metadata
       const summaryWithHeader = `
 ## Meeting Summary
 - **Date**: ${new Date().toLocaleDateString()}
@@ -345,7 +316,6 @@ ${aiSummary}
         variant: "destructive"
       });
       
-      // Use a fallback summary for demo purposes
       const fallbackSummary = `
 ## Meeting Summary
 - **Date**: ${new Date().toLocaleDateString()}
@@ -372,14 +342,12 @@ ${aiSummary}
     }
   };
 
-  // Format seconds to MM:SS
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Copy summary to clipboard
   const copySummary = () => {
     if (!summary) return;
     
@@ -394,7 +362,6 @@ ${aiSummary}
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Export as PDF
   const exportAsPDF = async () => {
     if (!summary || !summaryRef.current) return;
     
@@ -403,22 +370,26 @@ ${aiSummary}
     try {
       const summaryElement = summaryRef.current;
       
-      // Add some styling for better PDF output
       const originalStyle = summaryElement.style.cssText;
-      summaryElement.style.padding = '20px';
+      summaryElement.style.padding = '30px';
       summaryElement.style.backgroundColor = '#ffffff';
       summaryElement.style.color = '#000000';
-      summaryElement.style.maxWidth = '800px';
-      summaryElement.style.margin = '0 auto';
+      summaryElement.style.width = '800px';
+      summaryElement.style.minHeight = '500px';
+      summaryElement.style.margin = '0';
+      summaryElement.style.boxSizing = 'border-box';
+      summaryElement.style.fontSize = '14px';
+      summaryElement.style.lineHeight = '1.6';
       
       const canvas = await html2canvas(summaryElement, {
-        scale: 2, // Higher scale for better quality
+        scale: 2,
         logging: false,
         useCORS: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        width: 800,
+        height: Math.max(summaryElement.offsetHeight, 500),
       });
       
-      // Reset the original style
       summaryElement.style.cssText = originalStyle;
       
       const imgData = canvas.toDataURL('image/png');
@@ -428,11 +399,24 @@ ${aiSummary}
         format: 'a4'
       });
       
-      // Calculate aspect ratio
-      const imgWidth = 210; // A4 width in mm (portrait)
+      const imgWidth = 210;
+      const pageHeight = 297;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      let heightLeft = imgHeight;
+      let position = 0;
+      let pageOffset = 0;
+      
+      pdf.addImage(imgData, 'PNG', 0, pageOffset, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+      
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
       pdf.save(`Meeting_Summary_${new Date().toISOString().slice(0, 10)}.pdf`);
       
       toast({
@@ -452,7 +436,6 @@ ${aiSummary}
     }
   };
 
-  // Send summary to chat
   const sendToChat = () => {
     if (onUseSummary && summary) {
       onUseSummary(summary);
@@ -462,8 +445,7 @@ ${aiSummary}
       });
     }
   };
-  
-  // Retry API key validation
+
   const handleRetryApiKey = async () => {
     toast({
       title: "Testing API Connection",
@@ -476,16 +458,13 @@ ${aiSummary}
       setRecordingError(null);
     }
   };
-  
-  // Clean up resources when component unmounts
+
   useEffect(() => {
     return () => {
-      // Stop recording if active
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
         mediaRecorderRef.current.stop();
       }
       
-      // Clear any timers
       if (intervalRef.current !== null) {
         window.clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -505,7 +484,6 @@ ${aiSummary}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* API Key error handling */}
         {apiKeyStatus === 'invalid' && (
           <div className="bg-amber-50 border border-amber-300 rounded-md p-3 text-sm flex items-start gap-2">
             <AlertCircle className="text-amber-600 h-5 w-5 flex-shrink-0 mt-0.5" />
@@ -524,7 +502,6 @@ ${aiSummary}
           </div>
         )}
         
-        {/* Recording error display */}
         {recordingError && !apiKeyStatus && (
           <div className="bg-red-50 border border-red-300 rounded-md p-3 text-sm">
             <p className="text-red-800 font-medium">Recording Error</p>
@@ -532,7 +509,6 @@ ${aiSummary}
           </div>
         )}
       
-        {/* Recording controls */}
         <div className="flex justify-center gap-4 p-2">
           {isRecording ? (
             <Button 
@@ -556,14 +532,12 @@ ${aiSummary}
           )}
         </div>
         
-        {/* Audio playback (for debugging) */}
         {audioData && (
           <div className="flex justify-center">
             <audio controls src={URL.createObjectURL(audioData)} className="w-full max-w-md"></audio>
           </div>
         )}
         
-        {/* Transcription display */}
         {transcribedText && (
           <div className="space-y-2">
             <div className="flex justify-between items-center">
@@ -595,7 +569,6 @@ ${aiSummary}
           </div>
         )}
         
-        {/* Summary display */}
         {summary && (
           <div className="space-y-2">
             <h3 className="text-sm font-medium">Meeting Summary:</h3>
@@ -615,7 +588,6 @@ ${aiSummary}
         )}
       </CardContent>
       
-      {/* Summary actions */}
       {summary && (
         <CardFooter className="flex flex-wrap gap-2">
           <Button 

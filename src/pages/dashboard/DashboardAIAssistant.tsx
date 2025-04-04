@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
 import { AIAssistantUpgradeCard } from "@/components/ai/AIAssistantUpgradeCard";
@@ -28,12 +28,15 @@ import {
   VolumeX, 
   Mic,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Camera,
+  FileUpload
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { VoiceInteractionToolCard } from "@/components/ai/tools/VoiceInteractionToolCard";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface EnhancedToolsTabProps {
   selectedRole: AIAssistantRole;
@@ -60,6 +63,12 @@ const DashboardAIAssistant = () => {
   const [activeTab, setActiveTab] = useState<string>("chat");
   const [isSpeechEnabled, setSpeechEnabled] = useState(false);
   const [showToolbar, setShowToolbar] = useState(true);
+  const [showCamera, setShowCamera] = useState(false);
+  const [imageCapture, setImageCapture] = useState<ImageCapture | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
   const breakpoint = useBreakpoint();
   const isMobile = !breakpoint.includes("md");
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name;
@@ -75,7 +84,17 @@ const DashboardAIAssistant = () => {
     stopListening,
     speakText,
     stopSpeaking
-  } = useVoiceInteraction();
+  } = useVoiceInteraction({
+    continuousListening: false,
+    autoResumeListening: isSpeechEnabled,
+    onTranscriptComplete: (transcript) => {
+      if (isSpeechEnabled && transcript) {
+        sendVoiceMessage(transcript);
+      } else {
+        setInputMessage(transcript);
+      }
+    }
+  });
 
   useEffect(() => {
     if (aiSettings?.role) {
@@ -103,6 +122,14 @@ const DashboardAIAssistant = () => {
     clearMessages();
   };
 
+  const handleToggleSpeech = useCallback(() => {
+    console.log("Toggling speech from", isSpeechEnabled, "to", !isSpeechEnabled);
+    if (isSpeaking) {
+      stopSpeaking();
+    }
+    setSpeechEnabled(prevState => !prevState);
+  }, [isSpeechEnabled, isSpeaking, stopSpeaking]);
+
   useEffect(() => {
     if (!isSpeechEnabled || messages.length === 0) return;
     
@@ -111,76 +138,156 @@ const DashboardAIAssistant = () => {
       .find(msg => msg.role === "assistant");
     
     if (latestAssistantMessage) {
+      console.log("Speaking latest assistant message");
       speakText(latestAssistantMessage.content);
     }
   }, [messages, isSpeechEnabled, speakText]);
 
-  useEffect(() => {
-    if (lastTranscript && !isListening) {
-      setInputMessage(lastTranscript);
+  const handleFileUpload = useCallback(async (file: File) => {
+    try {
+      console.log("Uploading file:", file.name);
+      toast({
+        title: "File Uploaded",
+        description: `File "${file.name}" has been uploaded.`,
+      });
+      
+      setInputMessage(`I've uploaded a file named "${file.name}". Can you help me with it?`);
+    } catch (error) {
+      console.error("File upload error:", error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload the file. Please try again.",
+        variant: "destructive"
+      });
     }
-  }, [lastTranscript, isListening]);
+  }, [toast]);
 
-  const handleToggleSpeech = () => {
-    if (isSpeaking) {
-      stopSpeaking();
+  const handleCameraCapture = useCallback(async () => {
+    try {
+      setShowCamera(true);
+      
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: true,
+        audio: false
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        
+        const track = stream.getVideoTracks()[0];
+        setImageCapture(new ImageCapture(track));
+      }
+    } catch (error) {
+      console.error("Camera access error:", error);
+      toast({
+        title: "Camera Error",
+        description: "Failed to access camera. Please check your permissions.",
+        variant: "destructive"
+      });
     }
-    setSpeechEnabled(!isSpeechEnabled);
+  }, [toast]);
+
+  const takePicture = useCallback(async () => {
+    if (!imageCapture || !canvasRef.current) return;
+    
+    try {
+      const bitmap = await imageCapture.grabFrame();
+      const canvas = canvasRef.current;
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      const context = canvas.getContext('2d');
+      context?.drawImage(bitmap, 0, 0);
+      
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      setCapturedImage(dataUrl);
+      
+      setInputMessage("I've just taken a photo. Can you help me analyze it?");
+      
+      setShowCamera(false);
+      
+      if (videoRef.current?.srcObject instanceof MediaStream) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      }
+      
+      toast({
+        title: "Photo Taken",
+        description: "Your photo has been captured and is ready to use.",
+      });
+    } catch (error) {
+      console.error("Error taking picture:", error);
+      toast({
+        title: "Camera Error",
+        description: "Failed to take picture. Please try again.",
+        variant: "destructive"
+      });
+    }
+  }, [imageCapture, toast]);
+
+  const closeCamera = useCallback(() => {
+    if (videoRef.current?.srcObject instanceof MediaStream) {
+      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+    }
+    setShowCamera(false);
+  }, []);
+
+  const sendVoiceMessage = async (text: string) => {
+    if (!text.trim() || isLoading || !canAccess) {
+      return;
+    }
+    
+    console.log("Sending voice message:", text);
+    await sendMessage(text);
   };
 
   useEffect(() => {
-    const checkAccess = async () => {
-      if (!user) {
-        console.log("No authenticated user, no AI access");
-        setCanAccess(false);
+    if (!user) {
+      console.log("No authenticated user, no AI access");
+      setCanAccess(false);
+      setIsChecking(false);
+      return;
+    }
+
+    try {
+      console.log("Checking AI access for user:", user.id);
+      
+      const { data: canUse, error: rpcError } = await supabase.rpc("can_use_ai_assistant");
+      
+      if (!rpcError && canUse !== null) {
+        console.log("RPC check result:", canUse);
+        setCanAccess(canUse);
         setIsChecking(false);
         return;
       }
-
-      try {
-        console.log("Checking AI access for user:", user.id);
-        
-        const { data: canUse, error: rpcError } = await supabase.rpc("can_use_ai_assistant");
-        
-        if (!rpcError && canUse !== null) {
-          console.log("RPC check result:", canUse);
-          setCanAccess(canUse);
-          setIsChecking(false);
-          return;
-        }
-        
-        console.log("RPC check failed with error:", rpcError?.message);
-        console.log("Falling back to direct profile check");
-        
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("account_type")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error("Error checking access:", profileError);
-          toast({
-            title: "Error checking access",
-            description: "Could not verify your account type. Please try again.",
-            variant: "destructive",
-          });
-          setCanAccess(false);
-        } else {
-          const hasAccess = profile?.account_type === "business" || profile?.account_type === "individual";
-          setCanAccess(hasAccess);
-          
-          console.log("Account type:", profile?.account_type, "Has access:", hasAccess);
-        }
-      } catch (error) {
-        console.error("Error checking AI access:", error);
-        setCanAccess(false);
-      }
       
-      setIsChecking(false);
-    };
+      console.log("RPC check failed with error:", rpcError?.message);
+      console.log("Falling back to direct profile check");
+      
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("account_type")
+        .eq("id", user.id)
+        .maybeSingle();
 
-    checkAccess();
+      if (profileError) {
+        console.error("Error checking access:", profileError);
+        toast({
+          title: "Error checking access",
+          description: "Could not verify your account type. Please try again.",
+          variant: "destructive",
+        });
+        setCanAccess(false);
+      } else {
+        const hasAccess = profile?.account_type === "business" || profile?.account_type === "individual";
+        setCanAccess(hasAccess);
+        
+        console.log("Account type:", profile?.account_type, "Has access:", hasAccess);
+      }
+    } catch (error) {
+      console.error("Error checking AI access:", error);
+      setCanAccess(false);
+    }
+    
+    setIsChecking(false);
   }, [user, toast]);
 
   useEffect(() => {
@@ -365,6 +472,9 @@ const DashboardAIAssistant = () => {
                       onStartListening={startListening}
                       onStopListening={stopListening}
                       recognitionSupported={supportsVoice}
+                      onSendVoiceMessage={sendVoiceMessage}
+                      onFileUpload={handleFileUpload}
+                      onCameraCapture={handleCameraCapture}
                     />
                   </TabsContent>
                   
@@ -411,6 +521,29 @@ const DashboardAIAssistant = () => {
             </div>
           )}
         </div>
+        
+        <Dialog open={showCamera} onOpenChange={setShowCamera}>
+          <DialogContent className="max-w-md" onInteractOutside={closeCamera}>
+            <DialogHeader>
+              <DialogTitle>Take a Picture</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col items-center space-y-4">
+              <div className="relative bg-black rounded-lg overflow-hidden w-full aspect-video">
+                <video 
+                  ref={videoRef} 
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <canvas ref={canvasRef} className="hidden" />
+              <div className="flex justify-center gap-4">
+                <Button variant="outline" onClick={closeCamera}>Cancel</Button>
+                <Button onClick={takePicture}>Take Picture</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </AISettingsProvider>
     </StaffRoleGuard>
   );

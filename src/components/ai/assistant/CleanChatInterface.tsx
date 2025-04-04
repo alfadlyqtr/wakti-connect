@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { AIMessage, AIAssistantRole } from "@/types/ai-assistant.types";
 import { AIAssistantMessage } from "../message/AIAssistantMessage";
 import { Loader2 } from "lucide-react";
@@ -22,6 +22,8 @@ interface CleanChatInterfaceProps {
   onStopListening?: () => void;
   recognitionSupported?: boolean;
   onSendVoiceMessage?: (text: string) => void;
+  onFileUpload?: (file: File) => Promise<void>;
+  onCameraCapture?: () => Promise<void>;
 }
 
 export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
@@ -38,7 +40,9 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   onStartListening,
   onStopListening,
   recognitionSupported = false,
-  onSendVoiceMessage
+  onSendVoiceMessage,
+  onFileUpload,
+  onCameraCapture
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFirstMessage = messages.length === 0;
@@ -51,13 +55,33 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
     }
   }, [messages]);
   
-  // Handle voice-to-voice conversation
+  // Voice to voice toggle handler - upgraded to properly manage state
+  const handleVoiceToVoiceToggle = useCallback((enabled: boolean) => {
+    console.log("Voice to voice conversation toggle:", enabled);
+    setVoiceToVoiceEnabled(enabled);
+    
+    // If enabling and we have the ability to listen
+    if (enabled && onStartListening && !isListening) {
+      console.log("Starting listening due to voice-to-voice toggle");
+      onStartListening();
+    } else if (!enabled && isListening && onStopListening) {
+      console.log("Stopping listening due to voice-to-voice toggle off");
+      onStopListening();
+    }
+  }, [onStartListening, onStopListening, isListening]);
+  
+  // Handle voice-to-voice conversation - improved logic for better reliability
   useEffect(() => {
-    if (voiceToVoiceEnabled && !isLoading && !isSpeaking && inputMessage && onSendVoiceMessage) {
+    if (!voiceToVoiceEnabled || isLoading || isSpeaking) return;
+    
+    if (inputMessage && onSendVoiceMessage) {
+      console.log("Processing voice input for voice conversation:", inputMessage);
+      
+      // Add a delay to ensure the input message is complete
       const handler = setTimeout(() => {
         onSendVoiceMessage(inputMessage);
         setInputMessage('');
-      }, 500);
+      }, 1000); // Increased from 500ms for more reliable operation
       
       return () => clearTimeout(handler);
     }
@@ -94,15 +118,6 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
     role: "assistant",
     content: getWelcomeMessage(),
     timestamp: new Date(),
-  };
-  
-  const handleToggleVoiceToVoice = (enabled: boolean) => {
-    setVoiceToVoiceEnabled(enabled);
-    
-    // If enabling and we have the ability to listen
-    if (enabled && onStartListening && !isListening) {
-      onStartListening();
-    }
   };
   
   return (
@@ -165,7 +180,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
           <div ref={messagesEndRef} />
         </div>
         
-        {/* Input form */}
+        {/* Input form - with improved voice toggle functionality */}
         <MessageInputForm
           inputMessage={inputMessage}
           setInputMessage={setInputMessage}
@@ -177,7 +192,9 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
           onStopListening={onStopListening}
           recognitionSupported={recognitionSupported}
           voiceToVoiceEnabled={voiceToVoiceEnabled}
-          onToggleVoiceToVoice={handleToggleVoiceToVoice}
+          onToggleVoiceToVoice={handleVoiceToVoiceToggle}
+          onFileUpload={onFileUpload}
+          onCameraCapture={onCameraCapture}
         />
       </CardContent>
     </Card>
