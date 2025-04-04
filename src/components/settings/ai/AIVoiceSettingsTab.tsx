@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,7 +42,7 @@ export const AIVoiceSettingsTab: React.FC = () => {
   };
   
   const handleTestVoice = () => {
-    speakText("Hello! This is a test of the AI voice feature with the " + voice + " voice.", voice);
+    speakText("Hello! This is a test of the AI voice feature with the " + voice + " voice.");
   };
   
   const handleRetryApiKey = async () => {

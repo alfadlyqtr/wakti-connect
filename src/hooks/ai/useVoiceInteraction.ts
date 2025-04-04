@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -23,13 +22,11 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     onTranscriptComplete 
   } = options;
   
-  // Get voice settings from the store
   const voiceSettings = useVoiceSettings();
   const autoSilenceDetection = optionAutoSilenceDetection !== undefined 
     ? optionAutoSilenceDetection 
     : voiceSettings.autoSilenceDetection;
   
-  // State management
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastTranscript, setLastTranscript] = useState('');
@@ -41,11 +38,11 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   const [apiKeyErrorDetails, setApiKeyErrorDetails] = useState<string | null>(null);
   const [isSilent, setIsSilent] = useState(true);
   const [averageVolume, setAverageVolume] = useState<number>(0);
+  const [canUseSpeechSynthesis, setCanUseSpeechSynthesis] = useState(false);
+  const [openAIVoiceSupported, setOpenAIVoiceSupported] = useState(false);
   
-  // Hooks
   const { toast } = useToast();
   
-  // Refs for stateful values
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const silenceTimeoutRef = useRef<number | null>(null);
@@ -55,7 +52,6 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   const shouldResumeRef = useRef(false);
   const apiTestInProgressRef = useRef(false);
   
-  // Check if browser supports voice recognition
   useEffect(() => {
     const checkSupport = async () => {
       try {
@@ -64,9 +60,13 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
           return false;
         }
         
-        // Just check if we can access the microphone
         await navigator.mediaDevices.getUserMedia({ audio: true });
         setSupportsVoice(true);
+        
+        if ('speechSynthesis' in window) {
+          setCanUseSpeechSynthesis(true);
+        }
+        
         return true;
       } catch (err) {
         console.error('Error checking microphone access:', err);
@@ -78,7 +78,6 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     checkSupport();
   }, []);
   
-  // Check if OpenAI voice-to-text is supported (API key is valid)
   const checkApiKey = useCallback(async () => {
     if (apiTestInProgressRef.current) return null;
     
@@ -87,21 +86,18 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       console.log("Checking OpenAI API key validation...");
       setApiKeyStatus('checking');
       
-      // First check text-to-voice
       const { data: textToVoiceData, error: textToVoiceError } = await supabase.functions.invoke('ai-text-to-voice', {
         body: { test: true }
       });
       
       console.log("Text-to-voice API key check response:", { data: textToVoiceData, error: textToVoiceError });
       
-      // Then check voice-to-text
       const { data: voiceToTextData, error: voiceToTextError } = await supabase.functions.invoke('ai-voice-to-text', {
         body: { test: true }
       });
       
       console.log("Voice-to-text API key check response:", { data: voiceToTextData, error: voiceToTextError });
       
-      // If either fails, mark as invalid
       if ((textToVoiceError || (textToVoiceData && textToVoiceData.error)) || 
           (voiceToTextError || (voiceToTextData && voiceToTextData.error))) {
         console.warn('OpenAI API key validation failed');
@@ -113,17 +109,20 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
           (voiceToTextData && voiceToTextData.error) || 
           'API key validation failed'
         );
+        setOpenAIVoiceSupported(false);
         return false;
       } else {
         console.log('OpenAI API key is valid for voice features');
         setApiKeyStatus('valid');
         setApiKeyErrorDetails(null);
+        setOpenAIVoiceSupported(true);
         return true;
       }
     } catch (err) {
       console.error('Error checking OpenAI API key:', err);
       setApiKeyStatus('unknown');
       setApiKeyErrorDetails('Connection error');
+      setOpenAIVoiceSupported(false);
       return false;
     } finally {
       apiTestInProgressRef.current = false;
@@ -136,32 +135,25 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     }
   }, [supportsVoice, checkApiKey]);
   
-  // Retry API key validation
   const retryApiKeyValidation = useCallback(async () => {
     const result = await checkApiKey();
     return result === true;
   }, [checkApiKey]);
   
-  // Calculate volume level from audio data
   const calculateVolumeLevel = useCallback((audioData: Float32Array): number => {
-    // Calculate RMS volume
     let sum = 0;
     for (let i = 0; i < audioData.length; i++) {
       sum += audioData[i] * audioData[i];
     }
     const rms = Math.sqrt(sum / audioData.length);
-    
-    // Convert to dB
-    const db = 20 * Math.log10(Math.max(rms, 0.0000001)); // Avoid log(0)
+    const db = 20 * Math.log10(Math.max(rms, 0.0000001));
     return db;
   }, []);
   
-  // Set up volume monitoring
   const setupVolumeMonitoring = useCallback((stream: MediaStream) => {
     if (!autoSilenceDetection) return null;
     
     try {
-      // Create audio context and analyser
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       audioContextRef.current = audioContext;
       
@@ -169,11 +161,9 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       analyserRef.current = analyser;
       analyser.fftSize = 1024;
       
-      // Connect mic to analyser
       const source = audioContext.createMediaStreamSource(stream);
       source.connect(analyser);
       
-      // Create processor to get audio data
       const processor = audioContext.createScriptProcessor(2048, 1, 1);
       processor.connect(audioContext.destination);
       analyser.connect(processor);
@@ -182,10 +172,8 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         const inputData = e.inputBuffer.getChannelData(0);
         const volume = calculateVolumeLevel(inputData);
         
-        // Calculate moving average
         setAverageVolume(prev => prev * 0.8 + volume * 0.2);
         
-        // Check for silence
         if (volume < silenceThreshold) {
           if (silenceStartTimeRef.current === null) {
             silenceStartTimeRef.current = Date.now();
@@ -193,14 +181,12 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
             console.log("Silence detected for threshold period");
             setIsSilent(true);
             
-            // If automatic silence detection is enabled, stop listening and process audio
             if (autoSilenceDetection && isListening && !isProcessing) {
               console.log("Auto-stopping listening due to silence");
               stopListening();
             }
           }
         } else {
-          // Reset silence timer if sound is detected
           silenceStartTimeRef.current = null;
           setIsSilent(false);
         }
@@ -221,7 +207,6 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     }
   }, [autoSilenceDetection, silenceThreshold, silenceTime, isListening, isProcessing, calculateVolumeLevel]);
   
-  // Start listening for speech
   const startListening = useCallback(async () => {
     if (!supportsVoice) {
       setError('Voice recognition not supported in this browser');
@@ -236,21 +221,16 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     try {
       console.log("Starting listening...");
       
-      // Clear any previous audio data
       audioChunksRef.current = [];
       setTemporaryTranscript('');
       
-      // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       
-      // Set up volume monitoring if auto silence detection is enabled
       const cleanupVolumeMonitoring = setupVolumeMonitoring(stream);
       
-      // Create media recorder
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       
-      // Set up event handlers
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
@@ -261,10 +241,8 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         try {
           console.log("Media recorder stopped, processing audio...");
           
-          // Create a single blob from all audio chunks
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
           
-          // Only process if we have actual audio data
           if (audioBlob.size > 0) {
             processSpeech(audioBlob);
           } else {
@@ -278,12 +256,10 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         }
       };
       
-      // Start recording
       mediaRecorder.start();
       setIsListening(true);
       setIsSilent(false);
       
-      // Clean up on unmount
       return () => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
           try {
@@ -293,12 +269,10 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
           }
         }
         
-        // Clean up volume monitoring
         if (cleanupVolumeMonitoring) {
           cleanupVolumeMonitoring();
         }
         
-        // Stop all tracks in the stream
         stream.getTracks().forEach(track => track.stop());
       };
       
@@ -313,7 +287,6 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     }
   }, [supportsVoice, isListening, setupVolumeMonitoring, continuousListening, toast]);
   
-  // Stop listening
   const stopListening = useCallback(() => {
     if (!isListening || !mediaRecorderRef.current) {
       console.log("Not listening or no media recorder, ignoring stop request");
@@ -322,17 +295,15 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     
     try {
       console.log("Stopping listening...");
-      // Only stop if currently recording
+      
       if (mediaRecorderRef.current.state !== 'inactive') {
         mediaRecorderRef.current.stop();
       }
       
-      // Stop all microphone tracks
       if (mediaRecorderRef.current.stream) {
         mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
       }
       
-      // Clean up audio context if it exists
       if (audioContextRef.current) {
         try {
           audioContextRef.current.close();
@@ -348,12 +319,10 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     }
   }, [isListening]);
   
-  // Process speech using OpenAI
   const processSpeech = useCallback(async (audioBlob: Blob) => {
     try {
       setIsProcessing(true);
       
-      // Guard against empty blobs
       if (audioBlob.size <= 0) {
         console.warn("Empty audio blob received - ignoring");
         setIsProcessing(false);
@@ -363,13 +332,12 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         return;
       }
       
-      // Convert blob to base64
       const reader = new FileReader();
       
       const base64Promise = new Promise<string>((resolve, reject) => {
         reader.onloadend = () => {
           const base64 = reader.result as string;
-          const base64Data = base64.split(',')[1]; // Remove the data URL prefix
+          const base64Data = base64.split(',')[1];
           resolve(base64Data);
         };
         reader.onerror = () => {
@@ -380,7 +348,6 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       reader.readAsDataURL(audioBlob);
       const base64Data = await base64Promise;
       
-      // Send to our Supabase Edge Function
       console.log("Sending audio to voice-to-text function...");
       const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
         body: { audio: base64Data }
@@ -392,7 +359,6 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         throw new Error(error.message || 'Failed to convert speech to text');
       }
       
-      // If no text was returned (usually means silence or very short audio)
       if (!data?.text || data.text.trim() === "") {
         console.log("No text was returned from voice-to-text function");
         
@@ -404,15 +370,12 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       
       console.log("Received transcript:", data.text);
       
-      // Set the transcript
       setLastTranscript(data.text);
       setTemporaryTranscript('');
       
-      // Call the callback if provided
       if (onTranscriptComplete) {
         onTranscriptComplete(data.text);
       }
-      
     } catch (e) {
       console.error('Error processing speech:', e);
       setError(e instanceof Error ? e.message : 'An error occurred during speech processing');
@@ -422,17 +385,14 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         description: e instanceof Error ? e.message : 'Failed to process your speech',
         variant: 'destructive'
       });
-      
     } finally {
       setIsProcessing(false);
-      // If continuous listening is enabled, restart listening
       if (continuousListening && !isListening) {
         setTimeout(startListening, 500);
       }
     }
   }, [continuousListening, isListening, startListening, onTranscriptComplete, toast]);
   
-  // Function to speak text
   const speakText = useCallback(async (text: string) => {
     if (!text) return;
     
@@ -440,13 +400,11 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       setIsSpeaking(true);
       console.log("Speaking text:", text.substring(0, 50) + "...");
       
-      // Store that we should resume listening after speaking
       if (autoResumeListening && isListening) {
         shouldResumeRef.current = true;
         stopListening();
       }
       
-      // Send text to the text-to-speech edge function
       const { data, error } = await supabase.functions.invoke('ai-text-to-voice', {
         body: { 
           text, 
@@ -462,10 +420,8 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         throw new Error('No audio content returned');
       }
       
-      // Play the returned audio
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
-      // Convert base64 to array buffer
       const base64 = data.audioContent;
       const binaryString = window.atob(base64);
       const bytes = new Uint8Array(binaryString.length);
@@ -473,18 +429,15 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         bytes[i] = binaryString.charCodeAt(i);
       }
       
-      // Decode audio data and play
       const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
       const source = audioContext.createBufferSource();
       source.buffer = audioBuffer;
       source.connect(audioContext.destination);
       
-      // Set up events
       source.onended = () => {
         console.log("Speech playback ended");
         setIsSpeaking(false);
         
-        // Resume listening if needed
         if (autoResumeListening && shouldResumeRef.current) {
           console.log("Auto-resuming listening after speaking");
           shouldResumeRef.current = false;
@@ -494,9 +447,7 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         }
       };
       
-      // Start playback
       source.start();
-      
     } catch (e) {
       console.error("Error speaking text:", e);
       setIsSpeaking(false);
@@ -508,19 +459,15 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     }
   }, [voiceSettings.voice, autoResumeListening, isListening, stopListening, startListening, toast]);
   
-  // Function to stop speaking
   const stopSpeaking = useCallback(() => {
-    // Can't directly stop the audio context, but we can set the state
     setIsSpeaking(false);
     shouldResumeRef.current = false;
     
-    // Attempt to resume listening if that was the previous state
     if (autoResumeListening && !isListening) {
       startListening();
     }
   }, [autoResumeListening, isListening, startListening]);
   
-  // Clean up resources when component unmounts
   useEffect(() => {
     return () => {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -557,6 +504,8 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     averageVolume,
     apiKeyStatus,
     apiKeyErrorDetails,
-    retryApiKeyValidation
+    retryApiKeyValidation,
+    canUseSpeechSynthesis,
+    openAIVoiceSupported
   };
 };
