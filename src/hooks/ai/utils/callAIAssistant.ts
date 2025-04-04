@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { AIMessage } from "@/types/ai-assistant.types";
 
 // Function to call the AI assistant edge function with improved context fetching

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSpeechSynthesis } from './useSpeechSynthesis';
 import { useToast } from '@/hooks/use-toast';
@@ -64,23 +63,39 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       try {
         console.log("Checking OpenAI API key validation...");
         setApiKeyStatus('checking');
-        const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
+        
+        // First check text-to-voice
+        const { data: textToVoiceData, error: textToVoiceError } = await supabase.functions.invoke('ai-text-to-voice', {
           body: { test: true }
         });
         
-        console.log("API key check response:", { data, error });
+        console.log("Text-to-voice API key check response:", { data: textToVoiceData, error: textToVoiceError });
         
-        if (error || (data && data.error)) {
-          console.warn('OpenAI API key validation failed:', error || data.error);
+        // Then check voice-to-text
+        const { data: voiceToTextData, error: voiceToTextError } = await supabase.functions.invoke('ai-voice-to-text', {
+          body: { test: true }
+        });
+        
+        console.log("Voice-to-text API key check response:", { data: voiceToTextData, error: voiceToTextError });
+        
+        // If either fails, mark as invalid
+        if ((textToVoiceError || (textToVoiceData && textToVoiceData.error)) || 
+            (voiceToTextError || (voiceToTextData && voiceToTextData.error))) {
+          console.warn('OpenAI API key validation failed:', 
+            textToVoiceError || (textToVoiceData && textToVoiceData.error) || 
+            voiceToTextError || (voiceToTextData && voiceToTextData.error));
+          
           setOpenAIVoiceSupported(false);
           setApiKeyStatus('invalid');
           setApiKeyErrorDetails(
-            (error && error.message) || 
-            (data && data.error) || 
+            (textToVoiceError && textToVoiceError.message) || 
+            (textToVoiceData && textToVoiceData.error) || 
+            (voiceToTextError && voiceToTextError.message) || 
+            (voiceToTextData && voiceToTextData.error) || 
             'API key validation failed'
           );
         } else {
-          console.log('OpenAI API key is valid');
+          console.log('OpenAI API key is valid for voice features');
           setOpenAIVoiceSupported(true);
           setApiKeyStatus('valid');
           setApiKeyErrorDetails(null);
@@ -103,19 +118,21 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     try {
       console.log("Retrying OpenAI API key validation...");
       setApiKeyStatus('checking');
-      const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
-        body: { test: true }
-      });
       
-      console.log("API key retry response:", { data, error });
+      // Check both endpoints
+      const [textToVoiceResponse, voiceToTextResponse] = await Promise.all([
+        supabase.functions.invoke('ai-text-to-voice', { body: { test: true } }),
+        supabase.functions.invoke('ai-voice-to-text', { body: { test: true } })
+      ]);
       
-      if (error || (data && data.error)) {
+      const textToVoiceError = textToVoiceResponse.error || (textToVoiceResponse.data && textToVoiceResponse.data.error);
+      const voiceToTextError = voiceToTextResponse.error || (voiceToTextResponse.data && voiceToTextResponse.data.error);
+      
+      if (textToVoiceError || voiceToTextError) {
         setOpenAIVoiceSupported(false);
         setApiKeyStatus('invalid');
         setApiKeyErrorDetails(
-          (error && error.message) || 
-          (data && data.error) || 
-          'API key validation failed'
+          textToVoiceError || voiceToTextError || 'API key validation failed'
         );
         return false;
       } else {
