@@ -245,14 +245,36 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       console.log("Microphone access granted");
       
-      // Create media recorder with options optimized for voice
-      const options = { mimeType: 'audio/webm' };
+      // Try with mp3 format first (which is better supported by OpenAI), then fall back to webm
+      let options;
+      try {
+        options = { mimeType: 'audio/mp3' };
+        // Test if this format is supported
+        new MediaRecorder(stream, options);
+        console.log("Using MP3 format for recording");
+      } catch (e) {
+        console.log("MP3 format not supported, trying webm");
+        try {
+          options = { mimeType: 'audio/webm' };
+          // Test if this format is supported
+          new MediaRecorder(stream, options);
+          console.log("Using WebM format for recording");
+        } catch (e2) {
+          console.log("WebM format not supported, using default format");
+          options = {};
+        }
+      }
+      
+      // Create media recorder with the determined options
       const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
+      
+      console.log("Created MediaRecorder with MIME type:", mediaRecorder.mimeType);
       
       // Set up recorder event handlers
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
+          console.log(`Received audio chunk: ${event.data.size} bytes`);
           audioChunksRef.current.push(event.data);
         }
       };
@@ -292,8 +314,8 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
           return;
         }
         
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        console.log(`Audio blob size: ${audioBlob.size} bytes`);
+        const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType });
+        console.log(`Audio blob created: ${audioBlob.size} bytes with type ${audioBlob.type}`);
         
         // Only process if we have a significant amount of audio data
         if (audioBlob.size > 1000) {

@@ -24,35 +24,33 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   const [copied, setCopied] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [recordingError, setRecordingError] = useState<string | null>(null);
+  const [audioData, setAudioData] = useState<Blob | null>(null);
   
   const summaryRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<number | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  
   const { toast } = useToast();
   
-  // Use the voice interaction hook for recording with continuous listening
+  // Use the voice interaction hook for validation only
   const { 
-    startListening, 
-    stopListening, 
-    supportsVoice, 
-    isListening,
-    lastTranscript,
-    isProcessing,
+    supportsVoice,
     openAIVoiceSupported,
     apiKeyStatus,
     apiKeyErrorDetails,
     retryApiKeyValidation
   } = useVoiceInteraction({
-    continuousListening: true,
-    onTranscriptComplete: (text) => {
-      // Append to existing transcript instead of replacing
-      setTranscribedText(prev => prev ? `${prev}\n${text}` : text);
-    }
+    continuousListening: false,
   });
 
-  // Start recording
+  // Manual start recording implementation
   const startRecording = async () => {
-    // Reset error state
+    // Reset error state and data
     setRecordingError(null);
+    setTranscribedText('');
+    setSummary('');
+    audioChunksRef.current = [];
     
     if (!supportsVoice) {
       toast({
@@ -75,10 +73,14 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     }
     
     try {
+      // Request microphone access
+      console.log("Requesting microphone access...");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log("Microphone access granted");
+      
+      // Start timer
       setIsRecording(true);
       setRecordingTime(0);
-      setTranscribedText('');
-      setSummary('');
       
       // Clear any existing timer
       if (intervalRef.current !== null) {
@@ -90,8 +92,74 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
         setRecordingTime(prev => prev + 1);
       }, 1000);
       
-      // Start voice recording
-      await startListening();
+      // Create media recorder with options optimized for voice
+      const options = { mimeType: 'audio/mp3' };
+      
+      try {
+        const mediaRecorder = new MediaRecorder(stream, options);
+        mediaRecorderRef.current = mediaRecorder;
+      } catch (e) {
+        // Fallback to default format if mp3 is not supported
+        console.log("MP3 format not supported, using default format");
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+      }
+      
+      // Set up recorder event handlers
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          console.log(`Received audio chunk: ${event.data.size} bytes`);
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorderRef.current.onstart = () => {
+        console.log("MediaRecorder started successfully");
+      };
+      
+      mediaRecorderRef.current.onerror = (event) => {
+        console.error("MediaRecorder error:", event);
+        setRecordingError("Media recorder error");
+        stopRecording();
+      };
+      
+      mediaRecorderRef.current.onstop = () => {
+        console.log("MediaRecorder stopped");
+        
+        // Process the recording after stop
+        if (audioChunksRef.current.length > 0) {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/mp3' });
+          setAudioData(audioBlob);
+          console.log(`Final audio blob created: ${audioBlob.size} bytes`);
+          
+          // Process immediately
+          if (audioBlob.size > 1000) {
+            processAudioData(audioBlob);
+          } else {
+            toast({
+              title: "Recording too short",
+              description: "The recording was too short to process. Please try again.",
+              variant: "destructive"
+            });
+            setRecordingError("Recording was too short to process");
+          }
+        } else {
+          console.error("No audio data collected");
+          setRecordingError("No audio data was recorded");
+          toast({
+            title: "Recording Failed",
+            description: "No audio data was captured. Please check your microphone permissions and try again.",
+            variant: "destructive"
+          });
+        }
+        
+        // Clean up
+        stopMediaTracks(stream);
+      };
+      
+      // Start recording with small time slices for more responsive recording
+      mediaRecorderRef.current.start(1000);
+      console.log("Recording started");
       
       toast({
         title: "Recording started",
@@ -116,8 +184,15 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     }
   };
 
+  // Helper function to stop media tracks
+  const stopMediaTracks = (stream: MediaStream) => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+  };
+
   // Stop recording
-  const stopRecording = async () => {
+  const stopRecording = () => {
     try {
       // Clear timer interval
       if (intervalRef.current !== null) {
@@ -127,19 +202,17 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       
       setIsRecording(false);
       
-      // Stop voice recording
-      await stopListening();
-      
-      if (transcribedText) {
+      // Stop recording if active
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        console.log("Stopping MediaRecorder...");
+        mediaRecorderRef.current.stop();
+        
         toast({
-          title: "Recording completed",
-          description: `${formatTime(recordingTime)} of audio transcribed.`,
+          title: "Processing recording",
+          description: "Your recording is being processed. This may take a moment.",
         });
       } else {
-        toast({
-          title: "Transcription processing",
-          description: "Processing the audio. This may take a moment.",
-        });
+        console.log("MediaRecorder was not active");
       }
     } catch (error) {
       console.error("Error stopping recording:", error);
@@ -147,6 +220,88 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
         title: "Error",
         description: "Failed to properly stop recording.",
         variant: "destructive"
+      });
+    }
+  };
+  
+  // Process audio data
+  const processAudioData = async (audioBlob: Blob) => {
+    try {
+      console.log("Processing audio data, size:", audioBlob.size, "bytes");
+      
+      // Convert blob to base64
+      const reader = new FileReader();
+      
+      reader.onloadend = async () => {
+        try {
+          const base64 = reader.result as string;
+          const base64Data = base64.split(',')[1]; // Remove the data URL prefix
+          
+          console.log("Audio converted to base64, sending to voice-to-text function...");
+          
+          // Send to our Supabase Edge Function
+          const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
+            body: { audio: base64Data }
+          });
+          
+          console.log("Voice-to-text response:", { data, error });
+          
+          if (error) {
+            throw new Error(error.message || 'Failed to convert speech to text');
+          }
+          
+          if (!data?.text) {
+            // No text was returned, likely silence
+            setRecordingError("No speech detected in the recording");
+            toast({
+              title: "No speech detected",
+              description: "The recording didn't contain any recognizable speech. Please try again.",
+              variant: "destructive"
+            });
+            return;
+          }
+          
+          console.log("Received transcript:", data.text);
+          
+          // Set the transcript
+          setTranscribedText(data.text);
+          
+          toast({
+            title: "Transcription complete",
+            description: `${formatTime(recordingTime)} of audio transcribed.`,
+            variant: "success"
+          });
+        } catch (e) {
+          console.error('Error processing speech:', e);
+          setRecordingError(e instanceof Error ? e.message : 'An error occurred during speech processing');
+          toast({
+            title: 'Speech Processing Error',
+            description: e instanceof Error ? e.message : 'Failed to process your speech',
+            variant: 'destructive'
+          });
+        }
+      };
+      
+      reader.onerror = () => {
+        console.error("FileReader error");
+        setRecordingError("Error reading audio data");
+        toast({
+          title: "Processing Error",
+          description: "Failed to process the audio data.",
+          variant: "destructive"
+        });
+      };
+      
+      console.log("Starting FileReader...");
+      reader.readAsDataURL(audioBlob);
+      
+    } catch (e) {
+      console.error('Error processing audio data:', e);
+      setRecordingError(e instanceof Error ? e.message : 'An error occurred processing audio');
+      toast({
+        title: 'Audio Processing Error',
+        description: e instanceof Error ? e.message : 'Failed to process your audio',
+        variant: 'destructive'
       });
     }
   };
@@ -308,13 +463,6 @@ ${aiSummary}
     }
   };
   
-  // Update transcribed text if we receive new text while stopped
-  useEffect(() => {
-    if (!isRecording && lastTranscript && !transcribedText) {
-      setTranscribedText(lastTranscript);
-    }
-  }, [isRecording, lastTranscript, transcribedText]);
-  
   // Retry API key validation
   const handleRetryApiKey = async () => {
     toast({
@@ -333,8 +481,8 @@ ${aiSummary}
   useEffect(() => {
     return () => {
       // Stop recording if active
-      if (isRecording) {
-        stopListening();
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
       }
       
       // Clear any timers
@@ -343,7 +491,7 @@ ${aiSummary}
         intervalRef.current = null;
       }
     };
-  }, [isRecording, stopListening]);
+  }, []);
 
   return (
     <Card>
@@ -391,7 +539,6 @@ ${aiSummary}
               variant="destructive" 
               className="flex items-center gap-2 animate-pulse" 
               onClick={stopRecording}
-              disabled={isProcessing}
             >
               <MicOff className="h-4 w-4" />
               Stop Recording ({formatTime(recordingTime)})
@@ -408,6 +555,13 @@ ${aiSummary}
             </Button>
           )}
         </div>
+        
+        {/* Audio playback (for debugging) */}
+        {audioData && (
+          <div className="flex justify-center">
+            <audio controls src={URL.createObjectURL(audioData)} className="w-full max-w-md"></audio>
+          </div>
+        )}
         
         {/* Transcription display */}
         {transcribedText && (

@@ -177,11 +177,13 @@ serve(async (req) => {
     
     // Prepare form data
     const formData = new FormData();
-    const blob = new Blob([binaryAudio], { type: 'audio/webm' });
-    formData.append('file', blob, 'audio.webm');
+    const blob = new Blob([binaryAudio], { type: 'audio/mp3' }); // Changed to mp3 format
+    formData.append('file', blob, 'audio.mp3'); // Changed to mp3 format
     formData.append('model', 'whisper-1');
-
+    
+    console.log("Audio blob size:", blob.size, "bytes");
     console.log("Sending request to OpenAI");
+    
     // Send to OpenAI
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
