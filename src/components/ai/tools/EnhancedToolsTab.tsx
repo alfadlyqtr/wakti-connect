@@ -5,6 +5,7 @@ import { AIAssistantRole } from '@/types/ai-assistant.types';
 import { AIUpgradeRequired } from '@/components/ai/AIUpgradeRequired';
 import { DocumentUploadTool } from './DocumentUploadTool';
 import { ImageGenerationToolCard } from './ImageGenerationToolCard';
+import { ImageTransformationToolCard } from './ImageTransformationToolCard';
 
 interface EnhancedToolsTabProps {
   selectedRole: AIAssistantRole;
@@ -25,7 +26,10 @@ export const EnhancedToolsTab: React.FC<EnhancedToolsTabProps> = ({
 
   if (compact) {
     return (
-      <ImageGenerationToolCard onPromptUse={onUseContent} />
+      <div className="grid gap-4">
+        <ImageGenerationToolCard onPromptUse={onUseContent} />
+        <ImageTransformationToolCard />
+      </div>
     );
   }
 
@@ -42,6 +46,10 @@ export const EnhancedToolsTab: React.FC<EnhancedToolsTabProps> = ({
             compact={true}
           />
           <ImageGenerationToolCard onPromptUse={onUseContent} />
+        </div>
+        
+        <div className="pt-2">
+          <ImageTransformationToolCard />
         </div>
       </CardContent>
     </Card>

@@ -16,7 +16,7 @@ serve(async (req) => {
   try {
     // Get request data
     const requestData = await req.json();
-    const { prompt } = requestData;
+    const { prompt, imageUrl } = requestData;
 
     if (!prompt) {
       return new Response(
@@ -41,17 +41,36 @@ serve(async (req) => {
       );
     }
 
-    console.log("Generating image with prompt:", prompt);
+    console.log("Processing image transformation request");
+    let openaiRequestBody;
 
-    // Standard image generation with DALL-E 3
-    const openaiRequestBody = {
-      model: "dall-e-3",
-      prompt: prompt,
-      n: 1,
-      size: "1024x1024",
-      quality: "standard",
-      response_format: "url"
-    };
+    if (imageUrl) {
+      console.log("Image-based generation with prompt:", prompt);
+      
+      // Image variation/transformation with DALL-E 3
+      openaiRequestBody = {
+        model: "dall-e-3",
+        prompt: `Transform this image into ${prompt}. Create an anime/Gimi-style illustration that preserves the main subject and composition.`,
+        n: 1,
+        size: "1024x1024",
+        quality: "standard",
+        response_format: "url",
+        // For image transformation, we need to pass the image URL
+        image: imageUrl
+      };
+    } else {
+      console.log("Text-based generation with prompt:", prompt);
+      
+      // Standard image generation with DALL-E 3
+      openaiRequestBody = {
+        model: "dall-e-3",
+        prompt: prompt,
+        n: 1,
+        size: "1024x1024",
+        quality: "standard",
+        response_format: "url"
+      };
+    }
     
     console.log("Making OpenAI API request with model:", openaiRequestBody.model);
 
@@ -79,7 +98,7 @@ serve(async (req) => {
     }
 
     const data = await openaiResponse.json();
-    const imageUrl = data.data[0].url;
+    const generatedImageUrl = data.data[0].url;
     
     console.log("Image generated successfully");
 
@@ -87,8 +106,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         id: crypto.randomUUID(),
-        imageUrl,
-        prompt
+        imageUrl: generatedImageUrl,
+        originalImageUrl: imageUrl || null,
+        prompt,
+        isTransformation: !!imageUrl
       }),
       { 
         status: 200, 
