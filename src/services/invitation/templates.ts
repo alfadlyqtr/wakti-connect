@@ -25,7 +25,18 @@ export const fetchInvitationTemplates = async (): Promise<InvitationTemplate[]> 
         name: 'Simple Invitation',
         previewImage: '/templates/simple.jpg',
         defaultStyles: { backgroundColor: '#ffffff', textColor: '#000000' },
-        customization: { allowColors: true, allowFonts: true },
+        customization: { 
+          theme: {
+            primary: '#3B82F6',
+            secondary: '#10B981',
+            background: '#ffffff'
+          },
+          font: {
+            family: 'system-ui, sans-serif',
+            size: 'medium',
+            color: '#000000'
+          }
+        },
         isDefault: true,
         createdAt: new Date().toISOString()
       },
@@ -34,7 +45,18 @@ export const fetchInvitationTemplates = async (): Promise<InvitationTemplate[]> 
         name: 'Elegant Invitation',
         previewImage: '/templates/elegant.jpg',
         defaultStyles: { backgroundColor: '#f8f5f2', textColor: '#333333' },
-        customization: { allowColors: true, allowFonts: true },
+        customization: { 
+          theme: {
+            primary: '#9333EA',
+            secondary: '#8B5CF6',
+            background: '#f8f5f2'
+          },
+          font: {
+            family: 'Georgia, serif',
+            size: 'medium',
+            color: '#333333'
+          }
+        },
         isDefault: false,
         createdAt: new Date().toISOString()
       },
@@ -43,7 +65,18 @@ export const fetchInvitationTemplates = async (): Promise<InvitationTemplate[]> 
         name: 'Modern Invitation',
         previewImage: '/templates/modern.jpg',
         defaultStyles: { backgroundColor: '#121212', textColor: '#ffffff' },
-        customization: { allowColors: true, allowFonts: true },
+        customization: { 
+          theme: {
+            primary: '#EC4899',
+            secondary: '#8B5CF6',
+            background: '#121212'
+          },
+          font: {
+            family: 'Inter, sans-serif',
+            size: 'medium',
+            color: '#ffffff'
+          }
+        },
         isDefault: false,
         createdAt: new Date().toISOString()
       }
