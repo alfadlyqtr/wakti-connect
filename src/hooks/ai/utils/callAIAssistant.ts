@@ -8,7 +8,7 @@ export const callAIAssistant = async (token: string, message: string, userName: 
     // Prepare context - this will be added to the message
     let context = "";
     
-    // Get tasks data for context
+    // Get tasks data for context - Improved to handle empty data properly
     try {
       const { data: taskData, error: taskError } = await supabase
         .from('tasks')
@@ -16,27 +16,47 @@ export const callAIAssistant = async (token: string, message: string, userName: 
         .order('due_date', { ascending: true })
         .limit(5);
         
-      if (!taskError && taskData) {
-        const todayTasks = taskData.filter(task => {
-          const dueDate = new Date(task.due_date);
+      if (!taskError) {
+        if (taskData && taskData.length > 0) {
           const today = new Date();
-          return dueDate.setHours(0,0,0,0) === today.setHours(0,0,0,0);
-        });
-        
-        const tomorrowTasks = taskData.filter(task => {
-          const dueDate = new Date(task.due_date);
+          today.setHours(0,0,0,0);
+          
           const tomorrow = new Date();
           tomorrow.setDate(tomorrow.getDate() + 1);
-          return dueDate.setHours(0,0,0,0) === tomorrow.setHours(0,0,0,0);
-        });
-        
-        context += `User has ${todayTasks.length} tasks due today and ${tomorrowTasks.length} tasks due tomorrow. `;
+          tomorrow.setHours(0,0,0,0);
+          
+          const todayTasks = taskData.filter(task => {
+            if (!task.due_date) return false;
+            const dueDate = new Date(task.due_date);
+            return dueDate.setHours(0,0,0,0) === today.getTime();
+          });
+          
+          const tomorrowTasks = taskData.filter(task => {
+            if (!task.due_date) return false;
+            const dueDate = new Date(task.due_date);
+            return dueDate.setHours(0,0,0,0) === tomorrow.getTime();
+          });
+          
+          context += `User has ${todayTasks.length} tasks due today and ${tomorrowTasks.length} tasks due tomorrow. `;
+          
+          // Add specific task info if available
+          if (todayTasks.length > 0) {
+            context += `Today's tasks: ${todayTasks.map(t => t.title).join(', ')}. `;
+          }
+          
+          if (tomorrowTasks.length > 0) {
+            context += `Tomorrow's tasks: ${tomorrowTasks.map(t => t.title).join(', ')}. `;
+          }
+        } else {
+          context += "User currently has no tasks in the system. ";
+        }
       }
     } catch (error) {
       console.warn("Error getting tasks data:", error);
+      context += "Unable to retrieve task information. ";
     }
     
-    // Get events/appointments
+    // Get events/appointments - Improved to handle empty data properly
     try {
       const { data: eventData, error: eventError } = await supabase
         .from('events')
@@ -45,20 +65,28 @@ export const callAIAssistant = async (token: string, message: string, userName: 
         .order('start_time', { ascending: true })
         .limit(5);
         
-      if (!eventError && eventData && eventData.length > 0) {
-        context += `User has ${eventData.length} upcoming events. `;
-        
-        // Add first event for more context
-        if (eventData[0]) {
-          const nextEvent = eventData[0];
-          const eventDate = new Date(nextEvent.start_time);
-          context += `Next event: "${nextEvent.title}" on ${eventDate.toLocaleDateString()} at ${eventDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}. `;
+      if (!eventError) {
+        if (eventData && eventData.length > 0) {
+          context += `User has ${eventData.length} upcoming events. `;
+          
+          // Add first event for more context
+          if (eventData[0]) {
+            const nextEvent = eventData[0];
+            const eventDate = new Date(nextEvent.start_time);
+            context += `Next event: "${nextEvent.title}" on ${eventDate.toLocaleDateString()} at ${eventDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}. `;
+          }
+          
+          // List upcoming events
+          if (eventData.length > 1) {
+            context += `Other upcoming events: ${eventData.slice(1).map(e => e.title).join(', ')}. `;
+          }
+        } else {
+          context += "User has no upcoming events in the system. ";
         }
-      } else {
-        context += "User has no upcoming events. ";
       }
     } catch (error) {
       console.warn("Error getting events data:", error);
+      context += "Unable to retrieve event information. ";
     }
     
     // Try to add current UI state as context
@@ -116,7 +144,7 @@ export const callAIAssistant = async (token: string, message: string, userName: 
   }
 };
 
-// New function to check if the user has actual data
+// Function to check if the user has actual data
 export const hasUserData = async (userId: string): Promise<boolean> => {
   try {
     // Check for tasks

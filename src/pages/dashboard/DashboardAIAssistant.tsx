@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,6 +20,7 @@ import { QuickToolsCard } from "@/components/ai/tools/QuickToolsCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AIRoleSelector } from "@/components/ai/assistant/AIRoleSelector";
 import { useVoiceInteraction } from "@/hooks/ai/useVoiceInteraction";
+import { Button } from "@/components/ui/button";
 import { 
   MessageSquare, 
   Wrench, 
@@ -30,7 +32,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Camera,
-  FileUpload
+  Upload
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Switch } from "@/components/ui/switch";
@@ -43,6 +45,15 @@ interface EnhancedToolsTabProps {
   onUseContent: (content: string) => void;
   canAccess: boolean;
   compact?: boolean;
+}
+
+// ImageCapture API definition
+declare global {
+  class ImageCapture {
+    constructor(track: MediaStreamTrack);
+    grabFrame(): Promise<ImageBitmap>;
+    takePhoto(): Promise<Blob>;
+  }
 }
 
 const DashboardAIAssistant = () => {
@@ -240,54 +251,58 @@ const DashboardAIAssistant = () => {
   };
 
   useEffect(() => {
-    if (!user) {
-      console.log("No authenticated user, no AI access");
-      setCanAccess(false);
-      setIsChecking(false);
-      return;
-    }
-
-    try {
-      console.log("Checking AI access for user:", user.id);
-      
-      const { data: canUse, error: rpcError } = await supabase.rpc("can_use_ai_assistant");
-      
-      if (!rpcError && canUse !== null) {
-        console.log("RPC check result:", canUse);
-        setCanAccess(canUse);
+    const checkUserAccess = async () => {
+      if (!user) {
+        console.log("No authenticated user, no AI access");
+        setCanAccess(false);
         setIsChecking(false);
         return;
       }
-      
-      console.log("RPC check failed with error:", rpcError?.message);
-      console.log("Falling back to direct profile check");
-      
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("account_type")
-        .eq("id", user.id)
-        .maybeSingle();
 
-      if (profileError) {
-        console.error("Error checking access:", profileError);
-        toast({
-          title: "Error checking access",
-          description: "Could not verify your account type. Please try again.",
-          variant: "destructive",
-        });
-        setCanAccess(false);
-      } else {
-        const hasAccess = profile?.account_type === "business" || profile?.account_type === "individual";
-        setCanAccess(hasAccess);
+      try {
+        console.log("Checking AI access for user:", user.id);
         
-        console.log("Account type:", profile?.account_type, "Has access:", hasAccess);
+        const { data: canUse, error: rpcError } = await supabase.rpc("can_use_ai_assistant");
+        
+        if (!rpcError && canUse !== null) {
+          console.log("RPC check result:", canUse);
+          setCanAccess(canUse);
+          setIsChecking(false);
+          return;
+        }
+        
+        console.log("RPC check failed with error:", rpcError?.message);
+        console.log("Falling back to direct profile check");
+        
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("account_type")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error("Error checking access:", profileError);
+          toast({
+            title: "Error checking access",
+            description: "Could not verify your account type. Please try again.",
+            variant: "destructive",
+          });
+          setCanAccess(false);
+        } else {
+          const hasAccess = profile?.account_type === "business" || profile?.account_type === "individual";
+          setCanAccess(hasAccess);
+          
+          console.log("Account type:", profile?.account_type, "Has access:", hasAccess);
+        }
+      } catch (error) {
+        console.error("Error checking AI access:", error);
+        setCanAccess(false);
       }
-    } catch (error) {
-      console.error("Error checking AI access:", error);
-      setCanAccess(false);
-    }
+      
+      setIsChecking(false);
+    };
     
-    setIsChecking(false);
+    checkUserAccess();
   }, [user, toast]);
 
   useEffect(() => {

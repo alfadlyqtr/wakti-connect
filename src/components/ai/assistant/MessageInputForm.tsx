@@ -1,8 +1,8 @@
 
-import React, { useState } from "react";
+import React, { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Mic, MicOff, SendHorizonal, Loader2, Camera, FileUpload } from "lucide-react";
+import { Mic, MicOff, SendHorizonal, Loader2, Camera, FileIcon, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -107,7 +107,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isLoading || !canAccess || isListening}
                   >
-                    <FileUpload className="h-4 w-4" />
+                    <Upload className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
