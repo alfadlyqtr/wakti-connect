@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface UseSpeechRecognitionOptions {
   continuous?: boolean;
@@ -30,7 +30,7 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
   }, []);
   
   // Start listening for speech
-  const startListening = () => {
+  const startListening = useCallback(() => {
     if (!supported) {
       setError('Speech recognition is not supported in this browser');
       return;
@@ -51,6 +51,7 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
     
     // Set up events
     recognition.onstart = () => {
+      console.log("Speech recognition started");
       setIsListening(true);
     };
     
@@ -60,14 +61,17 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
       const recognizedText = lastResult[0].transcript;
       
       setTranscript(recognizedText);
+      console.log("Recognized:", recognizedText);
     };
     
     recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
       setError(`Speech recognition error: ${event.error}`);
       setIsListening(false);
     };
     
     recognition.onend = () => {
+      console.log("Speech recognition ended");
       setIsListening(false);
     };
     
@@ -78,23 +82,24 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
       // Store recognition instance in window for stopping later
       (window as any).__recognitionInstance = recognition;
     } catch (err) {
+      console.error("Could not start speech recognition:", err);
       setError(`Could not start speech recognition: ${err instanceof Error ? err.message : String(err)}`);
     }
-  };
+  }, [supported, continuous, interimResults, lang]);
   
   // Stop listening
-  const stopListening = () => {
+  const stopListening = useCallback(() => {
     if ((window as any).__recognitionInstance) {
       (window as any).__recognitionInstance.stop();
       (window as any).__recognitionInstance = null;
     }
     setIsListening(false);
-  };
+  }, []);
   
   // Reset transcript
-  const resetTranscript = () => {
+  const resetTranscript = useCallback(() => {
     setTranscript('');
-  };
+  }, []);
   
   // Clean up on unmount
   useEffect(() => {
