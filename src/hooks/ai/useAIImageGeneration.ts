@@ -12,6 +12,11 @@ export interface GeneratedImage {
   isTransformation?: boolean;
 }
 
+interface GenerateImageParams {
+  prompt: string;
+  imageUrl?: string;
+}
+
 export const useAIImageGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<GeneratedImage | null>(null);
@@ -20,7 +25,7 @@ export const useAIImageGeneration = () => {
   const { toast } = useToast();
 
   const generateImage = useMutation({
-    mutationFn: async ({ prompt, imageUrl }: { prompt: string; imageUrl?: string }) => {
+    mutationFn: async ({ prompt, imageUrl }: GenerateImageParams) => {
       setIsGenerating(true);
       try {
         console.log("Starting image generation with prompt:", prompt);

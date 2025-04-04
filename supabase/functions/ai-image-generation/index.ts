@@ -41,11 +41,11 @@ serve(async (req) => {
       );
     }
 
-    console.log("Processing image transformation request");
+    console.log("Processing image generation request");
     let openaiRequestBody;
 
     if (imageUrl) {
-      console.log("Image-based generation with prompt:", prompt);
+      console.log("Image-based transformation with prompt:", prompt);
       
       // Image variation/transformation with DALL-E 3
       openaiRequestBody = {

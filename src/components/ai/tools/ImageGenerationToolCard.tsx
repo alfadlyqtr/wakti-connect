@@ -58,7 +58,8 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
     
     try {
       console.log("Generating image with prompt:", prompt);
-      const result = await generateImage.mutateAsync(prompt);
+      // Fix: Pass an object with the prompt property instead of just the string
+      const result = await generateImage.mutateAsync({ prompt });
       
       // If the parent component needs to know about the generated image
       if (onImageGenerate && result) {
