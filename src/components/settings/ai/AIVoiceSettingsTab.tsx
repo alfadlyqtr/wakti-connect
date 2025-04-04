@@ -6,7 +6,7 @@ import { VoiceSelector } from '@/components/ai/settings/VoiceSelector';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Mic, Volume2, WaveformIcon } from 'lucide-react';
+import { Mic, Volume2, AudioWaveform } from 'lucide-react';
 
 export const AIVoiceSettingsTab: React.FC = () => {
   const { 
