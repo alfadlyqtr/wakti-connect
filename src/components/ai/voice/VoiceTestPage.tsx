@@ -1,71 +1,247 @@
 
-import React from 'react';
-import { VoiceAPITester } from '../utils/VoiceAPITester';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState, useCallback } from 'react';
+import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
+import { useVoiceSettings } from '@/store/voiceSettings';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { AIVoiceVisualizer } from '../animation/AIVoiceVisualizer';
+import { AIAssistantMouthAnimation } from '../animation/AIAssistantMouthAnimation';
+import { VoiceSelector } from '../settings/VoiceSelector';
+import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
-export const VoiceTestPage: React.FC = () => {
-  return (
-    <div className="container mx-auto py-6 space-y-6">
-      <h1 className="text-2xl font-bold">Voice Integration Test Center</h1>
+export const VoiceTestPage = () => {
+  const [testText, setTestText] = useState("Hello, I'm the WAKTI AI Assistant! I can help you with tasks, appointments, and more.");
+  const [testResult, setTestResult] = useState('');
+  const { toast } = useToast();
+  const { 
+    voice, 
+    updateVoice, 
+    toggleAutoSilenceDetection, 
+    autoSilenceDetection 
+  } = useVoiceSettings();
+  
+  const {
+    isListening,
+    lastTranscript,
+    temporaryTranscript,
+    isSpeaking,
+    supportsVoice,
+    startListening,
+    stopListening,
+    speakText,
+    stopSpeaking,
+    apiKeyStatus
+  } = useVoiceInteraction({
+    continuousListening: true,
+    autoSilenceDetection,
+    onTranscriptComplete: (transcript) => {
+      if (transcript) {
+        setTestResult(transcript);
+      }
+    }
+  });
+  
+  const handleSpeak = useCallback(() => {
+    if (testText) {
+      console.log("Speaking text:", testText);
+      speakText(testText);
+    }
+  }, [testText, speakText]);
+  
+  const handleApiTest = async () => {
+    try {
+      const testResults = [];
       
-      <Tabs defaultValue="test-tool">
-        <TabsList>
-          <TabsTrigger value="test-tool">Test Tools</TabsTrigger>
-          <TabsTrigger value="help">Troubleshooting</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="test-tool" className="space-y-6">
-          <VoiceAPITester />
-        </TabsContent>
-        
-        <TabsContent value="help" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Troubleshooting OpenAI Voice Features</CardTitle>
-              <CardDescription>
-                Common issues and solutions for the voice integration
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+      // Test speech synthesis
+      toast({
+        title: "Testing voice synthesis...",
+        description: "Checking connection to OpenAI TTS API"
+      });
+      
+      const speechResponse = await fetch('/api/v1/ai-text-to-voice', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          test: true 
+        })
+      });
+      
+      const speechData = await speechResponse.json();
+      if (speechData.success) {
+        testResults.push("✅ Text-to-Voice API connection successful");
+      } else {
+        testResults.push(`❌ Text-to-Voice API error: ${speechData.error || 'Unknown error'}`);
+      }
+      
+      // Test speech recognition
+      toast({
+        title: "Testing voice recognition...",
+        description: "Checking connection to OpenAI Speech-to-Text API"
+      });
+      
+      const recognitionResponse = await fetch('/api/v1/ai-voice-to-text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          test: true 
+        })
+      });
+      
+      const recognitionData = await recognitionResponse.json();
+      if (recognitionData.success) {
+        testResults.push("✅ Voice-to-Text API connection successful");
+      } else {
+        testResults.push(`❌ Voice-to-Text API error: ${recognitionData.error || 'Unknown error'}`);
+      }
+      
+      // Show final results
+      setTestResult(testResults.join("\n"));
+      
+      toast({
+        title: "API Test Complete",
+        description: testResults.length > 0 ? testResults[0] : "Test completed"
+      });
+    } catch (error) {
+      console.error("API test error:", error);
+      setTestResult(`Error testing APIs: ${error.message}`);
+      toast({
+        title: "API Test Failed",
+        description: `Error connecting to APIs: ${error.message}`,
+        variant: "destructive"
+      });
+    }
+  };
+  
+  return (
+    <div className="container max-w-3xl py-8 space-y-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Voice Interaction Test</CardTitle>
+          <CardDescription>
+            Test voice synthesis and recognition features
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label>API Connection Status</Label>
+            <div className="text-sm p-3 bg-muted rounded-md">
+              {apiKeyStatus === 'checking' && "Checking API connection..."}
+              {apiKeyStatus === 'valid' && "✅ OpenAI API key is valid"}
+              {apiKeyStatus === 'invalid' && "❌ OpenAI API key is invalid or has restricted access"}
+              {apiKeyStatus === 'unknown' && "⚠️ OpenAI API key status unknown"}
+            </div>
+            <Button onClick={handleApiTest} variant="outline" size="sm">
+              Test API Connection
+            </Button>
+          </div>
+          
+          <div className="space-y-2">
+            <Label>Voice Settings</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <h3 className="text-lg font-medium">API Key Issues</h3>
-                <p className="text-sm text-muted-foreground">
-                  Ensure your OpenAI API key is set correctly in the Supabase secrets. The key should start with "sk-" and should have permissions for both audio transcription and text-to-speech.
-                </p>
+                <VoiceSelector
+                  selectedVoice={voice}
+                  onVoiceChange={updateVoice}
+                  label="Voice"
+                />
               </div>
-              
-              <div>
-                <h3 className="text-lg font-medium">Audio Format Issues</h3>
-                <p className="text-sm text-muted-foreground">
-                  OpenAI requires audio to be at least 0.1 seconds in length. If you're getting "audio too short" errors, try speaking for longer or using the file upload feature with a known good audio file.
-                </p>
+              <div className="flex items-center justify-between space-x-2">
+                <div className="space-y-0.5">
+                  <Label htmlFor="silence-detection">Auto Silence Detection</Label>
+                  <p className="text-[0.8rem] text-muted-foreground">
+                    Automatically stop listening when there's silence
+                  </p>
+                </div>
+                <Switch
+                  id="silence-detection"
+                  checked={autoSilenceDetection}
+                  onCheckedChange={toggleAutoSilenceDetection}
+                />
               </div>
-              
-              <div>
-                <h3 className="text-lg font-medium">Memory Limitations</h3>
-                <p className="text-sm text-muted-foreground">
-                  Edge functions have memory limits. Keep text inputs under 4000 characters and audio recordings reasonably short (under 30 seconds).
-                </p>
+            </div>
+          </div>
+          
+          <div className="space-y-2 pb-4">
+            <Label htmlFor="test-text">Text to Speak</Label>
+            <div className="flex gap-2">
+              <Input 
+                id="test-text" 
+                value={testText} 
+                onChange={(e) => setTestText(e.target.value)}
+              />
+              <Button 
+                onClick={handleSpeak} 
+                disabled={!testText || isSpeaking}
+              >
+                {isSpeaking ? <VolumeX /> : <Volume2 />}
+                {isSpeaking ? "Stop" : "Speak"}
+              </Button>
+            </div>
+          </div>
+          
+          {isSpeaking && (
+            <div className="flex items-center justify-center py-4 space-y-2">
+              <div className="flex flex-col items-center gap-3">
+                <AIAssistantMouthAnimation isActive={true} isSpeaking={true} size="medium" mood="happy" />
+                <AIVoiceVisualizer isActive={true} isSpeaking={true} />
               </div>
-              
-              <div>
-                <h3 className="text-lg font-medium">Timeout Issues</h3>
-                <p className="text-sm text-muted-foreground">
-                  Edge functions have a timeout limit. If your requests are timing out, try with shorter text or audio.
-                </p>
+            </div>
+          )}
+  
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Voice Recognition</Label>
+              {supportsVoice ? (
+                <Button 
+                  size="sm" 
+                  variant={isListening ? "destructive" : "outline"}
+                  onClick={isListening ? stopListening : startListening}
+                >
+                  {isListening ? <MicOff className="mr-2 h-4 w-4" /> : <Mic className="mr-2 h-4 w-4" />}
+                  {isListening ? "Stop Listening" : "Start Listening"}
+                </Button>
+              ) : (
+                <span className="text-sm text-muted-foreground">
+                  Speech recognition not supported in this browser
+                </span>
+              )}
+            </div>
+            
+            {isListening && (
+              <div className="text-sm p-3 bg-muted rounded-md h-24 overflow-y-auto">
+                <p className="font-medium">Listening...</p>
+                {temporaryTranscript && (
+                  <p className="text-muted-foreground">{temporaryTranscript}</p>
+                )}
               </div>
-              
-              <div>
-                <h3 className="text-lg font-medium">Browser Support</h3>
-                <p className="text-sm text-muted-foreground">
-                  Make sure you're using a modern browser with Web Audio API and MediaRecorder support. Chrome, Firefox, and Edge should work well.
-                </p>
+            )}
+            
+            {testResult && (
+              <div className="p-3 border rounded-md">
+                <p className="font-medium">Result:</p>
+                <p className="whitespace-pre-line">{testResult}</p>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            )}
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <div className="text-sm text-muted-foreground">
+            {supportsVoice ? (
+              isListening ? "Listening active" : "Ready to listen"
+            ) : (
+              "Browser does not support speech recognition"
+            )}
+          </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 };

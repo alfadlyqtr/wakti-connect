@@ -1,8 +1,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSpeechSynthesis } from './useSpeechSynthesis';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 import { useVoiceSettings } from '@/store/voiceSettings';
 
 interface UseVoiceInteractionOptions {
@@ -37,20 +36,16 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   const [temporaryTranscript, setTemporaryTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [supportsVoice, setSupportsVoice] = useState(false);
-  const [openAIVoiceSupported, setOpenAIVoiceSupported] = useState<boolean>(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [apiKeyStatus, setApiKeyStatus] = useState<'checking' | 'valid' | 'invalid' | 'unknown'>('checking');
   const [apiKeyErrorDetails, setApiKeyErrorDetails] = useState<string | null>(null);
   const [isSilent, setIsSilent] = useState(true);
   const [averageVolume, setAverageVolume] = useState<number>(0);
-  const [consecutiveErrors, setConsecutiveErrors] = useState(0);
   
   // Hooks
   const { toast } = useToast();
-  const { speak, cancel: stopSpeaking, speaking: isSpeaking, supported: synthesisSupported } = useSpeechSynthesis({
-    voice: voiceSettings.voice
-  });
   
-  // Refs for stateful values that don't trigger re-renders
+  // Refs for stateful values
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const silenceTimeoutRef = useRef<number | null>(null);
@@ -58,9 +53,7 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   const analyserRef = useRef<AnalyserNode | null>(null);
   const silenceStartTimeRef = useRef<number | null>(null);
   const shouldResumeRef = useRef(false);
-  const volumeCheckIntervalRef = useRef<number | null>(null);
   const apiTestInProgressRef = useRef(false);
-  const lastErrorTimeRef = useRef<number | null>(null);
   
   // Check if browser supports voice recognition
   useEffect(() => {
@@ -111,11 +104,7 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       // If either fails, mark as invalid
       if ((textToVoiceError || (textToVoiceData && textToVoiceData.error)) || 
           (voiceToTextError || (voiceToTextData && voiceToTextData.error))) {
-        console.warn('OpenAI API key validation failed:', 
-          textToVoiceError || (textToVoiceData && textToVoiceData.error) || 
-          voiceToTextError || (voiceToTextData && voiceToTextData.error));
-        
-        setOpenAIVoiceSupported(false);
+        console.warn('OpenAI API key validation failed');
         setApiKeyStatus('invalid');
         setApiKeyErrorDetails(
           (textToVoiceError && textToVoiceError.message) || 
@@ -127,14 +116,12 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         return false;
       } else {
         console.log('OpenAI API key is valid for voice features');
-        setOpenAIVoiceSupported(true);
         setApiKeyStatus('valid');
         setApiKeyErrorDetails(null);
         return true;
       }
     } catch (err) {
       console.error('Error checking OpenAI API key:', err);
-      setOpenAIVoiceSupported(false);
       setApiKeyStatus('unknown');
       setApiKeyErrorDetails('Connection error');
       return false;
@@ -154,43 +141,6 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     const result = await checkApiKey();
     return result === true;
   }, [checkApiKey]);
-  
-  // Clean up resources when component unmounts
-  useEffect(() => {
-    return () => {
-      if (mediaRecorderRef.current) {
-        try {
-          mediaRecorderRef.current.stop();
-        } catch (e) {
-          console.error("Error stopping media recorder:", e);
-        }
-      }
-      if (silenceTimeoutRef.current) {
-        window.clearTimeout(silenceTimeoutRef.current);
-      }
-      if (volumeCheckIntervalRef.current) {
-        window.clearInterval(volumeCheckIntervalRef.current);
-      }
-      if (audioContextRef.current) {
-        try {
-          audioContextRef.current.close();
-        } catch (e) {
-          console.error("Error closing audio context:", e);
-        }
-      }
-    };
-  }, []);
-  
-  // Handle automatic resume after speaking completes
-  useEffect(() => {
-    if (autoResumeListening && !isSpeaking && shouldResumeRef.current) {
-      console.log("Auto-resuming listening after speaking");
-      setTimeout(() => {
-        startListening();
-        shouldResumeRef.current = false;
-      }, 500); // Add a small delay to ensure everything is ready
-    }
-  }, [isSpeaking, autoResumeListening]);
   
   // Calculate volume level from audio data
   const calculateVolumeLevel = useCallback((audioData: Float32Array): number => {
@@ -240,11 +190,7 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
           if (silenceStartTimeRef.current === null) {
             silenceStartTimeRef.current = Date.now();
           } else if (Date.now() - silenceStartTimeRef.current > silenceTime && !isSilent) {
-            console.log("Silence detected for threshold period", {
-              volume, 
-              threshold: silenceThreshold,
-              silenceTime
-            });
+            console.log("Silence detected for threshold period");
             setIsSilent(true);
             
             // If automatic silence detection is enabled, stop listening and process audio
@@ -275,7 +221,134 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     }
   }, [autoSilenceDetection, silenceThreshold, silenceTime, isListening, isProcessing, calculateVolumeLevel]);
   
-  // Function to process speech using OpenAI
+  // Start listening for speech
+  const startListening = useCallback(async () => {
+    if (!supportsVoice) {
+      setError('Voice recognition not supported in this browser');
+      return;
+    }
+    
+    if (isListening) {
+      console.log("Already listening, ignoring start request");
+      return;
+    }
+    
+    try {
+      console.log("Starting listening...");
+      
+      // Clear any previous audio data
+      audioChunksRef.current = [];
+      setTemporaryTranscript('');
+      
+      // Request microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Set up volume monitoring if auto silence detection is enabled
+      const cleanupVolumeMonitoring = setupVolumeMonitoring(stream);
+      
+      // Create media recorder
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      
+      // Set up event handlers
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onstop = async () => {
+        try {
+          console.log("Media recorder stopped, processing audio...");
+          
+          // Create a single blob from all audio chunks
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          
+          // Only process if we have actual audio data
+          if (audioBlob.size > 0) {
+            processSpeech(audioBlob);
+          } else {
+            console.log("No audio data collected");
+            if (continuousListening) {
+              startListening();
+            }
+          }
+        } catch (error) {
+          console.error("Error processing audio on stop:", error);
+        }
+      };
+      
+      // Start recording
+      mediaRecorder.start();
+      setIsListening(true);
+      setIsSilent(false);
+      
+      // Clean up on unmount
+      return () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+          try {
+            mediaRecorderRef.current.stop();
+          } catch (e) {
+            console.error("Error stopping media recorder during cleanup:", e);
+          }
+        }
+        
+        // Clean up volume monitoring
+        if (cleanupVolumeMonitoring) {
+          cleanupVolumeMonitoring();
+        }
+        
+        // Stop all tracks in the stream
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+    } catch (error) {
+      console.error("Error starting voice recognition:", error);
+      setError(error instanceof Error ? error.message : 'Failed to start voice recognition');
+      toast({
+        title: "Voice Recognition Error",
+        description: error instanceof Error ? error.message : 'Failed to start voice recognition',
+        variant: "destructive"
+      });
+    }
+  }, [supportsVoice, isListening, setupVolumeMonitoring, continuousListening, toast]);
+  
+  // Stop listening
+  const stopListening = useCallback(() => {
+    if (!isListening || !mediaRecorderRef.current) {
+      console.log("Not listening or no media recorder, ignoring stop request");
+      return;
+    }
+    
+    try {
+      console.log("Stopping listening...");
+      // Only stop if currently recording
+      if (mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      
+      // Stop all microphone tracks
+      if (mediaRecorderRef.current.stream) {
+        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      }
+      
+      // Clean up audio context if it exists
+      if (audioContextRef.current) {
+        try {
+          audioContextRef.current.close();
+          audioContextRef.current = null;
+        } catch (e) {
+          console.error("Error closing audio context:", e);
+        }
+      }
+      
+      setIsListening(false);
+    } catch (error) {
+      console.error("Error stopping voice recognition:", error);
+    }
+  }, [isListening]);
+  
+  // Process speech using OpenAI
   const processSpeech = useCallback(async (audioBlob: Blob) => {
     try {
       setIsProcessing(true);
@@ -307,16 +380,6 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       reader.readAsDataURL(audioBlob);
       const base64Data = await base64Promise;
       
-      // Simple validation to ensure we have valid audio data
-      if (!base64Data || base64Data.length < 100) {
-        console.warn("Audio data is too small:", base64Data?.length);
-        setIsProcessing(false);
-        if (continuousListening && !isListening) {
-          startListening();
-        }
-        return;
-      }
-      
       // Send to our Supabase Edge Function
       console.log("Sending audio to voice-to-text function...");
       const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
@@ -329,14 +392,9 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         throw new Error(error.message || 'Failed to convert speech to text');
       }
       
-      // Check for empty text in response (usually means silence or very short audio)
+      // If no text was returned (usually means silence or very short audio)
       if (!data?.text || data.text.trim() === "") {
         console.log("No text was returned from voice-to-text function");
-        
-        // Check if we got a warning about audio being too short
-        if (data?.warning === "Audio is too short to transcribe") {
-          console.log("Audio was too short to transcribe");
-        }
         
         if (continuousListening) {
           startListening();
@@ -345,9 +403,6 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       }
       
       console.log("Received transcript:", data.text);
-      
-      // Reset consecutive errors since we got a successful response
-      setConsecutiveErrors(0);
       
       // Set the transcript
       setLastTranscript(data.text);
@@ -362,25 +417,11 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
       console.error('Error processing speech:', e);
       setError(e instanceof Error ? e.message : 'An error occurred during speech processing');
       
-      // Track consecutive errors
-      const newErrorCount = consecutiveErrors + 1;
-      setConsecutiveErrors(newErrorCount);
-      
-      // Only show toast for first few errors to avoid overwhelming user
-      if (newErrorCount <= 2) {
-        toast({
-          title: 'Speech Processing Error',
-          description: e instanceof Error ? e.message : 'Failed to process your speech',
-          variant: 'destructive'
-        });
-      }
-      
-      // If we've had multiple errors, try to re-test the API key
-      if (newErrorCount >= 3 && (lastErrorTimeRef.current === null || Date.now() - lastErrorTimeRef.current > 60000)) {
-        console.log("Multiple errors detected, retrying API key validation");
-        lastErrorTimeRef.current = Date.now();
-        retryApiKeyValidation();
-      }
+      toast({
+        title: 'Speech Processing Error',
+        description: e instanceof Error ? e.message : 'Failed to process your speech',
+        variant: 'destructive'
+      });
       
     } finally {
       setIsProcessing(false);
@@ -389,267 +430,133 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         setTimeout(startListening, 500);
       }
     }
-  }, [onTranscriptComplete, continuousListening, toast, isListening, consecutiveErrors, retryApiKeyValidation]);
+  }, [continuousListening, isListening, startListening, onTranscriptComplete, toast]);
   
-  const startListening = useCallback(async () => {
-    if (isListening || isProcessing) {
-      console.log("Already listening or processing, ignoring startListening call");
-      return;
-    }
+  // Function to speak text
+  const speakText = useCallback(async (text: string) => {
+    if (!text) return;
     
     try {
-      console.log("Starting voice recording...");
-      setError(null);
-      audioChunksRef.current = [];
-      silenceStartTimeRef.current = null;
-      setIsSilent(false);
-      setTemporaryTranscript('Listening...');
+      setIsSpeaking(true);
+      console.log("Speaking text:", text.substring(0, 50) + "...");
       
-      // Request microphone access
-      console.log("Requesting microphone access...");
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log("Microphone access granted");
-      
-      // Setup volume monitoring if enabled
-      const cleanupVolumeMonitoring = setupVolumeMonitoring(stream);
-      
-      // Try with mp3 format first (which is better supported by OpenAI), then fall back to webm
-      let options;
-      try {
-        options = { mimeType: 'audio/mp3' };
-        // Test if this format is supported
-        new MediaRecorder(stream, options);
-        console.log("Using MP3 format for recording");
-      } catch (e) {
-        console.log("MP3 format not supported, trying webm");
-        try {
-          options = { mimeType: 'audio/webm' };
-          // Test if this format is supported
-          new MediaRecorder(stream, options);
-          console.log("Using WebM format for recording");
-        } catch (e2) {
-          console.log("WebM format not supported, using default format");
-          options = {};
-        }
+      // Store that we should resume listening after speaking
+      if (autoResumeListening && isListening) {
+        shouldResumeRef.current = true;
+        stopListening();
       }
       
-      // Create media recorder with the determined options
-      const mediaRecorder = new MediaRecorder(stream, options);
-      mediaRecorderRef.current = mediaRecorder;
-      
-      console.log("Created MediaRecorder with MIME type:", mediaRecorder.mimeType);
-      
-      // Set up recorder event handlers
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          console.log(`Received audio chunk: ${event.data.size} bytes`);
-          audioChunksRef.current.push(event.data);
-        } else {
-          console.warn("Received empty audio chunk");
+      // Send text to the text-to-speech edge function
+      const { data, error } = await supabase.functions.invoke('ai-text-to-voice', {
+        body: { 
+          text, 
+          voice: voiceSettings.voice 
         }
-      };
+      });
       
-      mediaRecorder.onstart = () => {
-        console.log("MediaRecorder started");
-        setIsListening(true);
-        
-        // Set a maximum recording time (30 seconds to capture more content)
-        if (silenceTimeoutRef.current) {
-          window.clearTimeout(silenceTimeoutRef.current);
-        }
-        silenceTimeoutRef.current = window.setTimeout(() => {
-          console.log("Maximum recording time reached (30s)");
-          if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-            stopListening();
-          }
-        }, 30000);
-      };
+      if (error) {
+        throw new Error(error.message || 'Failed to generate speech');
+      }
       
-      mediaRecorder.onerror = (event) => {
-        console.error("MediaRecorder error:", event);
-        setError("Media recorder error");
-        stopListening();
-        
-        // Show toast for media recorder errors
-        toast({
-          title: 'Recording Error',
-          description: 'There was a problem with the microphone recording',
-          variant: 'destructive'
-        });
-      };
+      if (!data?.audioContent) {
+        throw new Error('No audio content returned');
+      }
       
-      mediaRecorder.onstop = async () => {
-        console.log("MediaRecorder stopped");
-        setIsListening(false);
+      // Play the returned audio
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Convert base64 to array buffer
+      const base64 = data.audioContent;
+      const binaryString = window.atob(base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      // Decode audio data and play
+      const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
+      const source = audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(audioContext.destination);
+      
+      // Set up events
+      source.onended = () => {
+        console.log("Speech playback ended");
+        setIsSpeaking(false);
         
-        // Clean up volume monitoring
-        if (cleanupVolumeMonitoring) cleanupVolumeMonitoring();
-        
-        if (!audioChunksRef.current.length) {
-          console.log("No audio chunks recorded");
-          if (continuousListening) {
+        // Resume listening if needed
+        if (autoResumeListening && shouldResumeRef.current) {
+          console.log("Auto-resuming listening after speaking");
+          shouldResumeRef.current = false;
+          setTimeout(() => {
             startListening();
-          }
-          return;
-        }
-        
-        const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType });
-        console.log(`Audio blob created: ${audioBlob.size} bytes with type ${audioBlob.type}`);
-        
-        // Only process if we have a significant amount of audio data
-        if (audioBlob.size > 100) {
-          await processSpeech(audioBlob);
-        } else if (continuousListening) {
-          console.log("Audio too short, restarting listening");
-          startListening();
-        }
-        
-        // Clean up
-        if (mediaRecorderRef.current) {
-          const tracks = mediaRecorderRef.current.stream.getTracks();
-          tracks.forEach(track => track.stop());
+          }, 300);
         }
       };
       
-      // Start recording with smaller chunks for more responsive transcription
-      console.log("Starting MediaRecorder...");
-      mediaRecorder.start(100);
+      // Start playback
+      source.start();
       
     } catch (e) {
-      console.error('Error starting voice recognition:', e);
-      setError(e instanceof Error ? e.message : 'Could not access microphone');
-      setIsListening(false);
-      setTemporaryTranscript('');
-      
+      console.error("Error speaking text:", e);
+      setIsSpeaking(false);
       toast({
-        title: 'Microphone Access Error',
-        description: e instanceof Error ? e.message : 'Could not access your microphone',
-        variant: 'destructive'
+        title: "Text-to-Speech Error",
+        description: e instanceof Error ? e.message : "Failed to generate speech",
+        variant: "destructive"
       });
-      
-      // Try testing the API key anyway in case that's the issue
-      retryApiKeyValidation();
     }
-  }, [isListening, isProcessing, processSpeech, continuousListening, toast, setupVolumeMonitoring, retryApiKeyValidation]);
+  }, [voiceSettings.voice, autoResumeListening, isListening, stopListening, startListening, toast]);
   
-  const stopListening = useCallback(() => {
-    console.log("Stopping voice recording...");
-    if (silenceTimeoutRef.current) {
-      window.clearTimeout(silenceTimeoutRef.current);
-      silenceTimeoutRef.current = null;
-    }
+  // Function to stop speaking
+  const stopSpeaking = useCallback(() => {
+    // Can't directly stop the audio context, but we can set the state
+    setIsSpeaking(false);
+    shouldResumeRef.current = false;
     
-    if (volumeCheckIntervalRef.current) {
-      window.clearInterval(volumeCheckIntervalRef.current);
-      volumeCheckIntervalRef.current = null;
+    // Attempt to resume listening if that was the previous state
+    if (autoResumeListening && !isListening) {
+      startListening();
     }
-    
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      try {
-        mediaRecorderRef.current.stop();
-        setTemporaryTranscript('Processing...');
-      } catch (e) {
-        console.error("Error stopping MediaRecorder:", e);
-        setIsListening(false);
-        setTemporaryTranscript('');
-      }
-    } else {
-      console.log("MediaRecorder not active, just updating state");
-      setIsListening(false);
-      setTemporaryTranscript('');
-    }
-  }, []);
+  }, [autoResumeListening, isListening, startListening]);
   
-  const speakText = useCallback((text: string, voice?: string) => {
-    if (!text) {
-      console.warn("Empty text passed to speakText, ignoring");
-      return;
-    }
-    
-    // If we're listening, stop and flag for resumption
-    if (isListening && autoResumeListening) {
-      console.log("Pausing listening to speak");
-      shouldResumeRef.current = true;
-      stopListening();
-    }
-    
-    // If voice is provided, use it, otherwise use the default from settings
-    const voiceToUse = voice || voiceSettings.voice;
-    
-    // First, try to use the Edge Function for text-to-speech if OpenAI is available
-    if (openAIVoiceSupported && apiKeyStatus === 'valid') {
-      console.log(`Using OpenAI for speech with voice ${voiceToUse}`);
-      
-      // Add safe limit to prevent edge function timeout
-      const maxTextLength = 4000;
-      const truncatedText = text.length > maxTextLength ? text.substring(0, maxTextLength) : text;
-      
-      supabase.functions.invoke('ai-text-to-voice', {
-        body: { text: truncatedText, voice: voiceToUse }
-      }).then(({ data, error }) => {
-        if (error || (data && data.error)) {
-          console.error("Error using OpenAI for speech:", error || data.error);
-          // Fall back to browser speech synthesis
-          speak(text);
-        } else if (data && data.audioContent) {
-          // Play audio from base64
-          const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
-          audio.onplay = () => {
-            console.log("AI speech started");
-          };
-          audio.onended = () => {
-            console.log("AI speech ended");
-            if (autoResumeListening && shouldResumeRef.current) {
-              console.log("Auto-resuming listening after AI speech");
-              setTimeout(() => {
-                startListening();
-                shouldResumeRef.current = false;
-              }, 500);
-            }
-          };
-          audio.onerror = (err) => {
-            console.error("Error playing audio:", err);
-            // Fall back to browser speech synthesis
-            speak(text);
-          };
-          audio.play().catch(err => {
-            console.error("Error playing audio:", err);
-            // Fall back to browser speech synthesis
-            speak(text);
-          });
+  // Clean up resources when component unmounts
+  useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch (e) {
+          console.error("Error stopping media recorder:", e);
         }
-      }).catch(err => {
-        console.error("Error calling text-to-voice function:", err);
-        // Fall back to browser speech synthesis
-        speak(text);
-      });
-    } else {
-      // Use browser's speech synthesis as fallback
-      console.log("Using browser speech synthesis as fallback");
-      speak(text);
-    }
-  }, [speak, stopListening, isListening, autoResumeListening, startListening, openAIVoiceSupported, apiKeyStatus, voiceSettings.voice]);
+      }
+      
+      if (audioContextRef.current) {
+        try {
+          audioContextRef.current.close();
+        } catch (e) {
+          console.error("Error closing audio context:", e);
+        }
+      }
+    };
+  }, []);
   
   return {
     isListening,
-    isProcessing,
-    supportsVoice,
+    startListening,
+    stopListening,
     lastTranscript,
     temporaryTranscript,
     error,
-    startListening,
-    stopListening,
+    isProcessing,
+    supportsVoice,
+    isSpeaking,
     speakText,
     stopSpeaking,
-    isSpeaking,
-    resetTranscript: () => setLastTranscript(''),
-    canUseSpeechSynthesis: synthesisSupported,
-    openAIVoiceSupported,
-    apiKeyStatus,
-    apiKeyErrorDetails,
-    retryApiKeyValidation,
     isSilent,
     averageVolume,
-    consecutiveErrors
+    apiKeyStatus,
+    apiKeyErrorDetails,
+    retryApiKeyValidation
   };
 };
