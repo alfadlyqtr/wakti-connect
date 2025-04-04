@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AIAssistantRole } from '@/types/ai-assistant.types'; 
-import { AIUpgradeRequired } from '../AIUpgradeRequired';
+import { AIUpgradeRequired } from '@/components/ai/AIUpgradeRequired';
 import { DocumentUploadTool } from './DocumentUploadTool';
 import { ImageGenerationToolCard } from './ImageGenerationToolCard';
 

@@ -5,7 +5,7 @@ import { DocumentUploadTool } from "./DocumentUploadTool";
 import { VoiceInteractionToolCard } from "./VoiceInteractionToolCard";
 import { MeetingSummaryTool } from "./MeetingSummaryTool";
 import { AIAssistantSettings } from "@/components/settings/ai/AIAssistantSettings";
-import { AIUpgradeRequired } from "../AIUpgradeRequired";
+import { AIUpgradeRequired } from "@/components/ai/AIUpgradeRequired";
 import { ImageGenerationToolCard } from "./ImageGenerationToolCard";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
 
