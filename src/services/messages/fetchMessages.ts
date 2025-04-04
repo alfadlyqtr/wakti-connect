@@ -49,8 +49,8 @@ export const fetchMessages = async (otherUserId: string): Promise<Message[]> => 
       recipientId: msg.recipient_id || '',
       isRead: msg.is_read || false,
       createdAt: msg.created_at || '',
-      senderName: msg.profiles && typeof msg.profiles === 'object' ? msg.profiles.display_name || '' : '',
-      senderAvatar: msg.profiles && typeof msg.profiles === 'object' ? msg.profiles.avatar_url || '' : ''
+      senderName: msg.profiles !== null && typeof msg.profiles === 'object' ? msg.profiles.display_name || '' : '',
+      senderAvatar: msg.profiles !== null && typeof msg.profiles === 'object' ? msg.profiles.avatar_url || '' : ''
     }));
   } catch (error) {
     console.error("Error fetching messages:", error);
