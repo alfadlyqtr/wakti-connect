@@ -291,7 +291,7 @@ export const FullscreenVoiceConversation: React.FC<FullscreenVoiceConversationPr
                     </span>
                   </p>
                   <Button size="sm" variant="outline" onClick={handleApiKeyRetry}>
-                    Retry Connection
+                    Test API Connection
                   </Button>
                 </div>
               )}

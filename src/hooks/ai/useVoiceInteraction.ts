@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSpeechRecognition } from './useSpeechRecognition';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useVoiceSettings } from '@/store/voiceSettings';
 
@@ -43,8 +43,8 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   const {
     transcript,
     isListening,
-    startListening,
-    stopListening,
+    startListening: startSpeechRecognition,
+    stopListening: stopSpeechRecognition,
     resetTranscript,
     supported: recognitionSupported
   } = useSpeechRecognition({
@@ -157,9 +157,7 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
         if (autoResumeListening) {
           // Short delay before resuming listening
           setTimeout(() => {
-            if (startListening) {
-              startListening();
-            }
+            startListening();
           }, 500);
         }
       };
@@ -183,7 +181,7 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     } finally {
       setIsProcessing(false);
     }
-  }, [voice, autoResumeListening, startListening, apiKeyStatus, toast]);
+  }, [voice, autoResumeListening, apiKeyStatus, toast]);
   
   // Function to stop speaking
   const stopSpeaking = useCallback(() => {
@@ -197,6 +195,20 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
   const retryApiKeyValidation = async () => {
     return await checkApiKeyValidity();
   };
+
+  // Start listening wrapper function
+  const startListening = useCallback(() => {
+    if (startSpeechRecognition) {
+      startSpeechRecognition();
+    }
+  }, [startSpeechRecognition]);
+
+  // Stop listening wrapper function
+  const stopListening = useCallback(() => {
+    if (stopSpeechRecognition) {
+      stopSpeechRecognition();
+    }
+  }, [stopSpeechRecognition]);
   
   // Simulate silence detection (every 500ms check if there's been speech)
   useEffect(() => {

@@ -1,6 +1,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+// Add the missing TypeScript interface for window.SpeechRecognition
+declare global {
+  interface Window {
+    SpeechRecognition: typeof SpeechRecognition;
+    webkitSpeechRecognition: typeof SpeechRecognition;
+  }
+}
+
 interface UseSpeechRecognitionOptions {
   continuous?: boolean;
   interimResults?: boolean;
@@ -21,7 +29,7 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
   
   // Check if browser supports speech recognition
   useEffect(() => {
-    // Check for the SpeechRecognition API
+    // Check for the SpeechRecognition API in a browser-safe way
     const isSpeechRecognitionSupported = typeof window !== 'undefined' && (
       'SpeechRecognition' in window || 
       'webkitSpeechRecognition' in window
