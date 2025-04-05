@@ -31,7 +31,15 @@ export function MessageAvatar({ isUser }: MessageAvatarProps) {
           </AvatarFallback>
         </>
       ) : (
-        <Bot className="h-4 w-4 text-white" />
+        <>
+          <AvatarImage 
+            src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
+            alt="WAKTI AI" 
+          />
+          <AvatarFallback>
+            <Bot className="h-4 w-4 text-white" />
+          </AvatarFallback>
+        </>
       )}
     </Avatar>
   );

@@ -24,16 +24,20 @@ export const AIAssistantHeader: React.FC<AIAssistantHeaderProps> = ({ userName }
 
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-2">
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2">
+        <img 
+          src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
+          alt="WAKTI Logo" 
+          className="h-8 w-8 rounded-md object-cover"
+        />
+        <div>
           <h1 className="text-xl md:text-2xl font-bold tracking-tight text-primary">
             WAKTI AI Assistant
           </h1>
-          <Bot className="h-5 w-5 md:h-6 md:w-6 text-wakti-blue" />
+          <p className="text-sm text-muted-foreground">
+            {getTimeBasedGreeting()}{userName ? `, ${userName}` : ""}! How can I help you today?
+          </p>
         </div>
-        <p className="text-sm text-muted-foreground">
-          {getTimeBasedGreeting()}{userName ? `, ${userName}` : ""}! How can I help you today?
-        </p>
       </div>
       
       <div className="flex items-center gap-2 mt-2 md:mt-0">
