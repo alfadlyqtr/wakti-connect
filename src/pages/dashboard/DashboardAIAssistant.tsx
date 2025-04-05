@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -95,9 +94,7 @@ const DashboardAIAssistant = () => {
   useEffect(() => {
     if (aiSettings?.role) {
       // Handle database to client role conversion
-      if (aiSettings.role === "employee") {
-        setSelectedRole("work");
-      } else if (aiSettings.role === "writer") {
+      if (aiSettings.role === "employee" || aiSettings.role === "writer") {
         setSelectedRole("work");
       } else {
         setSelectedRole(aiSettings.role);

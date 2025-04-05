@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText, Upload, File, Image, CheckCircle2 } from "lucide-react";
@@ -51,7 +52,7 @@ export const AIDocumentProcessor: React.FC<AIDocumentProcessorProps> = ({
         return "Extract key information for work-related tasks";
       case "business_owner":
         return "Analyze this document for business insights";
-      case "writer":
+      case "writer": // Handle writer role
         return "Help me understand and edit this content";
       default:
         return "Analyze this document and provide insights";

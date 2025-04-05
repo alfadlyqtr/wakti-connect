@@ -51,6 +51,7 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
           break;
         case "work":
         case "employee":
+        case "writer":
           knowledgeProfile = employeeProfile;
           break;
         default:
@@ -87,8 +88,8 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
       case "student": return <GraduationCap className="h-5 w-5 text-blue-500" />;
       case "business_owner": return <Building2 className="h-5 w-5 text-amber-500" />;
       case "work":
-      case "employee": return <Briefcase className="h-5 w-5 text-purple-500" />;
-      case "writer": return <Book className="h-5 w-5 text-green-500" />;
+      case "employee":
+      case "writer": return <Briefcase className="h-5 w-5 text-purple-500" />;
       default: return <User className="h-5 w-5 text-gray-500" />;
     }
   };
@@ -194,6 +195,7 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
         
       case "work":
       case "employee":
+      case "writer":
         return (
           <div className="space-y-4">
             <div>

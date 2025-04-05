@@ -1,5 +1,5 @@
 // AI Assistant role types - must match what's in the database
-export type AIAssistantRole = "student" | "business_owner" | "general" | "work" | "employee";
+export type AIAssistantRole = "student" | "business_owner" | "general" | "work" | "employee" | "writer";
 
 // AI settings interface
 export interface AISettings {
@@ -156,6 +156,29 @@ export const RoleContexts: Record<AIAssistantRole, {
       { name: "Task Reporter", description: "Report completed tasks", icon: "ClipboardCheck" },
       { name: "Meeting Organizer", description: "Organize team meetings", icon: "Users" },
       { name: "Content Creator", description: "Generate creative content", icon: "Edit" }
+    ]
+  },
+  "writer": {
+    title: "Writer Assistant",
+    description: "Help with writing, editing, and proofreading",
+    icon: "pencil",
+    welcomeMessage: "Hello! I'm your Writer Assistant. I can help you with your writing projects, from brainstorming ideas to polishing your final draft. How can I assist you today?",
+    commandSuggestions: [
+      "Create a new writing prompt",
+      "Edit a document",
+      "Proofread my work"
+    ],
+    suggestedPrompts: [
+      "Generate a new writing prompt",
+      "Edit a document",
+      "Proofread my work",
+      "Get feedback on my writing"
+    ],
+    quickTools: [
+      { name: "Writing Prompt Generator", description: "Generate writing prompts", icon: "Pencil" },
+      { name: "Document Editor", description: "Edit documents", icon: "FileText" },
+      { name: "Proofreader", description: "Proofread documents", icon: "CheckSquare" },
+      { name: "Feedback Request", description: "Request feedback on writing", icon: "HelpCircle" }
     ]
   }
 };

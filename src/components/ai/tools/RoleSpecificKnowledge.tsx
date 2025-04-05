@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -109,7 +110,7 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
       case "student": return "Student";
       case "work":
       case "employee": return "Work";
-      case "writer": return "Creator";
+      case "writer": return "Work"; // Map writer to Work
       case "business_owner": return "Business";
       default: return "General";
     }
@@ -120,7 +121,7 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
       case "student": return <BookOpen className="h-4 w-4" />;
       case "work":
       case "employee": return <Users className="h-4 w-4" />;
-      case "writer": return <Edit className="h-4 w-4" />;
+      case "writer": return <Users className="h-4 w-4" />; // Map writer to Users icon
       case "business_owner": return <Briefcase className="h-4 w-4" />;
       default: return <Bot className="h-4 w-4" />;
     }
