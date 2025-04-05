@@ -84,6 +84,8 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
     setIsUploading(true);
     try {
       await onCameraCapture();
+    } catch (error) {
+      console.error("Error capturing from camera:", error);
     } finally {
       setIsUploading(false);
     }
@@ -97,7 +99,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
     >
       <div className="flex gap-2">
         {/* Speech-to-Text toggle */}
-        {recognitionSupported && (
+        {recognitionSupported && onStartListening && onStopListening && (
           <Button
             type="button"
             variant="ghost"
@@ -108,7 +110,6 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
             )}
             onClick={handleMicrophoneToggle}
             title={isListening ? "Stop Listening" : "Start Listening"}
-            disabled={!canAccess}
           >
             {isListening ? (
               <MicOff className="h-5 w-5" />
@@ -133,7 +134,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
               variant="ghost"
               size="icon"
               onClick={handleFileUploadClick}
-              disabled={isLoading || isUploading || !canAccess}
+              disabled={isLoading || isUploading}
               title="Upload File"
             >
               <Upload className="h-5 w-5" />
@@ -148,7 +149,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
             variant="ghost"
             size="icon"
             onClick={handleCameraCaptureClick}
-            disabled={isLoading || isUploading || !canAccess}
+            disabled={isLoading || isUploading}
             title="Capture from Camera"
           >
             <Camera className="h-5 w-5" />

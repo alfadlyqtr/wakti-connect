@@ -18,16 +18,11 @@ export const useUpdateAISettings = (user: User | null) => {
       console.log("Updating AI settings:", newSettings);
       
       // Ensure the role is a valid database enum value
-      // Convert client roles to database roles
+      // If it's not one of the allowed values, default to "general"
       let roleValue = newSettings.role;
       
-      // Convert "work" to "employee" for database storage
-      if (roleValue === "work") {
-        roleValue = "employee";
-      }
-      
       // Make sure the role is one of the database-allowed values
-      if (!["student", "business_owner", "general", "writer", "employee"].includes(roleValue)) {
+      if (!["student", "business_owner", "general", "employee", "writer"].includes(roleValue)) {
         console.warn(`Role '${roleValue}' is not valid for the database, defaulting to 'general'`);
         roleValue = "general";
       }
@@ -40,7 +35,7 @@ export const useUpdateAISettings = (user: User | null) => {
         response_length: newSettings.response_length,
         proactiveness: newSettings.proactiveness,
         suggestion_frequency: newSettings.suggestion_frequency,
-        role: roleValue as "student" | "business_owner" | "general" | "writer" | "employee", // Use the validated role value
+        role: roleValue, // Use the validated role value
         enabled_features: newSettings.enabled_features,
       };
       
@@ -57,12 +52,6 @@ export const useUpdateAISettings = (user: User | null) => {
         
         console.log("Settings updated successfully");
         
-        // Convert database role back to client role if needed
-        let clientRole = data.role as AIAssistantRole;
-        if (clientRole === "employee") {
-          clientRole = "work";
-        }
-        
         // Convert to AISettings type and add knowledge_profile from the original newSettings
         const updatedSettings: AISettings = {
           id: data.id,
@@ -72,7 +61,7 @@ export const useUpdateAISettings = (user: User | null) => {
           response_length: data.response_length || "balanced",
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
           suggestion_frequency: data.suggestion_frequency || "medium",
-          role: clientRole,
+          role: data.role as AIAssistantRole || "general",
           enabled_features: data.enabled_features as Record<string, boolean> || {
             tasks: true,
             events: true,
@@ -80,7 +69,7 @@ export const useUpdateAISettings = (user: User | null) => {
             analytics: true,
             messaging: true,
           },
-          knowledge_profile: newSettings.knowledge_profile || { role: clientRole }
+          knowledge_profile: newSettings.knowledge_profile || { role: data.role }
         };
         
         return updatedSettings;
@@ -96,12 +85,6 @@ export const useUpdateAISettings = (user: User | null) => {
         
         console.log("Settings created successfully");
         
-        // Convert database role back to client role if needed
-        let clientRole = data.role as AIAssistantRole;
-        if (clientRole === "employee") {
-          clientRole = "work";
-        }
-        
         // Convert to AISettings type
         const createdSettings: AISettings = {
           id: data.id,
@@ -111,7 +94,7 @@ export const useUpdateAISettings = (user: User | null) => {
           response_length: data.response_length || "balanced",
           proactiveness: data.proactiveness !== null ? data.proactiveness : true,
           suggestion_frequency: data.suggestion_frequency || "medium",
-          role: clientRole,
+          role: data.role as AIAssistantRole || "general",
           enabled_features: data.enabled_features as Record<string, boolean> || {
             tasks: true,
             events: true,
@@ -119,7 +102,7 @@ export const useUpdateAISettings = (user: User | null) => {
             analytics: true,
             messaging: true,
           },
-          knowledge_profile: newSettings.knowledge_profile || { role: clientRole }
+          knowledge_profile: newSettings.knowledge_profile || { role: data.role }
         };
         
         return createdSettings;

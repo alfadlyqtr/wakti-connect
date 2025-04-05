@@ -5,8 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { 
   Calendar, CheckSquare, User, BarChart2, CircleDollarSign, 
-  BriefcaseBusiness, Brain, Clock, MessageSquare, 
-  Users, Briefcase, FileText, Receipt
+  BriefcaseBusiness, Brain, Clock, MessageSquare
 } from 'lucide-react';
 import { SystemCommands, AIAssistantRole } from '@/types/ai-assistant.types';
 
@@ -19,8 +18,8 @@ export const AISystemIntegrationPanel: React.FC<AISystemIntegrationPanelProps> =
   selectedRole,
   onExampleClick
 }) => {
-  // Get business-specific commands
-  const getBusinessCommands = () => {
+  // Filter commands based on user role to show most relevant ones first
+  const getFilteredCommands = () => {
     const relevantCommands = { ...SystemCommands };
     
     // Filter out system-only commands
@@ -30,351 +29,222 @@ export const AISystemIntegrationPanel: React.FC<AISystemIntegrationPanelProps> =
       }
     });
     
-    return relevantCommands;
+    // Sort commands based on role relevance
+    let commandKeys = Object.keys(relevantCommands);
+    
+    if (selectedRole === 'business_owner') {
+      // Prioritize business-related commands
+      commandKeys = [
+        'manage_staff',
+        'view_analytics',
+        'view_bookings',
+        'check_business',
+        ...commandKeys.filter(k => !['manage_staff', 'view_analytics', 'view_bookings', 'check_business'].includes(k))
+      ];
+    } else if (selectedRole === 'student') {
+      // Prioritize task and scheduling commands
+      commandKeys = [
+        'create_task',
+        'view_tasks',
+        'schedule_event',
+        'check_calendar',
+        ...commandKeys.filter(k => !['create_task', 'view_tasks', 'schedule_event', 'check_calendar'].includes(k))
+      ];
+    }
+    
+    // Create sorted object
+    const sortedCommands: typeof relevantCommands = {};
+    commandKeys.forEach(key => {
+      sortedCommands[key] = relevantCommands[key];
+    });
+    
+    return sortedCommands;
   };
   
-  const businessCommands = getBusinessCommands();
+  const filteredCommands = getFilteredCommands();
   
   return (
-    <Card className="border-wakti-blue/10">
+    <Card className="mt-6 border-wakti-blue/10">
       <CardHeader className="pb-3">
-        <CardTitle className="text-xl flex items-center gap-2">
-          <Brain className="h-6 w-6 text-wakti-blue" />
-          WAKTI Business Integration
+        <CardTitle className="text-md flex items-center gap-2">
+          <Brain className="h-5 w-5 text-wakti-blue" />
+          WAKTI System Integration
         </CardTitle>
-        <CardDescription className="text-base">
-          Your AI assistant can interact with WAKTI systems to help manage your business
+        <CardDescription>
+          I can interact with WAKTI's systems to help you with:
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="business" className="w-full">
-          <TabsList className="grid grid-cols-4 mb-6">
-            <TabsTrigger value="business" className="flex items-center gap-1">
-              <Briefcase className="h-4 w-4" />
-              <span>Business</span>
-            </TabsTrigger>
-            <TabsTrigger value="staff" className="flex items-center gap-1">
-              <Users className="h-4 w-4" />
-              <span>Staff</span>
-            </TabsTrigger>
+        <Tabs defaultValue="tasks" className="w-full">
+          <TabsList className="grid grid-cols-4 mb-4">
             <TabsTrigger value="tasks" className="flex items-center gap-1">
-              <CheckSquare className="h-4 w-4" />
-              <span>Tasks</span>
+              <CheckSquare className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Tasks</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-1">
-              <BarChart2 className="h-4 w-4" />
-              <span>Analytics</span>
+            <TabsTrigger value="calendar" className="flex items-center gap-1">
+              <Calendar className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Events</span>
+            </TabsTrigger>
+            <TabsTrigger value="business" className="flex items-center gap-1">
+              <BriefcaseBusiness className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Business</span>
+            </TabsTrigger>
+            <TabsTrigger value="more" className="flex items-center gap-1">
+              <BarChart2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">More</span>
             </TabsTrigger>
           </TabsList>
           
-          {/* Business Tab */}
-          <TabsContent value="business" className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium mb-4">Business Operations</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="border-dashed">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center">
-                      <BriefcaseBusiness className="h-5 w-5 mr-2 text-wakti-blue" />
-                      Business Profile
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <p className="text-sm text-muted-foreground">Manage your business information and settings</p>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="justify-start h-auto py-2"
-                          onClick={() => onExampleClick("Check my business information")}
-                        >
-                          <BriefcaseBusiness className="h-4 w-4 mr-2 text-wakti-blue" />
-                          <span className="text-sm">Check my business information</span>
-                        </Button>
-                        
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="justify-start h-auto py-2"
-                          onClick={() => onExampleClick("Update my business hours")}
-                        >
-                          <Clock className="h-4 w-4 mr-2 text-wakti-blue" />
-                          <span className="text-sm">Update my business hours</span>
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+          <TabsContent value="tasks" className="mt-0">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground mb-3">
+                I can help manage your tasks and to-dos:
+              </p>
+              
+              <div className="grid grid-cols-1 gap-2">
+                {filteredCommands.create_task?.examples.slice(0, 1).map((example, i) => (
+                  <Button 
+                    key={i} 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start h-auto py-2 px-3"
+                    onClick={() => onExampleClick(example)}
+                  >
+                    <CheckSquare className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
+                    <span className="text-sm">{example}</span>
+                  </Button>
+                ))}
                 
-                <Card className="border-dashed">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center">
-                      <Calendar className="h-5 w-5 mr-2 text-wakti-blue" />
-                      Bookings & Services
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <p className="text-sm text-muted-foreground">Manage your services and booking options</p>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="justify-start h-auto py-2"
-                          onClick={() => onExampleClick(businessCommands.view_bookings?.examples[0] || "Show my bookings")}
-                        >
-                          <Calendar className="h-4 w-4 mr-2 text-wakti-blue" />
-                          <span className="text-sm">View upcoming bookings</span>
-                        </Button>
-                        
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="justify-start h-auto py-2"
-                          onClick={() => onExampleClick("Check my available services")}
-                        >
-                          <CircleDollarSign className="h-4 w-4 mr-2 text-wakti-blue" />
-                          <span className="text-sm">Check my available services</span>
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                {filteredCommands.view_tasks?.examples.slice(0, 1).map((example, i) => (
+                  <Button 
+                    key={i} 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start h-auto py-2 px-3"
+                    onClick={() => onExampleClick(example)}
+                  >
+                    <Clock className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
+                    <span className="text-sm">{example}</span>
+                  </Button>
+                ))}
               </div>
             </div>
           </TabsContent>
           
-          {/* Staff Tab */}
-          <TabsContent value="staff" className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium mb-4">Staff Management</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="border-dashed">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center">
-                      <Users className="h-5 w-5 mr-2 text-wakti-blue" />
-                      Staff Overview
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <p className="text-sm text-muted-foreground">Monitor and manage your staff</p>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="justify-start h-auto py-2"
-                          onClick={() => onExampleClick(businessCommands.manage_staff?.examples[0] || "Show my staff status")}
-                        >
-                          <User className="h-4 w-4 mr-2 text-wakti-blue" />
-                          <span className="text-sm">Show staff status</span>
-                        </Button>
-                        
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="justify-start h-auto py-2"
-                          onClick={() => onExampleClick("Assign tasks to staff")}
-                        >
-                          <CheckSquare className="h-4 w-4 mr-2 text-wakti-blue" />
-                          <span className="text-sm">Assign tasks to staff</span>
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+          <TabsContent value="calendar" className="mt-0">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground mb-3">
+                I can help manage your events and schedule:
+              </p>
+              
+              <div className="grid grid-cols-1 gap-2">
+                {filteredCommands.schedule_event?.examples.slice(0, 1).map((example, i) => (
+                  <Button 
+                    key={i} 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start h-auto py-2 px-3"
+                    onClick={() => onExampleClick(example)}
+                  >
+                    <Calendar className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
+                    <span className="text-sm">{example}</span>
+                  </Button>
+                ))}
                 
-                <Card className="border-dashed">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center">
-                      <Receipt className="h-5 w-5 mr-2 text-wakti-blue" />
-                      Staff Reports
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <p className="text-sm text-muted-foreground">Review staff performance and reports</p>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="justify-start h-auto py-2"
-                          onClick={() => onExampleClick("Check staff working hours")}
-                        >
-                          <Clock className="h-4 w-4 mr-2 text-wakti-blue" />
-                          <span className="text-sm">Check staff working hours</span>
-                        </Button>
-                        
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="justify-start h-auto py-2"
-                          onClick={() => onExampleClick("Get staff earnings report")}
-                        >
-                          <CircleDollarSign className="h-4 w-4 mr-2 text-wakti-blue" />
-                          <span className="text-sm">Get staff earnings report</span>
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                {filteredCommands.check_calendar?.examples.slice(0, 1).map((example, i) => (
+                  <Button 
+                    key={i} 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start h-auto py-2 px-3"
+                    onClick={() => onExampleClick(example)}
+                  >
+                    <Clock className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
+                    <span className="text-sm">{example}</span>
+                  </Button>
+                ))}
               </div>
             </div>
           </TabsContent>
           
-          {/* Tasks Tab */}
-          <TabsContent value="tasks" className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium mb-4">Task Management</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="border-dashed">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center">
-                      <CheckSquare className="h-5 w-5 mr-2 text-wakti-blue" />
-                      Business Tasks
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <p className="text-sm text-muted-foreground">Manage business-related tasks</p>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="justify-start h-auto py-2"
-                          onClick={() => onExampleClick(businessCommands.create_task?.examples[0] || "Create a task")}
-                        >
-                          <CheckSquare className="h-4 w-4 mr-2 text-wakti-blue" />
-                          <span className="text-sm">Create a business task</span>
-                        </Button>
-                        
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="justify-start h-auto py-2"
-                          onClick={() => onExampleClick(businessCommands.view_tasks?.examples[0] || "View my tasks")}
-                        >
-                          <FileText className="h-4 w-4 mr-2 text-wakti-blue" />
-                          <span className="text-sm">View my tasks</span>
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+          <TabsContent value="business" className="mt-0">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground mb-3">
+                I can help with business management:
+              </p>
+              
+              <div className="grid grid-cols-1 gap-2">
+                {filteredCommands.manage_staff?.examples.slice(0, 1).map((example, i) => (
+                  <Button 
+                    key={i} 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start h-auto py-2 px-3"
+                    onClick={() => onExampleClick(example)}
+                  >
+                    <User className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
+                    <span className="text-sm">{example}</span>
+                  </Button>
+                ))}
                 
-                <Card className="border-dashed">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center">
-                      <Calendar className="h-5 w-5 mr-2 text-wakti-blue" />
-                      Schedules & Deadlines
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <p className="text-sm text-muted-foreground">Manage business schedules and deadlines</p>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="justify-start h-auto py-2"
-                          onClick={() => onExampleClick(businessCommands.schedule_event?.examples[0] || "Schedule a meeting")}
-                        >
-                          <Calendar className="h-4 w-4 mr-2 text-wakti-blue" />
-                          <span className="text-sm">Schedule a business meeting</span>
-                        </Button>
-                        
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="justify-start h-auto py-2"
-                          onClick={() => onExampleClick(businessCommands.check_calendar?.examples[0] || "Check my calendar")}
-                        >
-                          <Clock className="h-4 w-4 mr-2 text-wakti-blue" />
-                          <span className="text-sm">Check my business calendar</span>
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                {filteredCommands.view_analytics?.examples.slice(0, 1).map((example, i) => (
+                  <Button 
+                    key={i} 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start h-auto py-2 px-3"
+                    onClick={() => onExampleClick(example)}
+                  >
+                    <BarChart2 className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
+                    <span className="text-sm">{example}</span>
+                  </Button>
+                ))}
               </div>
             </div>
           </TabsContent>
           
-          {/* Analytics Tab */}
-          <TabsContent value="analytics" className="space-y-6">
-            <div>
-              <h3 className="text-lg font-medium mb-4">Business Insights</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="border-dashed">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center">
-                      <BarChart2 className="h-5 w-5 mr-2 text-wakti-blue" />
-                      Performance Analytics
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <p className="text-sm text-muted-foreground">View business performance data</p>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="justify-start h-auto py-2"
-                          onClick={() => onExampleClick(businessCommands.view_analytics?.examples[0] || "Show my analytics")}
-                        >
-                          <BarChart2 className="h-4 w-4 mr-2 text-wakti-blue" />
-                          <span className="text-sm">Show business analytics</span>
-                        </Button>
-                        
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="justify-start h-auto py-2"
-                          onClick={() => onExampleClick(businessCommands.get_business_overview?.examples[0] || "Business overview")}
-                        >
-                          <BriefcaseBusiness className="h-4 w-4 mr-2 text-wakti-blue" />
-                          <span className="text-sm">Get business overview</span>
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+          <TabsContent value="more" className="mt-0">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground mb-3">
+                Additional capabilities:
+              </p>
+              
+              <div className="grid grid-cols-1 gap-2">
+                {filteredCommands.search_contacts?.examples.slice(0, 1).map((example, i) => (
+                  <Button 
+                    key={i} 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start h-auto py-2 px-3"
+                    onClick={() => onExampleClick(example)}
+                  >
+                    <User className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
+                    <span className="text-sm">{example}</span>
+                  </Button>
+                ))}
                 
-                <Card className="border-dashed">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center">
-                      <Users className="h-5 w-5 mr-2 text-wakti-blue" />
-                      Customer Insights
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <p className="text-sm text-muted-foreground">Review customer data and interactions</p>
-                      <div className="grid grid-cols-1 gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="justify-start h-auto py-2"
-                          onClick={() => onExampleClick("Show my subscriber statistics")}
-                        >
-                          <Users className="h-4 w-4 mr-2 text-wakti-blue" />
-                          <span className="text-sm">Show subscriber statistics</span>
-                        </Button>
-                        
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="justify-start h-auto py-2"
-                          onClick={() => onExampleClick("Analyze customer feedback")}
-                        >
-                          <MessageSquare className="h-4 w-4 mr-2 text-wakti-blue" />
-                          <span className="text-sm">Analyze customer feedback</span>
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                {filteredCommands.view_bookings?.examples.slice(0, 1).map((example, i) => (
+                  <Button 
+                    key={i} 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start h-auto py-2 px-3"
+                    onClick={() => onExampleClick(example)}
+                  >
+                    <CircleDollarSign className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
+                    <span className="text-sm">{example}</span>
+                  </Button>
+                ))}
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="justify-start h-auto py-2 px-3"
+                  onClick={() => onExampleClick("Help me with my productivity")}
+                >
+                  <MessageSquare className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
+                  <span className="text-sm">Help me with my productivity</span>
+                </Button>
               </div>
             </div>
           </TabsContent>

@@ -49,9 +49,8 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
   const getRoleColor = () => {
     switch (selectedRole) {
       case "student": return "from-blue-600 to-blue-500";
-      case "work": return "from-purple-600 to-purple-500";
-      case "employee": return "from-purple-600 to-purple-500"; // Map employee to work colors
-      case "writer": return "from-purple-600 to-purple-500"; // Map writer to work colors
+      case "employee": return "from-purple-600 to-purple-500";
+      case "writer": return "from-green-600 to-green-500";
       case "business_owner": return "from-amber-600 to-amber-500";
       default: return "from-wakti-blue to-wakti-blue/90";
     }

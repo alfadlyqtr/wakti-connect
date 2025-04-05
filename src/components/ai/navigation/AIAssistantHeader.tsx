@@ -50,9 +50,8 @@ export const AIAssistantHeader: React.FC<AIAssistantHeaderProps> = ({
   const getRoleIcon = (role: AIAssistantRole) => {
     switch (role) {
       case "student": return <BookOpen className="h-4 w-4" />;
-      case "work": return <Users className="h-4 w-4" />;
-      case "employee": return <Users className="h-4 w-4" />; // Map employee to work icon
-      case "writer": return <Users className="h-4 w-4" />; // Map writer to work icon
+      case "employee": return <Users className="h-4 w-4" />;
+      case "writer": return <Edit className="h-4 w-4" />;
       case "business_owner": return <Briefcase className="h-4 w-4" />;
       default: return <Bot className="h-4 w-4" />;
     }
@@ -61,9 +60,8 @@ export const AIAssistantHeader: React.FC<AIAssistantHeaderProps> = ({
   const getRoleColor = (role: AIAssistantRole) => {
     switch (role) {
       case "student": return "from-blue-600 to-blue-500";
-      case "work": return "from-purple-600 to-purple-500";
-      case "employee": return "from-purple-600 to-purple-500"; // Map employee to work colors
-      case "writer": return "from-purple-600 to-purple-500"; // Map writer to work colors
+      case "employee": return "from-purple-600 to-purple-500";
+      case "writer": return "from-green-600 to-green-500";
       case "business_owner": return "from-amber-600 to-amber-500";
       default: return "from-wakti-blue to-wakti-blue/90";
     }
@@ -72,9 +70,8 @@ export const AIAssistantHeader: React.FC<AIAssistantHeaderProps> = ({
   const getRoleName = (role: AIAssistantRole) => {
     switch (role) {
       case "student": return "Student Assistant";
-      case "work": return "Work Assistant";
-      case "employee": return "Work Assistant"; // Map employee to Work Assistant
-      case "writer": return "Work Assistant"; // Map writer to Work Assistant
+      case "employee": return "Work Assistant";
+      case "writer": return "Creator Assistant";
       case "business_owner": return "Business Assistant";
       default: return "General Assistant";
     }

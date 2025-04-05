@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
   const { settings, updateSettings } = useAISettings();
   const [isUpdating, setIsUpdating] = useState(false);
   
+  // Form state for different role-specific fields
   const [studentProfile, setStudentProfile] = useState({
     grade: settings?.knowledge_profile?.grade || "",
     schoolType: settings?.knowledge_profile?.schoolType || "high-school",
@@ -49,9 +51,7 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
         case "business_owner":
           knowledgeProfile = businessProfile;
           break;
-        case "work":
         case "employee":
-        case "writer":
           knowledgeProfile = employeeProfile;
           break;
         default:
@@ -87,9 +87,8 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
     switch (selectedRole) {
       case "student": return <GraduationCap className="h-5 w-5 text-blue-500" />;
       case "business_owner": return <Building2 className="h-5 w-5 text-amber-500" />;
-      case "work":
-      case "employee":
-      case "writer": return <Briefcase className="h-5 w-5 text-purple-500" />;
+      case "employee": return <Briefcase className="h-5 w-5 text-purple-500" />;
+      case "writer": return <Book className="h-5 w-5 text-green-500" />;
       default: return <User className="h-5 w-5 text-gray-500" />;
     }
   };
@@ -193,9 +192,7 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
           </div>
         );
         
-      case "work":
       case "employee":
-      case "writer":
         return (
           <div className="space-y-4">
             <div>
@@ -264,7 +261,7 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
       <CardContent>
         {renderProfileForm()}
       </CardContent>
-      {(selectedRole === "student" || selectedRole === "business_owner" || selectedRole === "work" || selectedRole === "employee") && (
+      {(selectedRole === "student" || selectedRole === "business_owner" || selectedRole === "employee") && (
         <CardFooter className="flex justify-end pt-0">
           <Button 
             onClick={handleSaveProfile} 

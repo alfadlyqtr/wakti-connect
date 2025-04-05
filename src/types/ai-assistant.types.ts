@@ -1,5 +1,5 @@
 // AI Assistant role types - must match what's in the database
-export type AIAssistantRole = "student" | "business_owner" | "general" | "work" | "employee" | "writer";
+export type AIAssistantRole = "student" | "business_owner" | "general" | "employee" | "writer";
 
 // AI settings interface
 export interface AISettings {
@@ -112,73 +112,50 @@ export const RoleContexts: Record<AIAssistantRole, {
       { name: "Quick Answer", description: "Get instant information", icon: "HelpCircle" }
     ]
   },
-  "work": {
-    title: "Work Assistant",
-    description: "Help with workplace tasks, team coordination, and creative projects",
-    icon: "users",
-    welcomeMessage: "Hello! I'm your Work Assistant. I can help manage your work assignments, coordinate with your team, track your job cards, and support creative projects. How can I support you today?",
-    commandSuggestions: [
-      "Show me my assigned tasks",
-      "Create a task for the client project",
-      "Help me outline an article"
-    ],
-    suggestedPrompts: [
-      "Track my hours for today",
-      "Create a task for the team meeting notes",
-      "Help me outline a new content piece",
-      "Give me feedback on this paragraph"
-    ],
-    quickTools: [
-      { name: "Time Tracker", description: "Track your work hours", icon: "Clock" },
-      { name: "Task Reporter", description: "Report completed tasks", icon: "ClipboardCheck" },
-      { name: "Meeting Organizer", description: "Organize team meetings", icon: "Users" },
-      { name: "Content Creator", description: "Generate creative content", icon: "Edit" }
-    ]
-  },
   "employee": {
     title: "Work Assistant",
-    description: "Help with workplace tasks, team coordination, and creative projects",
+    description: "Help with workplace tasks and team coordination",
     icon: "users",
-    welcomeMessage: "Hello! I'm your Work Assistant. I can help manage your work assignments, coordinate with your team, track your job cards, and support creative projects. How can I support you today?",
+    welcomeMessage: "Hello! I'm your Work Assistant. I can help manage your work assignments, coordinate with your team, and track your job cards. How can I support your workday?",
     commandSuggestions: [
       "Show me my assigned tasks",
       "Create a task for the client project",
-      "Help me outline an article"
+      "View my work schedule"
     ],
     suggestedPrompts: [
       "Track my hours for today",
       "Create a task for the team meeting notes",
-      "Help me outline a new content piece",
-      "Give me feedback on this paragraph"
+      "Help me log my completed work",
+      "What's on my agenda for today?"
     ],
     quickTools: [
       { name: "Time Tracker", description: "Track your work hours", icon: "Clock" },
       { name: "Task Reporter", description: "Report completed tasks", icon: "ClipboardCheck" },
       { name: "Meeting Organizer", description: "Organize team meetings", icon: "Users" },
-      { name: "Content Creator", description: "Generate creative content", icon: "Edit" }
+      { name: "Work Log", description: "Log your daily work", icon: "FileText" }
     ]
   },
   "writer": {
-    title: "Writer Assistant",
-    description: "Help with writing, editing, and proofreading",
-    icon: "pencil",
-    welcomeMessage: "Hello! I'm your Writer Assistant. I can help you with your writing projects, from brainstorming ideas to polishing your final draft. How can I assist you today?",
+    title: "Creative Assistant",
+    description: "Help with content creation and creative projects",
+    icon: "pen-nib",
+    welcomeMessage: "Hello! I'm your Creative Assistant. I can help organize your writing projects, manage deadlines, and keep track of your creative tasks. What are you working on today?",
     commandSuggestions: [
-      "Create a new writing prompt",
-      "Edit a document",
-      "Proofread my work"
+      "Create a task for my article draft",
+      "Schedule time for editing tomorrow",
+      "Organize my writing deadlines"
     ],
     suggestedPrompts: [
-      "Generate a new writing prompt",
-      "Edit a document",
-      "Proofread my work",
-      "Get feedback on my writing"
+      "Help me outline an article",
+      "Create a writing schedule",
+      "Give me feedback on this paragraph",
+      "Create a task for my book chapter"
     ],
     quickTools: [
-      { name: "Writing Prompt Generator", description: "Generate writing prompts", icon: "Pencil" },
-      { name: "Document Editor", description: "Edit documents", icon: "FileText" },
-      { name: "Proofreader", description: "Proofread documents", icon: "CheckSquare" },
-      { name: "Feedback Request", description: "Request feedback on writing", icon: "HelpCircle" }
+      { name: "Content Generator", description: "Generate writing ideas", icon: "Lightbulb" },
+      { name: "Editor Helper", description: "Get editing assistance", icon: "Edit" },
+      { name: "Writing Scheduler", description: "Plan writing sessions", icon: "Calendar" },
+      { name: "Research Tool", description: "Find relevant information", icon: "Search" }
     ]
   }
 };
