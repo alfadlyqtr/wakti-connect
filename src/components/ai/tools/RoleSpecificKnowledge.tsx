@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Graduation, Briefcase, Pen, Bot, Info, Star, Clock } from "lucide-react";
+import { BookOpen, GraduationCap, Briefcase, Pen, Bot, Info, Star, Clock } from "lucide-react";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
 import { Badge } from "@/components/ui/badge";
 
@@ -69,7 +69,7 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
 
   const getRoleIcon = () => {
     switch (selectedRole) {
-      case "student": return <Graduation className="h-5 w-5 text-blue-500" />;
+      case "student": return <GraduationCap className="h-5 w-5 text-blue-500" />;
       case "business_owner": return <Briefcase className="h-5 w-5 text-amber-500" />;
       case "employee": return <Clock className="h-5 w-5 text-purple-500" />;
       case "writer": return <Pen className="h-5 w-5 text-green-500" />;
