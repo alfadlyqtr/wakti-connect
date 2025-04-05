@@ -7,12 +7,14 @@ interface AIAssistantMouthAnimationProps {
   isActive: boolean;
   size?: 'small' | 'medium' | 'large';
   mood?: 'neutral' | 'happy' | 'thinking';
+  isSpeaking?: boolean; // Added this prop to fix the type error
 }
 
 export function AIAssistantMouthAnimation({
   isActive,
   size = 'small',
-  mood = 'neutral'
+  mood = 'neutral',
+  isSpeaking = false // Default to false
 }: AIAssistantMouthAnimationProps) {
   // Size mapping
   const sizeClasses = {
