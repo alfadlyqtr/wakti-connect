@@ -48,7 +48,7 @@ export function LanguageSwitcher() {
     }
   }, [i18n]);
 
-  // Directly display both language options as buttons
+  // Directly display both language options as buttons with flags
   if (i18n.language === 'ar') {
     return (
       <Button variant="outline" size="sm" className="px-3" onClick={() => changeLanguage('en')}>

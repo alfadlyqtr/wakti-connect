@@ -6,9 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// This is a secure Maps API key that should be set in Supabase environment
-// For now, we're using a placeholder key but in production, this should be changed
-const FALLBACK_MAPS_KEY = 'AIzaSyBIwzALxUPNbatRBj3X1HyELQG7xToQ3vA';
+// Using a more reliable Maps API key - same as in the client config
+const MAPS_API_KEY = 'AIzaSyD5QBJ4O3ovpZ9UI6ZekiZ7H4h9gN_lDg0';
 
 serve(async (req) => {
   // Handle CORS preflight request
@@ -25,7 +24,7 @@ serve(async (req) => {
       console.log('GOOGLE_MAPS_API_KEY not found in environment variables, using fallback key');
       return new Response(
         JSON.stringify({ 
-          apiKey: FALLBACK_MAPS_KEY, 
+          apiKey: MAPS_API_KEY, 
           source: 'fallback'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -45,7 +44,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message, 
-        apiKey: FALLBACK_MAPS_KEY, 
+        apiKey: MAPS_API_KEY, 
         source: 'error-fallback'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

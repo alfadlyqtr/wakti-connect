@@ -6,9 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
  * Provides Google Maps API key and utility functions
  */
 
-// Export a constant API key for immediate use
-// Note: In production, this should be replaced with a key from environment variables
-export const GOOGLE_MAPS_API_KEY = 'AIzaSyBIwzALxUPNbatRBj3X1HyELQG7xToQ3vA';
+// Use a more reliable API key 
+export const GOOGLE_MAPS_API_KEY = 'AIzaSyD5QBJ4O3ovpZ9UI6ZekiZ7H4h9gN_lDg0';
 
 /**
  * Fetches the Google Maps API key from the Supabase Edge Function

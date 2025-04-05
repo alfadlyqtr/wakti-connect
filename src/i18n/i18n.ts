@@ -30,6 +30,7 @@ i18n
     },
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
+      lookupLocalStorage: 'wakti-language',
       caches: ['localStorage'],
     }
   });
@@ -46,6 +47,13 @@ const setDocumentDirection = (language: string) => {
     document.body.classList.remove('font-arabic');
   }
 };
+
+// Check for saved language preference
+const savedLanguage = localStorage.getItem('wakti-language');
+if (savedLanguage) {
+  i18n.changeLanguage(savedLanguage);
+  setDocumentDirection(savedLanguage);
+}
 
 // Set the initial direction based on the detected language
 setDocumentDirection(i18n.language);
