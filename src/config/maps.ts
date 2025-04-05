@@ -57,11 +57,5 @@ export const generateGoogleMapsUrl = (location: string): string => {
   return `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
 };
 
-// Export all functions to ensure they are available
-export {
-  generateMapEmbedUrl,
-  generateGoogleMapsUrl,
-};
-
 // For backward compatibility - export the placeholder key as default
 export default GOOGLE_MAPS_API_KEY;
