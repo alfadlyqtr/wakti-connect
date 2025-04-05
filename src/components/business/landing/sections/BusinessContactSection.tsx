@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { generateMapEmbedUrl, GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from "@/config/maps";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,10 +55,8 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
     layout = "sideBySide", // sideBySide, formTop, formBottom
   } = content;
   
-  // Generate embed URL for Google Maps using the address
   let mapEmbedUrl = address ? generateMapEmbedUrl(address) : mapUrl;
   
-  // If we have coordinates, use those instead for more accuracy
   if (coordinates) {
     try {
       const coords = JSON.parse(coordinates);
@@ -82,7 +79,6 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check required fields: name and phone
     if (!formData.name || !formData.phone) {
       toast({
         title: "Error",
@@ -95,7 +91,6 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Save to database
       await submitContactMutation.mutateAsync({
         businessId,
         pageId,
@@ -107,20 +102,14 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
         }
       });
       
-      // Send message to business inbox
       try {
-        // Prepare message content that includes contact details
         const messageContent = `Contact from: ${formData.name} (${formData.phone})`;
-        
         await sendMessage(businessId, messageContent);
       } catch (error) {
         console.log("Error sending message to business inbox:", error);
-        // We continue even if sending the message fails
       }
       
-      // Show success message
       setShowSuccessMessage(true);
-      // Reset form
       setFormData({
         name: "",
         email: "",
@@ -128,7 +117,6 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
         message: ""
       });
       
-      // Hide success message after 5 seconds
       setTimeout(() => {
         setShowSuccessMessage(false);
       }, 5000);
@@ -145,7 +133,6 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
     }
   };
   
-  // Generate the Google Maps directions URL
   const getDirectionsUrl = () => {
     if (coordinates) {
       try {
@@ -158,11 +145,9 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
       }
     }
     
-    // Fallback to address
     return generateGoogleMapsUrl(address);
   };
 
-  // Define section layout based on user selection
   const renderSectionContent = () => {
     const contactInfo = (
       <div className="space-y-6">
@@ -340,7 +325,6 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
       </div>
     );
     
-    // Determine layout
     if (layout === "formTop") {
       return (
         <div className="space-y-8">
@@ -356,7 +340,6 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
         </div>
       );
     } else {
-      // Default: side by side
       return (
         <div className="flex flex-col md:flex-row gap-8">
           <div className="md:w-1/2">{contactInfo}</div>

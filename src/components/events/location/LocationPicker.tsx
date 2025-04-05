@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, MapPin } from 'lucide-react';
-import { GOOGLE_MAPS_API_KEY } from '@/config/maps';
+import { GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from '@/config/maps';
 
 // Add TypeScript types for Google Maps
 declare global {
@@ -130,7 +130,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             variant="outline" 
             size="icon"
             className="ml-2"
-            onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(inputValue)}`, '_blank')}
+            onClick={() => window.open(generateGoogleMapsUrl(inputValue), '_blank')}
           >
             <MapPin className="h-4 w-4" />
           </Button>
