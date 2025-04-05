@@ -1,379 +1,277 @@
+
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { AIAssistantRole } from "@/types/ai-assistant.types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookOpen, Briefcase, GraduationCap, Building2 } from "lucide-react";
+import { Book, GraduationCap, Building2, Briefcase, User } from "lucide-react";
+import { AIAssistantRole } from "@/types/ai-assistant.types";
+import { useAISettings } from "@/components/settings/ai/context/AISettingsContext";
+import { toast } from "@/components/ui/use-toast";
 
 interface KnowledgeProfileToolCardProps {
   selectedRole: AIAssistantRole;
 }
 
 export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> = ({ selectedRole }) => {
-  const [formData, setFormData] = useState<Record<string, string>>({});
-
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const { settings, updateSettings } = useAISettings();
+  const [isUpdating, setIsUpdating] = useState(false);
   
-  const getFormFields = () => {
-    switch (selectedRole) {
-      case 'student':
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="education_level">Education Level</Label>
-                <Select 
-                  onValueChange={(value) => handleChange('education_level', value)}
-                  value={formData.education_level || ''}
-                >
-                  <SelectTrigger id="education_level">
-                    <SelectValue placeholder="Select level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="primary">Primary School</SelectItem>
-                    <SelectItem value="middle">Middle School</SelectItem>
-                    <SelectItem value="high">High School</SelectItem>
-                    <SelectItem value="undergraduate">Undergraduate</SelectItem>
-                    <SelectItem value="graduate">Graduate School</SelectItem>
-                    <SelectItem value="phd">PhD</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="grade">Grade/Year</Label>
-                <Input 
-                  id="grade" 
-                  placeholder="e.g. 10th Grade, 2nd Year"
-                  onChange={(e) => handleChange('grade', e.target.value)}
-                  value={formData.grade || ''}
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="subjects">Main Subjects/Focus Areas</Label>
-              <Input 
-                id="subjects" 
-                placeholder="Math, Science, Literature, etc."
-                onChange={(e) => handleChange('subjects', e.target.value)}
-                value={formData.subjects || ''}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="learning_style">Learning Style</Label>
-              <Select 
-                onValueChange={(value) => handleChange('learning_style', value)}
-                value={formData.learning_style || ''}
-              >
-                <SelectTrigger id="learning_style">
-                  <SelectValue placeholder="How do you learn best?" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="visual">Visual Learner</SelectItem>
-                  <SelectItem value="auditory">Auditory Learner</SelectItem>
-                  <SelectItem value="reading">Reading/Writing</SelectItem>
-                  <SelectItem value="kinesthetic">Kinesthetic (Hands-on)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="academic_goals">Academic Goals</Label>
-              <Textarea 
-                id="academic_goals" 
-                placeholder="What are your current academic goals?"
-                onChange={(e) => handleChange('academic_goals', e.target.value)}
-                value={formData.academic_goals || ''}
-              />
-            </div>
-          </div>
-        );
-        
-      case 'business_owner':
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="business_type">Business Type</Label>
-                <Select 
-                  onValueChange={(value) => handleChange('business_type', value)}
-                  value={formData.business_type || ''}
-                >
-                  <SelectTrigger id="business_type">
-                    <SelectValue placeholder="Select business type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="retail">Retail</SelectItem>
-                    <SelectItem value="service">Service</SelectItem>
-                    <SelectItem value="hospitality">Hospitality</SelectItem>
-                    <SelectItem value="health">Healthcare</SelectItem>
-                    <SelectItem value="tech">Technology</SelectItem>
-                    <SelectItem value="education">Education</SelectItem>
-                    <SelectItem value="manufacturing">Manufacturing</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="team_size">Team Size</Label>
-                <Select 
-                  onValueChange={(value) => handleChange('team_size', value)}
-                  value={formData.team_size || ''}
-                >
-                  <SelectTrigger id="team_size">
-                    <SelectValue placeholder="Select size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="solo">Just Me</SelectItem>
-                    <SelectItem value="small">2-5 people</SelectItem>
-                    <SelectItem value="medium">6-20 people</SelectItem>
-                    <SelectItem value="large">21-100 people</SelectItem>
-                    <SelectItem value="enterprise">100+ people</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="industry">Industry</Label>
-              <Input 
-                id="industry" 
-                placeholder="E.g. Automotive, Food Service, Tech"
-                onChange={(e) => handleChange('industry', e.target.value)}
-                value={formData.industry || ''}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="business_goals">Business Goals</Label>
-              <Textarea 
-                id="business_goals" 
-                placeholder="What are your current business priorities?"
-                onChange={(e) => handleChange('business_goals', e.target.value)}
-                value={formData.business_goals || ''}
-              />
-            </div>
-          </div>
-        );
-        
-      case 'employee':
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="job_title">Job Title</Label>
-                <Input 
-                  id="job_title" 
-                  placeholder="E.g. Software Engineer, Project Manager"
-                  onChange={(e) => handleChange('job_title', e.target.value)}
-                  value={formData.job_title || ''}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="department">Department</Label>
-                <Input 
-                  id="department" 
-                  placeholder="E.g. Engineering, HR, Marketing"
-                  onChange={(e) => handleChange('department', e.target.value)}
-                  value={formData.department || ''}
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="industry">Industry</Label>
-              <Input 
-                id="industry" 
-                placeholder="E.g. Healthcare, Financial Services"
-                onChange={(e) => handleChange('industry', e.target.value)}
-                value={formData.industry || ''}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="primary_responsibilities">Primary Responsibilities</Label>
-              <Textarea 
-                id="primary_responsibilities" 
-                placeholder="What are your main job responsibilities?"
-                onChange={(e) => handleChange('primary_responsibilities', e.target.value)}
-                value={formData.primary_responsibilities || ''}
-              />
-            </div>
-          </div>
-        );
-        
-      case 'writer':
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="writer_type">Writer Type</Label>
-                <Select 
-                  onValueChange={(value) => handleChange('writer_type', value)}
-                  value={formData.writer_type || ''}
-                >
-                  <SelectTrigger id="writer_type">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="content">Content Writer</SelectItem>
-                    <SelectItem value="creative">Creative Writer</SelectItem>
-                    <SelectItem value="academic">Academic Writer</SelectItem>
-                    <SelectItem value="journalist">Journalist</SelectItem>
-                    <SelectItem value="technical">Technical Writer</SelectItem>
-                    <SelectItem value="copywriter">Copywriter</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="primary_genre">Primary Genre/Field</Label>
-                <Input 
-                  id="primary_genre" 
-                  placeholder="E.g. Fiction, Technology, Health"
-                  onChange={(e) => handleChange('primary_genre', e.target.value)}
-                  value={formData.primary_genre || ''}
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="writing_style">Writing Style Preferences</Label>
-              <Textarea 
-                id="writing_style" 
-                placeholder="Describe your preferred writing style"
-                onChange={(e) => handleChange('writing_style', e.target.value)}
-                value={formData.writing_style || ''}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="current_projects">Current Projects</Label>
-              <Textarea 
-                id="current_projects" 
-                placeholder="What are you currently working on?"
-                onChange={(e) => handleChange('current_projects', e.target.value)}
-                value={formData.current_projects || ''}
-              />
-            </div>
-          </div>
-        );
-        
-      default: // general
-        return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="interests">Interests & Hobbies</Label>
-              <Input 
-                id="interests" 
-                placeholder="E.g. Cooking, Photography, Travel"
-                onChange={(e) => handleChange('interests', e.target.value)}
-                value={formData.interests || ''}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="profession">Profession/Field</Label>
-              <Input 
-                id="profession" 
-                placeholder="E.g. Teacher, Designer, Engineer"
-                onChange={(e) => handleChange('profession', e.target.value)}
-                value={formData.profession || ''}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="goals">Current Goals</Label>
-              <Textarea 
-                id="goals" 
-                placeholder="What are you currently working towards?"
-                onChange={(e) => handleChange('goals', e.target.value)}
-                value={formData.goals || ''}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="preferences">Communication Preferences</Label>
-              <Select 
-                onValueChange={(value) => handleChange('preferences', value)}
-                value={formData.preferences || ''}
-              >
-                <SelectTrigger id="preferences">
-                  <SelectValue placeholder="How would you like to communicate?" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="brief">Brief & To-the-point</SelectItem>
-                  <SelectItem value="detailed">Detailed Explanations</SelectItem>
-                  <SelectItem value="friendly">Friendly & Conversational</SelectItem>
-                  <SelectItem value="professional">Professional & Formal</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
+  // Form state for different role-specific fields
+  const [studentProfile, setStudentProfile] = useState({
+    grade: settings?.knowledge_profile?.grade || "",
+    schoolType: settings?.knowledge_profile?.schoolType || "high-school",
+    subjects: settings?.knowledge_profile?.subjects || ""
+  });
+  
+  const [businessProfile, setBusinessProfile] = useState({
+    industry: settings?.knowledge_profile?.industry || "",
+    businessType: settings?.knowledge_profile?.businessType || "service",
+    employeeCount: settings?.knowledge_profile?.employeeCount || "1-10"
+  });
+  
+  const [employeeProfile, setEmployeeProfile] = useState({
+    field: settings?.knowledge_profile?.field || "",
+    experienceLevel: settings?.knowledge_profile?.experienceLevel || "mid-level",
+    skills: settings?.knowledge_profile?.skills || ""
+  });
+  
+  const handleSaveProfile = async () => {
+    if (!settings) return;
+    
+    setIsUpdating(true);
+    try {
+      let knowledgeProfile = {};
+      
+      switch (selectedRole) {
+        case "student":
+          knowledgeProfile = studentProfile;
+          break;
+        case "business_owner":
+          knowledgeProfile = businessProfile;
+          break;
+        case "employee":
+          knowledgeProfile = employeeProfile;
+          break;
+        default:
+          knowledgeProfile = {}; 
+      }
+      
+      const updatedSettings = {
+        ...settings,
+        knowledge_profile: knowledgeProfile
+      };
+      
+      const success = await updateSettings(updatedSettings);
+      
+      if (success) {
+        toast({
+          title: "Profile Updated",
+          description: "Your knowledge profile has been successfully updated.",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating knowledge profile:", error);
+      toast({
+        title: "Update Failed",
+        description: "There was an error updating your knowledge profile.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
     }
   };
   
   const getRoleIcon = () => {
-    switch(selectedRole) {
-      case 'student':
-        return <BookOpen className="h-5 w-5 mr-2" />;
-      case 'business_owner':
-        return <Briefcase className="h-5 w-5 mr-2" />;
-      case 'employee':
-        return <Building2 className="h-5 w-5 mr-2" />;
-      default:
-        return <GraduationCap className="h-5 w-5 mr-2" />;
+    switch (selectedRole) {
+      case "student": return <GraduationCap className="h-5 w-5 text-blue-500" />;
+      case "business_owner": return <Building2 className="h-5 w-5 text-amber-500" />;
+      case "employee": return <Briefcase className="h-5 w-5 text-purple-500" />;
+      case "writer": return <Book className="h-5 w-5 text-green-500" />;
+      default: return <User className="h-5 w-5 text-gray-500" />;
     }
   };
   
-  const getRoleTitle = () => {
-    switch(selectedRole) {
-      case 'student':
-        return 'Student Profile';
-      case 'business_owner':
-        return 'Business Profile';
-      case 'employee':
-        return 'Professional Profile';
-      case 'writer':
-        return 'Writer Profile';
+  const renderProfileForm = () => {
+    switch (selectedRole) {
+      case "student":
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="grade">Grade/Year</Label>
+              <Input 
+                id="grade" 
+                placeholder="e.g., 10th grade, Freshman" 
+                value={studentProfile.grade}
+                onChange={(e) => setStudentProfile({...studentProfile, grade: e.target.value})}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="schoolType">Education Level</Label>
+              <Select 
+                value={studentProfile.schoolType}
+                onValueChange={(value) => setStudentProfile({...studentProfile, schoolType: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select education level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="elementary">Elementary School</SelectItem>
+                  <SelectItem value="middle-school">Middle School</SelectItem>
+                  <SelectItem value="high-school">High School</SelectItem>
+                  <SelectItem value="college">College/University</SelectItem>
+                  <SelectItem value="graduate">Graduate School</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="subjects">Primary Subjects</Label>
+              <Input 
+                id="subjects" 
+                placeholder="e.g., Math, History, Science" 
+                value={studentProfile.subjects}
+                onChange={(e) => setStudentProfile({...studentProfile, subjects: e.target.value})}
+              />
+            </div>
+          </div>
+        );
+        
+      case "business_owner":
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="industry">Industry</Label>
+              <Input 
+                id="industry" 
+                placeholder="e.g., Technology, Retail, Healthcare" 
+                value={businessProfile.industry}
+                onChange={(e) => setBusinessProfile({...businessProfile, industry: e.target.value})}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="businessType">Business Type</Label>
+              <Select 
+                value={businessProfile.businessType}
+                onValueChange={(value) => setBusinessProfile({...businessProfile, businessType: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select business type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="service">Service-based</SelectItem>
+                  <SelectItem value="product">Product-based</SelectItem>
+                  <SelectItem value="retail">Retail</SelectItem>
+                  <SelectItem value="online">Online/E-commerce</SelectItem>
+                  <SelectItem value="consulting">Consulting</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="employeeCount">Company Size</Label>
+              <Select 
+                value={businessProfile.employeeCount}
+                onValueChange={(value) => setBusinessProfile({...businessProfile, employeeCount: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select company size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1-10">1-10 employees</SelectItem>
+                  <SelectItem value="11-50">11-50 employees</SelectItem>
+                  <SelectItem value="51-200">51-200 employees</SelectItem>
+                  <SelectItem value="201-500">201-500 employees</SelectItem>
+                  <SelectItem value="501+">501+ employees</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+        
+      case "employee":
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="field">Professional Field</Label>
+              <Input 
+                id="field" 
+                placeholder="e.g., Marketing, Engineering, Finance" 
+                value={employeeProfile.field}
+                onChange={(e) => setEmployeeProfile({...employeeProfile, field: e.target.value})}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="experienceLevel">Experience Level</Label>
+              <Select 
+                value={employeeProfile.experienceLevel}
+                onValueChange={(value) => setEmployeeProfile({...employeeProfile, experienceLevel: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select experience level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="entry-level">Entry Level</SelectItem>
+                  <SelectItem value="mid-level">Mid Level</SelectItem>
+                  <SelectItem value="senior">Senior</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="executive">Executive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="skills">Key Skills</Label>
+              <Input 
+                id="skills" 
+                placeholder="e.g., Project Management, Data Analysis" 
+                value={employeeProfile.skills}
+                onChange={(e) => setEmployeeProfile({...employeeProfile, skills: e.target.value})}
+              />
+            </div>
+          </div>
+        );
+        
       default:
-        return 'Personal Profile';
+        return (
+          <div className="text-center py-2">
+            <p className="text-muted-foreground">
+              Select a more specific assistant role to customize your knowledge profile.
+            </p>
+          </div>
+        );
     }
   };
-
+  
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center text-lg">
+    <Card className="shadow-sm hover:shadow transition-shadow">
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
           {getRoleIcon()}
-          {getRoleTitle()}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Help WAKTI AI understand your specific needs better by sharing some details about yourself.
-          This information helps the AI provide more relevant and personalized assistance.
-        </p>
-        
-        {getFormFields()}
-        
-        <div className="pt-2">
-          <Button className="w-full">
-            Save Profile
-          </Button>
+          <CardTitle className="text-lg">Knowledge Profile</CardTitle>
         </div>
+        <CardDescription>
+          Help your AI assistant understand your context better
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {renderProfileForm()}
       </CardContent>
+      {(selectedRole === "student" || selectedRole === "business_owner" || selectedRole === "employee") && (
+        <CardFooter className="flex justify-end pt-0">
+          <Button 
+            onClick={handleSaveProfile} 
+            disabled={isUpdating}
+            size="sm"
+          >
+            {isUpdating ? "Saving..." : "Save Profile"}
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 };

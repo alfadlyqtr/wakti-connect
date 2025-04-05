@@ -9,7 +9,6 @@ import { AIAssistantRole } from "@/types/ai-assistant.types";
 import { QuickToolsCard } from "./QuickToolsCard";
 import { ImageGenerationToolCard } from "./ImageGenerationToolCard";
 import { ImageTransformationToolCard } from "./ImageTransformationToolCard";
-import { KnowledgeProfileToolCard } from "./KnowledgeProfileToolCard";
 
 interface AIToolsTabContentProps {
   canAccess: boolean;
@@ -34,11 +33,6 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
           selectedRole={selectedRole}
           onToolSelect={(example) => onUseDocumentContent(example)}
         />
-      </div>
-      
-      {/* Role-specific Knowledge Profile */}
-      <div className="grid grid-cols-1 gap-4">
-        <KnowledgeProfileToolCard selectedRole={selectedRole} />
       </div>
       
       {/* Tools Row */}
