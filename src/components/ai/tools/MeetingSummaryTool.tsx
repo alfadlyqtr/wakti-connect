@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, FileDown, Copy, Check, FileText, Loader2, AlertCircle } from 'lucide-react';
+import { Mic, MicOff, FileDown, Copy, Check, FileText, Loader2, AlertCircle, Map } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
@@ -10,6 +10,7 @@ import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { supabase } from '@/lib/supabase';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { generateMapEmbedUrl, generateGoogleMapsUrl } from '@/config/maps';
 
 interface MeetingSummaryToolProps {
   onUseSummary?: (summary: string) => void;
@@ -25,6 +26,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   const [isExporting, setIsExporting] = useState(false);
   const [recordingError, setRecordingError] = useState<string | null>(null);
   const [audioData, setAudioData] = useState<Blob | null>(null);
+  const [detectedLocation, setDetectedLocation] = useState<string | null>(null);
   
   const summaryRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<number | null>(null);
@@ -286,16 +288,50 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     }
   };
 
+  // New function to detect location from text
+  const detectLocationFromText = (text: string): string | null => {
+    // Simple location detection using common patterns
+    // Look for phrases like "meeting at [location]" or "located at [location]" or similar patterns
+    const locationPatterns = [
+      /(?:meeting|located|held|happening|taking place|will be|scheduled|at|in)\s+(?:the\s+)?([A-Z][a-zA-Z\s]+(?:Building|Office|Center|Room|Hall|Tower|Plaza|Street|Avenue|Road|Boulevard|Place|Square|Park|Campus|Floor|Suite|Theater|Arena|Stadium|Hotel|Conference|Center|Venue))/g,
+      /(?:at|in)\s+([A-Z][a-zA-Z\s]+(?:Building|Office|Center|Room|Hall|Tower|Plaza))/g,
+      /(?:at|on|in)\s+(\d+\s+[A-Z][a-zA-Z\s]+(?:Street|Avenue|Road|Boulevard|Lane|Drive|Place|Court|Way|Circle|Terrace))/g,
+      /(?:location|venue|place|address)(?:\s+is)?(?:\s+at)?[:\s]+([A-Za-z0-9\s,]+(?:Street|Avenue|Road|Boulevard|Place|Square|Park|Building|Tower|Plaza))/i,
+    ];
+
+    for (const pattern of locationPatterns) {
+      const matches = text.match(pattern);
+      if (matches && matches.length > 0) {
+        // Extract the location part from the match
+        const locationMatch = pattern.exec(text);
+        if (locationMatch && locationMatch[1]) {
+          return locationMatch[1].trim();
+        }
+        return matches[0].replace(/(?:meeting|located|held|happening|taking place|will be|scheduled|at|in)\s+(?:the\s+)?/, '').trim();
+      }
+    }
+
+    return null;
+  };
+
   const generateSummary = async () => {
     if (!transcribedText) return;
     
     setIsSummarizing(true);
     
     try {
+      // Check for location in the transcribed text
+      const location = detectLocationFromText(transcribedText);
+      setDetectedLocation(location);
+      
+      const locationContext = location 
+        ? `The meeting location appears to be at: "${location}". Please include this location information in the summary.` 
+        : "";
+
       const response = await supabase.functions.invoke("ai-assistant", {
         body: {
-          message: `Please summarize the following meeting transcript into key points, action items, decisions, and participants. Format it with markdown headings and bullet points, and highlight important items: ${transcribedText}`,
-          context: "This is a meeting transcript that needs to be summarized with visual highlights."
+          message: `Please summarize the following meeting transcript into key points, action items, decisions, and participants. Format it with markdown headings and bullet points, and highlight important items. ${locationContext} If possible, organize information into clear sections. ${transcribedText}`,
+          context: "This is a meeting transcript that needs to be summarized with visual highlights and structured organization for PDF export."
         }
       });
       
@@ -309,6 +345,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
 ## Meeting Summary
 - **Date**: ${new Date().toLocaleDateString()}
 - **Duration**: ${formatTime(recordingTime)}
+${location ? `- **Location**: ${location}` : ''}
 
 ${aiSummary}
       `;
@@ -322,10 +359,12 @@ ${aiSummary}
         variant: "destructive"
       });
       
+      // Fallback summary with location if detected
       const fallbackSummary = `
 ## Meeting Summary
 - **Date**: ${new Date().toLocaleDateString()}
 - **Duration**: ${formatTime(recordingTime)}
+${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
 
 ### Key Points:
 1. Team discussed project timeline and adjusted deadlines for Q3 deliverables
@@ -368,31 +407,108 @@ ${aiSummary}
     setIsExporting(true);
     
     try {
-      const summaryElement = summaryRef.current;
+      // Create a temporary container for the PDF export
+      const pdfContainer = document.createElement('div');
+      pdfContainer.style.width = '800px';
+      pdfContainer.style.padding = '40px';
+      pdfContainer.style.backgroundColor = '#ffffff';
+      pdfContainer.style.color = '#000000';
+      pdfContainer.style.fontFamily = 'Arial, sans-serif';
+      document.body.appendChild(pdfContainer);
       
-      const originalStyle = summaryElement.style.cssText;
-      summaryElement.style.padding = '30px';
-      summaryElement.style.backgroundColor = '#ffffff';
-      summaryElement.style.color = '#000000';
-      summaryElement.style.width = '800px';
-      summaryElement.style.minHeight = '500px';
-      summaryElement.style.margin = '0';
-      summaryElement.style.boxSizing = 'border-box';
-      summaryElement.style.fontSize = '14px';
-      summaryElement.style.lineHeight = '1.6';
+      // Add WAKTI branding header
+      const headerDiv = document.createElement('div');
+      headerDiv.style.marginBottom = '20px';
+      headerDiv.style.paddingBottom = '15px';
+      headerDiv.style.borderBottom = '2px solid #0053c3';
+      headerDiv.style.display = 'flex';
+      headerDiv.style.justifyContent = 'space-between';
+      headerDiv.style.alignItems = 'center';
       
-      const canvas = await html2canvas(summaryElement, {
+      // Logo and title
+      headerDiv.innerHTML = `
+        <div style="display: flex; align-items: center;">
+          <h1 style="color: #0053c3; margin: 0; font-size: 24px;">WAKTI</h1>
+          <span style="color: #666; margin-left: 10px; font-size: 18px;">Meeting Summary</span>
+        </div>
+        <div style="color: #666; font-size: 12px;">Powered by WAKTI Productivity Suite</div>
+      `;
+      pdfContainer.appendChild(headerDiv);
+      
+      // Add the summary content
+      const contentDiv = document.createElement('div');
+      contentDiv.innerHTML = summaryRef.current.innerHTML;
+      pdfContainer.appendChild(contentDiv);
+      
+      // Add location map if location was detected
+      if (detectedLocation) {
+        const mapDiv = document.createElement('div');
+        mapDiv.style.marginTop = '30px';
+        mapDiv.style.marginBottom = '30px';
+        
+        const mapTitleDiv = document.createElement('div');
+        mapTitleDiv.innerHTML = `<h3 style="color: #0053c3; margin-bottom: 10px;">Meeting Location</h3>`;
+        mapDiv.appendChild(mapTitleDiv);
+        
+        const mapImageDiv = document.createElement('div');
+        mapImageDiv.style.width = '100%';
+        mapImageDiv.style.height = '300px';
+        mapImageDiv.style.border = '1px solid #ddd';
+        mapImageDiv.style.backgroundColor = '#f8f8f8';
+        mapImageDiv.style.display = 'flex';
+        mapImageDiv.style.justifyContent = 'center';
+        mapImageDiv.style.alignItems = 'center';
+        mapImageDiv.innerHTML = `
+          <iframe 
+            width="100%" 
+            height="300" 
+            frameborder="0" 
+            style="border:0" 
+            src="${generateMapEmbedUrl(detectedLocation)}" 
+            allowfullscreen>
+          </iframe>
+        `;
+        mapDiv.appendChild(mapImageDiv);
+        
+        const mapLinkDiv = document.createElement('div');
+        mapLinkDiv.innerHTML = `
+          <a style="color: #0053c3; font-size: 12px; text-decoration: none;" 
+             href="${generateGoogleMapsUrl(detectedLocation)}" target="_blank">
+            Open in Google Maps
+          </a>
+        `;
+        mapDiv.appendChild(mapLinkDiv);
+        
+        pdfContainer.appendChild(mapDiv);
+      }
+      
+      // Add footer with WAKTI promotion
+      const footerDiv = document.createElement('div');
+      footerDiv.style.marginTop = '30px';
+      footerDiv.style.paddingTop = '15px';
+      footerDiv.style.borderTop = '2px solid #0053c3';
+      footerDiv.style.fontSize = '12px';
+      footerDiv.style.color = '#666';
+      footerDiv.style.display = 'flex';
+      footerDiv.style.justifyContent = 'space-between';
+      footerDiv.innerHTML = `
+        <div>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</div>
+        <div>Manage your meetings efficiently with WAKTI Productivity Suite</div>
+      `;
+      pdfContainer.appendChild(footerDiv);
+      
+      // Render to canvas
+      const canvas = await html2canvas(pdfContainer, {
         scale: 2,
         logging: false,
         useCORS: true,
         backgroundColor: '#ffffff',
-        width: 800,
-        height: Math.max(summaryElement.offsetHeight, 500),
       });
       
-      summaryElement.style.cssText = originalStyle;
+      // Remove the temporary container
+      document.body.removeChild(pdfContainer);
       
-      const imgData = canvas.toDataURL('image/png');
+      // Create PDF
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -400,24 +516,24 @@ ${aiSummary}
       });
       
       const imgWidth = 210;
-      const pageHeight = 297;
+      const pageHeight = 295;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
       let heightLeft = imgHeight;
       let position = 0;
       let pageOffset = 0;
       
-      pdf.addImage(imgData, 'PNG', 0, pageOffset, imgWidth, imgHeight);
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
       
       while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
       
-      pdf.save(`Meeting_Summary_${new Date().toISOString().slice(0, 10)}.pdf`);
+      pdf.save(`WAKTI_Meeting_Summary_${new Date().toISOString().slice(0, 10)}.pdf`);
       
       toast({
         title: "PDF Exported",
@@ -584,6 +700,35 @@ ${aiSummary}
                   .replace(/\n\n/g, '<br />')
               }}
             />
+            
+            {/* Location Map Display */}
+            {detectedLocation && (
+              <div className="mt-4 border rounded-md overflow-hidden">
+                <div className="bg-muted/50 p-2 flex items-center gap-1.5">
+                  <Map className="h-4 w-4 text-wakti-blue" />
+                  <h3 className="text-sm font-medium">Meeting Location</h3>
+                </div>
+                <div className="aspect-video w-full">
+                  <iframe 
+                    src={generateMapEmbedUrl(detectedLocation)}
+                    className="w-full h-full border-0" 
+                    allowFullScreen 
+                    loading="lazy" 
+                    referrerPolicy="no-referrer-when-downgrade"
+                  ></iframe>
+                </div>
+                <div className="p-2 bg-muted/20">
+                  <a 
+                    href={generateGoogleMapsUrl(detectedLocation)} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs text-wakti-blue hover:underline flex items-center gap-1"
+                  >
+                    <Map className="h-3 w-3" /> Open in Google Maps
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
