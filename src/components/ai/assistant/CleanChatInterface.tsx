@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useToast } from "@/components/ui/use-toast";
+import { MessageAvatar } from "@/components/ai/message";
 
 interface CleanChatInterfaceProps {
   messages: AIMessage[];
@@ -279,17 +280,5 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
         </form>
       </div>
     </Card>
-  );
-};
-
-interface MessageAvatarProps {
-  isUser: boolean;
-}
-
-const MessageAvatar: React.FC<MessageAvatarProps> = ({ isUser }) => {
-  return (
-    <Avatar className="h-8 w-8 bg-gray-200">
-      <span className="text-xs font-medium">{isUser ? "You" : "Sys"}</span>
-    </Avatar>
   );
 };
