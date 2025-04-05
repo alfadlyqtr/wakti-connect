@@ -6,8 +6,10 @@ import { AIAssistantRole, AIMessage } from "@/types/ai-assistant.types";
 import { AIAssistantToolsCard } from "../tools/AIAssistantToolsCard";
 import { AIAssistantHistoryCard } from "../AIAssistantHistoryCard";
 import { AnimatePresence, motion } from "framer-motion";
-import { Zap, MessageSquare, Wrench, History, Bot, Sparkles, BookOpen, Briefcase, Pen } from "lucide-react";
+import { Zap, MessageSquare, Wrench, History, Bot, Sparkles, BookOpen, Briefcase, Pen, BookCopy, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { RoleSpecificKnowledge } from "../tools/RoleSpecificKnowledge";
+import { KnowledgeProfileToolCard } from "../tools/KnowledgeProfileToolCard";
 
 interface AIAssistantTabsProps {
   messages: AIMessage[];
@@ -104,7 +106,7 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
         onValueChange={setActiveTab} 
         className="w-full space-y-4"
       >
-        <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto">
+        <TabsList className="grid grid-cols-4 w-full max-w-md mx-auto">
           <TabsTrigger value="chat" className="flex items-center space-x-2">
             <MessageSquare className="h-4 w-4" />
             <span>Chat</span>
@@ -112,6 +114,10 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
           <TabsTrigger value="tools" className="flex items-center space-x-2">
             <Wrench className="h-4 w-4" />
             <span>Tools</span>
+          </TabsTrigger>
+          <TabsTrigger value="knowledge" className="flex items-center space-x-2">
+            <BookCopy className="h-4 w-4" />
+            <span>Knowledge</span>
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center space-x-2">
             <History className="h-4 w-4" />
@@ -160,6 +166,26 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
                 onUseDocumentContent={handleUseDocumentContent}
                 selectedRole={selectedRole}
               />
+            </motion.div>
+          </TabsContent>
+          
+          <TabsContent 
+            value="knowledge" 
+            className="space-y-4 focus-visible:outline-none"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <KnowledgeProfileToolCard selectedRole={selectedRole} />
+                <RoleSpecificKnowledge
+                  selectedRole={selectedRole}
+                  canAccess={canAccess}
+                />
+              </div>
             </motion.div>
           </TabsContent>
           

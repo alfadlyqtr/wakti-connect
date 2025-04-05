@@ -1,8 +1,7 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, FileDown, Copy, Check, FileText, Loader2, AlertCircle, Map, Download } from 'lucide-react';
+import { Mic, MicOff, FileDown, Copy, Check, FileText, Loader2, AlertCircle, Map, Download, Archive } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
@@ -11,9 +10,19 @@ import { supabase } from '@/lib/supabase';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { generateMapEmbedUrl, generateGoogleMapsUrl } from '@/config/maps';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface MeetingSummaryToolProps {
   onUseSummary?: (summary: string) => void;
+}
+
+interface SavedMeeting {
+  id: string;
+  date: string;
+  duration: number;
+  location: string | null;
+  summary: string;
+  audioUrl?: string;
 }
 
 export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSummary }) => {
@@ -28,11 +37,14 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   const [audioData, setAudioData] = useState<Blob | null>(null);
   const [detectedLocation, setDetectedLocation] = useState<string | null>(null);
   const [isDownloadingAudio, setIsDownloadingAudio] = useState(false);
+  const [savedMeetings, setSavedMeetings] = useState<SavedMeeting[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   
   const summaryRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<number | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const pulseElementRef = useRef<HTMLDivElement>(null);
   
   const { toast } = useToast();
   
@@ -44,6 +56,48 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   } = useVoiceInteraction({
     continuousListening: false,
   });
+
+  // Load saved meetings on component mount
+  useEffect(() => {
+    const loadSavedMeetings = async () => {
+      setIsLoadingHistory(true);
+      try {
+        // For demonstration, we're using mock data
+        // In a real implementation, this would fetch from your database
+        const mockMeetings: SavedMeeting[] = [
+          {
+            id: '1',
+            date: new Date(Date.now() - 86400000 * 2).toISOString(),
+            duration: 1560, // 26 minutes
+            location: 'Conference Room A',
+            summary: '## Meeting Summary\n- **Date**: April 3, 2025\n- **Duration**: 26:00\n\n### Key Points:\n1. Reviewed Q1 financial results\n2. Discussed marketing strategy for Q2\n3. Assigned action items to team members',
+          },
+          {
+            id: '2',
+            date: new Date(Date.now() - 86400000 * 5).toISOString(),
+            duration: 1860, // 31 minutes
+            location: 'Virtual Meeting - Zoom',
+            summary: '## Meeting Summary\n- **Date**: March 31, 2025\n- **Duration**: 31:00\n\n### Key Points:\n1. Product roadmap updates\n2. Customer feedback discussion\n3. New feature prioritization',
+          },
+          {
+            id: '3',
+            date: new Date(Date.now() - 86400000 * 7).toISOString(),
+            duration: 900, // 15 minutes
+            location: null,
+            summary: '## Meeting Summary\n- **Date**: March 29, 2025\n- **Duration**: 15:00\n\n### Key Points:\n1. Weekly team standup\n2. Blocker discussion\n3. Sprint planning',
+          },
+        ];
+        
+        setSavedMeetings(mockMeetings);
+      } catch (error) {
+        console.error("Error loading saved meetings:", error);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+    
+    loadSavedMeetings();
+  }, []);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -731,304 +785,4 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
       // Create PDF with improved settings for better quality
       const pdf = new jsPDF({
         orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-        compress: true
-      });
-      
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      let heightLeft = imgHeight;
-      let position = 0;
-      
-      pdf.addImage(
-        canvas.toDataURL('image/png', 1.0), 
-        'PNG', 
-        0, 
-        position, 
-        imgWidth, 
-        imgHeight, 
-        undefined, 
-        'FAST'
-      );
-      heightLeft -= pageHeight;
-      
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(
-          canvas.toDataURL('image/png', 1.0), 
-          'PNG', 
-          0, 
-          position, 
-          imgWidth, 
-          imgHeight, 
-          undefined, 
-          'FAST'
-        );
-        heightLeft -= pageHeight;
-      }
-      
-      pdf.save(`WAKTI_Meeting_Summary_${new Date().toISOString().slice(0, 10)}.pdf`);
-      
-      toast({
-        title: "PDF Exported",
-        description: "Your professional meeting summary has been exported as a PDF file.",
-        variant: "success"
-      });
-    } catch (error) {
-      console.error("Error exporting PDF:", error);
-      toast({
-        title: "Export Failed",
-        description: "Failed to export the summary as PDF. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  const sendToChat = () => {
-    if (onUseSummary && summary) {
-      onUseSummary(summary);
-      toast({
-        title: "Summary Sent",
-        description: "Meeting summary sent to chat.",
-      });
-    }
-  };
-
-  const handleRetryApiKey = async () => {
-    toast({
-      title: "Testing API Connection",
-      description: "Checking OpenAI API key configuration...",
-    });
-    
-    const success = await retryApiKeyValidation();
-    
-    if (success) {
-      setRecordingError(null);
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-        mediaRecorderRef.current.stop();
-      }
-      
-      if (intervalRef.current !== null) {
-        window.clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, []);
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Mic className="h-5 w-5 text-wakti-blue" />
-          Meeting Summary Tool
-        </CardTitle>
-        <CardDescription>
-          Record your meeting and get an AI-generated summary with key points and action items
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {apiKeyStatus === 'invalid' && (
-          <div className="bg-amber-50 border border-amber-300 rounded-md p-3 text-sm flex items-start gap-2">
-            <AlertCircle className="text-amber-600 h-5 w-5 flex-shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="text-amber-800 font-medium">OpenAI API Key Issue</p>
-              <p className="text-amber-700">{apiKeyErrorDetails || 'API key not properly configured'}</p>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleRetryApiKey}
-                className="mt-1"
-              >
-                Test API Connection
-              </Button>
-            </div>
-          </div>
-        )}
-        
-        {recordingError && !apiKeyStatus && (
-          <div className="bg-red-50 border border-red-300 rounded-md p-3 text-sm">
-            <p className="text-red-800 font-medium">Recording Error</p>
-            <p className="text-red-700">{recordingError}</p>
-          </div>
-        )}
-      
-        <div className="flex justify-center gap-4 p-2">
-          {isRecording ? (
-            <Button 
-              variant="destructive" 
-              className="flex items-center gap-2 animate-pulse" 
-              onClick={stopRecording}
-            >
-              <MicOff className="h-4 w-4" />
-              Stop Recording ({formatTime(recordingTime)})
-            </Button>
-          ) : (
-            <Button 
-              variant="default" 
-              className="flex items-center gap-2 bg-wakti-blue hover:bg-wakti-blue/90" 
-              onClick={startRecording}
-              disabled={isSummarizing || !supportsVoice}
-            >
-              <Mic className="h-4 w-4" />
-              Start Recording
-            </Button>
-          )}
-        </div>
-        
-        {audioData && (
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <h3 className="text-sm font-medium">Audio Recording:</h3>
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex items-center gap-1 text-xs"
-                onClick={downloadAudio}
-                disabled={isDownloadingAudio}
-              >
-                {isDownloadingAudio ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <Download className="h-3 w-3" />
-                )}
-                Download Audio
-              </Button>
-            </div>
-            <div className="flex justify-center">
-              <audio controls src={URL.createObjectURL(audioData)} className="w-full max-w-md"></audio>
-            </div>
-          </div>
-        )}
-        
-        {transcribedText && (
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <h3 className="text-sm font-medium">Transcribed Text:</h3>
-              {isRecording && <span className="text-xs text-green-500 animate-pulse">Recording in progress...</span>}
-            </div>
-            <Textarea 
-              value={transcribedText} 
-              className="h-28 resize-none bg-muted/30 font-mono text-sm"
-              readOnly
-            />
-            
-            {!summary && (
-              <Button 
-                onClick={generateSummary} 
-                className="w-full"
-                disabled={isSummarizing}
-              >
-                {isSummarizing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Summarizing...
-                  </>
-                ) : (
-                  <>Generate Summary</>
-                )}
-              </Button>
-            )}
-          </div>
-        )}
-        
-        {summary && (
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium">Meeting Summary:</h3>
-            <div 
-              ref={summaryRef}
-              className="bg-muted/30 rounded-md p-3 whitespace-pre-line text-sm prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ 
-                __html: summary
-                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                  .replace(/^### (.*?)$/gm, '<h3 class="text-lg font-bold text-wakti-blue mt-3">$1</h3>')
-                  .replace(/^## (.*?)$/gm, '<h2 class="text-xl font-bold mb-2">$1</h2>')
-                  .replace(/^- (.*?)$/gm, '<li class="ml-4">$1</li>')
-                  .replace(/\n\n/g, '<br />')
-              }}
-            />
-            
-            {/* Location Map Display */}
-            {detectedLocation && (
-              <div className="mt-4 border rounded-md overflow-hidden">
-                <div className="bg-muted/50 p-2 flex items-center gap-1.5">
-                  <Map className="h-4 w-4 text-wakti-blue" />
-                  <h3 className="text-sm font-medium">Meeting Location</h3>
-                </div>
-                <div className="aspect-video w-full">
-                  <iframe 
-                    src={generateMapEmbedUrl(detectedLocation)}
-                    className="w-full h-full border-0" 
-                    allowFullScreen 
-                    loading="lazy" 
-                    referrerPolicy="no-referrer-when-downgrade"
-                  ></iframe>
-                </div>
-                <div className="p-2 bg-muted/20">
-                  <a 
-                    href={generateGoogleMapsUrl(detectedLocation)} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-xs text-wakti-blue hover:underline flex items-center gap-1"
-                  >
-                    <Map className="h-3 w-3" /> Open in Google Maps
-                  </a>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-      
-      {summary && (
-        <CardFooter className="flex flex-wrap gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center gap-1"
-            onClick={copySummary}
-          >
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            {copied ? "Copied" : "Copy"}
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center gap-1"
-            onClick={exportAsPDF}
-            disabled={isExporting}
-          >
-            {isExporting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Exporting...
-              </>
-            ) : (
-              <>
-                <FileDown className="h-4 w-4" />
-                Export as PDF
-              </>
-            )}
-          </Button>
-          <Button 
-            size="sm" 
-            className="flex items-center gap-1 ml-auto"
-            onClick={sendToChat}
-          >
-            Use in Chat
-          </Button>
-        </CardFooter>
-      )}
-    </Card>
-  );
-};
+        unit: 'mm

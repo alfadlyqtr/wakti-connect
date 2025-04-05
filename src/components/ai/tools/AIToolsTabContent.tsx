@@ -10,7 +10,6 @@ import { QuickToolsCard } from "./QuickToolsCard";
 import { ImageGenerationToolCard } from "./ImageGenerationToolCard";
 import { ImageTransformationToolCard } from "./ImageTransformationToolCard";
 import { KnowledgeProfileToolCard } from "./KnowledgeProfileToolCard";
-import { RoleSpecificKnowledge } from "./RoleSpecificKnowledge";
 
 interface AIToolsTabContentProps {
   canAccess: boolean;
@@ -37,11 +36,7 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
         />
       </div>
       
-      {/* Knowledge Profiles Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <KnowledgeProfileToolCard selectedRole={selectedRole} />
-        <RoleSpecificKnowledge selectedRole={selectedRole} canAccess={canAccess} />
-      </div>
+      {/* Knowledge Profiles Section - Removed from here, moved to Knowledge tab */}
       
       {/* Tools Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

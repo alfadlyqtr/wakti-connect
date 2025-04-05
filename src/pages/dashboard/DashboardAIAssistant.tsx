@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CleanChatInterface } from "@/components/ai/assistant/CleanChatInterface";
 import { EnhancedToolsTab } from "@/components/ai/tools/EnhancedToolsTab";
 import { RoleSpecificKnowledge } from "@/components/ai/tools/RoleSpecificKnowledge";
+import { KnowledgeProfileToolCard } from "@/components/ai/tools/KnowledgeProfileToolCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AIRoleSelector } from "@/components/ai/assistant/AIRoleSelector";
 import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
@@ -26,7 +27,8 @@ import {
   Camera,
   Settings,
   Cpu,
-  Briefcase
+  Briefcase,
+  Archive
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -406,10 +408,15 @@ const DashboardAIAssistant = () => {
                       </TabsContent>
                       
                       <TabsContent value="knowledge" className="focus-visible:outline-none">
-                        <RoleSpecificKnowledge
-                          selectedRole={selectedRole}
-                          canAccess={canAccess}
-                        />
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <KnowledgeProfileToolCard selectedRole={selectedRole} />
+                            <RoleSpecificKnowledge
+                              selectedRole={selectedRole}
+                              canAccess={canAccess}
+                            />
+                          </div>
+                        </div>
                       </TabsContent>
                     </motion.div>
                   </Tabs>
