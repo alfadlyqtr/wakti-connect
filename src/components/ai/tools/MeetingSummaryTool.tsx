@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -785,4 +786,340 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
       // Create PDF with improved settings for better quality
       const pdf = new jsPDF({
         orientation: 'portrait',
-        unit: 'mm
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+      
+      // Add the canvas as an image to the PDF
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.addImage(
+        canvas.toDataURL('image/png', 1.0), 
+        'PNG', 
+        0, 
+        0, 
+        imgWidth, 
+        imgHeight,
+        undefined,
+        'FAST'
+      );
+      
+      // Download the PDF
+      pdf.save(`WAKTI_Meeting_Summary_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`);
+      
+      toast({
+        title: "PDF Exported",
+        description: "Your meeting summary has been exported as a PDF.",
+        variant: "success"
+      });
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast({
+        title: "Export Error",
+        description: "Failed to export the meeting summary as PDF. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Render the meeting summary tool UI
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4">
+        {/* Recording and Controls Section */}
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center text-lg">
+              <FileText className="mr-2 h-5 w-5 text-muted-foreground" />
+              Meeting Summary Tool
+            </CardTitle>
+            <CardDescription>
+              Record and transcribe meetings to generate comprehensive summaries
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Recording Controls */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 rounded-lg border p-4 relative">
+              {isRecording && (
+                <motion.div 
+                  ref={pulseElementRef}
+                  className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500"
+                  initial={{ scale: 1, opacity: 0.8 }}
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.8, 0.2, 0.8] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+              )}
+              
+              <div className="flex items-center gap-2 min-w-[120px]">
+                {isRecording ? (
+                  <div className="flex items-center gap-2">
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                    >
+                      <Mic className="h-5 w-5 text-red-500" />
+                    </motion.div>
+                    <span className="font-medium">Recording: {formatTime(recordingTime)}</span>
+                  </div>
+                ) : (
+                  <span className="font-medium">Ready to Record</span>
+                )}
+              </div>
+              
+              <div className="flex flex-wrap gap-2 justify-center">
+                {!isRecording ? (
+                  <Button 
+                    onClick={startRecording} 
+                    className="bg-red-500 hover:bg-red-600"
+                    disabled={isRecording || !supportsVoice}
+                  >
+                    <Mic className="mr-2 h-4 w-4" />
+                    Start Recording
+                  </Button>
+                ) : (
+                  <Button 
+                    onClick={stopRecording} 
+                    variant="outline"
+                  >
+                    <MicOff className="mr-2 h-4 w-4" />
+                    Stop Recording
+                  </Button>
+                )}
+                
+                <Button
+                  onClick={generateSummary}
+                  disabled={!transcribedText || isSummarizing}
+                  variant="secondary"
+                >
+                  {isSummarizing ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="mr-2 h-4 w-4" />
+                      Generate Summary
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+            
+            {/* Error State */}
+            {recordingError && (
+              <div className="rounded-lg bg-destructive/15 p-4 text-destructive flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold">Recording Error</h4>
+                  <p className="text-sm">{recordingError}</p>
+                </div>
+              </div>
+            )}
+            
+            {/* Transcribed Text */}
+            {transcribedText && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium">Transcribed Meeting</h3>
+                <Textarea 
+                  value={transcribedText}
+                  onChange={(e) => setTranscribedText(e.target.value)}
+                  className="min-h-[120px] text-sm"
+                  placeholder="Transcribed text will appear here..."
+                />
+              </div>
+            )}
+            
+            {/* Audio Download */}
+            {audioData && (
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={downloadAudio}
+                  disabled={isDownloadingAudio}
+                  className="text-xs"
+                >
+                  {isDownloadingAudio ? (
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                  ) : (
+                    <Download className="mr-1 h-3 w-3" />
+                  )}
+                  Download Audio
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        {/* Summary Display */}
+        {summary && (
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex justify-between items-center">
+                <CardTitle className="text-lg">Meeting Summary</CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={copySummary}
+                    className="h-8"
+                  >
+                    {copied ? (
+                      <Check className="mr-1 h-4 w-4" />
+                    ) : (
+                      <Copy className="mr-1 h-4 w-4" />
+                    )}
+                    {copied ? 'Copied' : 'Copy'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={exportAsPDF}
+                    disabled={isExporting}
+                    className="h-8"
+                  >
+                    {isExporting ? (
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileDown className="mr-1 h-4 w-4" />
+                    )}
+                    {isExporting ? 'Exporting...' : 'Export PDF'}
+                  </Button>
+                  {onUseSummary && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => onUseSummary(summary)}
+                      className="h-8"
+                    >
+                      Use in Chat
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div 
+                ref={summaryRef}
+                className="prose prose-sm max-w-none dark:prose-invert"
+                dangerouslySetInnerHTML={{ 
+                  __html: summary.replace(/\n/g, '<br />') 
+                }}
+              />
+              
+              {/* Add Map For Location If Present */}
+              {detectedLocation && (
+                <div className="mt-6 border rounded-lg overflow-hidden">
+                  <div className="bg-muted p-2 font-medium text-sm">Meeting Location</div>
+                  <div className="aspect-video">
+                    <iframe
+                      className="w-full h-full border-0"
+                      src={generateMapEmbedUrl(detectedLocation)}
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                    ></iframe>
+                  </div>
+                  <div className="p-2 text-right">
+                    <a
+                      href={generateGoogleMapsUrl(detectedLocation)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Open in Google Maps
+                    </a>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* Previous Meetings */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center text-lg">
+              <Archive className="mr-2 h-5 w-5 text-muted-foreground" />
+              Previous Meetings
+            </CardTitle>
+            <CardDescription>
+              Access your recent meeting summaries (last 5)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoadingHistory ? (
+              <div className="flex justify-center items-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : savedMeetings.length > 0 ? (
+              <Accordion type="single" collapsible className="w-full">
+                {savedMeetings.map((meeting) => (
+                  <AccordionItem key={meeting.id} value={meeting.id}>
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex justify-between items-center w-full pr-4">
+                        <div className="font-medium">
+                          Meeting on {new Date(meeting.date).toLocaleDateString()}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {formatTime(meeting.duration)}
+                          {meeting.location && ` • ${meeting.location}`}
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div 
+                        className="prose prose-sm max-w-none dark:prose-invert px-1 py-2"
+                        dangerouslySetInnerHTML={{ 
+                          __html: meeting.summary.replace(/\n/g, '<br />') 
+                        }}
+                      />
+                      <div className="flex justify-end gap-2 mt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(meeting.summary);
+                            toast({
+                              title: "Copied to clipboard",
+                              description: "Meeting summary copied to clipboard successfully.",
+                            });
+                          }}
+                          className="h-8 text-xs"
+                        >
+                          <Copy className="mr-1 h-3 w-3" />
+                          Copy
+                        </Button>
+                        {onUseSummary && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => onUseSummary(meeting.summary)}
+                            className="h-8 text-xs"
+                          >
+                            Use in Chat
+                          </Button>
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <FileText className="mx-auto h-8 w-8 mb-2" />
+                <h3 className="font-medium mb-1">No meeting history</h3>
+                <p className="text-sm">Record your first meeting to save it here</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
