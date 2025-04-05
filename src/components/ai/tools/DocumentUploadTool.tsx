@@ -60,13 +60,13 @@ export const DocumentUploadTool: React.FC<DocumentUploadToolProps> = ({
           onClick={handleFileUpload}
         >
           <Upload className="h-4 w-4 mx-auto mb-1" />
-          <p className="text-xs text-muted-foreground">Upload documents or images for AI analysis</p>
+          <p className="text-xs text-muted-foreground">Upload documents for text extraction</p>
           <input 
             type="file" 
             className="hidden" 
             ref={fileInputRef} 
             onChange={handleFileChange}
-            accept=".pdf,.doc,.docx,.txt,image/*"
+            accept=".pdf,.doc,.docx,.txt"
           />
         </div>
 
@@ -74,11 +74,7 @@ export const DocumentUploadTool: React.FC<DocumentUploadToolProps> = ({
           <div className="space-y-2">
             {uploadedFiles.map((file, index) => (
               <div key={index} className="flex items-center text-xs p-1.5 bg-primary/5 rounded">
-                {file.type.includes('image') ? (
-                  <File className="h-3 w-3 mr-1.5" />
-                ) : (
-                  <File className="h-3 w-3 mr-1.5" />
-                )}
+                <File className="h-3 w-3 mr-1.5" />
                 <span className="truncate">{file.name}</span>
                 <CheckCircle2 className="h-3 w-3 ml-1.5 text-green-500" />
               </div>
@@ -102,8 +98,8 @@ export const DocumentUploadTool: React.FC<DocumentUploadToolProps> = ({
   return (
     <AIToolCard
       icon={FileText}
-      title="Document Upload & Analysis"
-      description="Upload documents and extract information for AI analysis"
+      title="Document Upload & Text Extraction"
+      description="Upload documents and extract text for AI analysis"
       iconColor="text-blue-500"
     >
       <div className="space-y-4">
@@ -113,7 +109,7 @@ export const DocumentUploadTool: React.FC<DocumentUploadToolProps> = ({
         >
           <FileText className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
           <h3 className="text-base font-medium mb-1">Upload Documents</h3>
-          <p className="text-sm text-muted-foreground mb-3">Upload files for the AI to analyze and extract information</p>
+          <p className="text-sm text-muted-foreground mb-3">Upload files for text extraction</p>
           <Button 
             variant="outline" 
             onClick={(e) => {
@@ -130,11 +126,10 @@ export const DocumentUploadTool: React.FC<DocumentUploadToolProps> = ({
             className="hidden" 
             ref={fileInputRef} 
             onChange={handleFileChange}
-            accept=".pdf,.doc,.docx,.txt,image/*"
-            multiple
+            accept=".pdf,.doc,.docx,.txt"
           />
           <p className="text-xs text-muted-foreground mt-3">
-            Supports PDF, Word, text files and images
+            Supports PDF, Word, and text files
           </p>
         </div>
 
@@ -153,7 +148,7 @@ export const DocumentUploadTool: React.FC<DocumentUploadToolProps> = ({
             
             {extractedText && (
               <div className="mt-4">
-                <h4 className="font-medium mb-2">Extracted Content</h4>
+                <h4 className="font-medium mb-2">Extracted Text</h4>
                 <div className="border rounded p-3 text-sm bg-primary/5 mb-3 max-h-40 overflow-y-auto">
                   {extractedText}
                 </div>
