@@ -8,6 +8,7 @@ interface AIToolCardProps {
   title: string;
   description: string;
   iconColor?: string;
+  logoSrc?: string;
   children: React.ReactNode;
 }
 
@@ -16,13 +17,18 @@ export const AIToolCard: React.FC<AIToolCardProps> = ({
   title,
   description,
   iconColor = "text-blue-600",
+  logoSrc,
   children,
 }) => {
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center">
-          <Icon className={`h-5 w-5 mr-2 ${iconColor}`} />
+          {logoSrc ? (
+            <img src={logoSrc} alt={title} className="h-5 w-5 mr-2" />
+          ) : (
+            <Icon className={`h-5 w-5 mr-2 ${iconColor}`} />
+          )}
           {title}
         </CardTitle>
       </CardHeader>
