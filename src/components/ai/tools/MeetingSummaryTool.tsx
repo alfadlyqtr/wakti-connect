@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, FileDown, Copy, Check, FileText, Loader2, AlertCircle, Map } from 'lucide-react';
+import { Mic, MicOff, FileDown, Copy, Check, FileText, Loader2, AlertCircle, Map, Download } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { motion } from 'framer-motion';
@@ -27,6 +27,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   const [recordingError, setRecordingError] = useState<string | null>(null);
   const [audioData, setAudioData] = useState<Blob | null>(null);
   const [detectedLocation, setDetectedLocation] = useState<string | null>(null);
+  const [isDownloadingAudio, setIsDownloadingAudio] = useState(false);
   
   const summaryRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<number | null>(null);
@@ -246,7 +247,9 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           
           console.log("Received transcript:", data.text);
           
-          setTranscribedText(data.text);
+          // Apply some post-processing to improve transcription accuracy
+          const processedText = improveTranscriptionAccuracy(data.text);
+          setTranscribedText(processedText);
           
           toast({
             title: "Transcription complete",
@@ -288,15 +291,75 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     }
   };
 
-  // New function to detect location from text
+  // Function to improve transcription accuracy with common post-processing techniques
+  const improveTranscriptionAccuracy = (text: string): string => {
+    if (!text) return '';
+    
+    // Capitalize first letter of sentences
+    let improved = text.replace(/(\.\s+|^\s*)([a-z])/g, (match, p1, p2) => {
+      return p1 + p2.toUpperCase();
+    });
+    
+    // Fix common transcription errors
+    const corrections: Record<string, string> = {
+      'i think': 'I think',
+      'i am': 'I am',
+      'i\'m': 'I\'m',
+      'i\'ll': 'I\'ll',
+      'i\'ve': 'I\'ve',
+      'i\'d': 'I\'d',
+      'ok ': 'OK ',
+      'okay ': 'OK ',
+      'gonna ': 'going to ',
+      'wanna ': 'want to ',
+      'gotta ': 'got to ',
+      'kinda ': 'kind of ',
+      'sorta ': 'sort of ',
+      'lemme ': 'let me ',
+      'gimme ': 'give me ',
+      // Add more common corrections as needed
+    };
+    
+    // Apply corrections
+    Object.entries(corrections).forEach(([incorrect, correct]) => {
+      improved = improved.replace(new RegExp(`\\b${incorrect}\\b`, 'gi'), correct);
+    });
+    
+    // Add periods to sentences that might be missing them
+    improved = improved.replace(/([a-z])\s+([A-Z])/g, '$1. $2');
+    
+    // Clean up multiple spaces
+    improved = improved.replace(/\s{2,}/g, ' ').trim();
+    
+    return improved;
+  };
+
+  // Enhanced location detection with more sophisticated patterns
   const detectLocationFromText = (text: string): string | null => {
-    // Simple location detection using common patterns
-    // Look for phrases like "meeting at [location]" or "located at [location]" or similar patterns
+    if (!text) return null;
+    
+    // More comprehensive patterns to detect locations
     const locationPatterns = [
-      /(?:meeting|located|held|happening|taking place|will be|scheduled|at|in)\s+(?:the\s+)?([A-Z][a-zA-Z\s]+(?:Building|Office|Center|Room|Hall|Tower|Plaza|Street|Avenue|Road|Boulevard|Place|Square|Park|Campus|Floor|Suite|Theater|Arena|Stadium|Hotel|Conference|Center|Venue))/g,
-      /(?:at|in)\s+([A-Z][a-zA-Z\s]+(?:Building|Office|Center|Room|Hall|Tower|Plaza))/g,
-      /(?:at|on|in)\s+(\d+\s+[A-Z][a-zA-Z\s]+(?:Street|Avenue|Road|Boulevard|Lane|Drive|Place|Court|Way|Circle|Terrace))/g,
-      /(?:location|venue|place|address)(?:\s+is)?(?:\s+at)?[:\s]+([A-Za-z0-9\s,]+(?:Street|Avenue|Road|Boulevard|Place|Square|Park|Building|Tower|Plaza))/i,
+      // Meeting at/in [Location]
+      /(?:meeting|located|held|happening|taking place|will be|scheduled)\s+(?:at|in)\s+(?:the\s+)?([A-Za-z0-9\s,]+(?:Building|Office|Center|Room|Hall|Tower|Plaza|Street|Avenue|Road|Boulevard|Place|Square|Park|Campus|Floor|Suite|Theater|Arena|Stadium|Hotel|Conference|Center|Venue))/gi,
+      
+      // Located/held at [Location]
+      /(?:located|held)\s+(?:at|in)\s+(?:the\s+)?([A-Za-z0-9\s,]+(?:Building|Office|Center|Room|Hall|Tower|Plaza))/gi,
+      
+      // At [Street Address]
+      /(?:at|on)\s+(\d+\s+[A-Za-z\s]+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Place|Pl|Court|Ct|Way|Circle|Cir|Terrace|Ter))/gi,
+      
+      // Address is [Location]
+      /(?:location|venue|place|address)(?:\s+is)?(?:\s+at)?[:\s]+([A-Za-z0-9\s,\.#-]+)/i,
+      
+      // Meeting/event in [City]
+      /(?:in|at)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*(?:\s+City)?),?\s+([A-Z]{2}|[A-Za-z]+)\b/g,
+      
+      // Mentions of room numbers
+      /(?:room|rm)\s+(\d+[A-Za-z0-9-]*)/gi,
+      
+      // Conference rooms often mentioned
+      /((?:[A-Z][a-z]+\s+){1,3}(?:Conference|Meeting|Board)\s+Room)/g,
     ];
 
     for (const pattern of locationPatterns) {
@@ -307,7 +370,33 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
         if (locationMatch && locationMatch[1]) {
           return locationMatch[1].trim();
         }
-        return matches[0].replace(/(?:meeting|located|held|happening|taking place|will be|scheduled|at|in)\s+(?:the\s+)?/, '').trim();
+        // Fall back to the whole match with some cleanup
+        return matches[0]
+          .replace(/(?:meeting|located|held|happening|taking place|will be|scheduled|at|in)\s+(?:the\s+)?/i, '')
+          .trim();
+      }
+    }
+
+    // Look for named locations with capital letters (potential proper nouns)
+    const properNounMatch = text.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})\b/g);
+    if (properNounMatch) {
+      // Filter out common non-location proper nouns
+      const commonNonLocations = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
+        'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      
+      const potentialLocations = properNounMatch.filter(name => 
+        !commonNonLocations.includes(name) && name.length > 3);
+      
+      if (potentialLocations.length > 0) {
+        // Try to find locations that appear before or after location-related words
+        const locationContexts = ['at', 'in', 'near', 'location', 'venue', 'place', 'meet', 'meeting', 'office'];
+        
+        for (const location of potentialLocations) {
+          const contextCheck = new RegExp(`(${locationContexts.join('|')})\\s+${location}|${location}\\s+(${locationContexts.join('|')})`, 'i');
+          if (text.match(contextCheck)) {
+            return location;
+          }
+        }
       }
     }
 
@@ -320,18 +409,32 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     setIsSummarizing(true);
     
     try {
-      // Check for location in the transcribed text
+      // Check for location in the transcribed text with improved detection
       const location = detectLocationFromText(transcribedText);
       setDetectedLocation(location);
       
       const locationContext = location 
-        ? `The meeting location appears to be at: "${location}". Please include this location information in the summary.` 
-        : "";
+        ? `The meeting location has been identified as: "${location}". Please include this location information in the beginning of the summary.` 
+        : "No specific location was detected in the transcript.";
 
       const response = await supabase.functions.invoke("ai-assistant", {
         body: {
-          message: `Please summarize the following meeting transcript into key points, action items, decisions, and participants. Format it with markdown headings and bullet points, and highlight important items. ${locationContext} If possible, organize information into clear sections. ${transcribedText}`,
-          context: "This is a meeting transcript that needs to be summarized with visual highlights and structured organization for PDF export."
+          message: `Please create a professional and comprehensive summary of the following meeting transcript, including key points, action items, decisions made, and who was participating. 
+          
+          Format the summary in a clean business format with markdown headings and bullet points. 
+          ${locationContext} 
+          
+          Important guidelines:
+          1. Focus on extracting factual information only, no questions or suggestions in the summary
+          2. Structure the content with clear sections (Summary, Key Points, Action Items, Decisions)
+          3. Include a clear list of participants if mentioned
+          4. Be concise and direct - avoid speculation or asking questions in the summary
+          5. Format dates and times consistently
+          6. Organize action items by owner/responsible person when possible
+          7. Keep the tone professional and objective
+          
+          TRANSCRIPT: ${transcribedText}`,
+          context: "This is a meeting transcript that needs to be summarized in a professional format for PDF export and business use."
         }
       });
       
@@ -401,6 +504,43 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const downloadAudio = () => {
+    if (!audioData) return;
+    
+    setIsDownloadingAudio(true);
+    
+    try {
+      // Create a download link for the audio file
+      const url = URL.createObjectURL(audioData);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `WAKTI_Meeting_Recording_${new Date().toISOString().slice(0, 10)}.mp3`;
+      
+      // Trigger the download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Audio Downloaded",
+        description: "Your meeting recording has been downloaded successfully.",
+        variant: "success"
+      });
+    } catch (error) {
+      console.error("Error downloading audio:", error);
+      toast({
+        title: "Download Failed",
+        description: "Failed to download the audio recording. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDownloadingAudio(false);
+    }
+  };
+
   const exportAsPDF = async () => {
     if (!summary || !summaryRef.current) return;
     
@@ -416,28 +556,77 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
       pdfContainer.style.fontFamily = 'Arial, sans-serif';
       document.body.appendChild(pdfContainer);
       
-      // Add WAKTI branding header
+      // Add WAKTI branding header with enhanced design
       const headerDiv = document.createElement('div');
-      headerDiv.style.marginBottom = '20px';
+      headerDiv.style.marginBottom = '30px';
       headerDiv.style.paddingBottom = '15px';
       headerDiv.style.borderBottom = '2px solid #0053c3';
       headerDiv.style.display = 'flex';
       headerDiv.style.justifyContent = 'space-between';
       headerDiv.style.alignItems = 'center';
       
-      // Logo and title
+      // Logo and title with enhanced styling
       headerDiv.innerHTML = `
         <div style="display: flex; align-items: center;">
-          <h1 style="color: #0053c3; margin: 0; font-size: 24px;">WAKTI</h1>
-          <span style="color: #666; margin-left: 10px; font-size: 18px;">Meeting Summary</span>
+          <div style="background-color: #0053c3; color: white; padding: 10px 15px; border-radius: 6px; margin-right: 15px;">
+            <h1 style="margin: 0; font-size: 24px; font-weight: bold;">WAKTI</h1>
+          </div>
+          <div>
+            <span style="color: #333; font-size: 22px; font-weight: bold;">Meeting Summary</span>
+            <div style="color: #666; font-size: 14px; margin-top: 5px;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</div>
+          </div>
         </div>
-        <div style="color: #666; font-size: 12px;">Powered by WAKTI Productivity Suite</div>
+        <div style="color: #0053c3; font-size: 14px; font-weight: bold;">Powered by WAKTI Productivity Suite</div>
       `;
       pdfContainer.appendChild(headerDiv);
       
-      // Add the summary content
+      // Add meeting metadata table with enhanced styling
+      const metadataDiv = document.createElement('div');
+      metadataDiv.style.marginBottom = '25px';
+      metadataDiv.style.backgroundColor = '#f8f9fa';
+      metadataDiv.style.padding = '15px';
+      metadataDiv.style.borderRadius = '6px';
+      metadataDiv.style.border = '1px solid #e9ecef';
+      
+      // Create styled metadata table
+      metadataDiv.innerHTML = `
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <tr>
+            <td style="padding: 8px 15px; width: 120px; font-weight: bold; color: #0053c3;">Date:</td>
+            <td style="padding: 8px 15px;">${new Date().toLocaleDateString()}</td>
+            <td style="padding: 8px 15px; width: 120px; font-weight: bold; color: #0053c3;">Duration:</td>
+            <td style="padding: 8px 15px;">${formatTime(recordingTime)}</td>
+          </tr>
+          ${detectedLocation ? `
+          <tr>
+            <td style="padding: 8px 15px; font-weight: bold; color: #0053c3;">Location:</td>
+            <td style="padding: 8px 15px;" colspan="3">${detectedLocation}</td>
+          </tr>` : ''}
+        </table>
+      `;
+      pdfContainer.appendChild(metadataDiv);
+      
+      // Process the summary content to apply enhanced styling
       const contentDiv = document.createElement('div');
-      contentDiv.innerHTML = summaryRef.current.innerHTML;
+      contentDiv.style.lineHeight = '1.6';
+      
+      // Style the content with enhanced formatting
+      let styledContent = summaryRef.current.innerHTML
+        // Style headings
+        .replace(/<h2 class="[^"]*">(.*?)<\/h2>/g, 
+          '<h2 style="color: #0053c3; font-size: 20px; margin-top: 30px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid #e9ecef;">$1</h2>')
+        .replace(/<h3 class="[^"]*">(.*?)<\/h3>/g, 
+          '<h3 style="color: #0053c3; font-size: 16px; margin-top: 20px; margin-bottom: 10px;">$1</h3>')
+        // Style bullet points
+        .replace(/<li class="[^"]*">(.*?)<\/li>/g,
+          '<li style="margin-bottom: 8px; padding-left: 5px;">$1</li>')
+        // Add bullet point styling
+        .replace(/<li style/g, '<li style="position: relative; list-style-type: none; padding-left: 20px; margin-bottom: 8px;"><span style="position: absolute; left: 0; top: 0; color: #0053c3;">•</span><span style')
+        // Style strong elements
+        .replace(/<strong>(.*?)<\/strong>/g, 
+          '<strong style="color: #333;">$1</strong>');
+      
+      contentDiv.innerHTML = styledContent;
       pdfContainer.appendChild(contentDiv);
       
       // Add location map if location was detected
@@ -447,32 +636,40 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
         mapDiv.style.marginBottom = '30px';
         
         const mapTitleDiv = document.createElement('div');
-        mapTitleDiv.innerHTML = `<h3 style="color: #0053c3; margin-bottom: 10px;">Meeting Location</h3>`;
+        mapTitleDiv.innerHTML = `
+          <h3 style="color: #0053c3; font-size: 16px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid #e9ecef;">
+            Meeting Location
+          </h3>
+        `;
         mapDiv.appendChild(mapTitleDiv);
         
-        const mapImageDiv = document.createElement('div');
-        mapImageDiv.style.width = '100%';
-        mapImageDiv.style.height = '300px';
-        mapImageDiv.style.border = '1px solid #ddd';
-        mapImageDiv.style.backgroundColor = '#f8f8f8';
-        mapImageDiv.style.display = 'flex';
-        mapImageDiv.style.justifyContent = 'center';
-        mapImageDiv.style.alignItems = 'center';
-        mapImageDiv.innerHTML = `
-          <iframe 
-            width="100%" 
-            height="300" 
-            frameborder="0" 
-            style="border:0" 
-            src="${generateMapEmbedUrl(detectedLocation)}" 
-            allowfullscreen>
-          </iframe>
-        `;
-        mapDiv.appendChild(mapImageDiv);
+        // Create a centered container for the map
+        const mapContainerDiv = document.createElement('div');
+        mapContainerDiv.style.display = 'flex';
+        mapContainerDiv.style.justifyContent = 'center';
+        mapContainerDiv.style.alignItems = 'center';
+        mapContainerDiv.style.backgroundColor = '#f8f9fa';
+        mapContainerDiv.style.padding = '15px';
+        mapContainerDiv.style.borderRadius = '6px';
+        mapContainerDiv.style.border = '1px solid #e9ecef';
         
+        // Add an iframe with Google Maps
+        const mapIframe = document.createElement('iframe');
+        mapIframe.width = '100%';
+        mapIframe.height = '300';
+        mapIframe.style.border = '0';
+        mapIframe.src = generateMapEmbedUrl(detectedLocation);
+        mapIframe.setAttribute('allowfullscreen', '');
+        
+        mapContainerDiv.appendChild(mapIframe);
+        mapDiv.appendChild(mapContainerDiv);
+        
+        // Add link to open in Google Maps
         const mapLinkDiv = document.createElement('div');
+        mapLinkDiv.style.marginTop = '10px';
+        mapLinkDiv.style.textAlign = 'right';
         mapLinkDiv.innerHTML = `
-          <a style="color: #0053c3; font-size: 12px; text-decoration: none;" 
+          <a style="color: #0053c3; font-size: 13px; text-decoration: none;" 
              href="${generateGoogleMapsUrl(detectedLocation)}" target="_blank">
             Open in Google Maps
           </a>
@@ -482,22 +679,45 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
         pdfContainer.appendChild(mapDiv);
       }
       
-      // Add footer with WAKTI promotion
+      // Add footer with WAKTI promotion and enhanced design
       const footerDiv = document.createElement('div');
-      footerDiv.style.marginTop = '30px';
+      footerDiv.style.marginTop = '40px';
       footerDiv.style.paddingTop = '15px';
       footerDiv.style.borderTop = '2px solid #0053c3';
       footerDiv.style.fontSize = '12px';
       footerDiv.style.color = '#666';
       footerDiv.style.display = 'flex';
       footerDiv.style.justifyContent = 'space-between';
+      footerDiv.style.alignItems = 'center';
+      
       footerDiv.innerHTML = `
-        <div>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</div>
-        <div>Manage your meetings efficiently with WAKTI Productivity Suite</div>
+        <div>Document generated by WAKTI Meeting Summary Tool</div>
+        <div style="color: #0053c3; font-weight: bold;">WAKTI - Your Productivity Partner</div>
       `;
       pdfContainer.appendChild(footerDiv);
       
-      // Render to canvas
+      // Add promotion banner at the bottom
+      const promotionDiv = document.createElement('div');
+      promotionDiv.style.marginTop = '30px';
+      promotionDiv.style.padding = '15px';
+      promotionDiv.style.backgroundColor = '#f0f7ff';
+      promotionDiv.style.borderRadius = '6px';
+      promotionDiv.style.border = '1px solid #cce5ff';
+      promotionDiv.style.fontSize = '13px';
+      promotionDiv.style.color = '#0053c3';
+      promotionDiv.style.textAlign = 'center';
+      
+      promotionDiv.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 5px;">
+          Boost your team's productivity with WAKTI's complete suite of business tools
+        </div>
+        <div style="color: #666;">
+          Task management · Calendar · Meeting summaries · Team collaboration · AI assistance
+        </div>
+      `;
+      pdfContainer.appendChild(promotionDiv);
+      
+      // Render to canvas with higher quality
       const canvas = await html2canvas(pdfContainer, {
         scale: 2,
         logging: false,
@@ -508,28 +728,46 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
       // Remove the temporary container
       document.body.removeChild(pdfContainer);
       
-      // Create PDF
+      // Create PDF with improved settings for better quality
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: 'a4'
+        format: 'a4',
+        compress: true
       });
       
-      const imgWidth = 210;
-      const pageHeight = 295;
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
       let heightLeft = imgHeight;
       let position = 0;
-      let pageOffset = 0;
       
-      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(
+        canvas.toDataURL('image/png', 1.0), 
+        'PNG', 
+        0, 
+        position, 
+        imgWidth, 
+        imgHeight, 
+        undefined, 
+        'FAST'
+      );
       heightLeft -= pageHeight;
       
       while (heightLeft > 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, imgWidth, imgHeight);
+        pdf.addImage(
+          canvas.toDataURL('image/png', 1.0), 
+          'PNG', 
+          0, 
+          position, 
+          imgWidth, 
+          imgHeight, 
+          undefined, 
+          'FAST'
+        );
         heightLeft -= pageHeight;
       }
       
@@ -537,7 +775,7 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
       
       toast({
         title: "PDF Exported",
-        description: "Your meeting summary has been exported as a PDF file.",
+        description: "Your professional meeting summary has been exported as a PDF file.",
         variant: "success"
       });
     } catch (error) {
@@ -649,8 +887,27 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
         </div>
         
         {audioData && (
-          <div className="flex justify-center">
-            <audio controls src={URL.createObjectURL(audioData)} className="w-full max-w-md"></audio>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <h3 className="text-sm font-medium">Audio Recording:</h3>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex items-center gap-1 text-xs"
+                onClick={downloadAudio}
+                disabled={isDownloadingAudio}
+              >
+                {isDownloadingAudio ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Download className="h-3 w-3" />
+                )}
+                Download Audio
+              </Button>
+            </div>
+            <div className="flex justify-center">
+              <audio controls src={URL.createObjectURL(audioData)} className="w-full max-w-md"></audio>
+            </div>
           </div>
         )}
         
