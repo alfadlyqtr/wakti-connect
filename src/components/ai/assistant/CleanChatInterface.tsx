@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -109,8 +110,12 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             animate={{ opacity: 1, y: 0 }}
             className="text-center py-10"
           >
-            <div className={`h-16 w-16 rounded-full ${getRoleColor()} mx-auto mb-4 flex items-center justify-center`}>
-              <Bot className="h-8 w-8 text-white" />
+            <div className={`h-16 w-16 rounded-full ${getRoleColor()} mx-auto mb-4 flex items-center justify-center overflow-hidden`}>
+              <img 
+                src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
+                alt="WAKTI AI" 
+                className="h-full w-full object-cover"
+              />
             </div>
             <h2 className="text-xl font-bold mb-2">
               Hi{userName ? ` ${userName}` : ''}, I'm your WAKTI{" "}
@@ -155,8 +160,12 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               )}
             >
               {msg.role === "assistant" ? (
-                <Avatar className={`h-8 w-8 ${getRoleColor()}`}>
-                  <Bot className="h-4 w-4 text-white" />
+                <Avatar className={`h-8 w-8 ${getRoleColor()} overflow-hidden`}>
+                  <img 
+                    src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
+                    alt="WAKTI AI" 
+                    className="h-full w-full object-cover"
+                  />
                 </Avatar>
               ) : msg.role === "user" ? (
                 <MessageAvatar isUser={true} />
@@ -189,8 +198,12 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               animate={{ opacity: 1, y: 0 }}
               className="flex items-start gap-3 mb-4"
             >
-              <Avatar className={`h-8 w-8 ${getRoleColor()}`}>
-                <Bot className="h-4 w-4 text-white" />
+              <Avatar className={`h-8 w-8 ${getRoleColor()} overflow-hidden`}>
+                <img 
+                  src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
+                  alt="WAKTI AI" 
+                  className="h-full w-full object-cover"
+                />
               </Avatar>
               <div className="bg-background rounded-lg py-3 px-4 border">
                 <Loader2 className="h-5 w-5 animate-spin" />

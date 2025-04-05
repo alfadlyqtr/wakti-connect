@@ -83,10 +83,14 @@ export const AIAssistantHeader: React.FC<AIAssistantHeaderProps> = ({
         {/* Assistant title and info */}
         <div className="flex items-center">
           <div className={cn(
-            "h-10 w-10 rounded-full bg-gradient-to-br flex items-center justify-center mr-3 shadow-sm",
+            "h-10 w-10 rounded-full overflow-hidden flex items-center justify-center mr-3 shadow-sm",
             getRoleColor(selectedRole)
           )}>
-            <Bot className="h-5 w-5 text-white" />
+            <img 
+              src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
+              alt="WAKTI Logo"
+              className="h-full w-full object-cover"
+            />
           </div>
           
           <div>

@@ -22,6 +22,7 @@ export const DocumentAnalysisToolCard: React.FC<DocumentAnalysisToolCardProps> =
       title="Document Analysis"
       description="Upload documents for the AI to analyze and extract information."
       iconColor="text-blue-600"
+      logoSrc="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png"
     >
       <AIAssistantDocumentsCard 
         canAccess={canAccess} 
