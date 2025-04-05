@@ -5,7 +5,7 @@
  */
 
 // Google Maps API key for map embeds and location services
-const GOOGLE_MAPS_API_KEY = 'AIzaSyBIwzALxUPNbatRBj3X1HyELQG7xToQ3vA';
+export const GOOGLE_MAPS_API_KEY = 'AIzaSyBIwzALxUPNbatRBj3X1HyELQG7xToQ3vA';
 
 /**
  * Generates a Google Maps embed URL for a location query

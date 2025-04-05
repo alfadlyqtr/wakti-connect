@@ -26,14 +26,7 @@ export const VoiceTestPage = () => {
     startListening,
     stopListening,
     apiKeyStatus
-  } = useVoiceInteraction({
-    continuousListening: true,
-    onTranscriptComplete: (transcript) => {
-      if (transcript) {
-        setTestResult(transcript);
-      }
-    }
-  });
+  } = useVoiceInteraction();
   
   const handleApiTest = async () => {
     try {
