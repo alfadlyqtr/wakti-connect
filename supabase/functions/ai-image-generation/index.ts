@@ -28,8 +28,9 @@ serve(async (req) => {
       );
     }
 
-    // Get OpenAI API key from Supabase secrets
+    // Get API keys from Supabase secrets
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const RUNWARE_API_KEY = Deno.env.get("RUNWARE_API_KEY");
 
     if (!OPENAI_API_KEY) {
       return new Response(
@@ -42,6 +43,89 @@ serve(async (req) => {
     }
 
     console.log("Processing image generation request");
+    
+    if (imageUrl && RUNWARE_API_KEY) {
+      // Use Runware AI for image-to-image transformation
+      console.log("Using Runware AI for image-to-image transformation");
+      
+      try {
+        // Check if the imageUrl is a data URL and extract the base64 content
+        let base64Image = imageUrl;
+        if (imageUrl.startsWith('data:image')) {
+          // Extract the base64 part (remove data:image/...;base64, prefix)
+          base64Image = imageUrl.split(',')[1];
+        }
+        
+        // Prepare the payload for Runware API
+        const runwarePayload = [
+          {
+            "taskType": "authentication",
+            "apiKey": RUNWARE_API_KEY
+          },
+          {
+            "taskType": "imageToImage",
+            "taskUUID": crypto.randomUUID(),
+            "positivePrompt": prompt,
+            "model": "runware:100@1",
+            "width": 1024,
+            "height": 1024,
+            "numberResults": 1,
+            "outputFormat": "WEBP",
+            "CFGScale": 7.5,
+            "scheduler": "DPMSolverMultistepScheduler",
+            "strength": 0.75,
+            "inputImage": base64Image
+          }
+        ];
+        
+        // Call Runware API
+        console.log("Making Runware API request");
+        const runwareResponse = await fetch('https://api.runware.ai/v1', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(runwarePayload)
+        });
+        
+        if (!runwareResponse.ok) {
+          const errorText = await runwareResponse.text();
+          console.error("Runware API error:", errorText);
+          throw new Error(`Runware API error: ${errorText}`);
+        }
+        
+        const runwareData = await runwareResponse.json();
+        console.log("Runware API response:", JSON.stringify(runwareData));
+        
+        const imageResult = runwareData.data.find(item => item.taskType === "imageToImage");
+        if (!imageResult || !imageResult.imageURL) {
+          throw new Error("No image URL in Runware response");
+        }
+        
+        // Return the transformed image URL
+        return new Response(
+          JSON.stringify({ 
+            id: crypto.randomUUID(),
+            imageUrl: imageResult.imageURL,
+            originalImageUrl: imageUrl,
+            prompt,
+            isTransformation: true
+          }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          }
+        );
+      } catch (runwareError) {
+        console.error("Runware API processing error:", runwareError);
+        
+        // Fall back to OpenAI if Runware fails
+        console.log("Falling back to OpenAI for image generation");
+      }
+    }
+    
+    // Use OpenAI as default or fallback
+    console.log("Using OpenAI for image generation");
     
     // Set up OpenAI API options
     const apiUrl = 'https://api.openai.com/v1/images/generations';

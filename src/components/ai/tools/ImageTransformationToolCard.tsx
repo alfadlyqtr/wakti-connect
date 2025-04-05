@@ -93,7 +93,7 @@ export const ImageTransformationToolCard: React.FC = () => {
     <AIToolCard
       icon={RefreshCw}
       title="Image Transformation"
-      description="Transform your uploaded images into anime/Gimi-style illustrations"
+      description="Transform your photos into anime/Gimi-style using AI-powered image-to-image conversion"
       iconColor="text-emerald-500"
     >
       <div className="space-y-3">
@@ -139,39 +139,66 @@ export const ImageTransformationToolCard: React.FC = () => {
             )}
             
             {generatedImage && (
-              <Card className="relative overflow-hidden">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 bg-black/20 hover:bg-black/40 text-white rounded-full z-10"
-                  onClick={clearGeneratedImage}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-                <div className="aspect-square relative">
-                  <img 
-                    src={generatedImage.imageUrl} 
-                    alt="Transformed image"
-                    className="w-full h-full object-cover"
-                  />
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Original Image */}
+                  <Card className="relative overflow-hidden">
+                    <div className="absolute top-2 left-2 bg-black/20 px-2 py-1 rounded text-white text-xs">Original</div>
+                    <div className="aspect-square relative">
+                      <img 
+                        src={generatedImage.originalImageUrl || ''} 
+                        alt="Original image"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </Card>
+                  
+                  {/* Transformed Image */}
+                  <Card className="relative overflow-hidden">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 bg-black/20 hover:bg-black/40 text-white rounded-full z-10"
+                      onClick={clearGeneratedImage}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                    <div className="absolute top-2 left-2 bg-black/20 px-2 py-1 rounded text-white text-xs">Transformed</div>
+                    <div className="aspect-square relative">
+                      <img 
+                        src={generatedImage.imageUrl} 
+                        alt="Transformed image"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="p-2 bg-muted/50">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={handleDownload}
+                      >
+                        <Image className="h-4 w-4 mr-2" /> Download Image
+                      </Button>
+                    </div>
+                  </Card>
                 </div>
-                <div className="p-2 bg-muted/50">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={handleDownload}
-                  >
-                    <Image className="h-4 w-4 mr-2" /> Download Image
-                  </Button>
-                </div>
-              </Card>
+              </div>
             )}
           </>
         )}
         
         {uploadedImageUrl && !generatedImage && (
           <>
+            <div className="text-sm text-muted-foreground">
+              <p className="font-medium mb-1">How to get the best results:</p>
+              <ul className="list-disc list-inside space-y-1 text-xs">
+                <li>Use clear images with good lighting</li>
+                <li>Images with people or distinct subjects work best</li>
+                <li>Be specific in your transformation prompt</li>
+              </ul>
+            </div>
+            
             <Textarea
               placeholder="Describe how you want to transform the image..."
               value={prompt}
