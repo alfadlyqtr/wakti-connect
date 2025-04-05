@@ -4,7 +4,6 @@ import { AIMessage, AIAssistantRole, RoleContexts } from '@/types/ai-assistant.t
 import { AIAssistantMessage } from '../message/AIAssistantMessage';
 import { Loader2 } from 'lucide-react';
 import { getTimeBasedGreeting } from '@/lib/dateUtils';
-import { QuickToolsCard } from '../tools/QuickToolsCard';
 
 export interface AIAssistantChatProps {
   messages: AIMessage[];
@@ -82,11 +81,6 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
     }
   }, [messages]);
   
-  // Function to handle quick tool selection
-  const handleToolClick = (toolDescription: string) => {
-    setInputMessage(toolDescription);
-  };
-  
   // If there are no messages (besides welcome), show role context welcome message
   if (isFirstMessage) {
     const welcomeMessage: AIMessage = {
@@ -103,13 +97,6 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
           isActive={true}
           isSpeaking={speakingMessageId === "role-welcome"}
         />
-        
-        <div className="mt-4">
-          <QuickToolsCard
-            selectedRole={selectedRole}
-            onToolClick={handleToolClick}
-          />
-        </div>
       </div>
     );
   }

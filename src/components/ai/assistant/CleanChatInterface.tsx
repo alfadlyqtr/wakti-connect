@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect } from "react";
 import { AIMessage, AIAssistantRole } from "@/types/ai-assistant.types";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageInputForm } from "./MessageInputForm";

@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { 
@@ -64,192 +63,150 @@ export const AISystemIntegrationPanel: React.FC<AISystemIntegrationPanelProps> =
   const filteredCommands = getFilteredCommands();
   
   return (
-    <Card className="mt-6 border-wakti-blue/10">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-md flex items-center gap-2">
-          <Brain className="h-5 w-5 text-wakti-blue" />
-          WAKTI System Integration
-        </CardTitle>
-        <CardDescription>
-          I can interact with WAKTI's systems to help you with:
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="tasks" className="w-full">
-          <TabsList className="grid grid-cols-4 mb-4">
-            <TabsTrigger value="tasks" className="flex items-center gap-1">
-              <CheckSquare className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Tasks</span>
-            </TabsTrigger>
-            <TabsTrigger value="calendar" className="flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Events</span>
-            </TabsTrigger>
-            <TabsTrigger value="business" className="flex items-center gap-1">
-              <BriefcaseBusiness className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Business</span>
-            </TabsTrigger>
-            <TabsTrigger value="more" className="flex items-center gap-1">
-              <BarChart2 className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">More</span>
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="tasks" className="mt-0">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground mb-3">
-                I can help manage your tasks and to-dos:
-              </p>
-              
-              <div className="grid grid-cols-1 gap-2">
-                {filteredCommands.create_task?.examples.slice(0, 1).map((example, i) => (
-                  <Button 
-                    key={i} 
-                    variant="outline" 
-                    size="sm" 
-                    className="justify-start h-auto py-2 px-3"
-                    onClick={() => onExampleClick(example)}
-                  >
-                    <CheckSquare className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
-                    <span className="text-sm">{example}</span>
-                  </Button>
-                ))}
-                
-                {filteredCommands.view_tasks?.examples.slice(0, 1).map((example, i) => (
-                  <Button 
-                    key={i} 
-                    variant="outline" 
-                    size="sm" 
-                    className="justify-start h-auto py-2 px-3"
-                    onClick={() => onExampleClick(example)}
-                  >
-                    <Clock className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
-                    <span className="text-sm">{example}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="calendar" className="mt-0">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground mb-3">
-                I can help manage your events and schedule:
-              </p>
-              
-              <div className="grid grid-cols-1 gap-2">
-                {filteredCommands.schedule_event?.examples.slice(0, 1).map((example, i) => (
-                  <Button 
-                    key={i} 
-                    variant="outline" 
-                    size="sm" 
-                    className="justify-start h-auto py-2 px-3"
-                    onClick={() => onExampleClick(example)}
-                  >
-                    <Calendar className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
-                    <span className="text-sm">{example}</span>
-                  </Button>
-                ))}
-                
-                {filteredCommands.check_calendar?.examples.slice(0, 1).map((example, i) => (
-                  <Button 
-                    key={i} 
-                    variant="outline" 
-                    size="sm" 
-                    className="justify-start h-auto py-2 px-3"
-                    onClick={() => onExampleClick(example)}
-                  >
-                    <Clock className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
-                    <span className="text-sm">{example}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="business" className="mt-0">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground mb-3">
-                I can help with business management:
-              </p>
-              
-              <div className="grid grid-cols-1 gap-2">
-                {filteredCommands.manage_staff?.examples.slice(0, 1).map((example, i) => (
-                  <Button 
-                    key={i} 
-                    variant="outline" 
-                    size="sm" 
-                    className="justify-start h-auto py-2 px-3"
-                    onClick={() => onExampleClick(example)}
-                  >
-                    <User className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
-                    <span className="text-sm">{example}</span>
-                  </Button>
-                ))}
-                
-                {filteredCommands.view_analytics?.examples.slice(0, 1).map((example, i) => (
-                  <Button 
-                    key={i} 
-                    variant="outline" 
-                    size="sm" 
-                    className="justify-start h-auto py-2 px-3"
-                    onClick={() => onExampleClick(example)}
-                  >
-                    <BarChart2 className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
-                    <span className="text-sm">{example}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="more" className="mt-0">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground mb-3">
-                Additional capabilities:
-              </p>
-              
-              <div className="grid grid-cols-1 gap-2">
-                {filteredCommands.search_contacts?.examples.slice(0, 1).map((example, i) => (
-                  <Button 
-                    key={i} 
-                    variant="outline" 
-                    size="sm" 
-                    className="justify-start h-auto py-2 px-3"
-                    onClick={() => onExampleClick(example)}
-                  >
-                    <User className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
-                    <span className="text-sm">{example}</span>
-                  </Button>
-                ))}
-                
-                {filteredCommands.view_bookings?.examples.slice(0, 1).map((example, i) => (
-                  <Button 
-                    key={i} 
-                    variant="outline" 
-                    size="sm" 
-                    className="justify-start h-auto py-2 px-3"
-                    onClick={() => onExampleClick(example)}
-                  >
-                    <CircleDollarSign className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
-                    <span className="text-sm">{example}</span>
-                  </Button>
-                ))}
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="justify-start h-auto py-2 px-3"
-                  onClick={() => onExampleClick("Help me with my productivity")}
-                >
-                  <MessageSquare className="h-3.5 w-3.5 mr-2 text-wakti-blue" />
-                  <span className="text-sm">Help me with my productivity</span>
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+    <Tabs defaultValue="tasks" className="w-full">
+      <TabsList className="grid grid-cols-4 mb-2">
+        <TabsTrigger value="tasks" className="flex items-center gap-1">
+          <CheckSquare className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline text-xs">Tasks</span>
+        </TabsTrigger>
+        <TabsTrigger value="calendar" className="flex items-center gap-1">
+          <Calendar className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline text-xs">Events</span>
+        </TabsTrigger>
+        <TabsTrigger value="business" className="flex items-center gap-1">
+          <BriefcaseBusiness className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline text-xs">Business</span>
+        </TabsTrigger>
+        <TabsTrigger value="more" className="flex items-center gap-1">
+          <BarChart2 className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline text-xs">More</span>
+        </TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="tasks" className="mt-0">
+        <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-2">
+            {filteredCommands.create_task?.examples.slice(0, 1).map((example, i) => (
+              <Button 
+                key={i} 
+                variant="outline" 
+                size="sm" 
+                className="justify-start h-auto py-1.5 px-2 text-xs"
+                onClick={() => onExampleClick(example)}
+              >
+                <CheckSquare className="h-3 w-3 mr-1 text-wakti-blue" />
+                <span>{example}</span>
+              </Button>
+            ))}
+            
+            {filteredCommands.view_tasks?.examples.slice(0, 1).map((example, i) => (
+              <Button 
+                key={i} 
+                variant="outline" 
+                size="sm" 
+                className="justify-start h-auto py-1.5 px-2 text-xs"
+                onClick={() => onExampleClick(example)}
+              >
+                <Clock className="h-3 w-3 mr-1 text-wakti-blue" />
+                <span>{example}</span>
+              </Button>
+            ))}
+          </div>
+        </div>
+      </TabsContent>
+      
+      <TabsContent value="calendar" className="mt-0">
+        <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-2">
+            {filteredCommands.schedule_event?.examples.slice(0, 1).map((example, i) => (
+              <Button 
+                key={i} 
+                variant="outline" 
+                size="sm" 
+                className="justify-start h-auto py-1.5 px-2 text-xs"
+                onClick={() => onExampleClick(example)}
+              >
+                <Calendar className="h-3 w-3 mr-1 text-wakti-blue" />
+                <span>{example}</span>
+              </Button>
+            ))}
+            
+            {filteredCommands.check_calendar?.examples.slice(0, 1).map((example, i) => (
+              <Button 
+                key={i} 
+                variant="outline" 
+                size="sm" 
+                className="justify-start h-auto py-1.5 px-2 text-xs"
+                onClick={() => onExampleClick(example)}
+              >
+                <Clock className="h-3 w-3 mr-1 text-wakti-blue" />
+                <span>{example}</span>
+              </Button>
+            ))}
+          </div>
+        </div>
+      </TabsContent>
+      
+      <TabsContent value="business" className="mt-0">
+        <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-2">
+            {filteredCommands.manage_staff?.examples.slice(0, 1).map((example, i) => (
+              <Button 
+                key={i} 
+                variant="outline" 
+                size="sm" 
+                className="justify-start h-auto py-1.5 px-2 text-xs"
+                onClick={() => onExampleClick(example)}
+              >
+                <User className="h-3 w-3 mr-1 text-wakti-blue" />
+                <span>{example}</span>
+              </Button>
+            ))}
+            
+            {filteredCommands.view_analytics?.examples.slice(0, 1).map((example, i) => (
+              <Button 
+                key={i} 
+                variant="outline" 
+                size="sm" 
+                className="justify-start h-auto py-1.5 px-2 text-xs"
+                onClick={() => onExampleClick(example)}
+              >
+                <BarChart2 className="h-3 w-3 mr-1 text-wakti-blue" />
+                <span>{example}</span>
+              </Button>
+            ))}
+          </div>
+        </div>
+      </TabsContent>
+      
+      <TabsContent value="more" className="mt-0">
+        <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-2">
+            {filteredCommands.search_contacts?.examples.slice(0, 1).map((example, i) => (
+              <Button 
+                key={i} 
+                variant="outline" 
+                size="sm" 
+                className="justify-start h-auto py-1.5 px-2 text-xs"
+                onClick={() => onExampleClick(example)}
+              >
+                <User className="h-3 w-3 mr-1 text-wakti-blue" />
+                <span>{example}</span>
+              </Button>
+            ))}
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="justify-start h-auto py-1.5 px-2 text-xs"
+              onClick={() => onExampleClick("Help me with my productivity")}
+            >
+              <MessageSquare className="h-3 w-3 mr-1 text-wakti-blue" />
+              <span>Help me with my productivity</span>
+            </Button>
+          </div>
+        </div>
+      </TabsContent>
+    </Tabs>
   );
 };

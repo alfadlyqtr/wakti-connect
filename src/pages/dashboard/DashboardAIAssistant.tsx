@@ -18,8 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AIRoleSelector } from "@/components/ai/assistant/AIRoleSelector";
 import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
 import { Button } from "@/components/ui/button";
-import { EmptyStateView } from "@/components/ai/assistant/EmptyStateView";
-import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
+import { QuickToolsCard } from "@/components/ai/tools/QuickToolsCard";
 import { 
   MessageSquare, 
   Wrench, 
@@ -32,6 +31,7 @@ import {
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
 
 declare global {
   class ImageCapture {
@@ -60,7 +60,6 @@ const DashboardAIAssistant = () => {
   const [showCamera, setShowCamera] = useState(false);
   const [imageCapture, setImageCapture] = useState<ImageCapture | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [showSidePanel, setShowSidePanel] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
@@ -392,17 +391,33 @@ const DashboardAIAssistant = () => {
                               onStartVoiceInput={handleStartVoiceInput}
                               onStopVoiceInput={handleStopVoiceInput}
                               isListening={isListening}
+                              showSuggestions={false}
                             />
                           </div>
                           
-                          {messages.length === 0 && (
-                            <div className="hidden md:block w-1/3 min-w-[250px] max-w-[300px]">
-                              <EmptyStateView 
-                                onPromptClick={(prompt) => setInputMessage(prompt)} 
-                                selectedRole={selectedRole}
-                              />
-                            </div>
-                          )}
+                          <div className="hidden md:block w-1/3 min-w-[250px] max-w-[300px] space-y-4">
+                            <QuickToolsCard 
+                              selectedRole={selectedRole}
+                              onToolClick={(prompt) => setInputMessage(prompt)} 
+                            />
+                            
+                            <Card>
+                              <CardHeader className="pb-2">
+                                <CardTitle className="text-sm flex items-center gap-2">
+                                  <Cpu className="h-4 w-4" /> 
+                                  System Integration
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent className="p-3">
+                                <AISystemIntegrationPanel
+                                  selectedRole={selectedRole}
+                                  onExampleClick={(example) => {
+                                    setInputMessage(example);
+                                  }}
+                                />
+                              </CardContent>
+                            </Card>
+                          </div>
                         </div>
                       </TabsContent>
                       
@@ -428,18 +443,34 @@ const DashboardAIAssistant = () => {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2">
-                        <Cpu className="h-4 w-4" /> 
-                        WAKTI System Integration
+                        <Bot className="h-4 w-4" /> 
+                        Business Tools
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <AISystemIntegrationPanel
-                        selectedRole={selectedRole}
-                        onExampleClick={(example) => {
-                          setInputMessage(example);
-                          setActiveTab("chat");
-                        }}
-                      />
+                      {selectedRole === "business_owner" ? (
+                        <AISystemIntegrationPanel
+                          selectedRole={selectedRole}
+                          onExampleClick={(example) => {
+                            setInputMessage(example);
+                            setActiveTab("chat");
+                          }}
+                        />
+                      ) : (
+                        <div className="p-3 text-center">
+                          <p className="text-sm text-muted-foreground">
+                            Business tools are available in Business Assistant mode.
+                          </p>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="mt-2"
+                            onClick={() => handleRoleChange("business_owner")}
+                          >
+                            Switch to Business Mode
+                          </Button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
