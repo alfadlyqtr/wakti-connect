@@ -176,7 +176,8 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               )}>
                 <div className="prose dark:prose-invert max-w-none text-sm prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4">
                   <ReactMarkdown 
-                    remarkPlugins={[remarkGfm]}
+                    // Fix: Use remarkPlugins array instead of direct plugin application
+                    remarkPlugins={[[remarkGfm]]}
                   >
                     {msg.content}
                   </ReactMarkdown>

@@ -223,7 +223,7 @@ export const RoleProfileDisplay: React.FC<RoleProfileDisplayProps> = ({
   return (
     <div className="border rounded-md p-4 bg-muted/10 mb-4">
       <div className="flex justify-between items-start mb-2">
-        <h4 className="text-sm font-medium">{getRoleTitle()} Profile</h4>
+        <h4 className="text-sm font-medium">{getRoleTitle(role)} Profile</h4>
         <Button 
           variant="ghost" 
           size="sm" 
