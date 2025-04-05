@@ -39,7 +39,7 @@ export const helpFaqsData: FAQ[] = [
   },
   {
     question: "What's the difference between Individual and Business plans?",
-    answer: "The Individual plan offers unlimited tasks, appointments, and messaging with other users. The Business plan includes all Individual features plus a customizable business page, booking system, staff management, and advanced analytics.",
+    answer: "The Individual plan (QAR 20/month, QAR 200/year) offers unlimited tasks, appointments, and messaging with other users. The Business plan (QAR 45/month, QAR 400/year) includes all Individual features plus a customizable business page, booking system, staff management, and advanced analytics.",
     forAccountTypes: ['all']
   },
   {
@@ -75,6 +75,21 @@ export const helpFaqsData: FAQ[] = [
   {
     question: "How secure is my data on WAKTI?",
     answer: "WAKTI takes data security seriously. We use industry-standard encryption for data transmission and storage, implement strict access controls, and regularly audit our security measures. Your data is only accessible to you and those you explicitly share it with.",
+    forAccountTypes: ['all']
+  },
+  {
+    question: "Who created WAKTI?",
+    answer: "WAKTI was created by a team based in Qatar, focusing on providing an integrated productivity and business management solution tailored for small businesses and individual professionals in the MENA region with support for Arabic language.",
+    forAccountTypes: ['all']
+  },
+  {
+    question: "What are WAKTI's subscription plans and pricing?",
+    answer: "WAKTI offers three plans: 1) Free Plan with limited tasks (1/month) and features, 2) Individual Plan at QAR 20/month or QAR 200/year with unlimited tasks and appointments, 3) Business Plan at QAR 45/month or QAR 400/year with all features including business page, booking system, and staff management for up to 6 staff members.",
+    forAccountTypes: ['all']
+  },
+  {
+    question: "What makes WAKTI unique?",
+    answer: "WAKTI uniquely combines task management, scheduling, messaging, and business management in one platform. It focuses on the MENA region with Arabic support, offers customizable business profiles with booking capabilities, staff management features, and progressive privacy controls for messaging.",
     forAccountTypes: ['all']
   }
 ];
@@ -148,5 +163,19 @@ export const helpGuidesData: Guide[] = [
     thumbnailUrl: "/placeholder.svg",
     url: "https://docs.wakti.app/integrations",
     forAccountTypes: ['individual', 'business']
+  },
+  {
+    title: "WAKTI AI Assistant Guide",
+    description: "How to use and customize the WAKTI AI Assistant for maximum productivity",
+    thumbnailUrl: "/placeholder.svg",
+    url: "https://docs.wakti.app/ai-assistant",
+    forAccountTypes: ['individual', 'business']
+  },
+  {
+    title: "Understanding WAKTI Plans",
+    description: "Detailed comparison of Free, Individual, and Business plans",
+    thumbnailUrl: "/placeholder.svg",
+    url: "https://docs.wakti.app/plans",
+    forAccountTypes: ['all']
   }
 ];

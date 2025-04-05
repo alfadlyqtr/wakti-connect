@@ -214,11 +214,43 @@ export async function prepareAIRequest(user, message, context, supabaseClient) {
     console.error("Failed to fetch user profile:", error);
   }
   
-  // Enhanced system message with improved integrations
-  let systemMessage = `${roleContext} `;
+  // WAKTI information for the AI assistant
+  const waktiInfo = `
+WAKTI INFORMATION:
+
+GENERAL INFORMATION
+-------------------
+WAKTI is an all-in-one productivity and business management platform that integrates task management, appointment booking, messaging, and business tools.
+It is a mobile-first application that is also fully accessible on desktop.
+It was developed by a team based in Qatar, focusing on the MENA region with Arabic language support.
+
+CORE FEATURES
+------------
+1. Task Management & To-Do Lists: Create, edit, prioritize, share, and organize tasks with subtasks and color-coding.
+2. Appointment & Booking System: Create events, send invitations, offer bookable services (for businesses).
+3. Messaging & Contact Management: Message users and businesses with privacy controls.
+4. Business Dashboard & Landing Page: Customizable public business profile with booking capabilities.
+5. Business Management Tools: Staff management, time tracking, analytics, and service configuration.
+6. TMW AI Chatbot Integration: For enhanced customer engagement.
+
+SUBSCRIPTION PLANS
+----------------
+1. Free Plan: Limited tasks (1/month), view-only appointments, limited messaging (1/month)
+2. Individual Plan (QAR 20/month, QAR 200/year): Unlimited tasks, create appointments, message individuals
+3. Business Plan (QAR 45/month, QAR 400/year): Everything in Individual plus business profile, booking system, staff management (up to 6), TMW AI Chatbot
+
+ROLES
+-----
+1. Individual Users: Manage personal tasks, appointments, messaging
+2. Business Users: Everything from Individual plus business profile, staff management, service booking
+3. Staff Users: Access to assigned tasks, bookings, and time tracking (permissions set by admin)
+`;
   
-  // Add WAKTI system integration capabilities
-  systemMessage += `
+  // Enhanced system message with improved integrations and WAKTI knowledge
+  let systemMessage = `${roleContext} 
+
+${waktiInfo}
+
 You are integrated with WAKTI's productivity systems and can directly help with:
 
 1. Tasks: Create, view, update, and manage user tasks
@@ -321,6 +353,19 @@ Since this user has an Individual account, you can:
   if (documentsContext) {
     systemMessage += `Reference these documents when relevant: ${documentsContext} `;
   }
+  
+  // Add WAKTI knowledge instructions
+  systemMessage += `
+You are an expert on WAKTI. Always accurately answer any questions about WAKTI, including:
+- What WAKTI is and what it does
+- WAKTI's features and capabilities
+- WAKTI's pricing plans and subscription options
+- WAKTI's target audience and use cases
+- WAKTI's unique selling points and advantages
+- How to use specific WAKTI features
+
+If asked about non-WAKTI topics, you can answer briefly but always try to relate your response back to how WAKTI can help with that topic.
+`;
   
   // Add active listening and proactive assistance guidance
   systemMessage += `
