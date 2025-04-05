@@ -7,10 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Loader2, Upload, File, Trash2 } from "lucide-react";
 import { useAISettings } from "./context/AISettingsContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AIAssistantRole } from "@/types/ai-assistant.types";
 
 export const AIKnowledgeTab: React.FC = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [selectedRole, setSelectedRole] = useState<AIAssistantRole | undefined>(undefined);
   const { 
     knowledgeUploads, 
     addKnowledge, 
@@ -23,9 +26,10 @@ export const AIKnowledgeTab: React.FC = () => {
     if (!title.trim() || !content.trim()) return;
     
     try {
-      await addKnowledge(title, content);
+      await addKnowledge(title, content, selectedRole);
       setTitle("");
       setContent("");
+      setSelectedRole(undefined);
     } catch (error) {
       console.error("Failed to add knowledge:", error);
     }
@@ -49,6 +53,28 @@ export const AIKnowledgeTab: React.FC = () => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="knowledge_role">Role Specific (Optional)</Label>
+            <Select
+              value={selectedRole}
+              onValueChange={(value: AIAssistantRole | undefined) => setSelectedRole(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a specific assistant role (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="general">General Assistant</SelectItem>
+                <SelectItem value="student">Student Assistant</SelectItem>
+                <SelectItem value="business_owner">Business Assistant</SelectItem>
+                <SelectItem value="employee">Work Assistant</SelectItem>
+                <SelectItem value="writer">Creative Assistant</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              If selected, this knowledge will only be used when that assistant role is active.
+            </p>
           </div>
           
           <div className="space-y-2">
@@ -97,7 +123,17 @@ export const AIKnowledgeTab: React.FC = () => {
                   <div className="flex items-center">
                     <File className="h-4 w-4 mr-2 text-muted-foreground" />
                     <div>
-                      <p className="font-medium text-sm">{item.title}</p>
+                      <div className="flex items-center">
+                        <p className="font-medium text-sm">{item.title}</p>
+                        {item.role && (
+                          <span className="ml-2 text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
+                            {item.role === "student" ? "Student" : 
+                             item.role === "business_owner" ? "Business" :
+                             item.role === "employee" ? "Work" : 
+                             item.role === "writer" ? "Creator" : "General"}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         Added {new Date(item.created_at).toLocaleDateString()}
                       </p>

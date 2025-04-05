@@ -1,8 +1,9 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { FileUp, Trash2, BookOpen, Briefcase, Edit, Users, Bot, Upload, Info } from 'lucide-react';
+import { FileUp, Trash2, BookOpen, Briefcase, Edit, Users, Bot, Upload, Info, UserCircle } from 'lucide-react';
 import { AIAssistantRole } from '@/types/ai-assistant.types';
 import { useToast } from '@/components/ui/use-toast';
 import { useAIKnowledge } from '@/hooks/ai/useAIKnowledge';
@@ -11,6 +12,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useAISettings } from '@/components/settings/ai/context/AISettingsContext';
+import { RoleProfileDialog } from './RoleProfileDialog';
+import { RoleProfileDisplay } from './RoleProfileDisplay';
 
 interface RoleSpecificKnowledgeProps {
   selectedRole: AIAssistantRole;
@@ -24,7 +28,9 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
   const [activeTab, setActiveTab] = useState<AIAssistantRole>(selectedRole);
   const { toast } = useToast();
   const { knowledgeUploads, isLoadingKnowledge, deleteKnowledge, addKnowledge } = useAIKnowledge();
+  const { settings } = useAISettings();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
   
   const handleFileSelect = () => {
     fileInputRef.current?.click();
@@ -195,19 +201,38 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
             </AlertDescription>
           </Alert>
           
-          <div className="mb-4">
-            <Button onClick={handleFileSelect} className="w-full">
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Knowledge for {getRoleName(activeTab)}
-            </Button>
-            <input 
-              type="file" 
-              ref={fileInputRef}
-              className="hidden" 
-              accept=".txt,.pdf,.docx,.md"
-              onChange={handleFileChange}
+          {activeTab !== "general" && (
+            <div className="mb-4 flex flex-col sm:flex-row gap-3">
+              <Button 
+                onClick={() => setShowProfileDialog(true)} 
+                variant="default" 
+                className="flex-1"
+              >
+                <UserCircle className="h-4 w-4 mr-2" />
+                Edit {getRoleName(activeTab)} Profile
+              </Button>
+              
+              <Button onClick={handleFileSelect} className="flex-1">
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Knowledge
+              </Button>
+              <input 
+                type="file" 
+                ref={fileInputRef}
+                className="hidden" 
+                accept=".txt,.pdf,.docx,.md"
+                onChange={handleFileChange}
+              />
+            </div>
+          )}
+          
+          {activeTab !== "general" && settings?.knowledge_profile && (
+            <RoleProfileDisplay
+              role={activeTab}
+              profileData={settings.knowledge_profile}
+              onEditClick={() => setShowProfileDialog(true)}
             />
-          </div>
+          )}
           
           <div className="space-y-2">
             <h3 className="text-sm font-medium">{getRoleName(activeTab)} Knowledge Items</h3>
@@ -250,6 +275,12 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
             )}
           </div>
         </Tabs>
+        
+        <RoleProfileDialog
+          open={showProfileDialog}
+          onOpenChange={setShowProfileDialog}
+          role={activeTab}
+        />
       </CardContent>
     </Card>
   );
