@@ -1239,6 +1239,39 @@ export type Database = {
         }
         Relationships: []
       }
+      meetings: {
+        Row: {
+          created_at: string
+          date: string
+          duration: number
+          id: string
+          language: string | null
+          location: string | null
+          summary: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          duration: number
+          id?: string
+          language?: string | null
+          location?: string | null
+          summary: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          duration?: number
+          id?: string
+          language?: string | null
+          location?: string | null
+          summary?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string

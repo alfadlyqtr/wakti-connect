@@ -1,9 +1,11 @@
 
 /**
- * Google Maps API key for map embeds and location services
- * In a production environment, this should be stored in environment variables
+ * Maps configuration module
+ * Provides Google Maps API key and utility functions
  */
-export const GOOGLE_MAPS_API_KEY = 'AIzaSyBIwzALxUPNbatRBj3X1HyELQG7xToQ3vA';
+
+// Google Maps API key for map embeds and location services
+const GOOGLE_MAPS_API_KEY = 'AIzaSyBIwzALxUPNbatRBj3X1HyELQG7xToQ3vA';
 
 /**
  * Generates a Google Maps embed URL for a location query
@@ -26,3 +28,6 @@ export const generateGoogleMapsUrl = (location: string): string => {
   const encodedLocation = encodeURIComponent(location);
   return `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
 };
+
+// Export API key as default for convenient imports
+export default GOOGLE_MAPS_API_KEY;
