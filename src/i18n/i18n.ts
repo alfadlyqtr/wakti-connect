@@ -55,15 +55,23 @@ if (savedLanguage) {
   console.log('Found saved language in i18n initialization:', savedLanguage);
   i18n.changeLanguage(savedLanguage);
   setDocumentDirection(savedLanguage);
+} else {
+  // If no saved language, check if browser language is Arabic
+  const browserLang = navigator.language;
+  if (browserLang && browserLang.toLowerCase().startsWith('ar')) {
+    console.log('Browser language is Arabic, setting language to ar');
+    i18n.changeLanguage('ar');
+    localStorage.setItem('wakti-language', 'ar');
+  }
+  setDocumentDirection(i18n.language);
 }
-
-// Set the initial direction based on the detected language
-setDocumentDirection(i18n.language);
 
 // Listen for language changes
 i18n.on('languageChanged', (lng) => {
   console.log('Language changed to:', lng);
   setDocumentDirection(lng);
+  // Ensure the language is saved in localStorage
+  localStorage.setItem('wakti-language', lng);
 });
 
 export default i18n;

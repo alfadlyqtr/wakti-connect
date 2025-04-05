@@ -8,8 +8,10 @@ import { Save, Loader2 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useAISettings } from "./context/AISettingsContext";
+import { useTranslation } from "react-i18next";
 
 export const AIFeaturesTab: React.FC = () => {
+  const { t } = useTranslation();
   const { settings, updateSettings, isUpdatingSettings } = useAISettings();
   
   if (!settings) return null;
@@ -41,17 +43,17 @@ export const AIFeaturesTab: React.FC = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>AI Features & Behavior</CardTitle>
+        <CardTitle>{t("aiSettings.features.title")}</CardTitle>
         <CardDescription>
-          Control how the AI assistant behaves and what features it uses
+          {t("aiSettings.features.description")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <Label htmlFor="proactiveness">AI Proactiveness</Label>
+            <Label htmlFor="proactiveness">{t("aiSettings.features.proactiveness")}</Label>
             <p className="text-sm text-muted-foreground">
-              Allow AI to suggest actions based on your activity
+              {t("aiSettings.features.proactivenessDescription")}
             </p>
           </div>
           <Switch
@@ -64,9 +66,9 @@ export const AIFeaturesTab: React.FC = () => {
         <Separator />
         
         <div className="space-y-3">
-          <Label>Suggestion Frequency</Label>
+          <Label>{t("aiSettings.features.suggestionFrequency")}</Label>
           <p className="text-sm text-muted-foreground">
-            How often should the AI offer suggestions and ideas
+            {t("aiSettings.features.suggestionFrequencyDescription")}
           </p>
           <RadioGroup 
             value={settings.suggestion_frequency} 
@@ -74,15 +76,15 @@ export const AIFeaturesTab: React.FC = () => {
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="low" id="low_freq" />
-              <Label htmlFor="low_freq" className="cursor-pointer">Low - Minimal suggestions</Label>
+              <Label htmlFor="low_freq" className="cursor-pointer">{t("aiSettings.frequency.low")}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="medium" id="medium_freq" />
-              <Label htmlFor="medium_freq" className="cursor-pointer">Medium - Balanced suggestions</Label>
+              <Label htmlFor="medium_freq" className="cursor-pointer">{t("aiSettings.frequency.medium")}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="high" id="high_freq" />
-              <Label htmlFor="high_freq" className="cursor-pointer">High - Frequent suggestions</Label>
+              <Label htmlFor="high_freq" className="cursor-pointer">{t("aiSettings.frequency.high")}</Label>
             </div>
           </RadioGroup>
         </div>
@@ -90,14 +92,14 @@ export const AIFeaturesTab: React.FC = () => {
         <Separator />
         
         <div className="space-y-3">
-          <Label>Enabled Features</Label>
+          <Label>{t("aiSettings.features.enabledFeatures")}</Label>
           <p className="text-sm text-muted-foreground">
-            Select which features the AI assistant can help with
+            {t("aiSettings.features.selectFeatures")}
           </p>
           
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="tasks_feature" className="cursor-pointer">Task Management</Label>
+              <Label htmlFor="tasks_feature" className="cursor-pointer">{t("aiSettings.features.taskManagement")}</Label>
               <Switch
                 id="tasks_feature"
                 checked={settings.enabled_features.tasks}
@@ -106,7 +108,7 @@ export const AIFeaturesTab: React.FC = () => {
             </div>
             
             <div className="flex items-center justify-between">
-              <Label htmlFor="events_feature" className="cursor-pointer">Event Planning</Label>
+              <Label htmlFor="events_feature" className="cursor-pointer">{t("aiSettings.features.eventPlanning")}</Label>
               <Switch
                 id="events_feature"
                 checked={settings.enabled_features.events}
@@ -115,7 +117,7 @@ export const AIFeaturesTab: React.FC = () => {
             </div>
             
             <div className="flex items-center justify-between">
-              <Label htmlFor="staff_feature" className="cursor-pointer">Staff Management</Label>
+              <Label htmlFor="staff_feature" className="cursor-pointer">{t("aiSettings.features.staffManagement")}</Label>
               <Switch
                 id="staff_feature"
                 checked={settings.enabled_features.staff}
@@ -124,7 +126,7 @@ export const AIFeaturesTab: React.FC = () => {
             </div>
             
             <div className="flex items-center justify-between">
-              <Label htmlFor="analytics_feature" className="cursor-pointer">Analytics & Insights</Label>
+              <Label htmlFor="analytics_feature" className="cursor-pointer">{t("aiSettings.features.analytics")}</Label>
               <Switch
                 id="analytics_feature"
                 checked={settings.enabled_features.analytics}
@@ -133,7 +135,7 @@ export const AIFeaturesTab: React.FC = () => {
             </div>
             
             <div className="flex items-center justify-between">
-              <Label htmlFor="messaging_feature" className="cursor-pointer">Messaging Assistance</Label>
+              <Label htmlFor="messaging_feature" className="cursor-pointer">{t("aiSettings.features.messagingAssistance")}</Label>
               <Switch
                 id="messaging_feature"
                 checked={settings.enabled_features.messaging}
@@ -152,12 +154,12 @@ export const AIFeaturesTab: React.FC = () => {
           {isUpdatingSettings ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
+              {t("aiSettings.saving")}
             </>
           ) : (
             <>
               <Save className="mr-2 h-4 w-4" />
-              Save Feature Settings
+              {t("aiSettings.saveFeatures")}
             </>
           )}
         </Button>

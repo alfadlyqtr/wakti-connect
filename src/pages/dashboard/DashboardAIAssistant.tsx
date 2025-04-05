@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,6 +35,7 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
+import { useTranslation } from "react-i18next";
 
 declare global {
   class ImageCapture {
@@ -44,6 +46,7 @@ declare global {
 }
 
 const DashboardAIAssistant = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { 
     messages, 
@@ -104,8 +107,8 @@ const DashboardAIAssistant = () => {
       } catch (error) {
         console.error("Failed to update AI role:", error);
         toast({
-          title: "Error",
-          description: "Failed to update assistant role",
+          title: t("common.error"),
+          description: t("ai.roleUpdateError"),
           variant: "destructive",
         });
       }
@@ -118,20 +121,20 @@ const DashboardAIAssistant = () => {
     try {
       console.log("Uploading file:", file.name);
       toast({
-        title: "File Uploaded",
-        description: `File "${file.name}" has been uploaded.`,
+        title: t("ai.fileUploaded"),
+        description: t("ai.fileUploadSuccess", { name: file.name }),
       });
       
-      setInputMessage(`I've uploaded a file named "${file.name}". Can you help me with it?`);
+      setInputMessage(t("ai.uploadedFilePrompt", { name: file.name }));
     } catch (error) {
       console.error("File upload error:", error);
       toast({
-        title: "Upload Failed",
-        description: "Failed to upload the file. Please try again.",
+        title: t("ai.uploadFailed"),
+        description: t("ai.tryAgain"),
         variant: "destructive"
       });
     }
-  }, [toast]);
+  }, [toast, t]);
 
   const handleCameraCapture = useCallback(async () => {
     try {
@@ -151,12 +154,12 @@ const DashboardAIAssistant = () => {
     } catch (error) {
       console.error("Camera access error:", error);
       toast({
-        title: "Camera Error",
-        description: "Failed to access camera. Please check your permissions.",
+        title: t("ai.cameraError"),
+        description: t("ai.checkPermissions"),
         variant: "destructive"
       });
     }
-  }, [toast]);
+  }, [toast, t]);
 
   const takePicture = useCallback(async () => {
     if (!imageCapture || !canvasRef.current) return;
@@ -172,7 +175,7 @@ const DashboardAIAssistant = () => {
       const dataUrl = canvas.toDataURL('image/jpeg');
       setCapturedImage(dataUrl);
       
-      setInputMessage("I've just taken a photo. Can you help me analyze it?");
+      setInputMessage(t("ai.photoTakenPrompt"));
       
       setShowCamera(false);
       
@@ -181,18 +184,18 @@ const DashboardAIAssistant = () => {
       }
       
       toast({
-        title: "Photo Taken",
-        description: "Your photo has been captured and is ready to use.",
+        title: t("ai.photoTaken"),
+        description: t("ai.photoReady"),
       });
     } catch (error) {
       console.error("Error taking picture:", error);
       toast({
-        title: "Camera Error",
-        description: "Failed to take picture. Please try again.",
+        title: t("ai.cameraError"),
+        description: t("ai.tryAgain"),
         variant: "destructive"
       });
     }
-  }, [imageCapture, toast]);
+  }, [imageCapture, toast, t]);
 
   const closeCamera = useCallback(() => {
     if (videoRef.current?.srcObject instanceof MediaStream) {
@@ -234,8 +237,8 @@ const DashboardAIAssistant = () => {
         if (profileError) {
           console.error("Error checking access:", profileError);
           toast({
-            title: "Error checking access",
-            description: "Could not verify your account type. Please try again.",
+            title: t("ai.accessError"),
+            description: t("ai.verifyAccountError"),
             variant: "destructive",
           });
           setCanAccess(false);
@@ -254,7 +257,7 @@ const DashboardAIAssistant = () => {
     };
     
     checkUserAccess();
-  }, [user, toast]);
+  }, [user, toast, t]);
 
   useEffect(() => {
     if (hookCanUseAI !== undefined && !isChecking) {
@@ -320,8 +323,8 @@ const DashboardAIAssistant = () => {
   return (
     <StaffRoleGuard 
       disallowStaff={true}
-      messageTitle="AI Assistant Not Available"
-      messageDescription="AI assistant features are not available for staff accounts."
+      messageTitle={t("ai.notAvailable")}
+      messageDescription={t("ai.staffRestriction")}
     >
       <AISettingsProvider>
         <div className="space-y-4">
@@ -337,10 +340,10 @@ const DashboardAIAssistant = () => {
                     </div>
                     <div>
                       <CardTitle className="flex items-center">
-                        WAKTI AI Assistant
+                        {t("ai.title")}
                         <Badge variant="outline" className="ml-2 text-xs px-2">v2.0</Badge>
                       </CardTitle>
-                      <p className="text-sm text-muted-foreground">Your intelligent productivity partner</p>
+                      <p className="text-sm text-muted-foreground">{t("ai.subtitle")}</p>
                     </div>
                   </div>
                 </CardHeader>
@@ -358,15 +361,15 @@ const DashboardAIAssistant = () => {
                     <TabsList className="mx-auto mb-4 grid w-full max-w-md grid-cols-3">
                       <TabsTrigger value="chat" className="flex items-center gap-2">
                         <MessageSquare className="h-4 w-4" />
-                        <span>Chat</span>
+                        <span>{t("ai.tabs.chat")}</span>
                       </TabsTrigger>
                       <TabsTrigger value="tools" className="flex items-center gap-2">
                         <Wrench className="h-4 w-4" />
-                        <span>Tools</span>
+                        <span>{t("ai.tabs.tools")}</span>
                       </TabsTrigger>
                       <TabsTrigger value="knowledge" className="flex items-center gap-2">
                         <BookCopy className="h-4 w-4" />
-                        <span>Knowledge</span>
+                        <span>{t("ai.tabs.knowledge")}</span>
                       </TabsTrigger>
                     </TabsList>
                     
@@ -428,7 +431,7 @@ const DashboardAIAssistant = () => {
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm flex items-center gap-2">
                           <Cpu className="h-4 w-4" /> 
-                          Business Tools
+                          {t("ai.businessTools")}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -453,8 +456,8 @@ const DashboardAIAssistant = () => {
                             <Bot className="h-4 w-4" />
                           )}
                           {selectedRole === "employee" || selectedRole === "writer" 
-                            ? "Creative Tools" 
-                            : `${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1).replace('_', ' ')} Tools`}
+                            ? t("ai.creativeTools")
+                            : t(`ai.toolsFor.${selectedRole}`)}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -478,7 +481,7 @@ const DashboardAIAssistant = () => {
         <Dialog open={showCamera} onOpenChange={setShowCamera}>
           <DialogContent className="max-w-md" onInteractOutside={closeCamera}>
             <DialogHeader>
-              <DialogTitle>Take a Picture</DialogTitle>
+              <DialogTitle>{t("ai.takePicture")}</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col items-center space-y-4">
               <div className="relative bg-black rounded-lg overflow-hidden w-full aspect-video">
@@ -491,8 +494,8 @@ const DashboardAIAssistant = () => {
               </div>
               <canvas ref={canvasRef} className="hidden" />
               <div className="flex justify-center gap-4">
-                <Button variant="outline" onClick={closeCamera}>Cancel</Button>
-                <Button onClick={takePicture}>Take Picture</Button>
+                <Button variant="outline" onClick={closeCamera}>{t("common.cancel")}</Button>
+                <Button onClick={takePicture}>{t("ai.takePicture")}</Button>
               </div>
             </div>
           </DialogContent>

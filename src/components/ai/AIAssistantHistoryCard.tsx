@@ -2,6 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { History, Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface AIAssistantHistoryCardProps {
   canAccess: boolean;
@@ -12,15 +13,17 @@ export const AIAssistantHistoryCard: React.FC<AIAssistantHistoryCardProps> = ({
   canAccess,
   compact = false
 }) => {
+  const { t } = useTranslation();
+  
   if (!canAccess) {
     return null;
   }
 
   // Sample history data - would be replaced with actual data in a real implementation
   const sampleHistory = [
-    { id: "1", title: "How to improve task efficiency", date: "2 days ago" },
-    { id: "2", title: "Marketing strategies for small business", date: "1 week ago" },
-    { id: "3", title: "Study plan for biology exam", date: "2 weeks ago" }
+    { id: "1", title: t("ai.sampleHistory.efficiency"), date: t("ai.timeAgo.days", { count: 2 }) },
+    { id: "2", title: t("ai.sampleHistory.marketing"), date: t("ai.timeAgo.week", { count: 1 }) },
+    { id: "3", title: t("ai.sampleHistory.studyPlan"), date: t("ai.timeAgo.weeks", { count: 2 }) }
   ];
 
   // Adjust styling for compact mode
@@ -47,7 +50,7 @@ export const AIAssistantHistoryCard: React.FC<AIAssistantHistoryCardProps> = ({
       <div className="space-y-3">
         <div className="flex items-center text-sm mb-1">
           <History className="h-4 w-4 mr-1.5" />
-          <span className="font-medium">Recent Conversations</span>
+          <span className="font-medium">{t("ai.recentConversations")}</span>
         </div>
         <div className="space-y-2">
           {sampleHistory.map((item) => (
@@ -72,7 +75,7 @@ export const AIAssistantHistoryCard: React.FC<AIAssistantHistoryCardProps> = ({
       <CardHeader className={getHeaderClasses()}>
         <CardTitle className={`flex items-center ${getTitleClasses()}`}>
           <History className={getIconClasses()} />
-          Conversation History
+          {t("ai.conversationHistory")}
         </CardTitle>
       </CardHeader>
       <CardContent>

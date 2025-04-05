@@ -9,8 +9,10 @@ import { Loader2, Upload, File, Trash2 } from "lucide-react";
 import { useAISettings } from "./context/AISettingsContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
+import { useTranslation } from "react-i18next";
 
 export const AIKnowledgeTab: React.FC = () => {
+  const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [selectedRole, setSelectedRole] = useState<AIAssistantRole | undefined>(undefined);
@@ -38,50 +40,50 @@ export const AIKnowledgeTab: React.FC = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Knowledge Base</CardTitle>
+        <CardTitle>{t("aiSettings.knowledge.title")}</CardTitle>
         <CardDescription>
-          Add custom information that your AI assistant can reference
+          {t("aiSettings.knowledge.description")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="knowledge_title">Title</Label>
+            <Label htmlFor="knowledge_title">{t("aiSettings.knowledge.titleLabel")}</Label>
             <Input
               id="knowledge_title"
-              placeholder="E.g., Company Policies, Product Information"
+              placeholder={t("aiSettings.knowledge.titlePlaceholder")}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="knowledge_role">Role Specific (Optional)</Label>
+            <Label htmlFor="knowledge_role">{t("aiSettings.knowledge.roleSpecific")}</Label>
             <Select
               value={selectedRole}
               onValueChange={(value: AIAssistantRole | undefined) => setSelectedRole(value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a specific assistant role (optional)" />
+                <SelectValue placeholder={t("aiSettings.knowledge.selectRole")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="general">General Assistant</SelectItem>
-                <SelectItem value="student">Student Assistant</SelectItem>
-                <SelectItem value="business_owner">Business Assistant</SelectItem>
-                <SelectItem value="employee">Work Assistant</SelectItem>
-                <SelectItem value="writer">Creative Assistant</SelectItem>
+                <SelectItem value="general">{t("aiSettings.roles.general")}</SelectItem>
+                <SelectItem value="student">{t("aiSettings.roles.student")}</SelectItem>
+                <SelectItem value="business_owner">{t("aiSettings.roles.business")}</SelectItem>
+                <SelectItem value="employee">{t("aiSettings.roles.work")}</SelectItem>
+                <SelectItem value="writer">{t("aiSettings.roles.creative")}</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              If selected, this knowledge will only be used when that assistant role is active.
+              {t("aiSettings.knowledge.roleDescription")}
             </p>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="knowledge_content">Content</Label>
+            <Label htmlFor="knowledge_content">{t("aiSettings.knowledge.content")}</Label>
             <Textarea
               id="knowledge_content"
-              placeholder="Enter text that you want your AI assistant to know about"
+              placeholder={t("aiSettings.knowledge.contentPlaceholder")}
               className="min-h-[200px]"
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -96,12 +98,12 @@ export const AIKnowledgeTab: React.FC = () => {
             {isAddingKnowledge ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Adding Knowledge...
+                {t("aiSettings.knowledge.adding")}
               </>
             ) : (
               <>
                 <Upload className="mr-2 h-4 w-4" />
-                Add to Knowledge Base
+                {t("aiSettings.knowledge.add")}
               </>
             )}
           </Button>
@@ -113,7 +115,7 @@ export const AIKnowledgeTab: React.FC = () => {
           </div>
         ) : knowledgeUploads && knowledgeUploads.length > 0 ? (
           <div className="space-y-4">
-            <h3 className="font-medium">Your Knowledge Base</h3>
+            <h3 className="font-medium">{t("aiSettings.knowledge.yourKnowledge")}</h3>
             <div className="space-y-2">
               {knowledgeUploads.map((item) => (
                 <div 
@@ -127,15 +129,16 @@ export const AIKnowledgeTab: React.FC = () => {
                         <p className="font-medium text-sm">{item.title}</p>
                         {item.role && (
                           <span className="ml-2 text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
-                            {item.role === "student" ? "Student" : 
-                             item.role === "business_owner" ? "Business" :
-                             item.role === "employee" ? "Work" : 
-                             item.role === "writer" ? "Creator" : "General"}
+                            {t(`aiSettings.roles.${item.role}`, {
+                              defaultValue: t("aiSettings.roles.general")
+                            })}
                           </span>
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Added {new Date(item.created_at).toLocaleDateString()}
+                        {t("aiSettings.knowledge.added", {
+                          date: new Date(item.created_at).toLocaleDateString()
+                        })}
                       </p>
                     </div>
                   </div>
@@ -143,6 +146,7 @@ export const AIKnowledgeTab: React.FC = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => deleteKnowledge(item.id)}
+                    title={t("aiSettings.knowledge.delete")}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -152,9 +156,9 @@ export const AIKnowledgeTab: React.FC = () => {
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
-            <p>No knowledge items added yet</p>
+            <p>{t("aiSettings.knowledge.noItems")}</p>
             <p className="text-sm">
-              Add information that your AI assistant can use when responding
+              {t("aiSettings.knowledge.addInfo")}
             </p>
           </div>
         )}

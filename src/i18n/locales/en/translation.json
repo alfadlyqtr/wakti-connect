@@ -22,7 +22,8 @@
     "logIn": "Log In",
     "logOut": "Log Out",
     "getStarted": "Get Started",
-    "scrollToTop": "Scroll to Top"
+    "scrollToTop": "Scroll to Top",
+    "there": "There"
   },
   "header": {
     "pricing": "Pricing",
@@ -247,11 +248,13 @@
     "endBy": "End by"
   },
   "settings": {
+    "title": "Settings",
     "profile": "Profile",
     "account": "Account",
     "billing": "Billing",
     "notifications": "Notifications",
     "aiAssistant": "AI Assistant",
+    "currency": "Currency",
     "manageSettings": "Manage your account settings and preferences",
     "personalInfo": "Personal Information",
     "updatePersonalInfo": "Update your personal information",
@@ -262,7 +265,8 @@
     "uploadNewPicture": "Upload new picture",
     "remove": "Remove",
     "saveChanges": "Save Changes",
-    "updatingProfile": "Updating profile..."
+    "updatingProfile": "Updating profile...",
+    "businessAccount": "Business & Account"
   },
   "contact": {
     "getInTouch": "Get In Touch",
@@ -326,14 +330,180 @@
       "high": "High",
       "medium": "Medium",
       "low": "Low",
-      "normal": "Normal"
+      "normal": "Normal",
+      "urgent": "Urgent"
     },
     "today": "Tasks Today",
     "createTask": "Create Task",
-    "startWork": "Start Working"
+    "startWork": "Start Working",
+    "userDescription": "Manage your tasks and track your progress.",
+    "staffDescription": "View and manage tasks assigned or delegated to you.",
+    "noTasksYet": "No tasks yet",
+    "createFirstTaskPaid": "Create your first task to start organizing your work.",
+    "createFirstTaskFree": "Free accounts can create one task. Create your first task now!",
+    "noTasksFound": "No tasks found",
+    "noArchivedTasks": "No archived tasks",
+    "archivedTasksDescription": "Tasks you delete or cancel will appear here",
+    "noTasksDescription": "Start by creating your first task"
   },
   "location": {
     "enterLocation": "Enter a location",
     "viewOnMap": "View on Map"
+  },
+  "ai": {
+    "title": "WAKTI AI Assistant",
+    "subtitle": "Your intelligent productivity partner",
+    "assistant": "WAKTI AI Assistant",
+    "unlockFeatures": "Unlock AI-powered productivity features with Individual or Business plan",
+    "benefits": "What you'll get with WAKTI AI:",
+    "upgradePlan": "Upgrade your plan",
+    "premiumFeature": "Premium Feature",
+    "requiresPlan": "This feature requires an Individual or Business plan",
+    "upgradeToAccess": "Upgrade your WAKTI plan to access enhanced AI tools and features that help you boost productivity.",
+    "upgradeNow": "Upgrade Now",
+    "documentAnalysis": "Document Analysis",
+    "recentConversations": "Recent Conversations",
+    "conversationHistory": "Conversation History",
+    "takePicture": "Take a Picture",
+    "photoTaken": "Photo Taken",
+    "photoReady": "Your photo has been captured and is ready to use.",
+    "photoTakenPrompt": "I've just taken a photo. Can you help me analyze it?",
+    "uploadedFilePrompt": "I've uploaded a file named \"{name}\". Can you help me with it?",
+    "fileUploaded": "File Uploaded",
+    "fileUploadSuccess": "File \"{name}\" has been uploaded.",
+    "uploadFailed": "Upload Failed",
+    "tryAgain": "Failed to upload the file. Please try again.",
+    "cameraError": "Camera Error",
+    "checkPermissions": "Failed to access camera. Please check your permissions.",
+    "accessError": "Error checking access",
+    "verifyAccountError": "Could not verify your account type. Please try again.",
+    "roleUpdateError": "Failed to update assistant role",
+    "notAvailable": "AI Assistant Not Available",
+    "staffRestriction": "AI assistant features are not available for staff accounts.",
+    "greeting": "Hi",
+    "introduction": "I'm your WAKTI {role} Assistant",
+    "defaultWelcome": "How can I help you today? I'm here to assist with any questions or tasks you have.",
+    "messagePlaceholder": "Type your message...",
+    "stopVoice": "Stop voice input",
+    "startVoice": "Start voice input",
+    "attachFile": "Attach a file",
+    "takePhoto": "Take a photo",
+    "sendMessage": "Send message",
+    "system": "Sys",
+    "fileTooLarge": "File too large",
+    "fileSizeLimit": "Please upload a file smaller than 10MB",
+    "tabs": {
+      "chat": "Chat",
+      "tools": "Tools",
+      "knowledge": "Knowledge"
+    },
+    "businessTools": "Business Tools",
+    "creativeTools": "Creative Tools",
+    "toolsFor": {
+      "general": "General Tools",
+      "student": "Student Tools",
+      "business_owner": "Business Tools",
+      "employee": "Work Tools",
+      "writer": "Creative Tools"
+    },
+    "roles": {
+      "general": "Productivity",
+      "student": "Study",
+      "business_owner": "Business",
+      "employee": "Work",
+      "writer": "Creative"
+    },
+    "features": {
+      "taskScheduling": "Smart task scheduling and optimization",
+      "eventPlanning": "Event planning assistance and suggestions",
+      "staffManagement": "Staff management and workload optimization",
+      "analyticsInsights": "Analytics insights and performance recommendations",
+      "customizablePersonality": "Customizable AI personality and behavior"
+    },
+    "welcomeMessages": {
+      "general": "How can I help you today? I'm here to assist with any questions or tasks you have.",
+      "student": "Let me help you with your studies and academic planning.",
+      "business_owner": "I can help optimize your business operations and management tasks.",
+      "employee": "Let me help you be more productive and organize your work effectively.",
+      "writer": "Need creative inspiration or content assistance? I'm here to help."
+    },
+    "sampleHistory": {
+      "efficiency": "How to improve task efficiency",
+      "marketing": "Marketing strategies for small business",
+      "studyPlan": "Study plan for biology exam"
+    },
+    "timeAgo": {
+      "days": "{{count}} days ago",
+      "week": "{{count}} week ago",
+      "weeks": "{{count}} weeks ago"
+    }
+  },
+  "aiSettings": {
+    "personalitySettings": "AI Personality Settings",
+    "customizeInteraction": "Customize how your AI assistant interacts with you",
+    "assistantName": "Assistant Name",
+    "fixedAssistantName": "The assistant name is set to WAKTI AI and cannot be changed.",
+    "aiTone": "AI Tone",
+    "tones": {
+      "formal": "Formal & Professional",
+      "casual": "Casual & Friendly",
+      "professional": "Professional",
+      "friendly": "Friendly",
+      "balanced": "Balanced"
+    },
+    "responseLength": "Response Length",
+    "length": {
+      "short": "Short & Quick Responses",
+      "balanced": "Balanced Responses",
+      "detailed": "In-Depth Responses"
+    },
+    "saving": "Saving...",
+    "savePersonality": "Save Personality Settings",
+    "saveFeatures": "Save Feature Settings",
+    "features": {
+      "title": "AI Features & Behavior",
+      "description": "Control how the AI assistant behaves and what features it uses",
+      "proactiveness": "AI Proactiveness",
+      "proactivenessDescription": "Allow AI to suggest actions based on your activity",
+      "suggestionFrequency": "Suggestion Frequency",
+      "suggestionFrequencyDescription": "How often should the AI offer suggestions and ideas",
+      "enabledFeatures": "Enabled Features",
+      "selectFeatures": "Select which features the AI assistant can help with",
+      "taskManagement": "Task Management",
+      "eventPlanning": "Event Planning",
+      "staffManagement": "Staff Management",
+      "analytics": "Analytics & Insights",
+      "messagingAssistance": "Messaging Assistance"
+    },
+    "frequency": {
+      "low": "Low - Minimal suggestions",
+      "medium": "Medium - Balanced suggestions",
+      "high": "High - Frequent suggestions"
+    },
+    "knowledge": {
+      "title": "Knowledge Base",
+      "description": "Add custom information that your AI assistant can reference",
+      "titleLabel": "Title",
+      "titlePlaceholder": "E.g., Company Policies, Product Information",
+      "roleSpecific": "Role Specific (Optional)",
+      "selectRole": "Select a specific assistant role (optional)",
+      "roleDescription": "If selected, this knowledge will only be used when that assistant role is active.",
+      "content": "Content",
+      "contentPlaceholder": "Enter text that you want your AI assistant to know about",
+      "adding": "Adding Knowledge...",
+      "add": "Add to Knowledge Base",
+      "yourKnowledge": "Your Knowledge Base",
+      "added": "Added {{date}}",
+      "delete": "Delete knowledge item",
+      "noItems": "No knowledge items added yet",
+      "addInfo": "Add information that your AI assistant can use when responding"
+    },
+    "roles": {
+      "general": "General Assistant",
+      "student": "Student Assistant",
+      "business": "Business Assistant",
+      "work": "Work Assistant",
+      "creative": "Creative Assistant"
+    }
   }
 }

@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Save, Loader2, Bot } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAISettings } from "./context/AISettingsContext";
+import { useTranslation } from "react-i18next";
 
 export const AIPersonalityTab: React.FC = () => {
+  const { t } = useTranslation();
   const { settings, updateSettings, isUpdatingSettings } = useAISettings();
   
   if (!settings) return null;
@@ -32,15 +34,15 @@ export const AIPersonalityTab: React.FC = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bot className="h-5 w-5 text-wakti-blue" />
-          AI Personality Settings
+          {t("aiSettings.personalitySettings")}
         </CardTitle>
         <CardDescription>
-          Customize how your AI assistant interacts with you
+          {t("aiSettings.customizeInteraction")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="assistant_name">Assistant Name</Label>
+          <Label htmlFor="assistant_name">{t("aiSettings.assistantName")}</Label>
           <Input 
             id="assistant_name" 
             value="WAKTI AI"
@@ -49,12 +51,12 @@ export const AIPersonalityTab: React.FC = () => {
             placeholder="WAKTI AI"
           />
           <p className="text-xs text-muted-foreground">
-            The assistant name is set to WAKTI AI and cannot be changed.
+            {t("aiSettings.fixedAssistantName")}
           </p>
         </div>
         
         <div className="space-y-2">
-          <Label>AI Tone</Label>
+          <Label>{t("aiSettings.aiTone")}</Label>
           <RadioGroup 
             value={settings.tone} 
             onValueChange={handleToneChange}
@@ -62,44 +64,44 @@ export const AIPersonalityTab: React.FC = () => {
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="formal" id="formal" />
-              <Label htmlFor="formal" className="cursor-pointer">Formal & Professional</Label>
+              <Label htmlFor="formal" className="cursor-pointer">{t("aiSettings.tones.formal")}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="casual" id="casual" />
-              <Label htmlFor="casual" className="cursor-pointer">Casual & Friendly</Label>
+              <Label htmlFor="casual" className="cursor-pointer">{t("aiSettings.tones.casual")}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="professional" id="professional" />
-              <Label htmlFor="professional" className="cursor-pointer">Professional</Label>
+              <Label htmlFor="professional" className="cursor-pointer">{t("aiSettings.tones.professional")}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="friendly" id="friendly" />
-              <Label htmlFor="friendly" className="cursor-pointer">Friendly</Label>
+              <Label htmlFor="friendly" className="cursor-pointer">{t("aiSettings.tones.friendly")}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="balanced" id="balanced" />
-              <Label htmlFor="balanced" className="cursor-pointer">Balanced</Label>
+              <Label htmlFor="balanced" className="cursor-pointer">{t("aiSettings.tones.balanced")}</Label>
             </div>
           </RadioGroup>
         </div>
         
         <div className="space-y-2">
-          <Label>Response Length</Label>
+          <Label>{t("aiSettings.responseLength")}</Label>
           <RadioGroup 
             value={settings.response_length} 
             onValueChange={handleResponseLengthChange}
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="concise" id="concise" />
-              <Label htmlFor="concise" className="cursor-pointer">Short & Quick Responses</Label>
+              <Label htmlFor="concise" className="cursor-pointer">{t("aiSettings.length.short")}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="balanced" id="balanced_length" />
-              <Label htmlFor="balanced_length" className="cursor-pointer">Balanced Responses</Label>
+              <Label htmlFor="balanced_length" className="cursor-pointer">{t("aiSettings.length.balanced")}</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="detailed" id="detailed_length" />
-              <Label htmlFor="detailed_length" className="cursor-pointer">In-Depth Responses</Label>
+              <Label htmlFor="detailed_length" className="cursor-pointer">{t("aiSettings.length.detailed")}</Label>
             </div>
           </RadioGroup>
         </div>
@@ -113,12 +115,12 @@ export const AIPersonalityTab: React.FC = () => {
           {isUpdatingSettings ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
+              {t("aiSettings.saving")}
             </>
           ) : (
             <>
               <Save className="mr-2 h-4 w-4" />
-              Save Personality Settings
+              {t("aiSettings.savePersonality")}
             </>
           )}
         </Button>

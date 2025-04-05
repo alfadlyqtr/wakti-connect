@@ -2,11 +2,13 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { Globe } from "lucide-react";
 
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
   
   const changeLanguage = (language: string) => {
+    console.log(`Changing language to: ${language}`);
     i18n.changeLanguage(language);
     
     // Set the dir attribute on the html element for RTL support
@@ -50,18 +52,30 @@ export function LanguageSwitcher() {
     }
   }, [i18n]);
 
-  // Directly display both language options as buttons with flags
+  // Show different buttons based on current language
   if (i18n.language === 'ar') {
     return (
-      <Button variant="outline" size="sm" className="px-3" onClick={() => changeLanguage('en')}>
-        <span className="mr-1">🇺🇸</span>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="px-3 flex items-center gap-1.5" 
+        onClick={() => changeLanguage('en')}
+        title="Switch to English"
+      >
+        <Globe className="h-4 w-4" />
         <span>English</span>
       </Button>
     );
   } else {
     return (
-      <Button variant="outline" size="sm" className="px-3" onClick={() => changeLanguage('ar')}>
-        <span className="mr-1">🇶🇦</span>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="px-3 flex items-center gap-1.5" 
+        onClick={() => changeLanguage('ar')}
+        title="التبديل إلى اللغة العربية"
+      >
+        <Globe className="h-4 w-4" />
         <span>العربية</span>
       </Button>
     );
