@@ -2,54 +2,75 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+ 
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 262.1 83.3% 57.8%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 262.1 83.3% 57.8%;
-    --radius: 0.5rem;
-  }
+    --foreground: 222.2 84% 4.9%;
 
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+ 
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+ 
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+ 
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+ 
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+ 
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+ 
+    --radius: 0.5rem;
+    
+    --wakti-blue: 217 91% 60%;
+    --wakti-orange: 32 100% 50%;
+    --wakti-green: 142 71% 45%;
+  }
+ 
   .dark {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 263.4 70% 50.4%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+ 
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+ 
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+ 
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+ 
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+ 
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+ 
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+ 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 263.4 70% 50.4%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
   }
 }
-
+ 
 @layer base {
   * {
     @apply border-border;
@@ -58,44 +79,76 @@
     @apply bg-background text-foreground;
   }
   
-  /* Improve mobile input focus */
-  input, textarea, select {
-    @apply focus:outline-none focus:ring-2 focus:ring-primary/50;
-    font-size: 16px; /* Prevents iOS zoom on focus */
+  /* RTL Support */
+  html[dir="rtl"] .flip-in-rtl {
+    transform: scaleX(-1);
+  }
+  
+  /* Arabic Font Support */
+  @font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 400;
+    src: url('https://fonts.gstatic.com/s/tajawal/v9/Iura6YBj_oCad4k1nzGBC5xLhLFw4Q.woff2') format('woff2');
+    unicode-range: U+0600-06FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE80-FEFC;
+  }
+  
+  @font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 700;
+    src: url('https://fonts.gstatic.com/s/tajawal/v9/Iurf6YBj_oCad4k1l4QZfHFrLH6zkXWf.woff2') format('woff2');
+    unicode-range: U+0600-06FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE80-FEFC;
+  }
+  
+  .font-arabic {
+    font-family: 'Tajawal', system-ui, sans-serif;
+  }
+  
+  html[dir="rtl"] body {
+    font-family: 'Tajawal', system-ui, sans-serif;
+  }
+  
+  /* Enhance RTL layout */
+  html[dir="rtl"] .rtl-mirror {
+    transform: scaleX(-1);
   }
 }
 
-@layer utilities {
-  .no-scrollbar {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-  }
-  
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari, Opera */
-  }
-  
-  /* Improve touch targets for mobile */
-  .touch-target {
-    @apply min-h-[44px] min-w-[44px]; /* Apple's recommended minimum touch target size */
-  }
-  
-  /* Add mobile-friendly spacing utilities */
-  .mobile-p {
-    @apply p-2 sm:p-4;
-  }
-  
-  .mobile-px {
-    @apply px-2 sm:px-4;
-  }
-  
-  .mobile-py {
-    @apply py-2 sm:py-4;
-  }
-  
-  /* Fix for iOS overscroll */
-  .overscroll-fix {
-    @apply overscroll-none;
-    -webkit-overflow-scrolling: touch;
-  }
+/* Fix for RTL text in form inputs */
+html[dir="rtl"] input, 
+html[dir="rtl"] textarea {
+  text-align: right;
+}
+
+/* Ensure correct margin direction in RTL */
+html[dir="rtl"] .mr-1, 
+html[dir="rtl"] .mr-2, 
+html[dir="rtl"] .mr-3, 
+html[dir="rtl"] .mr-4 {
+  margin-right: 0 !important;
+}
+
+html[dir="rtl"] .mr-1 {
+  margin-left: 0.25rem !important;
+}
+
+html[dir="rtl"] .mr-2 {
+  margin-left: 0.5rem !important;
+}
+
+html[dir="rtl"] .mr-3 {
+  margin-left: 0.75rem !important;
+}
+
+html[dir="rtl"] .mr-4 {
+  margin-left: 1rem !important;
+}
+
+/* Fix for flag displays */
+.en-flag, .ar-flag {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
 }

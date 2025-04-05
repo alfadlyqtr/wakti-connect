@@ -1,168 +1,276 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSpeechRecognition } from './useSpeechRecognition';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useVoiceSettings } from '@/store/voiceSettings';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface UseVoiceInteractionOptions {
-  autoResumeListening?: boolean;
   continuousListening?: boolean;
-  autoSilenceDetection?: boolean;
-  silenceTime?: number;
-  onTranscriptComplete?: (transcript: string) => void;
+  language?: string;
+  autoStart?: boolean;
 }
 
-export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) => {
+export function useVoiceInteraction(options: UseVoiceInteractionOptions = {}) {
   const { 
-    autoResumeListening = true, 
-    continuousListening = true,
-    autoSilenceDetection: optionAutoSilenceDetection,
-    silenceTime = 2000,
-    onTranscriptComplete 
+    continuousListening = false,
+    language = 'en',
+    autoStart = false
   } = options;
-  
-  const { autoSilenceDetection: storeAutoSilenceDetection } = useVoiceSettings();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [lastTranscript, setLastTranscript] = useState('');
-  const [temporaryTranscript, setTemporaryTranscript] = useState('');
-  const [apiKeyStatus, setApiKeyStatus] = useState<'valid' | 'invalid' | 'unknown' | 'checking'>('unknown');
+
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [supportsVoice, setSupportsVoice] = useState<boolean>(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const [apiKeyStatus, setApiKeyStatus] = useState<'checking' | 'valid' | 'invalid' | 'unknown'>('checking');
   const [apiKeyErrorDetails, setApiKeyErrorDetails] = useState<string | null>(null);
-  const [isSilent, setIsSilent] = useState(false);
-  const [averageVolume, setAverageVolume] = useState(0);
-  const { toast } = useToast();
   
-  // Use the passed autoSilenceDetection or fall back to the store value
-  const effectiveAutoSilenceDetection = optionAutoSilenceDetection !== undefined 
-    ? optionAutoSilenceDetection 
-    : storeAutoSilenceDetection;
-  
-  // Speech recognition setup
-  const {
-    transcript,
-    isListening,
-    startListening: startSpeechRecognition,
-    stopListening: stopSpeechRecognition,
-    resetTranscript,
-    supported: recognitionSupported
-  } = useSpeechRecognition({
-    continuous: continuousListening,
-    interimResults: true,
-  });
-
-  // We'll expose these derived capabilities for components to check
-  const supportsVoice = recognitionSupported;
-  
-  // Update temporary transcript when speech is being recognized
+  // Check browser support for voice recording
   useEffect(() => {
-    if (isListening && transcript) {
-      setTemporaryTranscript(transcript);
+    const checkBrowserSupport = async () => {
+      if (typeof navigator !== 'undefined' && 
+          navigator.mediaDevices && 
+          navigator.mediaDevices.getUserMedia) {
+        setSupportsVoice(true);
+      } else {
+        setSupportsVoice(false);
+        setError('Your browser does not support voice recording');
+      }
+    };
+    
+    checkBrowserSupport();
+  }, []);
+  
+  // Check if OpenAI API key is valid
+  useEffect(() => {
+    const validateApiKey = async () => {
+      if (!supportsVoice) return;
+      
+      try {
+        setApiKeyStatus('checking');
+        setApiKeyErrorDetails(null);
+        
+        const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
+          body: { test: true }
+        });
+        
+        if (error) {
+          console.error("API key validation error:", error);
+          setApiKeyStatus('invalid');
+          setApiKeyErrorDetails(error.message || 'Unknown error validating API key');
+          return;
+        }
+        
+        if (data?.success) {
+          setApiKeyStatus('valid');
+        } else if (data?.error) {
+          setApiKeyStatus('invalid');
+          setApiKeyErrorDetails(data.error);
+        } else {
+          setApiKeyStatus('unknown');
+        }
+      } catch (err: any) {
+        console.error("Error validating API key:", err);
+        setApiKeyStatus('invalid');
+        setApiKeyErrorDetails(err.message || 'Unknown error checking API connection');
+      }
+    };
+    
+    validateApiKey();
+  }, [supportsVoice]);
+  
+  // Start listening automatically if autoStart is true
+  useEffect(() => {
+    if (autoStart && supportsVoice && apiKeyStatus === 'valid') {
+      startListening();
     }
-  }, [isListening, transcript]);
-
-  // Check if the OpenAI API key is valid for voice features
-  const checkApiKeyValidity = useCallback(async () => {
-    setApiKeyStatus('checking');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart, supportsVoice, apiKeyStatus]);
+  
+  // Start voice recording
+  const startListening = useCallback(async () => {
+    if (!supportsVoice) {
+      setError('Voice recording is not supported on this device');
+      return;
+    }
+    
+    if (apiKeyStatus === 'invalid') {
+      setError(`OpenAI API key issue: ${apiKeyErrorDetails || 'API key is not properly configured'}`);
+      return;
+    }
+    
+    setError(null);
+    setTranscript('');
+    setAudioChunks([]);
+    
     try {
-      const { data, error } = await supabase.functions.invoke('test-openai-connection', {
-        body: { test: 'whisper' }
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      let recorder;
+      try {
+        recorder = new MediaRecorder(stream, { mimeType: 'audio/mp3' });
+      } catch (e) {
+        console.log("MP3 format not supported, using default format");
+        recorder = new MediaRecorder(stream);
+      }
+      
+      setMediaRecorder(recorder);
+      
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          setAudioChunks((chunks) => [...chunks, event.data]);
+        }
+      };
+      
+      recorder.onstop = async () => {
+        // Process the audio chunks
+        if (audioChunks.length > 0) {
+          await processAudioToText();
+        }
+      };
+      
+      recorder.start(1000);
+      setIsListening(true);
+      
+    } catch (err: any) {
+      console.error('Error starting voice recording:', err);
+      setError(`Could not access microphone: ${err.message}`);
+    }
+  }, [supportsVoice, apiKeyStatus, apiKeyErrorDetails, audioChunks]);
+  
+  // Stop voice recording
+  const stopListening = useCallback(() => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+      
+      // Stop all audio tracks
+      if (mediaRecorder.stream) {
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      }
+    }
+    
+    setIsListening(false);
+  }, [mediaRecorder]);
+  
+  // Process audio data to text
+  const processAudioToText = useCallback(async () => {
+    if (audioChunks.length === 0) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+      
+      if (audioBlob.size < 100) {
+        setError('Audio recording too short');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Convert blob to base64
+      const reader = new FileReader();
+      
+      reader.onloadend = async () => {
+        try {
+          const base64data = (reader.result as string).split(',')[1];
+          
+          // Call the Supabase Edge Function
+          const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
+            body: { 
+              audio: base64data,
+              language: language
+            }
+          });
+          
+          if (error) {
+            throw new Error(error.message);
+          }
+          
+          if (data?.text) {
+            setTranscript(data.text);
+          } else if (data?.warning) {
+            setError(data.warning);
+          } else {
+            setError('No transcription returned');
+          }
+          
+        } catch (err: any) {
+          console.error('Error processing audio:', err);
+          setError(err.message || 'Error processing audio');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      reader.onerror = () => {
+        setError('Error reading audio data');
+        setIsLoading(false);
+      };
+      
+      reader.readAsDataURL(audioBlob);
+      
+    } catch (err: any) {
+      console.error('Error processing audio to text:', err);
+      setError(err.message || 'Error processing audio');
+      setIsLoading(false);
+    }
+  }, [audioChunks, language]);
+  
+  // Retry API key validation
+  const retryApiKeyValidation = useCallback(async () => {
+    setApiKeyStatus('checking');
+    setApiKeyErrorDetails(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
+        body: { test: true }
       });
       
       if (error) {
-        console.error("Error checking OpenAI API key:", error);
         setApiKeyStatus('invalid');
         setApiKeyErrorDetails(error.message);
         return false;
       }
       
-      if (data?.valid) {
+      if (data?.success) {
         setApiKeyStatus('valid');
-        setApiKeyErrorDetails(null);
         return true;
       } else {
         setApiKeyStatus('invalid');
-        setApiKeyErrorDetails(data?.message || 'Unknown error validating API key');
+        setApiKeyErrorDetails(data?.error || 'Unknown error');
         return false;
       }
-    } catch (error) {
-      console.error("Exception checking OpenAI API key:", error);
+    } catch (err: any) {
       setApiKeyStatus('invalid');
-      setApiKeyErrorDetails(error instanceof Error ? error.message : 'Unknown error');
+      setApiKeyErrorDetails(err.message || 'Connection error');
       return false;
     }
   }, []);
-
-  // Initialize API key check
-  useEffect(() => {
-    checkApiKeyValidity();
-  }, [checkApiKeyValidity]);
   
-  // Handle transcript completion
+  // Clean up on unmount
   useEffect(() => {
-    if (!isListening && transcript && onTranscriptComplete) {
-      setLastTranscript(transcript);
-      onTranscriptComplete(transcript);
-      resetTranscript();
-      setTemporaryTranscript('');
-    }
-  }, [isListening, transcript, onTranscriptComplete, resetTranscript]);
-  
-  // Start listening wrapper function
-  const startListening = useCallback(() => {
-    if (startSpeechRecognition) {
-      startSpeechRecognition();
-    }
-  }, [startSpeechRecognition]);
-
-  // Stop listening wrapper function
-  const stopListening = useCallback(() => {
-    if (stopSpeechRecognition) {
-      stopSpeechRecognition();
-    }
-  }, [stopSpeechRecognition]);
-  
-  // Simulate silence detection (every 500ms check if there's been speech)
-  useEffect(() => {
-    if (isListening && effectiveAutoSilenceDetection) {
-      const lastTranscriptRef = useRef(temporaryTranscript);
-      const timer = setInterval(() => {
-        if (temporaryTranscript === lastTranscriptRef.current) {
-          // No change in transcript, might be silent
-          setIsSilent(true);
-        } else {
-          // Transcript changed, not silent
-          setIsSilent(false);
-          lastTranscriptRef.current = temporaryTranscript;
+    return () => {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        
+        if (mediaRecorder.stream) {
+          mediaRecorder.stream.getTracks().forEach(track => track.stop());
         }
-      }, silenceTime);
-      
-      return () => clearInterval(timer);
-    }
-    
-    return () => {};
-  }, [isListening, temporaryTranscript, effectiveAutoSilenceDetection, silenceTime]);
+      }
+    };
+  }, [mediaRecorder]);
   
-  // Reset silence state when not listening
-  useEffect(() => {
-    if (!isListening) {
-      setIsSilent(false);
-    }
-  }, [isListening]);
-
   return {
     isListening,
     transcript,
-    temporaryTranscript,
-    lastTranscript,
+    isLoading,
+    error,
     startListening,
     stopListening,
-    resetTranscript,
-    isProcessing,
     supportsVoice,
     apiKeyStatus,
     apiKeyErrorDetails,
-    retryApiKeyValidation: checkApiKeyValidity,
-    isSilent,
-    averageVolume
+    retryApiKeyValidation
   };
-};
+}

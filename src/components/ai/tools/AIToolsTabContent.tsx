@@ -2,7 +2,6 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { DocumentUploadTool } from "./DocumentUploadTool";
-import { MeetingSummaryTool } from "./MeetingSummaryTool";
 import { AIAssistantSettings } from "@/components/settings/ai/AIAssistantSettings";
 import { AIUpgradeRequired } from "@/components/ai/AIUpgradeRequired";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
@@ -10,6 +9,7 @@ import { QuickToolsCard } from "./QuickToolsCard";
 import { ImageGenerationToolCard } from "./ImageGenerationToolCard";
 import { ImageTransformationToolCard } from "./ImageTransformationToolCard";
 import { KnowledgeProfileToolCard } from "./KnowledgeProfileToolCard";
+import { VoiceToTextTool } from "./VoiceToTextTool";
 
 interface AIToolsTabContentProps {
   canAccess: boolean;
@@ -36,15 +36,13 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
         />
       </div>
       
-      {/* Knowledge Profiles Section - Removed from here, moved to Knowledge tab */}
-      
       {/* Tools Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <DocumentUploadTool
           canAccess={canAccess}
           onUseDocumentContent={onUseDocumentContent}
         />
-        <MeetingSummaryTool onUseSummary={onUseDocumentContent} />
+        <VoiceToTextTool onUseSummary={onUseDocumentContent} />
       </div>
 
       {/* Image Tools Row */}
