@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AIRoleSelector } from "@/components/ai/assistant/AIRoleSelector";
 import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
 import { Button } from "@/components/ui/button";
+import { EmptyStateView } from "@/components/ai/assistant/EmptyStateView";
 import { 
   MessageSquare, 
   Wrench, 

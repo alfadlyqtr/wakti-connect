@@ -53,6 +53,10 @@ export function CleanChatInterface({
             messages={messages}
             isLoading={isLoading}
             selectedRole={selectedRole}
+            inputMessage={inputMessage}
+            setInputMessage={setInputMessage}
+            handleSendMessage={handleSendMessage}
+            canAccess={canAccess}
           />
           <div ref={messagesEndRef} />
         </div>
