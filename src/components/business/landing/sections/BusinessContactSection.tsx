@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { generateMapEmbedUrl, GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from "@/config/maps";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useSubmitContactFormMutation } from "@/hooks/business-page/useBusinessPageMutations";
 import { sendMessage } from "@/services/messages";
+import { getMapsApiKey } from "@/config/maps";
 
 interface BusinessContactSectionProps {
   content: Record<string, any>;
@@ -27,6 +28,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [mapEmbedUrl, setMapEmbedUrl] = useState('');
   
   const { 
     title = "Contact Us",
@@ -54,19 +56,43 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
     // New layout options
     layout = "sideBySide", // sideBySide, formTop, formBottom
   } = content;
-  
-  let mapEmbedUrl = address ? generateMapEmbedUrl(address) : mapUrl;
-  
-  if (coordinates) {
-    try {
-      const coords = JSON.parse(coordinates);
-      if (coords.lat && coords.lng) {
-        mapEmbedUrl = `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${coords.lat},${coords.lng}&zoom=15`;
+
+  // Generate map URL using the secure API key
+  useEffect(() => {
+    const loadMapUrl = async () => {
+      if (!address && !mapUrl && !coordinates) return;
+      
+      try {
+        const apiKey = await getMapsApiKey();
+        
+        if (coordinates) {
+          try {
+            const coords = JSON.parse(coordinates);
+            if (coords.lat && coords.lng) {
+              setMapEmbedUrl(`https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${coords.lat},${coords.lng}&zoom=15`);
+              return;
+            }
+          } catch (e) {
+            console.error("Error parsing coordinates:", e);
+          }
+        }
+        
+        if (address) {
+          const encodedLocation = encodeURIComponent(address);
+          setMapEmbedUrl(`https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodedLocation}`);
+          return;
+        }
+        
+        if (mapUrl) {
+          setMapEmbedUrl(mapUrl);
+        }
+      } catch (error) {
+        console.error('Error generating map URL:', error);
       }
-    } catch (e) {
-      console.error("Error parsing coordinates:", e);
-    }
-  }
+    };
+    
+    loadMapUrl();
+  }, [address, mapUrl, coordinates]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -187,17 +213,19 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
           )}
         </div>
         
-        {showMap && (address || coordinates) && (
+        {showMap && (address || coordinates || mapUrl) && (
           <div className="w-full aspect-video rounded-lg overflow-hidden border">
-            <iframe
-              src={mapEmbedUrl}
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              className="w-full h-full"
-              title="Google Maps"
-            ></iframe>
+            {mapEmbedUrl && (
+              <iframe
+                src={mapEmbedUrl}
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="w-full h-full"
+                title="Google Maps"
+              ></iframe>
+            )}
           </div>
         )}
       </div>

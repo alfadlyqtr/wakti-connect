@@ -1,10 +1,9 @@
 
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Copy, Check, Download, FileDown, Map } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
-import { generateMapEmbedUrl, generateGoogleMapsUrl } from '@/config/maps';
+import { getMapsApiKey, generateGoogleMapsUrl } from '@/config/maps';
 
 interface SummaryDisplayProps {
   summary: string;
@@ -32,6 +31,23 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
   summaryRef
 }) => {
   const mapRef = useRef<HTMLIFrameElement>(null);
+  const [mapUrl, setMapUrl] = useState<string>('');
+
+  useEffect(() => {
+    if (detectedLocation) {
+      const loadMapUrl = async () => {
+        try {
+          const apiKey = await getMapsApiKey();
+          const encodedLocation = encodeURIComponent(detectedLocation);
+          setMapUrl(`https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodedLocation}`);
+        } catch (error) {
+          console.error('Error generating map URL:', error);
+        }
+      };
+      
+      loadMapUrl();
+    }
+  }, [detectedLocation]);
 
   if (!summary) {
     return null;
@@ -109,16 +125,18 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
             </Button>
           </div>
           
-          <iframe
-            ref={mapRef}
-            width="100%"
-            height="200"
-            style={{ border: 0 }}
-            loading="lazy"
-            src={generateMapEmbedUrl(detectedLocation)}
-            title="Meeting Location"
-            className="rounded-md"
-          />
+          {mapUrl && (
+            <iframe
+              ref={mapRef}
+              width="100%"
+              height="200"
+              style={{ border: 0 }}
+              loading="lazy"
+              src={mapUrl}
+              title="Meeting Location"
+              className="rounded-md"
+            />
+          )}
         </div>
       )}
     </Card>

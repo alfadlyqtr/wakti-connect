@@ -1,10 +1,38 @@
 
+import { supabase } from '@/integrations/supabase/client';
+
 /**
  * Maps configuration module
  * Provides Google Maps API key and utility functions
  */
 
-// Google Maps API key for map embeds and location services
+// Store the API key in memory once loaded
+let cachedApiKey: string | null = null;
+
+/**
+ * Fetches the Google Maps API key from the Supabase Edge Function
+ * Falls back to a placeholder key if needed
+ */
+export const getMapsApiKey = async (): Promise<string> => {
+  if (cachedApiKey) return cachedApiKey;
+  
+  try {
+    const { data, error } = await supabase.functions.invoke('get-maps-key');
+    
+    if (error) {
+      console.error('Error fetching Maps API key:', error);
+      return 'AIzaSyBIwzALxUPNbatRBj3X1HyELQG7xToQ3vA'; // Fallback to placeholder
+    }
+    
+    cachedApiKey = data.apiKey;
+    return cachedApiKey;
+  } catch (err) {
+    console.error('Exception fetching Maps API key:', err);
+    return 'AIzaSyBIwzALxUPNbatRBj3X1HyELQG7xToQ3vA'; // Fallback to placeholder
+  }
+};
+
+// For backward compatibility - this will be replaced gradually
 export const GOOGLE_MAPS_API_KEY = 'AIzaSyBIwzALxUPNbatRBj3X1HyELQG7xToQ3vA';
 
 /**
@@ -29,5 +57,5 @@ export const generateGoogleMapsUrl = (location: string): string => {
   return `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
 };
 
-// Export API key as default for convenient imports
+// For backward compatibility - export the placeholder key as default
 export default GOOGLE_MAPS_API_KEY;
