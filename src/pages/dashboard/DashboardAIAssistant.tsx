@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +16,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AIRoleSelector } from "@/components/ai/assistant/AIRoleSelector";
 import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
 import { useVoiceInteraction } from "@/hooks/ai/useVoiceInteraction";
+import { AIToolsTabContent } from "@/components/ai/tools/AIToolsTabContent";
+import { KnowledgeBaseToolCard } from "@/components/ai/tools/KnowledgeBaseToolCard";
 import { Button } from "@/components/ui/button";
 import { 
   MessageSquare, 
@@ -23,7 +26,10 @@ import {
   PanelRight,
   PuzzleIcon,
   Settings,
-  Zap
+  Zap,
+  Database,
+  Wrench,
+  Book
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +59,7 @@ const DashboardAIAssistant = () => {
   const [canAccess, setCanAccess] = useState(false);
   const [selectedRole, setSelectedRole] = useState<AIAssistantRole>("general");
   const [activeTab, setActiveTab] = useState<string>("chat");
-  const [showSidebar, setShowSidebar] = useState(false);
+  const [mainSection, setMainSection] = useState<string>("chat");
   const [showCamera, setShowCamera] = useState(false);
   const [imageCapture, setImageCapture] = useState<ImageCapture | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -293,11 +299,7 @@ const DashboardAIAssistant = () => {
 
   const handleExampleClick = (example: string) => {
     setInputMessage(example);
-    setActiveTab("chat");
-  };
-
-  const toggleSidebar = () => {
-    setShowSidebar(!showSidebar);
+    setMainSection("chat");
   };
 
   if (isChecking) {
@@ -352,16 +354,20 @@ const DashboardAIAssistant = () => {
                 </CardHeader>
               </Card>
               
-              {/* Main content with tabs */}
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="mx-auto mb-4 grid w-full max-w-md grid-cols-2">
+              {/* Main section tabs */}
+              <Tabs value={mainSection} onValueChange={setMainSection}>
+                <TabsList className="mx-auto mb-4 grid w-full max-w-md grid-cols-3">
                   <TabsTrigger value="chat" className="flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
                     <span>Chat</span>
                   </TabsTrigger>
-                  <TabsTrigger value="system" className="flex items-center gap-2">
-                    <PuzzleIcon className="h-4 w-4" />
-                    <span>System Integration</span>
+                  <TabsTrigger value="tools" className="flex items-center gap-2">
+                    <Wrench className="h-4 w-4" />
+                    <span>Tools</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="knowledge" className="flex items-center gap-2">
+                    <Database className="h-4 w-4" />
+                    <span>Knowledge</span>
                   </TabsTrigger>
                 </TabsList>
                 
@@ -371,33 +377,87 @@ const DashboardAIAssistant = () => {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  {/* Chat Tab Content */}
+                  {/* Chat Section */}
                   <TabsContent value="chat" className="focus-visible:outline-none">
-                    <div className="flex gap-4">
-                      {/* Main Chat Area */}
-                      <div className="flex-1">
-                        <CleanChatInterface
-                          messages={messages}
-                          isLoading={isLoading}
-                          inputMessage={inputMessage}
-                          setInputMessage={setInputMessage}
-                          handleSendMessage={handleSendMessage}
+                    {/* Chat Tabs - Chat or Business Integration */}
+                    <Tabs value={activeTab} onValueChange={setActiveTab}>
+                      <TabsList className="mx-auto mb-4 grid w-full grid-cols-2">
+                        <TabsTrigger value="chat" className="flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4" />
+                          <span>Chat Interface</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="system" className="flex items-center gap-2">
+                          <PuzzleIcon className="h-4 w-4" />
+                          <span>WAKTI Business Integration</span>
+                        </TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="chat" className="focus-visible:outline-none">
+                        <div className="flex gap-4">
+                          {/* Main Chat Area */}
+                          <div className="flex-1">
+                            <CleanChatInterface
+                              messages={messages}
+                              isLoading={isLoading}
+                              inputMessage={inputMessage}
+                              setInputMessage={setInputMessage}
+                              handleSendMessage={handleSendMessage}
+                              selectedRole={selectedRole}
+                              userName={userName}
+                              canAccess={canAccess}
+                              onFileUpload={handleFileUpload}
+                              onCameraCapture={handleCameraCapture}
+                            />
+                          </div>
+                        </div>
+                      </TabsContent>
+                      
+                      {/* System Integration Tab Content */}
+                      <TabsContent value="system" className="focus-visible:outline-none">
+                        <AISystemIntegrationPanel
                           selectedRole={selectedRole}
-                          userName={userName}
-                          canAccess={canAccess}
-                          onFileUpload={handleFileUpload}
-                          onCameraCapture={handleCameraCapture}
+                          onExampleClick={handleExampleClick}
                         />
-                      </div>
-                    </div>
+                      </TabsContent>
+                    </Tabs>
                   </TabsContent>
                   
-                  {/* System Integration Tab Content - Specifically for Business */}
-                  <TabsContent value="system" className="focus-visible:outline-none">
-                    <AISystemIntegrationPanel
-                      selectedRole={selectedRole}
-                      onExampleClick={handleExampleClick}
-                    />
+                  {/* Tools Section */}
+                  <TabsContent value="tools" className="focus-visible:outline-none">
+                    <Card className="border-wakti-blue/10">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-xl flex items-center gap-2">
+                          <Wrench className="h-6 w-6 text-wakti-blue" />
+                          AI Assistant Tools
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <AIToolsTabContent 
+                          canAccess={canAccess} 
+                          onUseDocumentContent={(content) => {
+                            setInputMessage(content);
+                            setMainSection("chat");
+                            setActiveTab("chat");
+                          }}
+                          selectedRole={selectedRole}
+                        />
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  
+                  {/* Knowledge Base Section */}
+                  <TabsContent value="knowledge" className="focus-visible:outline-none">
+                    <Card className="border-wakti-blue/10">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-xl flex items-center gap-2">
+                          <Database className="h-6 w-6 text-wakti-blue" />
+                          Knowledge Base
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <KnowledgeBaseToolCard />
+                      </CardContent>
+                    </Card>
                   </TabsContent>
                 </motion.div>
               </Tabs>

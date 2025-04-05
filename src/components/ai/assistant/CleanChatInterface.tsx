@@ -64,7 +64,7 @@ export function CleanChatInterface({
   };
 
   return (
-    <Card className="flex-1 flex flex-col h-[calc(100vh-200px)] md:h-[calc(100vh-210px)] overflow-hidden">
+    <Card className="flex-1 flex flex-col h-[calc(100vh-280px)] md:h-[calc(100vh-290px)] overflow-hidden">
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
         <div className="flex-1 overflow-y-auto p-4">
           {messages.length === 0 && showSuggestions ? (
