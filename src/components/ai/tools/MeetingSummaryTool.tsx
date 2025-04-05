@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,8 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { generateMapEmbedUrl, generateGoogleMapsUrl } from '@/config/maps';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { useTranslation } from 'react-i18next';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface MeetingSummaryToolProps {
   onUseSummary?: (summary: string) => void;
@@ -23,6 +26,7 @@ interface SavedMeeting {
   location: string | null;
   summary: string;
   audioUrl?: string;
+  language?: string;
 }
 
 export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSummary }) => {
@@ -39,6 +43,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   const [isDownloadingAudio, setIsDownloadingAudio] = useState(false);
   const [savedMeetings, setSavedMeetings] = useState<SavedMeeting[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
   
   const summaryRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<number | null>(null);
@@ -47,6 +52,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   const pulseElementRef = useRef<HTMLDivElement>(null);
   
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
   
   const { 
     supportsVoice,
@@ -57,47 +63,47 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     continuousListening: false,
   });
 
-  // Load saved meetings on component mount
+  // Language options for speech recognition
+  const languageOptions = [
+    { value: 'en', label: 'English' },
+    { value: 'ar', label: 'العربية (Arabic)' }
+  ];
+
+  // Load saved meetings from Supabase on component mount
   useEffect(() => {
     const loadSavedMeetings = async () => {
       setIsLoadingHistory(true);
       try {
-        // For demonstration, we're using mock data
-        // In a real implementation, this would fetch from your database
-        const mockMeetings: SavedMeeting[] = [
-          {
-            id: '1',
-            date: new Date(Date.now() - 86400000 * 2).toISOString(),
-            duration: 1560, // 26 minutes
-            location: 'Conference Room A',
-            summary: '## Meeting Summary\n- **Date**: April 3, 2025\n- **Duration**: 26:00\n\n### Key Points:\n1. Reviewed Q1 financial results\n2. Discussed marketing strategy for Q2\n3. Assigned action items to team members',
-          },
-          {
-            id: '2',
-            date: new Date(Date.now() - 86400000 * 5).toISOString(),
-            duration: 1860, // 31 minutes
-            location: 'Virtual Meeting - Zoom',
-            summary: '## Meeting Summary\n- **Date**: March 31, 2025\n- **Duration**: 31:00\n\n### Key Points:\n1. Product roadmap updates\n2. Customer feedback discussion\n3. New feature prioritization',
-          },
-          {
-            id: '3',
-            date: new Date(Date.now() - 86400000 * 7).toISOString(),
-            duration: 900, // 15 minutes
-            location: null,
-            summary: '## Meeting Summary\n- **Date**: March 29, 2025\n- **Duration**: 15:00\n\n### Key Points:\n1. Weekly team standup\n2. Blocker discussion\n3. Sprint planning',
-          },
-        ];
+        const { data, error } = await supabase
+          .from('meetings')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(5);
         
-        setSavedMeetings(mockMeetings);
+        if (error) {
+          throw error;
+        }
+        
+        if (data && data.length > 0) {
+          setSavedMeetings(data);
+        } else {
+          console.log("No saved meetings found");
+          setSavedMeetings([]);
+        }
       } catch (error) {
         console.error("Error loading saved meetings:", error);
+        toast({
+          title: "Error loading meetings",
+          description: "Could not load your meeting history.",
+          variant: "destructive"
+        });
       } finally {
         setIsLoadingHistory(false);
       }
     };
     
     loadSavedMeetings();
-  }, []);
+  }, [toast]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -280,7 +286,10 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           console.log("Audio converted to base64, sending to voice-to-text function...");
           
           const { data, error } = await supabase.functions.invoke('ai-voice-to-text', {
-            body: { audio: base64Data }
+            body: { 
+              audio: base64Data,
+              language: selectedLanguage // Pass the selected language to the function
+            }
           });
           
           console.log("Voice-to-text response:", { data, error });
@@ -302,7 +311,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           console.log("Received transcript:", data.text);
           
           // Apply some post-processing to improve transcription accuracy
-          const processedText = improveTranscriptionAccuracy(data.text);
+          const processedText = improveTranscriptionAccuracy(data.text, selectedLanguage);
           setTranscribedText(processedText);
           
           toast({
@@ -346,109 +355,154 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
   };
 
   // Function to improve transcription accuracy with common post-processing techniques
-  const improveTranscriptionAccuracy = (text: string): string => {
+  // Updated to support English and Arabic
+  const improveTranscriptionAccuracy = (text: string, language: string): string => {
     if (!text) return '';
     
-    // Capitalize first letter of sentences
-    let improved = text.replace(/(\.\s+|^\s*)([a-z])/g, (match, p1, p2) => {
-      return p1 + p2.toUpperCase();
-    });
+    if (language === 'en') {
+      // English improvements
+      // Capitalize first letter of sentences
+      let improved = text.replace(/(\.\s+|^\s*)([a-z])/g, (match, p1, p2) => {
+        return p1 + p2.toUpperCase();
+      });
+      
+      // Fix common transcription errors
+      const corrections: Record<string, string> = {
+        'i think': 'I think',
+        'i am': 'I am',
+        'i\'m': 'I\'m',
+        'i\'ll': 'I\'ll',
+        'i\'ve': 'I\'ve',
+        'i\'d': 'I\'d',
+        'ok ': 'OK ',
+        'okay ': 'OK ',
+        'gonna ': 'going to ',
+        'wanna ': 'want to ',
+        'gotta ': 'got to ',
+        'kinda ': 'kind of ',
+        'sorta ': 'sort of ',
+        'lemme ': 'let me ',
+        'gimme ': 'give me ',
+      };
+      
+      // Apply corrections
+      Object.entries(corrections).forEach(([incorrect, correct]) => {
+        improved = improved.replace(new RegExp(`\\b${incorrect}\\b`, 'gi'), correct);
+      });
+      
+      // Add periods to sentences that might be missing them
+      improved = improved.replace(/([a-z])\s+([A-Z])/g, '$1. $2');
+      
+      // Clean up multiple spaces
+      improved = improved.replace(/\s{2,}/g, ' ').trim();
+      
+      return improved;
+    } else if (language === 'ar') {
+      // Arabic improvements
+      // For Arabic text, we need different processing logic
+      
+      // 1. Fix common Arabic transcription errors (simplified example)
+      const arabicCorrections: Record<string, string> = {
+        // Add common Arabic transcription corrections here
+        // This is a placeholder for actual Arabic language corrections
+      };
+      
+      let improved = text;
+      
+      Object.entries(arabicCorrections).forEach(([incorrect, correct]) => {
+        improved = improved.replace(new RegExp(incorrect, 'g'), correct);
+      });
+      
+      // 2. Fix spacing issues that are common in Arabic transcriptions
+      improved = improved.replace(/\s{2,}/g, ' ').trim();
+      
+      return improved;
+    }
     
-    // Fix common transcription errors
-    const corrections: Record<string, string> = {
-      'i think': 'I think',
-      'i am': 'I am',
-      'i\'m': 'I\'m',
-      'i\'ll': 'I\'ll',
-      'i\'ve': 'I\'ve',
-      'i\'d': 'I\'d',
-      'ok ': 'OK ',
-      'okay ': 'OK ',
-      'gonna ': 'going to ',
-      'wanna ': 'want to ',
-      'gotta ': 'got to ',
-      'kinda ': 'kind of ',
-      'sorta ': 'sort of ',
-      'lemme ': 'let me ',
-      'gimme ': 'give me ',
-      // Add more common corrections as needed
-    };
-    
-    // Apply corrections
-    Object.entries(corrections).forEach(([incorrect, correct]) => {
-      improved = improved.replace(new RegExp(`\\b${incorrect}\\b`, 'gi'), correct);
-    });
-    
-    // Add periods to sentences that might be missing them
-    improved = improved.replace(/([a-z])\s+([A-Z])/g, '$1. $2');
-    
-    // Clean up multiple spaces
-    improved = improved.replace(/\s{2,}/g, ' ').trim();
-    
-    return improved;
+    // Default return for other languages
+    return text;
   };
 
   // Enhanced location detection with more sophisticated patterns
   const detectLocationFromText = (text: string): string | null => {
     if (!text) return null;
     
-    // More comprehensive patterns to detect locations
-    const locationPatterns = [
-      // Meeting at/in [Location]
-      /(?:meeting|located|held|happening|taking place|will be|scheduled)\s+(?:at|in)\s+(?:the\s+)?([A-Za-z0-9\s,]+(?:Building|Office|Center|Room|Hall|Tower|Plaza|Street|Avenue|Road|Boulevard|Place|Square|Park|Campus|Floor|Suite|Theater|Arena|Stadium|Hotel|Conference|Center|Venue))/gi,
+    // Check if we're processing Arabic text
+    const isArabicText = /[\u0600-\u06FF]/.test(text);
+    
+    if (isArabicText) {
+      // Arabic location detection patterns
+      const arabicLocationPatterns = [
+        // Simplified Arabic location patterns - in a real implementation these would be more comprehensive
+        /(?:الاجتماع|موقع|مكان).*?(?:في|ب).*?([ء-ي\s]+)/i,
+        /(?:القاعة|غرفة|قاعة).*?([ء-ي\s]+\d*)/i,
+      ];
       
-      // Located/held at [Location]
-      /(?:located|held)\s+(?:at|in)\s+(?:the\s+)?([A-Za-z0-9\s,]+(?:Building|Office|Center|Room|Hall|Tower|Plaza))/gi,
-      
-      // At [Street Address]
-      /(?:at|on)\s+(\d+\s+[A-Za-z\s]+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Place|Pl|Court|Ct|Way|Circle|Cir|Terrace|Ter))/gi,
-      
-      // Address is [Location]
-      /(?:location|venue|place|address)(?:\s+is)?(?:\s+at)?[:\s]+([A-Za-z0-9\s,\.#-]+)/i,
-      
-      // Meeting/event in [City]
-      /(?:in|at)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*(?:\s+City)?),?\s+([A-Z]{2}|[A-Za-z]+)\b/g,
-      
-      // Mentions of room numbers
-      /(?:room|rm)\s+(\d+[A-Za-z0-9-]*)/gi,
-      
-      // Conference rooms often mentioned
-      /((?:[A-Z][a-z]+\s+){1,3}(?:Conference|Meeting|Board)\s+Room)/g,
-    ];
-
-    for (const pattern of locationPatterns) {
-      const matches = text.match(pattern);
-      if (matches && matches.length > 0) {
-        // Extract the location part from the match
-        const locationMatch = pattern.exec(text);
-        if (locationMatch && locationMatch[1]) {
-          return locationMatch[1].trim();
+      for (const pattern of arabicLocationPatterns) {
+        const matches = text.match(pattern);
+        if (matches && matches[1]) {
+          return matches[1].trim();
         }
-        // Fall back to the whole match with some cleanup
-        return matches[0]
-          .replace(/(?:meeting|located|held|happening|taking place|will be|scheduled|at|in)\s+(?:the\s+)?/i, '')
-          .trim();
       }
-    }
-
-    // Look for named locations with capital letters (potential proper nouns)
-    const properNounMatch = text.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})\b/g);
-    if (properNounMatch) {
-      // Filter out common non-location proper nouns
-      const commonNonLocations = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
-        'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-      
-      const potentialLocations = properNounMatch.filter(name => 
-        !commonNonLocations.includes(name) && name.length > 3);
-      
-      if (potentialLocations.length > 0) {
-        // Try to find locations that appear before or after location-related words
-        const locationContexts = ['at', 'in', 'near', 'location', 'venue', 'place', 'meet', 'meeting', 'office'];
+    } else {
+      // English location patterns
+      const locationPatterns = [
+        // Meeting at/in [Location]
+        /(?:meeting|located|held|happening|taking place|will be|scheduled)\s+(?:at|in)\s+(?:the\s+)?([A-Za-z0-9\s,]+(?:Building|Office|Center|Room|Hall|Tower|Plaza|Street|Avenue|Road|Boulevard|Place|Square|Park|Campus|Floor|Suite|Theater|Arena|Stadium|Hotel|Conference|Center|Venue))/gi,
         
-        for (const location of potentialLocations) {
-          const contextCheck = new RegExp(`(${locationContexts.join('|')})\\s+${location}|${location}\\s+(${locationContexts.join('|')})`, 'i');
-          if (text.match(contextCheck)) {
-            return location;
+        // Located/held at [Location]
+        /(?:located|held)\s+(?:at|in)\s+(?:the\s+)?([A-Za-z0-9\s,]+(?:Building|Office|Center|Room|Hall|Tower|Plaza))/gi,
+        
+        // At [Street Address]
+        /(?:at|on)\s+(\d+\s+[A-Za-z\s]+(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Lane|Ln|Drive|Dr|Place|Pl|Court|Ct|Way|Circle|Cir|Terrace|Ter))/gi,
+        
+        // Address is [Location]
+        /(?:location|venue|place|address)(?:\s+is)?(?:\s+at)?[:\s]+([A-Za-z0-9\s,\.#-]+)/i,
+        
+        // Meeting/event in [City]
+        /(?:in|at)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*(?:\s+City)?),?\s+([A-Z]{2}|[A-Za-z]+)\b/g,
+        
+        // Mentions of room numbers
+        /(?:room|rm)\s+(\d+[A-Za-z0-9-]*)/gi,
+        
+        // Conference rooms often mentioned
+        /((?:[A-Z][a-z]+\s+){1,3}(?:Conference|Meeting|Board)\s+Room)/g,
+      ];
+
+      for (const pattern of locationPatterns) {
+        const matches = text.match(pattern);
+        if (matches && matches.length > 0) {
+          // Extract the location part from the match
+          const locationMatch = pattern.exec(text);
+          if (locationMatch && locationMatch[1]) {
+            return locationMatch[1].trim();
+          }
+          // Fall back to the whole match with some cleanup
+          return matches[0]
+            .replace(/(?:meeting|located|held|happening|taking place|will be|scheduled|at|in)\s+(?:the\s+)?/i, '')
+            .trim();
+        }
+      }
+
+      // Look for named locations with capital letters (potential proper nouns)
+      const properNounMatch = text.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})\b/g);
+      if (properNounMatch) {
+        // Filter out common non-location proper nouns
+        const commonNonLocations = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
+          'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        
+        const potentialLocations = properNounMatch.filter(name => 
+          !commonNonLocations.includes(name) && name.length > 3);
+        
+        if (potentialLocations.length > 0) {
+          // Try to find locations that appear before or after location-related words
+          const locationContexts = ['at', 'in', 'near', 'location', 'venue', 'place', 'meet', 'meeting', 'office'];
+          
+          for (const location of potentialLocations) {
+            const contextCheck = new RegExp(`(${locationContexts.join('|')})\\s+${location}|${location}\\s+(${locationContexts.join('|')})`, 'i');
+            if (text.match(contextCheck)) {
+              return location;
+            }
           }
         }
       }
@@ -471,24 +525,19 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
         ? `The meeting location has been identified as: "${location}". Please include this location information in the beginning of the summary.` 
         : "No specific location was detected in the transcript.";
 
+      // Determine the language of the transcript
+      const isArabicText = /[\u0600-\u06FF]/.test(transcribedText);
+      const summaryLanguage = isArabicText ? 'ar' : 'en';
+      
+      const systemPrompt = summaryLanguage === 'ar' 
+        ? "أنت مساعد محترف يقوم بتلخيص محادثات الاجتماعات. يرجى تلخيص المحادثة التالية بتنسيق نظيف مع عناوين ونقاط مرقمة. ركز على النقاط الرئيسية والقرارات والإجراءات المطلوبة. احتفظ بالملخص دقيقًا وموجزًا."
+        : "You are a professional meeting summarizer. Please create a professional and comprehensive summary of the following meeting transcript, including key points, action items, decisions made, and who was participating.";
+
       const response = await supabase.functions.invoke("ai-assistant", {
         body: {
-          message: `Please create a professional and comprehensive summary of the following meeting transcript, including key points, action items, decisions made, and who was participating. 
-          
-          Format the summary in a clean business format with markdown headings and bullet points. 
-          ${locationContext} 
-          
-          Important guidelines:
-          1. Focus on extracting factual information only, no questions or suggestions in the summary
-          2. Structure the content with clear sections (Summary, Key Points, Action Items, Decisions)
-          3. Include a clear list of participants if mentioned
-          4. Be concise and direct - avoid speculation or asking questions in the summary
-          5. Format dates and times consistently
-          6. Organize action items by owner/responsible person when possible
-          7. Keep the tone professional and objective
-          
-          TRANSCRIPT: ${transcribedText}`,
-          context: "This is a meeting transcript that needs to be summarized in a professional format for PDF export and business use."
+          message: transcribedText,
+          system: systemPrompt,
+          context: `${locationContext} Format the summary in a clean business format with markdown headings and bullet points. Important guidelines: 1. Focus on extracting factual information only, no questions or suggestions in the summary 2. Structure the content with clear sections (Summary, Key Points, Action Items, Decisions) 3. Include a clear list of participants if mentioned 4. Be concise and direct - avoid speculation or asking questions in the summary 5. Format dates and times consistently 6. Organize action items by owner/responsible person when possible 7. Keep the tone professional and objective. RESPOND IN ${summaryLanguage === 'ar' ? 'ARABIC' : 'ENGLISH'} LANGUAGE.`
         }
       });
       
@@ -498,16 +547,62 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
       
       const aiSummary = response.data.response;
       
-      const summaryWithHeader = `
+      // Format the header based on language
+      const dateStr = new Date().toLocaleDateString(summaryLanguage === 'ar' ? 'ar-SA' : 'en-US');
+      
+      const summaryWithHeader = summaryLanguage === 'ar' 
+        ? `
+## ملخص الاجتماع
+- **التاريخ**: ${dateStr}
+- **المدة**: ${formatTime(recordingTime)}
+${location ? `- **الموقع**: ${location}` : ''}
+
+${aiSummary}
+        `
+        : `
 ## Meeting Summary
-- **Date**: ${new Date().toLocaleDateString()}
+- **Date**: ${dateStr}
 - **Duration**: ${formatTime(recordingTime)}
 ${location ? `- **Location**: ${location}` : ''}
 
 ${aiSummary}
-      `;
+        `;
       
       setSummary(summaryWithHeader);
+      
+      // Save the meeting summary to Supabase
+      try {
+        const { error: saveError } = await supabase.from('meetings').insert({
+          date: new Date().toISOString(),
+          duration: recordingTime,
+          location: location,
+          summary: summaryWithHeader,
+          language: summaryLanguage
+        });
+        
+        if (saveError) {
+          console.error("Error saving meeting:", saveError);
+          toast({
+            title: "Save Error",
+            description: "Meeting summary generated but couldn't be saved to your history.",
+            variant: "destructive"
+          });
+        } else {
+          // Reload meetings after saving a new one
+          const { data: refreshedData } = await supabase
+            .from('meetings')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(5);
+            
+          if (refreshedData) {
+            setSavedMeetings(refreshedData);
+          }
+        }
+      } catch (saveError) {
+        console.error("Error saving meeting to database:", saveError);
+      }
+      
     } catch (error) {
       console.error("Error generating summary:", error);
       toast({
@@ -517,7 +612,29 @@ ${aiSummary}
       });
       
       // Fallback summary with location if detected
-      const fallbackSummary = `
+      const isArabicText = /[\u0600-\u06FF]/.test(transcribedText);
+      const fallbackSummary = isArabicText
+        ? `
+## ملخص الاجتماع
+- **التاريخ**: ${new Date().toLocaleDateString('ar-SA')}
+- **المدة**: ${formatTime(recordingTime)}
+${detectedLocation ? `- **الموقع**: ${detectedLocation}` : ''}
+
+### النقاط الرئيسية:
+1. تمت مناقشة جدول المشروع وتعديل المواعيد النهائية
+2. تم تأكيد الميزانية للحملة التسويقية الجديدة
+3. تم جدولة عملية إعداد الموظف الجديد للأسبوع المقبل
+
+### المهام المطلوبة:
+- على أحمد إنهاء التصاميم بحلول يوم الجمعة
+- على سارة التنسيق مع العميل بشأن الجداول الزمنية المعدلة
+- على محمد إعداد مواد التدريب
+
+### القرارات:
+- تم نقل اجتماعات الحالة الأسبوعية إلى الخميس الساعة 10 صباحاً
+- تم تمديد سياسة العمل عن بعد حتى نهاية العام
+        `
+        : `
 ## Meeting Summary
 - **Date**: ${new Date().toLocaleDateString()}
 - **Duration**: ${formatTime(recordingTime)}
@@ -536,7 +653,7 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
 ### Decisions:
 - Weekly status meetings moved to Thursdays at 10am
 - Remote work policy extended through end of year
-      `;
+        `;
       
       setSummary(fallbackSummary);
     } finally {
@@ -610,6 +727,13 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
       pdfContainer.style.fontFamily = 'Arial, sans-serif';
       document.body.appendChild(pdfContainer);
       
+      // Check if content is in Arabic
+      const isArabicContent = /[\u0600-\u06FF]/.test(summary);
+      if (isArabicContent) {
+        pdfContainer.style.direction = 'rtl';
+        pdfContainer.style.textAlign = 'right';
+      }
+      
       // Add WAKTI branding header with enhanced design
       const headerDiv = document.createElement('div');
       headerDiv.style.marginBottom = '30px';
@@ -626,11 +750,11 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
             <h1 style="margin: 0; font-size: 24px; font-weight: bold;">WAKTI</h1>
           </div>
           <div>
-            <span style="color: #333; font-size: 22px; font-weight: bold;">Meeting Summary</span>
-            <div style="color: #666; font-size: 14px; margin-top: 5px;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</div>
+            <span style="color: #333; font-size: 22px; font-weight: bold;">${isArabicContent ? 'ملخص الاجتماع' : 'Meeting Summary'}</span>
+            <div style="color: #666; font-size: 14px; margin-top: 5px;">${isArabicContent ? 'تم إنشاؤه في' : 'Generated on'} ${new Date().toLocaleDateString(isArabicContent ? 'ar-SA' : 'en-US')} ${isArabicContent ? 'في' : 'at'} ${new Date().toLocaleTimeString(isArabicContent ? 'ar-SA' : 'en-US')}</div>
           </div>
         </div>
-        <div style="color: #0053c3; font-size: 14px; font-weight: bold;">Powered by WAKTI Productivity Suite</div>
+        <div style="color: #0053c3; font-size: 14px; font-weight: bold;">${isArabicContent ? 'مدعوم بواسطة مجموعة أدوات وقتي للإنتاجية' : 'Powered by WAKTI Productivity Suite'}</div>
       `;
       pdfContainer.appendChild(headerDiv);
       
@@ -644,16 +768,16 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
       
       // Create styled metadata table
       metadataDiv.innerHTML = `
-        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px; direction: ${isArabicContent ? 'rtl' : 'ltr'}">
           <tr>
-            <td style="padding: 8px 15px; width: 120px; font-weight: bold; color: #0053c3;">Date:</td>
-            <td style="padding: 8px 15px;">${new Date().toLocaleDateString()}</td>
-            <td style="padding: 8px 15px; width: 120px; font-weight: bold; color: #0053c3;">Duration:</td>
+            <td style="padding: 8px 15px; width: 120px; font-weight: bold; color: #0053c3;">${isArabicContent ? 'التاريخ:' : 'Date:'}</td>
+            <td style="padding: 8px 15px;">${new Date().toLocaleDateString(isArabicContent ? 'ar-SA' : 'en-US')}</td>
+            <td style="padding: 8px 15px; width: 120px; font-weight: bold; color: #0053c3;">${isArabicContent ? 'المدة:' : 'Duration:'}</td>
             <td style="padding: 8px 15px;">${formatTime(recordingTime)}</td>
           </tr>
           ${detectedLocation ? `
           <tr>
-            <td style="padding: 8px 15px; font-weight: bold; color: #0053c3;">Location:</td>
+            <td style="padding: 8px 15px; font-weight: bold; color: #0053c3;">${isArabicContent ? 'الموقع:' : 'Location:'}</td>
             <td style="padding: 8px 15px;" colspan="3">${detectedLocation}</td>
           </tr>` : ''}
         </table>
@@ -692,7 +816,7 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
         const mapTitleDiv = document.createElement('div');
         mapTitleDiv.innerHTML = `
           <h3 style="color: #0053c3; font-size: 16px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid #e9ecef;">
-            Meeting Location
+            ${isArabicContent ? 'موقع الاجتماع' : 'Meeting Location'}
           </h3>
         `;
         mapDiv.appendChild(mapTitleDiv);
@@ -721,11 +845,11 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
         // Add link to open in Google Maps
         const mapLinkDiv = document.createElement('div');
         mapLinkDiv.style.marginTop = '10px';
-        mapLinkDiv.style.textAlign = 'right';
+        mapLinkDiv.style.textAlign = isArabicContent ? 'left' : 'right';
         mapLinkDiv.innerHTML = `
           <a style="color: #0053c3; font-size: 13px; text-decoration: none;" 
              href="${generateGoogleMapsUrl(detectedLocation)}" target="_blank">
-            Open in Google Maps
+            ${isArabicContent ? 'فتح في خرائط Google' : 'Open in Google Maps'}
           </a>
         `;
         mapDiv.appendChild(mapLinkDiv);
@@ -743,10 +867,11 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
       footerDiv.style.display = 'flex';
       footerDiv.style.justifyContent = 'space-between';
       footerDiv.style.alignItems = 'center';
+      footerDiv.style.direction = isArabicContent ? 'rtl' : 'ltr';
       
       footerDiv.innerHTML = `
-        <div>Document generated by WAKTI Meeting Summary Tool</div>
-        <div style="color: #0053c3; font-weight: bold;">WAKTI - Your Productivity Partner</div>
+        <div>${isArabicContent ? 'تم إنشاء المستند بواسطة أداة ملخص اجتماع وقتي' : 'Document generated by WAKTI Meeting Summary Tool'}</div>
+        <div style="color: #0053c3; font-weight: bold;">${isArabicContent ? 'وقتي - شريكك في الإنتاجية' : 'WAKTI - Your Productivity Partner'}</div>
       `;
       pdfContainer.appendChild(footerDiv);
       
@@ -760,13 +885,14 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
       promotionDiv.style.fontSize = '13px';
       promotionDiv.style.color = '#0053c3';
       promotionDiv.style.textAlign = 'center';
+      promotionDiv.style.direction = isArabicContent ? 'rtl' : 'ltr';
       
       promotionDiv.innerHTML = `
         <div style="font-weight: bold; margin-bottom: 5px;">
-          Boost your team's productivity with WAKTI's complete suite of business tools
+          ${isArabicContent ? 'عزز إنتاجية فريقك مع مجموعة أدوات الأعمال الكاملة من وقتي' : 'Boost your team\'s productivity with WAKTI\'s complete suite of business tools'}
         </div>
         <div style="color: #666;">
-          Task management · Calendar · Meeting summaries · Team collaboration · AI assistance
+          ${isArabicContent ? 'إدارة المهام · التقويم · ملخصات الاجتماعات · تعاون الفريق · مساعدة الذكاء الاصطناعي' : 'Task management · Calendar · Meeting summaries · Team collaboration · AI assistance'}
         </div>
       `;
       pdfContainer.appendChild(promotionDiv);
@@ -834,13 +960,39 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center text-lg">
               <FileText className="mr-2 h-5 w-5 text-muted-foreground" />
-              Meeting Summary Tool
+              {t('common.meetingSummaryTool', 'Meeting Summary Tool')}
             </CardTitle>
             <CardDescription>
-              Record and transcribe meetings to generate comprehensive summaries
+              {t('common.meetingSummaryDescription', 'Record and transcribe meetings to generate comprehensive summaries')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Language Selection */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border rounded-lg">
+              <div>
+                <h3 className="text-sm font-medium mb-1">{t('common.selectLanguage', 'Select Language')}</h3>
+                <p className="text-xs text-muted-foreground">
+                  {t('common.languageSupport', 'Recording supports both English and Arabic')}
+                </p>
+              </div>
+              <Select 
+                value={selectedLanguage} 
+                onValueChange={setSelectedLanguage}
+                disabled={isRecording}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder={t('common.selectLanguage', 'Select Language')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {languageOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
             {/* Recording Controls */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 rounded-lg border p-4 relative">
               {isRecording && (
@@ -862,10 +1014,14 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
                     >
                       <Mic className="h-5 w-5 text-red-500" />
                     </motion.div>
-                    <span className="font-medium">Recording: {formatTime(recordingTime)}</span>
+                    <span className="font-medium">
+                      {t('common.recording', 'Recording')}: {formatTime(recordingTime)}
+                    </span>
                   </div>
                 ) : (
-                  <span className="font-medium">Ready to Record</span>
+                  <span className="font-medium">
+                    {t('common.readyToRecord', 'Ready to Record')}
+                  </span>
                 )}
               </div>
               
@@ -877,7 +1033,7 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
                     disabled={isRecording || !supportsVoice}
                   >
                     <Mic className="mr-2 h-4 w-4" />
-                    Start Recording
+                    {t('common.startRecording', 'Start Recording')}
                   </Button>
                 ) : (
                   <Button 
@@ -885,7 +1041,7 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
                     variant="outline"
                   >
                     <MicOff className="mr-2 h-4 w-4" />
-                    Stop Recording
+                    {t('common.stopRecording', 'Stop Recording')}
                   </Button>
                 )}
                 
@@ -897,12 +1053,12 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
                   {isSummarizing ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
+                      {t('common.generating', 'Generating...')}
                     </>
                   ) : (
                     <>
                       <FileText className="mr-2 h-4 w-4" />
-                      Generate Summary
+                      {t('common.generateSummary', 'Generate Summary')}
                     </>
                   )}
                 </Button>
@@ -914,7 +1070,7 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
               <div className="rounded-lg bg-destructive/15 p-4 text-destructive flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold">Recording Error</h4>
+                  <h4 className="font-semibold">{t('common.recordingError', 'Recording Error')}</h4>
                   <p className="text-sm">{recordingError}</p>
                 </div>
               </div>
@@ -923,12 +1079,15 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
             {/* Transcribed Text */}
             {transcribedText && (
               <div className="space-y-2">
-                <h3 className="text-sm font-medium">Transcribed Meeting</h3>
+                <h3 className="text-sm font-medium">
+                  {t('common.transcribedMeeting', 'Transcribed Meeting')}
+                </h3>
                 <Textarea 
                   value={transcribedText}
                   onChange={(e) => setTranscribedText(e.target.value)}
                   className="min-h-[120px] text-sm"
-                  placeholder="Transcribed text will appear here..."
+                  placeholder={t('common.transcribedTextPlaceholder', 'Transcribed text will appear here...')}
+                  dir={/[\u0600-\u06FF]/.test(transcribedText) ? 'rtl' : 'ltr'}
                 />
               </div>
             )}
@@ -948,7 +1107,7 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
                   ) : (
                     <Download className="mr-1 h-3 w-3" />
                   )}
-                  Download Audio
+                  {t('common.downloadAudio', 'Download Audio')}
                 </Button>
               </div>
             )}
@@ -960,7 +1119,9 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
           <Card>
             <CardHeader className="pb-3">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-lg">Meeting Summary</CardTitle>
+                <CardTitle className="text-lg">
+                  {t('common.meetingSummary', 'Meeting Summary')}
+                </CardTitle>
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
@@ -973,7 +1134,7 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
                     ) : (
                       <Copy className="mr-1 h-4 w-4" />
                     )}
-                    {copied ? 'Copied' : 'Copy'}
+                    {copied ? t('common.copied', 'Copied') : t('common.copy', 'Copy')}
                   </Button>
                   <Button
                     variant="outline"
@@ -987,7 +1148,7 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
                     ) : (
                       <FileDown className="mr-1 h-4 w-4" />
                     )}
-                    {isExporting ? 'Exporting...' : 'Export PDF'}
+                    {isExporting ? t('common.exporting', 'Exporting...') : t('common.exportPDF', 'Export PDF')}
                   </Button>
                   {onUseSummary && (
                     <Button
@@ -996,7 +1157,7 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
                       onClick={() => onUseSummary(summary)}
                       className="h-8"
                     >
-                      Use in Chat
+                      {t('common.useInChat', 'Use in Chat')}
                     </Button>
                   )}
                 </div>
@@ -1009,12 +1170,15 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
                 dangerouslySetInnerHTML={{ 
                   __html: summary.replace(/\n/g, '<br />') 
                 }}
+                dir={/[\u0600-\u06FF]/.test(summary) ? 'rtl' : 'ltr'}
               />
               
               {/* Add Map For Location If Present */}
               {detectedLocation && (
                 <div className="mt-6 border rounded-lg overflow-hidden">
-                  <div className="bg-muted p-2 font-medium text-sm">Meeting Location</div>
+                  <div className="bg-muted p-2 font-medium text-sm">
+                    {/[\u0600-\u06FF]/.test(summary) ? 'موقع الاجتماع' : 'Meeting Location'}
+                  </div>
                   <div className="aspect-video">
                     <iframe
                       className="w-full h-full border-0"
@@ -1031,7 +1195,7 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
                       rel="noopener noreferrer"
                       className="text-xs text-primary hover:underline"
                     >
-                      Open in Google Maps
+                      {/[\u0600-\u06FF]/.test(summary) ? 'فتح في خرائط Google' : 'Open in Google Maps'}
                     </a>
                   </div>
                 </div>
@@ -1045,10 +1209,10 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center text-lg">
               <Archive className="mr-2 h-5 w-5 text-muted-foreground" />
-              Previous Meetings
+              {t('common.previousMeetings', 'Previous Meetings')}
             </CardTitle>
             <CardDescription>
-              Access your recent meeting summaries (last 5)
+              {t('common.accessPreviousMeetings', 'Access your recent meeting summaries (last 5)')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1063,7 +1227,8 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
                     <AccordionTrigger className="hover:no-underline">
                       <div className="flex justify-between items-center w-full pr-4">
                         <div className="font-medium">
-                          Meeting on {new Date(meeting.date).toLocaleDateString()}
+                          {meeting.language === 'ar' ? 'اجتماع في ' : 'Meeting on '} 
+                          {new Date(meeting.date).toLocaleDateString(meeting.language === 'ar' ? 'ar-SA' : 'en-US')}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {formatTime(meeting.duration)}
@@ -1077,22 +1242,23 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
                         dangerouslySetInnerHTML={{ 
                           __html: meeting.summary.replace(/\n/g, '<br />') 
                         }}
+                        dir={meeting.language === 'ar' ? 'rtl' : 'ltr'}
                       />
-                      <div className="flex justify-end gap-2 mt-4">
+                      <div className={`flex justify-end gap-2 mt-4 ${meeting.language === 'ar' ? 'flex-row-reverse' : ''}`}>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => {
                             navigator.clipboard.writeText(meeting.summary);
                             toast({
-                              title: "Copied to clipboard",
-                              description: "Meeting summary copied to clipboard successfully.",
+                              title: t('common.copiedToClipboard', 'Copied to clipboard'),
+                              description: t('common.meetingSummaryCopied', 'Meeting summary copied to clipboard successfully.'),
                             });
                           }}
                           className="h-8 text-xs"
                         >
                           <Copy className="mr-1 h-3 w-3" />
-                          Copy
+                          {t('common.copy', 'Copy')}
                         </Button>
                         {onUseSummary && (
                           <Button
@@ -1101,7 +1267,7 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
                             onClick={() => onUseSummary(meeting.summary)}
                             className="h-8 text-xs"
                           >
-                            Use in Chat
+                            {t('common.useInChat', 'Use in Chat')}
                           </Button>
                         )}
                       </div>
@@ -1112,8 +1278,8 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <FileText className="mx-auto h-8 w-8 mb-2" />
-                <h3 className="font-medium mb-1">No meeting history</h3>
-                <p className="text-sm">Record your first meeting to save it here</p>
+                <h3 className="font-medium mb-1">{t('common.noMeetingHistory', 'No meeting history')}</h3>
+                <p className="text-sm">{t('common.recordFirstMeeting', 'Record your first meeting to save it here')}</p>
               </div>
             )}
           </CardContent>

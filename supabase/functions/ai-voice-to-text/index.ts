@@ -137,7 +137,7 @@ serve(async (req) => {
       }
     }
     
-    const { audio } = body;
+    const { audio, language = 'en' } = body;
     
     if (!audio) {
       console.error("No audio data provided");
@@ -184,7 +184,7 @@ serve(async (req) => {
       );
     }
     
-    console.log("Processing audio data");
+    console.log("Processing audio data with language:", language);
     
     // Validate minimum audio length
     if (audio.length < 100) {
@@ -238,8 +238,16 @@ serve(async (req) => {
     formData.append('file', blob, 'audio.mp3');
     formData.append('model', 'whisper-1');
     
+    // Set the language if provided
+    // Arabic is 'ar', English is 'en' in ISO 639-1
+    if (language === 'ar') {
+      formData.append('language', 'ar');
+    } else if (language === 'en') {
+      formData.append('language', 'en');
+    }
+    
     console.log("Audio blob size:", blob.size, "bytes");
-    console.log("Sending request to OpenAI");
+    console.log("Sending request to OpenAI with language:", language);
     
     // Send to OpenAI
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
