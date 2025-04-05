@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
-import { AISettings } from "@/types/ai-assistant.types";
+import { AISettings, AIAssistantRole } from "@/types/ai-assistant.types";
 import { AISettingsContextType } from "./AISettingsContext.types";
 import { handleUpdateSettings } from "./settingsOperations";
 import { handleAddKnowledge, handleDeleteKnowledge } from "./knowledgeOperations";
@@ -36,8 +36,8 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return handleUpdateSettings(updateSettingsMutation, newSettings, setError);
   };
   
-  const addKnowledge = async (title: string, content: string) => {
-    return handleAddKnowledge(addKnowledgeMutation, title, content, setError);
+  const addKnowledge = async (title: string, content: string, role?: AIAssistantRole) => {
+    return handleAddKnowledge(addKnowledgeMutation, title, content, setError, role);
   };
   
   const deleteKnowledge = async (id: string) => {

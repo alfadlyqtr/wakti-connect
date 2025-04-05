@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Book, GraduationCap, Building2, Briefcase, User } from "lucide-react";
+import { Book, BookOpen, Building2, Briefcase, User } from "lucide-react";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
 import { useAISettings } from "@/components/settings/ai/context/AISettingsContext";
 import { toast } from "@/components/ui/use-toast";
@@ -85,7 +85,7 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
   
   const getRoleIcon = () => {
     switch (selectedRole) {
-      case "student": return <GraduationCap className="h-5 w-5 text-blue-500" />;
+      case "student": return <BookOpen className="h-5 w-5 text-blue-500" />;
       case "business_owner": return <Building2 className="h-5 w-5 text-amber-500" />;
       case "employee": return <Briefcase className="h-5 w-5 text-purple-500" />;
       case "writer": return <Book className="h-5 w-5 text-green-500" />;
