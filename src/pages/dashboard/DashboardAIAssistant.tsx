@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,13 +9,11 @@ import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { AISettingsProvider } from "@/components/settings/ai";
 import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
-import { AIAssistantHeader } from "@/components/ai/header/AIAssistantHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CleanChatInterface } from "@/components/ai/assistant/CleanChatInterface";
 import { EnhancedToolsTab } from "@/components/ai/tools/EnhancedToolsTab";
 import { RoleSpecificKnowledge } from "@/components/ai/tools/RoleSpecificKnowledge";
 import { MeetingSummaryTool } from "@/components/ai/tools/MeetingSummaryTool";
-import { QuickToolsCard } from "@/components/ai/tools/QuickToolsCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AIRoleSelector } from "@/components/ai/assistant/AIRoleSelector";
 import { useVoiceInteraction } from "@/hooks/ai/useVoiceInteraction";
@@ -77,9 +74,11 @@ const DashboardAIAssistant = () => {
   const { toast } = useToast();
   
   const {
-    lastTranscript,
+    isListening,
     startListening,
-    stopListening
+    stopListening,
+    lastTranscript,
+    supportsVoice
   } = useVoiceInteraction({
     continuousListening: false,
     autoResumeListening: false,
@@ -94,16 +93,21 @@ const DashboardAIAssistant = () => {
 
   useEffect(() => {
     if (aiSettings?.role) {
-      setSelectedRole(aiSettings.role);
+      if (aiSettings.role === "writer") {
+        setSelectedRole("work");
+      } else {
+        setSelectedRole(aiSettings.role);
+      }
     }
   }, [aiSettings]);
 
   const handleRoleChange = async (role: AIAssistantRole) => {
-    setSelectedRole(role);
+    const effectiveRole = role === "writer" ? "work" : role;
+    setSelectedRole(effectiveRole);
     
     if (aiSettings) {
       try {
-        const updatedSettings = { ...aiSettings, role };
+        const updatedSettings = { ...aiSettings, role: effectiveRole };
         await updateSettings.mutateAsync(updatedSettings);
       } catch (error) {
         console.error("Failed to update AI role:", error);
@@ -308,7 +312,7 @@ const DashboardAIAssistant = () => {
   const getRoleColor = () => {
     switch (selectedRole) {
       case "student": return "from-blue-600 to-blue-500";
-      case "employee": return "from-purple-600 to-purple-500";
+      case "work": return "from-purple-600 to-purple-500";
       case "writer": return "from-green-600 to-green-500";
       case "business_owner": return "from-amber-600 to-amber-500";
       default: return "from-wakti-blue to-wakti-blue/90";
@@ -398,11 +402,6 @@ const DashboardAIAssistant = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-6">
-                        <QuickToolsCard
-                          selectedRole={selectedRole}
-                          onToolSelect={handleToolContent}
-                        />
-                        
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <VoiceInteractionToolCard
                             onSpeechRecognized={handleToolContent}

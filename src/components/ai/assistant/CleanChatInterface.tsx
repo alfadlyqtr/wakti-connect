@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MessageInputForm } from "./MessageInputForm";
 import { AIAssistantChat } from "./AIAssistantChat";
 import { EmptyStateView } from "./EmptyStateView";
+import { useVoiceInteraction } from "@/hooks/ai/useVoiceInteraction";
 
 interface CleanChatInterfaceProps {
   messages: AIMessage[];
@@ -33,6 +34,22 @@ export function CleanChatInterface({
 }: CleanChatInterfaceProps) {
   const [showSuggestions, setShowSuggestions] = useState(!messages || messages.length === 0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Voice recognition integration
+  const {
+    isListening,
+    startListening,
+    stopListening,
+    temporaryTranscript,
+    supportsVoice
+  } = useVoiceInteraction({
+    continuousListening: true,
+    onTranscriptComplete: (transcript) => {
+      if (transcript) {
+        setInputMessage(transcript);
+      }
+    }
+  });
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -78,9 +95,18 @@ export function CleanChatInterface({
             canAccess={canAccess}
             onFileUpload={onFileUpload}
             onCameraCapture={onCameraCapture}
+            isListening={isListening}
+            onStartListening={supportsVoice ? startListening : undefined}
+            onStopListening={supportsVoice ? stopListening : undefined}
+            recognitionSupported={supportsVoice}
           />
+          {isListening && temporaryTranscript && (
+            <div className="px-4 py-2 text-sm text-muted-foreground">
+              <span className="font-medium">Listening:</span> {temporaryTranscript}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
   );
-}
+};

@@ -1,5 +1,5 @@
 // AI Assistant role types - must match what's in the database
-export type AIAssistantRole = "student" | "business_owner" | "general" | "employee" | "writer";
+export type AIAssistantRole = "student" | "business_owner" | "general" | "work" | "writer";
 
 // AI settings interface
 export interface AISettings {
@@ -112,27 +112,27 @@ export const RoleContexts: Record<AIAssistantRole, {
       { name: "Quick Answer", description: "Get instant information", icon: "HelpCircle" }
     ]
   },
-  "employee": {
+  "work": {
     title: "Work Assistant",
-    description: "Help with workplace tasks and team coordination",
+    description: "Help with workplace tasks, team coordination, and creative projects",
     icon: "users",
-    welcomeMessage: "Hello! I'm your Work Assistant. I can help manage your work assignments, coordinate with your team, and track your job cards. How can I support your workday?",
+    welcomeMessage: "Hello! I'm your Work Assistant. I can help manage your work assignments, coordinate with your team, track your job cards, and support creative projects. How can I support you today?",
     commandSuggestions: [
       "Show me my assigned tasks",
       "Create a task for the client project",
-      "View my work schedule"
+      "Help me outline an article"
     ],
     suggestedPrompts: [
       "Track my hours for today",
       "Create a task for the team meeting notes",
-      "Help me log my completed work",
-      "What's on my agenda for today?"
+      "Help me outline a new content piece",
+      "Give me feedback on this paragraph"
     ],
     quickTools: [
       { name: "Time Tracker", description: "Track your work hours", icon: "Clock" },
       { name: "Task Reporter", description: "Report completed tasks", icon: "ClipboardCheck" },
       { name: "Meeting Organizer", description: "Organize team meetings", icon: "Users" },
-      { name: "Work Log", description: "Log your daily work", icon: "FileText" }
+      { name: "Content Creator", description: "Generate creative content", icon: "Edit" }
     ]
   },
   "writer": {
