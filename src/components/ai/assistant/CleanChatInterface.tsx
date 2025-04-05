@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -159,9 +158,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
                   <Bot className="h-4 w-4 text-white" />
                 </Avatar>
               ) : msg.role === "user" ? (
-                <Avatar className="h-8 w-8 bg-gray-200">
-                  <span className="text-xs font-medium">You</span>
-                </Avatar>
+                <MessageAvatar isUser={true} />
               ) : (
                 <Avatar className="h-8 w-8 bg-yellow-100">
                   <span className="text-xs font-medium">Sys</span>
@@ -176,7 +173,6 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               )}>
                 <div className="prose dark:prose-invert max-w-none text-sm prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4">
                   <ReactMarkdown 
-                    // Fix: Use remark-gfm as a plugin properly
                     remarkPlugins={[remarkGfm]}
                   >
                     {msg.content}
@@ -283,5 +279,17 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
         </form>
       </div>
     </Card>
+  );
+};
+
+interface MessageAvatarProps {
+  isUser: boolean;
+}
+
+const MessageAvatar: React.FC<MessageAvatarProps> = ({ isUser }) => {
+  return (
+    <Avatar className="h-8 w-8 bg-gray-200">
+      <span className="text-xs font-medium">{isUser ? "You" : "Sys"}</span>
+    </Avatar>
   );
 };

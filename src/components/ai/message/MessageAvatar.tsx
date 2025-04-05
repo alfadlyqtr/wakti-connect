@@ -1,19 +1,38 @@
 
 import React from "react";
-import { Bot, User } from "lucide-react";
+import { Bot, UserRound } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface MessageAvatarProps {
   isUser: boolean;
 }
 
 export function MessageAvatar({ isUser }: MessageAvatarProps) {
+  const { user } = useAuth();
+  
+  // Get the avatar URL or user initials
+  const userAvatarUrl = user?.user_metadata?.avatar_url || null;
+  const userInitial = user?.user_metadata?.full_name?.[0] || 
+                    user?.user_metadata?.name?.[0] || 
+                    user?.email?.[0]?.toUpperCase() || 'U';
+  
   return (
-    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+    <Avatar className={`w-8 h-8 rounded-full flex-shrink-0 ${
       isUser 
-        ? "bg-gray-300 text-gray-600" 
-        : "bg-wakti-blue text-white"
+        ? "bg-gray-200" 
+        : "bg-wakti-blue"
     }`}>
-      {isUser ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-    </div>
+      {isUser ? (
+        <>
+          <AvatarImage src={userAvatarUrl || ''} alt="User" />
+          <AvatarFallback className="text-gray-600 text-sm">
+            {userInitial}
+          </AvatarFallback>
+        </>
+      ) : (
+        <Bot className="h-4 w-4 text-white" />
+      )}
+    </Avatar>
   );
 }

@@ -24,7 +24,7 @@ export function AIAssistantMessage({
   return (
     <div
       className={cn(
-        "flex w-full gap-2 sm:gap-3",
+        "flex w-full items-start gap-2 sm:gap-3",
         isUser ? "justify-end" : "justify-start"
       )}
     >
