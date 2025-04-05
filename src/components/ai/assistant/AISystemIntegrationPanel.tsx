@@ -27,7 +27,7 @@ export const AISystemIntegrationPanel: React.FC<AISystemIntegrationPanelProps> =
     return null;
   }
   
-  // Business integration tools organized by tab
+  // Business integration tools organized by tab - ensuring each tab has unique tools
   const businessTools = {
     overview: [
       { label: "Business dashboard summary", icon: BriefcaseBusiness },
@@ -45,19 +45,19 @@ export const AISystemIntegrationPanel: React.FC<AISystemIntegrationPanelProps> =
       { label: "Growth trend analysis", icon: TrendingUp }
     ],
     operations: [
-      { label: "Upcoming appointments", icon: Clock },
-      { label: "Review pending invoices", icon: Receipt },
-      { label: "Service capacity planning", icon: Kanban }
+      { label: "Project management overview", icon: Kanban },
+      { label: "Resource allocation status", icon: Boxes },
+      { label: "Process efficiency analysis", icon: Settings }
     ],
     marketing: [
-      { label: "Marketing campaign analysis", icon: Megaphone },
-      { label: "Social media performance", icon: Globe },
-      { label: "Promotional strategy", icon: Target }
+      { label: "Campaign performance metrics", icon: Megaphone },
+      { label: "Social media engagement", icon: Globe },
+      { label: "Conversion rate analysis", icon: Target }
     ],
     finance: [
-      { label: "Cashflow projection", icon: Landmark },
-      { label: "Expense breakdown", icon: AreaChart },
-      { label: "Tax preparation assistance", icon: Scale }
+      { label: "Cash flow projection", icon: Landmark },
+      { label: "Expense categorization", icon: AreaChart },
+      { label: "Revenue stream analysis", icon: Scale }
     ]
   };
   

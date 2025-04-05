@@ -21,25 +21,29 @@ interface QuickToolsCardProps {
   onToolClick?: (toolDescription: string) => void;
   onToolSelect?: (toolDescription: string) => void;
   compact?: boolean;
+  inSidebar?: boolean;
 }
 
 export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
   selectedRole,
   onToolClick,
   onToolSelect,
-  compact = false
+  compact = false,
+  inSidebar = false
 }) => {
-  // Define role-specific unique tools
+  // Define role-specific tools - ensure each tool is unique
   const getRoleSpecificTools = () => {
     switch (selectedRole) {
       case 'general':
         return [
           { name: "Task Planner", description: "Plan my daily tasks and priorities", icon: "CheckSquare" },
-          { name: "Notes", description: "Create and organize my personal notes", icon: "FileText" },
-          { name: "Reminder", description: "Set up reminders for important events", icon: "BellRing" },
           { name: "Daily Schedule", description: "Optimize my daily schedule", icon: "Calendar" },
           { name: "Shopping List", description: "Create a shopping list for me", icon: "List" },
-          { name: "Travel Planner", description: "Help me plan my upcoming trip", icon: "Plane" }
+          { name: "Travel Planner", description: "Help me plan my upcoming trip", icon: "Plane" },
+          { name: "Meeting Planner", description: "Schedule and plan meetings", icon: "Users" },
+          { name: "Reminder Setup", description: "Create reminders for important events", icon: "BellRing" },
+          { name: "Note Taking", description: "Help me organize my thoughts", icon: "FileText" },
+          { name: "Quick Answer", description: "Get fast answers to questions", icon: "Search" }
         ];
       case 'student':
         return [
@@ -48,7 +52,9 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
           { name: "Note Summarizer", description: "Summarize my lecture notes", icon: "FileText" },
           { name: "Exam Prep", description: "Prepare for upcoming exams", icon: "GraduationCap" },
           { name: "Bibliography", description: "Format citations for my paper", icon: "BookCopy" },
-          { name: "Math Solver", description: "Help solve math problems", icon: "Calculator" }
+          { name: "Math Solver", description: "Help solve math problems", icon: "Calculator" },
+          { name: "Language Helper", description: "Translation and language assistance", icon: "Languages" },
+          { name: "Study Schedule", description: "Organize my study sessions", icon: "Calendar" }
         ];
       case 'employee':
       case 'writer':
@@ -58,7 +64,9 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
           { name: "Script Writer", description: "Help write scripts for presentations", icon: "Pen" },
           { name: "Blog Post", description: "Create blog post outlines", icon: "FileDigit" },
           { name: "Social Media", description: "Draft engaging social media posts", icon: "Presentation" },
-          { name: "Proofreading", description: "Proofread and improve my text", icon: "Highlighter" }
+          { name: "Proofreading", description: "Proofread and improve my text", icon: "Highlighter" },
+          { name: "Copywriting", description: "Create persuasive marketing copy", icon: "ScrollText" },
+          { name: "Creative Writing", description: "Write stories and creative pieces", icon: "Lightbulb" }
         ];
       case 'business_owner':
         return [
@@ -67,7 +75,9 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
           { name: "Marketing", description: "Create marketing materials", icon: "Lightbulb" },
           { name: "Financial Report", description: "Summarize financial data", icon: "CircleDollarSign" },
           { name: "Customer Insights", description: "Analyze customer feedback data", icon: "LineChart" },
-          { name: "Service Proposal", description: "Draft service proposals", icon: "FileBadge" }
+          { name: "Service Proposal", description: "Draft service proposals", icon: "FileBadge" },
+          { name: "Business Plan", description: "Develop business strategies", icon: "BriefcaseBusiness" },
+          { name: "Operations", description: "Optimize business operations", icon: "Settings" }
         ];
       default:
         return [
@@ -135,14 +145,20 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
     }
   };
 
-  // Get tools based on role
-  const roleTools = getRoleSpecificTools();
+  // Get all tools based on role
+  const allRoleTools = getRoleSpecificTools();
+  
+  // For sidebar view, display specific tools
+  // For sidebar, display a different set of tools than the main panel to avoid duplicates
+  const roleTools = inSidebar 
+    ? allRoleTools.slice(4, 8)  // Use second set of tools for sidebar
+    : allRoleTools.slice(0, 6); // Use first set of tools for main panel
 
   // For the right sidebar panel, display without the card wrapper
   if (compact) {
     return (
       <div className="grid grid-cols-2 gap-2">
-        {roleTools.slice(0, 6).map((tool, index) => (
+        {roleTools.map((tool, index) => (
           <Button
             key={index}
             variant="outline"

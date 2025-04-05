@@ -351,7 +351,7 @@ const DashboardAIAssistant = () => {
               </Card>
               
               <div className="flex flex-col lg:flex-row gap-4">
-                <div className="w-full lg:w-3/4">
+                <div className="w-full lg:w-4/5">
                   <Tabs value={activeTab} onValueChange={setActiveTab}>
                     <TabsList className="mx-auto mb-4 grid w-full max-w-md grid-cols-3">
                       <TabsTrigger value="chat" className="flex items-center gap-2">
@@ -394,53 +394,6 @@ const DashboardAIAssistant = () => {
                               showSuggestions={false}
                             />
                           </div>
-                          
-                          <div className="hidden md:block w-1/3 min-w-[250px] max-w-[300px] space-y-4">
-                            <Card>
-                              <CardHeader className="pb-2">
-                                <CardTitle className="text-sm flex items-center gap-2">
-                                  {selectedRole === "student" ? (
-                                    <BookCopy className="h-4 w-4" />
-                                  ) : selectedRole === "employee" || selectedRole === "writer" ? (
-                                    <Wrench className="h-4 w-4" />
-                                  ) : selectedRole === "business_owner" ? (
-                                    <Briefcase className="h-4 w-4" />
-                                  ) : (
-                                    <Bot className="h-4 w-4" />
-                                  )}
-                                  {selectedRole === "employee" || selectedRole === "writer" 
-                                    ? "Creative Tools" 
-                                    : `${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1).replace('_', ' ')} Tools`}
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent className="p-3">
-                                <QuickToolsCard 
-                                  selectedRole={selectedRole}
-                                  onToolClick={(prompt) => setInputMessage(prompt)} 
-                                  compact={true}
-                                />
-                              </CardContent>
-                            </Card>
-                            
-                            {shouldShowSystemIntegration && (
-                              <Card>
-                                <CardHeader className="pb-2">
-                                  <CardTitle className="text-sm flex items-center gap-2">
-                                    <Cpu className="h-4 w-4" /> 
-                                    Business System Integration
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent className="p-3">
-                                  <AISystemIntegrationPanel
-                                    selectedRole={selectedRole}
-                                    onExampleClick={(example) => {
-                                      setInputMessage(example);
-                                    }}
-                                  />
-                                </CardContent>
-                              </Card>
-                            )}
-                          </div>
                         </div>
                       </TabsContent>
                       
@@ -462,7 +415,7 @@ const DashboardAIAssistant = () => {
                   </Tabs>
                 </div>
                 
-                <div className="w-full lg:w-1/4">
+                <div className="w-full lg:w-1/5">
                   {shouldShowSystemIntegration ? (
                     <Card>
                       <CardHeader className="pb-2">
@@ -504,6 +457,7 @@ const DashboardAIAssistant = () => {
                             setInputMessage(example);
                             setActiveTab("chat");
                           }}
+                          inSidebar={true}
                         />
                       </CardContent>
                     </Card>

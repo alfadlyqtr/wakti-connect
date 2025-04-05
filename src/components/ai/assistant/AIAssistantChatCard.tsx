@@ -40,7 +40,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Set to false by default to give more space to chat
 
   const getRoleTitle = () => {
     switch (selectedRole) {
@@ -137,7 +137,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
         </div>
 
         <div className="flex flex-1 overflow-hidden">
-          {/* Main chat area */}
+          {/* Main chat area - larger by default */}
           <div className="flex-1 overflow-y-auto p-3 sm:p-4">
             <AIAssistantChat 
               messages={messages} 
@@ -152,9 +152,9 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
             <div ref={messagesEndRef} />
           </div>
           
-          {/* Sidebar with suggestions - shown conditionally */}
+          {/* Sidebar with suggestions - shown conditionally and narrower */}
           {messages.length === 0 && showSuggestions && isSidebarOpen && (
-            <div className="w-1/3 min-w-[250px] max-w-[350px] border-l p-3 overflow-y-auto bg-gray-50/50">
+            <div className="w-1/4 min-w-[200px] max-w-[250px] border-l p-3 overflow-y-auto bg-gray-50/50">
               <EmptyStateView onPromptClick={handlePromptClick} selectedRole={selectedRole} />
             </div>
           )}
