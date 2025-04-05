@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Mic, AudioWaveform, RefreshCcw } from 'lucide-react';
+import { Mic, RefreshCcw } from 'lucide-react';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 
 export const AIVoiceSettingsTab: React.FC = () => {
@@ -108,31 +108,13 @@ export const AIVoiceSettingsTab: React.FC = () => {
                   OpenAI API Connection Issue
                 </h4>
                 <p className="text-sm text-amber-700 mb-2">
-                  {apiKeyErrorDetails || "There's an issue with the OpenAI API connection. Enhanced voice recognition may not be available."}
+                  {apiKeyErrorDetails || "There's an issue with the OpenAI API connection. Voice recognition may not be available."}
                 </p>
                 <Button variant="outline" size="sm" onClick={handleRetryApiKey} className="mt-2">
                   Test API Connection
                 </Button>
               </div>
             )}
-          </div>
-          
-          <div className="rounded-lg border p-4 bg-muted/50">
-            <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
-              <AudioWaveform className="h-4 w-4 text-wakti-blue" />
-              Voice Recognition Mode
-            </h4>
-            <p className="text-sm">
-              Use voice recognition from the chat interface to convert your speech to text.
-              It enables hands-free input with improved voice detection.
-            </p>
-            <div className="mt-3 flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">Access from the chat interface</p>
-              <Button variant="outline" size="sm" className="h-8">
-                <Mic className="h-3.5 w-3.5 mr-1" />
-                <span className="text-xs">Try It</span>
-              </Button>
-            </div>
           </div>
         </CardContent>
         

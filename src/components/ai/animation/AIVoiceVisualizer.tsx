@@ -4,17 +4,14 @@ import { cn } from '@/lib/utils';
 
 interface AIVoiceVisualizerProps {
   isActive: boolean;
-  isSpeaking?: boolean;
   className?: string;
 }
 
 export function AIVoiceVisualizer({ 
   isActive,
-  isSpeaking = false,
   className
 }: AIVoiceVisualizerProps) {
-  // A simple voice visualizer component that shows when the system is listening or would be speaking
-  // Since we removed text-to-speech, this is just a visual indicator
+  // A simple voice visualizer component that shows when the system is listening
   return (
     <div className={cn('flex items-center justify-center gap-1', className)}>
       {/* Create simple bars that animate slightly differently */}

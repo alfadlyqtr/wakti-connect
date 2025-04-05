@@ -149,20 +149,6 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     }
   }, [isListening]);
 
-  // For compatibility with components that expect these methods (even though they don't do anything now)
-  const speakText = useCallback((text: string) => {
-    toast({
-      title: "Text-to-Speech Disabled",
-      description: "This feature has been temporarily disabled.",
-    });
-    return Promise.resolve();
-  }, [toast]);
-  
-  const stopSpeaking = useCallback(() => {
-    // This is a no-op since we've removed TTS
-    return Promise.resolve();
-  }, []);
-  
   return {
     isListening,
     transcript,
@@ -177,10 +163,6 @@ export const useVoiceInteraction = (options: UseVoiceInteractionOptions = {}) =>
     apiKeyErrorDetails,
     retryApiKeyValidation: checkApiKeyValidity,
     isSilent,
-    averageVolume,
-    // Adding these for compatibility with existing components
-    isSpeaking: false, 
-    speakText,
-    stopSpeaking
+    averageVolume
   };
 };

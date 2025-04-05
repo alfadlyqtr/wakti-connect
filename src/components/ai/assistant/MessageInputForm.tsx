@@ -1,7 +1,7 @@
 
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Send, Loader2, Camera, Upload, Power, Volume2, VolumeX } from "lucide-react";
+import { Mic, MicOff, Send, Loader2, Camera, Upload } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
@@ -15,12 +15,8 @@ interface MessageInputFormProps {
   onStartListening?: () => void;
   onStopListening?: () => void;
   recognitionSupported?: boolean;
-  voiceToVoiceEnabled?: boolean;
-  onToggleVoiceToVoice?: (enabled: boolean) => void;
   onFileUpload?: (file: File) => Promise<void>;
   onCameraCapture?: () => Promise<void>;
-  isSpeaking?: boolean;
-  onEnterVoiceMode?: () => void;
 }
 
 export const MessageInputForm: React.FC<MessageInputFormProps> = ({
@@ -33,12 +29,8 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   onStartListening,
   onStopListening,
   recognitionSupported = false,
-  voiceToVoiceEnabled = false,
-  onToggleVoiceToVoice,
   onFileUpload,
   onCameraCapture,
-  isSpeaking = false,
-  onEnterVoiceMode,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -50,13 +42,6 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       onStopListening();
     } else if (!isListening && onStartListening) {
       onStartListening();
-    }
-  };
-
-  // Toggle voice-to-voice functionality
-  const handleVoiceToVoiceToggle = () => {
-    if (onToggleVoiceToVoice) {
-      onToggleVoiceToVoice(!voiceToVoiceEnabled);
     }
   };
 
@@ -113,31 +98,6 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       className="border-t p-2 flex flex-col gap-2"
     >
       <div className="flex gap-2">
-        {/* Voice-to-Voice toggle */}
-        {recognitionSupported && onToggleVoiceToVoice && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "flex-shrink-0",
-              voiceToVoiceEnabled && "bg-green-100 text-green-800"
-            )}
-            onClick={handleVoiceToVoiceToggle}
-            title={
-              voiceToVoiceEnabled
-                ? "Voice-to-Voice Conversation Active"
-                : "Enable Voice-to-Voice Conversation"
-            }
-          >
-            {voiceToVoiceEnabled ? (
-              <Power className="h-5 w-5 text-green-600" />
-            ) : (
-              <Power className="h-5 w-5" />
-            )}
-          </Button>
-        )}
-
         {/* Speech-to-Text toggle */}
         {recognitionSupported && onStartListening && onStopListening && (
           <Button
@@ -195,21 +155,6 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
             <Camera className="h-5 w-5" />
           </Button>
         )}
-
-        {/* Voice Mode */}
-        {onEnterVoiceMode && recognitionSupported && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onEnterVoiceMode}
-            className="ml-auto"
-            title="Enter Voice Conversation Mode"
-          >
-            <Volume2 className="h-4 w-4 mr-1" />
-            Voice Conversation
-          </Button>
-        )}
       </div>
 
       <div className="flex gap-2 items-end">
@@ -238,7 +183,6 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
             isLoading ||
             !canAccess ||
             !inputMessage.trim() ||
-            isSpeaking ||
             isUploading
           }
           className="flex-shrink-0 self-end"
@@ -251,23 +195,10 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
         </Button>
       </div>
 
-      {voiceToVoiceEnabled && (
+      {isListening && (
         <div className="px-2 py-1 text-xs text-muted-foreground flex items-center">
-          <div
-            className={cn(
-              "w-2 h-2 rounded-full mr-2",
-              isSpeaking
-                ? "bg-green-500"
-                : isListening
-                ? "bg-red-500 animate-pulse"
-                : "bg-gray-400"
-            )}
-          ></div>
-          {isSpeaking
-            ? "AI is speaking..."
-            : isListening
-            ? "Listening for your voice..."
-            : "Voice conversation active"}
+          <div className="w-2 h-2 rounded-full mr-2 bg-red-500 animate-pulse"></div>
+          Listening for your voice...
         </div>
       )}
 

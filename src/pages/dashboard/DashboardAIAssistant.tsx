@@ -10,7 +10,7 @@ import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { AISettingsProvider } from "@/components/settings/ai";
 import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
-import { AIAssistantHeader } from "@/components/ai/navigation/AIAssistantHeader";
+import { AIAssistantHeader } from "@/components/ai/header/AIAssistantHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CleanChatInterface } from "@/components/ai/assistant/CleanChatInterface";
 import { EnhancedToolsTab } from "@/components/ai/tools/EnhancedToolsTab";
@@ -26,13 +26,9 @@ import {
   Wrench, 
   BookCopy,
   Bot,
-  Mic,
-  PanelLeftClose,
-  PanelLeftOpen,
   Camera
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { VoiceInteractionToolCard } from "@/components/ai/tools/VoiceInteractionToolCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -81,10 +77,7 @@ const DashboardAIAssistant = () => {
   const { toast } = useToast();
   
   const {
-    isListening,
-    supportsVoice,
     lastTranscript,
-    isProcessing,
     startListening,
     stopListening
   } = useVoiceInteraction({
@@ -348,32 +341,6 @@ const DashboardAIAssistant = () => {
                       <p className="text-sm text-muted-foreground">Your intelligent productivity partner</p>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-4">
-                    {supportsVoice && (
-                      <motion.div 
-                        whileTap={{ scale: 0.95 }}
-                        className={`h-8 w-8 rounded-full ${isListening ? 'bg-red-500' : 'bg-wakti-blue'} flex items-center justify-center cursor-pointer`}
-                        onClick={isListening ? stopListening : startListening}
-                      >
-                        <Mic className="h-4 w-4 text-white" />
-                        {isListening && (
-                          <motion.div
-                            className="absolute inset-0 rounded-full border-2 border-red-500"
-                            animate={{ scale: [1, 1.5, 1] }}
-                            transition={{ repeat: Infinity, duration: 1.5 }}
-                          />
-                        )}
-                      </motion.div>
-                    )}
-                    
-                    <button
-                      onClick={() => setShowToolbar(!showToolbar)}
-                      className="text-muted-foreground hover:text-foreground p-1"
-                    >
-                      {showToolbar ? <PanelLeftClose className="h-5 w-5" /> : <PanelLeftOpen className="h-5 w-5" />}
-                    </button>
-                  </div>
                 </CardHeader>
                 {showToolbar && (
                   <CardContent className="pt-0 pb-3">
@@ -390,9 +357,6 @@ const DashboardAIAssistant = () => {
                   <TabsTrigger value="chat" className="flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
                     <span>Chat</span>
-                    {isListening && (
-                      <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                    )}
                   </TabsTrigger>
                   <TabsTrigger value="tools" className="flex items-center gap-2">
                     <Wrench className="h-4 w-4" />
@@ -420,11 +384,6 @@ const DashboardAIAssistant = () => {
                       selectedRole={selectedRole}
                       userName={userName}
                       canAccess={canAccess}
-                      isListening={isListening}
-                      onStartListening={startListening}
-                      onStopListening={stopListening}
-                      recognitionSupported={supportsVoice}
-                      onSendVoiceMessage={sendVoiceMessage}
                       onFileUpload={handleFileUpload}
                       onCameraCapture={handleCameraCapture}
                     />

@@ -3,30 +3,24 @@ import React, { useState, useCallback } from 'react';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { AIVoiceVisualizer } from '../animation/AIVoiceVisualizer';
 import { AIAssistantMouthAnimation } from '../animation/AIAssistantMouthAnimation';
-import { VoiceSelector } from '../settings/VoiceSelector';
-import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { Mic, MicOff } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 export const VoiceTestPage = () => {
-  const [testText, setTestText] = useState("Hello, I'm the WAKTI AI Assistant! I can help you with tasks, appointments, and more.");
   const [testResult, setTestResult] = useState('');
   const { toast } = useToast();
   const { 
-    voice, 
-    updateVoice, 
     toggleAutoSilenceDetection, 
     autoSilenceDetection 
   } = useVoiceSettings();
   
   const {
     isListening,
-    lastTranscript,
     temporaryTranscript,
     supportsVoice,
     startListening,
@@ -41,15 +35,6 @@ export const VoiceTestPage = () => {
       }
     }
   });
-  
-  const handleSpeak = useCallback(() => {
-    if (testText) {
-      toast({
-        title: "Text-to-Speech Disabled",
-        description: "This feature has been temporarily disabled."
-      });
-    }
-  }, [testText, toast]);
   
   const handleApiTest = async () => {
     try {
@@ -100,9 +85,9 @@ export const VoiceTestPage = () => {
     <div className="container max-w-3xl py-8 space-y-8">
       <Card>
         <CardHeader>
-          <CardTitle>Voice Interaction Test</CardTitle>
+          <CardTitle>Voice Recognition Test</CardTitle>
           <CardDescription>
-            Test voice recognition features
+            Test voice-to-text recognition features
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -121,50 +106,19 @@ export const VoiceTestPage = () => {
           
           <div className="space-y-2">
             <Label>Voice Settings</Label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <VoiceSelector
-                  selectedVoice={voice}
-                  onVoiceChange={updateVoice}
-                  label="Voice"
-                  disabled={true}
-                />
+            <div className="flex items-center justify-between space-x-2">
+              <div className="space-y-0.5">
+                <Label htmlFor="silence-detection">Auto Silence Detection</Label>
+                <p className="text-[0.8rem] text-muted-foreground">
+                  Automatically stop listening when there's silence
+                </p>
               </div>
-              <div className="flex items-center justify-between space-x-2">
-                <div className="space-y-0.5">
-                  <Label htmlFor="silence-detection">Auto Silence Detection</Label>
-                  <p className="text-[0.8rem] text-muted-foreground">
-                    Automatically stop listening when there's silence
-                  </p>
-                </div>
-                <Switch
-                  id="silence-detection"
-                  checked={autoSilenceDetection}
-                  onCheckedChange={toggleAutoSilenceDetection}
-                />
-              </div>
-            </div>
-          </div>
-          
-          <div className="space-y-2 pb-4">
-            <Label htmlFor="test-text">Text to Speak</Label>
-            <div className="flex gap-2">
-              <Input 
-                id="test-text" 
-                value={testText} 
-                onChange={(e) => setTestText(e.target.value)}
+              <Switch
+                id="silence-detection"
+                checked={autoSilenceDetection}
+                onCheckedChange={toggleAutoSilenceDetection}
               />
-              <Button 
-                onClick={handleSpeak} 
-                disabled={!testText}
-              >
-                <Volume2 className="mr-2 h-4 w-4" />
-                Speak
-              </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Text-to-speech functionality has been temporarily disabled
-            </p>
           </div>
           
           <div className="flex items-center justify-center py-4 space-y-2">

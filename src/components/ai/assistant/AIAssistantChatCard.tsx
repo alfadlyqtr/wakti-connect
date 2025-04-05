@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Bot, Trash2, Settings, PanelLeftClose, PanelLeftOpen, Volume2, VolumeX } from 'lucide-react';
+import { Bot, Trash2, Settings, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AIMessage, AIAssistantRole } from '@/types/ai-assistant.types';
 import { AIAssistantChat } from './AIAssistantChat';
@@ -9,11 +10,8 @@ import { EmptyStateView } from './EmptyStateView';
 import { PoweredByTMW } from './PoweredByTMW';
 import { AIRoleSelector } from './AIRoleSelector';
 import { getTimeBasedGreeting } from '@/lib/dateUtils';
-import { useSpeechSynthesis } from '@/hooks/ai/useSpeechSynthesis';
 import { AIAssistantMouthAnimation } from '../animation/AIAssistantMouthAnimation';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { motion } from 'framer-motion';
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -43,13 +41,6 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [speechEnabled, setSpeechEnabled] = useState(false);
-  const [currentSpeechMessage, setCurrentSpeechMessage] = useState<string | null>(null);
-  
-  const { speak, cancel, speaking, supported: speechSupported } = useSpeechSynthesis({
-    rate: 1,
-    pitch: 1
-  });
 
   const getRoleTitle = () => {
     switch (selectedRole) {
@@ -76,43 +67,10 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
-  
-  useEffect(() => {
-    if (!speechEnabled || !speechSupported || messages.length === 0) return;
-    
-    const latestAssistantMessage = [...messages]
-      .reverse()
-      .find(msg => msg.role === 'assistant');
-    
-    if (latestAssistantMessage && latestAssistantMessage.content !== currentSpeechMessage) {
-      speak(latestAssistantMessage.content);
-      setCurrentSpeechMessage(latestAssistantMessage.content);
-    }
-  }, [messages, speechEnabled, speechSupported, speak, currentSpeechMessage]);
 
   const handlePromptClick = (prompt: string) => {
     setInputMessage(prompt);
     setShowSuggestions(false);
-  };
-  
-  const toggleSpeech = () => {
-    const newState = !speechEnabled;
-    setSpeechEnabled(newState);
-    
-    if (!newState && speaking) {
-      cancel();
-    }
-    
-    if (newState && messages.length > 0) {
-      const latestAssistantMessage = [...messages]
-        .reverse()
-        .find(msg => msg.role === 'assistant');
-      
-      if (latestAssistantMessage) {
-        speak(latestAssistantMessage.content);
-        setCurrentSpeechMessage(latestAssistantMessage.content);
-      }
-    }
   };
 
   const greeting = getTimeBasedGreeting(userName);
@@ -122,11 +80,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
       <div className="py-2 px-3 sm:py-3 sm:px-4 border-b flex justify-between items-center bg-gradient-to-r from-white to-gray-50">
         <div className="flex items-center">
           <div className={`h-9 w-9 rounded-full bg-gradient-to-br ${getRoleColor()} flex items-center justify-center flex-shrink-0 mr-2 shadow-sm`}>
-            {speaking ? (
-              <AIAssistantMouthAnimation isActive={true} isSpeaking={true} />
-            ) : (
-              <Bot className="h-5 w-5 text-white" />
-            )}
+            <Bot className="h-5 w-5 text-white" />
           </div>
           <div>
             <h3 className="text-sm md:text-base font-medium flex items-center gap-1.5">
@@ -155,28 +109,6 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
         </div>
         
         <div className="flex items-center gap-2">
-          {speechSupported && (
-            <div className="flex items-center mr-1">
-              <Switch
-                checked={speechEnabled}
-                onCheckedChange={toggleSpeech}
-                className="data-[state=checked]:bg-green-500"
-              />
-              <span className="ml-1.5">
-                {speaking ? (
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ repeat: Infinity, duration: 1 }}
-                  >
-                    <Volume2 className="h-4 w-4 text-green-500" />
-                  </motion.div>
-                ) : (
-                  <VolumeX className="h-4 w-4 text-gray-400" />
-                )}
-              </span>
-            </div>
-          )}
-          
           <Button 
             variant="ghost" 
             size="icon"
