@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/components/ui/use-toast';
 import { AISettings, AIAssistantRole, AIKnowledgeUpload } from '@/types/ai-assistant.types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AISettingsContextType } from './AISettingsContext.types';
 
 // Default settings
 const defaultSettings: AISettings = {
@@ -24,28 +25,12 @@ const defaultSettings: AISettings = {
   }
 };
 
-// Define the context type
-interface AISettingsContextType {
-  settings: AISettings | null;
-  isLoadingSettings: boolean;
-  error: any;
-  updateSettings: (settings: AISettings) => Promise<boolean>;
-  canUseAI: boolean;
-  createDefaultSettings: () => Promise<AISettings>;
-  isCreatingSettings: boolean;
-  knowledgeUploads: AIKnowledgeUpload[] | undefined;
-  isLoadingKnowledge: boolean;
-  addKnowledge: (data: { title: string; content: string; role?: AIAssistantRole }) => Promise<any>;
-  deleteKnowledge: (id: string) => Promise<any>;
-  isAddingKnowledge: boolean;
-}
-
 const AISettingsContext = createContext<AISettingsContextType | undefined>(undefined);
 
 export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [canUseAI, setCanUseAI] = useState(false);
+  const [canUseAI, setCanUseAI] = useState<boolean | undefined>(undefined);
   
   // Fetch AI settings
   const { 
@@ -154,7 +139,8 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   
   // Add knowledge mutation
   const addKnowledgeMutation = useMutation({
-    mutationFn: async ({ title, content, role }: { title: string; content: string; role?: AIAssistantRole }) => {
+    mutationFn: async (params: { title: string; content: string; role?: AIAssistantRole }) => {
+      const { title, content, role } = params;
       if (!user) throw new Error("User not authenticated");
       
       const { data, error } = await supabase
@@ -252,9 +238,9 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, [user]);
   
   // Create default settings if none exist
-  const createDefaultSettings = async (): Promise<AISettings> => {
+  const createDefaultSettings = async (): Promise<void> => {
     try {
-      return await createSettingsMutation.mutateAsync();
+      await createSettingsMutation.mutateAsync();
     } catch (error) {
       console.error("Failed to create default settings:", error);
       throw error;
@@ -273,40 +259,45 @@ export const AISettingsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
   
   // Add knowledge
-  const addKnowledge = async (data: { title: string; content: string; role?: AIAssistantRole }) => {
+  const addKnowledge = async (title: string, content: string): Promise<boolean> => {
     try {
-      return await addKnowledgeMutation.mutateAsync(data);
+      await addKnowledgeMutation.mutateAsync({ title, content });
+      return true;
     } catch (error) {
       console.error("Failed to add knowledge:", error);
-      throw error;
+      return false;
     }
   };
   
   // Delete knowledge
-  const deleteKnowledge = async (id: string) => {
+  const deleteKnowledge = async (id: string): Promise<boolean> => {
     try {
-      return await deleteKnowledgeMutation.mutateAsync(id);
+      await deleteKnowledgeMutation.mutateAsync(id);
+      return true;
     } catch (error) {
       console.error("Failed to delete knowledge:", error);
-      throw error;
+      return false;
     }
   };
   
+  const contextValue: AISettingsContextType = {
+    settings,
+    isLoadingSettings,
+    error: error ? (error as Error).message : null,
+    updateSettings,
+    canUseAI,
+    createDefaultSettings,
+    isCreatingSettings: createSettingsMutation.isPending,
+    knowledgeUploads: knowledgeUploads || null,
+    isLoadingKnowledge,
+    addKnowledge,
+    deleteKnowledge,
+    isAddingKnowledge: addKnowledgeMutation.isPending,
+    isUpdatingSettings: updateSettingsMutation.isPending
+  };
+  
   return (
-    <AISettingsContext.Provider value={{
-      settings,
-      isLoadingSettings,
-      error,
-      updateSettings,
-      canUseAI,
-      createDefaultSettings,
-      isCreatingSettings: createSettingsMutation.isPending,
-      knowledgeUploads,
-      isLoadingKnowledge,
-      addKnowledge,
-      deleteKnowledge,
-      isAddingKnowledge: addKnowledgeMutation.isPending
-    }}>
+    <AISettingsContext.Provider value={contextValue}>
       {children}
     </AISettingsContext.Provider>
   );
