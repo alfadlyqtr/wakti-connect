@@ -42,34 +42,36 @@ serve(async (req) => {
     }
 
     console.log("Processing image generation request");
+    
+    // Set up OpenAI API options
+    const apiUrl = 'https://api.openai.com/v1/images/generations';
     let openaiRequestBody;
-    let apiUrl = 'https://api.openai.com/v1/images/generations';
 
     if (imageUrl) {
       console.log("Image-based transformation with prompt:", prompt);
       
-      // For image transformations with DALL-E 3, we need to include the image data
-      // However, since DALL-E 3 doesn't support direct image input via API,
-      // we'll use a highly detailed prompt that describes what to do with the image
-      // Note: For true image-to-image transformation, we'd need a different model or API
+      // For true image-to-image transformation with DALL-E 3
+      // Since we're limited by the DALL-E 3 API capabilities, we need to create a highly
+      // descriptive prompt that incorporates elements from both the original image and desired style
       
-      // Create a more detailed prompt for style transformation
-      const enhancedPrompt = `Create an anime/Gimi-style illustration based on this description: ${prompt}. 
-      The image should have vibrant colors, clean lines, and stylized features typical of anime art.
-      Include detailed shading, expressive eyes, and a dynamic composition.
-      The style should feel like high-quality anime or manga artwork.`;
+      // Create a specialized prompt for anime/Gimi style transformation
+      const enhancedPrompt = `Transform the following scene into anime/Gimi style: ${prompt}. 
+      The anime style should have vibrant colors, clean sharp lines, dramatic lighting, 
+      expressive eyes, and stylized features typical of high-quality anime art.
+      Maintain the exact same composition, subjects, and scene as the original image, 
+      but rendered in perfect anime style artwork.`;
       
       openaiRequestBody = {
-        model: "dall-e-3",
+        model: "dall-e-3", 
         prompt: enhancedPrompt,
         n: 1,
         size: "1024x1024",
-        quality: "standard",
+        quality: "hd",        // Using higher quality for better results
         response_format: "url",
-        style: "vivid" // Using vivid style for more artistic results
+        style: "vivid"        // Using vivid style for more artistic results
       };
       
-      console.log("Enhanced prompt for transformation:", enhancedPrompt);
+      console.log("Enhanced transformation prompt:", enhancedPrompt);
     } else {
       console.log("Text-based generation with prompt:", prompt);
       

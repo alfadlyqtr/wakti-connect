@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
 export const ImageTransformationToolCard: React.FC = () => {
-  const [prompt, setPrompt] = useState("Transform into anime/Gimi-style with bright colors, sharp lines, and expressive features");
+  const [prompt, setPrompt] = useState("Transform this image into anime/Gimi-style with vibrant colors, sharp lines, and expressive features");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { 
     transformImage, 
@@ -82,11 +82,11 @@ export const ImageTransformationToolCard: React.FC = () => {
   };
 
   const predefinedStyles = [
-    "Transform into anime/Gimi-style with bright colors, sharp lines, and expressive features",
-    "Convert to manga-style black and white illustration with dramatic shading",
-    "Transform into Studio Ghibli style with soft colors and detailed backgrounds",
-    "Create a cyberpunk anime version with neon colors and futuristic elements",
-    "Convert to chibi anime character with exaggerated features and cute style"
+    "Transform this image into anime/Gimi-style with vibrant colors, sharp lines, and expressive features",
+    "Convert this image to manga-style black and white illustration with dramatic shading",
+    "Transform this image into Studio Ghibli style with soft colors and detailed backgrounds",
+    "Create a cyberpunk anime version of this image with neon colors and futuristic elements",
+    "Convert this image to chibi anime character with exaggerated features and cute style"
   ];
 
   return (
