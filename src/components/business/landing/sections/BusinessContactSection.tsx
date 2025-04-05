@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { generateMapEmbedUrl, GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from "@/config/maps";
+import { generateMapEmbedUrl, GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl, getMapsApiKey } from "@/config/maps";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useSubmitContactFormMutation } from "@/hooks/business-page/useBusinessPageMutations";
 import { sendMessage } from "@/services/messages";
-import { getMapsApiKey } from "@/config/maps";
 
 interface BusinessContactSectionProps {
   content: Record<string, any>;
@@ -44,7 +43,6 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
     contactButtonColor = "#3B82F6",
     contactSuccessMessage = "Thank you for your message. We'll get back to you soon!",
     coordinates = "",
-    // Form styling options
     formBackground = "#f5f5f5",
     formBorderRadius = "8px",
     formPadding = "20px",
@@ -53,11 +51,9 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
     inputBackground = "#ffffff",
     inputTextColor = "#333333",
     labelColor = "#333333",
-    // New layout options
-    layout = "sideBySide", // sideBySide, formTop, formBottom
+    layout = "sideBySide"
   } = content;
 
-  // Generate map URL using the secure API key
   useEffect(() => {
     const loadMapUrl = async () => {
       if (!address && !mapUrl && !coordinates) return;
