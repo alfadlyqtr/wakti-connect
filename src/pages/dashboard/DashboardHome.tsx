@@ -18,8 +18,10 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { ProfileData } from "@/components/dashboard/home/ProfileData";
 import { useBusinessAnalytics } from "@/hooks/useBusinessAnalytics";
 import { BarChart, Activity, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const DashboardHome = () => {
+  const { t } = useTranslation();
   const { tasks, isLoading: tasksLoading } = useTaskContext();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -99,14 +101,14 @@ const DashboardHome = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="col-span-1">
           <CardHeader>
-            <CardTitle>Tasks Overview</CardTitle>
+            <CardTitle>{t('dashboard.tasksOverview')}</CardTitle>
           </CardHeader>
           <CardContent>
             {tasks && tasks.length > 0 ? (
               <TasksOverview tasks={tasks} />
             ) : (
               <NoTasks 
-                message="You don't have any tasks yet" 
+                message={t('dashboard.noTasks')} 
                 onCreateTask={() => navigate('/dashboard/tasks')}
               />
             )}
@@ -115,7 +117,7 @@ const DashboardHome = () => {
 
         <Card className="col-span-1">
           <CardHeader>
-            <CardTitle>Calendar</CardTitle>
+            <CardTitle>{t('dashboard.calendar')}</CardTitle>
           </CardHeader>
           <CardContent>
             <DashboardCalendar 
@@ -132,14 +134,14 @@ const DashboardHome = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
-                Subscribers
+                {t('sidebar.subscribers')}
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{analyticsData.subscriberCount}</div>
               <p className="text-xs text-muted-foreground">
-                Total subscribers to your business
+                {t('dashboard.totalSubscribers')}
               </p>
             </CardContent>
           </Card>
@@ -147,14 +149,14 @@ const DashboardHome = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
-                Team Members
+                {t('sidebar.staff')}
               </CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{analyticsData.staffCount}</div>
               <p className="text-xs text-muted-foreground">
-                Active staff members
+                {t('dashboard.activeStaff')}
               </p>
             </CardContent>
           </Card>
@@ -162,14 +164,14 @@ const DashboardHome = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
-                Completion Rate
+                {t('dashboard.completionRate')}
               </CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{analyticsData.taskCompletionRate}%</div>
               <p className="text-xs text-muted-foreground">
-                Task completion rate this {analyticsData.timeRange}
+                {t('task.completionRateThis')} {analyticsData.timeRange}
               </p>
             </CardContent>
           </Card>
@@ -180,24 +182,24 @@ const DashboardHome = () => {
       {isIndividual && (
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Professional Dashboard Features</CardTitle>
+            <CardTitle>{t('dashboard.professionalFeatures')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">
-              As an Individual account holder, you have access to professional features.
+              {t('dashboard.accessToFeatures')}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="p-4 border rounded-md">
-                <h3 className="font-medium mb-2">Unlimited Tasks</h3>
-                <p className="text-sm text-muted-foreground">Create and manage as many tasks as you need</p>
+                <h3 className="font-medium mb-2">{t('dashboard.unlimitedTasks')}</h3>
+                <p className="text-sm text-muted-foreground">{t('dashboard.createManage')}</p>
               </div>
               <div className="p-4 border rounded-md">
-                <h3 className="font-medium mb-2">Event Management</h3>
-                <p className="text-sm text-muted-foreground">Create and send event invitations</p>
+                <h3 className="font-medium mb-2">{t('dashboard.eventManagement')}</h3>
+                <p className="text-sm text-muted-foreground">{t('dashboard.createShare')}</p>
               </div>
               <div className="p-4 border rounded-md">
-                <h3 className="font-medium mb-2">Premium Support</h3>
-                <p className="text-sm text-muted-foreground">Priority customer support</p>
+                <h3 className="font-medium mb-2">{t('dashboard.premiumSupport')}</h3>
+                <p className="text-sm text-muted-foreground">{t('dashboard.prioritySupport')}</p>
               </div>
             </div>
           </CardContent>
@@ -208,30 +210,30 @@ const DashboardHome = () => {
       {isFree && (
         <Card className="mt-6 border-2 border-dashed border-primary/40">
           <CardHeader>
-            <CardTitle>Upgrade Your Experience</CardTitle>
+            <CardTitle>{t('dashboard.upgradeExperience')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">
-              You're currently on the Free plan with limited features. Upgrade to unlock more capabilities!
+              {t('dashboard.upgradeToUnlock')}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="p-4 bg-muted/50 rounded-md">
-                <h3 className="font-medium mb-2">Individual Plan</h3>
-                <p className="text-sm text-muted-foreground mb-2">Perfect for professionals</p>
+                <h3 className="font-medium mb-2">{t('dashboard.individualPlan')}</h3>
+                <p className="text-sm text-muted-foreground mb-2">{t('dashboard.perfectFor')}</p>
                 <ul className="text-sm space-y-1">
-                  <li>• Unlimited tasks</li>
-                  <li>• Create and manage appointments</li>
-                  <li>• Message other individual users</li>
+                  <li>• {t('dashboard.unlimitedTasks')}</li>
+                  <li>• {t('dashboard.createManageAppointments')}</li>
+                  <li>• {t('dashboard.messageIndividuals')}</li>
                 </ul>
               </div>
               <div className="p-4 bg-muted/50 rounded-md">
-                <h3 className="font-medium mb-2">Business Plan</h3>
-                <p className="text-sm text-muted-foreground mb-2">For teams and businesses</p>
+                <h3 className="font-medium mb-2">{t('dashboard.businessPlan')}</h3>
+                <p className="text-sm text-muted-foreground mb-2">{t('dashboard.forTeams')}</p>
                 <ul className="text-sm space-y-1">
-                  <li>• All Individual features</li>
-                  <li>• Staff management</li>
-                  <li>• Business landing page</li>
-                  <li>• Customer booking system</li>
+                  <li>• {t('pricing.plans.business.features.0')}</li>
+                  <li>• {t('pricing.plans.business.features.1')}</li>
+                  <li>• {t('pricing.plans.business.features.2')}</li>
+                  <li>• {t('pricing.plans.business.features.3')}</li>
                 </ul>
               </div>
             </div>
@@ -240,7 +242,7 @@ const DashboardHome = () => {
                 className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
                 onClick={() => navigate('/dashboard/upgrade')}
               >
-                View Plans & Pricing
+                {t('dashboard.viewPlans')}
               </button>
             </div>
           </CardContent>

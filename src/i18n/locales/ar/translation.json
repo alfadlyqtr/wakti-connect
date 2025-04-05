@@ -22,7 +22,9 @@
     "logIn": "تسجيل الدخول",
     "logOut": "تسجيل الخروج",
     "getStarted": "ابدأ الآن",
-    "scrollToTop": "التمرير إلى الأعلى"
+    "scrollToTop": "التمرير إلى الأعلى",
+    "total": "الإجمالي",
+    "there": "هناك"
   },
   "header": {
     "pricing": "الأسعار",
@@ -189,7 +191,27 @@
     "noTasksToday": "لا توجد مهام لليوم",
     "unreadNotifications": "إشعارات غير مقروءة",
     "noNewNotifications": "لا توجد إشعارات جديدة",
-    "activity": "النشاط"
+    "activity": "النشاط",
+    "completionRate": "معدل الإكمال",
+    "upgradeExperience": "تحسين تجربتك",
+    "upgradeToUnlock": "أنت حاليًا على الخطة المجانية ذات الميزات المحدودة. قم بالترقية لفتح المزيد من الإمكانيات!",
+    "individualPlan": "الخطة الفردية",
+    "businessPlan": "خطة الأعمال",
+    "perfectFor": "مثالي للمحترفين",
+    "forTeams": "للفرق والشركات",
+    "viewPlans": "عرض الخطط والأسعار",
+    "professionalFeatures": "ميزات لوحة التحكم المهنية",
+    "accessToFeatures": "كصاحب حساب فردي، لديك وصول إلى ميزات احترافية.",
+    "unlimitedTasks": "مهام غير محدودة",
+    "eventManagement": "إدارة الأحداث",
+    "createManage": "إنشاء وإدارة أكبر عدد من المهام التي تحتاجها",
+    "createShare": "إنشاء وإرسال دعوات للأحداث",
+    "premiumSupport": "دعم ممتاز",
+    "prioritySupport": "دعم عملاء ذو أولوية",
+    "totalSubscribers": "إجمالي المشتركين في عملك",
+    "activeStaff": "الموظفين النشطين",
+    "createManageAppointments": "إنشاء وإدارة المواعيد",
+    "messageIndividuals": "مراسلة المستخدمين الأفراد"
   },
   "auth": {
     "welcomeToWakti": "مرحبًا بك في وقتي",
@@ -326,11 +348,23 @@
       "high": "عالي",
       "medium": "متوسط",
       "low": "منخفض",
+      "urgent": "عاجل",
       "normal": "عادي"
     },
     "today": "مهام اليوم",
     "createTask": "إنشاء مهمة",
-    "startWork": "بدء العمل"
+    "startWork": "بدء العمل",
+    "tasks": "المهام",
+    "userDescription": "إدارة المهام الخاصة بك وتتبع تقدمك.",
+    "staffDescription": "عرض وإدارة المهام المخصصة أو المفوضة إليك.",
+    "noTasksYet": "لا توجد مهام بعد",
+    "createFirstTaskPaid": "قم بإنشاء مهمتك الأولى للبدء في تنظيم عملك.",
+    "createFirstTaskFree": "يمكن للحسابات المجانية إنشاء مهمة واحدة. أنشئ مهمتك الأولى الآن!",
+    "noTasksFound": "لم يتم العثور على مهام",
+    "noArchivedTasks": "لا توجد مهام مؤرشفة",
+    "archivedTasksDescription": "المهام التي تحذفها أو تلغيها ستظهر هنا",
+    "noTasksDescription": "ابدأ بإنشاء مهمتك الأولى",
+    "completionRateThis": "معدل إكمال المهام هذا"
   },
   "location": {
     "enterLocation": "أدخل موقعًا",

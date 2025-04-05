@@ -2,6 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ClipboardList } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface EmptyTasksStateProps {
   isPaidAccount: boolean;
@@ -12,19 +13,21 @@ export const EmptyTasksState: React.FC<EmptyTasksStateProps> = ({
   isPaidAccount,
   onCreateTask
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="rounded-full bg-muted p-3 mb-3">
         <ClipboardList className="h-6 w-6 text-muted-foreground" />
       </div>
-      <h3 className="text-lg font-medium">No tasks yet</h3>
+      <h3 className="text-lg font-medium">{t('task.noTasksYet')}</h3>
       <p className="text-muted-foreground max-w-md mt-2 mb-4">
         {isPaidAccount
-          ? "Create your first task to start organizing your work."
-          : "Free accounts can create 1 task. Create your first task now!"}
+          ? t('task.createFirstTaskPaid')
+          : t('task.createFirstTaskFree')}
       </p>
       <Button onClick={onCreateTask}>
-        Create Task
+        {t('task.createTask')}
       </Button>
     </div>
   );

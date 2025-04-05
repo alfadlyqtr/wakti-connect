@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarEvent } from "@/types/calendar.types";
 import { CheckCircle, Circle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface TaskListProps {
   tasks: CalendarEvent[];
@@ -11,6 +12,7 @@ interface TaskListProps {
 
 export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const getPriorityColorClass = (priority?: string) => {
     switch (priority) {
@@ -46,7 +48,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
           </div>
           <div className="flex-1 truncate text-sm">{task.title}</div>
           <Badge className={`ml-2 ${getPriorityColorClass(task.priority)}`}>
-            {task.priority || "normal"}
+            {task.priority ? t(`task.priority.${task.priority}`) : t('task.priority.normal')}
           </Badge>
         </div>
       ))}

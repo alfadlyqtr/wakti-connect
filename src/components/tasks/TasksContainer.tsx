@@ -5,6 +5,7 @@ import TaskGrid from "./TaskGrid";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useDebouncedRefresh } from "@/hooks/useDebouncedRefresh";
+import { useTranslation } from "react-i18next";
 
 interface TasksContainerProps {
   tasks: Task[];
@@ -29,6 +30,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   onArchive,
   onRestore
 }) => {
+  const { t } = useTranslation();
   // Use the debounced refresh hook to prevent UI freezing
   const { refresh: debouncedRefetch, isRefreshing } = useDebouncedRefresh(refetch);
 
@@ -36,12 +38,12 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
     return (
       <div className="text-center py-12 border rounded-lg">
         <h3 className="text-lg font-medium mb-2">
-          {isArchiveView ? "No archived tasks" : "No tasks found"}
+          {isArchiveView ? t('task.noArchivedTasks') : t('task.noTasksFound')}
         </h3>
         <p className="text-muted-foreground mb-6">
           {isArchiveView 
-            ? "Tasks that you delete or cancel will appear here" 
-            : "Get started by creating your first task"}
+            ? t('task.archivedTasksDescription')
+            : t('task.noTasksDescription')}
         </p>
         
         {!isArchiveView && (
@@ -50,7 +52,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
             disabled={isRefreshing}
           >
             <PlusCircle className="mr-2 h-4 w-4" />
-            Create Task
+            {t('task.createTask')}
           </Button>
         )}
       </div>
