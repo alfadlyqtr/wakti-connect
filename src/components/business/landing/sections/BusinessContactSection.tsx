@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { generateMapEmbedUrl, generateGoogleMapsUrl, getMapsApiKey } from "@/config/maps";
+import { generateMapEmbedUrl, generateGoogleMapsUrl, GOOGLE_MAPS_API_KEY } from "@/config/maps";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -28,13 +28,13 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [mapEmbedUrl, setMapEmbedUrl] = useState('');
-  
+
   const { 
     title = "Contact Us",
     description = "Get in touch with us for any inquiries",
-    email = "contact@example.com",
-    phone = "+1 (555) 123-4567",
-    address = "123 Business Street, City, State",
+    email = "",
+    phone = "",
+    address = "",
     showMap = true,
     mapUrl = "",
     enableContactForm = true,
@@ -59,7 +59,7 @@ const BusinessContactSection: React.FC<BusinessContactSectionProps> = ({
       if (!address && !mapUrl && !coordinates) return;
       
       try {
-        const apiKey = await getMapsApiKey();
+        const apiKey = GOOGLE_MAPS_API_KEY;
         
         if (coordinates) {
           try {

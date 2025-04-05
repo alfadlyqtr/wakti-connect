@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, MapPin } from 'lucide-react';
-import { getMapsApiKey, generateGoogleMapsUrl } from '@/config/maps';
+import { GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from '@/config/maps';
 
 // Add TypeScript types for Google Maps
 declare global {
@@ -57,34 +57,27 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
-  // Load Google Maps script
+  // Load Google Maps script directly with the static API key
   useEffect(() => {
-    const loadMapsApi = async () => {
-      if (window.google) {
-        setScriptLoaded(true);
-        return;
-      }
+    if (window.google) {
+      setScriptLoaded(true);
+      return;
+    }
 
-      try {
-        // Get API key from secure endpoint
-        const apiKey = await getMapsApiKey();
-        
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-        script.async = true;
-        script.defer = true;
-        script.onload = () => setScriptLoaded(true);
-        document.body.appendChild(script);
-        
-        return () => {
-          document.body.removeChild(script);
-        };
-      } catch (error) {
-        console.error('Error loading Google Maps API:', error);
-      }
-    };
-    
-    loadMapsApi();
+    try {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => setScriptLoaded(true);
+      document.body.appendChild(script);
+      
+      return () => {
+        document.body.removeChild(script);
+      };
+    } catch (error) {
+      console.error('Error loading Google Maps API:', error);
+    }
   }, []);
 
   // Initialize autocomplete

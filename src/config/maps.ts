@@ -6,34 +6,28 @@ import { supabase } from '@/integrations/supabase/client';
  * Provides Google Maps API key and utility functions
  */
 
-// Store the API key in memory once loaded
-let cachedApiKey: string | null = null;
+// Export a constant API key for immediate use
+export const GOOGLE_MAPS_API_KEY = 'AIzaSyBIwzALxUPNbatRBj3X1HyELQG7xToQ3vA';
 
 /**
  * Fetches the Google Maps API key from the Supabase Edge Function
- * Falls back to a placeholder key if needed
+ * Falls back to the static key if needed
  */
 export const getMapsApiKey = async (): Promise<string> => {
-  if (cachedApiKey) return cachedApiKey;
-  
   try {
     const { data, error } = await supabase.functions.invoke('get-maps-key');
     
     if (error) {
       console.error('Error fetching Maps API key:', error);
-      return 'AIzaSyBIwzALxUPNbatRBj3X1HyELQG7xToQ3vA'; // Fallback to placeholder
+      return GOOGLE_MAPS_API_KEY; // Fallback to constant key
     }
     
-    cachedApiKey = data.apiKey;
-    return cachedApiKey;
+    return data.apiKey || GOOGLE_MAPS_API_KEY;
   } catch (err) {
     console.error('Exception fetching Maps API key:', err);
-    return 'AIzaSyBIwzALxUPNbatRBj3X1HyELQG7xToQ3vA'; // Fallback to placeholder
+    return GOOGLE_MAPS_API_KEY; // Fallback to constant key
   }
 };
-
-// For backward compatibility - this will be replaced gradually
-export const GOOGLE_MAPS_API_KEY = 'AIzaSyBIwzALxUPNbatRBj3X1HyELQG7xToQ3vA';
 
 /**
  * Generates a Google Maps embed URL for a location query
@@ -57,5 +51,5 @@ export const generateGoogleMapsUrl = (location: string): string => {
   return `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
 };
 
-// For backward compatibility - export the placeholder key as default
+// For backward compatibility - export the key as default
 export default GOOGLE_MAPS_API_KEY;

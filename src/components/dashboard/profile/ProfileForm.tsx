@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,35 +51,35 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   const { isStaff } = useStaffPermissions();
 
   if (!isEditing) {
-    // Display mode
+    // Display mode - updated padding and spacing
     return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
+      <div className="space-y-6 p-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
             <h4 className="text-sm font-medium text-muted-foreground">Full Name</h4>
-            <p>{profile?.full_name || "Not set"}</p>
+            <p className="font-medium">{profile?.full_name || "Not set"}</p>
           </div>
-          <div>
+          <div className="space-y-2">
             <h4 className="text-sm font-medium text-muted-foreground">Display Name</h4>
-            <p>{profile?.display_name || "Not set"}</p>
+            <p className="font-medium">{profile?.display_name || "Not set"}</p>
           </div>
           {profile?.account_type === "business" && (
-            <div>
+            <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">Business Name</h4>
-              <p>{profile?.business_name || "Not set"}</p>
+              <p className="font-medium">{profile?.business_name || "Not set"}</p>
             </div>
           )}
           {profile?.account_type !== "business" && (
-            <div>
+            <div className="space-y-2">
               <h4 className="text-sm font-medium text-muted-foreground">Occupation</h4>
-              <p>{profile?.occupation || "Not set"}</p>
+              <p className="font-medium">{profile?.occupation || "Not set"}</p>
             </div>
           )}
         </div>
         {!isStaff && (
           <Button 
             onClick={() => setIsEditing(true)}
-            className="w-full"
+            className="w-full mt-4"
           >
             Edit Profile
           </Button>

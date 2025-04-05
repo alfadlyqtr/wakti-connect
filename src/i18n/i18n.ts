@@ -37,10 +37,13 @@ i18n
 // Set the HTML dir attribute based on the current language
 const setDocumentDirection = (language: string) => {
   document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.lang = language; // Set the language attribute
   if (language === 'ar') {
     document.body.classList.add('rtl');
+    document.body.classList.add('font-arabic');
   } else {
     document.body.classList.remove('rtl');
+    document.body.classList.remove('font-arabic');
   }
 };
 

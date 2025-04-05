@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Menu, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -100,9 +99,9 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
 
         <MobileSearch searchOpen={searchOpen} setSearchOpen={setSearchOpen} />
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {/* Date and Time display */}
-          <NavDateTime className="mr-3" />
+          <NavDateTime className="mr-3 hidden md:block" />
           
           {/* Add a subtle separator before other icons (only visible on md+ screens) */}
           <Separator orientation="vertical" className="h-8 hidden md:block" />

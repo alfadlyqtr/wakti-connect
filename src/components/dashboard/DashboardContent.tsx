@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import StaffDashboardHeader from './StaffDashboardHeader';
 import DashboardLoading from './DashboardLoading';
@@ -45,15 +44,15 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     }
   }, [isStaff, isLoading, currentPath, userId, navigate, userRole]);
   
-  // Calculate main content padding based on sidebar state
+  // Calculate main content padding based on sidebar state and device
   const mainContentClass = isMobile 
-    ? "pt-2 pb-16 transition-all duration-300" 
+    ? "pt-3 pb-16 px-3 transition-all duration-300" 
     : sidebarCollapsed 
-      ? "lg:pl-[70px] pt-4 pb-12 transition-all duration-300" 
-      : "lg:pl-52 pt-4 pb-12 transition-all duration-300";
+      ? "lg:pl-[70px] pt-4 pb-12 px-4 transition-all duration-300" 
+      : "lg:pl-52 pt-4 pb-12 px-4 transition-all duration-300";
 
   return (
-    <main className={`flex-1 overflow-y-auto px-3 sm:px-4 ${mainContentClass}`}>
+    <main className={`flex-1 overflow-y-auto ${mainContentClass}`}>
       <div className="container mx-auto animate-in">
         {isLoading ? (
           <DashboardLoading />
@@ -61,7 +60,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           <>
             {/* Only show staff header if user is staff AND not a business owner */}
             {isStaff && userId && userRole === 'staff' && (
-              <div className="mb-4">
+              <div className="mb-5">
                 <StaffDashboardHeader staffId={userId} />
               </div>
             )}
