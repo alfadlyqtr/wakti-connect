@@ -31,7 +31,7 @@ export const AIRoleSelector: React.FC<AIRoleSelectorProps> = ({
 
   return (
     <Tabs value={effectiveRole} onValueChange={(val) => handleRoleChange(val as AIAssistantRole)}>
-      <TabsList className={`grid grid-cols-4 w-full ${compact ? 'px-1 py-0.5' : ''}`}>
+      <TabsList className={`grid grid-cols-4 ${compact ? 'w-auto px-1 py-0.5' : 'w-full'}`}>
         <TabsTrigger value="general" className="flex items-center gap-1 text-xs sm:text-sm">
           <Bot className="h-4 w-4" />
           <span className={compact ? "hidden" : "hidden sm:inline"}>General</span>

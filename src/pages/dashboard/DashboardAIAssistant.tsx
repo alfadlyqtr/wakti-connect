@@ -11,31 +11,23 @@ import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CleanChatInterface } from "@/components/ai/assistant/CleanChatInterface";
-import { EnhancedToolsTab } from "@/components/ai/tools/EnhancedToolsTab";
-import { RoleSpecificKnowledge } from "@/components/ai/tools/RoleSpecificKnowledge";
-import { MeetingSummaryTool } from "@/components/ai/tools/MeetingSummaryTool";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AIRoleSelector } from "@/components/ai/assistant/AIRoleSelector";
+import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
 import { useVoiceInteraction } from "@/hooks/ai/useVoiceInteraction";
 import { Button } from "@/components/ui/button";
 import { 
   MessageSquare, 
-  Wrench, 
-  BookCopy,
   Bot,
-  Camera
+  Camera,
+  PanelRight,
+  PuzzleIcon,
+  Settings,
+  Zap
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { VoiceInteractionToolCard } from "@/components/ai/tools/VoiceInteractionToolCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
-interface EnhancedToolsTabProps {
-  selectedRole: AIAssistantRole;
-  onUseContent: (content: string) => void;
-  canAccess: boolean;
-  compact?: boolean;
-}
 
 declare global {
   class ImageCapture {
@@ -61,7 +53,7 @@ const DashboardAIAssistant = () => {
   const [canAccess, setCanAccess] = useState(false);
   const [selectedRole, setSelectedRole] = useState<AIAssistantRole>("general");
   const [activeTab, setActiveTab] = useState<string>("chat");
-  const [showToolbar, setShowToolbar] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [imageCapture, setImageCapture] = useState<ImageCapture | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -103,7 +95,6 @@ const DashboardAIAssistant = () => {
   }, [aiSettings]);
 
   const handleRoleChange = async (role: AIAssistantRole) => {
-    // No need to modify role here - this will be handled in the useAISettingsMutations hook
     setSelectedRole(role);
     
     if (aiSettings) {
@@ -300,9 +291,13 @@ const DashboardAIAssistant = () => {
     setInputMessage("");
   };
 
-  const handleToolContent = (content: string) => {
-    setInputMessage(content);
+  const handleExampleClick = (example: string) => {
+    setInputMessage(example);
     setActiveTab("chat");
+  };
+
+  const toggleSidebar = () => {
+    setShowSidebar(!showSidebar);
   };
 
   if (isChecking) {
@@ -314,7 +309,7 @@ const DashboardAIAssistant = () => {
     switch (selectedRole) {
       case "student": return "from-blue-600 to-blue-500";
       case "work": return "from-purple-600 to-purple-500";
-      case "writer": return "from-green-600 to-green-500";
+      case "writer": return "from-purple-600 to-purple-500";
       case "business_owner": return "from-amber-600 to-amber-500";
       default: return "from-wakti-blue to-wakti-blue/90";
     }
@@ -346,30 +341,27 @@ const DashboardAIAssistant = () => {
                       <p className="text-sm text-muted-foreground">Your intelligent productivity partner</p>
                     </div>
                   </div>
-                </CardHeader>
-                {showToolbar && (
-                  <CardContent className="pt-0 pb-3">
+                  
+                  <div className="flex items-center gap-2">
                     <AIRoleSelector 
                       selectedRole={selectedRole} 
-                      onRoleChange={handleRoleChange} 
+                      onRoleChange={handleRoleChange}
+                      compact={true} 
                     />
-                  </CardContent>
-                )}
+                  </div>
+                </CardHeader>
               </Card>
               
+              {/* Main content with tabs */}
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="mx-auto mb-4 grid w-full max-w-md grid-cols-3">
+                <TabsList className="mx-auto mb-4 grid w-full max-w-md grid-cols-2">
                   <TabsTrigger value="chat" className="flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
                     <span>Chat</span>
                   </TabsTrigger>
-                  <TabsTrigger value="tools" className="flex items-center gap-2">
-                    <Wrench className="h-4 w-4" />
-                    <span>Tools</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="knowledge" className="flex items-center gap-2">
-                    <BookCopy className="h-4 w-4" />
-                    <span>Knowledge</span>
+                  <TabsTrigger value="system" className="flex items-center gap-2">
+                    <PuzzleIcon className="h-4 w-4" />
+                    <span>System Integration</span>
                   </TabsTrigger>
                 </TabsList>
                 
@@ -379,52 +371,32 @@ const DashboardAIAssistant = () => {
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
                 >
+                  {/* Chat Tab Content */}
                   <TabsContent value="chat" className="focus-visible:outline-none">
-                    <CleanChatInterface
-                      messages={messages}
-                      isLoading={isLoading}
-                      inputMessage={inputMessage}
-                      setInputMessage={setInputMessage}
-                      handleSendMessage={handleSendMessage}
-                      selectedRole={selectedRole}
-                      userName={userName}
-                      canAccess={canAccess}
-                      onFileUpload={handleFileUpload}
-                      onCameraCapture={handleCameraCapture}
-                    />
+                    <div className="flex gap-4">
+                      {/* Main Chat Area */}
+                      <div className="flex-1">
+                        <CleanChatInterface
+                          messages={messages}
+                          isLoading={isLoading}
+                          inputMessage={inputMessage}
+                          setInputMessage={setInputMessage}
+                          handleSendMessage={handleSendMessage}
+                          selectedRole={selectedRole}
+                          userName={userName}
+                          canAccess={canAccess}
+                          onFileUpload={handleFileUpload}
+                          onCameraCapture={handleCameraCapture}
+                        />
+                      </div>
+                    </div>
                   </TabsContent>
                   
-                  <TabsContent value="tools" className="space-y-6 focus-visible:outline-none">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Wrench className="h-5 w-5 text-wakti-blue" />
-                          AI Assistant Tools
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <VoiceInteractionToolCard
-                            onSpeechRecognized={handleToolContent}
-                          />
-                          
-                          <MeetingSummaryTool onUseSummary={handleToolContent} />
-                          
-                          <EnhancedToolsTab
-                            selectedRole={selectedRole}
-                            onUseContent={handleToolContent}
-                            canAccess={canAccess}
-                            compact={true}
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                  
-                  <TabsContent value="knowledge" className="focus-visible:outline-none">
-                    <RoleSpecificKnowledge
+                  {/* System Integration Tab Content - Specifically for Business */}
+                  <TabsContent value="system" className="focus-visible:outline-none">
+                    <AISystemIntegrationPanel
                       selectedRole={selectedRole}
-                      canAccess={canAccess}
+                      onExampleClick={handleExampleClick}
                     />
                   </TabsContent>
                 </motion.div>
