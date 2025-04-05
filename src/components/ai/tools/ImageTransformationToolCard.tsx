@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
 export const ImageTransformationToolCard: React.FC = () => {
-  const [prompt, setPrompt] = useState("Transform into anime/Gimi-style");
+  const [prompt, setPrompt] = useState("Transform into anime/Gimi-style with bright colors, sharp lines, and expressive features");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { 
     transformImage, 
@@ -80,6 +80,14 @@ export const ImageTransformationToolCard: React.FC = () => {
     link.click();
     document.body.removeChild(link);
   };
+
+  const predefinedStyles = [
+    "Transform into anime/Gimi-style with bright colors, sharp lines, and expressive features",
+    "Convert to manga-style black and white illustration with dramatic shading",
+    "Transform into Studio Ghibli style with soft colors and detailed backgrounds",
+    "Create a cyberpunk anime version with neon colors and futuristic elements",
+    "Convert to chibi anime character with exaggerated features and cute style"
+  ];
 
   return (
     <AIToolCard
@@ -171,6 +179,23 @@ export const ImageTransformationToolCard: React.FC = () => {
               className="min-h-[60px]"
               disabled={isGenerating}
             />
+            
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground font-medium">Suggested styles:</p>
+              <div className="flex flex-wrap gap-2">
+                {predefinedStyles.map((style, index) => (
+                  <Button 
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPrompt(style)}
+                    className="text-xs"
+                  >
+                    {style.split(' ').slice(0, 3).join(' ')}...
+                  </Button>
+                ))}
+              </div>
+            </div>
             
             <Button 
               onClick={handleTransform}
