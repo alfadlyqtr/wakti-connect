@@ -174,12 +174,13 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
                 msg.role === "user" ? "bg-primary text-primary-foreground" : 
                 "bg-orange-50 text-orange-800 border border-orange-100"
               )}>
-                <ReactMarkdown 
-                  className="prose dark:prose-invert max-w-none text-sm prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4" 
-                  remarkPlugins={[remarkGfm]}
-                >
-                  {msg.content}
-                </ReactMarkdown>
+                <div className="prose dark:prose-invert max-w-none text-sm prose-p:my-1 prose-headings:mb-2 prose-headings:mt-4">
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
+                </div>
               </div>
             </motion.div>
           ))}
