@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AIAssistantChatCard } from "../assistant/AIAssistantChatCard";
@@ -5,7 +6,7 @@ import { AIAssistantRole, AIMessage } from "@/types/ai-assistant.types";
 import { AIAssistantToolsCard } from "../tools/AIAssistantToolsCard";
 import { AIAssistantHistoryCard } from "../AIAssistantHistoryCard";
 import { AnimatePresence, motion } from "framer-motion";
-import { Zap, MessageSquare, Wrench, History, Bot, Sparkles } from "lucide-react";
+import { Zap, MessageSquare, Wrench, History, Bot, Sparkles, BookOpen, Briefcase, Pen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AIAssistantTabsProps {
@@ -52,6 +53,26 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
     }
   };
 
+  const getRoleIcon = () => {
+    switch (selectedRole) {
+      case "student": return <BookOpen className="h-5 w-5 text-white" />;
+      case "employee": 
+      case "writer": return <Pen className="h-5 w-5 text-white" />;
+      case "business_owner": return <Briefcase className="h-5 w-5 text-white" />;
+      default: return <Bot className="h-5 w-5 text-white" />;
+    }
+  };
+
+  const getRoleTitle = () => {
+    switch (selectedRole) {
+      case "student": return "Student Assistant";
+      case "employee": 
+      case "writer": return "Creative Assistant";
+      case "business_owner": return "Business Assistant";
+      default: return "AI Assistant";
+    }
+  };
+
   return (
     <div className="flex flex-col space-y-4 w-full">
       <motion.div 
@@ -63,10 +84,10 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
           "h-10 w-10 rounded-full bg-gradient-to-br flex items-center justify-center mr-3",
           getRoleColor()
         )}>
-          <Bot className="h-5 w-5 text-white" />
+          {getRoleIcon()}
         </div>
         <h2 className="text-2xl font-bold text-center relative">
-          WAKTI AI Assistant
+          WAKTI {getRoleTitle()}
           <motion.span 
             className="absolute -right-7 top-0"
             initial={{ rotate: -20, scale: 0.8 }}

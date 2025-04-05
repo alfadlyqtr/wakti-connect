@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Bot, Trash2, Settings, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Bot, Trash2, Settings, PanelLeftClose, PanelLeftOpen, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AIMessage, AIAssistantRole } from '@/types/ai-assistant.types';
 import { AIAssistantChat } from './AIAssistantChat';
@@ -45,8 +45,8 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const getRoleTitle = () => {
     switch (selectedRole) {
       case 'student': return 'Student Assistant';
-      case 'employee': return 'Work/Creator Assistant';
-      case 'writer': return 'Work/Creator Assistant';
+      case 'employee': return 'Creative Assistant';
+      case 'writer': return 'Creative Assistant';
       case 'business_owner': return 'Business Assistant';
       default: return 'AI Assistant';
     }

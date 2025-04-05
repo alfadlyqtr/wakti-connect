@@ -5,7 +5,11 @@ import { Button } from '@/components/ui/button';
 import { 
   Calendar, User, BarChart2, CircleDollarSign, 
   BriefcaseBusiness, Brain, MessageSquare, Receipt,
-  TrendingUp, Users, ShieldCheck, Settings
+  TrendingUp, Users, ShieldCheck, Settings,
+  FileText, List, Clock, Presentation, Kanban,
+  Building, BadgePercent, HeartHandshake, Globe,
+  LineChart, Target, Megaphone, Bell, UserCog,
+  Boxes, Landmark, Scale, PieChart, AreaChart
 } from 'lucide-react';
 import { AIAssistantRole } from '@/types/ai-assistant.types';
 
@@ -26,26 +30,40 @@ export const AISystemIntegrationPanel: React.FC<AISystemIntegrationPanelProps> =
   // Business integration tools organized by tab
   const businessTools = {
     overview: [
-      { label: "Business overview summary", icon: BriefcaseBusiness },
-      { label: "Financial performance report", icon: CircleDollarSign }
+      { label: "Business dashboard summary", icon: BriefcaseBusiness },
+      { label: "Weekly performance report", icon: LineChart },
+      { label: "Monthly revenue forecast", icon: CircleDollarSign }
     ],
     staff: [
       { label: "Staff attendance report", icon: User },
-      { label: "Assign tasks to team members", icon: Users }
+      { label: "Team performance analysis", icon: Users },
+      { label: "Staff scheduling optimization", icon: Calendar }
     ],
     analytics: [
-      { label: "Customer engagement analysis", icon: TrendingUp },
-      { label: "Revenue forecast for Q2", icon: BarChart2 }
+      { label: "Customer engagement metrics", icon: HeartHandshake },
+      { label: "Service popularity breakdown", icon: PieChart },
+      { label: "Growth trend analysis", icon: TrendingUp }
     ],
     operations: [
-      { label: "Upcoming appointments", icon: Calendar },
-      { label: "Review pending invoices", icon: Receipt }
+      { label: "Upcoming appointments", icon: Clock },
+      { label: "Review pending invoices", icon: Receipt },
+      { label: "Service capacity planning", icon: Kanban }
+    ],
+    marketing: [
+      { label: "Marketing campaign analysis", icon: Megaphone },
+      { label: "Social media performance", icon: Globe },
+      { label: "Promotional strategy", icon: Target }
+    ],
+    finance: [
+      { label: "Cashflow projection", icon: Landmark },
+      { label: "Expense breakdown", icon: AreaChart },
+      { label: "Tax preparation assistance", icon: Scale }
     ]
   };
   
   return (
     <Tabs defaultValue="overview" className="w-full">
-      <TabsList className="grid grid-cols-4 mb-2">
+      <TabsList className="grid grid-cols-3 mb-2">
         <TabsTrigger value="overview" className="flex items-center gap-1">
           <BriefcaseBusiness className="h-3.5 w-3.5" />
           <span className="hidden sm:inline text-xs">Overview</span>
@@ -58,9 +76,20 @@ export const AISystemIntegrationPanel: React.FC<AISystemIntegrationPanelProps> =
           <BarChart2 className="h-3.5 w-3.5" />
           <span className="hidden sm:inline text-xs">Analytics</span>
         </TabsTrigger>
+      </TabsList>
+      
+      <TabsList className="grid grid-cols-3 mb-2 mt-1">
         <TabsTrigger value="operations" className="flex items-center gap-1">
           <Settings className="h-3.5 w-3.5" />
           <span className="hidden sm:inline text-xs">Operations</span>
+        </TabsTrigger>
+        <TabsTrigger value="marketing" className="flex items-center gap-1">
+          <Megaphone className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline text-xs">Marketing</span>
+        </TabsTrigger>
+        <TabsTrigger value="finance" className="flex items-center gap-1">
+          <CircleDollarSign className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline text-xs">Finance</span>
         </TabsTrigger>
       </TabsList>
       

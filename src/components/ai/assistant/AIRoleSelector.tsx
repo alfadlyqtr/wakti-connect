@@ -16,9 +16,9 @@ export const AIRoleSelector: React.FC<AIRoleSelectorProps> = ({
   onRoleChange,
   compact = false
 }) => {
-  // Handle the combined Work/Creator role
+  // Handle the roles
   const handleRoleChange = (newRole: string) => {
-    // Map the combined creative role to employee
+    // Map the creative role correctly
     if (newRole === "creative") {
       onRoleChange("employee");
     } else {
@@ -26,15 +26,15 @@ export const AIRoleSelector: React.FC<AIRoleSelectorProps> = ({
     }
   };
 
-  // Check if current role is either employee or writer for the combined tab
+  // Check if current role is either employee or writer for the combined creative tab
   const isCreativeActive = selectedRole === "employee" || selectedRole === "writer";
   
   // Role descriptions for tooltips
   const roleDescriptions = {
-    general: "Day planning, tasks, reminders, and general assistance",
-    student: "Study help, research, assignments, and academic support",
-    creative: "Content creation, professional writing, emails, and creative assistance",
-    business_owner: "Business operations, staff management, analytics, and reporting"
+    general: "Daily productivity assistant: tasks, reminders, schedules, and general assistance",
+    student: "Academic assistant: study plans, research help, assignments, and educational support",
+    creative: "Content creation assistant: emails, professional writing, creative content, and marketing",
+    business_owner: "Business assistant: team management, analytics, business operations, and reports"
   };
 
   return (
@@ -54,7 +54,7 @@ export const AIRoleSelector: React.FC<AIRoleSelectorProps> = ({
                 <span className={compact ? "hidden" : "hidden sm:inline"}>General</span>
               </TabsTrigger>
             </TooltipTrigger>
-            <TooltipContent side="bottom">
+            <TooltipContent side="bottom" className="max-w-[200px]">
               <p className="text-xs">{roleDescriptions.general}</p>
             </TooltipContent>
           </Tooltip>
@@ -69,7 +69,7 @@ export const AIRoleSelector: React.FC<AIRoleSelectorProps> = ({
                 <span className={compact ? "hidden" : "hidden sm:inline"}>Student</span>
               </TabsTrigger>
             </TooltipTrigger>
-            <TooltipContent side="bottom">
+            <TooltipContent side="bottom" className="max-w-[200px]">
               <p className="text-xs">{roleDescriptions.student}</p>
             </TooltipContent>
           </Tooltip>
@@ -84,7 +84,7 @@ export const AIRoleSelector: React.FC<AIRoleSelectorProps> = ({
                 <span className={compact ? "hidden" : "hidden sm:inline"}>Creative</span>
               </TabsTrigger>
             </TooltipTrigger>
-            <TooltipContent side="bottom">
+            <TooltipContent side="bottom" className="max-w-[200px]">
               <p className="text-xs">{roleDescriptions.creative}</p>
             </TooltipContent>
           </Tooltip>
@@ -99,7 +99,7 @@ export const AIRoleSelector: React.FC<AIRoleSelectorProps> = ({
                 <span className={compact ? "hidden" : "hidden sm:inline"}>Business</span>
               </TabsTrigger>
             </TooltipTrigger>
-            <TooltipContent side="bottom">
+            <TooltipContent side="bottom" className="max-w-[200px]">
               <p className="text-xs">{roleDescriptions.business_owner}</p>
             </TooltipContent>
           </Tooltip>

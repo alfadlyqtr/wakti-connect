@@ -25,7 +25,8 @@ import {
   Bot,
   Camera,
   Settings,
-  Cpu
+  Cpu,
+  Briefcase
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -395,10 +396,31 @@ const DashboardAIAssistant = () => {
                           </div>
                           
                           <div className="hidden md:block w-1/3 min-w-[250px] max-w-[300px] space-y-4">
-                            <QuickToolsCard 
-                              selectedRole={selectedRole}
-                              onToolClick={(prompt) => setInputMessage(prompt)} 
-                            />
+                            <Card>
+                              <CardHeader className="pb-2">
+                                <CardTitle className="text-sm flex items-center gap-2">
+                                  {selectedRole === "student" ? (
+                                    <BookCopy className="h-4 w-4" />
+                                  ) : selectedRole === "employee" || selectedRole === "writer" ? (
+                                    <Wrench className="h-4 w-4" />
+                                  ) : selectedRole === "business_owner" ? (
+                                    <Briefcase className="h-4 w-4" />
+                                  ) : (
+                                    <Bot className="h-4 w-4" />
+                                  )}
+                                  {selectedRole === "employee" || selectedRole === "writer" 
+                                    ? "Creative Tools" 
+                                    : `${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1).replace('_', ' ')} Tools`}
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent className="p-3">
+                                <QuickToolsCard 
+                                  selectedRole={selectedRole}
+                                  onToolClick={(prompt) => setInputMessage(prompt)} 
+                                  compact={true}
+                                />
+                              </CardContent>
+                            </Card>
                             
                             {shouldShowSystemIntegration && (
                               <Card>
@@ -445,7 +467,7 @@ const DashboardAIAssistant = () => {
                     <Card>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm flex items-center gap-2">
-                          <Bot className="h-4 w-4" /> 
+                          <Cpu className="h-4 w-4" /> 
                           Business Tools
                         </CardTitle>
                       </CardHeader>
@@ -470,7 +492,9 @@ const DashboardAIAssistant = () => {
                           ) : (
                             <Bot className="h-4 w-4" />
                           )}
-                          {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1).replace('_', ' ')} Tools
+                          {selectedRole === "employee" || selectedRole === "writer" 
+                            ? "Creative Tools" 
+                            : `${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1).replace('_', ' ')} Tools`}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
