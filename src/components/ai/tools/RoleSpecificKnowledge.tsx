@@ -107,6 +107,7 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
   const getRoleName = (role: AIAssistantRole) => {
     switch (role) {
       case "student": return "Student";
+      case "work":
       case "employee": return "Work";
       case "writer": return "Creator";
       case "business_owner": return "Business";
@@ -117,6 +118,7 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
   const getRoleIcon = (role: AIAssistantRole) => {
     switch (role) {
       case "student": return <BookOpen className="h-4 w-4" />;
+      case "work":
       case "employee": return <Users className="h-4 w-4" />;
       case "writer": return <Edit className="h-4 w-4" />;
       case "business_owner": return <Briefcase className="h-4 w-4" />;
@@ -173,7 +175,7 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
               <BookOpen className="h-4 w-4" />
               <span className="hidden md:inline">Student</span>
             </TabsTrigger>
-            <TabsTrigger value="employee" className="flex items-center gap-1">
+            <TabsTrigger value="work" className="flex items-center gap-1">
               <Users className="h-4 w-4" />
               <span className="hidden md:inline">Work</span>
             </TabsTrigger>

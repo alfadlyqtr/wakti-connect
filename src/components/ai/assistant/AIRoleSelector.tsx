@@ -15,12 +15,12 @@ export const AIRoleSelector: React.FC<AIRoleSelectorProps> = ({
   onRoleChange,
   compact = false
 }) => {
-  // If selectedRole is "writer", redirect to "work"
-  const effectiveRole = selectedRole === "writer" ? "work" : selectedRole;
+  // If selectedRole is "writer" or "employee", redirect to "work"
+  const effectiveRole = (selectedRole === "writer" || selectedRole === "employee") ? "work" : selectedRole;
   
   const handleRoleChange = (role: AIAssistantRole) => {
-    // If role is "writer", change it to "work" instead
-    if (role === "writer") {
+    // If role is "writer" or "employee", change it to "work" instead
+    if (role === "writer" || role === "employee") {
       onRoleChange("work");
     } else {
       onRoleChange(role);

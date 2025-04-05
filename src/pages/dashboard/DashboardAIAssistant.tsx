@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -93,7 +94,10 @@ const DashboardAIAssistant = () => {
 
   useEffect(() => {
     if (aiSettings?.role) {
-      if (aiSettings.role === "writer") {
+      // Handle database to client role conversion
+      if (aiSettings.role === "employee") {
+        setSelectedRole("work");
+      } else if (aiSettings.role === "writer") {
         setSelectedRole("work");
       } else {
         setSelectedRole(aiSettings.role);
@@ -102,12 +106,12 @@ const DashboardAIAssistant = () => {
   }, [aiSettings]);
 
   const handleRoleChange = async (role: AIAssistantRole) => {
-    const effectiveRole = role === "writer" ? "work" : role;
-    setSelectedRole(effectiveRole);
+    // No need to modify role here - this will be handled in the useAISettingsMutations hook
+    setSelectedRole(role);
     
     if (aiSettings) {
       try {
-        const updatedSettings = { ...aiSettings, role: effectiveRole };
+        const updatedSettings = { ...aiSettings, role: role };
         await updateSettings.mutateAsync(updatedSettings);
       } catch (error) {
         console.error("Failed to update AI role:", error);

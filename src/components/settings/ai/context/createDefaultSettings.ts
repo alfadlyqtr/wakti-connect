@@ -16,7 +16,7 @@ export const createDefaultSettings = async () => {
     const defaultSettings = {
       user_id: user.id,
       assistant_name: "WAKTI",
-      role: "general" as AIAssistantRole, // Using proper type assertion
+      role: "general", // Using a value directly valid for the database
       tone: "balanced",
       response_length: "balanced",
       proactiveness: true,

@@ -1,5 +1,5 @@
 // AI Assistant role types - must match what's in the database
-export type AIAssistantRole = "student" | "business_owner" | "general" | "work" | "writer";
+export type AIAssistantRole = "student" | "business_owner" | "general" | "work" | "employee";
 
 // AI settings interface
 export interface AISettings {
@@ -135,27 +135,27 @@ export const RoleContexts: Record<AIAssistantRole, {
       { name: "Content Creator", description: "Generate creative content", icon: "Edit" }
     ]
   },
-  "writer": {
-    title: "Creative Assistant",
-    description: "Help with content creation and creative projects",
-    icon: "pen-nib",
-    welcomeMessage: "Hello! I'm your Creative Assistant. I can help organize your writing projects, manage deadlines, and keep track of your creative tasks. What are you working on today?",
+  "employee": {
+    title: "Work Assistant",
+    description: "Help with workplace tasks, team coordination, and creative projects",
+    icon: "users",
+    welcomeMessage: "Hello! I'm your Work Assistant. I can help manage your work assignments, coordinate with your team, track your job cards, and support creative projects. How can I support you today?",
     commandSuggestions: [
-      "Create a task for my article draft",
-      "Schedule time for editing tomorrow",
-      "Organize my writing deadlines"
+      "Show me my assigned tasks",
+      "Create a task for the client project",
+      "Help me outline an article"
     ],
     suggestedPrompts: [
-      "Help me outline an article",
-      "Create a writing schedule",
-      "Give me feedback on this paragraph",
-      "Create a task for my book chapter"
+      "Track my hours for today",
+      "Create a task for the team meeting notes",
+      "Help me outline a new content piece",
+      "Give me feedback on this paragraph"
     ],
     quickTools: [
-      { name: "Content Generator", description: "Generate writing ideas", icon: "Lightbulb" },
-      { name: "Editor Helper", description: "Get editing assistance", icon: "Edit" },
-      { name: "Writing Scheduler", description: "Plan writing sessions", icon: "Calendar" },
-      { name: "Research Tool", description: "Find relevant information", icon: "Search" }
+      { name: "Time Tracker", description: "Track your work hours", icon: "Clock" },
+      { name: "Task Reporter", description: "Report completed tasks", icon: "ClipboardCheck" },
+      { name: "Meeting Organizer", description: "Organize team meetings", icon: "Users" },
+      { name: "Content Creator", description: "Generate creative content", icon: "Edit" }
     ]
   }
 };

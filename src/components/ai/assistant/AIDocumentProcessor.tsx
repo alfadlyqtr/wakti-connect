@@ -42,18 +42,19 @@ export const AIDocumentProcessor: React.FC<AIDocumentProcessorProps> = ({
     onUseDocumentContent(processingText);
   };
 
-  const getRoleSpecificPrompt = () => {
+  const getRolePrompt = () => {
     switch (selectedRole) {
-      case "student":
-        return "Upload documents, notes or images for analysis";
-      case "employee":
-        return "Upload work documents, reports or presentations";
-      case "writer":
-        return "Upload creative content, drafts or inspiration images";
+      case "student": 
+        return "Analyze this document for educational purposes";
+      case "work":
+      case "employee": // Map employee to work prompts
+        return "Extract key information for work-related tasks";
       case "business_owner":
-        return "Upload business documents, reports or marketing materials";
+        return "Analyze this document for business insights";
+      case "writer":
+        return "Help me understand and edit this content";
       default:
-        return "Upload documents or images for AI analysis";
+        return "Analyze this document and provide insights";
     }
   };
 
@@ -65,7 +66,7 @@ export const AIDocumentProcessor: React.FC<AIDocumentProcessorProps> = ({
           onClick={handleFileUpload}
         >
           <Upload className="h-4 w-4 mx-auto mb-1" />
-          <p className="text-xs text-muted-foreground">{getRoleSpecificPrompt()}</p>
+          <p className="text-xs text-muted-foreground">{getRolePrompt()}</p>
           <input 
             type="file" 
             className="hidden" 
@@ -112,7 +113,7 @@ export const AIDocumentProcessor: React.FC<AIDocumentProcessorProps> = ({
       >
         <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
         <h3 className="text-lg font-medium mb-1">Upload Documents</h3>
-        <p className="text-sm text-muted-foreground mb-4">{getRoleSpecificPrompt()}</p>
+        <p className="text-sm text-muted-foreground mb-4">{getRolePrompt()}</p>
         <Button 
           variant="outline" 
           onClick={(e) => {

@@ -45,7 +45,8 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const getRoleTitle = () => {
     switch (selectedRole) {
       case 'student': return 'Study Assistant';
-      case 'employee': return 'Work Assistant';
+      case 'work': return 'Work Assistant';
+      case 'employee': return 'Work Assistant'; // Map employee to Work Assistant
       case 'writer': return 'Creator Assistant';
       case 'business_owner': return 'Business Assistant';
       default: return 'AI Assistant';
@@ -55,7 +56,8 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const getRoleColor = () => {
     switch (selectedRole) {
       case 'student': return 'from-blue-600 to-blue-500';
-      case 'employee': return 'from-purple-600 to-purple-500';
+      case 'work': return 'from-purple-600 to-purple-500';
+      case 'employee': return 'from-purple-600 to-purple-500'; // Map employee to work colors
       case 'writer': return 'from-green-600 to-green-500';
       case 'business_owner': return 'from-amber-600 to-amber-500';
       default: return 'from-wakti-blue to-wakti-blue/90';
