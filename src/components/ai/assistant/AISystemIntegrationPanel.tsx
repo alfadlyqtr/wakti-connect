@@ -40,15 +40,6 @@ export const AISystemIntegrationPanel: React.FC<AISystemIntegrationPanelProps> =
         'check_business',
         ...commandKeys.filter(k => !['manage_staff', 'view_analytics', 'view_bookings', 'check_business'].includes(k))
       ];
-    } else if (selectedRole === 'student') {
-      // Prioritize task and scheduling commands
-      commandKeys = [
-        'create_task',
-        'view_tasks',
-        'schedule_event',
-        'check_calendar',
-        ...commandKeys.filter(k => !['create_task', 'view_tasks', 'schedule_event', 'check_calendar'].includes(k))
-      ];
     }
     
     // Create sorted object
@@ -63,94 +54,56 @@ export const AISystemIntegrationPanel: React.FC<AISystemIntegrationPanelProps> =
   const filteredCommands = getFilteredCommands();
   
   return (
-    <Tabs defaultValue="tasks" className="w-full">
+    <Tabs defaultValue="business" className="w-full">
       <TabsList className="grid grid-cols-4 mb-2">
-        <TabsTrigger value="tasks" className="flex items-center gap-1">
-          <CheckSquare className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline text-xs">Tasks</span>
-        </TabsTrigger>
-        <TabsTrigger value="calendar" className="flex items-center gap-1">
-          <Calendar className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline text-xs">Events</span>
-        </TabsTrigger>
         <TabsTrigger value="business" className="flex items-center gap-1">
           <BriefcaseBusiness className="h-3.5 w-3.5" />
           <span className="hidden sm:inline text-xs">Business</span>
         </TabsTrigger>
-        <TabsTrigger value="more" className="flex items-center gap-1">
+        <TabsTrigger value="staff" className="flex items-center gap-1">
+          <User className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline text-xs">Staff</span>
+        </TabsTrigger>
+        <TabsTrigger value="analytics" className="flex items-center gap-1">
           <BarChart2 className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline text-xs">More</span>
+          <span className="hidden sm:inline text-xs">Analytics</span>
+        </TabsTrigger>
+        <TabsTrigger value="bookings" className="flex items-center gap-1">
+          <Calendar className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline text-xs">Bookings</span>
         </TabsTrigger>
       </TabsList>
-      
-      <TabsContent value="tasks" className="mt-0">
-        <div className="space-y-2">
-          <div className="grid grid-cols-1 gap-2">
-            {filteredCommands.create_task?.examples.slice(0, 1).map((example, i) => (
-              <Button 
-                key={i} 
-                variant="outline" 
-                size="sm" 
-                className="justify-start h-auto py-1.5 px-2 text-xs"
-                onClick={() => onExampleClick(example)}
-              >
-                <CheckSquare className="h-3 w-3 mr-1 text-wakti-blue" />
-                <span>{example}</span>
-              </Button>
-            ))}
-            
-            {filteredCommands.view_tasks?.examples.slice(0, 1).map((example, i) => (
-              <Button 
-                key={i} 
-                variant="outline" 
-                size="sm" 
-                className="justify-start h-auto py-1.5 px-2 text-xs"
-                onClick={() => onExampleClick(example)}
-              >
-                <Clock className="h-3 w-3 mr-1 text-wakti-blue" />
-                <span>{example}</span>
-              </Button>
-            ))}
-          </div>
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="calendar" className="mt-0">
-        <div className="space-y-2">
-          <div className="grid grid-cols-1 gap-2">
-            {filteredCommands.schedule_event?.examples.slice(0, 1).map((example, i) => (
-              <Button 
-                key={i} 
-                variant="outline" 
-                size="sm" 
-                className="justify-start h-auto py-1.5 px-2 text-xs"
-                onClick={() => onExampleClick(example)}
-              >
-                <Calendar className="h-3 w-3 mr-1 text-wakti-blue" />
-                <span>{example}</span>
-              </Button>
-            ))}
-            
-            {filteredCommands.check_calendar?.examples.slice(0, 1).map((example, i) => (
-              <Button 
-                key={i} 
-                variant="outline" 
-                size="sm" 
-                className="justify-start h-auto py-1.5 px-2 text-xs"
-                onClick={() => onExampleClick(example)}
-              >
-                <Clock className="h-3 w-3 mr-1 text-wakti-blue" />
-                <span>{example}</span>
-              </Button>
-            ))}
-          </div>
-        </div>
-      </TabsContent>
       
       <TabsContent value="business" className="mt-0">
         <div className="space-y-2">
           <div className="grid grid-cols-1 gap-2">
-            {filteredCommands.manage_staff?.examples.slice(0, 1).map((example, i) => (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="justify-start h-auto py-1.5 px-2 text-xs"
+              onClick={() => onExampleClick("Check my business overview")}
+            >
+              <BriefcaseBusiness className="h-3 w-3 mr-1 text-wakti-blue" />
+              <span>Check my business overview</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="justify-start h-auto py-1.5 px-2 text-xs"
+              onClick={() => onExampleClick("How is my business performing?")}
+            >
+              <CircleDollarSign className="h-3 w-3 mr-1 text-wakti-blue" />
+              <span>How is my business performing?</span>
+            </Button>
+          </div>
+        </div>
+      </TabsContent>
+      
+      <TabsContent value="staff" className="mt-0">
+        <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-2">
+            {filteredCommands.manage_staff?.examples.slice(0, 2).map((example, i) => (
               <Button 
                 key={i} 
                 variant="outline" 
@@ -162,8 +115,14 @@ export const AISystemIntegrationPanel: React.FC<AISystemIntegrationPanelProps> =
                 <span>{example}</span>
               </Button>
             ))}
-            
-            {filteredCommands.view_analytics?.examples.slice(0, 1).map((example, i) => (
+          </div>
+        </div>
+      </TabsContent>
+      
+      <TabsContent value="analytics" className="mt-0">
+        <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-2">
+            {filteredCommands.view_analytics?.examples.slice(0, 2).map((example, i) => (
               <Button 
                 key={i} 
                 variant="outline" 
@@ -179,10 +138,10 @@ export const AISystemIntegrationPanel: React.FC<AISystemIntegrationPanelProps> =
         </div>
       </TabsContent>
       
-      <TabsContent value="more" className="mt-0">
+      <TabsContent value="bookings" className="mt-0">
         <div className="space-y-2">
           <div className="grid grid-cols-1 gap-2">
-            {filteredCommands.search_contacts?.examples.slice(0, 1).map((example, i) => (
+            {filteredCommands.view_bookings?.examples.slice(0, 2).map((example, i) => (
               <Button 
                 key={i} 
                 variant="outline" 
@@ -190,20 +149,10 @@ export const AISystemIntegrationPanel: React.FC<AISystemIntegrationPanelProps> =
                 className="justify-start h-auto py-1.5 px-2 text-xs"
                 onClick={() => onExampleClick(example)}
               >
-                <User className="h-3 w-3 mr-1 text-wakti-blue" />
+                <Calendar className="h-3 w-3 mr-1 text-wakti-blue" />
                 <span>{example}</span>
               </Button>
             ))}
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="justify-start h-auto py-1.5 px-2 text-xs"
-              onClick={() => onExampleClick("Help me with my productivity")}
-            >
-              <MessageSquare className="h-3 w-3 mr-1 text-wakti-blue" />
-              <span>Help me with my productivity</span>
-            </Button>
           </div>
         </div>
       </TabsContent>

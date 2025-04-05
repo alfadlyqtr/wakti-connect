@@ -76,56 +76,49 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
     return null;
   }
 
-  // Use a more compact version if needed
+  // For the right sidebar panel, display without the card wrapper
   if (compact) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         {roleContext.quickTools.slice(0, 4).map((tool, index) => (
           <Button
             key={index}
             variant="outline"
             size="sm"
-            className="h-auto py-2 px-3 flex items-center justify-start gap-2"
+            className="h-auto py-2 px-3 flex flex-col items-center justify-center text-center"
             onClick={() => handleToolClicked(tool.description)}
           >
-            <div className="text-wakti-blue">
+            <div className="text-wakti-blue mb-1">
               {getIconByName(tool.icon)}
             </div>
-            <span className="font-medium text-xs">{tool.name}</span>
+            <span className="text-xs font-medium">{tool.name}</span>
           </Button>
         ))}
       </div>
     );
   }
 
+  // For the full card view
   return (
-    <Card className="border-dashed">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg">Quick Tools</CardTitle>
-        <CardDescription>
-          Select a tool to help with your {roleContext.title.toLowerCase()} tasks
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-3">
-          {roleContext.quickTools.map((tool, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              className="h-auto py-3 px-4 flex flex-col items-center justify-center text-center gap-2"
-              onClick={() => handleToolClicked(tool.description)}
-            >
-              <div className="text-wakti-blue">
-                {getIconByName(tool.icon)}
-              </div>
-              <div className="flex flex-col">
-                <span className="font-medium">{tool.name}</span>
-                <span className="text-xs text-muted-foreground">{tool.description}</span>
-              </div>
-            </Button>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-2">
+        {roleContext.quickTools.map((tool, index) => (
+          <Button
+            key={index}
+            variant="outline"
+            className="h-auto py-3 px-4 flex flex-col items-center justify-center text-center gap-2"
+            onClick={() => handleToolClicked(tool.description)}
+          >
+            <div className="text-wakti-blue">
+              {getIconByName(tool.icon)}
+            </div>
+            <div className="flex flex-col">
+              <span className="font-medium">{tool.name}</span>
+              <span className="text-xs text-muted-foreground">{tool.description}</span>
+            </div>
+          </Button>
+        ))}
+      </div>
+    </div>
   );
 };

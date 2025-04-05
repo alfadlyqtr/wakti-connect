@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAIAssistant } from "@/hooks/useAIAssistant";
 import { useAuth } from "@/hooks/useAuth";
@@ -68,7 +67,6 @@ const DashboardAIAssistant = () => {
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name;
   const { toast } = useToast();
   
-  // Speech recognition setup
   const {
     transcript,
     isListening,
@@ -81,7 +79,6 @@ const DashboardAIAssistant = () => {
     interimResults: true
   });
 
-  // Update input message when speech is recognized
   useEffect(() => {
     if (transcript) {
       setInputMessage(transcript);
@@ -315,6 +312,8 @@ const DashboardAIAssistant = () => {
     }
   };
 
+  const shouldShowSystemIntegration = selectedRole === "business_owner";
+
   return (
     <StaffRoleGuard 
       disallowStaff={true}
@@ -401,22 +400,24 @@ const DashboardAIAssistant = () => {
                               onToolClick={(prompt) => setInputMessage(prompt)} 
                             />
                             
-                            <Card>
-                              <CardHeader className="pb-2">
-                                <CardTitle className="text-sm flex items-center gap-2">
-                                  <Cpu className="h-4 w-4" /> 
-                                  System Integration
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent className="p-3">
-                                <AISystemIntegrationPanel
-                                  selectedRole={selectedRole}
-                                  onExampleClick={(example) => {
-                                    setInputMessage(example);
-                                  }}
-                                />
-                              </CardContent>
-                            </Card>
+                            {shouldShowSystemIntegration && (
+                              <Card>
+                                <CardHeader className="pb-2">
+                                  <CardTitle className="text-sm flex items-center gap-2">
+                                    <Cpu className="h-4 w-4" /> 
+                                    Business System Integration
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-3">
+                                  <AISystemIntegrationPanel
+                                    selectedRole={selectedRole}
+                                    onExampleClick={(example) => {
+                                      setInputMessage(example);
+                                    }}
+                                  />
+                                </CardContent>
+                              </Card>
+                            )}
                           </div>
                         </div>
                       </TabsContent>
@@ -440,15 +441,15 @@ const DashboardAIAssistant = () => {
                 </div>
                 
                 <div className="w-full lg:w-1/4">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Bot className="h-4 w-4" /> 
-                        Business Tools
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {selectedRole === "business_owner" ? (
+                  {shouldShowSystemIntegration ? (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Bot className="h-4 w-4" /> 
+                          Business Tools
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
                         <AISystemIntegrationPanel
                           selectedRole={selectedRole}
                           onExampleClick={(example) => {
@@ -456,23 +457,33 @@ const DashboardAIAssistant = () => {
                             setActiveTab("chat");
                           }}
                         />
-                      ) : (
-                        <div className="p-3 text-center">
-                          <p className="text-sm text-muted-foreground">
-                            Business tools are available in Business Assistant mode.
-                          </p>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="mt-2"
-                            onClick={() => handleRoleChange("business_owner")}
-                          >
-                            Switch to Business Mode
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          {selectedRole === "student" ? (
+                            <BookCopy className="h-4 w-4" />
+                          ) : selectedRole === "employee" || selectedRole === "writer" ? (
+                            <Wrench className="h-4 w-4" />
+                          ) : (
+                            <Bot className="h-4 w-4" />
+                          )}
+                          {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1).replace('_', ' ')} Tools
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <QuickToolsCard
+                          selectedRole={selectedRole}
+                          onToolClick={(example) => {
+                            setInputMessage(example);
+                            setActiveTab("chat");
+                          }}
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               </div>
             </div>
