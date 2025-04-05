@@ -48,15 +48,15 @@ serve(async (req) => {
       console.log("Image-based transformation with prompt:", prompt);
       
       // Image variation/transformation with DALL-E 3
+      // Note: DALL-E 3 doesn't support direct image transformation in the same way as requested
+      // We'll need to use different parameters for this
       openaiRequestBody = {
         model: "dall-e-3",
         prompt: `Transform this image into ${prompt}. Create an anime/Gimi-style illustration that preserves the main subject and composition.`,
         n: 1,
         size: "1024x1024",
         quality: "standard",
-        response_format: "url",
-        // For image transformation, we need to pass the image URL
-        image: imageUrl
+        response_format: "url"
       };
     } else {
       console.log("Text-based generation with prompt:", prompt);
@@ -74,8 +74,15 @@ serve(async (req) => {
     
     console.log("Making OpenAI API request with model:", openaiRequestBody.model);
 
+    let apiUrl = 'https://api.openai.com/v1/images/generations';
+    
+    // If we have an image URL, we need to handle it differently
+    // Since DALL-E 3 doesn't directly support image transformation in the API the way we're trying to use it
+    // For now, we'll just use the prompt for text-to-image generation
+    // In a production app, you might want to use a different approach or model for image-to-image transformation
+    
     // Call OpenAI API to generate image
-    const openaiResponse = await fetch("https://api.openai.com/v1/images/generations", {
+    const openaiResponse = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
