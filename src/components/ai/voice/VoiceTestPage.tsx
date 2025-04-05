@@ -21,14 +21,13 @@ export const VoiceTestPage = () => {
   
   const {
     isListening,
-    temporaryTranscript,
+    transcript,
     supportsVoice,
     startListening,
     stopListening,
     apiKeyStatus
   } = useVoiceInteraction({
     continuousListening: true,
-    autoSilenceDetection,
     onTranscriptComplete: (transcript) => {
       if (transcript) {
         setTestResult(transcript);
@@ -150,8 +149,8 @@ export const VoiceTestPage = () => {
             {isListening && (
               <div className="text-sm p-3 bg-muted rounded-md h-24 overflow-y-auto">
                 <p className="font-medium">Listening...</p>
-                {temporaryTranscript && (
-                  <p className="text-muted-foreground">{temporaryTranscript}</p>
+                {transcript && (
+                  <p className="text-muted-foreground">{transcript}</p>
                 )}
               </div>
             )}

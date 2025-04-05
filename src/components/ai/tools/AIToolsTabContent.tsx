@@ -10,6 +10,7 @@ import { ImageGenerationToolCard } from "./ImageGenerationToolCard";
 import { ImageTransformationToolCard } from "./ImageTransformationToolCard";
 import { KnowledgeProfileToolCard } from "./KnowledgeProfileToolCard";
 import { VoiceToTextTool } from "./VoiceToTextTool";
+import { VoiceInteractionToolCard } from "./VoiceInteractionToolCard";
 
 interface AIToolsTabContentProps {
   canAccess: boolean;
@@ -43,6 +44,11 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
           onUseDocumentContent={onUseDocumentContent}
         />
         <VoiceToTextTool onUseSummary={onUseDocumentContent} />
+      </div>
+
+      {/* Voice Interaction */}
+      <div className="grid grid-cols-1 gap-4">
+        <VoiceInteractionToolCard onSpeechRecognized={onUseDocumentContent} />
       </div>
 
       {/* Image Tools Row */}

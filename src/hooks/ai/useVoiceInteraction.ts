@@ -6,18 +6,27 @@ interface UseVoiceInteractionOptions {
   continuousListening?: boolean;
   language?: string;
   autoStart?: boolean;
+  autoSilenceDetection?: boolean;
+  autoResumeListening?: boolean;
+  onTranscriptComplete?: (transcript: string) => void;
 }
 
 export function useVoiceInteraction(options: UseVoiceInteractionOptions = {}) {
   const { 
     continuousListening = false,
     language = 'en',
-    autoStart = false
+    autoStart = false,
+    autoSilenceDetection = false,
+    autoResumeListening = false,
+    onTranscriptComplete
   } = options;
 
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [lastTranscript, setLastTranscript] = useState('');
+  const [temporaryTranscript, setTemporaryTranscript] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [supportsVoice, setSupportsVoice] = useState<boolean>(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
@@ -101,6 +110,7 @@ export function useVoiceInteraction(options: UseVoiceInteractionOptions = {}) {
     
     setError(null);
     setTranscript('');
+    setTemporaryTranscript('');
     setAudioChunks([]);
     
     try {
@@ -157,6 +167,7 @@ export function useVoiceInteraction(options: UseVoiceInteractionOptions = {}) {
     if (audioChunks.length === 0) return;
     
     setIsLoading(true);
+    setIsProcessing(true);
     setError(null);
     
     try {
@@ -165,6 +176,7 @@ export function useVoiceInteraction(options: UseVoiceInteractionOptions = {}) {
       if (audioBlob.size < 100) {
         setError('Audio recording too short');
         setIsLoading(false);
+        setIsProcessing(false);
         return;
       }
       
@@ -189,6 +201,10 @@ export function useVoiceInteraction(options: UseVoiceInteractionOptions = {}) {
           
           if (data?.text) {
             setTranscript(data.text);
+            setLastTranscript(data.text);
+            if (onTranscriptComplete) {
+              onTranscriptComplete(data.text);
+            }
           } else if (data?.warning) {
             setError(data.warning);
           } else {
@@ -200,12 +216,14 @@ export function useVoiceInteraction(options: UseVoiceInteractionOptions = {}) {
           setError(err.message || 'Error processing audio');
         } finally {
           setIsLoading(false);
+          setIsProcessing(false);
         }
       };
       
       reader.onerror = () => {
         setError('Error reading audio data');
         setIsLoading(false);
+        setIsProcessing(false);
       };
       
       reader.readAsDataURL(audioBlob);
@@ -214,8 +232,9 @@ export function useVoiceInteraction(options: UseVoiceInteractionOptions = {}) {
       console.error('Error processing audio to text:', err);
       setError(err.message || 'Error processing audio');
       setIsLoading(false);
+      setIsProcessing(false);
     }
-  }, [audioChunks, language]);
+  }, [audioChunks, language, onTranscriptComplete]);
   
   // Retry API key validation
   const retryApiKeyValidation = useCallback(async () => {
@@ -264,7 +283,10 @@ export function useVoiceInteraction(options: UseVoiceInteractionOptions = {}) {
   return {
     isListening,
     transcript,
+    temporaryTranscript,
+    lastTranscript,
     isLoading,
+    isProcessing,
     error,
     startListening,
     stopListening,

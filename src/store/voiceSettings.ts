@@ -5,23 +5,26 @@ import { persist } from 'zustand/middleware';
 interface VoiceSettings {
   autoSilenceDetection: boolean;
   visualFeedback: boolean;
+  language: 'en' | 'ar';
 }
 
 interface VoiceSettingsState extends VoiceSettings {
   toggleAutoSilenceDetection: () => void;
   toggleVisualFeedback: () => void;
+  setLanguage: (language: 'en' | 'ar') => void;
   resetSettings: () => void;
 }
 
-const DEFAULT_SETTINGS: VoiceSettings = {
+const defaultSettings: VoiceSettings = {
   autoSilenceDetection: true,
   visualFeedback: true,
+  language: 'en',
 };
 
 export const useVoiceSettings = create<VoiceSettingsState>()(
   persist(
     (set) => ({
-      ...DEFAULT_SETTINGS,
+      ...defaultSettings,
       
       toggleAutoSilenceDetection: () => 
         set((state) => ({ autoSilenceDetection: !state.autoSilenceDetection })),
@@ -29,7 +32,11 @@ export const useVoiceSettings = create<VoiceSettingsState>()(
       toggleVisualFeedback: () => 
         set((state) => ({ visualFeedback: !state.visualFeedback })),
       
-      resetSettings: () => set(DEFAULT_SETTINGS),
+      setLanguage: (language: 'en' | 'ar') => 
+        set(() => ({ language })),
+      
+      resetSettings: () => 
+        set(() => ({ ...defaultSettings })),
     }),
     {
       name: 'wakti-voice-settings',

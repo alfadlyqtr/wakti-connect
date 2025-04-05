@@ -23,9 +23,7 @@ export const AIVoiceSettingsTab: React.FC = () => {
     apiKeyStatus,
     apiKeyErrorDetails,
     retryApiKeyValidation
-  } = useVoiceInteraction({
-    autoResumeListening: false
-  });
+  } = useVoiceInteraction();
   
   const handleReset = () => {
     resetSettings();
