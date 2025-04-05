@@ -40,13 +40,13 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const getRoleTitle = () => {
     switch (selectedRole) {
-      case 'student': return 'Study Assistant';
-      case 'employee': return 'Work Assistant';
-      case 'writer': return 'Creator Assistant';
+      case 'student': return 'Student Assistant';
+      case 'employee': return 'Work/Creator Assistant';
+      case 'writer': return 'Work/Creator Assistant';
       case 'business_owner': return 'Business Assistant';
       default: return 'AI Assistant';
     }
@@ -56,7 +56,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     switch (selectedRole) {
       case 'student': return 'from-blue-600 to-blue-500';
       case 'employee': return 'from-purple-600 to-purple-500';
-      case 'writer': return 'from-green-600 to-green-500';
+      case 'writer': return 'from-purple-600 to-purple-500';
       case 'business_owner': return 'from-amber-600 to-amber-500';
       default: return 'from-wakti-blue to-wakti-blue/90';
     }
@@ -136,10 +136,9 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
           <AIRoleSelector selectedRole={selectedRole} onRoleChange={onRoleChange} />
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 sm:p-4">
-          {messages.length === 0 && showSuggestions ? (
-            <EmptyStateView onPromptClick={handlePromptClick} selectedRole={selectedRole} />
-          ) : (
+        <div className="flex flex-1 overflow-hidden">
+          {/* Main chat area */}
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4">
             <AIAssistantChat 
               messages={messages} 
               isLoading={isLoading}
@@ -149,9 +148,16 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
               canAccess={canAccess}
               selectedRole={selectedRole}
             />
-          )}
+            
+            <div ref={messagesEndRef} />
+          </div>
           
-          <div ref={messagesEndRef} />
+          {/* Sidebar with suggestions - shown conditionally */}
+          {messages.length === 0 && showSuggestions && isSidebarOpen && (
+            <div className="w-1/3 min-w-[250px] max-w-[350px] border-l p-3 overflow-y-auto bg-gray-50/50">
+              <EmptyStateView onPromptClick={handlePromptClick} selectedRole={selectedRole} />
+            </div>
+          )}
         </div>
         
         <MessageInputForm

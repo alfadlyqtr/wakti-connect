@@ -210,4 +210,4 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       )}
     </form>
   );
-};
+}

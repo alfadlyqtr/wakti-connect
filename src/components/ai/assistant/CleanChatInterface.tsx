@@ -4,7 +4,6 @@ import { AIMessage, AIAssistantRole } from "@/types/ai-assistant.types";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageInputForm } from "./MessageInputForm";
 import { AIAssistantChat } from "./AIAssistantChat";
-import { EmptyStateView } from "./EmptyStateView";
 
 interface CleanChatInterfaceProps {
   messages: AIMessage[];
@@ -17,6 +16,9 @@ interface CleanChatInterfaceProps {
   canAccess: boolean;
   onFileUpload?: (file: File) => Promise<void>;
   onCameraCapture?: () => Promise<void>;
+  onStartVoiceInput?: () => void;
+  onStopVoiceInput?: () => void;
+  isListening?: boolean;
 }
 
 export function CleanChatInterface({
@@ -30,8 +32,10 @@ export function CleanChatInterface({
   canAccess,
   onFileUpload,
   onCameraCapture,
+  onStartVoiceInput,
+  onStopVoiceInput,
+  isListening = false,
 }: CleanChatInterfaceProps) {
-  const [showSuggestions, setShowSuggestions] = useState(!messages || messages.length === 0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when messages change
@@ -41,27 +45,15 @@ export function CleanChatInterface({
     }
   }, [messages]);
 
-  const handlePromptClick = (prompt: string) => {
-    setInputMessage(prompt);
-    setShowSuggestions(false);
-  };
-
   return (
     <Card className="flex-1 flex flex-col h-[calc(100vh-200px)] md:h-[calc(100vh-210px)] overflow-hidden">
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
         <div className="flex-1 overflow-y-auto p-4">
-          {messages.length === 0 && showSuggestions ? (
-            <EmptyStateView
-              onPromptClick={handlePromptClick}
-              selectedRole={selectedRole}
-            />
-          ) : (
-            <AIAssistantChat
-              messages={messages}
-              isLoading={isLoading}
-              selectedRole={selectedRole}
-            />
-          )}
+          <AIAssistantChat
+            messages={messages}
+            isLoading={isLoading}
+            selectedRole={selectedRole}
+          />
           <div ref={messagesEndRef} />
         </div>
 
@@ -74,6 +66,10 @@ export function CleanChatInterface({
             canAccess={canAccess}
             onFileUpload={onFileUpload}
             onCameraCapture={onCameraCapture}
+            isListening={isListening}
+            onStartListening={onStartVoiceInput}
+            onStopListening={onStopVoiceInput}
+            recognitionSupported={true}
           />
         </div>
       </CardContent>

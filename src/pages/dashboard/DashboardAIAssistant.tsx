@@ -10,16 +10,13 @@ import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { AISettingsProvider } from "@/components/settings/ai";
 import StaffRoleGuard from "@/components/auth/StaffRoleGuard";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
-import { AIAssistantHeader } from "@/components/ai/header/AIAssistantHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CleanChatInterface } from "@/components/ai/assistant/CleanChatInterface";
 import { EnhancedToolsTab } from "@/components/ai/tools/EnhancedToolsTab";
 import { RoleSpecificKnowledge } from "@/components/ai/tools/RoleSpecificKnowledge";
-import { MeetingSummaryTool } from "@/components/ai/tools/MeetingSummaryTool";
-import { QuickToolsCard } from "@/components/ai/tools/QuickToolsCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AIRoleSelector } from "@/components/ai/assistant/AIRoleSelector";
-import { useVoiceInteraction } from "@/hooks/ai/useVoiceInteraction";
+import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
 import { Button } from "@/components/ui/button";
 import { 
   MessageSquare, 
@@ -30,15 +27,8 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { VoiceInteractionToolCard } from "@/components/ai/tools/VoiceInteractionToolCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
-interface EnhancedToolsTabProps {
-  selectedRole: AIAssistantRole;
-  onUseContent: (content: string) => void;
-  canAccess: boolean;
-  compact?: boolean;
-}
+import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
 
 declare global {
   class ImageCapture {
@@ -64,10 +54,10 @@ const DashboardAIAssistant = () => {
   const [canAccess, setCanAccess] = useState(false);
   const [selectedRole, setSelectedRole] = useState<AIAssistantRole>("general");
   const [activeTab, setActiveTab] = useState<string>("chat");
-  const [showToolbar, setShowToolbar] = useState(true);
   const [showCamera, setShowCamera] = useState(false);
   const [imageCapture, setImageCapture] = useState<ImageCapture | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [showSidePanel, setShowSidePanel] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
@@ -76,21 +66,25 @@ const DashboardAIAssistant = () => {
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name;
   const { toast } = useToast();
   
+  // Speech recognition setup
   const {
-    lastTranscript,
+    transcript,
+    isListening,
     startListening,
-    stopListening
-  } = useVoiceInteraction({
-    continuousListening: false,
-    autoResumeListening: false,
-    onTranscriptComplete: (transcript) => {
-      if (transcript) {
-        sendVoiceMessage(transcript);
-      } else {
-        setInputMessage(transcript);
-      }
-    }
+    stopListening,
+    resetTranscript,
+    supported: recognitionSupported
+  } = useSpeechRecognition({
+    continuous: true,
+    interimResults: true
   });
+
+  // Update input message when speech is recognized
+  useEffect(() => {
+    if (transcript) {
+      setInputMessage(transcript);
+    }
+  }, [transcript]);
 
   useEffect(() => {
     if (aiSettings?.role) {
@@ -205,15 +199,6 @@ const DashboardAIAssistant = () => {
     setShowCamera(false);
   }, []);
 
-  const sendVoiceMessage = async (text: string) => {
-    if (!text.trim() || isLoading || !canAccess) {
-      return;
-    }
-    
-    console.log("Sending voice message:", text);
-    await sendMessage(text);
-  };
-
   useEffect(() => {
     const checkUserAccess = async () => {
       if (!user) {
@@ -300,6 +285,19 @@ const DashboardAIAssistant = () => {
     setActiveTab("chat");
   };
 
+  const handleStartVoiceInput = () => {
+    if (startListening) {
+      resetTranscript();
+      startListening();
+    }
+  };
+
+  const handleStopVoiceInput = () => {
+    if (stopListening) {
+      stopListening();
+    }
+  };
+
   if (isChecking) {
     console.log("Still checking access, showing loader");
     return <AIAssistantLoader />;
@@ -309,7 +307,7 @@ const DashboardAIAssistant = () => {
     switch (selectedRole) {
       case "student": return "from-blue-600 to-blue-500";
       case "employee": return "from-purple-600 to-purple-500";
-      case "writer": return "from-green-600 to-green-500";
+      case "writer": return "from-purple-600 to-purple-500";
       case "business_owner": return "from-amber-600 to-amber-500";
       default: return "from-wakti-blue to-wakti-blue/90";
     }
@@ -342,93 +340,106 @@ const DashboardAIAssistant = () => {
                     </div>
                   </div>
                 </CardHeader>
-                {showToolbar && (
-                  <CardContent className="pt-0 pb-3">
-                    <AIRoleSelector 
-                      selectedRole={selectedRole} 
-                      onRoleChange={handleRoleChange} 
-                    />
-                  </CardContent>
-                )}
+                <CardContent className="pt-0 pb-3">
+                  <AIRoleSelector 
+                    selectedRole={selectedRole} 
+                    onRoleChange={handleRoleChange} 
+                  />
+                </CardContent>
               </Card>
               
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="mx-auto mb-4 grid w-full max-w-md grid-cols-3">
-                  <TabsTrigger value="chat" className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    <span>Chat</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="tools" className="flex items-center gap-2">
-                    <Wrench className="h-4 w-4" />
-                    <span>Tools</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="knowledge" className="flex items-center gap-2">
-                    <BookCopy className="h-4 w-4" />
-                    <span>Knowledge</span>
-                  </TabsTrigger>
-                </TabsList>
+              <div className="flex flex-col lg:flex-row gap-4">
+                <div className="w-full lg:w-3/4">
+                  <Tabs value={activeTab} onValueChange={setActiveTab}>
+                    <TabsList className="mx-auto mb-4 grid w-full max-w-md grid-cols-3">
+                      <TabsTrigger value="chat" className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        <span>Chat</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="tools" className="flex items-center gap-2">
+                        <Wrench className="h-4 w-4" />
+                        <span>Tools</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="knowledge" className="flex items-center gap-2">
+                        <BookCopy className="h-4 w-4" />
+                        <span>Knowledge</span>
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <TabsContent value="chat" className="focus-visible:outline-none">
+                        <div className="flex gap-4">
+                          <div className="flex-1">
+                            <CleanChatInterface
+                              messages={messages}
+                              isLoading={isLoading}
+                              inputMessage={inputMessage}
+                              setInputMessage={setInputMessage}
+                              handleSendMessage={handleSendMessage}
+                              selectedRole={selectedRole}
+                              userName={userName}
+                              canAccess={canAccess}
+                              onFileUpload={handleFileUpload}
+                              onCameraCapture={handleCameraCapture}
+                              onStartVoiceInput={handleStartVoiceInput}
+                              onStopVoiceInput={handleStopVoiceInput}
+                              isListening={isListening}
+                            />
+                          </div>
+                          
+                          {messages.length === 0 && (
+                            <div className="hidden md:block w-1/3 min-w-[250px] max-w-[300px]">
+                              <EmptyStateView 
+                                onPromptClick={(prompt) => setInputMessage(prompt)} 
+                                selectedRole={selectedRole}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="tools" className="space-y-4 focus-visible:outline-none">
+                        <EnhancedToolsTab
+                          selectedRole={selectedRole}
+                          onUseContent={handleToolContent}
+                          canAccess={canAccess}
+                        />
+                      </TabsContent>
+                      
+                      <TabsContent value="knowledge" className="focus-visible:outline-none">
+                        <RoleSpecificKnowledge
+                          selectedRole={selectedRole}
+                          canAccess={canAccess}
+                        />
+                      </TabsContent>
+                    </motion.div>
+                  </Tabs>
+                </div>
                 
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <TabsContent value="chat" className="focus-visible:outline-none">
-                    <CleanChatInterface
-                      messages={messages}
-                      isLoading={isLoading}
-                      inputMessage={inputMessage}
-                      setInputMessage={setInputMessage}
-                      handleSendMessage={handleSendMessage}
-                      selectedRole={selectedRole}
-                      userName={userName}
-                      canAccess={canAccess}
-                      onFileUpload={handleFileUpload}
-                      onCameraCapture={handleCameraCapture}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="tools" className="space-y-6 focus-visible:outline-none">
+                {showSidePanel && selectedRole === "business_owner" && (
+                  <div className="w-full lg:w-1/4">
                     <Card>
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Wrench className="h-5 w-5 text-wakti-blue" />
-                          AI Assistant Tools
-                        </CardTitle>
+                        <CardTitle className="text-sm">WAKTI System Integration</CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-6">
-                        <QuickToolsCard
+                      <CardContent>
+                        <AISystemIntegrationPanel
                           selectedRole={selectedRole}
-                          onToolSelect={handleToolContent}
+                          onExampleClick={(example) => {
+                            setInputMessage(example);
+                            setActiveTab("chat");
+                          }}
                         />
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <VoiceInteractionToolCard
-                            onSpeechRecognized={handleToolContent}
-                          />
-                          
-                          <MeetingSummaryTool onUseSummary={handleToolContent} />
-                          
-                          <EnhancedToolsTab
-                            selectedRole={selectedRole}
-                            onUseContent={handleToolContent}
-                            canAccess={canAccess}
-                            compact={true}
-                          />
-                        </div>
                       </CardContent>
                     </Card>
-                  </TabsContent>
-                  
-                  <TabsContent value="knowledge" className="focus-visible:outline-none">
-                    <RoleSpecificKnowledge
-                      selectedRole={selectedRole}
-                      canAccess={canAccess}
-                    />
-                  </TabsContent>
-                </motion.div>
-              </Tabs>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

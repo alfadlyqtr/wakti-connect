@@ -7,12 +7,14 @@ interface AIAssistantMouthAnimationProps {
   isActive: boolean;
   size?: 'small' | 'medium' | 'large';
   mood?: 'neutral' | 'happy' | 'thinking';
+  isSpeaking?: boolean;
 }
 
 export function AIAssistantMouthAnimation({
   isActive,
   size = 'small',
-  mood = 'neutral'
+  mood = 'neutral',
+  isSpeaking = false
 }: AIAssistantMouthAnimationProps) {
   // Size mapping
   const sizeClasses = {
@@ -25,6 +27,7 @@ export function AIAssistantMouthAnimation({
     <div 
       className={cn(
         'rounded-full bg-wakti-blue flex items-center justify-center',
+        isSpeaking && 'animate-pulse',
         sizeClasses[size]
       )}
     >
