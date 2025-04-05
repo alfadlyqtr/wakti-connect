@@ -1,3 +1,4 @@
+
 // AI Assistant role types - must match what's in the database
 export type AIAssistantRole = "student" | "business_owner" | "general" | "employee" | "writer";
 
@@ -60,10 +61,10 @@ export const RoleContexts: Record<AIAssistantRole, {
       "Create a task for my essay due next week"
     ],
     quickTools: [
-      { name: "Homework Helper", description: "Get help with assignments", icon: "BookOpen" },
       { name: "Study Planner", description: "Create study schedules", icon: "Calendar" },
       { name: "Note Summarizer", description: "Summarize your notes", icon: "FileText" },
-      { name: "Research Assistant", description: "Help with research", icon: "Search" }
+      { name: "Research Assistant", description: "Find academic sources", icon: "Search" },
+      { name: "Concept Explainer", description: "Break down complex topics", icon: "BookOpen" }
     ]
   },
   "business_owner": {
@@ -85,8 +86,8 @@ export const RoleContexts: Record<AIAssistantRole, {
     quickTools: [
       { name: "Staff Scheduler", description: "Organize staff schedules", icon: "Users" },
       { name: "Business Analytics", description: "Review performance metrics", icon: "BarChart" },
-      { name: "Customer Service", description: "Manage customer interactions", icon: "HeartHandshake" },
-      { name: "Service Manager", description: "Optimize your services", icon: "Settings" }
+      { name: "Customer Service", description: "Manage interactions", icon: "HeartHandshake" },
+      { name: "Service Manager", description: "Business operations", icon: "Settings" }
     ]
   },
   "general": {
@@ -106,10 +107,10 @@ export const RoleContexts: Record<AIAssistantRole, {
       "How can I improve my productivity?"
     ],
     quickTools: [
-      { name: "Day Planner", description: "Plan your daily schedule", icon: "Calendar" },
-      { name: "Task Creator", description: "Create and organize tasks", icon: "CheckSquare" },
-      { name: "Event Organizer", description: "Manage your events", icon: "CalendarClock" },
-      { name: "Quick Answer", description: "Get instant information", icon: "HelpCircle" }
+      { name: "Day Planner", description: "Plan your schedule", icon: "Calendar" },
+      { name: "Task Creator", description: "Create tasks & reminders", icon: "CheckSquare" },
+      { name: "Quick Answer", description: "Get instant information", icon: "HelpCircle" },
+      { name: "Idea Generator", description: "Creative solutions", icon: "Lightbulb" }
     ]
   },
   "employee": {
@@ -129,10 +130,10 @@ export const RoleContexts: Record<AIAssistantRole, {
       "What's on my agenda for today?"
     ],
     quickTools: [
-      { name: "Time Tracker", description: "Track your work hours", icon: "Clock" },
-      { name: "Task Reporter", description: "Report completed tasks", icon: "ClipboardCheck" },
-      { name: "Meeting Organizer", description: "Organize team meetings", icon: "Users" },
-      { name: "Work Log", description: "Log your daily work", icon: "FileText" }
+      { name: "Email Composer", description: "Craft professional emails", icon: "FileText" },
+      { name: "Content Creator", description: "Create written content", icon: "Edit" },
+      { name: "Creative Writing", description: "Generate creative text", icon: "Mic" },
+      { name: "Meeting Organizer", description: "Plan effective meetings", icon: "Users" }
     ]
   },
   "writer": {

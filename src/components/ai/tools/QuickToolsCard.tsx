@@ -55,7 +55,6 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
       case "BarChart": return <BarChart className="h-5 w-5" />;
       case "HeartHandshake": return <HeartHandshake className="h-5 w-5" />;
       case "Settings": return <Settings className="h-5 w-5" />;
-      case "CalendarClock": return <Calendar className="h-5 w-5" />;
       case "Mic": return <Mic className="h-5 w-5" />;
       case "FileType": return <FileType className="h-5 w-5" />;
       case "List": return <List className="h-5 w-5" />;
@@ -75,6 +74,14 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
   if (!roleContext.quickTools || roleContext.quickTools.length === 0) {
     return null;
   }
+
+  const roleTitle = {
+    general: "Productivity Tools",
+    student: "Study Tools",
+    employee: "Creative Tools",
+    writer: "Writing Tools",
+    business_owner: "Business Tools"
+  }[selectedRole] || "Quick Tools";
 
   // For the right sidebar panel, display without the card wrapper
   if (compact) {
@@ -100,25 +107,42 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
 
   // For the full card view
   return (
-    <div className="space-y-2">
-      <div className="grid grid-cols-2 gap-2">
-        {roleContext.quickTools.map((tool, index) => (
-          <Button
-            key={index}
-            variant="outline"
-            className="h-auto py-3 px-4 flex flex-col items-center justify-center text-center gap-2"
-            onClick={() => handleToolClicked(tool.description)}
-          >
-            <div className="text-wakti-blue">
-              {getIconByName(tool.icon)}
-            </div>
-            <div className="flex flex-col">
-              <span className="font-medium">{tool.name}</span>
-              <span className="text-xs text-muted-foreground">{tool.description}</span>
-            </div>
-          </Button>
-        ))}
-      </div>
-    </div>
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          {selectedRole === "student" ? (
+            <BookOpen className="h-4 w-4" />
+          ) : selectedRole === "employee" || selectedRole === "writer" ? (
+            <Edit className="h-4 w-4" />
+          ) : selectedRole === "business_owner" ? (
+            <BarChart className="h-4 w-4" />
+          ) : (
+            <CheckSquare className="h-4 w-4" />
+          )}
+          {roleTitle}
+        </CardTitle>
+        <CardDescription className="text-xs">
+          Role-specific tools for {roleContext.title.toLowerCase()}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="p-3">
+        <div className="grid grid-cols-2 gap-2">
+          {roleContext.quickTools.map((tool, index) => (
+            <Button
+              key={index}
+              variant="outline"
+              size="sm"
+              className="h-auto py-2 px-3 flex flex-col items-center justify-center text-center"
+              onClick={() => handleToolClicked(tool.description)}
+            >
+              <div className="text-wakti-blue mb-1">
+                {getIconByName(tool.icon)}
+              </div>
+              <span className="text-xs font-medium">{tool.name}</span>
+            </Button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
-};
+}

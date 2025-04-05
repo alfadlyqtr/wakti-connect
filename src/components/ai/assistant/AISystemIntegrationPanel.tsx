@@ -3,7 +3,7 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { 
-  Calendar, CheckSquare, User, BarChart2, CircleDollarSign, 
+  Calendar, User, BarChart2, CircleDollarSign, 
   BriefcaseBusiness, Brain, Clock, MessageSquare
 } from 'lucide-react';
 import { SystemCommands, AIAssistantRole } from '@/types/ai-assistant.types';
@@ -17,6 +17,11 @@ export const AISystemIntegrationPanel: React.FC<AISystemIntegrationPanelProps> =
   selectedRole,
   onExampleClick
 }) => {
+  // Only show the business integration panel for business_owner role
+  if (selectedRole !== 'business_owner') {
+    return null;
+  }
+  
   // Filter commands based on user role to show most relevant ones first
   const getFilteredCommands = () => {
     const relevantCommands = { ...SystemCommands };
@@ -31,16 +36,14 @@ export const AISystemIntegrationPanel: React.FC<AISystemIntegrationPanelProps> =
     // Sort commands based on role relevance
     let commandKeys = Object.keys(relevantCommands);
     
-    if (selectedRole === 'business_owner') {
-      // Prioritize business-related commands
-      commandKeys = [
-        'manage_staff',
-        'view_analytics',
-        'view_bookings',
-        'check_business',
-        ...commandKeys.filter(k => !['manage_staff', 'view_analytics', 'view_bookings', 'check_business'].includes(k))
-      ];
-    }
+    // Prioritize business-related commands
+    commandKeys = [
+      'manage_staff',
+      'view_analytics',
+      'view_bookings',
+      'check_business',
+      ...commandKeys.filter(k => !['manage_staff', 'view_analytics', 'view_bookings', 'check_business'].includes(k))
+    ];
     
     // Create sorted object
     const sortedCommands: typeof relevantCommands = {};
