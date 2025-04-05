@@ -7,6 +7,8 @@ import { AIAssistantSettings } from "@/components/settings/ai/AIAssistantSetting
 import { AIUpgradeRequired } from "@/components/ai/AIUpgradeRequired";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
 import { QuickToolsCard } from "./QuickToolsCard";
+import { ImageGenerationToolCard } from "./ImageGenerationToolCard";
+import { ImageTransformationToolCard } from "./ImageTransformationToolCard";
 
 interface AIToolsTabContentProps {
   canAccess: boolean;
@@ -40,6 +42,14 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
           onUseDocumentContent={onUseDocumentContent}
         />
         <MeetingSummaryTool onUseSummary={onUseDocumentContent} />
+      </div>
+
+      {/* Image Tools Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ImageGenerationToolCard 
+          onPromptUse={onUseDocumentContent}
+        />
+        <ImageTransformationToolCard />
       </div>
     </div>
   );
