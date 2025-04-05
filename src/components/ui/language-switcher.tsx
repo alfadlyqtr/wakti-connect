@@ -22,7 +22,7 @@ export function LanguageSwitcher() {
       document.body.classList.remove('font-arabic');
     }
     
-    // Save the language preference in local storage
+    // Save the language preference in local storage with consistent key name
     localStorage.setItem('wakti-language', language);
   };
 
@@ -31,10 +31,12 @@ export function LanguageSwitcher() {
     // Try to load language preference from local storage first
     const savedLanguage = localStorage.getItem('wakti-language');
     if (savedLanguage && savedLanguage !== i18n.language) {
+      console.log('Applying saved language from localStorage:', savedLanguage);
       i18n.changeLanguage(savedLanguage);
     }
     
     const currentLang = i18n.language;
+    console.log('Current language:', currentLang);
     if (currentLang === 'ar' && document.documentElement.dir !== 'rtl') {
       document.documentElement.dir = 'rtl';
       document.documentElement.lang = 'ar';

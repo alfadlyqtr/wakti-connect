@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TaskPriority } from "@/types/task.types";
+import { useTranslation } from "react-i18next";
 
 interface TaskCardHeaderProps {
   title: string;
@@ -23,6 +24,8 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
   isRecurring,
   isCompleted,
 }) => {
+  const { t } = useTranslation();
+  
   const getPriorityIcon = () => {
     switch (priority) {
       case "urgent":
@@ -50,13 +53,13 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
         <div className="flex items-center mt-1 gap-2">
           <span className="flex items-center gap-1 text-xs">
             {getPriorityIcon()}
-            <span className="capitalize">{priority}</span>
+            <span className="capitalize">{t(`task.priority.${priority}`)}</span>
           </span>
           
           {isRecurring && (
             <span className="flex items-center gap-1 text-xs text-muted-foreground">
               <RepeatIcon className="h-3 w-3" />
-              <span>Recurring</span>
+              <span>{t('recurring.makeRecurring')}</span>
             </span>
           )}
         </div>

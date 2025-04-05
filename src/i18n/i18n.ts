@@ -37,6 +37,7 @@ i18n
 
 // Set the HTML dir attribute based on the current language
 const setDocumentDirection = (language: string) => {
+  console.log('Setting document direction for language:', language);
   document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
   document.documentElement.lang = language; // Set the language attribute
   if (language === 'ar') {
@@ -51,6 +52,7 @@ const setDocumentDirection = (language: string) => {
 // Check for saved language preference
 const savedLanguage = localStorage.getItem('wakti-language');
 if (savedLanguage) {
+  console.log('Found saved language in i18n initialization:', savedLanguage);
   i18n.changeLanguage(savedLanguage);
   setDocumentDirection(savedLanguage);
 }
@@ -60,6 +62,7 @@ setDocumentDirection(i18n.language);
 
 // Listen for language changes
 i18n.on('languageChanged', (lng) => {
+  console.log('Language changed to:', lng);
   setDocumentDirection(lng);
 });
 
