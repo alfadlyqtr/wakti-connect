@@ -19,17 +19,19 @@ import { AIRoleSelector } from "@/components/ai/assistant/AIRoleSelector";
 import { useSpeechRecognition } from "@/hooks/ai/useSpeechRecognition";
 import { Button } from "@/components/ui/button";
 import { EmptyStateView } from "@/components/ai/assistant/EmptyStateView";
+import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
 import { 
   MessageSquare, 
   Wrench, 
   BookCopy,
   Bot,
-  Camera
+  Camera,
+  Settings,
+  Cpu
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
 
 declare global {
   class ImageCapture {
@@ -422,24 +424,25 @@ const DashboardAIAssistant = () => {
                   </Tabs>
                 </div>
                 
-                {showSidePanel && selectedRole === "business_owner" && (
-                  <div className="w-full lg:w-1/4">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-sm">WAKTI System Integration</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <AISystemIntegrationPanel
-                          selectedRole={selectedRole}
-                          onExampleClick={(example) => {
-                            setInputMessage(example);
-                            setActiveTab("chat");
-                          }}
-                        />
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
+                <div className="w-full lg:w-1/4">
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Cpu className="h-4 w-4" /> 
+                        WAKTI System Integration
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <AISystemIntegrationPanel
+                        selectedRole={selectedRole}
+                        onExampleClick={(example) => {
+                          setInputMessage(example);
+                          setActiveTab("chat");
+                        }}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </div>
           )}

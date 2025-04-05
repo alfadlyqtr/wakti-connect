@@ -4,6 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Mic, MicOff, Send, Loader2, Camera, Upload } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 
 interface MessageInputFormProps {
   inputMessage: string;
@@ -98,25 +104,33 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       className="border-t p-2 flex flex-col gap-2"
     >
       <div className="flex gap-2">
-        {/* Speech-to-Text toggle */}
+        {/* Speech-to-Text toggle with tooltip */}
         {recognitionSupported && onStartListening && onStopListening && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "flex-shrink-0",
-              isListening && "bg-red-100 text-red-800"
-            )}
-            onClick={handleMicrophoneToggle}
-            title={isListening ? "Stop Listening" : "Start Listening"}
-          >
-            {isListening ? (
-              <MicOff className="h-5 w-5" />
-            ) : (
-              <Mic className="h-5 w-5" />
-            )}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant={isListening ? "destructive" : "ghost"}
+                  size="icon"
+                  className={cn(
+                    "flex-shrink-0",
+                    isListening && "bg-red-100 animate-pulse"
+                  )}
+                  onClick={handleMicrophoneToggle}
+                >
+                  {isListening ? (
+                    <MicOff className="h-5 w-5" />
+                  ) : (
+                    <Mic className="h-5 w-5" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isListening ? "Stop voice input" : "Start voice input"}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
 
         {/* File Upload */}
@@ -129,31 +143,43 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
               className="hidden"
               accept="image/*,.pdf,.doc,.docx,.txt"
             />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={handleFileUploadClick}
-              disabled={isLoading || isUploading}
-              title="Upload File"
-            >
-              <Upload className="h-5 w-5" />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleFileUploadClick}
+                    disabled={isLoading || isUploading}
+                  >
+                    <Upload className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Upload file</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </>
         )}
 
         {/* Camera Capture */}
         {onCameraCapture && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={handleCameraCaptureClick}
-            disabled={isLoading || isUploading}
-            title="Capture from Camera"
-          >
-            <Camera className="h-5 w-5" />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCameraCaptureClick}
+                  disabled={isLoading || isUploading}
+                >
+                  <Camera className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Capture image</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
       </div>
 
@@ -164,7 +190,9 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
           placeholder={
             !canAccess
               ? "Upgrade to use the AI Assistant"
-              : "Type your message here..."
+              : isListening 
+                ? "Listening for your voice..." 
+                : "Type your message here..."
           }
           disabled={!canAccess || isLoading}
           className="min-h-[60px] max-h-[200px] flex-1 resize-none"
@@ -210,4 +238,4 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       )}
     </form>
   );
-}
+};

@@ -15,8 +15,24 @@ export const AIRoleSelector: React.FC<AIRoleSelectorProps> = ({
   onRoleChange,
   compact = false
 }) => {
+  // Handle the combined Work/Creator role
+  const handleRoleChange = (newRole: string) => {
+    // Map the combined work_creator role to employee
+    if (newRole === "work_creator") {
+      onRoleChange("employee");
+    } else {
+      onRoleChange(newRole as AIAssistantRole);
+    }
+  };
+
+  // Check if current role is either employee or writer for the combined tab
+  const isWorkCreatorActive = selectedRole === "employee" || selectedRole === "writer";
+
   return (
-    <Tabs value={selectedRole} onValueChange={(val) => onRoleChange(val as AIAssistantRole)}>
+    <Tabs 
+      value={isWorkCreatorActive ? "work_creator" : selectedRole} 
+      onValueChange={handleRoleChange}
+    >
       <TabsList className={`grid grid-cols-4 w-full ${compact ? 'px-1 py-0.5' : ''}`}>
         <TabsTrigger value="general" className="flex items-center gap-1 text-xs sm:text-sm">
           <Bot className="h-4 w-4" />
@@ -26,7 +42,7 @@ export const AIRoleSelector: React.FC<AIRoleSelectorProps> = ({
           <BookOpen className="h-4 w-4" />
           <span className={compact ? "hidden" : "hidden sm:inline"}>Student</span>
         </TabsTrigger>
-        <TabsTrigger value="employee" className="flex items-center gap-1 text-xs sm:text-sm">
+        <TabsTrigger value="work_creator" className="flex items-center gap-1 text-xs sm:text-sm">
           <Users className="h-4 w-4" />
           <span className={compact ? "hidden" : "hidden sm:inline"}>Work/Creator</span>
         </TabsTrigger>

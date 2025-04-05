@@ -19,6 +19,7 @@ interface CleanChatInterfaceProps {
   onStartVoiceInput?: () => void;
   onStopVoiceInput?: () => void;
   isListening?: boolean;
+  showSuggestions?: boolean;
 }
 
 export function CleanChatInterface({
@@ -35,6 +36,7 @@ export function CleanChatInterface({
   onStartVoiceInput,
   onStopVoiceInput,
   isListening = false,
+  showSuggestions = false,
 }: CleanChatInterfaceProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
