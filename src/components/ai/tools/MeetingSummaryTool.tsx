@@ -430,7 +430,7 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     const isArabicText = /[\u0600-\u06FF]/.test(text);
     
     if (isArabicText) {
-      // Arabic location detection patterns
+      // Arabic location patterns
       const arabicLocationPatterns = [
         // Simplified Arabic location patterns - in a real implementation these would be more comprehensive
         /(?:الاجتماع|موقع|مكان).*?(?:في|ب).*?([ء-ي\s]+)/i,
@@ -798,8 +798,7 @@ ${detectedLocation ? `- **Location**: ${detectedLocation}` : ''}
       contentDiv.style.lineHeight = '1.6';
       
       // Style the content with enhanced formatting
-      let styledContent = summaryRef.current.innerHTML
+      let styledContent = summary
         // Style headings
-        .replace(/<h2 class="[^"]*">(.*?)<\/h2>/g, 
-          '<h2 style="color: #0053c3; font-size: 20px; margin-top: 30px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid #e9ecef;">$1</h2>')
-        .
+        .replace(/^## (.*)/gm, '<h2 style="color: #0053c3; font-size: 20px; margin-top: 30px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid #e9ecef;">$1</h2>')
+        .replace(/^### (.*)/gm, '<h3 style="color: #0
