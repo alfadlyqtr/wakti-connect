@@ -1,10 +1,5 @@
 
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.43.2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,23 +13,30 @@ serve(async (req) => {
   }
 
   try {
-    const { apiKey } = await req.json()
+    // No need to request the API key from the frontend
+    // Just use the one stored in the Edge Function secrets
+    const apiKey = Deno.env.get('OPENAI_API_KEY');
+    
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ 
+          valid: false, 
+          message: 'OpenAI API key not configured',
+          details: 'The OPENAI_API_KEY is not set in the Edge Function secrets'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
     
     // Create a simple test request to OpenAI API
-    const url = 'https://api.openai.com/v1/chat/completions'
-    const testBody = JSON.stringify({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: "Hi" }],
-      max_tokens: 5
-    })
+    const url = 'https://api.openai.com/v1/models'
     
     const openaiResponse = await fetch(url, {
-      method: 'POST',
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
-      },
-      body: testBody
+      }
     })
     
     // Check if the API key is valid

@@ -152,7 +152,7 @@ serve(async (req) => {
         }
       );
     }
-
+    
     // Check if OpenAI API key is available
     const apiKey = Deno.env.get('OPENAI_API_KEY');
     if (!apiKey) {
@@ -169,36 +169,7 @@ serve(async (req) => {
       );
     }
     
-    // Validate API key format
-    if (!apiKey.startsWith('sk-') || apiKey.length < 20) {
-      console.error("OPENAI_API_KEY format validation failed");
-      return new Response(
-        JSON.stringify({ 
-          error: 'OpenAI API key appears to be invalid',
-          details: "Please check the format of your OpenAI API key"
-        }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-    
     console.log("Processing audio data with language:", language);
-    
-    // Validate minimum audio length
-    if (audio.length < 100) {
-      console.warn("Audio data is too short");
-      return new Response(
-        JSON.stringify({ 
-          text: "",
-          warning: "Audio is too short to transcribe" 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
     
     // Process audio in chunks
     let binaryAudio;
@@ -213,20 +184,6 @@ serve(async (req) => {
         }),
         { 
           status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-    
-    // Simple validation to ensure we have valid audio data
-    if (binaryAudio.length < 1000) {
-      console.warn("Processed audio is too small:", binaryAudio.length, "bytes");
-      return new Response(
-        JSON.stringify({ 
-          text: "",
-          warning: "Audio is too short to transcribe" 
-        }),
-        { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
@@ -261,20 +218,6 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`OpenAI API error: ${errorText}`);
-      
-      // Special handling for "audio file is too short" error
-      if (errorText.includes('audio_too_short')) {
-        return new Response(
-          JSON.stringify({ 
-            text: "",
-            warning: "Audio is too short to transcribe" 
-          }),
-          { 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
-      
       return new Response(
         JSON.stringify({ 
           error: `OpenAI API error: ${errorText}`,

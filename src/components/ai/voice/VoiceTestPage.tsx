@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { AIVoiceVisualizer } from '../animation/AIVoiceVisualizer';
 import { AIAssistantMouthAnimation } from '../animation/AIAssistantMouthAnimation';
-import { Mic, MicOff } from 'lucide-react';
+import { Mic, MicOff, RefreshCcw } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 export const VoiceTestPage = () => {
@@ -16,7 +16,9 @@ export const VoiceTestPage = () => {
   const { toast } = useToast();
   const { 
     toggleAutoSilenceDetection, 
-    autoSilenceDetection 
+    autoSilenceDetection, 
+    language, 
+    setLanguage 
   } = useVoiceSettings();
   
   const {
@@ -25,34 +27,56 @@ export const VoiceTestPage = () => {
     supportsVoice,
     startListening,
     stopListening,
-    apiKeyStatus
-  } = useVoiceInteraction();
+    apiKeyStatus,
+    apiKeyErrorDetails,
+    retryApiKeyValidation
+  } = useVoiceInteraction({
+    onTranscriptComplete: (text) => {
+      if (text) {
+        setTestResult(text);
+      }
+    }
+  });
   
   const handleApiTest = async () => {
     try {
       const testResults = [];
       
-      // Test speech recognition
+      // Test API connection
       toast({
-        title: "Testing voice recognition...",
-        description: "Checking connection to OpenAI Speech-to-Text API"
+        title: "Testing OpenAI connection...",
+        description: "Verifying OpenAI API key"
       });
       
-      const recognitionResponse = await fetch('/api/v1/ai-voice-to-text', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          test: true 
-        })
-      });
+      const success = await retryApiKeyValidation();
       
-      const recognitionData = await recognitionResponse.json();
-      if (recognitionData.success) {
-        testResults.push("✅ Voice-to-Text API connection successful");
+      if (success) {
+        testResults.push("✅ OpenAI API key is valid");
+        
+        // Test speech recognition
+        toast({
+          title: "Testing voice recognition...",
+          description: "Checking connection to OpenAI Speech-to-Text API"
+        });
+        
+        const recognitionResponse = await fetch('/api/v1/ai-voice-to-text', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            test: true 
+          })
+        });
+        
+        const recognitionData = await recognitionResponse.json();
+        if (recognitionData.success) {
+          testResults.push("✅ Voice-to-Text API connection successful");
+        } else {
+          testResults.push(`❌ Voice-to-Text API error: ${recognitionData.error || 'Unknown error'}`);
+        }
       } else {
-        testResults.push(`❌ Voice-to-Text API error: ${recognitionData.error || 'Unknown error'}`);
+        testResults.push(`❌ OpenAI API key is invalid or not configured: ${apiKeyErrorDetails || 'Unknown error'}`);
       }
       
       // Show final results
@@ -88,10 +112,19 @@ export const VoiceTestPage = () => {
             <div className="text-sm p-3 bg-muted rounded-md">
               {apiKeyStatus === 'checking' && "Checking API connection..."}
               {apiKeyStatus === 'valid' && "✅ OpenAI API key is valid"}
-              {apiKeyStatus === 'invalid' && "❌ OpenAI API key is invalid or has restricted access"}
+              {apiKeyStatus === 'invalid' && (
+                <div className="flex items-center gap-2">
+                  <div className="text-destructive">❌ OpenAI API key is invalid or has restricted access</div>
+                  <Button size="sm" variant="outline" onClick={retryApiKeyValidation}>
+                    <RefreshCcw className="h-3 w-3 mr-1" />
+                    Retry
+                  </Button>
+                </div>
+              )}
               {apiKeyStatus === 'unknown' && "⚠️ OpenAI API key status unknown"}
+              {apiKeyErrorDetails && <p className="text-xs mt-1 text-destructive">{apiKeyErrorDetails}</p>}
             </div>
-            <Button onClick={handleApiTest} variant="outline" size="sm">
+            <Button onClick={handleApiTest} variant="outline" size="sm" className="mt-2">
               Test API Connection
             </Button>
           </div>
@@ -111,12 +144,38 @@ export const VoiceTestPage = () => {
                 onCheckedChange={toggleAutoSilenceDetection}
               />
             </div>
+            
+            {/* Language toggle */}
+            <div className="flex items-center justify-between space-x-2 mt-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="language-select">Recognition Language</Label>
+                <p className="text-[0.8rem] text-muted-foreground">
+                  Select the language for voice recognition
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button 
+                  size="sm" 
+                  variant={language === 'en' ? "default" : "outline"}
+                  onClick={() => setLanguage('en')}
+                >
+                  English
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant={language === 'ar' ? "default" : "outline"}
+                  onClick={() => setLanguage('ar')}
+                >
+                  Arabic
+                </Button>
+              </div>
+            </div>
           </div>
           
           <div className="flex items-center justify-center py-4 space-y-2">
             <div className="flex flex-col items-center gap-3">
-              <AIAssistantMouthAnimation isActive={true} size="medium" />
-              <AIVoiceVisualizer isActive={true} />
+              <AIAssistantMouthAnimation isActive={isListening} size="medium" />
+              <AIVoiceVisualizer isActive={isListening} />
             </div>
           </div>
   
@@ -141,7 +200,7 @@ export const VoiceTestPage = () => {
             
             {isListening && (
               <div className="text-sm p-3 bg-muted rounded-md h-24 overflow-y-auto">
-                <p className="font-medium">Listening...</p>
+                <p className="font-medium">Listening in {language === 'en' ? 'English' : 'Arabic'}...</p>
                 {transcript && (
                   <p className="text-muted-foreground">{transcript}</p>
                 )}

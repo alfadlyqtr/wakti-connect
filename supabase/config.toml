@@ -38,3 +38,5 @@ verify_jwt = true
 verify_jwt = true
 [functions.test-openai-connection]
 verify_jwt = true
+[functions.ai-voice-to-text]
+verify_jwt = true
