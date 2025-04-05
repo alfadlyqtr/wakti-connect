@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { generateMapEmbedUrl, GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl, getMapsApiKey } from "@/config/maps";
+import { generateMapEmbedUrl, generateGoogleMapsUrl, getMapsApiKey } from "@/config/maps";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
