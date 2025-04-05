@@ -20,7 +20,14 @@ import {
   Settings,
   Mic,
   FileType,
-  List
+  List,
+  ScrollText,
+  Book,
+  GraduationCap,
+  Mail,
+  MessageCircle,
+  Pen,
+  Code
 } from "lucide-react";
 
 interface QuickToolsCardProps {
@@ -36,7 +43,47 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
   onToolSelect,
   compact = false
 }) => {
-  const roleContext = RoleContexts[selectedRole];
+  // Define role-specific unique tools
+  const getRoleSpecificTools = () => {
+    switch (selectedRole) {
+      case 'general':
+        return [
+          { name: "Task Planner", description: "Help me plan my tasks for today", icon: "CheckSquare" },
+          { name: "Reminder", description: "Set a reminder for an important event", icon: "Calendar" },
+          { name: "Notes", description: "Help me write notes about this topic", icon: "FileText" },
+          { name: "Schedule", description: "Organize my day schedule", icon: "Clock" }
+        ];
+      case 'student':
+        return [
+          { name: "Study Plan", description: "Create a study plan for my exam", icon: "Book" },
+          { name: "Assignment", description: "Help me with my assignment", icon: "GraduationCap" },
+          { name: "Research", description: "Help me research this topic", icon: "Search" },
+          { name: "Notes", description: "Summarize my lecture notes", icon: "FileText" }
+        ];
+      case 'employee':
+      case 'writer':
+        return [
+          { name: "Email", description: "Help me write a professional email", icon: "Mail" },
+          { name: "Content", description: "Create content for my project", icon: "Edit" },
+          { name: "Message", description: "Draft a message to my colleague", icon: "MessageCircle" },
+          { name: "Creative", description: "Help me write something creative", icon: "Pen" }
+        ];
+      case 'business_owner':
+        return [
+          { name: "Analytics", description: "Analyze my business performance", icon: "BarChart" },
+          { name: "Team Tasks", description: "Assign tasks to my team", icon: "Users" },
+          { name: "Marketing", description: "Help with marketing content", icon: "Lightbulb" },
+          { name: "Reports", description: "Generate a business report", icon: "ScrollText" }
+        ];
+      default:
+        return [
+          { name: "Task Planner", description: "Help me plan my tasks for today", icon: "CheckSquare" },
+          { name: "Notes", description: "Help me write notes about this topic", icon: "FileText" },
+          { name: "Reminder", description: "Set a reminder for an important event", icon: "Calendar" },
+          { name: "Schedule", description: "Organize my day schedule", icon: "Clock" }
+        ];
+    }
+  };
   
   // Function to get Lucide icon by name
   const getIconByName = (iconName: string) => {
@@ -44,15 +91,22 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
       case "Calendar": return <Calendar className="h-5 w-5" />;
       case "CheckSquare": return <CheckSquare className="h-5 w-5" />;
       case "FileText": return <FileText className="h-5 w-5" />;
-      case "HelpCircle": return <HelpCircle className="h-5 w-5" />;
-      case "Users": return <Users className="h-5 w-5" />;
       case "Clock": return <Clock className="h-5 w-5" />;
-      case "ClipboardCheck": return <ClipboardCheck className="h-5 w-5" />;
-      case "Lightbulb": return <Lightbulb className="h-5 w-5" />;
-      case "Edit": return <Edit className="h-5 w-5" />;
+      case "Users": return <Users className="h-5 w-5" />;
+      case "Book": return <Book className="h-5 w-5" />;
+      case "GraduationCap": return <GraduationCap className="h-5 w-5" />;
       case "Search": return <Search className="h-5 w-5" />;
-      case "BookOpen": return <BookOpen className="h-5 w-5" />;
+      case "Mail": return <Mail className="h-5 w-5" />;
+      case "Edit": return <Edit className="h-5 w-5" />;
+      case "MessageCircle": return <MessageCircle className="h-5 w-5" />;
+      case "Pen": return <Pen className="h-5 w-5" />;
       case "BarChart": return <BarChart className="h-5 w-5" />;
+      case "Lightbulb": return <Lightbulb className="h-5 w-5" />;
+      case "ScrollText": return <ScrollText className="h-5 w-5" />;
+      case "Code": return <Code className="h-5 w-5" />;
+      case "ClipboardCheck": return <ClipboardCheck className="h-5 w-5" />;
+      case "HelpCircle": return <HelpCircle className="h-5 w-5" />;
+      case "BookOpen": return <BookOpen className="h-5 w-5" />;
       case "HeartHandshake": return <HeartHandshake className="h-5 w-5" />;
       case "Settings": return <Settings className="h-5 w-5" />;
       case "Mic": return <Mic className="h-5 w-5" />;
@@ -71,23 +125,14 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
     }
   };
 
-  if (!roleContext.quickTools || roleContext.quickTools.length === 0) {
-    return null;
-  }
-
-  const roleTitle = {
-    general: "Productivity Tools",
-    student: "Study Tools",
-    employee: "Creative Tools",
-    writer: "Writing Tools",
-    business_owner: "Business Tools"
-  }[selectedRole] || "Quick Tools";
+  // Get tools based on role
+  const roleTools = getRoleSpecificTools();
 
   // For the right sidebar panel, display without the card wrapper
   if (compact) {
     return (
       <div className="grid grid-cols-2 gap-2">
-        {roleContext.quickTools.slice(0, 4).map((tool, index) => (
+        {roleTools.map((tool, index) => (
           <Button
             key={index}
             variant="outline"
@@ -104,6 +149,24 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
       </div>
     );
   }
+
+  // Get role title
+  const roleTitle = {
+    general: "General Tools",
+    student: "Study Tools",
+    employee: "Creative Tools",
+    writer: "Creative Tools",
+    business_owner: "Business Tools"
+  }[selectedRole] || "Quick Tools";
+
+  // Get role description
+  const roleDescription = {
+    general: "Everyday productivity and organization",
+    student: "Academic and learning assistance",
+    employee: "Professional content creation",
+    writer: "Professional content creation",
+    business_owner: "Business management and analytics"
+  }[selectedRole] || "Role-specific tools";
 
   // For the full card view
   return (
@@ -122,12 +185,12 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
           {roleTitle}
         </CardTitle>
         <CardDescription className="text-xs">
-          Role-specific tools for {roleContext.title.toLowerCase()}
+          {roleDescription}
         </CardDescription>
       </CardHeader>
       <CardContent className="p-3">
         <div className="grid grid-cols-2 gap-2">
-          {roleContext.quickTools.map((tool, index) => (
+          {roleTools.map((tool, index) => (
             <Button
               key={index}
               variant="outline"
@@ -145,4 +208,4 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
       </CardContent>
     </Card>
   );
-}
+};

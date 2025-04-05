@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AIAssistantChatCard } from "../assistant/AIAssistantChatCard";
@@ -38,14 +37,11 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
   activeTab,
   setActiveTab
 }) => {
-  // Function to handle document content being used in the chat
   const handleUseDocumentContent = (content: string) => {
     setInputMessage(content);
-    // Switch to chat tab
     setActiveTab("chat");
   };
 
-  // Get role-specific color
   const getRoleColor = () => {
     switch (selectedRole) {
       case "student": return "from-blue-600 to-blue-500";
@@ -58,7 +54,6 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
 
   return (
     <div className="flex flex-col space-y-4 w-full">
-      {/* Header with animated highlight */}
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
