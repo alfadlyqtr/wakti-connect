@@ -1,56 +1,35 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AIAssistantRole } from '@/types/ai-assistant.types'; 
-import { AIUpgradeRequired } from '@/components/ai/AIUpgradeRequired';
-import { DocumentUploadTool } from './DocumentUploadTool';
-import { ImageGenerationToolCard } from './ImageGenerationToolCard';
-import { ImageTransformationToolCard } from './ImageTransformationToolCard';
+import React from "react";
+import { AIToolsTabContent } from "./AIToolsTabContent";
+import { AIAssistantRole } from "@/types/ai-assistant.types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Wrench } from "lucide-react";
 
 interface EnhancedToolsTabProps {
   selectedRole: AIAssistantRole;
   onUseContent: (content: string) => void;
   canAccess: boolean;
-  compact?: boolean;
 }
 
-export const EnhancedToolsTab: React.FC<EnhancedToolsTabProps> = ({ 
-  selectedRole, 
+export const EnhancedToolsTab: React.FC<EnhancedToolsTabProps> = ({
+  selectedRole,
   onUseContent,
-  canAccess,
-  compact = false
+  canAccess
 }) => {
-  if (!canAccess) {
-    return <AIUpgradeRequired />;
-  }
-
-  if (compact) {
-    return (
-      <div className="grid gap-4">
-        <ImageGenerationToolCard onPromptUse={onUseContent} />
-        <ImageTransformationToolCard />
-      </div>
-    );
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Enhanced Tools</CardTitle>
+    <Card className="w-full">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center text-xl">
+          <Wrench className="h-5 w-5 mr-2 text-wakti-blue" />
+          AI Tools
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <DocumentUploadTool 
-            canAccess={canAccess} 
-            onUseDocumentContent={onUseContent}
-            compact={true}
-          />
-          <ImageGenerationToolCard onPromptUse={onUseContent} />
-        </div>
-        
-        <div className="pt-2">
-          <ImageTransformationToolCard />
-        </div>
+      <CardContent>
+        <AIToolsTabContent 
+          canAccess={canAccess} 
+          onUseDocumentContent={onUseContent}
+          selectedRole={selectedRole}
+        />
       </CardContent>
     </Card>
   );

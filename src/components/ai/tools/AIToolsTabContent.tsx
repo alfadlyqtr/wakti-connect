@@ -8,6 +8,7 @@ import { AIAssistantSettings } from "@/components/settings/ai/AIAssistantSetting
 import { AIUpgradeRequired } from "@/components/ai/AIUpgradeRequired";
 import { ImageGenerationToolCard } from "./ImageGenerationToolCard";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
+import { QuickToolsCard } from "./QuickToolsCard";
 
 interface AIToolsTabContentProps {
   canAccess: boolean;
@@ -26,6 +27,15 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
 
   return (
     <div className="space-y-8">
+      {/* Quick Tools Section */}
+      <div className="grid grid-cols-1 gap-4">
+        <QuickToolsCard
+          selectedRole={selectedRole}
+          onToolSelect={(example) => onUseDocumentContent(example)}
+        />
+      </div>
+      
+      {/* First row of tools */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <DocumentUploadTool
           canAccess={canAccess}
@@ -34,9 +44,10 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
         <VoiceInteractionToolCard onSpeechRecognized={onUseDocumentContent} />
       </div>
       
+      {/* Second row of tools */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ImageGenerationToolCard onPromptUse={onUseDocumentContent} />
         <MeetingSummaryTool onUseSummary={onUseDocumentContent} />
+        <ImageGenerationToolCard onPromptUse={onUseDocumentContent} />
       </div>
 
       <Card>
