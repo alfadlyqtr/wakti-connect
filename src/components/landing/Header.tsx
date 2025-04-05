@@ -24,9 +24,11 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-md bg-wakti-blue flex items-center justify-center">
-              <span className="text-white font-bold text-lg">W</span>
-            </div>
+            <img 
+              src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
+              alt={t('common.wakti')} 
+              className="w-10 h-10 rounded-md object-cover"
+            />
             <span className="font-bold text-xl">{t('common.wakti')}</span>
           </Link>
         </div>

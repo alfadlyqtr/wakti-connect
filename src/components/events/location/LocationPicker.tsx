@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, MapPin } from 'lucide-react';
 import { GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from '@/config/maps';
+import { useTranslation } from 'react-i18next';
 
 // Add TypeScript types for Google Maps
 declare global {
@@ -50,8 +51,9 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   value,
   onChange,
   className = '',
-  placeholder = 'Enter a location'
+  placeholder
 }) => {
+  const { t } = useTranslation();
   const [inputValue, setInputValue] = useState(value || '');
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -125,7 +127,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             type="text"
             value={inputValue}
             onChange={handleInputChange}
-            placeholder={placeholder}
+            placeholder={placeholder || t('location.enterLocation')}
             className="pl-8"
           />
         </div>
@@ -136,6 +138,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
             size="icon"
             className="ml-2"
             onClick={() => window.open(generateGoogleMapsUrl(inputValue), '_blank')}
+            title={t('location.viewOnMap')}
           >
             <MapPin className="h-4 w-4" />
           </Button>

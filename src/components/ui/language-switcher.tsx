@@ -2,15 +2,6 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { Globe, Check } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
@@ -56,13 +47,6 @@ export function LanguageSwitcher() {
       document.body.classList.remove('font-arabic');
     }
   }, [i18n]);
-
-  const languages = [
-    { code: 'en', name: 'English', flag: 'en-flag', dir: 'ltr' },
-    { code: 'ar', name: 'العربية', flag: 'ar-flag', dir: 'rtl' }
-  ];
-
-  const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
 
   // Directly display both language options as buttons
   if (i18n.language === 'ar') {

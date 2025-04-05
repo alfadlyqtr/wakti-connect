@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
  */
 
 // Export a constant API key for immediate use
+// Note: In production, this should be replaced with a key from environment variables
 export const GOOGLE_MAPS_API_KEY = 'AIzaSyBIwzALxUPNbatRBj3X1HyELQG7xToQ3vA';
 
 /**

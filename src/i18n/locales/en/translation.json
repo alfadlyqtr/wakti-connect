@@ -1,3 +1,4 @@
+
 {
   "common": {
     "wakti": "Wakti",
@@ -20,7 +21,8 @@
     "signUp": "Sign Up",
     "logIn": "Log In",
     "logOut": "Log Out",
-    "getStarted": "Get Started"
+    "getStarted": "Get Started",
+    "scrollToTop": "Scroll to Top"
   },
   "header": {
     "pricing": "Pricing",
@@ -38,6 +40,29 @@
     "startForFree": "Start for Free",
     "seeFeatures": "See Features",
     "noCreditCard": "No credit card required • Free plan available"
+  },
+  "dashboardPreview": {
+    "title": "Dashboard Preview",
+    "description": "Beautiful and intuitive interface designed for productivity"
+  },
+  "footer": {
+    "description": "Your all-in-one productivity and business management platform.",
+    "quickLinks": "Quick Links",
+    "home": "Home",
+    "features": "Features",
+    "pricing": "Pricing",
+    "about": "About Us",
+    "contact": "Contact",
+    "legal": "Legal",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "faq": "FAQs",
+    "contactUs": "Contact Us",
+    "address": "West Bay, Doha, Qatar",
+    "email": "Email",
+    "phone": "Phone",
+    "allRightsReserved": "All rights reserved.",
+    "designedBy": "Designed and made by"
   },
   "features": {
     "title": "Everything You Need",
@@ -306,5 +331,9 @@
     "today": "Tasks Today",
     "createTask": "Create Task",
     "startWork": "Start Working"
+  },
+  "location": {
+    "enterLocation": "Enter a location",
+    "viewOnMap": "View on Map"
   }
 }
