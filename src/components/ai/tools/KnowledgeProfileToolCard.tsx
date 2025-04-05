@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SchoolBook, Briefcase, GraduationCap, Building2 } from "lucide-react";
+import { BookOpen, Briefcase, GraduationCap, Building2 } from "lucide-react";
 
 interface KnowledgeProfileToolCardProps {
   selectedRole: AIAssistantRole;
@@ -328,7 +327,7 @@ export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> =
   const getRoleIcon = () => {
     switch(selectedRole) {
       case 'student':
-        return <SchoolBook className="h-5 w-5 mr-2" />;
+        return <BookOpen className="h-5 w-5 mr-2" />;
       case 'business_owner':
         return <Briefcase className="h-5 w-5 mr-2" />;
       case 'employee':
