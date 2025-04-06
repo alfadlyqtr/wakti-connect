@@ -1,4 +1,3 @@
-
 {
   "common": {
     "cancel": "إلغاء",
@@ -141,7 +140,7 @@
       "taskScheduling": "جدولة المهام وإدارة المواعيد النهائية",
       "eventPlanning": "تخطيط الفعاليات والمناسبات",
       "staffManagement": "إدارة الموظفين ومتابعة الأداء",
-      "analyticsInsights": "تحليلات وأفكار الأعمال",
+      "analyticsInsights": "تحليلات وأفكار ��لأعمال",
       "customizablePersonality": "شخصية مخصصة قابلة للتعديل"
     },
     "tools": {
@@ -210,6 +209,50 @@
         "researchTool": "ساعدني في جمع معلومات عن اتجاهات السوق الحالية في مجال عملي"
       }
     },
+    "toolNames": {
+      "StudyPlanner": "مخطط الدراسة",
+      "NoteSummarizer": "ملخص الملاحظات",
+      "ResearchAssistant": "مساعد البحث",
+      "ConceptExplainer": "شارح المفاهيم",
+      "StaffScheduler": "جدولة الموظفين",
+      "BusinessAnalytics": "تحليلات الأعمال",
+      "CustomerService": "خدمة العملاء",
+      "ServiceManager": "إدارة الخدمات",
+      "DayPlanner": "مخطط اليوم",
+      "TaskCreator": "منشئ المهام",
+      "QuickAnswer": "إجابة سريعة",
+      "IdeaGenerator": "مولد الأفكار",
+      "EmailComposer": "منشئ البريد الإلكتروني",
+      "ContentCreator": "منشئ المحتوى",
+      "CreativeWriting": "الكتابة الإبداعية",
+      "MeetingOrganizer": "منظم الاجتماعات",
+      "ContentGenerator": "مولد المحتوى",
+      "EditorHelper": "مساعد التحرير",
+      "WritingScheduler": "جدولة الكتابة",
+      "ResearchTool": "أداة البحث"
+    },
+    "toolDescriptions": {
+      "StudyPlanner": "إنشاء جدول دراسة مخصص",
+      "NoteSummarizer": "تلخيص الملاحظات أو النصوص",
+      "ResearchAssistant": "المساعدة في إيجاد مصادر موثوقة",
+      "ConceptExplainer": "شرح المواضيع المعقدة ببساطة",
+      "StaffScheduler": "إدارة جداول الموظفين",
+      "BusinessAnalytics": "رؤى حول أداء الأعمال",
+      "CustomerService": "تحسين التواصل مع العملاء",
+      "ServiceManager": "تنظيم خدمات الأعمال",
+      "DayPlanner": "تنظيم جدولك اليومي",
+      "TaskCreator": "إنشاء وتتبع المهام",
+      "QuickAnswer": "الحصول على معلومات بسرعة",
+      "IdeaGenerator": "عصف ذهني للأفكار الإبداعية",
+      "EmailComposer": "إنشاء رسائل البريد الإلكتروني",
+      "ContentCreator": "المساعدة في وثائق العمل",
+      "CreativeWriting": "إنشاء محتوى إبداعي",
+      "MeetingOrganizer": "تخطيط اجتماعات فعالة",
+      "ContentGenerator": "إنشاء محتوى إبداعي",
+      "EditorHelper": "مراجعة وتحسين الكتابة",
+      "WritingScheduler": "تخطيط تقويم المحتوى الخاص بك",
+      "ResearchTool": "البحث عن معلومات للكتابة"
+    },
     "knowledge": {
       "aboutWakti": "عن واكتي",
       "keyFeatures": "الميزات الرئيسية",
@@ -235,7 +278,9 @@
       "professional": "المحترف",
       "creative": "المبدع",
       "general": "عام"
-    }
+    },
+    "closeSidebar": "إغلاق الشريط الجانبي",
+    "openSidebar": "فتح الشريط الجانبي"
   },
   "aiSettings": {
     "personalitySettings": "إعدادات الشخصية",
@@ -330,4 +375,3 @@
     "poweredBy": "مدعوم بواسطة"
   }
 }
-

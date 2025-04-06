@@ -4,6 +4,7 @@ import { AIToolsTabContent } from "./AIToolsTabContent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Wrench } from "lucide-react";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
+import { useTranslation } from "react-i18next";
 
 interface AIAssistantToolsCardProps {
   canAccess: boolean;
@@ -16,6 +17,8 @@ export const AIAssistantToolsCard: React.FC<AIAssistantToolsCardProps> = ({
   onUseDocumentContent,
   selectedRole,
 }) => {
+  const { t } = useTranslation();
+  
   if (!canAccess) {
     return null;
   }
@@ -25,7 +28,7 @@ export const AIAssistantToolsCard: React.FC<AIAssistantToolsCardProps> = ({
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center text-xl">
           <Wrench className="h-5 w-5 mr-2 text-wakti-blue" />
-          AI Assistant Tools
+          {t("ai.tools.title")}
         </CardTitle>
       </CardHeader>
       <CardContent>

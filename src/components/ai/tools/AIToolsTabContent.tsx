@@ -11,6 +11,7 @@ import { ImageTransformationToolCard } from "./ImageTransformationToolCard";
 import { KnowledgeProfileToolCard } from "./KnowledgeProfileToolCard";
 import { VoiceToTextTool } from "./VoiceToTextTool";
 import { VoiceInteractionToolCard } from "./VoiceInteractionToolCard";
+import { useTranslation } from "react-i18next";
 
 interface AIToolsTabContentProps {
   canAccess: boolean;
@@ -23,6 +24,8 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
   onUseDocumentContent,
   selectedRole,
 }) => {
+  const { t } = useTranslation();
+  
   if (!canAccess) {
     return <AIUpgradeRequired />;
   }

@@ -78,28 +78,38 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
     }
   };
 
+  // Get translated name and description for each tool
+  const getTranslatedToolInfo = (tool: { name: string; description: string }) => {
+    let translatedName = t(`ai.toolNames.${tool.name.replace(/\s+/g, "")}`, { defaultValue: tool.name });
+    let translatedDesc = t(`ai.toolDescriptions.${tool.name.replace(/\s+/g, "")}`, { defaultValue: tool.description });
+    
+    return {
+      name: translatedName,
+      description: translatedDesc
+    };
+  };
+
   if (inSidebar) {
     return (
       <div className="space-y-3">
-        {quickTools.map((tool, index) => (
-          <Button 
-            key={index} 
-            variant="ghost" 
-            className="w-full justify-start text-xs h-auto py-1.5 px-2"
-            onClick={() => onToolClick?.(getPromptForTool(tool.name))}
-          >
-            {getIconComponent(tool.icon)}
-            <span className="ml-2 truncate">{tool.name}</span>
-          </Button>
-        ))}
+        {quickTools.map((tool, index) => {
+          const translatedTool = getTranslatedToolInfo(tool);
+          return (
+            <Button 
+              key={index} 
+              variant="ghost" 
+              className="w-full justify-start text-xs h-auto py-1.5 px-2"
+              onClick={() => onToolClick?.(getPromptForTool(tool.name))}
+            >
+              {getIconComponent(tool.icon)}
+              <span className="ml-2 truncate">{translatedTool.name}</span>
+            </Button>
+          );
+        })}
         
         <div className="mt-3 pt-3 border-t border-border">
           <p className="text-xs text-muted-foreground">
-            {selectedRole === "student" ? t("ai.tools.quick.suggestedTools")
-             : selectedRole === "business_owner" ? t("ai.tools.quick.suggestedTools")
-             : selectedRole === "employee" ? t("ai.tools.quick.suggestedTools")
-             : selectedRole === "writer" ? t("ai.tools.quick.suggestedTools")
-             : t("ai.tools.quick.suggestedTools")}
+            {t("ai.tools.quick.suggestedTools")}
           </p>
         </div>
       </div>
@@ -111,31 +121,30 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
       <CardHeader className="pb-3">
         <CardTitle>{t("ai.tools.quick.title")}</CardTitle>
         <CardDescription>
-          {selectedRole === "student" ? t("ai.tools.quick.suggestedTools")
-           : selectedRole === "business_owner" ? t("ai.tools.quick.suggestedTools")
-           : selectedRole === "employee" || selectedRole === "writer" ? t("ai.tools.quick.suggestedTools")
-           : t("ai.tools.quick.suggestedTools")}
+          {t("ai.tools.quick.suggestedTools")}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-3">
-          {quickTools.map((tool, index) => (
-            <Button 
-              key={index} 
-              variant="outline" 
-              className="h-auto flex-col items-start p-4 justify-start text-left"
-              onClick={() => onToolSelect?.(getPromptForTool(tool.name))}
-            >
-              <div className="flex items-center mb-2">
-                {getIconComponent(tool.icon)}
-                <span className="ml-2 font-medium">{tool.name}</span>
-              </div>
-              <p className="text-xs text-muted-foreground">{tool.description}</p>
-            </Button>
-          ))}
+          {quickTools.map((tool, index) => {
+            const translatedTool = getTranslatedToolInfo(tool);
+            return (
+              <Button 
+                key={index} 
+                variant="outline" 
+                className="h-auto flex-col items-start p-4 justify-start text-left"
+                onClick={() => onToolSelect?.(getPromptForTool(tool.name))}
+              >
+                <div className="flex items-center mb-2">
+                  {getIconComponent(tool.icon)}
+                  <span className="ml-2 font-medium">{translatedTool.name}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">{translatedTool.description}</p>
+              </Button>
+            );
+          })}
         </div>
       </CardContent>
     </Card>
   );
 };
-

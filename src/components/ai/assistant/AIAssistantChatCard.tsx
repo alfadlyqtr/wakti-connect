@@ -12,6 +12,7 @@ import { AIRoleSelector } from './AIRoleSelector';
 import { getTimeBasedGreeting } from '@/lib/dateUtils';
 import { AIAssistantMouthAnimation } from '../animation/AIAssistantMouthAnimation';
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from "react-i18next";
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -41,14 +42,15 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Set to false by default to give more space to chat
+  const { t } = useTranslation();
 
   const getRoleTitle = () => {
     switch (selectedRole) {
-      case 'student': return 'Student Assistant';
-      case 'employee': return 'Creative Assistant';
-      case 'writer': return 'Creative Assistant';
-      case 'business_owner': return 'Business Assistant';
-      default: return 'AI Assistant';
+      case 'student': return t("ai.roles.student");
+      case 'employee': return t("ai.roles.employee");
+      case 'writer': return t("ai.roles.writer");
+      case 'business_owner': return t("ai.roles.business_owner");
+      default: return t("ai.roles.general");
     }
   };
 
@@ -91,8 +93,8 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
                   size="icon" 
                   onClick={clearMessages}
                   className="h-6 w-6 hover:bg-red-50 hover:text-red-500 transition-colors"
-                  aria-label="Clear chat"
-                  title="Clear chat"
+                  aria-label={t("common.delete")}
+                  title={t("common.delete")}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
@@ -114,8 +116,8 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
             size="icon"
             className="h-7 w-7 sm:h-8 sm:w-8 hover:bg-blue-50 hover:text-blue-500 transition-colors"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-            title={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+            aria-label={isSidebarOpen ? t("ai.closeSidebar") : t("ai.openSidebar")}
+            title={isSidebarOpen ? t("ai.closeSidebar") : t("ai.openSidebar")}
           >
             {isSidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
           </Button>
@@ -123,8 +125,8 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
             variant="ghost" 
             size="icon"
             className="h-7 w-7 sm:h-8 sm:w-8 hover:bg-blue-50 hover:text-blue-500 transition-colors"
-            aria-label="Settings"
-            title="Assistant Settings"
+            aria-label={t("settings.title")}
+            title={t("aiSettings.personalitySettings")}
           >
             <Settings className="h-4 w-4" />
           </Button>
