@@ -1,4 +1,3 @@
-
 {
   "common": {
     "wakti": "وقتي",
@@ -492,6 +491,13 @@
     "bookingUpdatedDesc": "تم تحديث حالة الحجز بنجاح.",
     "bookingAcknowledged": "تم قبول الحجز",
     "bookingAcknowledgedDesc": "تم قبول الحجز وإضافته إلى التقويم الخاص بك",
+    "statusChanged": "تم تغيير حالة الحجز إلى",
+    "bookingStatusChangedTo": "تم تغيير حالة حجزك \"{title}\" إلى {status}.",
+    "noDescription": "لا يوجد وصف",
+    "publish": "نشر",
+    "unpublish": "إلغاء النشر",
+    "publishConfirm": "هل أنت متأكد من أنك تريد نشر \"{name}\"؟ سيجعله مرئياً للعملاء.",
+    "unpublishConfirm": "هل أنت متأكد من أنك تريد إلغاء نشر \"{name}\"؟ سيخفيه عن العملاء.",
     "form": {
       "title": "عنوان الحجز",
       "description": "وصف الحجز (اختياري)",
@@ -635,5 +641,19 @@
       "createAccount": "إنشاء حساب في وقتي",
       "createAccountDesc": "استمتع بتجربة حجز أفضل، وتتبع الحجوزات السابقة والقادمة، والمزيد."
     }
-  }
-}
+  },
+  "ai": {
+    "title": "مساعد وقتي الذكي",
+    "subtitle": "شريكك الذكي للإنتاجية",
+    "assistant": "مساعد وقتي الذكي",
+    "unlockFeatures": "افتح ميزات الإنتاجية المدعومة بالذكاء الاصطناعي مع خطة الأفراد أو الأعمال",
+    "benefits": "ما ستحصل عليه مع الذكاء الاصطناعي من وقتي:",
+    "upgradePlan": "قم بترقية خطتك",
+    "premiumFeature": "ميزة متميزة",
+    "requiresPlan": "تتطلب هذه الميزة خطة للأفراد أو الأعمال",
+    "upgradeToAccess": "قم بترقية خطتك في وقتي للوصول إلى أدوات الذكاء الاصطناعي",
+    "documentAnalysis": "تحليل المستندات",
+    "recentConversations": "المحادثات الأخيرة",
+    "conversationHistory": "سجل المحادثات",
+    "takePicture": "التقاط صورة",
+    "photoTaken": "تم التقاط الصورة",

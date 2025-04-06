@@ -8,6 +8,7 @@ import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { BookingTemplateWithRelations } from "@/types/booking.types";
 import { formatCurrency } from "@/utils/formatUtils";
 import { useMobileBreakpoint } from "@/hooks/useBreakpoint";
+import { useTranslation } from "react-i18next";
 
 interface BookingTemplatesListProps {
   templates: BookingTemplateWithRelations[];
@@ -32,6 +33,7 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
   const [publishTemplateId, setPublishTemplateId] = React.useState<string | null>(null);
   const [publishAction, setPublishAction] = React.useState<boolean>(false);
   const isMobile = useMobileBreakpoint(); // This hook returns a boolean
+  const { t } = useTranslation();
 
   const templateToDelete = templates.find(t => t.id === deleteTemplateId);
   const templateToPublish = templates.find(t => t.id === publishTemplateId);
@@ -61,7 +63,7 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
     return (
       <Card>
         <CardContent className="pt-6 text-center">
-          <p className="text-muted-foreground">No pre-booking templates found.</p>
+          <p className="text-muted-foreground">{t('booking.noTemplates')}</p>
         </CardContent>
       </Card>
     );
@@ -77,37 +79,37 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-lg font-semibold">{template.name}</h3>
                   <Badge variant={template.is_published ? "success" : "secondary"}>
-                    {template.is_published ? "Published" : "Draft"}
+                    {template.is_published ? t('booking.templateBooking.published') : t('booking.templateBooking.draft')}
                   </Badge>
                 </div>
                 
                 <p className="text-sm text-muted-foreground line-clamp-2">
-                  {template.description || "No description"}
+                  {template.description || t('booking.noDescription')}
                 </p>
                 
                 <div className="text-sm space-y-1">
                   <div className="flex gap-2">
-                    <span className="font-medium">Duration:</span> 
-                    <span>{template.duration} minutes</span>
+                    <span className="font-medium">{t('booking.duration')}:</span> 
+                    <span>{template.duration} {t('booking.minutes')}</span>
                   </div>
                   
                   {template.price !== null && (
                     <div className="flex gap-2">
-                      <span className="font-medium">Price:</span> 
+                      <span className="font-medium">{t('booking.price')}:</span> 
                       <span>{formatCurrency(template.price)}</span>
                     </div>
                   )}
                   
                   {template.service && (
                     <div className="flex gap-2">
-                      <span className="font-medium">Service:</span> 
+                      <span className="font-medium">{t('booking.service')}:</span> 
                       <span>{template.service.name}</span>
                     </div>
                   )}
                   
                   {template.staff && (
                     <div className="flex gap-2">
-                      <span className="font-medium">Staff:</span> 
+                      <span className="font-medium">{t('booking.staff')}:</span> 
                       <span>{template.staff.name}</span>
                     </div>
                   )}
@@ -122,7 +124,7 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
                   className="w-auto sm:w-full"
                 >
                   <Edit className="h-4 w-4 mr-2" />
-                  Edit
+                  {t('common.edit')}
                 </Button>
                 
                 <Button 
@@ -132,7 +134,7 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
                   className="w-auto sm:w-full"
                 >
                   <CalendarClock className="h-4 w-4 mr-2" />
-                  Availability
+                  {t('booking.templateBooking.availability')}
                 </Button>
                 
                 <Button
@@ -145,12 +147,12 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
                   {template.is_published ? (
                     <>
                       <EyeOff className="h-4 w-4 mr-2" />
-                      Unpublish
+                      {t('booking.unpublish')}
                     </>
                   ) : (
                     <>
                       <Globe className="h-4 w-4 mr-2" />
-                      Publish
+                      {t('booking.publish')}
                     </>
                   )}
                 </Button>
@@ -163,7 +165,7 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
                   className="w-auto sm:w-full"
                 >
                   <Trash className="h-4 w-4 mr-2" />
-                  Delete
+                  {t('common.delete')}
                 </Button>
               </div>
             </div>
@@ -173,30 +175,30 @@ const BookingTemplatesList: React.FC<BookingTemplatesListProps> = ({
 
       {/* Delete Confirmation Dialog */}
       <ConfirmationDialog
-        title="Delete Pre-Booking Template"
-        description={`Are you sure you want to delete "${templateToDelete?.name}"? This action cannot be undone.`}
+        title={t('booking.templateBooking.deleteTemplate')}
+        description={`${t('booking.templateBooking.deleteTemplateConfirm')}`}
         open={!!deleteTemplateId}
         onOpenChange={() => setDeleteTemplateId(null)}
         onConfirm={confirmDelete}
         isLoading={isDeleting}
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
       />
 
       {/* Publish/Unpublish Confirmation Dialog */}
       <ConfirmationDialog
-        title={publishAction ? "Publish Pre-Booking Template" : "Unpublish Pre-Booking Template"}
+        title={publishAction ? t('booking.publish') : t('booking.unpublish')}
         description={
           publishAction 
-            ? `Are you sure you want to publish "${templateToPublish?.name}"? This will make it visible to customers.` 
-            : `Are you sure you want to unpublish "${templateToPublish?.name}"? This will hide it from customers.`
+            ? `${t('booking.publishConfirm', { name: templateToPublish?.name })}` 
+            : `${t('booking.unpublishConfirm', { name: templateToPublish?.name })}`
         }
         open={!!publishTemplateId}
         onOpenChange={() => setPublishTemplateId(null)}
         onConfirm={confirmPublish}
         isLoading={isPublishing}
-        confirmLabel={publishAction ? "Publish" : "Unpublish"}
-        cancelLabel="Cancel"
+        confirmLabel={publishAction ? t('booking.publish') : t('booking.unpublish')}
+        cancelLabel={t('common.cancel')}
       />
     </div>
   );

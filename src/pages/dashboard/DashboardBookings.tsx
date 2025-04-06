@@ -9,6 +9,7 @@ import { BookingTab, BookingStatus } from "@/types/booking.types";
 import { useBookings } from "@/hooks/useBookings";
 import { useBookingsTabState } from "@/hooks/useBookingsTabState";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTranslation } from "react-i18next";
 
 // Import refactored components
 import BookingsHeader from "@/components/bookings/BookingsHeader";
@@ -22,6 +23,7 @@ const DashboardBookings = () => {
   const queryClient = useQueryClient();
   const isStaff = localStorage.getItem('isStaff') === 'true';
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
   
   // Fetch bookings based on the selected tab
   const { 
@@ -74,8 +76,8 @@ const DashboardBookings = () => {
           .from('notifications')
           .insert({
             user_id: booking.customer_id,
-            title: `Booking ${status.charAt(0).toUpperCase() + status.slice(1)}`,
-            content: `Your booking for "${booking.title}" has been ${status}.`,
+            title: `${t('booking.statusChanged')} ${status}`,
+            content: `${t('booking.bookingStatusChangedTo', { title: booking.title, status: status })}`,
             type: "booking_update",
             related_entity_id: bookingId,
             related_entity_type: "booking"
@@ -160,9 +162,9 @@ const DashboardBookings = () => {
     return (
       <div className="container py-4 sm:py-8">
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2">My Bookings</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">{t('booking.myBookings')}</h1>
           <p className="text-muted-foreground text-sm sm:text-base">
-            View and manage bookings assigned to you
+            {t('booking.viewAndManage')}
           </p>
         </div>
         
@@ -174,7 +176,7 @@ const DashboardBookings = () => {
           isUpdating={updateStatus.isPending}
           isAcknowledging={acknowledgeBooking.isPending}
           isMarkingNoShow={markNoShow.isPending}
-          emptyMessage="No bookings have been assigned to you yet."
+          emptyMessage={t('booking.noBookingsAssigned')}
         />
       </div>
     );
@@ -191,31 +193,31 @@ const DashboardBookings = () => {
             value="all-bookings" 
             className={isMobile ? "px-2 py-1 text-xs" : ""}
           >
-            All Bookings
+            {t('booking.allBookings')}
           </TabsTrigger>
           <TabsTrigger 
             value="pending-bookings" 
             className={isMobile ? "px-2 py-1 text-xs" : ""}
           >
-            Pending
+            {t('booking.pending')}
           </TabsTrigger>
           <TabsTrigger 
             value="staff-bookings" 
             className={isMobile ? "px-2 py-1 text-xs" : ""}
           >
-            Staff Assigned
+            {t('booking.staffAssigned')}
           </TabsTrigger>
           <TabsTrigger 
             value="no-show-bookings" 
             className={isMobile ? "px-2 py-1 text-xs" : ""}
           >
-            No Shows
+            {t('booking.noShows')}
           </TabsTrigger>
           <TabsTrigger 
             value="templates" 
             className={isMobile ? "px-2 py-1 text-xs" : ""}
           >
-            Templates
+            {t('booking.templates')}
           </TabsTrigger>
         </TabsList>
         
@@ -233,7 +235,7 @@ const DashboardBookings = () => {
             filterFunction={(booking) => booking.status === 'pending'}
             onUpdateStatus={handleUpdateStatus}
             isUpdating={updateStatus.isPending}
-            emptyMessage="No pending bookings found."
+            emptyMessage={t('booking.noPendingBookings')}
           />
         </TabsContent>
         
@@ -243,7 +245,7 @@ const DashboardBookings = () => {
             filterFunction={(booking) => booking.staff_assigned_id !== null}
             onUpdateStatus={handleUpdateStatus}
             isUpdating={updateStatus.isPending}
-            emptyMessage="No staff assigned bookings found."
+            emptyMessage={t('booking.noStaffBookings')}
             isStaffTab={true}
           />
         </TabsContent>
