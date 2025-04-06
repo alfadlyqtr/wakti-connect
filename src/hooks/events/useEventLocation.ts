@@ -1,6 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "@/components/ui/use-toast";
+import { generateGoogleMapsUrl } from "@/config/maps";
 
 export const useEventLocation = () => {
   const [locationType, setLocationType] = useState<'manual' | 'google_maps'>('manual');
@@ -9,14 +10,25 @@ export const useEventLocation = () => {
   const [coordinates, setCoordinates] = useState<{latitude?: number, longitude?: number}>({});
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   
-  const handleLocationChange = useCallback((value: string, type: 'manual' | 'google_maps', url?: string) => {
+  const handleLocationChange = useCallback((value: string, type: 'manual' | 'google_maps' = 'manual', url?: string) => {
     setLocation(value);
     setLocationType(type);
     if (type === 'google_maps' && url) {
       setMapsUrl(url);
-    } else {
+    } else if (type === 'manual') {
       setMapsUrl('');
     }
+  }, []);
+  
+  const handleCoordinatesChange = useCallback((lat?: number, lng?: number) => {
+    if (lat && lng) {
+      setCoordinates({ latitude: lat, longitude: lng });
+      // Also update the maps URL based on these coordinates
+      const newUrl = generateGoogleMapsUrl(`${lat},${lng}`);
+      setMapsUrl(newUrl);
+      return newUrl;
+    }
+    return '';
   }, []);
   
   const getCurrentLocation = useCallback(() => {
@@ -42,7 +54,10 @@ export const useEventLocation = () => {
         setLocation(locationStr);
         setLocationType('google_maps');
         setCoordinates({ latitude, longitude });
-        setMapsUrl(`https://www.google.com/maps?q=${latitude},${longitude}`);
+        
+        // Generate and set the maps URL
+        const newMapsUrl = generateGoogleMapsUrl(`${latitude},${longitude}`);
+        setMapsUrl(newMapsUrl);
         
         toast({
           title: "Location Found",
@@ -90,6 +105,8 @@ export const useEventLocation = () => {
     coordinates,
     isGettingLocation,
     handleLocationChange,
-    getCurrentLocation
+    handleCoordinatesChange,
+    getCurrentLocation,
+    setMapsUrl
   };
 };

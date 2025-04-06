@@ -9,7 +9,15 @@ const resources = {
       'location.enterLocation': 'Enter event location',
       'location.viewOnMap': 'View on map',
       'location.currentLocation': 'Use my current location',
-      'location.searchPlaceholder': 'Search for a location...'
+      'location.searchPlaceholder': 'Search for a location...',
+      'location.manualEntry': 'Enter manually',
+      'location.googleMaps': 'Use Google Maps',
+      'location.getLocation': 'Get my current location',
+      'location.invalidUrl': 'Invalid Google Maps URL',
+      'location.displayName': 'Location display name',
+      'location.enterUrl': 'Enter a Google Maps URL',
+      'location.previewMap': 'Preview on map',
+      'location.validUrl': 'Enter a valid Google Maps URL'
     }
   }
 };

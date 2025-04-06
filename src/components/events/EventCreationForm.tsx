@@ -35,13 +35,15 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
   const [endTime, setEndTime] = useState("10:00");
   const [shareTab, setShareTab] = useState<ShareTab>(SHARE_TABS.RECIPIENTS);
   
-  // Use location hook for advanced location features
+  // Use enhanced location hook for advanced location features
   const {
     location,
     locationType,
     mapsUrl,
+    coordinates,
     isGettingLocation,
     handleLocationChange,
+    handleCoordinatesChange,
     getCurrentLocation
   } = useEventLocation();
   
@@ -115,6 +117,11 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
   const handleDateChange = (newDate: Date) => {
     setSelectedDate(newDate);
     form.setValue("startDate", newDate);
+  };
+  
+  const handleAdvancedLocationChange = (value: string, type: 'manual' | 'google_maps' = 'manual', url?: string) => {
+    handleLocationChange(value, type, url);
+    form.setValue("location", value);
   };
 
   // Handler for sending email invitations
@@ -208,7 +215,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
           onTitleChange={handleTitleChange}
           onDescriptionChange={handleDescriptionChange}
           onDateChange={handleDateChange}
-          onLocationChange={handleLocationChange}
+          onLocationChange={handleAdvancedLocationChange}
           onStartTimeChange={setStartTime}
           onEndTimeChange={setEndTime}
           onIsAllDayChange={setIsAllDay}

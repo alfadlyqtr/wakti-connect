@@ -71,6 +71,12 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
     }
   };
 
+  const handleMapUrlChange = (url: string) => {
+    if (onLocationChange && locationInputType === 'maps') {
+      onLocationChange(location, 'google_maps', url);
+    }
+  };
+
   return (
     <div className="space-y-4 p-4">
       <div className="space-y-2">
@@ -192,19 +198,32 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
               value={location}
               onChange={handleLocationPickerChange}
               placeholder="Search for a location..."
+              onMapUrlChange={handleMapUrlChange}
             />
             
-            {getCurrentLocation && (
+            {getCurrentLocation && !isGettingLocation && (
               <Button 
                 type="button" 
                 variant="outline" 
                 size="sm"
                 className="w-full" 
                 onClick={getCurrentLocation}
-                disabled={isGettingLocation}
               >
                 <Navigation className="mr-2 h-4 w-4" />
-                {isGettingLocation ? "Getting your location..." : "Use my current location"}
+                Use my current location
+              </Button>
+            )}
+            
+            {isGettingLocation && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                className="w-full" 
+                disabled={true}
+              >
+                <Navigation className="mr-2 h-4 w-4 animate-pulse" />
+                Getting your location...
               </Button>
             )}
           </div>
