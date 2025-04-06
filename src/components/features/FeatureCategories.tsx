@@ -8,27 +8,28 @@ import { useTranslation } from "react-i18next";
 const FeatureCategories = () => {
   const { t } = useTranslation();
 
+  // Using translation keys instead of direct strings
   const taskManagementFeatures = [
-    "Daily, Weekly, Monthly, and Quarterly Task Views",
-    "Drag & Drop Sorting Between Categories",
-    "Priority-Based Task Colors (High, Urgent, Medium, Normal)",
-    "To-Do List (Subtasks for Each Task)",
-    "Team Task Assignment",
-    "Task History & Visual Charts"
+    "features.taskManagement.dailyWeeklyViews",
+    "features.taskManagement.dragDropSorting",
+    "features.taskManagement.priorityColors",
+    "features.taskManagement.toDoList",
+    "features.taskManagement.teamTaskAssignment",
+    "features.taskManagement.taskHistory"
   ];
 
   const appointmentFeatures = [
-    "Create and Manage Services",
-    "Shareable Booking Pages (Custom Branding, Logo, Colors, Fonts)",
-    "Manage & Assign Appointments",
-    "Automatic Appointment Reminders"
+    "features.appointment.createManageServices",
+    "features.appointment.shareableBookingPages",
+    "features.appointment.manageAssignAppointments",
+    "features.appointment.automaticReminders"
   ];
 
   const dashboardFeatures = [
-    "Dashboard with Task & Appointment Summary",
-    "User Role Management (Individuals, Businesses, Staff)",
-    "Dark Mode & Light Mode Switcher",
-    "Bilingual Support (Arabic & English)"
+    "features.dashboard.summaryView",
+    "features.dashboard.userRoleManagement",
+    "features.dashboard.darkMode",
+    "features.dashboard.bilingualSupport"
   ];
 
   return (

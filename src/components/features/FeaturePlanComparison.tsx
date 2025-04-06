@@ -19,40 +19,40 @@ const FeaturePlanComparison = () => {
   
   const features = [
     {
-      name: "Task Management",
-      free: "View Only",
+      name: "features.comparison.taskManagement",
+      free: "features.comparison.viewOnly",
       individual: true,
       business: true,
     },
     {
-      name: "Task Sharing",
+      name: "features.comparison.taskSharing",
       free: false,
       individual: true,
       business: true,
     },
     {
-      name: "Custom Event Creation",
+      name: "features.comparison.customEventCreation",
       free: false,
       individual: true,
       business: true,
     },
     {
-      name: "Business Booking Pages",
+      name: "features.comparison.businessBookingPages",
       free: false,
       individual: false,
       business: true,
     },
     {
-      name: "Staff Management",
+      name: "features.comparison.staffManagement",
       free: false,
       individual: false,
       business: true,
     },
     {
-      name: "Business Analytics",
+      name: "features.comparison.businessAnalytics",
       free: false,
-      individual: "Basic",
-      business: "Advanced",
+      individual: "features.comparison.basic",
+      business: "features.comparison.advanced",
     },
   ];
 
@@ -64,14 +64,14 @@ const FeaturePlanComparison = () => {
         <X className="h-5 w-5 text-red-500 mx-auto" />
       );
     }
-    return <span className="text-center block">{status}</span>;
+    return <span className="text-center block">{t(status)}</span>;
   };
 
   return (
     <SectionContainer className="py-16">
       <h2 className="text-3xl font-bold text-center mb-6">{t("features.featurePage.planComparison")}</h2>
       <p className="text-center text-muted-foreground max-w-3xl mx-auto mb-12">
-        {t("features.featurePage.chooseYourPlan", "Choose the plan that's right for you and your team. Upgrade or downgrade anytime.")}
+        {t("features.featurePage.chooseYourPlan")}
       </p>
 
       <div className="rounded-lg border overflow-hidden mb-8">
@@ -87,7 +87,7 @@ const FeaturePlanComparison = () => {
           <TableBody>
             {features.map((feature, index) => (
               <TableRow key={index}>
-                <TableCell className="font-medium">{t(`features.${feature.name}`, feature.name)}</TableCell>
+                <TableCell className="font-medium">{t(feature.name)}</TableCell>
                 <TableCell className="text-center">
                   {renderStatus(feature.free)}
                 </TableCell>

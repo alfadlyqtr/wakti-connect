@@ -23,7 +23,7 @@ const EventFeatures = () => {
           </div>
           <h3 className="text-lg font-semibold mb-2">{t("features.featurePage.customizableEvents")}</h3>
           <p className="text-muted-foreground">
-            {t("features.featurePage.customizableEventsDescription", "Create beautiful and unique event invitations with customizable colors, fonts, and images.")}
+            {t("features.featurePage.customizableEventsDescription")}
           </p>
         </div>
         
@@ -33,7 +33,7 @@ const EventFeatures = () => {
           </div>
           <h3 className="text-lg font-semibold mb-2">{t("features.featurePage.multipleSharing")}</h3>
           <p className="text-muted-foreground">
-            {t("features.featurePage.multipleSharingDescription", "Share event invitations via WhatsApp, Email, SMS, or generate a direct link to send anywhere.")}
+            {t("features.featurePage.multipleSharingDescription")}
           </p>
         </div>
         
@@ -43,7 +43,7 @@ const EventFeatures = () => {
           </div>
           <h3 className="text-lg font-semibold mb-2">{t("features.featurePage.networkGrowth")}</h3>
           <p className="text-muted-foreground">
-            {t("features.featurePage.networkGrowthDescription", "Public event pages encourage sign-ups, helping you grow your network naturally with every invitation.")}
+            {t("features.featurePage.networkGrowthDescription")}
           </p>
         </div>
         
@@ -53,7 +53,7 @@ const EventFeatures = () => {
           </div>
           <h3 className="text-lg font-semibold mb-2">{t("features.featurePage.realTimeResponses")}</h3>
           <p className="text-muted-foreground">
-            {t("features.featurePage.realTimeResponsesDescription", "Get immediate notifications when invitations are viewed and accepted, helping you plan efficiently.")}
+            {t("features.featurePage.realTimeResponsesDescription")}
           </p>
         </div>
       </div>
