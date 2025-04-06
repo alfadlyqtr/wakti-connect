@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { Menu, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import LanguageSwitcher from "@/components/ui/language-switcher";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { Separator } from "@/components/ui/separator";
 
 // Import the components
