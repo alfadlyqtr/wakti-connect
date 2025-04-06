@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Copy, Check, Download, FileDown, Map } from 'lucide-react';
 import { GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from '@/config/maps';
+import { useTranslation } from 'react-i18next';
 
 interface SummaryDisplayProps {
   summary: string;
@@ -30,6 +31,7 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
   audioData,
   summaryRef
 }) => {
+  const { t, i18n } = useTranslation();
   const mapRef = useRef<HTMLIFrameElement>(null);
   const [mapUrl, setMapUrl] = useState<string>('');
 
@@ -48,10 +50,13 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
     return null;
   }
 
+  // Detect if the summary is in Arabic for RTL formatting
+  const isArabicSummary = /[\u0600-\u06FF]/.test(summary);
+
   return (
     <Card className="p-4 mt-4">
       <div className="flex justify-between items-center mb-3">
-        <h3 className="text-lg font-semibold">Meeting Summary</h3>
+        <h3 className="text-lg font-semibold">{t('ai.tools.meeting.meetingSummary')}</h3>
         <div className="flex space-x-2">
           <Button
             variant="outline"
@@ -60,7 +65,7 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
             className="flex items-center space-x-1"
           >
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            <span>{copied ? 'Copied' : 'Copy'}</span>
+            <span>{copied ? t('ai.tools.meeting.copied') : t('ai.tools.meeting.copy')}</span>
           </Button>
           
           <Button
@@ -71,7 +76,7 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
             className="flex items-center space-x-1"
           >
             <Download className="h-4 w-4" />
-            <span>Export PDF</span>
+            <span>{t('ai.tools.meeting.exportPDF')}</span>
           </Button>
           
           {audioData && (
@@ -83,7 +88,7 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
               className="flex items-center space-x-1"
             >
               <FileDown className="h-4 w-4" />
-              <span>Download Audio</span>
+              <span>{t('ai.tools.meeting.downloadAudio')}</span>
             </Button>
           )}
         </div>
@@ -91,7 +96,8 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
       
       <div
         ref={summaryRef}
-        className="prose max-w-none dark:prose-invert mb-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-md"
+        className={`prose max-w-none dark:prose-invert mb-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-md ${isArabicSummary ? 'text-right' : ''}`}
+        dir={isArabicSummary ? 'rtl' : 'ltr'}
         dangerouslySetInnerHTML={{
           __html: summary
             .replace(/\n/g, "<br />")
@@ -107,7 +113,7 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-medium flex items-center">
               <Map className="h-4 w-4 mr-2" />
-              Detected Meeting Location
+              {t('ai.tools.meeting.detectedLocation')}
             </h4>
             <Button
               variant="link"
@@ -116,7 +122,7 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
                 window.open(generateGoogleMapsUrl(detectedLocation), '_blank');
               }}
             >
-              Open in Google Maps
+              {t('ai.tools.meeting.openInMaps')}
             </Button>
           </div>
           

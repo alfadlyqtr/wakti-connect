@@ -39,7 +39,7 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
       {/* Language selector */}
       <div className="flex items-center justify-between">
         <label className="block text-sm font-medium mb-1">
-          {t('Recognition Language')}:
+          {t('ai.tools.meeting.languageSelect')}:
         </label>
         <Select
           value={selectedLanguage}
@@ -47,7 +47,7 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
           disabled={isRecording}
         >
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Select language" />
+            <SelectValue placeholder={t('ai.tools.voice.languageSelection')} />
           </SelectTrigger>
           <SelectContent>
             {languageOptions.map((lang) => (
@@ -76,7 +76,7 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
               className="mt-2"
               onClick={stopRecording}
             >
-              Stop Recording
+              {t('ai.tools.meeting.stopRecording')}
             </Button>
           </div>
         ) : (
@@ -92,7 +92,7 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
               className="mt-2"
               onClick={startRecording}
             >
-              Start Recording
+              {t('ai.tools.meeting.startRecording')}
             </Button>
           </div>
         )}

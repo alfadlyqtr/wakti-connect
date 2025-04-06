@@ -11,6 +11,7 @@ import { ImageTransformationToolCard } from "./ImageTransformationToolCard";
 import { KnowledgeProfileToolCard } from "./KnowledgeProfileToolCard";
 import { VoiceToTextTool } from "./VoiceToTextTool";
 import { VoiceInteractionToolCard } from "./VoiceInteractionToolCard";
+import { MeetingSummaryTool } from "./MeetingSummaryTool";
 import { useTranslation } from "react-i18next";
 
 interface AIToolsTabContentProps {
@@ -52,6 +53,11 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
       {/* Voice Interaction */}
       <div className="grid grid-cols-1 gap-4">
         <VoiceInteractionToolCard onSpeechRecognized={onUseDocumentContent} />
+      </div>
+
+      {/* Meeting Summary Tool */}
+      <div className="grid grid-cols-1 gap-4">
+        <MeetingSummaryTool onUseSummary={onUseDocumentContent} />
       </div>
 
       {/* Image Tools Row */}

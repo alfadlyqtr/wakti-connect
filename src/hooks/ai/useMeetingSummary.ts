@@ -1,9 +1,9 @@
-
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
 import { formatTime } from '@/utils/audio/audioProcessing';
 import { improveTranscriptionAccuracy, detectLocationFromText } from '@/utils/text/transcriptionUtils';
+import { useTranslation } from 'react-i18next';
 
 type MeetingSummaryState = {
   isRecording: boolean;
@@ -27,6 +27,9 @@ type SavedMeeting = {
 };
 
 export const useMeetingSummary = () => {
+  const { t, i18n } = useTranslation();
+  const currentLanguage = i18n.language;
+  
   const [state, setState] = useState<MeetingSummaryState>({
     isRecording: false,
     recordingTime: 0,
@@ -42,7 +45,7 @@ export const useMeetingSummary = () => {
   const [savedMeetings, setSavedMeetings] = useState<SavedMeeting[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [selectedLanguage, setSelectedLanguage] = useState(currentLanguage === 'ar' ? 'ar' : 'en');
   const [copied, setCopied] = useState(false);
 
   const intervalRef = useRef<number | null>(null);
@@ -51,8 +54,13 @@ export const useMeetingSummary = () => {
   const summaryRef = useRef<HTMLDivElement>(null);
   
   const { toast } = useToast();
+  
+  useEffect(() => {
+    if (currentLanguage === 'ar' || currentLanguage === 'en') {
+      setSelectedLanguage(currentLanguage);
+    }
+  }, [currentLanguage]);
 
-  // Load saved meetings from Supabase
   const loadSavedMeetings = async () => {
     setIsLoadingHistory(true);
     try {
@@ -75,8 +83,8 @@ export const useMeetingSummary = () => {
     } catch (error) {
       console.error("Error loading saved meetings:", error);
       toast({
-        title: "Error loading meetings",
-        description: "Could not load your meeting history.",
+        title: t('common.error'),
+        description: t('ai.tools.meeting.loadingHistory'),
         variant: "destructive"
       });
     } finally {
@@ -84,7 +92,6 @@ export const useMeetingSummary = () => {
     }
   };
 
-  // Start recording function
   const startRecording = async (supportsVoice: boolean, apiKeyStatus: string, apiKeyErrorDetails: string | null) => {
     setState(prev => ({
       ...prev,
@@ -97,8 +104,8 @@ export const useMeetingSummary = () => {
     
     if (!supportsVoice) {
       toast({
-        title: "Voice recording not supported",
-        description: "Your browser doesn't support voice recording. Try using Chrome or Edge.",
+        title: t('ai.tools.meeting.notSupported'),
+        description: t('ai.tools.meeting.browserNotSupported'),
         variant: "destructive"
       });
       return;
@@ -110,8 +117,8 @@ export const useMeetingSummary = () => {
         recordingError: 'OpenAI API key issue: ' + (apiKeyErrorDetails || 'API key not properly configured')
       }));
       toast({
-        title: "OpenAI API Key Issue",
-        description: "The OpenAI API key is not properly configured. Recording may not work correctly.",
+        title: t('ai.tools.voice.apiError'),
+        description: t('ai.tools.voice.connectionError'),
         variant: "destructive"
       });
       return;
@@ -165,7 +172,7 @@ export const useMeetingSummary = () => {
         console.error("MediaRecorder error:", event);
         setState(prev => ({
           ...prev,
-          recordingError: "Media recorder error"
+          recordingError: t('ai.tools.meeting.error')
         }));
         stopRecording();
       };
@@ -185,24 +192,24 @@ export const useMeetingSummary = () => {
             processAudioData(audioBlob);
           } else {
             toast({
-              title: "Recording too short",
-              description: "The recording was too short to process. Please try again.",
+              title: t('ai.tools.meeting.error'),
+              description: t('ai.tools.meeting.noSpeechDetected'),
               variant: "destructive"
             });
             setState(prev => ({
               ...prev,
-              recordingError: "Recording was too short to process"
+              recordingError: t('ai.tools.meeting.noSpeechDetected')
             }));
           }
         } else {
           console.error("No audio data collected");
           setState(prev => ({
             ...prev,
-            recordingError: "No audio data was recorded"
+            recordingError: t('ai.tools.meeting.error')
           }));
           toast({
-            title: "Recording Failed",
-            description: "No audio data was captured. Please check your microphone permissions and try again.",
+            title: t('ai.tools.meeting.error'),
+            description: t('ai.tools.meeting.permissionError'),
             variant: "destructive"
           });
         }
@@ -216,14 +223,14 @@ export const useMeetingSummary = () => {
       console.log("Recording started");
       
       toast({
-        title: "Recording started",
-        description: "Speak clearly to ensure accurate transcription. Recording will continue until you stop it.",
+        title: t('ai.tools.meeting.startRecording'),
+        description: t('ai.tools.voice.listeningIn', { language: selectedLanguage === 'ar' ? 'العربية' : 'English' }),
       });
     } catch (error) {
       console.error("Failed to start recording:", error);
       setState(prev => ({
         ...prev,
-        recordingError: `Recording failed to start: ${error instanceof Error ? error.message : 'unknown error'}`,
+        recordingError: t('ai.tools.meeting.permissionError'),
         isRecording: false
       }));
       
@@ -233,14 +240,13 @@ export const useMeetingSummary = () => {
       }
       
       toast({
-        title: "Recording Error",
-        description: "Failed to start recording. Please check browser permissions and try again.",
+        title: t('ai.tools.meeting.error'),
+        description: t('ai.tools.meeting.permissionError'),
         variant: "destructive"
       });
     }
   };
 
-  // Stop recording function
   const stopRecording = () => {
     try {
       if (intervalRef.current !== null) {
@@ -274,7 +280,6 @@ export const useMeetingSummary = () => {
     }
   };
 
-  // Process audio data
   const processAudioData = async (audioBlob: Blob) => {
     try {
       console.log("Processing audio data, size:", audioBlob.size, "bytes");
@@ -316,7 +321,6 @@ export const useMeetingSummary = () => {
           
           console.log("Received transcript:", data.text);
           
-          // Apply some post-processing to improve transcription accuracy
           const processedText = improveTranscriptionAccuracy(data.text, selectedLanguage);
           
           setState(prev => ({
@@ -373,29 +377,28 @@ export const useMeetingSummary = () => {
     }
   };
 
-  // Generate summary
   const generateSummary = async () => {
     if (!state.transcribedText) return;
     
     setState(prev => ({ ...prev, isSummarizing: true }));
     
     try {
-      // Check for location in the transcribed text with improved detection
       const location = detectLocationFromText(state.transcribedText);
       setState(prev => ({ ...prev, detectedLocation: location }));
       
       const locationContext = location 
         ? `The meeting location has been identified as: "${location}". Please include this location information in the beginning of the summary.` 
         : "No specific location was detected in the transcript.";
-
-      // Determine the language of the transcript
+      
       const isArabicText = /[\u0600-\u06FF]/.test(state.transcribedText);
+      const isArabicUI = i18n.language === 'ar';
+      
       const summaryLanguage = isArabicText ? 'ar' : 'en';
       
       const systemPrompt = summaryLanguage === 'ar' 
         ? "أنت مساعد محترف يقوم بتلخيص محادثات الاجتماعات. يرجى تلخيص المحادثة التالية بتنسيق نظيف مع عناوين ونقاط مرقمة. ركز على النقاط الرئيسية والقرارات والإجراءات المطلوبة. احتفظ بالملخص دقيقًا وموجزًا."
         : "You are a professional meeting summarizer. Please create a professional and comprehensive summary of the following meeting transcript, including key points, action items, decisions made, and who was participating.";
-
+      
       const response = await supabase.functions.invoke("ai-assistant", {
         body: {
           message: state.transcribedText,
@@ -410,7 +413,6 @@ export const useMeetingSummary = () => {
       
       const aiSummary = response.data.response;
       
-      // Format the header based on language
       const dateStr = new Date().toLocaleDateString(summaryLanguage === 'ar' ? 'ar-SA' : 'en-US');
       
       const summaryWithHeader = summaryLanguage === 'ar' 
@@ -436,7 +438,6 @@ ${aiSummary}
         summary: summaryWithHeader
       }));
       
-      // Save the meeting summary to Supabase
       try {
         const { error: saveError } = await supabase.from('meetings').insert({
           date: new Date().toISOString(),
@@ -449,12 +450,11 @@ ${aiSummary}
         if (saveError) {
           console.error("Error saving meeting:", saveError);
           toast({
-            title: "Save Error",
-            description: "Meeting summary generated but couldn't be saved to your history.",
+            title: t('common.error'),
+            description: t('ai.tools.meeting.saveError'),
             variant: "destructive"
           });
         } else {
-          // Reload meetings after saving a new one
           loadSavedMeetings();
         }
       } catch (saveError) {
@@ -464,12 +464,11 @@ ${aiSummary}
     } catch (error) {
       console.error("Error generating summary:", error);
       toast({
-        title: "Summary Error",
-        description: "Failed to generate meeting summary. Please try again.",
+        title: t('common.error'),
+        description: t('ai.tools.meeting.generateSummaryError'),
         variant: "destructive"
       });
       
-      // Fallback summary with location if detected
       const isArabicText = /[\u0600-\u06FF]/.test(state.transcribedText);
       const fallbackSummary = isArabicText
         ? `
@@ -522,7 +521,6 @@ ${state.detectedLocation ? `- **Location**: ${state.detectedLocation}` : ''}
     }
   };
 
-  // Copy summary to clipboard
   const copySummary = () => {
     if (!state.summary) return;
     
@@ -537,24 +535,20 @@ ${state.detectedLocation ? `- **Location**: ${state.detectedLocation}` : ''}
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Download audio recording
   const downloadAudio = () => {
     if (!state.audioData) return;
     
     setIsDownloadingAudio(true);
     
     try {
-      // Create a download link for the audio file
       const url = URL.createObjectURL(state.audioData);
       const link = document.createElement('a');
       link.href = url;
       link.download = `WAKTI_Meeting_Recording_${new Date().toISOString().slice(0, 10)}.mp3`;
       
-      // Trigger the download
       document.body.appendChild(link);
       link.click();
       
-      // Clean up
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
