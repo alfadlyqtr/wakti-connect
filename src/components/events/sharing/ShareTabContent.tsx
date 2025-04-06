@@ -6,6 +6,7 @@ import { InvitationRecipient } from "@/types/invitation.types";
 import RecipientSelector from "@/components/invitations/RecipientSelector";
 import ShareLinksTab from "../creation/ShareLinksTab";
 import { Mail, QrCode, Link as LinkIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface ShareTabContentProps {
   recipients?: InvitationRecipient[];
@@ -24,6 +25,8 @@ const ShareTabContent: React.FC<ShareTabContentProps> = ({
   setShareTab,
   onSendEmail
 }) => {
+  const { t } = useTranslation();
+  
   const handleTabChange = (value: string) => {
     if (setShareTab) {
       setShareTab(value as ShareTab);
@@ -36,15 +39,15 @@ const ShareTabContent: React.FC<ShareTabContentProps> = ({
         <TabsList className="grid grid-cols-3 w-full">
           <TabsTrigger value={SHARE_TABS.RECIPIENTS} className="flex items-center gap-2">
             <Mail className="h-4 w-4" />
-            <span className="hidden sm:inline">Recipients</span>
+            <span className="hidden sm:inline">{t('events.recipients')}</span>
           </TabsTrigger>
           <TabsTrigger value={SHARE_TABS.QRCODE} className="flex items-center gap-2">
             <QrCode className="h-4 w-4" />
-            <span className="hidden sm:inline">QR Code</span>
+            <span className="hidden sm:inline">{t('events.qrCode')}</span>
           </TabsTrigger>
           <TabsTrigger value={SHARE_TABS.LINK} className="flex items-center gap-2">
             <LinkIcon className="h-4 w-4" />
-            <span className="hidden sm:inline">Link</span>
+            <span className="hidden sm:inline">{t('events.link')}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -67,7 +70,7 @@ const ShareTabContent: React.FC<ShareTabContentProps> = ({
               </div>
             </div>
             <p className="mt-4 text-sm text-muted-foreground text-center">
-              Scan this QR code to view and respond to the event invitation
+              {t('events.scanCode')}
             </p>
           </div>
         </TabsContent>
