@@ -35,7 +35,7 @@ export const getEvents = async (tab: EventTab): Promise<EventsResult> => {
         .from('events')
         .select(`
           *,
-          invitations (
+          event_invitations (
             id,
             email,
             invited_user_id,
@@ -55,7 +55,7 @@ export const getEvents = async (tab: EventTab): Promise<EventsResult> => {
         .from('events')
         .select(`
           *,
-          invitations!inner (
+          event_invitations!inner (
             id,
             email,
             invited_user_id,
@@ -65,7 +65,7 @@ export const getEvents = async (tab: EventTab): Promise<EventsResult> => {
             updated_at
           )
         `)
-        .eq('invitations.invited_user_id', userId)
+        .eq('event_invitations.invited_user_id', userId)
         .order('created_at', { ascending: false });
     } 
     else if (tab === 'draft-events') {
@@ -74,7 +74,7 @@ export const getEvents = async (tab: EventTab): Promise<EventsResult> => {
         .from('events')
         .select(`
           *,
-          invitations (
+          event_invitations (
             id,
             email,
             invited_user_id,
