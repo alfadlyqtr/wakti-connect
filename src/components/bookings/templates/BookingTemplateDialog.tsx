@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import BookingTemplateForm from "./BookingTemplateForm";
 import { BookingTemplateWithRelations, BookingTemplateFormData } from "@/types/booking.types";
+import { useTranslation } from "react-i18next";
 
 interface BookingTemplateDialogProps {
   isOpen: boolean;
@@ -24,12 +25,14 @@ const BookingTemplateDialog: React.FC<BookingTemplateDialogProps> = ({
   initialData,
   isPending,
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
-            {initialData ? "Edit Booking Template" : "Create Booking Template"}
+            {initialData ? t('booking.templateBooking.editTemplate') : t('booking.templateBooking.createTemplate')}
           </DialogTitle>
         </DialogHeader>
         

@@ -3,6 +3,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookingWithRelations, BookingStatus } from "@/types/booking.types";
 import BookingsList from "./BookingsList";
+import { useTranslation } from "react-i18next";
 
 interface NoShowBookingsTabProps {
   noShowBookings: BookingWithRelations[];
@@ -19,11 +20,13 @@ const NoShowBookingsTab: React.FC<NoShowBookingsTabProps> = ({
   isApproving,
   isRejecting
 }) => {
+  const { t } = useTranslation();
+
   if (noShowBookings.length === 0) {
     return (
       <Card>
         <CardContent className="pt-6 text-center">
-          <p className="text-muted-foreground">No no-show bookings found.</p>
+          <p className="text-muted-foreground">{t('booking.noNoShows')}</p>
         </CardContent>
       </Card>
     );

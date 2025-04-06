@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarPlus } from "lucide-react";
 import BookingTemplateDialog from "./BookingTemplateDialog";
 import { BookingTemplateFormData } from "@/types/booking.types";
+import { useTranslation } from "react-i18next";
 
 interface CreateTemplateButtonProps {
   onCreate: (data: BookingTemplateFormData) => Promise<any>;
@@ -15,6 +16,7 @@ const CreateTemplateButton: React.FC<CreateTemplateButtonProps> = ({
   isCreating
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { t } = useTranslation();
 
   const handleCreate = async (data: BookingTemplateFormData) => {
     try {
@@ -32,7 +34,7 @@ const CreateTemplateButton: React.FC<CreateTemplateButtonProps> = ({
         id="create-template-button"
       >
         <CalendarPlus className="h-4 w-4 mr-2" />
-        Create Pre-Booking
+        {t('booking.templateBooking.createTemplate')}
       </Button>
 
       <BookingTemplateDialog

@@ -9,11 +9,13 @@ import { createBooking } from "@/services/booking";
 import { BookingFormData } from "@/types/booking.types";
 import BookingForm from "./BookingForm";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTranslation } from "react-i18next";
 
 const CreateBookingButton = () => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
   
   // Mutation for creating a booking
   const createBookingMutation = useMutation({
@@ -23,16 +25,16 @@ const CreateBookingButton = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
       toast({
-        title: "Pre-Booking Created",
-        description: "The pre-booking has been created successfully.",
+        title: t('booking.preBookingCreated'),
+        description: t('booking.preBookingCreatedDesc'),
         variant: "success"
       });
       setOpen(false);
     },
     onError: (error: any) => {
       toast({
-        title: "Error Creating Pre-Booking",
-        description: error.message || "An error occurred while creating the pre-booking.",
+        title: t('booking.errorCreatingPreBooking'),
+        description: error.message || t('common.error'),
         variant: "destructive"
       });
     }
@@ -51,12 +53,12 @@ const CreateBookingButton = () => {
           className={isMobile ? "h-8 px-2 py-1 text-xs" : ""}
         >
           <PlusCircle className="h-4 w-4 mr-1 sm:mr-2" />
-          {isMobile ? "Add Booking" : "Enter Manual Booking"}
+          {isMobile ? t('booking.addBooking') : t('booking.enterManualBooking')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Pre-Booking</DialogTitle>
+          <DialogTitle>{t('booking.createNewPreBooking')}</DialogTitle>
         </DialogHeader>
         <BookingForm 
           onSubmit={handleSubmit}

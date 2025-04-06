@@ -5,6 +5,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Service } from "@/types/service.types";
 import { StaffMember } from "@/types/staff";
+import { useTranslation } from "react-i18next";
 
 interface StaffServiceFieldsProps {
   control: Control<any>;
@@ -19,15 +20,17 @@ const StaffServiceFields: React.FC<StaffServiceFieldsProps> = ({
   staff,
   onServiceChange
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <div className="space-y-4">
-      <h3 className="text-md font-semibold">Service & Staff</h3>
+      <h3 className="text-md font-semibold">{t('booking.form.serviceStaff')}</h3>
       <FormField
         control={control}
         name="service_id"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Service</FormLabel>
+            <FormLabel>{t('booking.service')}</FormLabel>
             <Select 
               onValueChange={(value) => {
                 field.onChange(value);
@@ -37,7 +40,7 @@ const StaffServiceFields: React.FC<StaffServiceFieldsProps> = ({
             >
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a service" />
+                  <SelectValue placeholder={t('booking.form.selectService')} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -58,14 +61,14 @@ const StaffServiceFields: React.FC<StaffServiceFieldsProps> = ({
         name="staff_assigned_id"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Assign Staff (Optional)</FormLabel>
+            <FormLabel>{t('booking.form.selectStaff')}</FormLabel>
             <Select
               onValueChange={field.onChange}
               value={field.value}
             >
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Assign to staff" />
+                  <SelectValue placeholder={t('booking.form.selectStaff')} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>

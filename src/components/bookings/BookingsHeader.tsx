@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { BookingTab } from "@/types/booking.types";
 import CreateBookingButton from "./CreateBookingButton";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTranslation } from "react-i18next";
 
 interface BookingsHeaderProps {
   setActiveTab: (tab: BookingTab) => void;
@@ -13,10 +14,11 @@ interface BookingsHeaderProps {
 
 const BookingsHeader: React.FC<BookingsHeaderProps> = ({ setActiveTab }) => {
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
   
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
-      <h1 className="text-2xl sm:text-3xl font-bold">Bookings</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold">{t('booking.title')}</h1>
       
       <div className="flex flex-wrap gap-2">
         <CreateBookingButton />
@@ -28,7 +30,7 @@ const BookingsHeader: React.FC<BookingsHeaderProps> = ({ setActiveTab }) => {
           className={isMobile ? "px-2 py-1 h-8 text-xs" : ""}
         >
           <Calendar className="h-4 w-4 mr-1 sm:mr-2" />
-          {isMobile ? "Templates" : "Templates"}
+          {isMobile ? t('booking.templates') : t('booking.templates')}
         </Button>
         
         <DropdownMenu>
@@ -39,18 +41,18 @@ const BookingsHeader: React.FC<BookingsHeaderProps> = ({ setActiveTab }) => {
               className={isMobile ? "px-2 py-1 h-8 text-xs" : ""}
             >
               <Filter className="h-4 w-4 mr-1 sm:mr-2" />
-              {isMobile ? "Filter" : "Filter"}
+              {isMobile ? t('booking.filter') : t('booking.filter')}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-[150px]">
             <DropdownMenuItem onClick={() => setActiveTab("all-bookings")}>
-              All Bookings
+              {t('booking.allBookings')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setActiveTab("pending-bookings")}>
-              Pending Bookings
+              {t('booking.pending')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setActiveTab("staff-bookings")}>
-              Staff Assigned Bookings
+              {t('booking.staffAssigned')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
