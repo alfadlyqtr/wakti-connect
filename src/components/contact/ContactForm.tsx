@@ -6,8 +6,10 @@ import { toast } from "sonner";
 import { contactFormSchema, ContactFormValues } from "@/components/contact/FormSchema";
 import ContactFormFields from "@/components/contact/ContactFormFields";
 import ContactSuccessDialog from "@/components/contact/ContactSuccessDialog";
+import { useTranslation } from "react-i18next";
 
 const ContactForm = () => {
+  const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   
@@ -33,7 +35,7 @@ const ContactForm = () => {
       setShowSuccessDialog(true);
       form.reset();
     } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+      toast.error(t("contact.messageFailed"));
       console.error("Contact form submission error:", error);
     } finally {
       setIsSubmitting(false);
@@ -42,7 +44,7 @@ const ContactForm = () => {
 
   return (
     <div className="bg-card rounded-lg border p-6">
-      <h2 className="text-2xl font-bold mb-6">Send Us a Message</h2>
+      <h2 className="text-2xl font-bold mb-6">{t("contact.sendMessage")}</h2>
       
       <ContactFormFields 
         form={form} 

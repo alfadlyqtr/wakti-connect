@@ -6,8 +6,11 @@ import ContactForm from "@/components/ContactForm";
 import ContactFaq from "@/components/contact/ContactFaq";
 import SocialLinks from "@/components/contact/SocialLinks";
 import { MapPin } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const ContactPage = () => {
+  const { t } = useTranslation();
+  
   return (
     <div className="min-h-screen py-16">
       <div className="container mx-auto px-4">
@@ -35,9 +38,9 @@ const ContactPage = () => {
           </div>
           <div className="relative z-10 text-center">
             <MapPin className="h-12 w-12 text-wakti-blue mx-auto mb-4" />
-            <h3 className="text-xl font-bold mb-2">Visit Our Office</h3>
+            <h3 className="text-xl font-bold mb-2">{t("contact.visitUs")}</h3>
             <p className="text-muted-foreground">
-              West Bay, Doha, Qatar
+              {t("footer.address")}
             </p>
           </div>
         </div>

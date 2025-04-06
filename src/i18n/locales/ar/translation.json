@@ -285,7 +285,19 @@
     "sending": "جاري الإرسال...",
     "send": "إرسال",
     "messageSent": "تم إرسال رسالتك بنجاح!",
-    "messageFailed": "فشل إرسال الرسالة. يرجى المحاولة مرة أخرى."
+    "messageFailed": "فشل إرسال الرسالة. يرجى المحاولة مرة أخرى.",
+    "phoneOptional": "رقم الهاتف (اختياري)",
+    "messageSubject": "موضوع الرسالة",
+    "messageContent": "محتوى الرسالة",
+    "howCanWeHelp": "كيف يمكننا مساعدتك؟",
+    "workingHours": "ساعات العمل",
+    "officeAddress": "عنوان المكتب",
+    "supportEmail": "البريد الإلكتروني للدعم",
+    "customerService": "خدمة العملاء",
+    "frequentlyAskedQuestions": "الأسئلة الشائعة",
+    "findAnswers": "ابحث عن إجابات للأسئلة الشائعة",
+    "stillHaveQuestions": "لا تزال لديك أسئلة؟",
+    "contactSupport": "تواصل مع فريق الدعم"
   },
   "faq": {
     "title": "الأسئلة الشائعة",
@@ -507,4 +519,3 @@
     }
   }
 }
-

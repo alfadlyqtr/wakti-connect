@@ -6,15 +6,18 @@ import {
   Clock 
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
 const ContactInfo = () => {
+  const { t } = useTranslation();
+  
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-0">
         <div className="bg-wakti-blue p-6 text-white">
-          <h3 className="text-xl font-semibold mb-2">Contact Information</h3>
+          <h3 className="text-xl font-semibold mb-2">{t("contact.contactInfo")}</h3>
           <p className="text-blue-100">
-            Reach out to us through any of these channels
+            {t("contact.hereToHelp")}
           </p>
         </div>
         
@@ -22,7 +25,7 @@ const ContactInfo = () => {
           <div className="flex">
             <Mail className="h-5 w-5 text-wakti-blue mr-3 flex-shrink-0" />
             <div>
-              <p className="font-medium">Email</p>
+              <p className="font-medium">{t("contact.emailUs")}</p>
               <a 
                 href="mailto:support@wakti.co" 
                 className="text-sm text-muted-foreground hover:text-wakti-blue"
@@ -35,7 +38,7 @@ const ContactInfo = () => {
           <div className="flex">
             <Phone className="h-5 w-5 text-wakti-blue mr-3 flex-shrink-0" />
             <div>
-              <p className="font-medium">Phone</p>
+              <p className="font-medium">{t("contact.callUs")}</p>
               <a 
                 href="tel:+97444123456" 
                 className="text-sm text-muted-foreground hover:text-wakti-blue"
@@ -48,7 +51,7 @@ const ContactInfo = () => {
           <div className="flex">
             <Clock className="h-5 w-5 text-wakti-blue mr-3 flex-shrink-0" />
             <div>
-              <p className="font-medium">Working Hours</p>
+              <p className="font-medium">{t("contact.workingHours")}</p>
               <p className="text-sm text-muted-foreground">
                 Sunday - Thursday: 8AM - 5PM
               </p>

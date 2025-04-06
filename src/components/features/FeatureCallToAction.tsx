@@ -1,26 +1,32 @@
 
 import React from "react";
-import { SectionContainer } from "@/components/ui/section-container";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const FeatureCallToAction = () => {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  
   return (
-    <SectionContainer className="py-16 bg-muted/30 text-center">
-      <div className="max-w-3xl mx-auto">
-        <h2 className="text-3xl font-bold mb-6">Ready to Transform Your Productivity?</h2>
-        <p className="text-xl text-muted-foreground mb-8">
-          Join thousands of individuals and businesses who trust WAKTI for their daily 
-          productivity, task management, and appointment scheduling needs.
+    <section className="bg-wakti-blue py-16">
+      <div className="container mx-auto px-4 text-center">
+        <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+          {t("cta.title")}
+        </h2>
+        <p className="text-xl text-blue-100 max-w-3xl mx-auto mb-8">
+          {t("cta.description")}
         </p>
-        <Button size="lg" asChild>
-          <Link to="/auth?tab=register">
-            Get Started for Free <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
+        <Button 
+          variant="secondary" 
+          size="lg"
+          onClick={() => navigate("/signup")}
+          className="text-wakti-blue font-medium"
+        >
+          {t("cta.button")}
         </Button>
       </div>
-    </SectionContainer>
+    </section>
   );
 };
 

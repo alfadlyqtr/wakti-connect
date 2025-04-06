@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { ContactFormValues } from "./FormSchema";
+import { useTranslation } from "react-i18next";
 
 export interface ContactFormFieldsProps {
   form: UseFormReturn<ContactFormValues>;
@@ -19,6 +20,8 @@ const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
   isSubmitting,
   onSubmit
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -28,9 +31,9 @@ const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>{t("contact.yourName")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Your name" {...field} />
+                  <Input placeholder={t("contact.yourName")} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -42,9 +45,9 @@ const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>{t("contact.yourEmail")}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Your email address" type="email" {...field} />
+                  <Input placeholder={t("contact.yourEmail")} type="email" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -57,9 +60,9 @@ const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone (Optional)</FormLabel>
+              <FormLabel>{t("contact.phoneOptional")}</FormLabel>
               <FormControl>
-                <Input placeholder="Your phone number" type="tel" {...field} />
+                <Input placeholder={t("contact.phoneOptional")} type="tel" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -71,9 +74,9 @@ const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
           name="subject"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Subject</FormLabel>
+              <FormLabel>{t("contact.subject")}</FormLabel>
               <FormControl>
-                <Input placeholder="Message subject" {...field} />
+                <Input placeholder={t("contact.messageSubject")} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -85,10 +88,10 @@ const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
           name="message"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Message</FormLabel>
+              <FormLabel>{t("contact.message")}</FormLabel>
               <FormControl>
                 <Textarea 
-                  placeholder="How can we help you?" 
+                  placeholder={t("contact.howCanWeHelp")} 
                   className="min-h-[120px]" 
                   {...field} 
                 />
@@ -102,10 +105,10 @@ const ContactFormFields: React.FC<ContactFormFieldsProps> = ({
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Sending...
+              {t("contact.sending")}
             </>
           ) : (
-            "Send Message"
+            t("contact.send")
           )}
         </Button>
       </form>
