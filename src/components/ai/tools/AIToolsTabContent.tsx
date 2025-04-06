@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { DocumentUploadTool } from "./DocumentUploadTool";
 import { AIAssistantSettings } from "@/components/settings/ai/AIAssistantSettings";
 import { AIUpgradeRequired } from "@/components/ai/AIUpgradeRequired";
@@ -13,6 +13,7 @@ import { VoiceToTextTool } from "./VoiceToTextTool";
 import { VoiceInteractionToolCard } from "./VoiceInteractionToolCard";
 import { MeetingSummaryTool } from "./MeetingSummaryTool";
 import { useTranslation } from "react-i18next";
+import { ImageAnalysisToolCard } from "./ImageAnalysisToolCard";
 
 interface AIToolsTabContentProps {
   canAccess: boolean;
@@ -66,6 +67,11 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
           onPromptUse={onUseDocumentContent}
         />
         <ImageTransformationToolCard />
+      </div>
+
+      {/* Image Analysis Tool */}
+      <div className="grid grid-cols-1 gap-4">
+        <ImageAnalysisToolCard />
       </div>
     </div>
   );
