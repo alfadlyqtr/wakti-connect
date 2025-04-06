@@ -73,7 +73,7 @@ export function LanguageSwitcher() {
         size="sm" 
         className="px-3 flex items-center gap-1.5" 
         onClick={() => changeLanguage('ar')}
-        title="التبديل إلى اللغة العربية"
+        title="التبديل إلى العربية"
       >
         <Globe className="h-4 w-4" />
         <span>العربية</span>
@@ -81,5 +81,3 @@ export function LanguageSwitcher() {
     );
   }
 }
-
-export default LanguageSwitcher;
