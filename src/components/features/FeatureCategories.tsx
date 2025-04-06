@@ -3,8 +3,11 @@ import React from "react";
 import { ClipboardCheck, Calendar, LayoutDashboard } from "lucide-react";
 import { SectionContainer } from "@/components/ui/section-container";
 import FeatureDetail from "./FeatureDetail";
+import { useTranslation } from "react-i18next";
 
 const FeatureCategories = () => {
+  const { t } = useTranslation();
+
   const taskManagementFeatures = [
     "Daily, Weekly, Monthly, and Quarterly Task Views",
     "Drag & Drop Sorting Between Categories",
@@ -30,7 +33,7 @@ const FeatureCategories = () => {
 
   return (
     <SectionContainer className="bg-muted/30 mb-12">
-      <h2 className="text-3xl font-bold mb-8">Core Features</h2>
+      <h2 className="text-3xl font-bold mb-8">{t("features.featurePage.coreFeatures")}</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
         <div>
@@ -38,7 +41,7 @@ const FeatureCategories = () => {
             <div className="bg-wakti-blue/10 p-3 rounded-full text-wakti-blue">
               <ClipboardCheck size={28} />
             </div>
-            <h2 className="text-2xl font-bold">Task Management</h2>
+            <h2 className="text-2xl font-bold">{t("features.featurePage.taskManagement")}</h2>
           </div>
           <FeatureDetail features={taskManagementFeatures} />
         </div>
@@ -48,7 +51,7 @@ const FeatureCategories = () => {
             <div className="bg-green-500/10 p-3 rounded-full text-green-500">
               <Calendar size={28} />
             </div>
-            <h2 className="text-2xl font-bold">Appointment Scheduling</h2>
+            <h2 className="text-2xl font-bold">{t("features.featurePage.appointmentScheduling")}</h2>
           </div>
           <FeatureDetail features={appointmentFeatures} />
         </div>
@@ -58,7 +61,7 @@ const FeatureCategories = () => {
             <div className="bg-purple-500/10 p-3 rounded-full text-purple-500">
               <LayoutDashboard size={28} />
             </div>
-            <h2 className="text-2xl font-bold">Dashboard & User Management</h2>
+            <h2 className="text-2xl font-bold">{t("features.featurePage.dashboardUserManagement")}</h2>
           </div>
           <FeatureDetail features={dashboardFeatures} />
         </div>

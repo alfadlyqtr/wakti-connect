@@ -1,4 +1,3 @@
-
 {
   "common": {
     "wakti": "وقتي",
@@ -91,6 +90,21 @@
     "appointmentBooking": {
       "title": "حجز المواعيد",
       "description": "إنشاء وإدارة المواعيد والأحداث بسهولة، ومشاركتها مع الآخرين."
+    },
+    "featurePage": {
+      "coreFeatures": "الميزات الأساسية",
+      "taskManagement": "إدارة المهام",
+      "appointmentScheduling": "جدولة المواعيد",
+      "dashboardUserManagement": "لوحة التحكم وإدارة المستخدمين",
+      "eventSendingInvitations": "إرسال الأحداث والدعوات",
+      "customizableEvents": "أحداث قابلة للتخصيص",
+      "multipleSharing": "خيارات مشاركة متعددة",
+      "networkGrowth": "نمو الشبكة",
+      "realTimeResponses": "ردود في الوقت الحقيقي",
+      "planComparison": "مقارنة الخطط",
+      "chooseYourPlan": "اختر خطتك المناسبة",
+      "viewPricing": "عرض تفاصيل الأسعار الكاملة",
+      "invitationDescription": "أرسل دعوات أحداث مخصصة ومصممة بشكل جميل لجهات الاتصال أو شارك عبر واتساب، البريد الإلكتروني، الرسائل القصيرة، أو رابط مباشر. تتيح صفحات الأحداث العامة لغير المستخدمين عرض التفاصيل—لكن يجب عليهم التسجيل للقبول، مما يساعد على تنمية شبكتك دون عناء."
     }
   },
   "pricing": {
@@ -348,7 +362,7 @@
     "today": "مهام اليوم",
     "createTask": "إنشاء مهمة",
     "startWork": "بدء العمل",
-    "userDescription": "أدر مهامك وتتبع تقدمك.",
+    "userDescription": "أدر مهامك وتت��ع تقدمك.",
     "staffDescription": "عرض وإدارة المهام المعينة أو المفوضة إليك.",
     "noTasksYet": "لا توجد مهام بعد",
     "createFirstTaskPaid": "أنشئ مهمتك الأولى لبدء تنظيم عملك.",
