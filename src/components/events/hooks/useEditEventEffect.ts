@@ -74,8 +74,8 @@ const useEditEventEffect = ({
       }
       
       // Handle invitations
-      if (editEvent.event_invitations && editEvent.event_invitations.length > 0) {
-        const recipientsList: InvitationRecipient[] = editEvent.event_invitations.map(invitation => ({
+      if (editEvent.invitations && editEvent.invitations.length > 0) {
+        const recipientsList: InvitationRecipient[] = editEvent.invitations.map(invitation => ({
           id: invitation.id,
           name: invitation.email || invitation.invited_user_id || '',
           email: invitation.email,

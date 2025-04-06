@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Copy, Check, Download, FileDown, Map } from 'lucide-react';
-import { getMapsApiKey, generateGoogleMapsUrl } from '@/config/maps';
+import { GOOGLE_MAPS_API_KEY, generateGoogleMapsUrl } from '@/config/maps';
 
 interface SummaryDisplayProps {
   summary: string;
@@ -35,17 +35,12 @@ const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
 
   useEffect(() => {
     if (detectedLocation) {
-      const loadMapUrl = async () => {
-        try {
-          const apiKey = await getMapsApiKey();
-          const encodedLocation = encodeURIComponent(detectedLocation);
-          setMapUrl(`https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodedLocation}`);
-        } catch (error) {
-          console.error('Error generating map URL:', error);
-        }
-      };
-      
-      loadMapUrl();
+      try {
+        const encodedLocation = encodeURIComponent(detectedLocation);
+        setMapUrl(`https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${encodedLocation}`);
+      } catch (error) {
+        console.error('Error generating map URL:', error);
+      }
     }
   }, [detectedLocation]);
 

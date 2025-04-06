@@ -2,13 +2,13 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { eventSchema, EventFormValues, EventFormTab } from "@/types/event.types";
+import { eventSchema, EventFormValues, EventFormTab, BackgroundType, AnimationType, ButtonShape } from "@/types/event.types";
 import FormHeader from "./creation/FormHeader";
 import FormTabs from "./creation/FormTabs";
 import FormActions from "./creation/FormActions";
 import { InvitationRecipient } from "@/types/invitation.types";
 import useEditEventEffect from "./hooks/useEditEventEffect";
-import { Event } from "@/types/event.types";
+import { Event, EventCustomization } from "@/types/event.types";
 import { useEventSubmission } from "@/hooks/events/useEventSubmission";
 import { ShareTab, SHARE_TABS } from "@/types/form.types";
 import { useEventLocation } from "@/hooks/events/useEventLocation";
@@ -44,13 +44,14 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     isGettingLocation,
     handleLocationChange,
     handleCoordinatesChange,
-    getCurrentLocation
+    getCurrentLocation,
+    setMapsUrl
   } = useEventLocation();
   
   // Default customization state
-  const [customization, setCustomization] = useState({
+  const [customization, setCustomization] = useState<EventCustomization>({
     background: {
-      type: 'solid',
+      type: 'solid' as BackgroundType,
       value: '#ffffff',
     },
     font: {
@@ -62,16 +63,16 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
       accept: {
         background: '#4CAF50',
         color: '#ffffff',
-        shape: 'rounded',
+        shape: 'rounded' as ButtonShape,
       },
       decline: {
         background: '#f44336',
         color: '#ffffff',
-        shape: 'rounded',
+        shape: 'rounded' as ButtonShape,
       }
     },
     headerStyle: 'simple',
-    animation: 'fade',
+    animation: 'fade' as AnimationType,
   });
   
   const form = useForm<EventFormValues>({
@@ -101,7 +102,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     setLocation: (loc) => handleLocationChange(loc, 'manual'),
     setLocationType: (type) => handleLocationChange(location, type),
     setMapsUrl,
-    setCustomization
+    setCustomization: (newCustomization: EventCustomization) => setCustomization(newCustomization)
   });
 
   const handleTitleChange = (newTitle: string) => {

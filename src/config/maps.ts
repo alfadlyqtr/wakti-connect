@@ -40,3 +40,13 @@ export const isValidGoogleMapsUrl = (url: string): boolean => {
 
   return googleMapsPatterns.some(pattern => pattern.test(url));
 };
+
+// Generate an embed URL for maps
+export const generateMapEmbedUrl = (location: string): string => {
+  return `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${encodeURIComponent(location)}`;
+};
+
+// Get Maps API key (for components that need it directly)
+export const getMapsApiKey = (): string => {
+  return GOOGLE_MAPS_API_KEY;
+};
