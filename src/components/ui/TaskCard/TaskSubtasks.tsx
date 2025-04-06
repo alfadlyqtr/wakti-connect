@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { SubTask } from "@/types/task.types";
 import { Progress } from "@/components/ui/progress";
 import { CheckSquare, ListTodo } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface TaskSubtasksProps {
   taskId: string;
@@ -18,6 +19,7 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
   onSubtaskToggle,
   refetch
 }) => {
+  const { t } = useTranslation();
   const completedCount = subtasks.filter(subtask => subtask.is_completed).length;
   const progress = subtasks.length > 0 ? (completedCount / subtasks.length) * 100 : 0;
   
@@ -26,7 +28,7 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
       <div className="flex items-center justify-between mb-1 text-xs text-muted-foreground">
         <div className="flex items-center gap-1">
           <ListTodo className="h-3.5 w-3.5" />
-          <span>{completedCount} of {subtasks.length} completed</span>
+          <span>{completedCount} {t("task.of")} {subtasks.length} {t("task.completed")}</span>
         </div>
         <span>{Math.round(progress)}%</span>
       </div>
@@ -53,7 +55,7 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
               {subtask.content}
               {subtask.due_date && (
                 <span className="text-xs text-muted-foreground ml-1">
-                  (Due: {new Date(subtask.due_date).toLocaleDateString()})
+                  ({t("task.due")}: {new Date(subtask.due_date).toLocaleDateString()})
                 </span>
               )}
             </label>
@@ -63,7 +65,7 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
         {subtasks.length > 3 && (
           <div className="text-xs text-muted-foreground mt-1 flex items-center">
             <CheckSquare className="h-3 w-3 mr-1" />
-            <span>+{subtasks.length - 3} more subtasks</span>
+            <span>+{subtasks.length - 3} {t("task.subtasks")}</span>
           </div>
         )}
       </div>

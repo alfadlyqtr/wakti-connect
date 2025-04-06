@@ -1,13 +1,15 @@
 
 import React from "react";
-import { format, parseISO, isAfter, isToday } from "date-fns";
-import { TaskStatus } from "@/types/task.types";
-import { CalendarClock, Clock } from "lucide-react";
+import { formatDistanceToNow, isPast, isToday, format } from "date-fns";
+import { CalendarIcon, BellOff } from "lucide-react";
+import { formatTimeString } from "@/utils/dateTimeFormatter";
+import { useTranslation } from "react-i18next";
+import { ar } from "date-fns/locale";
 
 interface TaskDueDateProps {
   dueDate: Date | string;
   dueTime: string | null | undefined;
-  status: TaskStatus;
+  status: string;
   snoozedUntil?: Date | string | null;
   snoozeCount?: number;
 }
@@ -19,45 +21,48 @@ export const TaskDueDate: React.FC<TaskDueDateProps> = ({
   snoozedUntil,
   snoozeCount
 }) => {
-  const formatDate = (date: Date | string) => {
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    
-    if (isToday(dateObj)) {
-      return 'Today';
+  const { t, i18n } = useTranslation();
+  
+  const formatDueDate = () => {
+    if (!dueDate || (typeof dueDate === 'string' && !dueDate.trim())) {
+      return t("common.noDate");
     }
     
-    return format(dateObj, 'MMM d, yyyy');
-  };
-  
-  const isOverdue = (date: Date | string, status: TaskStatus) => {
-    if (status === 'completed' || status === 'snoozed') return false;
+    const dateObj = typeof dueDate === 'string' ? new Date(dueDate) : dueDate;
+    if (isNaN(dateObj.getTime())) return t("common.invalidDate");
     
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    const now = new Date();
+    // Use proper locale for date formatting
+    const locale = i18n.language === 'ar' ? ar : undefined;
     
-    return isAfter(now, dateObj) && !isToday(dateObj);
+    if (isToday(dateObj)) {
+      return t("time.today");
+    }
+    
+    if (isPast(dateObj) && status !== 'completed') {
+      return `${t("task.overdue")}: ${formatDistanceToNow(dateObj, { addSuffix: true, locale })}`;
+    }
+    
+    return formatDistanceToNow(dateObj, { addSuffix: true, locale });
   };
-  
-  const dueDateObj = typeof dueDate === 'string' ? new Date(dueDate) : dueDate;
-  const overdue = isOverdue(dueDateObj, status);
-  
+
   return (
-    <div className="mt-2 mb-3">
-      {status === 'snoozed' && snoozedUntil ? (
-        <div className="flex items-center text-sm text-muted-foreground">
-          <Clock className="mr-2 h-4 w-4" />
+    <div className="flex flex-col gap-2 text-sm">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <CalendarIcon className="h-4 w-4" />
+        <span>
+          {formatDueDate()}
+          {dueTime && (
+            <span className="font-medium ml-1">{t("time.at")} {formatTimeString(dueTime)}</span>
+          )}
+        </span>
+      </div>
+      
+      {status === 'snoozed' && snoozedUntil && (
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <BellOff className="h-4 w-4" />
           <span>
-            Snoozed until {formatDate(snoozedUntil)}
-            {snoozeCount && snoozeCount > 1 ? ` (${snoozeCount} times)` : ''}
-          </span>
-        </div>
-      ) : (
-        <div className={`flex items-center text-sm ${overdue ? 'text-red-500' : 'text-muted-foreground'}`}>
-          <CalendarClock className="mr-2 h-4 w-4" />
-          <span>
-            Due {formatDate(dueDateObj)}
-            {dueTime && ` at ${dueTime}`}
-            {overdue && ' (Overdue)'}
+            {t("task.snoozedUntil")} {format(new Date(snoozedUntil), 'MMM d')}
+            {snoozeCount && snoozeCount > 1 ? ` (${snoozeCount} ${t("time.times")})` : ''}
           </span>
         </div>
       )}

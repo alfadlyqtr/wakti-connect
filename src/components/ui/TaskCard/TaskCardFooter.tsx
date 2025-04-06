@@ -5,6 +5,7 @@ import { Check, ThumbsUp, Loader2 } from "lucide-react";
 import { format, isPast, isToday } from "date-fns";
 import { TaskCardCompletionAnimation } from "../task-card/TaskCardCompletionAnimation";
 import { TaskStatus } from "@/types/task.types";
+import { useTranslation } from "react-i18next";
 
 interface TaskCardFooterProps {
   id: string;
@@ -23,6 +24,7 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
   onStatusChange,
   onEdit,
 }) => {
+  const { t } = useTranslation();
   const [showAnimation, setShowAnimation] = useState(false);
   const [isAheadOfTime, setIsAheadOfTime] = useState(false);
   const operationInProgressRef = useRef(false);
@@ -68,10 +70,10 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
           <ThumbsUp className="h-3 w-3 mr-1 text-green-500" />
           {completedDate ? (
             <>
-              Completed on {format(new Date(completedDate), "MMM d, yyyy")}
+              {t("task.completed")} {t("time.at")} {format(new Date(completedDate), "MMM d, yyyy")}
             </>
           ) : (
-            "Completed"
+            t("task.completed")
           )}
         </div>
       ) : (
@@ -84,14 +86,14 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
             disabled={operationInProgressRef.current}
           >
             <Check className="mr-1 h-4 w-4" />
-            Complete
+            {t("task.markComplete")}
           </Button>
           
           {/* In-progress indicator - not a button anymore */}
           {status === "in-progress" && (
             <span className="inline-flex items-center h-8 px-3 py-2 text-xs rounded-md bg-blue-50 text-blue-600 border border-blue-200">
               <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-              In Progress
+              {t("task.status.inProgress")}
             </span>
           )}
         </div>

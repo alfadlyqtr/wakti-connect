@@ -12,8 +12,10 @@ import { Archive } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { UserRole } from "@/types/user";
 import TasksContainer from "@/components/tasks/TasksContainer";
+import { useTranslation } from "react-i18next";
 
 const DashboardTasks = () => {
+  const { t } = useTranslation();
   const {
     isLoading,
     searchQuery,
@@ -68,7 +70,7 @@ const DashboardTasks = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">Tasks</h1>
+      <h1 className="text-2xl font-bold tracking-tight">{t("task.tasks")}</h1>
       
       <TaskTabs 
         activeTab={activeTab}
@@ -82,9 +84,9 @@ const DashboardTasks = () => {
         <div className="bg-muted/50 rounded-lg p-4 flex items-center">
           <Archive className="h-5 w-5 mr-2 text-muted-foreground" />
           <div>
-            <h3 className="font-medium">Archive</h3>
+            <h3 className="font-medium">{t("task.archive.title")}</h3>
             <p className="text-sm text-muted-foreground">
-              Tasks shown here will be permanently deleted after 7 days.
+              {t("task.archive.description")}
             </p>
           </div>
         </div>
