@@ -78,6 +78,29 @@
     "requiresPlan": "تتطلب هذه الميزة اشتراكًا مميزًا",
     "upgradeToAccess": "قم بالترقية لاستخدام مساعد الذكاء الاصطناعي مع المزيد من الميزات المتقدمة",
     "upgradeNow": "ترقية الآن",
+    "assistant": "مساعد الذكاء الاصطناعي",
+    "unlockFeatures": "قم بالترقية لفتح المزيد من ميزات الذكاء الاصطناعي",
+    "benefits": "فوائد المساعد الذكي",
+    "upgradePlan": "ترقية الخطة",
+    "recentConversations": "المحادثات الأخيرة",
+    "conversationHistory": "سجل المحادثات",
+    "timeAgo": {
+      "days": "قبل {{count}} يوم",
+      "week": "قبل أسبوع",
+      "weeks": "قبل {{count}} أسبوع"
+    },
+    "sampleHistory": {
+      "efficiency": "تحسين كفاءة العمل",
+      "marketing": "استراتيجيات التسويق",
+      "studyPlan": "خطة دراسة للاختبار النهائي"
+    },
+    "features": {
+      "taskScheduling": "جدولة المهام وإدارة المواعيد النهائية",
+      "eventPlanning": "تخطيط الفعاليات والمناسبات",
+      "staffManagement": "إدارة الموظفين ومتابعة الأداء",
+      "analyticsInsights": "تحليلات وأفكار الأعمال",
+      "customizablePersonality": "شخصية مخصصة قابلة للتعديل"
+    },
     "tools": {
       "title": "أدوات المساعد",
       "document": {
@@ -97,7 +120,11 @@
         "useResult": "استخدام النتيجة",
         "tryAgain": "المحاولة مرة أخرى",
         "notSupported": "التعرف على الصوت غير مدعوم في هذا المتصفح",
-        "listeningIn": "الاستماع باللغة {language}"
+        "listeningIn": "الاستماع باللغة {language}",
+        "apiError": "خطأ في واجهة برمجة تطبيقات الصوت",
+        "connectionError": "خطأ في الاتصال بخدمة الصوت",
+        "testConnection": "اختبار الاتصال",
+        "languageSelection": "اختيار لغة الاستماع"
       },
       "image": {
         "title": "إنشاء الصور",
@@ -115,8 +142,54 @@
         "title": "الأدوات السريعة",
         "suggestedTools": "الأدوات المقترحة لدورك",
         "tryThis": "جرب هذا المثال",
-        "examples": "الأمثلة"
+        "examples": "الأمثلة",
+        "studyPlanner": "مخطط الدراسة",
+        "noteSummarizer": "ملخص الملاحظات",
+        "researchAssistant": "مساعد البحث",
+        "conceptExplainer": "شرح المفاهيم",
+        "staffScheduler": "جدولة الموظفين",
+        "businessAnalytics": "تحليلات الأعمال",
+        "customerService": "خدمة العملاء",
+        "serviceManager": "مدير الخدمات",
+        "dayPlanner": "مخطط اليوم",
+        "taskCreator": "منشئ المهام",
+        "quickAnswer": "إجابة سريعة",
+        "ideaGenerator": "مولد الأفكار",
+        "emailComposer": "كتابة البريد الإلكتروني",
+        "contentCreator": "إنشاء المحتوى",
+        "creativeWriting": "كتابة إبداعية",
+        "meetingOrganizer": "منظم الاجتماعات",
+        "writingScheduler": "جدولة الكتابة",
+        "researchTool": "أداة البحث",
+        "contentGenerator": "منشئ المحتوى",
+        "editorHelper": "مساعد التحرير"
       }
+    },
+    "knowledge": {
+      "aboutWakti": "عن واكتي",
+      "keyFeatures": "الميزات الرئيسية",
+      "plansAndPricing": "الخطط والأسعار",
+      "waktiForStudents": "واكتي للطلاب",
+      "taskManagement": "إدارة المهام للدراسة",
+      "groupProjects": "المشاريع الجماعية",
+      "waktiForProfessionals": "واكتي للمحترفين",
+      "dailyWorkPlanning": "تخطيط العمل اليومي",
+      "teamCoordination": "تنسيق الفريق",
+      "waktiForCreators": "واكتي للمبدعين",
+      "projectMilestones": "مراحل المشروع",
+      "clientManagement": "إدارة العملاء",
+      "waktiForBusiness": "واكتي للأعمال",
+      "staffManagement": "إدارة الموظفين",
+      "serviceBooking": "حجز الخدمات",
+      "businessAnalytics": "تحليلات الأعمال",
+      "waktiOverview": "نظرة عامة على واكتي",
+      "taskAndEvents": "المهام والفعاليات",
+      "plansAndFeatures": "الخطط والميزات",
+      "student": "الطالب",
+      "business": "الأعمال",
+      "professional": "المحترف",
+      "creative": "المبدع",
+      "general": "عام"
     }
   },
   "aiSettings": {

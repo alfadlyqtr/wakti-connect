@@ -7,6 +7,7 @@ import {
   Calendar, Check, CheckSquare, Lightbulb, BookOpen, BarChart, 
   Users, Search, FileText, Edit, Mic, HelpCircle, HeartHandshake, Settings 
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface QuickToolsCardProps {
   selectedRole: AIAssistantRole;
@@ -21,6 +22,8 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
   onToolClick,
   inSidebar = false
 }) => {
+  const { t } = useTranslation();
+  
   // Get quick tools for the current role
   const quickTools = RoleContexts[selectedRole]?.quickTools || [];
   
@@ -46,32 +49,32 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
   // Create example prompts based on the role
   const getPromptForTool = (toolName: string): string => {
     switch (toolName) {
-      case "Study Planner": return "Create a study plan for my upcoming exams";
-      case "Note Summarizer": return "Help me summarize this chapter's key points";
-      case "Research Assistant": return "Find academic sources about climate change";
-      case "Concept Explainer": return "Explain quantum physics in simple terms";
+      case "Study Planner": return t("ai.tools.quick.studyPlanner");
+      case "Note Summarizer": return t("ai.tools.quick.noteSummarizer");
+      case "Research Assistant": return t("ai.tools.quick.researchAssistant");
+      case "Concept Explainer": return t("ai.tools.quick.conceptExplainer");
       
-      case "Staff Scheduler": return "Help me organize staff shifts for next week";
-      case "Business Analytics": return "What trends do you see in my recent business data?";
-      case "Customer Service": return "Draft a response to this customer complaint";
-      case "Service Manager": return "Suggest ways to improve my booking process";
+      case "Staff Scheduler": return t("ai.tools.quick.staffScheduler");
+      case "Business Analytics": return t("ai.tools.quick.businessAnalytics");
+      case "Customer Service": return t("ai.tools.quick.customerService");
+      case "Service Manager": return t("ai.tools.quick.serviceManager");
       
-      case "Day Planner": return "Help me organize my day efficiently";
-      case "Task Creator": return "Create a task list for my home renovation project";
-      case "Quick Answer": return "What's the best way to improve productivity?";
-      case "Idea Generator": return "Generate ideas for my weekend family activities";
+      case "Day Planner": return t("ai.tools.quick.dayPlanner");
+      case "Task Creator": return t("ai.tools.quick.taskCreator");
+      case "Quick Answer": return t("ai.tools.quick.quickAnswer");
+      case "Idea Generator": return t("ai.tools.quick.ideaGenerator");
       
-      case "Email Composer": return "Draft a professional email to my client";
-      case "Content Creator": return "Help me write a blog post about productivity";
-      case "Creative Writing": return "Write a short story about space exploration";
-      case "Meeting Organizer": return "Create an agenda for my team meeting tomorrow";
+      case "Email Composer": return t("ai.tools.quick.emailComposer");
+      case "Content Creator": return t("ai.tools.quick.contentCreator");
+      case "Creative Writing": return t("ai.tools.quick.creativeWriting");
+      case "Meeting Organizer": return t("ai.tools.quick.meetingOrganizer");
       
-      case "Content Generator": return "Give me ideas for my next blog post";
-      case "Editor Helper": return "Help me improve this paragraph";
-      case "Writing Scheduler": return "Create a writing schedule for my book project";
-      case "Research Tool": return "Find information about historical fiction writing";
+      case "Content Generator": return t("ai.tools.quick.contentGenerator");
+      case "Editor Helper": return t("ai.tools.quick.editorHelper");
+      case "Writing Scheduler": return t("ai.tools.quick.writingScheduler");
+      case "Research Tool": return t("ai.tools.quick.researchTool");
       
-      default: return `Help me with ${toolName}`;
+      default: return `${toolName}`;
     }
   };
 
@@ -92,11 +95,11 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
         
         <div className="mt-3 pt-3 border-t border-border">
           <p className="text-xs text-muted-foreground">
-            These tools are designed to help with your 
-            {selectedRole === "general" ? " daily tasks" : 
-             selectedRole === "student" ? " studies" :
-             selectedRole === "business_owner" ? " business" :
-             " work"}
+            {selectedRole === "student" ? t("ai.tools.quick.suggestedTools")
+             : selectedRole === "business_owner" ? t("ai.tools.quick.suggestedTools")
+             : selectedRole === "employee" ? t("ai.tools.quick.suggestedTools")
+             : selectedRole === "writer" ? t("ai.tools.quick.suggestedTools")
+             : t("ai.tools.quick.suggestedTools")}
           </p>
         </div>
       </div>
@@ -106,12 +109,12 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle>Quick Tools</CardTitle>
+        <CardTitle>{t("ai.tools.quick.title")}</CardTitle>
         <CardDescription>
-          {selectedRole === "student" ? "Study and learning tools" : 
-           selectedRole === "business_owner" ? "Business management tools" :
-           selectedRole === "employee" || selectedRole === "writer" ? "Work and creative tools" :
-           "Tools to help you be more productive"}
+          {selectedRole === "student" ? t("ai.tools.quick.suggestedTools")
+           : selectedRole === "business_owner" ? t("ai.tools.quick.suggestedTools")
+           : selectedRole === "employee" || selectedRole === "writer" ? t("ai.tools.quick.suggestedTools")
+           : t("ai.tools.quick.suggestedTools")}
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, GraduationCap, Briefcase, Pen, Bot, Info, Star, Clock } from "lucide-react";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "react-i18next";
 
 interface RoleSpecificKnowledgeProps {
   selectedRole: AIAssistantRole;
@@ -15,33 +16,35 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
   selectedRole,
   canAccess
 }) => {
+  const { t } = useTranslation();
+  
   // WAKTI role-specific knowledge
   const roleKnowledge = {
     student: [
-      { title: "WAKTI for Students", content: "WAKTI helps students organize assignments, track deadlines, and manage study schedules." },
-      { title: "Task Management for Academics", content: "Use WAKTI to categorize assignments by subject and prioritize your study tasks." },
-      { title: "Group Projects", content: "Share tasks and events with classmates to coordinate group projects efficiently." }
+      { title: t("ai.knowledge.waktiForStudents"), content: "WAKTI helps students organize assignments, track deadlines, and manage study schedules." },
+      { title: t("ai.knowledge.taskManagement"), content: "Use WAKTI to categorize assignments by subject and prioritize your study tasks." },
+      { title: t("ai.knowledge.groupProjects"), content: "Share tasks and events with classmates to coordinate group projects efficiently." }
     ],
     employee: [
-      { title: "WAKTI for Professionals", content: "WAKTI helps employees manage work tasks, track deadlines, and coordinate with team members." },
-      { title: "Daily Work Planning", content: "Use WAKTI to organize your workday with prioritized tasks and time blocking." },
-      { title: "Team Coordination", content: "Share tasks and events with colleagues for better team coordination." }
+      { title: t("ai.knowledge.waktiForProfessionals"), content: "WAKTI helps employees manage work tasks, track deadlines, and coordinate with team members." },
+      { title: t("ai.knowledge.dailyWorkPlanning"), content: "Use WAKTI to organize your workday with prioritized tasks and time blocking." },
+      { title: t("ai.knowledge.teamCoordination"), content: "Share tasks and events with colleagues for better team coordination." }
     ],
     writer: [
-      { title: "WAKTI for Creators", content: "WAKTI helps writers and creators organize projects, track deadlines, and manage creative workflows." },
-      { title: "Project Milestones", content: "Break down creative projects into manageable tasks with deadlines in WAKTI." },
-      { title: "Client Management", content: "Use WAKTI to schedule client meetings and track deliverables." }
+      { title: t("ai.knowledge.waktiForCreators"), content: "WAKTI helps writers and creators organize projects, track deadlines, and manage creative workflows." },
+      { title: t("ai.knowledge.projectMilestones"), content: "Break down creative projects into manageable tasks with deadlines in WAKTI." },
+      { title: t("ai.knowledge.clientManagement"), content: "Use WAKTI to schedule client meetings and track deliverables." }
     ],
     business_owner: [
-      { title: "WAKTI for Business", content: "WAKTI helps business owners manage operations, staff, and customer appointments." },
-      { title: "Staff Management", content: "Assign tasks to staff members and track their productivity with WAKTI." },
-      { title: "Service Booking", content: "Allow customers to book your services through a customizable booking page." },
-      { title: "Business Analytics", content: "Track business performance with integrated analytics and reporting tools." }
+      { title: t("ai.knowledge.waktiForBusiness"), content: "WAKTI helps business owners manage operations, staff, and customer appointments." },
+      { title: t("ai.knowledge.staffManagement"), content: "Assign tasks to staff members and track their productivity with WAKTI." },
+      { title: t("ai.knowledge.serviceBooking"), content: "Allow customers to book your services through a customizable booking page." },
+      { title: t("ai.knowledge.businessAnalytics"), content: "Track business performance with integrated analytics and reporting tools." }
     ],
     general: [
-      { title: "WAKTI Overview", content: "WAKTI is an all-in-one productivity and business management platform." },
-      { title: "Task & Events", content: "Organize your personal and work life with WAKTI's task and event management." },
-      { title: "Plans & Features", content: "WAKTI offers Free, Individual (QAR 20/month), and Business (QAR 45/month) plans with different features." }
+      { title: t("ai.knowledge.waktiOverview"), content: "WAKTI is an all-in-one productivity and business management platform." },
+      { title: t("ai.knowledge.taskAndEvents"), content: "Organize your personal and work life with WAKTI's task and event management." },
+      { title: t("ai.knowledge.plansAndFeatures"), content: "WAKTI offers Free, Individual (QAR 20/month), and Business (QAR 45/month) plans with different features." }
     ]
   };
 
@@ -51,17 +54,17 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
   // WAKTI general information to show for all roles
   const waktiInfo = [
     { 
-      title: "About WAKTI", 
+      title: t("ai.knowledge.aboutWakti"), 
       content: "WAKTI is an all-in-one productivity and business management platform developed in Qatar for the MENA region.",
       icon: <Info className="h-4 w-4 text-indigo-500" />
     },
     { 
-      title: "Key Features", 
+      title: t("ai.knowledge.keyFeatures"), 
       content: "Task management, appointment booking, messaging, business dashboard, and AI assistant integration.",
       icon: <Star className="h-4 w-4 text-amber-500" />
     },
     { 
-      title: "Plans & Pricing", 
+      title: t("ai.knowledge.plansAndPricing"), 
       content: "Free, Individual (QAR 20/month), and Business (QAR 45/month) plans available with different features.",
       icon: <Briefcase className="h-4 w-4 text-emerald-500" />
     }
@@ -79,11 +82,11 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
 
   const getRoleTitle = () => {
     switch (selectedRole) {
-      case "student": return "Student";
-      case "business_owner": return "Business";
-      case "employee": return "Professional";
-      case "writer": return "Creative";
-      default: return "General";
+      case "student": return t("ai.knowledge.student");
+      case "business_owner": return t("ai.knowledge.business");
+      case "employee": return t("ai.knowledge.professional");
+      case "writer": return t("ai.knowledge.creative");
+      default: return t("ai.knowledge.general");
     }
   };
 
