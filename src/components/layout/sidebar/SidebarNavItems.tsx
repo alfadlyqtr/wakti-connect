@@ -6,6 +6,7 @@ import { navItems, NavItem } from "./sidebarNavConfig";
 import SidebarNavItem from "./SidebarNavItem";
 import { isUserStaff } from "@/utils/staffUtils";
 import { UserRole, hasRoleAccess } from "@/types/user";
+import { useTranslation } from "react-i18next";
 
 interface SidebarNavItemsProps {
   onNavClick: (path: string) => void;
@@ -19,6 +20,7 @@ const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
   const location = useLocation();
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [isStaff, setIsStaff] = useState(false);
+  const { t } = useTranslation();
   
   // Get user role from localStorage
   const userRole = localStorage.getItem('userRole') as UserRole || 'free';
@@ -74,7 +76,10 @@ const SidebarNavItems: React.FC<SidebarNavItemsProps> = ({
       {filteredNavItems.map((item) => (
         <SidebarNavItem
           key={item.path}
-          item={item}
+          item={{
+            ...item,
+            label: t(`nav.${item.path || 'dashboard'}`),
+          }}
           isActive={isActive(item)}
           isMobile={isMobile}
           isCollapsed={isCollapsed}
