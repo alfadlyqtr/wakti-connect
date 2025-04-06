@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Mic, RefreshCcw } from 'lucide-react';
+import { Mic, RefreshCcw, Globe } from 'lucide-react';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useTranslation } from "react-i18next";
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
 export const AIVoiceSettingsTab: React.FC = () => {
   const { t } = useTranslation();
@@ -15,8 +17,10 @@ export const AIVoiceSettingsTab: React.FC = () => {
   const { 
     autoSilenceDetection, 
     visualFeedback,
+    language,
     toggleAutoSilenceDetection,
     toggleVisualFeedback,
+    setLanguage,
     resetSettings
   } = useVoiceSettings();
   
@@ -51,6 +55,14 @@ export const AIVoiceSettingsTab: React.FC = () => {
         variant: "success"
       });
     }
+  };
+
+  const handleLanguageChange = (value: string) => {
+    setLanguage(value);
+    toast({
+      title: t("aiSettings.voice.languageChanged"),
+      description: value === 'ar' ? 'تم تغيير لغة التعرف على الكلام إلى العربية' : 'Speech recognition language changed to English',
+    });
   };
   
   return (
@@ -100,6 +112,23 @@ export const AIVoiceSettingsTab: React.FC = () => {
                 checked={visualFeedback}
                 onCheckedChange={toggleVisualFeedback}
               />
+            </div>
+
+            <div className="pt-2 border-t">
+              <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                {t("aiSettings.voice.language")}
+              </h3>
+              <RadioGroup value={language} onValueChange={handleLanguageChange} className="flex gap-4">
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="en" id="lang-en" />
+                  <Label htmlFor="lang-en">English</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="ar" id="lang-ar" />
+                  <Label htmlFor="lang-ar">العربية</Label>
+                </div>
+              </RadioGroup>
             </div>
             
             {apiKeyStatus === 'invalid' && (

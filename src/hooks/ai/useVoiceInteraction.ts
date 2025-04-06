@@ -18,6 +18,7 @@ interface VoiceInteractionState {
   transcript: string;
   lastTranscript: string;
   supportsVoice: boolean;
+  language: string;
 }
 
 export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
@@ -33,8 +34,14 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     isProcessing: false,
     transcript: '',
     lastTranscript: '',
-    supportsVoice: typeof navigator !== 'undefined' && 'mediaDevices' in navigator
+    supportsVoice: typeof navigator !== 'undefined' && 'mediaDevices' in navigator,
+    language: language || 'en' // Default to 'en' if language is not provided
   });
+  
+  // Update state when language setting changes
+  useEffect(() => {
+    setState(prev => ({ ...prev, language }));
+  }, [language]);
   
   useEffect(() => {
     checkApiKeyValidity();
@@ -149,6 +156,7 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     ...state,
     retryApiKeyValidation,
     startListening,
-    stopListening
+    stopListening,
+    language // Make sure we're explicitly returning the language
   };
 };
