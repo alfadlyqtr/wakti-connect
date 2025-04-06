@@ -138,3 +138,4 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
     </Card>
   );
 };
+

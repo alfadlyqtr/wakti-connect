@@ -49,232 +49,90 @@ export const RoleContexts: Record<AIAssistantRole, {
     description: "Help with learning, assignments, and study planning",
     icon: "graduation-cap",
     welcomeMessage: "Hello! I'm your Study Assistant. I can help with homework, study planning, and educational questions. How can I assist with your learning today?",
-    commandSuggestions: [
-      "Create a task for my math homework",
-      "Schedule a study session for tomorrow at 4pm",
-      "Help me organize my assignments by due date"
-    ],
     suggestedPrompts: [
-      "Create a study plan for my upcoming exams",
-      "Help me summarize this chapter",
-      "What's the best way to memorize formulas?",
-      "Create a task for my essay due next week"
+      "Create a study plan for my final exams",
+      "Help me understand this math concept",
+      "Summarize this article for my research",
+      "How do I improve my study habits?"
     ],
     quickTools: [
-      { name: "Study Planner", description: "Create study schedules", icon: "Calendar" },
-      { name: "Note Summarizer", description: "Summarize your notes", icon: "FileText" },
-      { name: "Research Assistant", description: "Find academic sources", icon: "Search" },
-      { name: "Concept Explainer", description: "Break down complex topics", icon: "BookOpen" }
+      { name: "Study Planner", description: "Create a customized study schedule", icon: "Calendar" },
+      { name: "Note Summarizer", description: "Summarize your notes or texts", icon: "FileText" },
+      { name: "Research Assistant", description: "Help finding reliable sources", icon: "Search" },
+      { name: "Concept Explainer", description: "Explain complex topics simply", icon: "BookOpen" }
     ]
   },
   "business_owner": {
     title: "Business Assistant",
-    description: "Help with operations, staff, and business analytics",
+    description: "Support for managing your business and staff",
     icon: "briefcase",
-    welcomeMessage: "Hello! I'm your Business Assistant. I can help manage your tasks, staff, bookings, and provide business insights. What aspect of your business can I assist with today?",
-    commandSuggestions: [
-      "Show me my business analytics",
-      "Create a task to follow up with clients",
-      "View my staff status"
-    ],
+    welcomeMessage: "Hello! I'm your Business Assistant. I can help with staff management, service bookings, and business analytics. How can I support your business today?",
     suggestedPrompts: [
-      "Generate a performance report for my business",
-      "Create a task to review customer feedback",
-      "Help me schedule staff for next week",
-      "What's my business growth looking like?"
+      "Create a task for my marketing team",
+      "Help me draft a professional email",
+      "Analyze my recent business performance",
+      "Schedule a team meeting for next week"
     ],
     quickTools: [
-      { name: "Staff Scheduler", description: "Organize staff schedules", icon: "Users" },
-      { name: "Business Analytics", description: "Review performance metrics", icon: "BarChart" },
-      { name: "Customer Service", description: "Manage interactions", icon: "HeartHandshake" },
-      { name: "Service Manager", description: "Business operations", icon: "Settings" }
+      { name: "Staff Scheduler", description: "Manage employee schedules", icon: "Calendar" },
+      { name: "Business Analytics", description: "Insights into business performance", icon: "BarChart" },
+      { name: "Customer Service", description: "Improve client communication", icon: "HeartHandshake" },
+      { name: "Service Manager", description: "Organize business services", icon: "Settings" }
     ]
   },
   "general": {
-    title: "Productivity Assistant",
-    description: "Help with tasks, scheduling, and general productivity",
-    icon: "list-check",
-    welcomeMessage: "Hello! I'm your Productivity Assistant. I can help manage your tasks, schedule events, and boost your productivity. How can I assist you today?",
-    commandSuggestions: [
-      "Create a task to buy groceries",
-      "Show me my tasks for today",
-      "Schedule a meeting with Sarah"
-    ],
+    title: "Personal Assistant",
+    description: "General productivity and task management",
+    icon: "user",
+    welcomeMessage: "Hello! I'm your Personal Assistant. I can help organize tasks, plan events, and boost your productivity. What would you like help with today?",
     suggestedPrompts: [
-      "Help me organize my day",
-      "Create a shopping list task",
-      "Schedule a reminder for tomorrow",
-      "How can I improve my productivity?"
+      "Create a to-do list for today",
+      "Remind me to call mom at 5pm",
+      "How can I be more productive?",
+      "Help me plan my weekend"
     ],
     quickTools: [
-      { name: "Day Planner", description: "Plan your schedule", icon: "Calendar" },
-      { name: "Task Creator", description: "Create tasks & reminders", icon: "CheckSquare" },
-      { name: "Quick Answer", description: "Get instant information", icon: "HelpCircle" },
-      { name: "Idea Generator", description: "Creative solutions", icon: "Lightbulb" }
+      { name: "Day Planner", description: "Organize your daily schedule", icon: "Calendar" },
+      { name: "Task Creator", description: "Create and track tasks", icon: "CheckSquare" },
+      { name: "Quick Answer", description: "Get information fast", icon: "HelpCircle" },
+      { name: "Idea Generator", description: "Brainstorm creative ideas", icon: "Lightbulb" }
     ]
   },
   "employee": {
     title: "Work Assistant",
-    description: "Help with workplace tasks and team coordination",
-    icon: "users",
-    welcomeMessage: "Hello! I'm your Work Assistant. I can help manage your work assignments, coordinate with your team, and track your job cards. How can I support your workday?",
-    commandSuggestions: [
-      "Show me my assigned tasks",
-      "Create a task for the client project",
-      "View my work schedule"
-    ],
+    description: "Support for professional tasks and team coordination",
+    icon: "briefcase",
+    welcomeMessage: "Hello! I'm your Work Assistant. I can help manage projects, coordinate with your team, and track work tasks. How can I assist with your work today?",
     suggestedPrompts: [
-      "Track my hours for today",
-      "Create a task for the team meeting notes",
-      "Help me log my completed work",
-      "What's on my agenda for today?"
+      "Create a task for my current project",
+      "Draft an email to my team about the meeting",
+      "Help me prepare for tomorrow's presentation",
+      "Set a reminder for the weekly report"
     ],
     quickTools: [
-      { name: "Email Composer", description: "Craft professional emails", icon: "FileText" },
-      { name: "Content Creator", description: "Create written content", icon: "Edit" },
-      { name: "Creative Writing", description: "Generate creative text", icon: "Mic" },
+      { name: "Email Composer", description: "Draft professional emails", icon: "Edit" },
+      { name: "Content Creator", description: "Help with work documents", icon: "FileText" },
+      { name: "Creative Writing", description: "Generate creative content", icon: "Edit" },
       { name: "Meeting Organizer", description: "Plan effective meetings", icon: "Users" }
     ]
   },
   "writer": {
     title: "Creative Assistant",
-    description: "Help with content creation and creative projects",
-    icon: "pen-nib",
-    welcomeMessage: "Hello! I'm your Creative Assistant. I can help organize your writing projects, manage deadlines, and keep track of your creative tasks. What are you working on today?",
-    commandSuggestions: [
-      "Create a task for my article draft",
-      "Schedule time for editing tomorrow",
-      "Organize my writing deadlines"
-    ],
+    description: "Support for writing and creative projects",
+    icon: "pen",
+    welcomeMessage: "Hello! I'm your Creative Assistant. I can help with writing projects, creative ideas, and managing your content calendar. How can I inspire your creativity today?",
     suggestedPrompts: [
-      "Help me outline an article",
-      "Create a writing schedule",
-      "Give me feedback on this paragraph",
-      "Create a task for my book chapter"
+      "Help me brainstorm article ideas",
+      "Create an outline for my blog post",
+      "Review this draft and suggest improvements",
+      "Help me develop this character for my story"
     ],
     quickTools: [
-      { name: "Content Generator", description: "Generate writing ideas", icon: "Lightbulb" },
-      { name: "Editor Helper", description: "Get editing assistance", icon: "Edit" },
-      { name: "Writing Scheduler", description: "Plan writing sessions", icon: "Calendar" },
-      { name: "Research Tool", description: "Find relevant information", icon: "Search" }
+      { name: "Content Generator", description: "Generate creative content", icon: "Edit" },
+      { name: "Editor Helper", description: "Review and improve writing", icon: "FileText" },
+      { name: "Writing Scheduler", description: "Plan your content calendar", icon: "Calendar" },
+      { name: "Research Tool", description: "Find information for your writing", icon: "Search" }
     ]
   }
 };
 
-// AI System Commands for task management and other WAKTI features
-export interface SystemCommand {
-  name: string;
-  description: string;
-  examples: string[];
-  systemOnly?: boolean; // If true, only accessible to the system, not directly to users
-}
-
-export const SystemCommands: Record<string, SystemCommand> = {
-  "create_task": {
-    name: "Create Task",
-    description: "Creates a new task in your task list",
-    examples: [
-      "Create a task to buy groceries",
-      "Add a task for project research due tomorrow",
-      "New task: call client at high priority"
-    ]
-  },
-  "view_tasks": {
-    name: "View Tasks",
-    description: "Shows your current tasks",
-    examples: [
-      "Show my tasks",
-      "View pending tasks",
-      "List all my tasks"
-    ]
-  },
-  "schedule_event": {
-    name: "Schedule Event",
-    description: "Creates a new event in your calendar",
-    examples: [
-      "Schedule a meeting tomorrow at 3pm",
-      "Create an event for doctor appointment on Friday",
-      "Add team meeting to calendar for next Monday"
-    ]
-  },
-  "check_calendar": {
-    name: "Check Calendar",
-    description: "Shows your upcoming events",
-    examples: [
-      "Show my calendar",
-      "What events do I have today?",
-      "Check my schedule for next week"
-    ]
-  },
-  "manage_staff": {
-    name: "Manage Staff",
-    description: "View and manage your staff (Business accounts only)",
-    examples: [
-      "Show my staff status",
-      "View team members",
-      "Check staff availability"
-    ]
-  },
-  "view_analytics": {
-    name: "View Analytics",
-    description: "Shows business or productivity analytics",
-    examples: [
-      "Show my analytics",
-      "View business performance",
-      "Check my productivity stats"
-    ]
-  },
-  "search_contacts": {
-    name: "Search Contacts",
-    description: "Finds contacts in your network",
-    examples: [
-      "Find contact John Smith",
-      "Search for Sarah in my contacts",
-      "Look up client contact info"
-    ]
-  },
-  "view_bookings": {
-    name: "View Bookings",
-    description: "Shows your upcoming bookings or appointments",
-    examples: [
-      "Show my bookings",
-      "View upcoming appointments",
-      "Check my client bookings"
-    ]
-  },
-  "get_task_insights": {
-    name: "Get Task Insights",
-    description: "Provides insights about your task management patterns",
-    examples: [
-      "How's my task management?",
-      "Give me insights on my productivity",
-      "Analyze my task completion"
-    ],
-    systemOnly: true
-  },
-  "get_business_overview": {
-    name: "Get Business Overview",
-    description: "Provides an overview of business performance",
-    examples: [
-      "Show business overview",
-      "Give me a business summary",
-      "How is my business doing?"
-    ],
-    systemOnly: true
-  }
-};
-
-// AI productivity insights for task management
-export interface AIProductivityInsight {
-  type: string;
-  severity: 'low' | 'medium' | 'high' | 'positive';
-  message: string;
-}
-
-// System voice assistant settings
-export interface AIVoiceSettings {
-  enabled: boolean;
-  voiceId: string;
-  speed: number;
-  autoPlay: boolean;
-}
