@@ -105,7 +105,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
                     <Upload className="h-5 w-5" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t("common.upload")}</TooltipContent>
+                <TooltipContent>{t("ai.tools.document.upload")}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </>

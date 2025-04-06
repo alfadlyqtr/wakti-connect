@@ -2,6 +2,9 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import Markdown from "react-markdown";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
+import i18n from "@/i18n/i18n";
 
 interface MessageContentProps {
   content: string;
@@ -10,6 +13,13 @@ interface MessageContentProps {
 }
 
 export function MessageContent({ content, timestamp, isUser }: MessageContentProps) {
+  // Format the time with the appropriate locale
+  const formattedTime = format(
+    timestamp,
+    "h:mm a",
+    { locale: i18n.language === "ar" ? ar : undefined }
+  );
+
   return (
     <div
       className={cn(
@@ -27,7 +37,7 @@ export function MessageContent({ content, timestamp, isUser }: MessageContentPro
         "text-[8px] sm:text-[10px] mt-1 text-right",
         isUser ? "text-blue-100" : "text-muted-foreground"
       )}>
-        {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        {formattedTime}
       </div>
     </div>
   );

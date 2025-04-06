@@ -48,16 +48,16 @@ export function getRelativeTimeString(date: Date): string {
   if (diffInDays < 1) {
     return format(date, "h:mm a", { locale: i18n.language === "ar" ? ar : undefined });
   } else if (diffInDays === 1) {
-    return "Yesterday";
+    return i18n.t("ai.timeAgo.yesterday", { defaultValue: "Yesterday" });
   } else if (diffInDays < 7) {
-    return `${diffInDays} days ago`;
+    return i18n.t("ai.timeAgo.days", { count: diffInDays, defaultValue: "{{count}} days ago" });
   } else if (diffInDays < 14) {
-    return "1 week ago";
+    return i18n.t("ai.timeAgo.week", { defaultValue: "1 week ago" });
   } else if (diffInDays < 30) {
-    return `${Math.floor(diffInDays / 7)} weeks ago`;
+    return i18n.t("ai.timeAgo.weeks", { count: Math.floor(diffInDays / 7), defaultValue: "{{count}} weeks ago" });
   } else if (diffInDays < 60) {
-    return "1 month ago";
+    return i18n.t("ai.timeAgo.month", { defaultValue: "1 month ago" });
   } else {
-    return `${Math.floor(diffInDays / 30)} months ago`;
+    return i18n.t("ai.timeAgo.months", { count: Math.floor(diffInDays / 30), defaultValue: "{{count}} months ago" });
   }
 }

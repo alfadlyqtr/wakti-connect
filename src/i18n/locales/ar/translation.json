@@ -125,9 +125,12 @@
     },
     "creativeTools": "الأدوات الإبداعية",
     "timeAgo": {
+      "yesterday": "أمس",
       "days": "قبل {{count}} يوم",
       "week": "قبل أسبوع",
-      "weeks": "قبل {{count}} أسبوع"
+      "weeks": "قبل {{count}} أسبوع",
+      "month": "قبل شهر",
+      "months": "قبل {{count}} شهر"
     },
     "sampleHistory": {
       "efficiency": "تحسين كفاءة العمل",

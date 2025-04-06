@@ -38,7 +38,9 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
     const roleContext = RoleContexts[selectedRole];
     // Check if welcomeMessage exists, otherwise use a default message
     const baseMessage = roleContext.welcomeMessage || 
-      `Hello! I'm your ${roleContext.title}. I can help with a variety of tasks. How can I assist you today?`;
+      t("ai.defaultWelcome", {
+        defaultValue: `Hello! I'm your ${roleContext.title}. I can help with a variety of tasks. How can I assist you today?`
+      });
     
     const timeGreeting = getTimeBasedGreeting();
     
