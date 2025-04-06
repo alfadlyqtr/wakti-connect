@@ -6,6 +6,7 @@ import DetailsTabContent from "../details/DetailsTabContent";
 import CustomizeTab from "../customize/CustomizeTab";
 import ShareTabContent from "../sharing/ShareTabContent";
 import { InvitationRecipient } from "@/types/invitation.types";
+import { ShareTab } from "@/types/form.types";
 
 export interface FormTabsProps {
   activeTab: EventFormTab;
@@ -22,13 +23,20 @@ export interface FormTabsProps {
   startTime?: string;
   endTime?: string;
   isAllDay?: boolean;
+  locationType?: 'manual' | 'google_maps';
+  mapsUrl?: string;
+  shareTab?: ShareTab;
+  setShareTab?: (tab: ShareTab) => void;
+  onSendEmail?: (email: string) => void;
   onTitleChange?: (title: string) => void;
   onDescriptionChange?: (description: string) => void;
   onDateChange?: (date: Date) => void;
-  onLocationChange?: (location: string) => void;
+  onLocationChange?: (location: string, type?: 'manual' | 'google_maps', url?: string) => void;
   onStartTimeChange?: (time: string) => void;
   onEndTimeChange?: (time: string) => void;
   onIsAllDayChange?: (isAllDay: boolean) => void;
+  getCurrentLocation?: () => void;
+  isGettingLocation?: boolean;
 }
 
 const FormTabs: React.FC<FormTabsProps> = ({ 
@@ -46,13 +54,20 @@ const FormTabs: React.FC<FormTabsProps> = ({
   startTime,
   endTime,
   isAllDay = false,
+  locationType,
+  mapsUrl,
+  shareTab,
+  setShareTab,
+  onSendEmail,
   onTitleChange,
   onDescriptionChange,
   onDateChange,
   onLocationChange,
   onStartTimeChange,
   onEndTimeChange,
-  onIsAllDayChange
+  onIsAllDayChange,
+  getCurrentLocation,
+  isGettingLocation
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as EventFormTab)}>
@@ -71,6 +86,8 @@ const FormTabs: React.FC<FormTabsProps> = ({
           startTime={startTime}
           endTime={endTime}
           isAllDay={isAllDay}
+          locationType={locationType}
+          mapsUrl={mapsUrl}
           onTitleChange={onTitleChange}
           onDescriptionChange={onDescriptionChange}
           onDateChange={onDateChange}
@@ -78,6 +95,8 @@ const FormTabs: React.FC<FormTabsProps> = ({
           onStartTimeChange={onStartTimeChange}
           onEndTimeChange={onEndTimeChange}
           onIsAllDayChange={onIsAllDayChange}
+          getCurrentLocation={getCurrentLocation}
+          isGettingLocation={isGettingLocation}
         />
       </TabsContent>
       
@@ -101,6 +120,9 @@ const FormTabs: React.FC<FormTabsProps> = ({
           recipients={recipients}
           addRecipient={addRecipient}
           removeRecipient={removeRecipient}
+          shareTab={shareTab}
+          setShareTab={setShareTab}
+          onSendEmail={onSendEmail}
         />
       </TabsContent>
     </Tabs>

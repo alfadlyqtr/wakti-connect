@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,8 +8,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Clock } from "lucide-react";
+import { CalendarIcon, Clock, MapPin, Navigation } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import LocationPicker from "../location/LocationPicker";
 
 interface DetailsTabContentProps {
   title?: string;
@@ -19,13 +21,17 @@ interface DetailsTabContentProps {
   startTime?: string;
   endTime?: string;
   isAllDay?: boolean;
+  locationType?: 'manual' | 'google_maps';
+  mapsUrl?: string;
   onTitleChange?: (title: string) => void;
   onDescriptionChange?: (description: string) => void;
   onDateChange?: (date: Date) => void;
-  onLocationChange?: (location: string) => void;
+  onLocationChange?: (location: string, type?: 'manual' | 'google_maps', url?: string) => void;
   onStartTimeChange?: (time: string) => void;
   onEndTimeChange?: (time: string) => void;
   onIsAllDayChange?: (isAllDay: boolean) => void;
+  getCurrentLocation?: () => void;
+  isGettingLocation?: boolean;
 }
 
 const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
@@ -36,14 +42,35 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
   startTime = "09:00",
   endTime = "10:00",
   isAllDay = false,
+  locationType = 'manual',
+  mapsUrl = "",
   onTitleChange,
   onDescriptionChange,
   onDateChange,
   onLocationChange,
   onStartTimeChange,
   onEndTimeChange,
-  onIsAllDayChange
+  onIsAllDayChange,
+  getCurrentLocation,
+  isGettingLocation
 }) => {
+  const [locationInputType, setLocationInputType] = useState<'manual' | 'maps'>(locationType === 'google_maps' ? 'maps' : 'manual');
+  
+  const handleLocationTypeChange = (value: 'manual' | 'maps') => {
+    setLocationInputType(value);
+    // Reset location when changing type
+    if (value === 'manual' && onLocationChange) {
+      onLocationChange("", 'manual');
+    }
+  };
+
+  const handleLocationPickerChange = (value: string, lat?: number, lng?: number) => {
+    if (onLocationChange) {
+      const url = lat && lng ? `https://www.google.com/maps?q=${lat},${lng}` : undefined;
+      onLocationChange(value, 'google_maps', url);
+    }
+  };
+
   return (
     <div className="space-y-4 p-4">
       <div className="space-y-2">
@@ -132,14 +159,56 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
         </div>
       )}
       
-      <div className="space-y-2">
-        <Label htmlFor="location">Location</Label>
-        <Input 
-          id="location" 
-          value={location} 
-          onChange={(e) => onLocationChange?.(e.target.value)}
-          placeholder="Enter event location" 
-        />
+      <div className="space-y-3">
+        <Label>Location</Label>
+        
+        <RadioGroup 
+          value={locationInputType} 
+          onValueChange={(v) => handleLocationTypeChange(v as 'manual' | 'maps')}
+          className="flex space-x-4"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="manual" id="manual" />
+            <Label htmlFor="manual">Manual entry</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="maps" id="maps" />
+            <Label htmlFor="maps">Google Maps</Label>
+          </div>
+        </RadioGroup>
+        
+        {locationInputType === 'manual' ? (
+          <div className="flex items-center space-x-2">
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+            <Input
+              value={location}
+              onChange={(e) => onLocationChange?.(e.target.value, 'manual')}
+              placeholder="Enter location manually"
+            />
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <LocationPicker
+              value={location}
+              onChange={handleLocationPickerChange}
+              placeholder="Search for a location..."
+            />
+            
+            {getCurrentLocation && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                className="w-full" 
+                onClick={getCurrentLocation}
+                disabled={isGettingLocation}
+              >
+                <Navigation className="mr-2 h-4 w-4" />
+                {isGettingLocation ? "Getting your location..." : "Use my current location"}
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

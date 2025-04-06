@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from "react";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@/components/ui/use-toast";
 
 export const useEventLocation = () => {
   const [locationType, setLocationType] = useState<'manual' | 'google_maps'>('manual');

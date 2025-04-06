@@ -10,6 +10,8 @@ import { InvitationRecipient } from "@/types/invitation.types";
 import useEditEventEffect from "./hooks/useEditEventEffect";
 import { Event } from "@/types/event.types";
 import { useEventSubmission } from "@/hooks/events/useEventSubmission";
+import { ShareTab, SHARE_TABS } from "@/types/form.types";
+import { useEventLocation } from "@/hooks/events/useEventLocation";
 
 interface EventCreationFormProps {
   editEvent?: Event | null;
@@ -31,9 +33,17 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
-  const [location, setLocation] = useState("");
-  const [locationType, setLocationType] = useState<'manual' | 'google_maps'>('manual');
-  const [mapsUrl, setMapsUrl] = useState("");
+  const [shareTab, setShareTab] = useState<ShareTab>(SHARE_TABS.RECIPIENTS);
+  
+  // Use location hook for advanced location features
+  const {
+    location,
+    locationType,
+    mapsUrl,
+    isGettingLocation,
+    handleLocationChange,
+    getCurrentLocation
+  } = useEventLocation();
   
   // Default customization state
   const [customization, setCustomization] = useState({
@@ -86,7 +96,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     setIsAllDay,
     setStartTime,
     setEndTime,
-    setLocation,
+    setLocation: (loc) => handleLocationChange(loc, 'manual'),
     setLocationType,
     setMapsUrl,
     setCustomization
@@ -102,14 +112,22 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     form.setValue("description", newDescription);
   };
 
-  const handleLocationChange = (newLocation: string) => {
-    setLocation(newLocation);
-    form.setValue("location", newLocation);
-  };
-
   const handleDateChange = (newDate: Date) => {
     setSelectedDate(newDate);
     form.setValue("startDate", newDate);
+  };
+
+  // Handler for sending email invitations
+  const handleSendEmail = (email: string) => {
+    const emailRecipient: InvitationRecipient = {
+      id: `email-${Date.now()}`,
+      name: email,
+      email,
+      type: 'email'
+    };
+    
+    setRecipients(prev => [...prev, emailRecipient]);
+    setShareTab(SHARE_TABS.RECIPIENTS);
   };
 
   // The submission hook from useEventSubmission
@@ -135,9 +153,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
       setIsAllDay(false);
       setStartTime("09:00");
       setEndTime("10:00");
-      setLocation("");
-      setLocationType('manual');
-      setMapsUrl("");
+      handleLocationChange("", 'manual');
       setRecipients([]);
       setActiveTab("details");
       form.reset();
@@ -147,6 +163,8 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
   });
   
   const handleSubmitForm = () => {
+    form.setValue("location", location);
+    form.setValue("isAllDay", isAllDay);
     const formData = form.getValues();
     onSubmit(formData);
   };
@@ -195,6 +213,13 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
           onEndTimeChange={setEndTime}
           onIsAllDayChange={setIsAllDay}
           isAllDay={isAllDay}
+          locationType={locationType}
+          mapsUrl={mapsUrl}
+          getCurrentLocation={getCurrentLocation}
+          isGettingLocation={isGettingLocation}
+          shareTab={shareTab}
+          setShareTab={setShareTab}
+          onSendEmail={handleSendEmail}
         />
         
         <FormActions 
