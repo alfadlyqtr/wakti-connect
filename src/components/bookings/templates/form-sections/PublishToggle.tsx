@@ -3,12 +3,15 @@ import React from "react";
 import { Control, useWatch } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
+import { useTranslation } from "react-i18next";
 
 interface PublishToggleProps {
   control: Control<any>;
 }
 
 const PublishToggle: React.FC<PublishToggleProps> = ({ control }) => {
+  const { t } = useTranslation();
+  
   const serviceId = useWatch({
     control,
     name: "service_id",
@@ -23,11 +26,11 @@ const PublishToggle: React.FC<PublishToggleProps> = ({ control }) => {
       render={({ field }) => (
         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
           <div className="space-y-0.5">
-            <FormLabel className="text-base">Publish Pre-Booking</FormLabel>
+            <FormLabel className="text-base">{t('booking.publishPreBooking')}</FormLabel>
             <FormDescription>
               {isLinkedToService 
-                ? "This booking is linked to a service and will be published on your business page."
-                : "Make this pre-booking available on your business page."}
+                ? t('booking.linkedServicePublishDesc')
+                : t('booking.publishPreBookingDesc')}
             </FormDescription>
           </div>
           <FormControl>

@@ -3,12 +3,15 @@ import React from "react";
 import { Control } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "react-i18next";
 
 interface TimeSettingsProps {
   control: Control<any>;
 }
 
 const TimeSettings: React.FC<TimeSettingsProps> = ({ control }) => {
+  const { t } = useTranslation();
+  
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -17,7 +20,7 @@ const TimeSettings: React.FC<TimeSettingsProps> = ({ control }) => {
           name="default_starting_hour"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Default Starting Hour</FormLabel>
+              <FormLabel>{t('booking.templateBooking.startHour')}</FormLabel>
               <FormControl>
                 <Input 
                   type="number" 
@@ -37,7 +40,7 @@ const TimeSettings: React.FC<TimeSettingsProps> = ({ control }) => {
           name="default_ending_hour"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Default Ending Hour</FormLabel>
+              <FormLabel>{t('booking.templateBooking.endHour')}</FormLabel>
               <FormControl>
                 <Input 
                   type="number" 
@@ -58,12 +61,12 @@ const TimeSettings: React.FC<TimeSettingsProps> = ({ control }) => {
         name="max_daily_bookings"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Max Daily Bookings (Optional)</FormLabel>
+            <FormLabel>{t('booking.maxDailyBookings')} ({t('common.optional')})</FormLabel>
             <FormControl>
               <Input 
                 type="number" 
                 min={1} 
-                placeholder="Leave empty for unlimited" 
+                placeholder={t('booking.templateBooking.noLimit')} 
                 {...field}
                 value={field.value === undefined ? "" : field.value}
                 onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}

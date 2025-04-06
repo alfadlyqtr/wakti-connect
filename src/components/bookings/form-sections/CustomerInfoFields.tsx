@@ -14,36 +14,49 @@ const CustomerInfoFields: React.FC<CustomerInfoFieldsProps> = ({ control }) => {
   
   return (
     <div className="space-y-4">
-      <h3 className="text-md font-semibold">{t('booking.form.customerInfo')}</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FormField
-          control={control}
-          name="customer_name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('booking.form.customerName')}</FormLabel>
-              <FormControl>
-                <Input placeholder={t('booking.form.customerName')} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={control}
-          name="customer_email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('booking.form.customerEmail')}</FormLabel>
-              <FormControl>
-                <Input type="email" placeholder="customer@example.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+      <h3 className="text-lg font-medium">{t('booking.form.customerInfo')}</h3>
+      
+      <FormField
+        control={control}
+        name="customer_name"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('booking.form.customerName')}</FormLabel>
+            <FormControl>
+              <Input placeholder={t('booking.enterCustomerName')} {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={control}
+        name="customer_email"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('booking.form.customerEmail')}</FormLabel>
+            <FormControl>
+              <Input type="email" placeholder={t('booking.enterCustomerEmail')} {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={control}
+        name="customer_phone"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('booking.form.customerPhone')}</FormLabel>
+            <FormControl>
+              <Input placeholder={t('booking.enterCustomerPhone')} {...field} value={field.value || ""} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   );
 };

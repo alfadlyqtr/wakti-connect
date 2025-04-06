@@ -4,6 +4,7 @@ import { Control } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Service } from "@/types/service.types";
+import { useTranslation } from "react-i18next";
 
 interface ServiceSelectorProps {
   control: Control<any>;
@@ -16,13 +17,15 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
   services,
   onServiceChange 
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <FormField
       control={control}
       name="service_id"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Link to Service</FormLabel>
+          <FormLabel>{t('booking.linkToService')}</FormLabel>
           <Select 
             onValueChange={(value) => {
               field.onChange(value === "none" ? undefined : value);
@@ -32,21 +35,20 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
           >
             <FormControl>
               <SelectTrigger>
-                <SelectValue placeholder="Select a service" />
+                <SelectValue placeholder={t('booking.selectService')} />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="none">None</SelectItem>
+              <SelectItem value="none">{t('common.none')}</SelectItem>
               {services.map((service) => (
                 <SelectItem key={service.id} value={service.id}>
-                  {service.name} ({service.duration} min)
+                  {service.name} ({service.duration} {t('booking.minutes')})
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <FormDescription>
-            Selecting a service will auto-fill name, duration, price, and other details.
-            Linked services are automatically set to be published.
+            {t('booking.serviceSelectionDescription')}
           </FormDescription>
           <FormMessage />
         </FormItem>

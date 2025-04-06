@@ -15,7 +15,8 @@ const BookingDetailsFields: React.FC<BookingDetailsFieldsProps> = ({ control }) 
   
   return (
     <div className="space-y-4">
-      <h3 className="text-md font-semibold">{t('booking.form.title')}</h3>
+      <h3 className="text-lg font-medium">{t('booking.bookingDetails')}</h3>
+      
       <FormField
         control={control}
         name="title"
@@ -23,7 +24,7 @@ const BookingDetailsFields: React.FC<BookingDetailsFieldsProps> = ({ control }) 
           <FormItem>
             <FormLabel>{t('booking.form.title')}</FormLabel>
             <FormControl>
-              <Input placeholder={t('booking.form.title')} {...field} />
+              <Input placeholder={t('booking.enterBookingTitle')} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -37,7 +38,12 @@ const BookingDetailsFields: React.FC<BookingDetailsFieldsProps> = ({ control }) 
           <FormItem>
             <FormLabel>{t('booking.form.description')}</FormLabel>
             <FormControl>
-              <Textarea placeholder={t('booking.form.additionalNotes')} {...field} />
+              <Textarea 
+                placeholder={t('booking.enterBookingDescription')} 
+                className="min-h-[80px]" 
+                {...field}
+                value={field.value || ""}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>

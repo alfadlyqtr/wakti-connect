@@ -7,6 +7,7 @@
     "success": "تم بنجاح!",
     "cancel": "إلغاء",
     "save": "حفظ",
+    "saving": "جاري الحفظ",
     "edit": "تعديل",
     "delete": "حذف",
     "back": "رجوع",
@@ -30,7 +31,9 @@
     "no": "لا",
     "close": "إغلاق",
     "done": "تم",
-    "account": "الحساب"
+    "account": "الحساب",
+    "optional": "اختياري",
+    "none": "لا شيء"
   },
   "header": {
     "pricing": "الأسعار",
@@ -505,6 +508,29 @@
     "unpublish": "إلغاء النشر",
     "publishConfirm": "هل أنت متأكد من أنك تريد نشر \"{name}\"؟ سيجعله مرئياً للعملاء.",
     "unpublishConfirm": "هل أنت متأكد من أنك تريد إلغاء نشر \"{name}\"؟ سيخفيه عن العملاء.",
+    "linkToService": "ربط بالخدمة",
+    "selectService": "اختر خدمة",
+    "serviceSelectionDescription": "يؤدي تحديد الخدمة إلى ملء الاسم والمدة والسعر والتفاصيل الأخرى تلقائيًا. يتم تعيين الخدمات المرتبطة للنشر تلقائيًا.",
+    "noServiceProviders": "لا يوجد مزودي خدمة متاحين",
+    "assignStaff": "تعيين موظف",
+    "noServices": "لا توجد خدمات",
+    "noStaffAvailable": "لا يوجد موظفين متاحين",
+    "bookingDetails": "تفاصيل الحجز",
+    "enterBookingTitle": "أدخل عنوان الحجز",
+    "enterBookingDescription": "أدخل وصف الحجز (اختياري)",
+    "enterCustomerName": "أدخل اسم العميل",
+    "enterCustomerEmail": "أدخل البريد الإلكتروني للعميل",
+    "enterCustomerPhone": "أدخل رقم هاتف العميل",
+    "templateNamePlaceholder": "مثال: استشارة لمدة ساعة",
+    "autoFilledFromService": "ممتلئ تلقائيًا من الخدمة المرتبطة",
+    "priceFieldPlaceholder": "اترك فارغًا للتسعير المتغير",
+    "publishPreBooking": "نشر الحجز المسبق",
+    "publishPreBookingDesc": "اجعل هذا الحجز المسبق متاحًا على صفحة عملك.",
+    "linkedServicePublishDesc": "هذا الحجز مرتبط بخدمة وسيتم نشره على صفحة عملك.",
+    "maxDailyBookings": "الحد الأقصى للحجوزات اليومية",
+    "updatePreBooking": "تحديث الحجز المسبق",
+    "createPreBooking": "إنشاء حجز مسبق",
+    "autoDuration": "مدة تلقائية ({duration} دقيقة)",
     "form": {
       "title": "عنوان الحجز",
       "description": "وصف الحجز (اختياري)",
@@ -648,5 +674,17 @@
       "createAccount": "إنشاء حساب في وقتي",
       "createAccountDesc": "استمتع بتجربة حجز أفضل، وتتبع الحجوزات السابقة والقادمة، والمزيد."
     }
+  },
+  "events": {
+    "edit": "تعديل الحدث",
+    "create": "إنشاء حدث"
+  },
+  "validation": {
+    "titleRequired": "يجب أن يحتوي العنوان على الأقل حرفين",
+    "customerNameRequired": "اسم العميل مطلوب",
+    "validEmailRequired": "يرجى إدخال بريد إلكتروني صالح",
+    "dateRequired": "الرجاء تحديد تاريخ",
+    "startTimeRequired": "وقت البدء مطلوب",
+    "endTimeRequired": "وقت الانتهاء مطلوب"
   }
 }
