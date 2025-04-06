@@ -49,7 +49,7 @@ export const DocumentUploadTool: React.FC<DocumentUploadToolProps> = ({
     
     // Simulate document analysis
     setTimeout(() => {
-      const summary = `Document Analysis: ${selectedFile.name} - This is a sample document analysis that would be generated from the AI model. In a real implementation, this would be the result of processing the document contents through an NLP model.`;
+      const summary = `${t("ai.tools.document.upload")}: ${selectedFile.name} - ${t("ai.documentAnalysis")}`;
       setDocumentSummary(summary);
       setIsAnalyzing(false);
     }, 1500);

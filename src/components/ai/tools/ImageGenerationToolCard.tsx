@@ -31,8 +31,8 @@ export const ImageGenerationToolCard: React.FC<ImageGenerationToolCardProps> = (
       setIsGenerating(false);
       
       toast({
-        title: "Image generated",
-        description: "Your AI image has been created successfully.",
+        title: t("ai.tools.image.imageGenerated"),
+        description: t("ai.tools.image.imageSuccess"),
       });
     }, 1500);
   };

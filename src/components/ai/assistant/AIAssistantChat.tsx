@@ -4,6 +4,7 @@ import { AIMessage, AIAssistantRole, RoleContexts } from '@/types/ai-assistant.t
 import { AIAssistantMessage } from '../message/AIAssistantMessage';
 import { Loader2 } from 'lucide-react';
 import { getTimeBasedGreeting } from '@/lib/dateUtils';
+import { useTranslation } from 'react-i18next';
 
 export interface AIAssistantChatProps {
   messages: AIMessage[];
@@ -24,6 +25,8 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
   canAccess,
   selectedRole
 }) => {
+  const { t } = useTranslation();
+  
   // State to track which message is currently being "spoken"
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   
@@ -118,7 +121,7 @@ export const AIAssistantChat: React.FC<AIAssistantChatProps> = ({
             <Loader2 className="h-5 w-5 text-white animate-spin" />
           </div>
           <div className="p-3 bg-muted rounded-lg max-w-[80%]">
-            <p className="text-sm text-muted-foreground">Thinking...</p>
+            <p className="text-sm text-muted-foreground">{t("ai.thinking")}</p>
           </div>
         </div>
       )}
