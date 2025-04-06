@@ -81,3 +81,6 @@ export function LanguageSwitcher() {
     );
   }
 }
+
+// Add a default export that points to the same component
+export default LanguageSwitcher;
