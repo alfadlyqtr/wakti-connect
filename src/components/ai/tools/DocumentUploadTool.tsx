@@ -1,165 +1,135 @@
 
-import React, { useState, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Upload, File, CheckCircle2 } from 'lucide-react';
-import { AIToolCard } from './AIToolCard';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileText, Upload } from "lucide-react";
+import { AIUpgradeRequired } from "@/components/ai/AIUpgradeRequired";
+import { useTranslation } from "react-i18next";
 
 interface DocumentUploadToolProps {
   canAccess: boolean;
   onUseDocumentContent: (content: string) => void;
-  compact?: boolean;
 }
 
 export const DocumentUploadTool: React.FC<DocumentUploadToolProps> = ({
   canAccess,
-  onUseDocumentContent,
-  compact = false
+  onUseDocumentContent
 }) => {
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [extractedText, setExtractedText] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const { t } = useTranslation();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [documentSummary, setDocumentSummary] = useState("");
+  
   if (!canAccess) {
-    return null;
+    return <AIUpgradeRequired />;
   }
 
-  const handleFileUpload = () => {
-    fileInputRef.current?.click();
-  };
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const newFiles = Array.from(files);
-      setUploadedFiles(prev => [...prev, ...newFiles]);
-      
-      // Simulate text extraction (in a real app, this would call a backend service)
-      setTimeout(() => {
-        setExtractedText("Document text extraction complete. This is sample extracted text content that would normally come from processing the uploaded document using OCR or other document parsing technologies.");
-      }, 1000);
-      
-      // Reset the input to allow uploading the same file again
-      e.target.value = '';
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
     }
   };
 
-  const handleUseText = () => {
-    onUseDocumentContent(extractedText);
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      setSelectedFile(file);
+    }
   };
 
-  if (compact) {
-    return (
-      <div className="space-y-3">
-        <div className="flex items-center text-sm mb-1">
-          <FileText className="h-4 w-4 mr-1.5" />
-          <span className="font-medium">Document Analysis</span>
-        </div>
-        <div 
-          className="border border-dashed border-border rounded-lg p-3 text-center cursor-pointer hover:bg-accent/30"
-          onClick={handleFileUpload}
-        >
-          <Upload className="h-4 w-4 mx-auto mb-1" />
-          <p className="text-xs text-muted-foreground">Upload documents for text extraction</p>
-          <input 
-            type="file" 
-            className="hidden" 
-            ref={fileInputRef} 
-            onChange={handleFileChange}
-            accept=".pdf,.doc,.docx,.txt"
-          />
-        </div>
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
 
-        {uploadedFiles.length > 0 && (
-          <div className="space-y-2">
-            {uploadedFiles.map((file, index) => (
-              <div key={index} className="flex items-center text-xs p-1.5 bg-primary/5 rounded">
-                <File className="h-3 w-3 mr-1.5" />
-                <span className="truncate">{file.name}</span>
-                <CheckCircle2 className="h-3 w-3 ml-1.5 text-green-500" />
-              </div>
-            ))}
-            
-            {extractedText && (
-              <Button 
-                size="sm" 
-                className="w-full mt-2 text-xs h-7" 
-                onClick={handleUseText}
-              >
-                Use in chat
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  }
+  const handleAnalyze = () => {
+    if (!selectedFile) return;
+    setIsAnalyzing(true);
+    
+    // Simulate document analysis
+    setTimeout(() => {
+      const summary = `Document Analysis: ${selectedFile.name} - This is a sample document analysis that would be generated from the AI model. In a real implementation, this would be the result of processing the document contents through an NLP model.`;
+      setDocumentSummary(summary);
+      setIsAnalyzing(false);
+    }, 1500);
+  };
+
+  const handleUseContent = () => {
+    if (documentSummary) {
+      onUseDocumentContent(documentSummary);
+    }
+  };
+
+  const handleReset = () => {
+    setSelectedFile(null);
+    setDocumentSummary("");
+  };
 
   return (
-    <AIToolCard
-      icon={FileText}
-      title="Document Upload & Text Extraction"
-      description="Upload documents and extract text for AI analysis"
-      iconColor="text-blue-500"
-    >
-      <div className="space-y-4">
-        <div 
-          className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:bg-accent/30 transition-colors"
-          onClick={handleFileUpload}
-        >
-          <FileText className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-          <h3 className="text-base font-medium mb-1">Upload Documents</h3>
-          <p className="text-sm text-muted-foreground mb-3">Upload files for text extraction</p>
-          <Button 
-            variant="outline" 
-            onClick={(e) => {
-              e.stopPropagation();
-              handleFileUpload();
-            }}
-            size="sm"
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            Select Files
-          </Button>
-          <input 
-            type="file" 
-            className="hidden" 
-            ref={fileInputRef} 
-            onChange={handleFileChange}
-            accept=".pdf,.doc,.docx,.txt"
-          />
-          <p className="text-xs text-muted-foreground mt-3">
-            Supports PDF, Word, and text files
-          </p>
-        </div>
-
-        {uploadedFiles.length > 0 && (
-          <div className="space-y-3 border rounded-lg p-4">
-            <h4 className="font-medium">Uploaded Files</h4>
-            <div className="space-y-2">
-              {uploadedFiles.map((file, index) => (
-                <div key={index} className="flex items-center p-2 bg-primary/5 rounded">
-                  <File className="h-4 w-4 mr-2" />
-                  <span className="truncate">{file.name}</span>
-                  <CheckCircle2 className="h-4 w-4 ml-2 text-green-500" />
-                </div>
-              ))}
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5 text-wakti-blue" />
+          {t("ai.tools.document.upload")}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {documentSummary ? (
+          <div className="space-y-4">
+            <div className="p-3 rounded-md bg-secondary/30 h-32 overflow-y-auto">
+              <p className="text-sm">{documentSummary}</p>
             </div>
-            
-            {extractedText && (
-              <div className="mt-4">
-                <h4 className="font-medium mb-2">Extracted Text</h4>
-                <div className="border rounded p-3 text-sm bg-primary/5 mb-3 max-h-40 overflow-y-auto">
-                  {extractedText}
-                </div>
-                <Button onClick={handleUseText}>
-                  Use in Conversation
-                </Button>
-              </div>
-            )}
+            <div className="flex space-x-2">
+              <Button onClick={handleUseContent} className="flex-1">
+                {t("ai.tools.document.useThis")}
+              </Button>
+              <Button variant="outline" onClick={handleReset}>
+                {t("ai.tools.voice.tryAgain")}
+              </Button>
+            </div>
+          </div>
+        ) : selectedFile ? (
+          <div className="space-y-4">
+            <div className="p-3 rounded-md bg-secondary/30">
+              <p className="text-sm font-medium">{selectedFile.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {Math.round(selectedFile.size / 1024)} KB
+              </p>
+            </div>
+            <Button onClick={handleAnalyze} disabled={isAnalyzing} className="w-full">
+              {isAnalyzing ? (
+                <>
+                  <div className="h-4 w-4 mr-2 rounded-full border-2 border-t-transparent animate-spin" />
+                  {t("ai.tools.document.generating")}
+                </>
+              ) : (
+                t("ai.tools.document.analyze")
+              )}
+            </Button>
+          </div>
+        ) : (
+          <div
+            className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-secondary/20 transition-colors"
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onClick={() => document.getElementById('file-upload')?.click()}
+          >
+            <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
+            <p className="mt-2 text-sm font-medium">{t("ai.tools.document.dragDrop")}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {t("ai.tools.document.supportedFormats")}
+            </p>
+            <input
+              type="file"
+              id="file-upload"
+              className="hidden"
+              accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+              onChange={handleFileChange}
+            />
           </div>
         )}
-      </div>
-    </AIToolCard>
+      </CardContent>
+    </Card>
   );
 };

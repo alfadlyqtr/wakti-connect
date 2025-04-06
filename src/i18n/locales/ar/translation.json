@@ -84,6 +84,36 @@
     "upgradePlan": "ترقية الخطة",
     "recentConversations": "المحادثات الأخيرة",
     "conversationHistory": "سجل المحادثات",
+    "title": "مساعد الذكاء الاصطناعي",
+    "subtitle": "تفاعل مع المساعد الذكي المخصص",
+    "roleUpdateError": "فشل تحديث دور المساعد الذكي",
+    "accessError": "خطأ في الوصول",
+    "verifyAccountError": "لا يمكن التحقق من حالة حسابك",
+    "notAvailable": "المساعد الذكي غير متاح",
+    "staffRestriction": "لا يمكن للموظفين استخدام هذه الميزة",
+    "tabs": {
+      "chat": "المحادثة",
+      "tools": "الأدوات",
+      "knowledge": "المعرفة"
+    },
+    "uploadedFilePrompt": "هذا هو الملف {name}. يمكنك تحليله وتلخيصه لي.",
+    "photoTakenPrompt": "لقد قمت بالتقاط صورة. يمكنك تحليلها ووصف ما تراه.",
+    "fileUploaded": "تم رفع الملف",
+    "fileUploadSuccess": "تم رفع الملف {name} بنجاح",
+    "uploadFailed": "فشل رفع الملف",
+    "tryAgain": "يرجى المحاولة مرة أخرى",
+    "cameraError": "خطأ في الكاميرا",
+    "checkPermissions": "تحقق من إذن الكاميرا",
+    "photoTaken": "تم التقاط الصورة",
+    "photoReady": "الصورة جاهزة للتحليل",
+    "takePicture": "التقاط صورة",
+    "businessTools": "أدوات الأعمال",
+    "toolsFor": {
+      "student": "أدوات الطالب",
+      "general": "الأدوات المقترحة",
+      "business_owner": "أدوات الأعمال"
+    },
+    "creativeTools": "الأدوات الإبداعية",
     "timeAgo": {
       "days": "قبل {{count}} يوم",
       "week": "قبل أسبوع",
@@ -268,7 +298,9 @@
       "testingConnection": "اختبار اتصال OpenAI",
       "verifying": "جاري التحقق من صحة مفتاح API",
       "connectionSuccess": "تم الاتصال بنجاح",
-      "apiKeyValid": "مفتاح OpenAI API صالح لميزات التعرف على الصوت"
+      "apiKeyValid": "مفتاح OpenAI API صالح لميزات التعرف على الصوت",
+      "language": "لغة التعرف على الكلام",
+      "languageChanged": "تم تغيير لغة التعرف على الكلام"
     },
     "roles": {
       "general": "عام",
