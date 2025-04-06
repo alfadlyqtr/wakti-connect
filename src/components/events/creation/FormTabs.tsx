@@ -21,6 +21,14 @@ export interface FormTabsProps {
   removeRecipient?: (index: number) => void;
   startTime?: string;
   endTime?: string;
+  isAllDay?: boolean;
+  onTitleChange?: (title: string) => void;
+  onDescriptionChange?: (description: string) => void;
+  onDateChange?: (date: Date) => void;
+  onLocationChange?: (location: string) => void;
+  onStartTimeChange?: (time: string) => void;
+  onEndTimeChange?: (time: string) => void;
+  onIsAllDayChange?: (isAllDay: boolean) => void;
 }
 
 const FormTabs: React.FC<FormTabsProps> = ({ 
@@ -36,7 +44,15 @@ const FormTabs: React.FC<FormTabsProps> = ({
   addRecipient,
   removeRecipient,
   startTime,
-  endTime
+  endTime,
+  isAllDay = false,
+  onTitleChange,
+  onDescriptionChange,
+  onDateChange,
+  onLocationChange,
+  onStartTimeChange,
+  onEndTimeChange,
+  onIsAllDayChange
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as EventFormTab)}>
@@ -54,6 +70,14 @@ const FormTabs: React.FC<FormTabsProps> = ({
           location={location}
           startTime={startTime}
           endTime={endTime}
+          isAllDay={isAllDay}
+          onTitleChange={onTitleChange}
+          onDescriptionChange={onDescriptionChange}
+          onDateChange={onDateChange}
+          onLocationChange={onLocationChange}
+          onStartTimeChange={onStartTimeChange}
+          onEndTimeChange={onEndTimeChange}
+          onIsAllDayChange={onIsAllDayChange}
         />
       </TabsContent>
       

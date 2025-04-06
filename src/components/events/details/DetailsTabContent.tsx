@@ -1,6 +1,15 @@
 
 import React from "react";
 import { format } from "date-fns";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { CalendarIcon, Clock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface DetailsTabContentProps {
   title?: string;
@@ -9,43 +18,129 @@ interface DetailsTabContentProps {
   location?: string;
   startTime?: string;
   endTime?: string;
+  isAllDay?: boolean;
+  onTitleChange?: (title: string) => void;
+  onDescriptionChange?: (description: string) => void;
+  onDateChange?: (date: Date) => void;
+  onLocationChange?: (location: string) => void;
+  onStartTimeChange?: (time: string) => void;
+  onEndTimeChange?: (time: string) => void;
+  onIsAllDayChange?: (isAllDay: boolean) => void;
 }
 
 const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
-  title,
-  description,
-  selectedDate,
-  location,
-  startTime,
-  endTime
+  title = "",
+  description = "",
+  selectedDate = new Date(),
+  location = "",
+  startTime = "09:00",
+  endTime = "10:00",
+  isAllDay = false,
+  onTitleChange,
+  onDescriptionChange,
+  onDateChange,
+  onLocationChange,
+  onStartTimeChange,
+  onEndTimeChange,
+  onIsAllDayChange
 }) => {
   return (
     <div className="space-y-4 p-4">
-      <div className="mb-4">
-        <h3 className="font-medium text-lg">{title || "Untitled Event"}</h3>
-        {description && (
-          <p className="text-muted-foreground mt-1">{description}</p>
-        )}
+      <div className="space-y-2">
+        <Label htmlFor="title">Event Title</Label>
+        <Input 
+          id="title" 
+          value={title} 
+          onChange={(e) => onTitleChange?.(e.target.value)}
+          placeholder="Enter event title" 
+        />
       </div>
       
-      {selectedDate && (
-        <div className="border-t pt-4">
-          <p className="text-sm font-medium">Date & Time</p>
-          <p className="text-muted-foreground">
-            {format(selectedDate, "EEEE, MMMM d, yyyy")}
-            {startTime && endTime && (
-              <span> · {startTime} - {endTime}</span>
-            )}
-          </p>
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea 
+          id="description" 
+          value={description} 
+          onChange={(e) => onDescriptionChange?.(e.target.value)}
+          placeholder="Enter event description" 
+          rows={3} 
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Date</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !selectedDate && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && onDateChange?.(date)}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <Switch 
+          id="isAllDay"
+          checked={isAllDay}
+          onCheckedChange={onIsAllDayChange}
+        />
+        <Label htmlFor="isAllDay">All day event</Label>
+      </div>
+
+      {!isAllDay && (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="startTime">Start Time</Label>
+            <div className="flex items-center">
+              <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                id="startTime"
+                type="time"
+                value={startTime}
+                onChange={(e) => onStartTimeChange?.(e.target.value)}
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="endTime">End Time</Label>
+            <div className="flex items-center">
+              <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                id="endTime"
+                type="time"
+                value={endTime}
+                onChange={(e) => onEndTimeChange?.(e.target.value)}
+              />
+            </div>
+          </div>
         </div>
       )}
       
-      {location && (
-        <div className="border-t pt-4">
-          <p className="text-sm font-medium">Location</p>
-          <p className="text-muted-foreground">{location}</p>
-        </div>
-      )}
+      <div className="space-y-2">
+        <Label htmlFor="location">Location</Label>
+        <Input 
+          id="location" 
+          value={location} 
+          onChange={(e) => onLocationChange?.(e.target.value)}
+          placeholder="Enter event location" 
+        />
+      </div>
     </div>
   );
 };

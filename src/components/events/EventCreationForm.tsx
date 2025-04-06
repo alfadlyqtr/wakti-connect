@@ -9,6 +9,7 @@ import FormActions from "./creation/FormActions";
 import { InvitationRecipient } from "@/types/invitation.types";
 import useEditEventEffect from "./hooks/useEditEventEffect";
 import { Event } from "@/types/event.types";
+import { useEventSubmission } from "@/hooks/events/useEventSubmission";
 
 interface EventCreationFormProps {
   editEvent?: Event | null;
@@ -24,6 +25,42 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
   const [activeTab, setActiveTab] = useState<EventFormTab>("details");
   const [recipients, setRecipients] = useState<InvitationRecipient[]>([]);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [isAllDay, setIsAllDay] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("10:00");
+  const [location, setLocation] = useState("");
+  const [locationType, setLocationType] = useState<'manual' | 'google_maps'>('manual');
+  const [mapsUrl, setMapsUrl] = useState("");
+  
+  // Default customization state
+  const [customization, setCustomization] = useState({
+    background: {
+      type: 'solid',
+      value: '#ffffff',
+    },
+    font: {
+      family: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      size: 'medium',
+      color: '#333333',
+    },
+    buttons: {
+      accept: {
+        background: '#4CAF50',
+        color: '#ffffff',
+        shape: 'rounded',
+      },
+      decline: {
+        background: '#f44336',
+        color: '#ffffff',
+        shape: 'rounded',
+      }
+    },
+    headerStyle: 'simple',
+    animation: 'fade',
+  });
   
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
@@ -31,7 +68,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
       title: "",
       description: "",
       location: "",
-      startDate: undefined,
+      startDate: selectedDate,
       endDate: undefined,
       isAllDay: false,
     }
@@ -42,14 +79,86 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     editEvent,
     form,
     setRecipients,
-    setIsEditMode
+    setIsEditMode,
+    setTitle,
+    setDescription,
+    setSelectedDate,
+    setIsAllDay,
+    setStartTime,
+    setEndTime,
+    setLocation,
+    setLocationType,
+    setMapsUrl,
+    setCustomization
   });
 
-  const onSubmit = (data: EventFormValues) => {
-    console.log("Form submitted:", data);
-    if (onSuccess) {
-      onSuccess();
-    }
+  const handleTitleChange = (newTitle: string) => {
+    setTitle(newTitle);
+    form.setValue("title", newTitle);
+  };
+
+  const handleDescriptionChange = (newDescription: string) => {
+    setDescription(newDescription);
+    form.setValue("description", newDescription);
+  };
+
+  const handleLocationChange = (newLocation: string) => {
+    setLocation(newLocation);
+    form.setValue("location", newLocation);
+  };
+
+  const handleDateChange = (newDate: Date) => {
+    setSelectedDate(newDate);
+    form.setValue("startDate", newDate);
+  };
+
+  // The submission hook from useEventSubmission
+  const {
+    isSubmitting,
+    onSubmit
+  } = useEventSubmission({
+    title,
+    description,
+    isAllDay,
+    selectedDate,
+    startTime,
+    endTime,
+    location,
+    locationType,
+    mapsUrl,
+    customization,
+    recipients,
+    resetForm: () => {
+      setTitle("");
+      setDescription("");
+      setSelectedDate(new Date());
+      setIsAllDay(false);
+      setStartTime("09:00");
+      setEndTime("10:00");
+      setLocation("");
+      setLocationType('manual');
+      setMapsUrl("");
+      setRecipients([]);
+      setActiveTab("details");
+      form.reset();
+    },
+    editEvent,
+    onSuccess
+  });
+  
+  const handleSubmitForm = () => {
+    const formData = form.getValues();
+    onSubmit(formData);
+  };
+  
+  const handlePrev = () => {
+    if (activeTab === "customize") setActiveTab("details");
+    if (activeTab === "share") setActiveTab("customize");
+  };
+
+  const handleNext = () => {
+    if (activeTab === "details") setActiveTab("customize");
+    if (activeTab === "customize") setActiveTab("share");
   };
   
   return (
@@ -59,44 +168,39 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
         onCancel={onCancel}
       />
       
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(handleSubmitForm)}>
         <FormTabs 
           activeTab={activeTab} 
           setActiveTab={setActiveTab} 
-          title={form.watch("title")}
-          description={form.watch("description")}
-          selectedDate={form.watch("startDate")}
-          location={form.watch("location")}
-          startTime="09:00" // You should get this from a state or form
-          endTime="10:00"   // You should get this from a state or form
-          customization={{
-            background: { type: 'solid', value: '#ffffff' },
-            font: { family: 'sans-serif', size: 'medium', color: '#333333' },
-            buttons: {
-              accept: { background: '#4CAF50', color: '#ffffff', shape: 'rounded' },
-              decline: { background: '#f44336', color: '#ffffff', shape: 'rounded' }
-            }
-          }}
-          onCustomizationChange={(customization) => console.log("Customization changed:", customization)}
+          title={title}
+          description={description}
+          selectedDate={selectedDate}
+          location={location}
+          startTime={startTime}
+          endTime={endTime}
+          customization={customization}
+          onCustomizationChange={(newCustomization) => setCustomization(newCustomization)}
           recipients={recipients}
-          addRecipient={(recipient) => setRecipients([...recipients, recipient])}
+          addRecipient={(recipient) => setRecipients(prev => [...prev, recipient])}
           removeRecipient={(index) => {
             const newRecipients = [...recipients];
             newRecipients.splice(index, 1);
             setRecipients(newRecipients);
           }}
+          onTitleChange={handleTitleChange}
+          onDescriptionChange={handleDescriptionChange}
+          onDateChange={handleDateChange}
+          onLocationChange={handleLocationChange}
+          onStartTimeChange={setStartTime}
+          onEndTimeChange={setEndTime}
+          onIsAllDayChange={setIsAllDay}
+          isAllDay={isAllDay}
         />
         
         <FormActions 
-          onPrev={() => {
-            if (activeTab === "customize") setActiveTab("details");
-            if (activeTab === "share") setActiveTab("customize");
-          }}
-          onNext={() => {
-            if (activeTab === "details") setActiveTab("customize");
-            if (activeTab === "customize") setActiveTab("share");
-          }}
-          isSubmitting={form.formState.isSubmitting}
+          onPrev={handlePrev}
+          onNext={handleNext}
+          isSubmitting={isSubmitting}
           showSubmit={activeTab === "share"}
           submitLabel={isEditMode ? "Update Event" : "Create Event"}
         />
