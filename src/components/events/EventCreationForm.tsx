@@ -99,7 +99,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
     setStartTime,
     setEndTime,
     setLocation: (loc) => handleLocationChange(loc, 'manual'),
-    setLocationType,
+    setLocationType: (type) => handleLocationChange(location, type),
     setMapsUrl,
     setCustomization
   });
