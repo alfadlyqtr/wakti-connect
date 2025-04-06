@@ -36,7 +36,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
 import { useTranslation } from "react-i18next";
+import { AIAssistantTabs } from "@/components/ai/navigation/AIAssistantTabs";
 
+// Define global ImageCapture type
 declare global {
   class ImageCapture {
     constructor(track: MediaStreamTrack);
@@ -67,6 +69,7 @@ const DashboardAIAssistant = () => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [showSettings, setShowSettings] = useState(false);
   
   const breakpoint = useBreakpoint();
   const isMobile = !breakpoint.includes("md");
@@ -81,425 +84,266 @@ const DashboardAIAssistant = () => {
     resetTranscript,
     supported: recognitionSupported
   } = useSpeechRecognition({
-    continuous: true,
-    interimResults: true
+    onResult: (result) => {
+      setInputMessage(prev => prev + " " + result);
+    }
   });
-
+  
+  // Check if user can access AI features
   useEffect(() => {
-    if (transcript) {
-      setInputMessage(transcript);
-    }
-  }, [transcript]);
-
-  useEffect(() => {
-    if (aiSettings?.role) {
-      setSelectedRole(aiSettings.role);
-    }
-  }, [aiSettings]);
-
-  const handleRoleChange = async (role: AIAssistantRole) => {
-    setSelectedRole(role);
-    
-    if (aiSettings) {
+    const checkAccess = async () => {
       try {
-        const updatedSettings = { ...aiSettings, role };
-        await updateSettings.mutateAsync(updatedSettings);
+        setIsChecking(true);
+        
+        // Check if the user is staff
+        // For staff, we'll need to check a different property
+        const isStaff = user?.user_metadata?.is_staff === true;
+        
+        if (isStaff) {
+          // Staff cannot access AI features
+          setCanAccess(false);
+          setIsChecking(false);
+          return;
+        }
+        
+        // For normal users, we use the hook's value
+        setCanAccess(hookCanUseAI);
+        setIsChecking(false);
       } catch (error) {
-        console.error("Failed to update AI role:", error);
+        console.error("Error checking AI access:", error);
         toast({
-          title: t("common.error"),
-          description: t("ai.roleUpdateError"),
-          variant: "destructive",
+          title: t("ai.accessError"),
+          description: t("ai.verifyAccountError"),
+          variant: "destructive"
         });
+        setCanAccess(false);
+        setIsChecking(false);
       }
-    }
+    };
     
-    clearMessages();
-  };
+    if (user) {
+      checkAccess();
+    }
+  }, [user, hookCanUseAI, toast, t]);
 
-  const handleFileUpload = useCallback(async (file: File) => {
+  // Handle role change
+  const handleRoleChange = useCallback((role: AIAssistantRole) => {
     try {
-      console.log("Uploading file:", file.name);
-      toast({
-        title: t("ai.fileUploaded"),
-        description: t("ai.fileUploadSuccess", { name: file.name }),
-      });
-      
-      setInputMessage(t("ai.uploadedFilePrompt", { name: file.name }));
+      setSelectedRole(role);
+      localStorage.setItem("wakti-ai-role", role);
+      clearMessages();
     } catch (error) {
-      console.error("File upload error:", error);
+      console.error("Error updating AI role:", error);
       toast({
-        title: t("ai.uploadFailed"),
-        description: t("ai.tryAgain"),
+        title: t("ai.roleUpdateError"),
+        description: error instanceof Error ? error.message : String(error),
         variant: "destructive"
       });
     }
-  }, [toast, t]);
-
-  const handleCameraCapture = useCallback(async () => {
+  }, [setSelectedRole, clearMessages, toast, t]);
+  
+  // Load saved role on initial render
+  useEffect(() => {
+    const savedRole = localStorage.getItem("wakti-ai-role") as AIAssistantRole | null;
+    if (savedRole && ["student", "business_owner", "employee", "writer", "general"].includes(savedRole)) {
+      setSelectedRole(savedRole);
+    }
+  }, []);
+  
+  // Handle sending a message
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (inputMessage.trim() && !isLoading) {
+      const messageCopy = inputMessage;
+      setInputMessage("");
+      try {
+        await sendMessage(messageCopy);
+      } catch (error) {
+        console.error("Error sending message:", error);
+      }
+    }
+  };
+  
+  // Handle file upload for AI analysis
+  const handleFileUpload = async (file: File) => {
     try {
-      setShowCamera(true);
+      // Upload file to temporary storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `temp/${fileName}`;
       
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: true,
-        audio: false
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+      const { error: uploadError } = await supabase.storage
+        .from('ai-uploads')
+        .upload(filePath, file);
         
-        const track = stream.getVideoTracks()[0];
-        setImageCapture(new ImageCapture(track));
+      if (uploadError) {
+        throw new Error(uploadError.message);
+      }
+      
+      // Get temporary URL
+      const { data: urlData } = await supabase.storage
+        .from('ai-uploads')
+        .createSignedUrl(filePath, 60 * 60); // 1 hour expiry
+      
+      if (!urlData?.signedUrl) {
+        throw new Error("Failed to generate file URL");
+      }
+      
+      // Create a prompt for the AI about the file
+      setInputMessage(t("ai.uploadedFilePrompt", { name: file.name }));
+      
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      toast({
+        title: t("ai.uploadFailed"),
+        description: error instanceof Error ? error.message : t("ai.tryAgain"),
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Camera functionality
+  const handleCameraCapture = async () => {
+    try {
+      if (showCamera) {
+        // Take photo
+        if (imageCapture) {
+          const photoBlobPromise = imageCapture.takePhoto();
+          photoBlobPromise.then(blob => {
+            const imageUrl = URL.createObjectURL(blob);
+            setCapturedImage(imageUrl);
+            setShowCamera(false);
+            
+            // Create a prompt about the captured image
+            setInputMessage(t("ai.photoTakenPrompt"));
+            
+            // Stop the camera stream
+            if (videoRef.current && videoRef.current.srcObject) {
+              const stream = videoRef.current.srcObject as MediaStream;
+              stream.getTracks().forEach(track => track.stop());
+            }
+          });
+        }
+      } else {
+        // Start camera
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' }
+        });
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          
+          // Wait for video to be ready
+          await new Promise(resolve => {
+            if (videoRef.current) {
+              videoRef.current.onloadedmetadata = resolve;
+            }
+          });
+          
+          // Get the video track for ImageCapture
+          const track = stream.getVideoTracks()[0];
+          const newImageCapture = new ImageCapture(track);
+          setImageCapture(newImageCapture);
+          setShowCamera(true);
+        }
       }
     } catch (error) {
-      console.error("Camera access error:", error);
+      console.error('Camera error:', error);
       toast({
         title: t("ai.cameraError"),
         description: t("ai.checkPermissions"),
         variant: "destructive"
       });
     }
-  }, [toast, t]);
-
-  const takePicture = useCallback(async () => {
-    if (!imageCapture || !canvasRef.current) return;
-    
-    try {
-      const bitmap = await imageCapture.grabFrame();
-      const canvas = canvasRef.current;
-      canvas.width = bitmap.width;
-      canvas.height = bitmap.height;
-      const context = canvas.getContext('2d');
-      context?.drawImage(bitmap, 0, 0);
-      
-      const dataUrl = canvas.toDataURL('image/jpeg');
-      setCapturedImage(dataUrl);
-      
-      setInputMessage(t("ai.photoTakenPrompt"));
-      
-      setShowCamera(false);
-      
-      if (videoRef.current?.srcObject instanceof MediaStream) {
-        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-      }
-      
-      toast({
-        title: t("ai.photoTaken"),
-        description: t("ai.photoReady"),
-      });
-    } catch (error) {
-      console.error("Error taking picture:", error);
-      toast({
-        title: t("ai.cameraError"),
-        description: t("ai.tryAgain"),
-        variant: "destructive"
-      });
-    }
-  }, [imageCapture, toast, t]);
-
-  const closeCamera = useCallback(() => {
-    if (videoRef.current?.srcObject instanceof MediaStream) {
-      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-    }
-    setShowCamera(false);
-  }, []);
-
-  useEffect(() => {
-    const checkUserAccess = async () => {
-      if (!user) {
-        console.log("No authenticated user, no AI access");
-        setCanAccess(false);
-        setIsChecking(false);
-        return;
-      }
-
-      try {
-        console.log("Checking AI access for user:", user.id);
-        
-        const { data: canUse, error: rpcError } = await supabase.rpc("can_use_ai_assistant");
-        
-        if (!rpcError && canUse !== null) {
-          console.log("RPC check result:", canUse);
-          setCanAccess(canUse);
-          setIsChecking(false);
-          return;
-        }
-        
-        console.log("RPC check failed with error:", rpcError?.message);
-        console.log("Falling back to direct profile check");
-        
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("account_type")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error("Error checking access:", profileError);
-          toast({
-            title: t("ai.accessError"),
-            description: t("ai.verifyAccountError"),
-            variant: "destructive",
-          });
-          setCanAccess(false);
-        } else {
-          const hasAccess = profile?.account_type === "business" || profile?.account_type === "individual";
-          setCanAccess(hasAccess);
-          
-          console.log("Account type:", profile?.account_type, "Has access:", hasAccess);
-        }
-      } catch (error) {
-        console.error("Error checking AI access:", error);
-        setCanAccess(false);
-      }
-      
-      setIsChecking(false);
-    };
-    
-    checkUserAccess();
-  }, [user, toast, t]);
-
-  useEffect(() => {
-    if (hookCanUseAI !== undefined && !isChecking) {
-      console.log("Hook canUseAI value:", hookCanUseAI);
-      if (!canAccess && hookCanUseAI) {
-        console.log("Using hook's canUseAI value as backup");
-        setCanAccess(hookCanUseAI);
-      }
-    }
-  }, [hookCanUseAI, isChecking, canAccess]);
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputMessage.trim() || isLoading || !canAccess) {
-      console.log("Cannot send message:", {
-        emptyMessage: !inputMessage.trim(), 
-        isLoading, 
-        noAccess: !canAccess
-      });
-      return;
-    }
-    
-    console.log("Sending message:", inputMessage);
-    await sendMessage(inputMessage);
-    setInputMessage("");
   };
-
-  const handleToolContent = (content: string) => {
-    setInputMessage(content);
-    setActiveTab("chat");
-  };
-
-  const handleStartVoiceInput = () => {
-    if (startListening) {
+  
+  const handleVoiceTranscriptUse = () => {
+    if (transcript) {
+      setInputMessage(prev => prev + " " + transcript);
       resetTranscript();
-      startListening();
     }
   };
-
-  const handleStopVoiceInput = () => {
-    if (stopListening) {
-      stopListening();
-    }
-  };
-
+  
   if (isChecking) {
-    console.log("Still checking access, showing loader");
     return <AIAssistantLoader />;
   }
-
-  const getRoleColor = () => {
-    switch (selectedRole) {
-      case "student": return "from-blue-600 to-blue-500";
-      case "employee": return "from-purple-600 to-purple-500";
-      case "writer": return "from-purple-600 to-purple-500";
-      case "business_owner": return "from-amber-600 to-amber-500";
-      default: return "from-wakti-blue to-wakti-blue/90";
-    }
-  };
-
-  const shouldShowSystemIntegration = selectedRole === "business_owner";
-
+  
   return (
-    <StaffRoleGuard 
-      disallowStaff={true}
+    <StaffRoleGuard
       messageTitle={t("ai.notAvailable")}
       messageDescription={t("ai.staffRestriction")}
     >
       <AISettingsProvider>
-        <div className="space-y-4">
+        <div className="container mx-auto py-6 space-y-6">
+          <header className="flex flex-col space-y-4">
+            <div className="flex justify-between items-center">
+              <h1 className="text-2xl font-bold">{t("ai.title")}</h1>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSettings(true)}
+                className="flex items-center gap-1.5"
+              >
+                <Settings className="h-4 w-4" />
+                <span>{t("settings.title")}</span>
+              </Button>
+            </div>
+            <p className="text-muted-foreground">{t("ai.subtitle")}</p>
+          </header>
+          
           {!canAccess ? (
             <AIAssistantUpgradeCard />
           ) : (
-            <div className="mx-auto max-w-5xl">
-              <Card className="mb-4">
-                <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${getRoleColor()} flex items-center justify-center`}>
-                      <Bot className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="flex items-center">
-                        {t("ai.title")}
-                        <Badge variant="outline" className="ml-2 text-xs px-2">v2.0</Badge>
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground">{t("ai.subtitle")}</p>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0 pb-3">
-                  <AIRoleSelector 
-                    selectedRole={selectedRole} 
-                    onRoleChange={handleRoleChange} 
-                  />
-                </CardContent>
-              </Card>
-              
-              <div className="flex flex-col lg:flex-row gap-4">
-                <div className="w-full lg:w-4/5">
-                  <Tabs value={activeTab} onValueChange={setActiveTab}>
-                    <TabsList className="mx-auto mb-4 grid w-full max-w-md grid-cols-3">
-                      <TabsTrigger value="chat" className="flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4" />
-                        <span>{t("ai.tabs.chat")}</span>
-                      </TabsTrigger>
-                      <TabsTrigger value="tools" className="flex items-center gap-2">
-                        <Wrench className="h-4 w-4" />
-                        <span>{t("ai.tabs.tools")}</span>
-                      </TabsTrigger>
-                      <TabsTrigger value="knowledge" className="flex items-center gap-2">
-                        <BookCopy className="h-4 w-4" />
-                        <span>{t("ai.tabs.knowledge")}</span>
-                      </TabsTrigger>
-                    </TabsList>
-                    
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <TabsContent value="chat" className="focus-visible:outline-none">
-                        <div className="flex gap-4">
-                          <div className="flex-1">
-                            <CleanChatInterface
-                              messages={messages}
-                              isLoading={isLoading}
-                              inputMessage={inputMessage}
-                              setInputMessage={setInputMessage}
-                              handleSendMessage={handleSendMessage}
-                              selectedRole={selectedRole}
-                              userName={userName}
-                              canAccess={canAccess}
-                              onFileUpload={handleFileUpload}
-                              onCameraCapture={handleCameraCapture}
-                              onStartVoiceInput={handleStartVoiceInput}
-                              onStopVoiceInput={handleStopVoiceInput}
-                              isListening={isListening}
-                              showSuggestions={false}
-                            />
-                          </div>
-                        </div>
-                      </TabsContent>
-                      
-                      <TabsContent value="tools" className="space-y-4 focus-visible:outline-none">
-                        <EnhancedToolsTab
-                          selectedRole={selectedRole}
-                          onUseContent={handleToolContent}
-                          canAccess={canAccess}
-                        />
-                      </TabsContent>
-                      
-                      <TabsContent value="knowledge" className="focus-visible:outline-none">
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <KnowledgeProfileToolCard selectedRole={selectedRole} />
-                            <RoleSpecificKnowledge
-                              selectedRole={selectedRole}
-                              canAccess={canAccess}
-                            />
-                          </div>
-                        </div>
-                      </TabsContent>
-                    </motion.div>
-                  </Tabs>
-                </div>
-                
-                <div className="w-full lg:w-1/5">
-                  {shouldShowSystemIntegration ? (
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm flex items-center gap-2">
-                          <Cpu className="h-4 w-4" /> 
-                          {t("ai.businessTools")}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <AISystemIntegrationPanel
-                          selectedRole={selectedRole}
-                          onExampleClick={(example) => {
-                            setInputMessage(example);
-                            setActiveTab("chat");
-                          }}
-                        />
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm flex items-center gap-2">
-                          {selectedRole === "student" ? (
-                            <BookCopy className="h-4 w-4" />
-                          ) : selectedRole === "employee" || selectedRole === "writer" ? (
-                            <Wrench className="h-4 w-4" />
-                          ) : (
-                            <Bot className="h-4 w-4" />
-                          )}
-                          {selectedRole === "employee" || selectedRole === "writer" 
-                            ? t("ai.creativeTools")
-                            : t(`ai.toolsFor.${selectedRole}`)}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <QuickToolsCard
-                          selectedRole={selectedRole}
-                          onToolClick={(example) => {
-                            setInputMessage(example);
-                            setActiveTab("chat");
-                          }}
-                          inSidebar={true}
-                        />
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              </div>
-            </div>
+            <AIAssistantTabs
+              messages={messages}
+              inputMessage={inputMessage}
+              setInputMessage={setInputMessage}
+              handleSendMessage={handleSendMessage}
+              isLoading={isLoading}
+              canAccess={canAccess}
+              clearMessages={clearMessages}
+              selectedRole={selectedRole}
+              onRoleChange={handleRoleChange}
+              userName={userName}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
           )}
+          
+          {/* Camera Dialog */}
+          <Dialog open={showCamera} onOpenChange={setShowCamera}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>{t("ai.takePhoto")}</DialogTitle>
+              </DialogHeader>
+              <div className="flex flex-col space-y-4">
+                <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+                  <video 
+                    ref={videoRef} 
+                    autoPlay 
+                    playsInline
+                    className="w-full h-full object-cover"
+                  ></video>
+                </div>
+                <Button onClick={handleCameraCapture}>
+                  {t("ai.takePicture")}
+                </Button>
+                <canvas ref={canvasRef} className="hidden"></canvas>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          {/* Settings Dialog */}
+          <Dialog open={showSettings} onOpenChange={setShowSettings}>
+            <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{t("aiSettings.personalitySettings")}</DialogTitle>
+              </DialogHeader>
+              <AISystemIntegrationPanel />
+            </DialogContent>
+          </Dialog>
         </div>
-        
-        <Dialog open={showCamera} onOpenChange={setShowCamera}>
-          <DialogContent className="max-w-md" onInteractOutside={closeCamera}>
-            <DialogHeader>
-              <DialogTitle>{t("ai.takePicture")}</DialogTitle>
-            </DialogHeader>
-            <div className="flex flex-col items-center space-y-4">
-              <div className="relative bg-black rounded-lg overflow-hidden w-full aspect-video">
-                <video 
-                  ref={videoRef} 
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <canvas ref={canvasRef} className="hidden" />
-              <div className="flex justify-center gap-4">
-                <Button variant="outline" onClick={closeCamera}>{t("common.cancel")}</Button>
-                <Button onClick={takePicture}>{t("ai.takePicture")}</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </AISettingsProvider>
     </StaffRoleGuard>
   );

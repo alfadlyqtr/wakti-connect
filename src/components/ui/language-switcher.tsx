@@ -26,6 +26,9 @@ export function LanguageSwitcher() {
     
     // Save the language preference in local storage with consistent key name
     localStorage.setItem('wakti-language', language);
+    
+    // Force refresh the page to ensure all components update
+    window.location.reload();
   };
 
   // Check current language on component mount and set direction

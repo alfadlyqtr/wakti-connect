@@ -26,7 +26,8 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
   onUseDocumentContent,
   selectedRole,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   
   if (!canAccess) {
     return <AIUpgradeRequired />;
