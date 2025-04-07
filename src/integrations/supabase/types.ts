@@ -1783,9 +1783,7 @@ export type Database = {
     }
     Functions: {
       approve_no_show: {
-        Args: {
-          booking_id_param: string
-        }
+        Args: { booking_id_param: string }
         Returns: boolean
       }
       can_create_event: {
@@ -1797,26 +1795,18 @@ export type Database = {
         Returns: boolean
       }
       check_contact_request: {
-        Args: {
-          user_id_param: string
-          contact_id_param: string
-        }
+        Args: { user_id_param: string; contact_id_param: string }
         Returns: {
           request_exists: boolean
           request_status: string
         }[]
       }
       check_if_task_shared_with_user: {
-        Args: {
-          task_id: string
-          user_uuid: string
-        }
+        Args: { task_id: string; user_uuid: string }
         Returns: boolean
       }
       check_own_staff_record: {
-        Args: {
-          record_id_param: string
-        }
+        Args: { record_id_param: string }
         Returns: boolean
       }
       check_profiles_table: {
@@ -1824,22 +1814,15 @@ export type Database = {
         Returns: boolean
       }
       check_staff_member_access: {
-        Args: {
-          business_id_param: string
-        }
+        Args: { business_id_param: string }
         Returns: boolean
       }
       check_table_exists: {
-        Args: {
-          table_name: string
-        }
+        Args: { table_name: string }
         Returns: boolean
       }
       complete_job_card: {
-        Args: {
-          job_card_id: string
-          end_timestamp: string
-        }
+        Args: { job_card_id: string; end_timestamp: string }
         Returns: boolean
       }
       expire_old_messages: {
@@ -1847,9 +1830,7 @@ export type Database = {
         Returns: undefined
       }
       generate_unique_business_slug: {
-        Args: {
-          business_name: string
-        }
+        Args: { business_name: string }
         Returns: string
       }
       get_auth_user_account_type: {
@@ -1857,10 +1838,7 @@ export type Database = {
         Returns: string
       }
       get_template_available_slots: {
-        Args: {
-          template_id_param: string
-          date_param: string
-        }
+        Args: { template_id_param: string; date_param: string }
         Returns: {
           start_time: string
           end_time: string
@@ -1871,51 +1849,35 @@ export type Database = {
         Returns: string
       }
       is_business_owner: {
-        Args: {
-          business_id: string
-        }
+        Args: { business_id: string }
         Returns: boolean
       }
       is_business_owner_or_staff: {
-        Args: {
-          business_uuid: string
-        }
+        Args: { business_uuid: string }
         Returns: boolean
       }
       is_business_owner_secure: {
-        Args: {
-          business_id_param: string
-        }
+        Args: { business_id_param: string }
         Returns: boolean
       }
       is_own_staff_record: {
-        Args: {
-          record_id: string
-        }
+        Args: { record_id: string }
         Returns: boolean
       }
       is_own_staff_record_secure: {
-        Args: {
-          record_id_param: string
-        }
+        Args: { record_id_param: string }
         Returns: boolean
       }
       is_staff_member: {
-        Args: {
-          business_id: string
-        }
+        Args: { business_id: string }
         Returns: boolean
       }
       is_staff_of_business_secure: {
-        Args: {
-          business_id_param: string
-        }
+        Args: { business_id_param: string }
         Returns: boolean
       }
       mark_booking_no_show: {
-        Args: {
-          booking_id_param: string
-        }
+        Args: { booking_id_param: string }
         Returns: boolean
       }
       populate_access_control: {
@@ -1923,9 +1885,7 @@ export type Database = {
         Returns: undefined
       }
       populate_initial_business_analytics: {
-        Args: {
-          business_id_param: string
-        }
+        Args: { business_id_param: string }
         Returns: undefined
       }
       refresh_business_analytics: {
@@ -1933,15 +1893,11 @@ export type Database = {
         Returns: undefined
       }
       reject_no_show: {
-        Args: {
-          booking_id_param: string
-        }
+        Args: { booking_id_param: string }
         Returns: boolean
       }
       search_users: {
-        Args: {
-          search_query: string
-        }
+        Args: { search_query: string }
         Returns: {
           id: string
           full_name: string
@@ -1953,9 +1909,7 @@ export type Database = {
         }[]
       }
       todo_item_belongs_to_user: {
-        Args: {
-          todo_item_id: string
-        }
+        Args: { todo_item_id: string }
         Returns: boolean
       }
       update_existing_staff_contacts: {
@@ -1963,15 +1917,11 @@ export type Database = {
         Returns: undefined
       }
       user_owns_service: {
-        Args: {
-          service_id: string
-        }
+        Args: { service_id: string }
         Returns: boolean
       }
       user_owns_staff: {
-        Args: {
-          staff_id: string
-        }
+        Args: { staff_id: string }
         Returns: boolean
       }
     }
@@ -2000,27 +1950,29 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type DefaultSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-    ? (PublicSchema["Tables"] &
-        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -2028,20 +1980,22 @@ export type Tables<
     : never
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -2049,20 +2003,22 @@ export type TablesInsert<
     : never
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -2070,21 +2026,23 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof PublicSchema["CompositeTypes"]
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof Database
@@ -2093,6 +2051,32 @@ export type CompositeTypes<
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
   ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
-    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      account_type: ["free", "individual", "business", "staff"],
+      ai_assistant_role: [
+        "student",
+        "employee",
+        "writer",
+        "business_owner",
+        "general",
+      ],
+      appointment_status: ["scheduled", "cancelled", "completed"],
+      booking_status: [
+        "pending",
+        "confirmed",
+        "cancelled",
+        "completed",
+        "no_show",
+        "in_progress",
+      ],
+      event_status: ["draft", "sent", "accepted", "declined", "recalled"],
+      invitation_status: ["pending", "accepted", "declined"],
+    },
+  },
+} as const

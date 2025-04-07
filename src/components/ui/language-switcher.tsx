@@ -11,24 +11,14 @@ export function LanguageSwitcher() {
     console.log(`Changing language to: ${language}`);
     i18n.changeLanguage(language);
     
-    // Set the dir attribute on the html element for RTL support
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = language;
-    
-    // Add a class to the body for additional RTL styling if needed
-    if (language === 'ar') {
-      document.body.classList.add('rtl');
-      document.body.classList.add('font-arabic');
-    } else {
-      document.body.classList.remove('rtl');
-      document.body.classList.remove('font-arabic');
-    }
+    // The direction and other settings are now handled by the i18n.on('languageChanged') listener
+    // in the main i18n.ts file, so we don't need to duplicate that logic here
     
     // Save the language preference in local storage with consistent key name
     localStorage.setItem('wakti-language', language);
   };
 
-  // Check current language on component mount and set direction
+  // Check current language on component mount
   useEffect(() => {
     // Try to load language preference from local storage first
     const savedLanguage = localStorage.getItem('wakti-language');
@@ -37,19 +27,7 @@ export function LanguageSwitcher() {
       i18n.changeLanguage(savedLanguage);
     }
     
-    const currentLang = i18n.language;
-    console.log('Current language:', currentLang);
-    if (currentLang === 'ar' && document.documentElement.dir !== 'rtl') {
-      document.documentElement.dir = 'rtl';
-      document.documentElement.lang = 'ar';
-      document.body.classList.add('rtl');
-      document.body.classList.add('font-arabic');
-    } else if (currentLang !== 'ar' && document.documentElement.dir !== 'ltr') {
-      document.documentElement.dir = 'ltr';
-      document.documentElement.lang = 'en';
-      document.body.classList.remove('rtl');
-      document.body.classList.remove('font-arabic');
-    }
+    // No need to manually set direction here as it's handled in i18n.ts
   }, [i18n]);
 
   // Show different buttons based on current language

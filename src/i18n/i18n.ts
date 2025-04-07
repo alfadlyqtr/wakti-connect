@@ -7,6 +7,24 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import enTranslation from './locales/en/translation.json';
 import arTranslation from './locales/ar/translation.json';
 
+// Add location translations from the legacy config
+if (!enTranslation.location) {
+  enTranslation.location = {
+    enterLocation: 'Enter event location',
+    viewOnMap: 'View on map',
+    currentLocation: 'Use my current location',
+    searchPlaceholder: 'Search for a location...',
+    manualEntry: 'Enter manually',
+    googleMaps: 'Use Google Maps',
+    getLocation: 'Get my current location',
+    invalidUrl: 'Invalid Google Maps URL',
+    displayName: 'Location display name',
+    enterUrl: 'Enter a Google Maps URL',
+    previewMap: 'Preview on map',
+    validUrl: 'Enter a valid Google Maps URL'
+  };
+}
+
 // Initialize i18next
 i18n
   // detect user language

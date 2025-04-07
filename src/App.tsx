@@ -18,6 +18,7 @@ import NotificationListener from "@/components/notifications/NotificationListene
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import PublicLayout from "./components/layout/PublicLayout";
 
+// Import i18n configuration
 import "./i18n/i18n";
 
 const queryClient = new QueryClient({
