@@ -1,4 +1,3 @@
-
 {
   "common": {
     "wakti": "Wakti",
@@ -339,14 +338,16 @@
       "completed": "Completed",
       "inProgress": "In Progress",
       "pending": "Pending",
-      "late": "Late"
+      "late": "Late",
+      "all": "All Statuses"
     },
     "priority": {
       "high": "High",
       "medium": "Medium",
       "low": "Low",
       "normal": "Normal",
-      "urgent": "Urgent"
+      "urgent": "Urgent",
+      "all": "All Priorities"
     },
     "today": "Tasks Today",
     "createTask": "Create Task",
@@ -359,7 +360,14 @@
     "noTasksFound": "No tasks found",
     "noArchivedTasks": "No archived tasks",
     "archivedTasksDescription": "Tasks you delete or cancel will appear here",
-    "noTasksDescription": "Start by creating your first task"
+    "noTasksDescription": "Start by creating your first task",
+    "tabs": {
+      "myTasks": "My Tasks",
+      "archived": "Archived"
+    },
+    "completedTime": {
+      "at": "Completed at"
+    }
   },
   "location": {
     "enterLocation": "Enter a location",
@@ -540,7 +548,16 @@
     "notFoundMessage": "The requested booking information could not be found.",
     "staffLabel": "Staff:",
     "bookedFor": "Booked for:",
-    "phoneLabel": "Phone:"
+    "phoneLabel": "Phone:",
+    "message": {
+      "confirmation": "Your booking has been confirmed successfully."
+    },
+    "addToCalendar": "Add to Calendar",
+    "saveToReminders": "Save to Reminders",
+    "googleCalendar": "Google Calendar",
+    "appleCalendar": "Apple Calendar",
+    "outlookCalendar": "Outlook Calendar",
+    "email": "Email Confirmation"
   },
   "accountPromotion": {
     "getMore": "Get More from Your Bookings",
@@ -567,5 +584,17 @@
   "language": {
     "switchToEnglish": "Switch to English",
     "switchToArabic": "التبديل إلى اللغة العربية"
+  },
+  "event": {
+    "tabs": {
+      "past": "Past Events"
+    },
+    "accepted": "Accepted",
+    "declined": "Declined",
+    "pending": "Pending",
+    "invitedParticipants": "Invited Participants",
+    "noInvitations": "No invitations found",
+    "emailInvitation": "Email Invitation",
+    "appUser": "App User"
   }
 }

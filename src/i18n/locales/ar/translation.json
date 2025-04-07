@@ -1,4 +1,3 @@
-
 {
   "common": {
     "wakti": "وقتي",
@@ -339,14 +338,16 @@
       "completed": "مكتملة",
       "inProgress": "قيد التنفيذ",
       "pending": "معلقة",
-      "late": "متأخرة"
+      "late": "متأخرة",
+      "all": "جميع الحالات"
     },
     "priority": {
       "high": "عالية",
       "medium": "متوسطة",
       "low": "منخفضة",
       "normal": "عادية",
-      "urgent": "عاجلة"
+      "urgent": "عاجلة",
+      "all": "جميع الأولويات"
     },
     "today": "مهام اليوم",
     "createTask": "إنشاء مهمة",
@@ -359,7 +360,14 @@
     "noTasksFound": "لم يتم العثور على مهام",
     "noArchivedTasks": "لا توجد مهام مؤرشفة",
     "archivedTasksDescription": "المهام التي تحذفها أو تلغيها ستظهر هنا",
-    "noTasksDescription": "ابدأ بإنشاء مهمتك الأولى"
+    "noTasksDescription": "ابدأ بإنشاء مهمتك الأولى",
+    "tabs": {
+      "myTasks": "مهامي",
+      "archived": "المؤرشفة"
+    },
+    "completedTime": {
+      "at": "اكتملت في"
+    }
   },
   "location": {
     "enterLocation": "أدخل موقعًا",
@@ -540,7 +548,16 @@
     "notFoundMessage": "تعذر العثور على معلومات الحجز المطلوبة.",
     "staffLabel": "الموظف:",
     "bookedFor": "حُجز لـ:",
-    "phoneLabel": "الهاتف:"
+    "phoneLabel": "الهاتف:",
+    "message": {
+      "confirmation": "تم تأكيد حجزك بنجاح."
+    },
+    "addToCalendar": "إضافة إلى التقويم",
+    "saveToReminders": "حفظ في التذكيرات",
+    "googleCalendar": "تقويم جوجل",
+    "appleCalendar": "تقويم آبل",
+    "outlookCalendar": "تقويم أوتلوك",
+    "email": "تأكيد عبر البريد الإلكتروني"
   },
   "accountPromotion": {
     "getMore": "احصل على المزيد من حجوزاتك",
@@ -567,5 +584,17 @@
   "language": {
     "switchToEnglish": "Switch to English",
     "switchToArabic": "التبديل إلى اللغة العربية"
+  },
+  "event": {
+    "tabs": {
+      "past": "الأحداث السابقة"
+    },
+    "accepted": "مقبول",
+    "declined": "مرفوض",
+    "pending": "قيد الانتظار",
+    "invitedParticipants": "المدعوون",
+    "noInvitations": "لا توجد دعوات",
+    "emailInvitation": "دعوة بالبريد الإلكتروني",
+    "appUser": "مستخدم التطبيق"
   }
 }
