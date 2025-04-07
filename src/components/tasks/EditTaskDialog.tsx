@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface EditTaskDialogProps {
   open: boolean;
@@ -56,6 +57,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
   onUpdateTask,
 }) => {
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -101,15 +103,15 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       onOpenChange(false);
       
       toast({
-        title: "Task updated",
-        description: "Your task has been successfully updated",
+        title: t("task.updateTask"),
+        description: t("task.updateTaskDescription"),
         variant: "success"
       });
     } catch (error) {
       console.error("Error updating task:", error);
       toast({
-        title: "Task update failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        title: t("common.error"),
+        description: error instanceof Error ? error.message : t("common.error"),
         variant: "destructive"
       });
     } finally {
@@ -126,9 +128,9 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Task</DialogTitle>
+          <DialogTitle>{t("task.editTask")}</DialogTitle>
           <DialogDescription>
-            Update the details of your task.
+            {t("task.updateTaskDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -142,10 +144,10 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Task Title</FormLabel>
+                  <FormLabel>{t("task.taskTitle")}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter task title"
+                      placeholder={t("task.enterTaskTitle")}
                       {...field}
                       autoFocus
                     />
@@ -160,10 +162,10 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{t("task.description")}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Enter task description"
+                      placeholder={t("task.enterTaskDescription")}
                       {...field}
                       className="min-h-[100px]"
                     />
@@ -179,21 +181,21 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 name="priority"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Priority</FormLabel>
+                    <FormLabel>{t("task.priority")}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select priority" />
+                          <SelectValue placeholder={t("task.selectPriority")} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="urgent">Urgent</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="normal">Normal</SelectItem>
+                        <SelectItem value="urgent">{t("task.priority.urgent")}</SelectItem>
+                        <SelectItem value="high">{t("task.priority.high")}</SelectItem>
+                        <SelectItem value="medium">{t("task.priority.medium")}</SelectItem>
+                        <SelectItem value="normal">{t("task.priority.normal")}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -208,7 +210,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 name="dueDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Due Date</FormLabel>
+                    <FormLabel>{t("task.dueDate")}</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -222,7 +224,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                             {field.value ? (
                               format(new Date(field.value), "PPP")
                             ) : (
-                              <span>Pick a date</span>
+                              <span>{t("task.pickDate")}</span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
@@ -258,11 +260,11 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 name="dueTime"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Due Time (optional)</FormLabel>
+                    <FormLabel>{t("task.dueTime")}</FormLabel>
                     <FormControl>
                       <Input
                         type="time"
-                        placeholder="Select time"
+                        placeholder={t("task.selectTime")}
                         {...field}
                       />
                     </FormControl>
@@ -278,7 +280,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button 
                 type="submit" 
@@ -287,10 +289,10 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating...
+                    {t("task.updating")}
                   </>
                 ) : (
-                  "Update Task"
+                  t("task.updateTask")
                 )}
               </Button>
             </DialogFooter>

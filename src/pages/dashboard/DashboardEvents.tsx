@@ -81,14 +81,14 @@ export default function DashboardEvents() {
     try {
       await deleteEvent(eventId);
       toast({
-        title: "Event deleted",
-        description: "Your event has been deleted successfully.",
+        title: t("event.delete"),
+        description: t("common.success"),
       });
     } catch (error) {
       console.error('Error deleting event:', error);
       toast({
-        title: "Failed to delete event",
-        description: "There was a problem deleting your event. Please try again.",
+        title: t("common.error"),
+        description: t("common.error"),
         variant: "destructive",
       });
     }
@@ -130,14 +130,14 @@ export default function DashboardEvents() {
     try {
       await respondToInvitation(eventId, 'accepted');
       toast({
-        title: "Invitation accepted",
-        description: "You have accepted the invitation."
+        title: t("event.accepted"),
+        description: t("common.success")
       });
     } catch (error) {
       console.error('Error accepting invitation:', error);
       toast({
-        title: "Failed to accept invitation",
-        description: "There was a problem accepting the invitation. Please try again.",
+        title: t("common.error"),
+        description: t("common.error"),
         variant: "destructive",
       });
     }
@@ -148,14 +148,14 @@ export default function DashboardEvents() {
     try {
       await respondToInvitation(eventId, 'declined');
       toast({
-        title: "Invitation declined",
-        description: "You have declined the invitation."
+        title: t("event.declined"),
+        description: t("common.success")
       });
     } catch (error) {
       console.error('Error declining invitation:', error);
       toast({
-        title: "Failed to decline invitation",
-        description: "There was a problem declining the invitation. Please try again.",
+        title: t("common.error"),
+        description: t("common.error"),
         variant: "destructive",
       });
     }

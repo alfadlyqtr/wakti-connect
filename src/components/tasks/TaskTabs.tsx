@@ -11,8 +11,12 @@ interface TaskTabsProps {
 const TaskTabs = ({ activeTab, onTabChange }: TaskTabsProps) => {
   const { t } = useTranslation();
   
+  const handleTabChange = (value: string) => {
+    onTabChange(value as TaskTab);
+  };
+  
   return (
-    <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+    <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
       <TabsList className="grid grid-cols-2 w-full sm:w-[400px]">
         <TabsTrigger value="my-tasks">{t("task.tabs.myTasks")}</TabsTrigger>
         <TabsTrigger value="archived">{t("task.tabs.archived")}</TabsTrigger>
