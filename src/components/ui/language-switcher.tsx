@@ -17,7 +17,7 @@ export function LanguageSwitcher() {
         disabled
       >
         <Loader2 className="h-3 w-3 animate-spin" />
-        <span>Loading...</span>
+        <span>{currentLanguage === 'ar' ? 'جاري التحميل...' : 'Loading...'}</span>
       </Button>
     );
   }

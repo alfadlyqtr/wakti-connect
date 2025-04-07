@@ -19,6 +19,12 @@ const logLanguageInfo = (message: string, data?: any) => {
 
 logLanguageInfo('Initializing i18n');
 
+// Check if we have a stored language preference
+const persistedLanguage = localStorage.getItem('wakti-language');
+if (persistedLanguage) {
+  logLanguageInfo(`Found persisted language: ${persistedLanguage}`);
+}
+
 // Initialize i18next
 i18n
   // detect user language
@@ -53,6 +59,17 @@ i18n
       logLanguageInfo('Error initializing i18n:', err);
     } else {
       logLanguageInfo('i18n initialized successfully');
+      // Apply language direction right away
+      const currentLang = i18n.language;
+      document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = currentLang;
+      
+      if (currentLang === 'ar') {
+        document.body.classList.add('rtl');
+        document.body.classList.add('font-arabic');
+      }
+      
+      logLanguageInfo(`Initial language set to: ${currentLang}`);
     }
   });
 

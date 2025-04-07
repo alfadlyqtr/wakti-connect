@@ -49,7 +49,19 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     console.log(`[TranslationContext] Language set to ${currentLanguage} (RTL: ${isRTL})`);
   }, [currentLanguage, isRTL]);
   
-  // Method to change language without full page reload
+  // Initialize on first render
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('wakti-language');
+    if (savedLanguage && savedLanguage !== i18nInstance.language) {
+      console.log(`[TranslationContext] Found saved language: ${savedLanguage}, current is: ${i18nInstance.language}`);
+      // Wait a moment to allow i18n to initialize before changing
+      setTimeout(() => {
+        i18nInstance.changeLanguage(savedLanguage);
+      }, 100);
+    }
+  }, []);
+  
+  // Method to change language with full page reload to ensure consistent state
   const changeLanguage = (lang: string) => {
     try {
       console.log(`[TranslationContext] Changing language to: ${lang}`);
@@ -58,16 +70,19 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
       // Save to localStorage
       localStorage.setItem('wakti-language', lang);
       
+      // Show loading toast first
+      toast({
+        title: lang === 'ar' ? 'جاري تغيير اللغة...' : 'Changing language...',
+        description: lang === 'ar' ? 'يرجى الانتظار' : 'Please wait',
+        variant: "default",
+      });
+      
       // Change i18n language
       i18nInstance.changeLanguage(lang).then(() => {
         setLoadingTranslation(false);
         
-        // Show success toast
-        toast({
-          title: lang === 'ar' ? 'تم تغيير اللغة' : 'Language changed',
-          description: lang === 'ar' ? 'تم تغيير اللغة إلى العربية' : 'Language changed to English',
-          variant: "default",
-        });
+        // Force reload the page to ensure all components update properly
+        window.location.reload();
       }).catch(error => {
         console.error('[TranslationContext] Error changing language:', error);
         setLoadingTranslation(false);
