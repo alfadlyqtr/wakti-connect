@@ -126,7 +126,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             refetch={refetch}
           />
         )}
-      </CardContent>
+      </div>
       
       {!isArchived && (
         <TaskCardFooter 

@@ -361,7 +361,11 @@
       "inProgress": "In Progress",
       "pending": "Pending",
       "late": "Late",
-      "all": "All Statuses"
+      "snoozed": "Snoozed",
+      "all": "All Statuses",
+      "status": "Status",
+      "markCompleted": "Mark as completed",
+      "markPending": "Mark as pending"
     },
     "priority": {
       "high": "High",
@@ -369,7 +373,20 @@
       "low": "Low",
       "normal": "Normal",
       "urgent": "Urgent",
-      "all": "All Priorities"
+      "all": "All Priorities",
+      "priority": "Priority"
+    },
+    "menu": {
+      "actions": "Task Actions",
+      "markCompleted": "Mark as completed",
+      "startTask": "Start task",
+      "snooze": "Snooze",
+      "snoozeDay": "Snooze for 1 day",
+      "snoozeDays": "Snooze for {{count}} days",
+      "snoozeWeek": "Snooze for 1 week",
+      "cancelTask": "Cancel task",
+      "restore": "Restore",
+      "openMenu": "Open menu"
     },
     "today": "Tasks Today",
     "tasks": "Tasks",
@@ -711,5 +728,9 @@
     "previousStep": "Previous Step",
     "creatingEvent": "Creating event...",
     "updatingEvent": "Updating event..."
+  },
+  "archive": {
+    "title": "Archived Tasks",
+    "description": "Here you can see tasks that have been archived."
   }
 }
