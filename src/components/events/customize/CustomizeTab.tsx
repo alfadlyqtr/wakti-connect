@@ -7,7 +7,6 @@ import TemplateSelector from "@/components/invitations/TemplateSelector";
 import LivePreview from "./LivePreview";
 import { getTemplateById } from "@/data/eventTemplates";
 import { format } from "date-fns";
-import { useTranslation } from "react-i18next";
 
 interface CustomizeTabProps {
   customization: EventCustomization;
@@ -30,7 +29,6 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
   startTime,
   endTime
 }) => {
-  const { t } = useTranslation();
   const [designMode, setDesignMode] = useState<'template' | 'scratch'>('template');
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('mobile');
@@ -65,12 +63,8 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="template" className="px-3 py-2 text-center">
-                {t("events.templates")}
-              </TabsTrigger>
-              <TabsTrigger value="scratch" className="px-3 py-2 text-center">
-                {t("events.customize")}
-              </TabsTrigger>
+              <TabsTrigger value="template" className="px-3 py-2 text-center">Choose Template</TabsTrigger>
+              <TabsTrigger value="scratch" className="px-3 py-2 text-center">Customize</TabsTrigger>
             </TabsList>
             
             <TabsContent value="template">
@@ -92,7 +86,7 @@ const CustomizeTab: React.FC<CustomizeTabProps> = ({
         <div className="bg-muted/30 p-4 rounded-md flex flex-col justify-center">
           <LivePreview 
             customization={customization}
-            title={title || t("events.eventTitle")}
+            title={title || "Event Title"}
             description={description}
             location={location}
             dateTime={getFormattedDateTime()}

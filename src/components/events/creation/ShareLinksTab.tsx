@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { QrCode, Link as LinkIcon, Copy, Check, Mail } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/components/ui/use-toast';
-import { useTranslation } from 'react-i18next';
+import { toast } from '@/components/ui/toast';
 
 interface ShareLinksTabProps {
   onSendEmail?: (email: string) => void;
@@ -15,7 +14,6 @@ interface ShareLinksTabProps {
 const ShareLinksTab: React.FC<ShareLinksTabProps> = ({
   onSendEmail
 }) => {
-  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('link');
   const [copied, setCopied] = useState(false);
   const [emailValue, setEmailValue] = useState('');
@@ -30,15 +28,15 @@ const ShareLinksTab: React.FC<ShareLinksTabProps> = ({
       setCopied(true);
       
       toast({
-        title: t("common.clipboardTitle"),
-        description: t("common.clipboardMessage")
+        title: "Link copied",
+        description: "The event link has been copied to your clipboard"
       });
       
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       toast({
-        title: t("common.clipboardError"),
-        description: t("common.clipboardErrorDesc"),
+        title: "Failed to copy",
+        description: "Please copy the link manually",
         variant: "destructive"
       });
     }
@@ -48,8 +46,8 @@ const ShareLinksTab: React.FC<ShareLinksTabProps> = ({
   const handleSendEmail = () => {
     if (!emailValue) {
       toast({
-        title: t("validation.emailRequired"),
-        description: t("validation.enterEmail"),
+        title: "Email required",
+        description: "Please enter an email address",
         variant: "destructive"
       });
       return;
@@ -59,8 +57,8 @@ const ShareLinksTab: React.FC<ShareLinksTabProps> = ({
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(emailValue)) {
       toast({
-        title: t("validation.invalidEmail"),
-        description: t("validation.enterValidEmail"),
+        title: "Invalid email",
+        description: "Please enter a valid email address",
         variant: "destructive"
       });
       return;
@@ -71,8 +69,8 @@ const ShareLinksTab: React.FC<ShareLinksTabProps> = ({
       setEmailValue('');
       
       toast({
-        title: t("events.invitationSent"),
-        description: t("events.invitationSentTo", { email: emailValue })
+        title: "Invitation sent",
+        description: `Email invitation sent to ${emailValue}`
       });
     }
   };
@@ -82,10 +80,10 @@ const ShareLinksTab: React.FC<ShareLinksTabProps> = ({
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid grid-cols-2 w-full">
           <TabsTrigger value="link" className="flex items-center gap-1">
-            <LinkIcon className="h-4 w-4" /> {t("events.link")}
+            <LinkIcon className="h-4 w-4" /> Link
           </TabsTrigger>
           <TabsTrigger value="email" className="flex items-center gap-1">
-            <Mail className="h-4 w-4" /> {t("events.email")}
+            <Mail className="h-4 w-4" /> Email
           </TabsTrigger>
         </TabsList>
         
@@ -93,7 +91,7 @@ const ShareLinksTab: React.FC<ShareLinksTabProps> = ({
           <div className="space-y-4">
             <div>
               <Label htmlFor="shareableLink" className="text-sm font-medium">
-                {t("events.shareableLink")}
+                Shareable Link
               </Label>
               <div className="flex mt-1.5">
                 <Input 
@@ -117,7 +115,7 @@ const ShareLinksTab: React.FC<ShareLinksTabProps> = ({
             </div>
             
             <p className="text-sm text-muted-foreground">
-              {t("events.shareLinkDesc")}
+              Share this link directly with your attendees. Anyone with this link can view and respond to your event.
             </p>
             
             <div className="flex flex-wrap gap-2 mt-4">
@@ -125,30 +123,30 @@ const ShareLinksTab: React.FC<ShareLinksTabProps> = ({
                 variant="outline" 
                 size="sm"
                 onClick={() => {
-                  window.open(`https://wa.me/?text=${encodeURIComponent(`${t("events.whatsappMessage")} ${link}`)}`, '_blank');
+                  window.open(`https://wa.me/?text=${encodeURIComponent(`You're invited! ${link}`)}`, '_blank');
                 }}
               >
-                {t("events.shareWhatsApp")}
+                Share via WhatsApp
               </Button>
               
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={() => {
-                  window.open(`mailto:?subject=${t("events.emailSubject")}&body=${encodeURIComponent(`${t("events.emailMessage")} ${link}`)}`, '_blank');
+                  window.open(`mailto:?subject=Event Invitation&body=${encodeURIComponent(`You're invited! ${link}`)}`, '_blank');
                 }}
               >
-                {t("events.shareEmail")}
+                Share via Email
               </Button>
               
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={() => {
-                  window.open(`sms:?body=${encodeURIComponent(`${t("events.smsMessage")} ${link}`)}`, '_blank');
+                  window.open(`sms:?body=${encodeURIComponent(`You're invited! ${link}`)}`, '_blank');
                 }}
               >
-                {t("events.shareSMS")}
+                Share via SMS
               </Button>
             </div>
           </div>
@@ -158,7 +156,7 @@ const ShareLinksTab: React.FC<ShareLinksTabProps> = ({
           <div className="space-y-4">
             <div>
               <Label htmlFor="emailRecipient" className="text-sm font-medium">
-                {t("events.recipientEmail")}
+                Recipient Email
               </Label>
               <div className="flex mt-1.5 gap-2">
                 <Input 
@@ -172,13 +170,13 @@ const ShareLinksTab: React.FC<ShareLinksTabProps> = ({
                 <Button
                   onClick={handleSendEmail}
                 >
-                  {t("events.sendInvitation")}
+                  Send Invitation
                 </Button>
               </div>
             </div>
             
             <p className="text-sm text-muted-foreground">
-              {t("events.emailInviteDesc")}
+              Send a direct email invitation to someone who isn't in your contacts. They'll receive a link to view and respond to your event.
             </p>
           </div>
         </TabsContent>

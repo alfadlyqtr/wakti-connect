@@ -10,7 +10,6 @@ import {
   CardEffectTabContent,
   AnimationsTabContent
 } from "./tabs-content";
-import { useTranslation } from "react-i18next";
 
 interface CustomizationTabsProps {
   activeTab: string;
@@ -21,18 +20,16 @@ const CustomizationTabs: React.FC<CustomizationTabsProps> = ({
   activeTab, 
   setActiveTab 
 }) => {
-  const { t } = useTranslation();
-
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <TabsList className="flex flex-wrap w-full mb-4 overflow-x-auto">
-        <TabsTrigger value="background" className="px-2.5 py-1.5 text-xs sm:text-sm">{t("events.background")}</TabsTrigger>
-        <TabsTrigger value="text" className="px-2.5 py-1.5 text-xs sm:text-sm">{t("events.text")}</TabsTrigger>
-        <TabsTrigger value="buttons" className="px-2.5 py-1.5 text-xs sm:text-sm">{t("events.buttons")}</TabsTrigger>
-        <TabsTrigger value="header" className="px-2.5 py-1.5 text-xs sm:text-sm">{t("events.header")}</TabsTrigger>
-        <TabsTrigger value="features" className="px-2.5 py-1.5 text-xs sm:text-sm">{t("events.features")}</TabsTrigger>
-        <TabsTrigger value="effects" className="px-2.5 py-1.5 text-xs sm:text-sm">{t("events.cardEffect")}</TabsTrigger>
-        <TabsTrigger value="animations" className="px-2.5 py-1.5 text-xs sm:text-sm">{t("events.animations")}</TabsTrigger>
+        <TabsTrigger value="background" className="px-2.5 py-1.5 text-xs sm:text-sm">Background</TabsTrigger>
+        <TabsTrigger value="text" className="px-2.5 py-1.5 text-xs sm:text-sm">Text</TabsTrigger>
+        <TabsTrigger value="buttons" className="px-2.5 py-1.5 text-xs sm:text-sm">Buttons</TabsTrigger>
+        <TabsTrigger value="header" className="px-2.5 py-1.5 text-xs sm:text-sm">Header</TabsTrigger>
+        <TabsTrigger value="features" className="px-2.5 py-1.5 text-xs sm:text-sm">Features</TabsTrigger>
+        <TabsTrigger value="effects" className="px-2.5 py-1.5 text-xs sm:text-sm">Card Effect</TabsTrigger>
+        <TabsTrigger value="animations" className="px-2.5 py-1.5 text-xs sm:text-sm">Animations</TabsTrigger>
       </TabsList>
       
       <TabsContent value="background" className="space-y-4">
@@ -66,9 +63,9 @@ const CustomizationTabs: React.FC<CustomizationTabsProps> = ({
       <TabsContent value="more" className="space-y-6 sm:hidden">
         <Tabs defaultValue="features">
           <TabsList className="grid grid-cols-3 mb-4 w-full">
-            <TabsTrigger value="features">{t("events.features")}</TabsTrigger>
-            <TabsTrigger value="effects">{t("events.cardEffect")}</TabsTrigger>
-            <TabsTrigger value="animations">{t("events.animations")}</TabsTrigger>
+            <TabsTrigger value="features">Features</TabsTrigger>
+            <TabsTrigger value="effects">Card Effect</TabsTrigger>
+            <TabsTrigger value="animations">Animations</TabsTrigger>
           </TabsList>
           
           <TabsContent value="features" className="space-y-6">

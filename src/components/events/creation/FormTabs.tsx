@@ -7,7 +7,6 @@ import CustomizeTab from "../customize/CustomizeTab";
 import ShareTabContent from "../sharing/ShareTabContent";
 import { InvitationRecipient } from "@/types/invitation.types";
 import { ShareTab } from "@/types/form.types";
-import { useTranslation } from "react-i18next";
 
 export interface FormTabsProps {
   activeTab: EventFormTab;
@@ -70,14 +69,12 @@ const FormTabs: React.FC<FormTabsProps> = ({
   getCurrentLocation,
   isGettingLocation
 }) => {
-  const { t } = useTranslation();
-
   return (
     <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as EventFormTab)}>
       <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="details">{t("events.eventDetails")}</TabsTrigger>
-        <TabsTrigger value="customize">{t("events.customize")}</TabsTrigger>
-        <TabsTrigger value="share">{t("events.share")}</TabsTrigger>
+        <TabsTrigger value="details">Details</TabsTrigger>
+        <TabsTrigger value="customize">Customize</TabsTrigger>
+        <TabsTrigger value="share">Share</TabsTrigger>
       </TabsList>
 
       <TabsContent value="details">

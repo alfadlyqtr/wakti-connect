@@ -6,7 +6,6 @@ import { CheckCircle, XCircle, Clock, User } from 'lucide-react';
 import { Event, EventInvitation } from '@/types/event.types';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { useTranslation } from 'react-i18next';
 
 interface EventViewResponsesProps {
   event: Event;
@@ -14,7 +13,6 @@ interface EventViewResponsesProps {
 }
 
 const EventViewResponses: React.FC<EventViewResponsesProps> = ({ event, onClose }) => {
-  const { t } = useTranslation();
   const hasInvitations = event.invitations && event.invitations.length > 0;
   
   // Count responses by status
@@ -40,7 +38,7 @@ const EventViewResponses: React.FC<EventViewResponsesProps> = ({ event, onClose 
         
         {onClose && (
           <Button variant="outline" onClick={onClose}>
-            {t("common.close")}
+            Close
           </Button>
         )}
       </div>
@@ -54,7 +52,7 @@ const EventViewResponses: React.FC<EventViewResponsesProps> = ({ event, onClose 
             <CheckCircle className="h-5 w-5 text-green-600" />
           </div>
           <div>
-            <p className="text-sm font-medium">{t("events.accepted")}</p>
+            <p className="text-sm font-medium">Accepted</p>
             <p className="text-2xl font-bold">{responseCounts.accepted}</p>
           </div>
         </div>
@@ -67,7 +65,7 @@ const EventViewResponses: React.FC<EventViewResponsesProps> = ({ event, onClose 
             <XCircle className="h-5 w-5 text-red-600" />
           </div>
           <div>
-            <p className="text-sm font-medium">{t("events.declined")}</p>
+            <p className="text-sm font-medium">Declined</p>
             <p className="text-2xl font-bold">{responseCounts.declined}</p>
           </div>
         </div>
@@ -80,7 +78,7 @@ const EventViewResponses: React.FC<EventViewResponsesProps> = ({ event, onClose 
             <Clock className="h-5 w-5 text-yellow-600" />
           </div>
           <div>
-            <p className="text-sm font-medium">{t("events.pending")}</p>
+            <p className="text-sm font-medium">Pending</p>
             <p className="text-2xl font-bold">{responseCounts.pending}</p>
           </div>
         </div>
@@ -89,7 +87,7 @@ const EventViewResponses: React.FC<EventViewResponsesProps> = ({ event, onClose 
       {hasInvitations ? (
         <div className="border rounded-lg overflow-hidden">
           <div className="bg-muted py-3 px-4 font-medium">
-            {t("events.invitedParticipants")} ({responseCounts.total})
+            Invited Participants ({responseCounts.total})
           </div>
           
           <div className="divide-y">
@@ -101,9 +99,9 @@ const EventViewResponses: React.FC<EventViewResponsesProps> = ({ event, onClose 
       ) : (
         <div className="border rounded-lg p-8 text-center">
           <User className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-          <h3 className="text-lg font-medium">{t("events.noInvitations")}</h3>
+          <h3 className="text-lg font-medium">No invitations sent</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            {t("events.noInvitationsDesc")}
+            This event doesn't have any invitations.
           </p>
         </div>
       )}
@@ -112,7 +110,6 @@ const EventViewResponses: React.FC<EventViewResponsesProps> = ({ event, onClose 
 };
 
 const InvitationRow: React.FC<{ invitation: EventInvitation }> = ({ invitation }) => {
-  const { t } = useTranslation();
   const { email, invited_user_id, status } = invitation;
   
   const getStatusIcon = () => {
@@ -129,11 +126,11 @@ const InvitationRow: React.FC<{ invitation: EventInvitation }> = ({ invitation }
   const getStatusText = () => {
     switch (status) {
       case 'accepted':
-        return <span className="text-green-600">{t("events.accepted")}</span>;
+        return <span className="text-green-600">Accepted</span>;
       case 'declined':
-        return <span className="text-red-600">{t("events.declined")}</span>;
+        return <span className="text-red-600">Declined</span>;
       default:
-        return <span className="text-yellow-600">{t("events.pending")}</span>;
+        return <span className="text-yellow-600">Pending</span>;
     }
   };
   
@@ -146,7 +143,7 @@ const InvitationRow: React.FC<{ invitation: EventInvitation }> = ({ invitation }
         <div>
           <p className="font-medium">{email || `User ${invited_user_id?.substring(0, 6)}`}</p>
           <p className="text-sm text-muted-foreground">
-            {email ? t("events.emailInvitation") : t("events.appUser")}
+            {email ? 'Email Invitation' : 'App User'}
           </p>
         </div>
       </div>
