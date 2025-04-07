@@ -37,7 +37,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
       <div className="flex justify-between items-center">
         <div>
           <p className="text-sm font-medium">{t('common.total')} {t('task.tasks')}: {totalTasks}</p>
-          <p className="text-sm text-muted-foreground">{t('dashboard.completionRate')}: {completionRate}%</p>
+          <p className="text-sm text-muted-foreground">{t('task.completionRate')}: {completionRate}%</p>
         </div>
         <div className="flex gap-2">
           <div className="h-3 w-3 rounded-full bg-amber-500" />

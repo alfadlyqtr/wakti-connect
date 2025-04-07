@@ -1,29 +1,20 @@
 
-import React from "react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Archive, CheckSquare } from "lucide-react";
-import { TaskTab } from "@/types/task.types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslation } from "react-i18next";
 
 interface TaskTabsProps {
-  activeTab: TaskTab;
-  onTabChange: (tab: TaskTab) => void;
+  activeTab: string;
+  onTabChange: (tab: string) => void;
 }
 
-const TaskTabs: React.FC<TaskTabsProps> = ({ activeTab, onTabChange }) => {
+const TaskTabs = ({ activeTab, onTabChange }: TaskTabsProps) => {
   const { t } = useTranslation();
   
   return (
-    <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as TaskTab)} className="w-full">
-      <TabsList className="grid w-full max-w-md grid-cols-2">
-        <TabsTrigger value="my-tasks" className="flex items-center gap-2">
-          <CheckSquare className="h-4 w-4" />
-          <span>{t("task.tabs.myTasks")}</span>
-        </TabsTrigger>
-        <TabsTrigger value="archived" className="flex items-center gap-2">
-          <Archive className="h-4 w-4" />
-          <span>{t("task.tabs.archived")}</span>
-        </TabsTrigger>
+    <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+      <TabsList className="grid grid-cols-2 w-full sm:w-[400px]">
+        <TabsTrigger value="my-tasks">{t("task.tabs.myTasks")}</TabsTrigger>
+        <TabsTrigger value="archived">{t("task.tabs.archived")}</TabsTrigger>
       </TabsList>
     </Tabs>
   );

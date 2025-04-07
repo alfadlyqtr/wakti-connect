@@ -1,16 +1,14 @@
 
-import React, { useState, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Check, ThumbsUp, Loader2 } from "lucide-react";
-import { format, isPast, isToday } from "date-fns";
-import { TaskCardCompletionAnimation } from "../task-card/TaskCardCompletionAnimation";
-import { TaskStatus } from "@/types/task.types";
+import React from "react";
+import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
-
+import { TaskStatus } from "@/types/task.types";
+import { CheckCircle, CircleSlash } from "lucide-react";
+ 
 interface TaskCardFooterProps {
   id: string;
   status: TaskStatus;
-  completedDate: Date | string | null;
+  completedDate?: Date | null;
   dueDate: Date;
   onStatusChange: (id: string, status: string) => void;
   onEdit: (id: string) => void;
@@ -22,89 +20,34 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
   completedDate,
   dueDate,
   onStatusChange,
-  onEdit,
+  onEdit
 }) => {
   const { t } = useTranslation();
-  const [showAnimation, setShowAnimation] = useState(false);
-  const [isAheadOfTime, setIsAheadOfTime] = useState(false);
-  const operationInProgressRef = useRef(false);
   
-  // Check if task is completed
   const isCompleted = status === "completed";
-  const isArchived = status === "archived";
   
-  // Handle completing a task with debounce
-  const handleComplete = () => {
-    // Prevent multiple rapid clicks
-    if (operationInProgressRef.current) return;
-    operationInProgressRef.current = true;
-    
-    // Determine if task is being completed ahead of time
-    const isEarly = !isPast(dueDate) && !isToday(dueDate);
-    setIsAheadOfTime(isEarly);
-    
-    // Show animation and then update task status
-    setShowAnimation(true);
+  const handleMarkComplete = () => {
+    onStatusChange(id, isCompleted ? "pending" : "completed");
   };
-  
-  // Update task status after animation completes
-  const handleAnimationComplete = () => {
-    setShowAnimation(false);
-    onStatusChange(id, "completed");
-    
-    // Reset operation flag after a delay to prevent rapid clicks
-    setTimeout(() => {
-      operationInProgressRef.current = false;
-    }, 500);
-  };
-  
-  // Don't show controls for archived tasks
-  if (isArchived) {
-    return null;
-  }
-  
+
   return (
-    <div className="px-4 py-3 bg-muted/40 flex items-center justify-between">
-      {isCompleted ? (
-        <div className="text-xs text-muted-foreground flex items-center">
-          <ThumbsUp className="h-3 w-3 mr-1 text-green-500" />
-          {completedDate ? (
-            <>
-              {t("task.completed")} {t("time.at")} {format(new Date(completedDate), "MMM d, yyyy")}
-            </>
-          ) : (
-            t("task.completed")
-          )}
-        </div>
-      ) : (
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 bg-green-50 text-green-600 border-green-200 hover:bg-green-100"
-            onClick={handleComplete}
-            disabled={operationInProgressRef.current}
-          >
-            <Check className="mr-1 h-4 w-4" />
-            {t("task.markComplete")}
-          </Button>
-          
-          {/* In-progress indicator - not a button anymore */}
-          {status === "in-progress" && (
-            <span className="inline-flex items-center h-8 px-3 py-2 text-xs rounded-md bg-blue-50 text-blue-600 border border-blue-200">
-              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-              {t("task.status.inProgress")}
-            </span>
-          )}
-        </div>
-      )}
-      
-      {/* Completion animation */}
-      <TaskCardCompletionAnimation 
-        show={showAnimation}
-        isAheadOfTime={isAheadOfTime}
-        onAnimationComplete={handleAnimationComplete}
-      />
+    <div className="px-4 py-2 border-t flex items-center justify-between text-xs text-muted-foreground">
+      <div>
+        {completedDate && (
+          <span>
+            {t("task.completedTime.at")} {format(new Date(completedDate), "MMM d, yyyy")}
+          </span>
+        )}
+      </div>
+      <div className="flex gap-2">
+        <button
+          className="flex items-center gap-1 hover:text-foreground transition-colors"
+          onClick={handleMarkComplete}
+        >
+          {isCompleted ? <CircleSlash className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
+          {isCompleted ? t("task.status.pending") : t("task.status.completed")}
+        </button>
+      </div>
     </div>
   );
-}
+};

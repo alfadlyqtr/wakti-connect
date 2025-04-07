@@ -1,3 +1,4 @@
+
 {
   "common": {
     "wakti": "Wakti",
@@ -371,6 +372,7 @@
       "all": "All Priorities"
     },
     "today": "Tasks Today",
+    "tasks": "Tasks",
     "createTask": "Create Task",
     "startWork": "Start Working",
     "userDescription": "Manage your tasks and track your progress.",
