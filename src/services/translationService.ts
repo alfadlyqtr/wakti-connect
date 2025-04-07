@@ -1,7 +1,6 @@
-
 import i18n from '@/i18n/i18n';
 import { useTranslation } from 'react-i18next';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 
 // Interface for translation options
 interface TranslateOptions {
@@ -12,11 +11,6 @@ interface TranslateOptions {
 
 // Cache for API translations to reduce API calls
 const translationCache = new Map<string, string>();
-
-// Initialize Supabase client for edge function calls
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /**
  * Enhanced translate function that falls back to DeepSeek API if needed

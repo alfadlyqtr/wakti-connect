@@ -5,6 +5,7 @@ import './index.css';
 import './App.css';
 import { AuthProvider } from './hooks/auth';
 import { CurrencyProvider } from './contexts/CurrencyContext';
+import { TranslationProvider } from './contexts/TranslationContext';
 import './i18n/i18n'; // Import i18n configuration
 
 // Check if we should apply RTL based on saved language
@@ -20,7 +21,9 @@ console.log(`[App] Initializing app`);
 createRoot(document.getElementById("root")!).render(
   <AuthProvider>
     <CurrencyProvider>
-      <App />
+      <TranslationProvider>
+        <App />
+      </TranslationProvider>
     </CurrencyProvider>
   </AuthProvider>
 );
