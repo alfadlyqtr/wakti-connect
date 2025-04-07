@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Globe } from "lucide-react";
 
 export function LanguageSwitcher() {
-  const { i18n, t } = useTranslation();
+  const { i18n } = useTranslation();
   
   const changeLanguage = (language: string) => {
     console.log(`Changing language to: ${language}`);
