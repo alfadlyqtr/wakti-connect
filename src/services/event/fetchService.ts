@@ -48,10 +48,10 @@ export const getEvents = async (tab: 'my-events' | 'invited-events' | 'draft-eve
     let events: Event[] = [];
 
     if (tab === 'invited-events' && data) {
-      // Extract events from invitation data
+      // Extract events from invitation data and properly convert types
       events = convertToTypedEvents(data.filter(item => item.event).map(item => item.event));
     } else if (data) {
-      // Direct events data
+      // Direct events data, properly convert types
       events = convertToTypedEvents(data);
     }
 
@@ -63,7 +63,19 @@ export const getEvents = async (tab: 'my-events' | 'invited-events' | 'draft-eve
       .single();
 
     // Use type assertion to restrict the account_type to the expected values
-    const userRole = (profileData?.account_type || 'free') as 'free' | 'individual' | 'business';
+    let userRole: 'free' | 'individual' | 'business' = 'free';
+    
+    // Determine actual role and map staff role to a supported type
+    if (profileData) {
+      if (profileData.account_type === 'individual' || profileData.account_type === 'business') {
+        userRole = profileData.account_type;
+      } else if (profileData.account_type === 'staff') {
+        // Staff users are treated as individual users for event creation permissions
+        userRole = 'individual';
+      } else {
+        userRole = 'free';
+      }
+    }
     
     // Determine if user can create events (individual or business accounts)
     const canCreateEvents = userRole === 'individual' || userRole === 'business';
@@ -102,6 +114,10 @@ export const getEventById = async (eventId: string): Promise<EventWithInvitation
 
     // Convert to properly typed event
     const typedEvent = convertToTypedEvent(data);
+    
+    if (!typedEvent) {
+      return null;
+    }
     
     // Add invitations and return as EventWithInvitations
     return {

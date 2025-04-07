@@ -53,8 +53,32 @@ export const updateEvent = async (eventId: string, formData: EventFormData): Pro
       endTimestamp = new Date(formData.endDate).toISOString();
     }
     
+    // Type-safe status handling
+    let statusValue: "accepted" | "declined" | "draft" | "sent" | "recalled" = "draft";
+    
+    switch(formData.status) {
+      case "published":
+      case "sent":
+        statusValue = "sent";
+        break;
+      case "accepted":
+        statusValue = "accepted";
+        break;
+      case "declined":
+        statusValue = "declined";
+        break;
+      case "cancelled":
+      case "recalled":
+        statusValue = "recalled";
+        break;
+      default:
+        statusValue = "draft";
+    }
+    
+    // Convert customization to a serializable format
+    const customizationJson = formData.customization ? JSON.stringify(formData.customization) : null;
+    
     // Prepare the event object for update
-    // Convert EventCustomization to JSON compatible object
     const eventData = {
       title: formData.title,
       description: formData.description,
@@ -62,10 +86,8 @@ export const updateEvent = async (eventId: string, formData: EventFormData): Pro
       end_time: endTimestamp,
       is_all_day: formData.isAllDay,
       location: formData.location,
-      location_type: formData.location_type,
-      maps_url: formData.maps_url,
-      status: formData.status as EventStatus,
-      customization: formData.customization ? JSON.parse(JSON.stringify(formData.customization)) : null
+      status: statusValue,
+      customization: customizationJson
     };
     
     // Update the event
@@ -103,7 +125,7 @@ export const updateEvent = async (eventId: string, formData: EventFormData): Pro
         });
       }
       
-      // Prepare new invitations to add
+      // Prepare new invitations to add with proper typing
       const newInvitations = formData.invitations
         .filter(invite => {
           const key = invite.invited_user_id || invite.email;

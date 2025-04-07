@@ -35,8 +35,32 @@ export const createEvent = async (formData: EventFormData): Promise<Event | null
       endTimestamp = new Date(formData.endDate).toISOString();
     }
     
-    // Prepare the event object for insertion
-    // Convert EventCustomization to Json compatible object
+    // Prepare the event object for insertion, ensuring we have valid types
+    // Type-safe status handling
+    let statusValue: "accepted" | "declined" | "draft" | "sent" | "recalled" = "draft";
+    
+    switch(formData.status) {
+      case "published":
+      case "sent":
+        statusValue = "sent";
+        break;
+      case "accepted":
+        statusValue = "accepted";
+        break;
+      case "declined":
+        statusValue = "declined";
+        break;
+      case "cancelled":
+      case "recalled":
+        statusValue = "recalled";
+        break;
+      default:
+        statusValue = "draft";
+    }
+    
+    // Convert customization to a serializable format
+    const customizationJson = formData.customization ? JSON.stringify(formData.customization) : null;
+    
     const eventData = {
       title: formData.title,
       description: formData.description,
@@ -44,12 +68,9 @@ export const createEvent = async (formData: EventFormData): Promise<Event | null
       end_time: endTimestamp,
       is_all_day: formData.isAllDay,
       location: formData.location,
-      location_type: formData.location_type,
-      maps_url: formData.maps_url,
-      status: formData.status as EventStatus,
+      status: statusValue,
       user_id: userId,
-      // Convert customization to a JSON compatible format
-      customization: formData.customization ? JSON.parse(JSON.stringify(formData.customization)) : null
+      customization: customizationJson
     };
     
     // Insert the event into the database
@@ -70,7 +91,6 @@ export const createEvent = async (formData: EventFormData): Promise<Event | null
         event_id: event.id,
         email: invitation.email,
         invited_user_id: invitation.invited_user_id,
-        // Convert the status to explicit string literal type
         status: (invitation.status || 'pending') as 'pending' | 'accepted' | 'declined',
         shared_as_link: invitation.shared_as_link || false
       }));
@@ -88,7 +108,7 @@ export const createEvent = async (formData: EventFormData): Promise<Event | null
       }
     }
     
-    // Parse JSON back to EventCustomization before returning
+    // Parse customization back to EventCustomization object before returning
     const typedEvent: Event = {
       ...event,
       customization: event.customization ? (typeof event.customization === 'string' 

@@ -78,7 +78,7 @@ export function convertToEventCustomization(jsonData: any): EventCustomization {
 }
 
 // Convert a raw event from the database to a typed Event object
-export function convertToTypedEvent(rawEvent: any): Event {
+export function convertToTypedEvent(rawEvent: any): Event | null {
   if (!rawEvent) return null;
   
   return {
@@ -91,5 +91,5 @@ export function convertToTypedEvent(rawEvent: any): Event {
 export function convertToTypedEvents(rawEvents: any[]): Event[] {
   if (!rawEvents || !Array.isArray(rawEvents)) return [];
   
-  return rawEvents.map(convertToTypedEvent);
+  return rawEvents.map(event => convertToTypedEvent(event)).filter(Boolean) as Event[];
 }

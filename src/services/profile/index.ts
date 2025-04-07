@@ -11,7 +11,6 @@ export interface UserProfile {
   created_at: string;
   updated_at: string;
   business_name?: string;
-  // We don't need user_id since the id field is the user_id in Supabase profiles
 }
 
 /**
