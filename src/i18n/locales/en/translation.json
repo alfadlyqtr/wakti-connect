@@ -1,4 +1,3 @@
-
 {
   "common": {
     "returnHome": "Return Home",
@@ -137,5 +136,47 @@
     "trackTasks": "Track Tasks & To-Dos",
     "messageBusinesses": "Message Businesses",
     "createBusiness": "Create Business Profile"
+  },
+  "pricing": {
+    "title": "Simple, Transparent Pricing",
+    "subtitle": "Choose the plan that works best for you",
+    "plans": {
+      "free": {
+        "title": "Free",
+        "description": "For individuals just getting started",
+        "features": [
+          "Create 1 task per month",
+          "View-only appointments",
+          "Basic notifications",
+          "Limited messaging"
+        ],
+        "buttonText": "Get Started"
+      },
+      "individual": {
+        "title": "Individual",
+        "description": "For personal productivity",
+        "features": [
+          "Unlimited tasks",
+          "Appointment scheduling",
+          "Full messaging capabilities",
+          "Calendar integration",
+          "Priority support"
+        ],
+        "buttonText": "Choose Individual"
+      },
+      "business": {
+        "title": "Business",
+        "description": "For teams and businesses",
+        "features": [
+          "Everything in Individual plan",
+          "Staff management",
+          "Business profile page",
+          "Customer booking system",
+          "AI chatbot integration",
+          "Analytics & reporting"
+        ],
+        "buttonText": "Choose Business"
+      }
+    }
   }
 }
