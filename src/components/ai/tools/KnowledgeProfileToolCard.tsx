@@ -1,153 +1,79 @@
 
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React from "react";
+import { Database } from "lucide-react";
+import { AIToolCard } from "./AIToolCard";
+import { Button } from "@/components/ui/button";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
-import { Info, BookOpen, Briefcase, Pen, Bot } from "lucide-react";
-import { RoleProfileDialog } from "./RoleProfileDialog";
-import { useTranslation } from "react-i18next";
+import { 
+  waktiOverview,
+  waktiFeatures,
+  waktiRoles,
+  waktiPlans,
+  waktiCreation,
+  waktiCompanyInfo
+} from "@/data/wakti-knowledge";
 
 interface KnowledgeProfileToolCardProps {
   selectedRole: AIAssistantRole;
 }
 
-export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> = ({
-  selectedRole
+export const KnowledgeProfileToolCard: React.FC<KnowledgeProfileToolCardProps> = ({ 
+  selectedRole 
 }) => {
-  const { t } = useTranslation();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogRole, setDialogRole] = useState<AIAssistantRole>(selectedRole);
-  
-  const handleOpenDialog = (role: AIAssistantRole) => {
-    setDialogRole(role);
-    setDialogOpen(true);
+  const getRelevantWaktiInfo = () => {
+    // Information tailored to the selected role
+    switch (selectedRole) {
+      case "business_owner":
+        return {
+          title: "WAKTI Business Features",
+          description: "WAKTI's business management capabilities include staff management, service booking, and business analytics.",
+          info: waktiFeatures.businessDashboard + "\n\n" + waktiFeatures.businessManagement,
+          iconColor: "text-amber-500"
+        };
+      case "student":
+        return {
+          title: "WAKTI for Students",
+          description: "WAKTI helps students organize tasks, track assignments, and manage study schedules.",
+          info: waktiFeatures.taskManagement + "\n\n" + waktiFeatures.appointmentSystem,
+          iconColor: "text-blue-500"
+        };
+      case "employee":
+      case "writer":
+        return {
+          title: "WAKTI for Professionals",
+          description: "WAKTI helps professionals manage tasks, schedule appointments, and collaborate with teams.",
+          info: waktiFeatures.taskManagement + "\n\n" + waktiFeatures.appointmentSystem,
+          iconColor: "text-purple-500"
+        };
+      default:
+        return {
+          title: "About WAKTI",
+          description: "WAKTI is an all-in-one productivity and business management platform.",
+          info: waktiOverview + "\n\n" + waktiPlans,
+          iconColor: "text-wakti-blue"
+        };
+    }
   };
   
+  const waktiInfo = getRelevantWaktiInfo();
+  
   return (
-    <>
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center text-lg">
-            <Info className="h-5 w-5 mr-2 text-wakti-blue" />
-            {t("ai.knowledge.keyFeatures")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid grid-cols-5 w-full mb-4">
-              <TabsTrigger 
-                value="general" 
-                onClick={() => {}}
-                className="flex items-center justify-center py-2 px-0"
-              >
-                <Bot className="h-4 w-4" />
-              </TabsTrigger>
-              <TabsTrigger 
-                value="student" 
-                onClick={() => {}}
-                className="flex items-center justify-center py-2 px-0"
-              >
-                <BookOpen className="h-4 w-4" />
-              </TabsTrigger>
-              <TabsTrigger 
-                value="business_owner" 
-                onClick={() => {}}
-                className="flex items-center justify-center py-2 px-0"
-              >
-                <Briefcase className="h-4 w-4" />
-              </TabsTrigger>
-              <TabsTrigger 
-                value="employee" 
-                onClick={() => {}}
-                className="flex items-center justify-center py-2 px-0"
-              >
-                <Pen className="h-4 w-4" />
-              </TabsTrigger>
-              <TabsTrigger 
-                value="writer" 
-                onClick={() => {}}
-                className="flex items-center justify-center py-2 px-0"
-              >
-                <Pen className="h-4 w-4" />
-              </TabsTrigger>
-            </TabsList>
-            
-            <div className="h-40 overflow-y-auto border rounded-md p-3">
-              <TabsContent value="general">
-                <div 
-                  className="cursor-pointer space-y-2" 
-                  onClick={() => handleOpenDialog('general')}
-                >
-                  <h3 className="font-medium text-sm">{t("ai.knowledge.aboutWakti")}</h3>
-                  <ul className="text-xs space-y-1 text-muted-foreground list-disc list-inside">
-                    <li>{t("ai.knowledge.keyFeatures")}</li>
-                    <li>{t("ai.knowledge.plansAndPricing")}</li>
-                  </ul>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="student">
-                <div 
-                  className="cursor-pointer space-y-2" 
-                  onClick={() => handleOpenDialog('student')}
-                >
-                  <h3 className="font-medium text-sm">{t("ai.knowledge.waktiForStudents")}</h3>
-                  <ul className="text-xs space-y-1 text-muted-foreground list-disc list-inside">
-                    <li>{t("ai.knowledge.taskManagement")}</li>
-                    <li>{t("ai.knowledge.groupProjects")}</li>
-                  </ul>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="business_owner">
-                <div 
-                  className="cursor-pointer space-y-2" 
-                  onClick={() => handleOpenDialog('business_owner')}
-                >
-                  <h3 className="font-medium text-sm">{t("ai.knowledge.waktiForBusiness")}</h3>
-                  <ul className="text-xs space-y-1 text-muted-foreground list-disc list-inside">
-                    <li>{t("ai.knowledge.staffManagement")}</li>
-                    <li>{t("ai.knowledge.serviceBooking")}</li>
-                    <li>{t("ai.knowledge.businessAnalytics")}</li>
-                  </ul>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="employee">
-                <div 
-                  className="cursor-pointer space-y-2" 
-                  onClick={() => handleOpenDialog('employee')}
-                >
-                  <h3 className="font-medium text-sm">{t("ai.knowledge.waktiForProfessionals")}</h3>
-                  <ul className="text-xs space-y-1 text-muted-foreground list-disc list-inside">
-                    <li>{t("ai.knowledge.dailyWorkPlanning")}</li>
-                    <li>{t("ai.knowledge.teamCoordination")}</li>
-                  </ul>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="writer">
-                <div 
-                  className="cursor-pointer space-y-2" 
-                  onClick={() => handleOpenDialog('writer')}
-                >
-                  <h3 className="font-medium text-sm">{t("ai.knowledge.waktiForCreators")}</h3>
-                  <ul className="text-xs space-y-1 text-muted-foreground list-disc list-inside">
-                    <li>{t("ai.knowledge.projectMilestones")}</li>
-                    <li>{t("ai.knowledge.clientManagement")}</li>
-                  </ul>
-                </div>
-              </TabsContent>
-            </div>
-          </Tabs>
-        </CardContent>
-      </Card>
-      
-      <RoleProfileDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        role={dialogRole}
-      />
-    </>
+    <AIToolCard
+      icon={Database}
+      title={waktiInfo.title}
+      description={waktiInfo.description}
+      iconColor={waktiInfo.iconColor}
+    >
+      <div className="space-y-2 text-sm">
+        <p className="text-muted-foreground text-xs">{waktiInfo.info.substring(0, 200)}...</p>
+        <Button 
+          variant="outline" 
+          className="w-full"
+          onClick={() => window.open("/help", "_blank")}
+        >
+          View WAKTI Guide
+        </Button>
+      </div>
+    </AIToolCard>
   );
 };

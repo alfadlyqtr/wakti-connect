@@ -6,33 +6,6 @@ export async function callDeepSeepAPI(conversation: any[]) {
   try {
     const DEEPSEEP_API_KEY = Deno.env.get("DEEPSEEP_API_KEY");
     
-    if (!DEEPSEEP_API_KEY) {
-      console.error("DeepSeek API key not configured");
-      return {
-        error: new Response(
-          JSON.stringify({ error: "DeepSeek API key not configured" }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        )
-      };
-    }
-    
-    // Check user's language preference if available
-    let userLanguage = "en";
-    let languageContext = "";
-    
-    // Look for language indicators in the conversation
-    for (const message of conversation) {
-      if (message.content && typeof message.content === 'string') {
-        // Check for Arabic text to determine response language
-        const hasArabic = /[\u0600-\u06FF]/.test(message.content);
-        if (hasArabic) {
-          userLanguage = "ar";
-          languageContext = "The user is writing in Arabic. Respond in Arabic as well.";
-          break;
-        }
-      }
-    }
-    
     // Add system prompt to guide AI to focus on WAKTI
     const systemMessage = {
       role: "system",
@@ -48,8 +21,6 @@ While you can help with general questions, your specialty is productivity and WA
 If a message contains [WAKTI FOCUS LEVEL: HIGH], prioritize WAKTI topics and gently guide the conversation back to productivity.
 If a message contains [WAKTI FOCUS LEVEL: MEDIUM], balance between general assistance and WAKTI topics.
 If a message contains [WAKTI FOCUS LEVEL: LOW], you can freely discuss general topics.
-
-${languageContext}
 
 If the user mentions a [RECENT WAKTI TOPIC], try to relate your response to this topic when appropriate.
 Be concise, helpful, and positive. Avoid lengthy explanations unless specifically requested.`

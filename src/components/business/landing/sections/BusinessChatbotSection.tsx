@@ -2,7 +2,6 @@
 import React, { useEffect } from "react";
 import { useTMWChatbot } from "@/hooks/tmw-chatbot";
 import { ExternalLink } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 interface BusinessChatbotSectionProps {
   content: {
@@ -16,11 +15,9 @@ interface BusinessChatbotSectionProps {
 }
 
 const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content }) => {
-  const { t } = useTranslation();
-  
   const {
     enabled = true,
-    section_title = t("tmwChat.chatWithUs"),
+    section_title = "Chat with Us",
     section_description = "",
     chatbot_code = "",
     chatbot_size = "medium",
@@ -96,7 +93,7 @@ const BusinessChatbotSection: React.FC<BusinessChatbotSectionProps> = ({ content
           rel="noopener noreferrer"
           className="inline-flex items-center hover:underline"
         >
-          {t("tmwChat.poweredBy")} TMW AI <ExternalLink className="ml-1 h-3 w-3" />
+          Powered by TMW AI <ExternalLink className="ml-1 h-3 w-3" />
         </a>
       </div>
     </div>

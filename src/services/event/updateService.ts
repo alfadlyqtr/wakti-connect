@@ -1,171 +1,148 @@
+import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
+import { Event, EventFormData, EventStatus } from "@/types/event.types";
+import { transformDatabaseEvent, prepareEventForStorage } from './eventHelpers';
 
-import { supabase } from '@/lib/supabase';
-import { Event, EventFormData, EventStatus } from '@/types/event.types';
-import { toast } from '@/components/ui/use-toast';
-import { convertToTypedEvent } from '@/utils/typeAdapters';
-
-// Helper function to get the current user
-const getCurrentUser = async () => {
-  const { data } = await supabase.auth.getUser();
-  return data.user;
-};
-
-// Update an existing event
+/**
+ * Updates an existing event in the database
+ */
 export const updateEvent = async (eventId: string, formData: EventFormData): Promise<Event | null> => {
   try {
-    const user = await getCurrentUser();
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "You need to be logged in to update events.",
-        variant: "destructive",
-      });
-      return null;
+      throw new Error("You must be logged in to update events");
     }
-
-    // Check if the user owns this event
-    const { data: event, error: fetchError } = await supabase
+    
+    // Verify the event belongs to this user
+    const { data: existingEvent, error: verifyError } = await supabase
       .from('events')
       .select('*')
       .eq('id', eventId)
       .eq('user_id', user.id)
       .single();
-
-    if (fetchError || !event) {
-      console.error("Error fetching event to update:", fetchError);
-      toast({
-        title: "Event Not Found",
-        description: "Could not find the event to update or you don't have permission.",
-        variant: "destructive",
-      });
-      return null;
-    }
-
-    // Format the event data for update
-    let startTimestamp = formData.start_time;
-    if (!startTimestamp && formData.startDate) {
-      startTimestamp = new Date(formData.startDate).toISOString();
+    
+    if (verifyError || !existingEvent) {
+      throw new Error("Event not found or you don't have permission to edit it");
     }
     
-    let endTimestamp = formData.end_time;
-    if (!endTimestamp && formData.endDate) {
-      endTimestamp = new Date(formData.endDate).toISOString();
+    // Prepare the event data
+    const { title, description, startDate, location, customization, invitations, isAllDay, location_type, maps_url } = formData;
+    
+    // Extract start and end times from formData or create from the date
+    const startDateTime = new Date(startDate);
+    const endDateTime = new Date(startDate);
+    
+    if (!isAllDay) {
+      // Use provided start_time and end_time if available
+      if (formData.start_time && formData.end_time) {
+        // They are already ISO strings
+      } else {
+        // Set default times for non-all-day events
+        startDateTime.setHours(9, 0, 0);
+        endDateTime.setHours(10, 0, 0);
+      }
+    } else {
+      // For all-day events
+      startDateTime.setHours(0, 0, 0, 0);
+      endDateTime.setHours(23, 59, 59, 999);
     }
     
-    // Type-safe status handling
-    let statusValue: "accepted" | "declined" | "draft" | "sent" | "recalled" = "draft";
-    
-    switch(formData.status) {
-      case "published":
-      case "sent":
-        statusValue = "sent";
-        break;
-      case "accepted":
-        statusValue = "accepted";
-        break;
-      case "declined":
-        statusValue = "declined";
-        break;
-      case "cancelled":
-      case "recalled":
-        statusValue = "recalled";
-        break;
-      default:
-        statusValue = "draft";
+    // Determine status based on invitations and current status
+    let status: EventStatus = existingEvent.status;
+    if (existingEvent.status === 'draft' && invitations && invitations.length > 0) {
+      status = 'sent';
     }
     
-    // Convert customization to a serializable format
-    const customizationJson = formData.customization ? JSON.stringify(formData.customization) : null;
-    
-    // Prepare the event object for update
-    const eventData = {
-      title: formData.title,
-      description: formData.description,
-      start_time: startTimestamp,
-      end_time: endTimestamp,
-      is_all_day: formData.isAllDay,
-      location: formData.location,
-      status: statusValue,
-      customization: customizationJson
-    };
+    // Prepare the event data for update
+    const eventData = prepareEventForStorage({
+      title,
+      description,
+      start_time: formData.start_time || startDateTime.toISOString(),
+      end_time: formData.end_time || endDateTime.toISOString(),
+      is_all_day: isAllDay,
+      location,
+      location_type,
+      maps_url,
+      status,
+      customization
+    });
     
     // Update the event
     const { data: updatedEvent, error: updateError } = await supabase
       .from('events')
       .update(eventData)
       .eq('id', eventId)
-      .select()
+      .select('*')
       .single();
     
     if (updateError) {
       console.error("Error updating event:", updateError);
-      throw new Error(updateError.message);
+      throw new Error(`Failed to update event: ${updateError.message}`);
     }
     
     // Handle invitations if provided
-    if (formData.invitations && formData.invitations.length > 0) {
-      // First, fetch existing invitations
-      const { data: existingInvites, error: invitesError } = await supabase
+    if (invitations && invitations.length > 0) {
+      // Get existing invitations
+      const { data: existingInvitations } = await supabase
         .from('event_invitations')
         .select('*')
         .eq('event_id', eventId);
-        
-      if (invitesError) {
-        console.error("Error fetching existing invitations:", invitesError);
-        // Continue anyway as we can still try to add new invitations
-      }
       
-      // Create a map of existing invites by email or user ID
-      const existingInviteMap = new Map();
-      if (existingInvites) {
-        existingInvites.forEach(invite => {
-          const key = invite.invited_user_id || invite.email;
-          if (key) existingInviteMap.set(key, invite);
-        });
-      }
+      // Map existing invitations by email or user_id for comparison
+      const existingMap = new Map();
+      existingInvitations?.forEach(inv => {
+        if (inv.email) {
+          existingMap.set(inv.email, inv);
+        } else if (inv.invited_user_id) {
+          existingMap.set(inv.invited_user_id, inv);
+        }
+      });
       
-      // Prepare new invitations to add with proper typing
-      const newInvitations = formData.invitations
-        .filter(invite => {
-          const key = invite.invited_user_id || invite.email;
-          return key && !existingInviteMap.has(key);
-        })
-        .map(invite => ({
-          event_id: eventId,
-          email: invite.email,
-          invited_user_id: invite.invited_user_id,
-          status: (invite.status || 'pending') as 'pending' | 'accepted' | 'declined',
-          shared_as_link: invite.shared_as_link || false
-        }));
+      // Create a list of new invitations to insert
+      const newInvitations = invitations.filter(inv => {
+        const key = inv.email || inv.invited_user_id;
+        return key && !existingMap.has(key);
+      }).map(inv => ({
+        event_id: eventId,
+        email: inv.email,
+        invited_user_id: inv.invited_user_id,
+        status: 'pending',
+        shared_as_link: inv.shared_as_link || false
+      }));
       
-      // Add new invitations if any
+      // Insert new invitations if any
       if (newInvitations.length > 0) {
-        const { error: invitationError } = await supabase
+        const { error: insertError } = await supabase
           .from('event_invitations')
           .insert(newInvitations);
         
-        if (invitationError) {
-          console.warn("Error adding new invitations:", invitationError);
+        if (insertError) {
           toast({
             title: "Warning",
-            description: "Event updated but there was an issue with some invitations",
-            variant: "destructive",
+            description: `Event updated but some invitations failed to send`,
+            variant: "destructive"
           });
         }
       }
     }
     
-    // Convert and return the updated event
-    return convertToTypedEvent(updatedEvent);
+    // Fetch the updated event with invitations
+    const { data: fullEvent, error: fetchError } = await supabase
+      .from('events')
+      .select('*, invitations:event_invitations(*)')
+      .eq('id', eventId)
+      .single();
     
+    if (fetchError) {
+      console.error("Error fetching updated event:", fetchError);
+      return transformDatabaseEvent(updatedEvent);
+    }
+    
+    return transformDatabaseEvent(fullEvent);
   } catch (error: any) {
-    console.error("Error in updateEvent:", error);
-    toast({
-      title: "Update Failed",
-      description: error.message || "An unexpected error occurred while updating the event.",
-      variant: "destructive",
-    });
-    return null;
+    console.error("Update event error:", error);
+    throw error;
   }
 };

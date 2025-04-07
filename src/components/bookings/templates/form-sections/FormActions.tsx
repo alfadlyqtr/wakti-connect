@@ -2,7 +2,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 interface FormActionsProps {
   onCancel: () => void;
@@ -11,21 +10,19 @@ interface FormActionsProps {
 }
 
 const FormActions: React.FC<FormActionsProps> = ({ onCancel, isPending, isEditing }) => {
-  const { t } = useTranslation();
-  
   return (
     <div className="flex justify-end space-x-2">
       <Button type="button" variant="outline" onClick={onCancel}>
-        {t('common.cancel')}
+        Cancel
       </Button>
       <Button type="submit" disabled={isPending}>
         {isPending ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {t('common.saving')}...
+            Saving...
           </>
         ) : (
-          isEditing ? t('booking.updatePreBooking') : t('booking.createPreBooking')
+          isEditing ? 'Update Pre-Booking' : 'Create Pre-Booking'
         )}
       </Button>
     </div>

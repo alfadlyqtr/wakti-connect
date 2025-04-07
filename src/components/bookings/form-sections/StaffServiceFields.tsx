@@ -24,8 +24,7 @@ const StaffServiceFields: React.FC<StaffServiceFieldsProps> = ({
   
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">{t('booking.form.serviceStaff')}</h3>
-      
+      <h3 className="text-md font-semibold">{t('booking.form.serviceStaff')}</h3>
       <FormField
         control={control}
         name="service_id"
@@ -34,10 +33,10 @@ const StaffServiceFields: React.FC<StaffServiceFieldsProps> = ({
             <FormLabel>{t('booking.service')}</FormLabel>
             <Select 
               onValueChange={(value) => {
-                field.onChange(value || undefined);
+                field.onChange(value);
                 onServiceChange(value);
               }}
-              value={field.value || ""}
+              value={field.value}
             >
               <FormControl>
                 <SelectTrigger>
@@ -45,15 +44,11 @@ const StaffServiceFields: React.FC<StaffServiceFieldsProps> = ({
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {services.length === 0 ? (
-                  <SelectItem value="" disabled>{t('booking.noServices')}</SelectItem>
-                ) : (
-                  services.map((service) => (
-                    <SelectItem key={service.id} value={service.id}>
-                      {service.name}
-                    </SelectItem>
-                  ))
-                )}
+                {services.map((service) => (
+                  <SelectItem key={service.id} value={service.id}>
+                    {service.name} ({service.duration} min)
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <FormMessage />
@@ -66,10 +61,10 @@ const StaffServiceFields: React.FC<StaffServiceFieldsProps> = ({
         name="staff_assigned_id"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t('booking.staffAssigned')}</FormLabel>
-            <Select 
-              onValueChange={field.onChange} 
-              value={field.value || ""}
+            <FormLabel>{t('booking.form.selectStaff')}</FormLabel>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value}
             >
               <FormControl>
                 <SelectTrigger>
@@ -77,15 +72,11 @@ const StaffServiceFields: React.FC<StaffServiceFieldsProps> = ({
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {staff.length === 0 ? (
-                  <SelectItem value="" disabled>{t('booking.noStaffAvailable')}</SelectItem>
-                ) : (
-                  staff.map((staffMember) => (
-                    <SelectItem key={staffMember.id} value={staffMember.id}>
-                      {staffMember.name}
-                    </SelectItem>
-                  ))
-                )}
+                {staff.map((staffMember) => (
+                  <SelectItem key={staffMember.id} value={staffMember.id}>
+                    {staffMember.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <FormMessage />

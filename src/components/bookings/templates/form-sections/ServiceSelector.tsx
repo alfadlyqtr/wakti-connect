@@ -4,7 +4,6 @@ import { Control } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Service } from "@/types/service.types";
-import { useTranslation } from "react-i18next";
 
 interface ServiceSelectorProps {
   control: Control<any>;
@@ -17,15 +16,13 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
   services,
   onServiceChange 
 }) => {
-  const { t } = useTranslation();
-  
   return (
     <FormField
       control={control}
       name="service_id"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{t('booking.linkToService')}</FormLabel>
+          <FormLabel>Link to Service</FormLabel>
           <Select 
             onValueChange={(value) => {
               field.onChange(value === "none" ? undefined : value);
@@ -35,20 +32,21 @@ const ServiceSelector: React.FC<ServiceSelectorProps> = ({
           >
             <FormControl>
               <SelectTrigger>
-                <SelectValue placeholder={t('booking.selectService')} />
+                <SelectValue placeholder="Select a service" />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="none">{t('common.none')}</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {services.map((service) => (
                 <SelectItem key={service.id} value={service.id}>
-                  {service.name} ({service.duration} {t('booking.minutes')})
+                  {service.name} ({service.duration} min)
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <FormDescription>
-            {t('booking.serviceSelectionDescription')}
+            Selecting a service will auto-fill name, duration, price, and other details.
+            Linked services are automatically set to be published.
           </FormDescription>
           <FormMessage />
         </FormItem>

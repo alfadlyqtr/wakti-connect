@@ -35,32 +35,7 @@ export const createEvent = async (formData: EventFormData): Promise<Event | null
       endTimestamp = new Date(formData.endDate).toISOString();
     }
     
-    // Prepare the event object for insertion, ensuring we have valid types
-    // Type-safe status handling
-    let statusValue: "accepted" | "declined" | "draft" | "sent" | "recalled" = "draft";
-    
-    switch(formData.status) {
-      case "published":
-      case "sent":
-        statusValue = "sent";
-        break;
-      case "accepted":
-        statusValue = "accepted";
-        break;
-      case "declined":
-        statusValue = "declined";
-        break;
-      case "cancelled":
-      case "recalled":
-        statusValue = "recalled";
-        break;
-      default:
-        statusValue = "draft";
-    }
-    
-    // Convert customization to a serializable format
-    const customizationJson = formData.customization ? JSON.stringify(formData.customization) : null;
-    
+    // Prepare the event object for insertion
     const eventData = {
       title: formData.title,
       description: formData.description,
@@ -68,9 +43,11 @@ export const createEvent = async (formData: EventFormData): Promise<Event | null
       end_time: endTimestamp,
       is_all_day: formData.isAllDay,
       location: formData.location,
-      status: statusValue,
+      location_type: formData.location_type,
+      maps_url: formData.maps_url,
+      status: formData.status as EventStatus,
       user_id: userId,
-      customization: customizationJson
+      customization: formData.customization
     };
     
     // Insert the event into the database
@@ -91,7 +68,7 @@ export const createEvent = async (formData: EventFormData): Promise<Event | null
         event_id: event.id,
         email: invitation.email,
         invited_user_id: invitation.invited_user_id,
-        status: (invitation.status || 'pending') as 'pending' | 'accepted' | 'declined',
+        status: invitation.status || 'pending',
         shared_as_link: invitation.shared_as_link || false
       }));
       
@@ -108,15 +85,7 @@ export const createEvent = async (formData: EventFormData): Promise<Event | null
       }
     }
     
-    // Parse customization back to EventCustomization object before returning
-    const typedEvent: Event = {
-      ...event,
-      customization: event.customization ? (typeof event.customization === 'string' 
-        ? JSON.parse(event.customization) 
-        : event.customization) : {}
-    };
-    
-    return typedEvent;
+    return event;
   } catch (error: any) {
     console.error("Error in createEvent:", error);
     return null;

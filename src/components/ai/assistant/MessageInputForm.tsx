@@ -9,7 +9,6 @@ import {
   TooltipProvider,
   TooltipTrigger 
 } from "@/components/ui/tooltip";
-import { useTranslation } from "react-i18next";
 
 interface MessageInputFormProps {
   inputMessage: string;
@@ -38,7 +37,6 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   onFileUpload,
   onCameraCapture,
 }) => {
-  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -105,7 +103,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
                     <Upload className="h-5 w-5" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t("ai.tools.document.upload")}</TooltipContent>
+                <TooltipContent>Upload document</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </>
@@ -118,8 +116,8 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder={
             !canAccess
-              ? t("ai.upgradeToUseAI")
-              : t("ai.messagePlaceholder")
+              ? "Upgrade to use the AI Assistant"
+              : "Type your message here..."
           }
           disabled={!canAccess || isLoading}
           className="min-h-[60px] max-h-[200px] flex-1 resize-none"
@@ -153,7 +151,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       {isUploading && (
         <div className="text-xs text-muted-foreground flex items-center">
           <Loader2 className="h-3 w-3 animate-spin mr-2" />
-          <span>{t("common.loading")}</span>
+          <span>Uploading file...</span>
         </div>
       )}
     </form>

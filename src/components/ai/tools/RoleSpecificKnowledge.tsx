@@ -1,13 +1,10 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AIAssistantRole } from "@/types/ai-assistant.types";
-import { AIUpgradeRequired } from "../AIUpgradeRequired";
-import { BookOpen, Briefcase, Pen, Bot } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { useTranslation } from "react-i18next";
+import { BookOpen, GraduationCap, Briefcase, Pen, Bot, Info, Star, Clock } from "lucide-react";
+import { AIAssistantRole } from "@/types/ai-assistant.types";
+import { Badge } from "@/components/ui/badge";
 
 interface RoleSpecificKnowledgeProps {
   selectedRole: AIAssistantRole;
@@ -18,121 +15,118 @@ export const RoleSpecificKnowledge: React.FC<RoleSpecificKnowledgeProps> = ({
   selectedRole,
   canAccess
 }) => {
-  const { t } = useTranslation();
+  // WAKTI role-specific knowledge
+  const roleKnowledge = {
+    student: [
+      { title: "WAKTI for Students", content: "WAKTI helps students organize assignments, track deadlines, and manage study schedules." },
+      { title: "Task Management for Academics", content: "Use WAKTI to categorize assignments by subject and prioritize your study tasks." },
+      { title: "Group Projects", content: "Share tasks and events with classmates to coordinate group projects efficiently." }
+    ],
+    employee: [
+      { title: "WAKTI for Professionals", content: "WAKTI helps employees manage work tasks, track deadlines, and coordinate with team members." },
+      { title: "Daily Work Planning", content: "Use WAKTI to organize your workday with prioritized tasks and time blocking." },
+      { title: "Team Coordination", content: "Share tasks and events with colleagues for better team coordination." }
+    ],
+    writer: [
+      { title: "WAKTI for Creators", content: "WAKTI helps writers and creators organize projects, track deadlines, and manage creative workflows." },
+      { title: "Project Milestones", content: "Break down creative projects into manageable tasks with deadlines in WAKTI." },
+      { title: "Client Management", content: "Use WAKTI to schedule client meetings and track deliverables." }
+    ],
+    business_owner: [
+      { title: "WAKTI for Business", content: "WAKTI helps business owners manage operations, staff, and customer appointments." },
+      { title: "Staff Management", content: "Assign tasks to staff members and track their productivity with WAKTI." },
+      { title: "Service Booking", content: "Allow customers to book your services through a customizable booking page." },
+      { title: "Business Analytics", content: "Track business performance with integrated analytics and reporting tools." }
+    ],
+    general: [
+      { title: "WAKTI Overview", content: "WAKTI is an all-in-one productivity and business management platform." },
+      { title: "Task & Events", content: "Organize your personal and work life with WAKTI's task and event management." },
+      { title: "Plans & Features", content: "WAKTI offers Free, Individual (QAR 20/month), and Business (QAR 45/month) plans with different features." }
+    ]
+  };
+
+  // Get knowledge items for the selected role
+  const knowledgeItems = roleKnowledge[selectedRole] || roleKnowledge.general;
   
-  if (!canAccess) {
-    return <AIUpgradeRequired />;
-  }
-  
-  const getIcon = () => {
+  // WAKTI general information to show for all roles
+  const waktiInfo = [
+    { 
+      title: "About WAKTI", 
+      content: "WAKTI is an all-in-one productivity and business management platform developed in Qatar for the MENA region.",
+      icon: <Info className="h-4 w-4 text-indigo-500" />
+    },
+    { 
+      title: "Key Features", 
+      content: "Task management, appointment booking, messaging, business dashboard, and AI assistant integration.",
+      icon: <Star className="h-4 w-4 text-amber-500" />
+    },
+    { 
+      title: "Plans & Pricing", 
+      content: "Free, Individual (QAR 20/month), and Business (QAR 45/month) plans available with different features.",
+      icon: <Briefcase className="h-4 w-4 text-emerald-500" />
+    }
+  ];
+
+  const getRoleIcon = () => {
     switch (selectedRole) {
-      case 'student':
-        return <BookOpen className="h-5 w-5 mr-2 text-wakti-blue" />;
-      case 'business_owner':
-        return <Briefcase className="h-5 w-5 mr-2 text-wakti-blue" />;
-      case 'writer':
-      case 'employee':
-        return <Pen className="h-5 w-5 mr-2 text-wakti-blue" />;
-      default:
-        return <Bot className="h-5 w-5 mr-2 text-wakti-blue" />;
+      case "student": return <GraduationCap className="h-5 w-5 text-blue-500" />;
+      case "business_owner": return <Briefcase className="h-5 w-5 text-amber-500" />;
+      case "employee": return <Clock className="h-5 w-5 text-purple-500" />;
+      case "writer": return <Pen className="h-5 w-5 text-green-500" />;
+      default: return <Bot className="h-5 w-5 text-wakti-blue" />;
     }
   };
-  
-  const getTitle = () => {
+
+  const getRoleTitle = () => {
     switch (selectedRole) {
-      case 'student':
-        return t("ai.knowledge.waktiForStudents");
-      case 'business_owner':
-        return t("ai.knowledge.waktiForBusiness");
-      case 'writer':
-        return t("ai.knowledge.waktiForCreators");
-      case 'employee':
-        return t("ai.knowledge.waktiForProfessionals");
-      default:
-        return t("ai.knowledge.waktiOverview");
+      case "student": return "Student";
+      case "business_owner": return "Business";
+      case "employee": return "Professional";
+      case "writer": return "Creative";
+      default: return "General";
     }
   };
-  
-  const getKnowledgeItems = () => {
-    switch (selectedRole) {
-      case 'student':
-        return [
-          { title: t("ai.knowledge.taskManagement"), id: 'study-tasks' },
-          { title: t("ai.knowledge.groupProjects"), id: 'study-groups' }
-        ];
-      case 'business_owner':
-        return [
-          { title: t("ai.knowledge.staffManagement"), id: 'staff-management' },
-          { title: t("ai.knowledge.serviceBooking"), id: 'service-booking' },
-          { title: t("ai.knowledge.businessAnalytics"), id: 'business-analytics' }
-        ];
-      case 'writer':
-        return [
-          { title: t("ai.knowledge.projectMilestones"), id: 'creative-milestones' },
-          { title: t("ai.knowledge.clientManagement"), id: 'creative-clients' }
-        ];
-      case 'employee':
-        return [
-          { title: t("ai.knowledge.dailyWorkPlanning"), id: 'work-planning' },
-          { title: t("ai.knowledge.teamCoordination"), id: 'team-coordination' }
-        ];
-      default:
-        return [
-          { title: t("ai.knowledge.taskAndEvents"), id: 'general-tasks' },
-          { title: t("ai.knowledge.plansAndFeatures"), id: 'general-features' }
-        ];
-    }
-  };
-  
-  const knowledgeItems = getKnowledgeItems();
-  
-  const getRoleBadgeColor = () => {
-    switch (selectedRole) {
-      case 'student':
-        return "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20";
-      case 'business_owner':
-        return "bg-amber-500/10 text-amber-500 hover:bg-amber-500/20";
-      case 'writer':
-      case 'employee':
-        return "bg-purple-500/10 text-purple-500 hover:bg-purple-500/20";
-      default:
-        return "bg-wakti-blue/10 text-wakti-blue hover:bg-wakti-blue/20";
-    }
-  };
-  
+
   return (
-    <Card>
+    <Card className="overflow-hidden">
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center text-lg">
-          {getIcon()}
-          {getTitle()}
+        <CardTitle className="flex items-center gap-2">
+          {getRoleIcon()}
+          <span>WAKTI for {getRoleTitle()}</span>
+          <Badge variant="outline" className="ml-auto">Knowledge</Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex items-center space-x-2 py-1">
-          <Badge variant="outline" className={cn(getRoleBadgeColor())}>
-            {t(`aiSettings.roles.${selectedRole}`)}
-          </Badge>
-        </div>
-        
-        <div className="space-y-2">
-          {knowledgeItems.map((item) => (
-            <div 
-              key={item.id}
-              className="flex items-center justify-between border rounded-md p-2 hover:bg-secondary/50 transition-colors"
-            >
-              <span className="text-sm">{item.title}</span>
-              <Button variant="ghost" size="sm" className="text-xs h-7 px-2">
-                {t("aiSettings.knowledge.selectRole")}
-              </Button>
+      <CardContent className="p-4">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            {knowledgeItems.map((item, index) => (
+              <div 
+                key={index} 
+                className="border rounded-md p-3 hover:bg-accent transition-colors"
+              >
+                <h4 className="font-medium text-sm">{item.title}</h4>
+                <p className="text-xs text-muted-foreground mt-1">{item.content}</p>
+              </div>
+            ))}
+          </div>
+          
+          <div className="pt-2">
+            <h4 className="text-sm font-medium mb-2">General WAKTI Information</h4>
+            <div className="space-y-2">
+              {waktiInfo.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-2 border rounded-md p-2 text-xs"
+                >
+                  {item.icon}
+                  <div>
+                    <p className="font-medium">{item.title}</p>
+                    <p className="text-muted-foreground">{item.content}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        
-        <div className="pt-2 text-center">
-          <p className="text-xs text-muted-foreground">
-            {t("aiSettings.knowledge.addInfo")}
-          </p>
+          </div>
         </div>
       </CardContent>
     </Card>

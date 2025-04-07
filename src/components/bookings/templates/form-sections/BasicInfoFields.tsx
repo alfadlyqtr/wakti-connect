@@ -4,15 +4,12 @@ import { Control, useWatch } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useTranslation } from "react-i18next";
 
 interface BasicInfoFieldsProps {
   control: Control<any>;
 }
 
 const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({ control }) => {
-  const { t } = useTranslation();
-  
   const serviceId = useWatch({
     control,
     name: "service_id",
@@ -27,13 +24,13 @@ const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({ control }) => {
         name="name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t('booking.templateBooking.templateName')}</FormLabel>
+            <FormLabel>Pre-Booking Name</FormLabel>
             <FormControl>
-              <Input placeholder={t('booking.templateNamePlaceholder')} {...field} />
+              <Input placeholder="e.g., One-hour Consultation" {...field} />
             </FormControl>
             {isLinkedToService && (
               <FormDescription>
-                {t('booking.autoFilledFromService')}
+                Auto-filled from linked service
               </FormDescription>
             )}
             <FormMessage />
@@ -46,17 +43,17 @@ const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({ control }) => {
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t('booking.description')} ({t('common.optional')})</FormLabel>
+            <FormLabel>Description (Optional)</FormLabel>
             <FormControl>
               <Textarea 
-                placeholder={t('booking.templateBooking.descriptionPlaceholder')} 
+                placeholder="Describe this pre-booking" 
                 {...field} 
                 value={field.value || ""} 
               />
             </FormControl>
             {isLinkedToService && field.value && (
               <FormDescription>
-                {t('booking.autoFilledFromService')}
+                Auto-filled from linked service
               </FormDescription>
             )}
             <FormMessage />

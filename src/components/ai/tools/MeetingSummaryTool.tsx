@@ -5,7 +5,6 @@ import { AlertCircle } from 'lucide-react';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useMeetingSummary } from '@/hooks/ai/useMeetingSummary';
 import { exportMeetingSummaryAsPDF } from './meeting-summary/MeetingSummaryExporter';
-import { useTranslation } from 'react-i18next';
 
 // Import the refactored components
 import RecordingControls from './meeting-summary/RecordingControls';
@@ -18,8 +17,6 @@ interface MeetingSummaryToolProps {
 }
 
 export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSummary }) => {
-  const { t } = useTranslation();
-  
   const {
     state,
     isDownloadingAudio,
@@ -79,10 +76,10 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center text-lg">
-          {t('ai.tools.meeting.title')}
+          Meeting Summary Tool
         </CardTitle>
         <CardDescription>
-          {t('ai.tools.meeting.description')}
+          Record meetings and generate summaries with AI
         </CardDescription>
       </CardHeader>
       
@@ -91,8 +88,8 @@ export const MeetingSummaryTool: React.FC<MeetingSummaryToolProps> = ({ onUseSum
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 p-3 rounded-md flex items-start">
             <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-medium">{t('ai.tools.meeting.notSupported')}</p>
-              <p className="text-sm mt-1">{t('ai.tools.meeting.browserNotSupported')}</p>
+              <p className="font-medium">Voice recording not supported</p>
+              <p className="text-sm mt-1">Your browser doesn't support voice recording. Please use Chrome, Edge, or Safari for full functionality.</p>
             </div>
           </div>
         )}

@@ -4,7 +4,6 @@ import { Control } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StaffMember } from "@/types/staff";
-import { useTranslation } from "react-i18next";
 
 interface StaffAssignmentProps {
   control: Control<any>;
@@ -19,18 +18,16 @@ const StaffAssignment: React.FC<StaffAssignmentProps> = ({
   selectedStaffIds,
   onStaffChange
 }) => {
-  const { t } = useTranslation();
-  
   return (
     <FormField
       control={control}
       name="staff_assigned_ids"
       render={() => (
         <FormItem>
-          <FormLabel>{t('booking.assignStaff')} ({t('common.optional')})</FormLabel>
+          <FormLabel>Assign Staff (Optional)</FormLabel>
           <div className="border rounded-md p-4 space-y-2">
             {staff.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t('booking.noServiceProviders')}</p>
+              <p className="text-sm text-muted-foreground">No service providers available</p>
             ) : (
               staff.map((staffMember) => (
                 <div key={staffMember.id} className="flex items-center space-x-2">

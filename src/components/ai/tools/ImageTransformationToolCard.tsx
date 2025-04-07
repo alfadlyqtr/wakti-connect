@@ -7,12 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAIImageGeneration } from "@/hooks/ai/useAIImageGeneration";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { useTranslation } from "react-i18next";
 
 export const ImageTransformationToolCard: React.FC = () => {
-  const { t, i18n } = useTranslation();
-  const isRTL = i18n.language === 'ar';
-  const [prompt, setPrompt] = useState(t("ai.tools.image.animeStyle"));
+  const [prompt, setPrompt] = useState("Transform this image into anime/Gimi-style with vibrant colors, sharp lines, and expressive features");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { 
     transformImage, 
@@ -39,13 +36,13 @@ export const ImageTransformationToolCard: React.FC = () => {
     try {
       await uploadImage(file);
       toast({
-        title: t("ai.fileUploaded"),
-        description: t("ai.fileUploadSuccess", { name: file.name }),
+        title: "Image uploaded",
+        description: "Your image is ready to be transformed",
       });
     } catch (error) {
       toast({
-        title: t("ai.uploadFailed"),
-        description: error instanceof Error ? error.message : t("ai.tryAgain"),
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "Failed to upload image",
         variant: "destructive"
       });
     }
@@ -54,8 +51,8 @@ export const ImageTransformationToolCard: React.FC = () => {
   const handleTransform = async () => {
     if (!uploadedImageUrl) {
       toast({
-        title: t("ai.tools.image.noImage"),
-        description: t("ai.tools.image.uploadImageFirst"),
+        title: "No image",
+        description: "Please upload an image first",
         variant: "destructive"
       });
       return;
@@ -65,8 +62,8 @@ export const ImageTransformationToolCard: React.FC = () => {
       await transformImage(prompt);
     } catch (error) {
       toast({
-        title: t("ai.uploadFailed"),
-        description: error instanceof Error ? error.message : t("ai.tryAgain"),
+        title: "Transformation failed",
+        description: error instanceof Error ? error.message : "Failed to transform image",
         variant: "destructive"
       });
     }
@@ -85,18 +82,18 @@ export const ImageTransformationToolCard: React.FC = () => {
   };
 
   const predefinedStyles = [
-    t("ai.tools.image.animeStyle"),
-    t("ai.tools.image.mangaStyle"),
-    t("ai.tools.image.ghibliStyle"),
-    t("ai.tools.image.cyberpunkStyle"),
-    t("ai.tools.image.chibiStyle")
+    "Transform this image into anime/Gimi-style with vibrant colors, sharp lines, and expressive features",
+    "Convert this image to manga-style black and white illustration with dramatic shading",
+    "Transform this image into Studio Ghibli style with soft colors and detailed backgrounds",
+    "Create a cyberpunk anime version of this image with neon colors and futuristic elements",
+    "Convert this image to chibi anime character with exaggerated features and cute style"
   ];
 
   return (
     <AIToolCard
       icon={RefreshCw}
-      title={t("ai.tools.image.transformTitle")}
-      description={t("ai.tools.image.transformDescription")}
+      title="Image Transformation"
+      description="Transform your photos into anime/Gimi-style using AI-powered image-to-image conversion"
       iconColor="text-emerald-500"
     >
       <div className="space-y-3">
@@ -115,9 +112,9 @@ export const ImageTransformationToolCard: React.FC = () => {
           >
             <Upload className="h-10 w-10 text-gray-400 mb-2" />
             <div className="text-sm text-center text-gray-500">
-              <span className="font-medium text-primary">{t("ai.tools.image.clickToUpload")}</span> {t("ai.tools.image.dragAndDrop")}
+              <span className="font-medium text-primary">Click to upload</span> or drag and drop
             </div>
-            <p className="text-xs text-gray-400 mt-1">{t("ai.tools.image.imageFormats")}</p>
+            <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 10MB</p>
           </div>
         ) : (
           <>
@@ -134,7 +131,7 @@ export const ImageTransformationToolCard: React.FC = () => {
                 <div className="aspect-square relative">
                   <img 
                     src={uploadedImageUrl}
-                    alt={t("ai.tools.image.uploadImage")}
+                    alt="Uploaded image"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -146,11 +143,11 @@ export const ImageTransformationToolCard: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Original Image */}
                   <Card className="relative overflow-hidden">
-                    <div className={`absolute top-2 ${isRTL ? 'right-2' : 'left-2'} bg-black/20 px-2 py-1 rounded text-white text-xs`}>{t("ai.tools.image.original")}</div>
+                    <div className="absolute top-2 left-2 bg-black/20 px-2 py-1 rounded text-white text-xs">Original</div>
                     <div className="aspect-square relative">
                       <img 
                         src={generatedImage.originalImageUrl || ''} 
-                        alt={t("ai.tools.image.original")}
+                        alt="Original image"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -166,11 +163,11 @@ export const ImageTransformationToolCard: React.FC = () => {
                     >
                       <X className="h-4 w-4" />
                     </Button>
-                    <div className={`absolute top-2 ${isRTL ? 'right-2' : 'left-2'} bg-black/20 px-2 py-1 rounded text-white text-xs`}>{t("ai.tools.image.transformed")}</div>
+                    <div className="absolute top-2 left-2 bg-black/20 px-2 py-1 rounded text-white text-xs">Transformed</div>
                     <div className="aspect-square relative">
                       <img 
                         src={generatedImage.imageUrl} 
-                        alt={t("ai.tools.image.transformed")}
+                        alt="Transformed image"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -181,7 +178,7 @@ export const ImageTransformationToolCard: React.FC = () => {
                         className="w-full"
                         onClick={handleDownload}
                       >
-                        <Image className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> {t("ai.tools.image.downloadImage")}
+                        <Image className="h-4 w-4 mr-2" /> Download Image
                       </Button>
                     </div>
                   </Card>
@@ -194,16 +191,16 @@ export const ImageTransformationToolCard: React.FC = () => {
         {uploadedImageUrl && !generatedImage && (
           <>
             <div className="text-sm text-muted-foreground">
-              <p className="font-medium mb-1">{t("ai.tools.image.bestResults")}</p>
+              <p className="font-medium mb-1">How to get the best results:</p>
               <ul className="list-disc list-inside space-y-1 text-xs">
-                <li>{t("ai.tools.image.clearImages")}</li>
-                <li>{t("ai.tools.image.peopleWork")}</li>
-                <li>{t("ai.tools.image.specificPrompt")}</li>
+                <li>Use clear images with good lighting</li>
+                <li>Images with people or distinct subjects work best</li>
+                <li>Be specific in your transformation prompt</li>
               </ul>
             </div>
             
             <Textarea
-              placeholder={t("ai.tools.image.describeTransformation")}
+              placeholder="Describe how you want to transform the image..."
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               className="min-h-[60px]"
@@ -211,8 +208,8 @@ export const ImageTransformationToolCard: React.FC = () => {
             />
             
             <div className="space-y-2">
-              <p className="text-xs text-muted-foreground font-medium">{t("ai.tools.image.suggestedStyles")}</p>
-              <div className={`flex flex-wrap gap-2 ${isRTL ? 'space-x-reverse' : ''}`}>
+              <p className="text-xs text-muted-foreground font-medium">Suggested styles:</p>
+              <div className="flex flex-wrap gap-2">
                 {predefinedStyles.map((style, index) => (
                   <Button 
                     key={index}
@@ -234,10 +231,10 @@ export const ImageTransformationToolCard: React.FC = () => {
             >
               {isGenerating ? (
                 <>
-                  <Loader2 className={`h-4 w-4 animate-spin ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {t("ai.tools.image.transformingImage")}
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Transforming...
                 </>
-              ) : t("ai.tools.image.transformImage")}
+              ) : "Transform Image"}
             </Button>
           </>
         )}
@@ -252,8 +249,8 @@ export const ImageTransformationToolCard: React.FC = () => {
             }}
             className="w-full"
           >
-            <Upload className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> 
-            {t("ai.tools.image.uploadNewImage")}
+            <Upload className="h-4 w-4 mr-2" /> 
+            Upload New Image
           </Button>
         )}
       </div>

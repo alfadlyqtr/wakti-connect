@@ -1,5 +1,5 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { InvitationCustomization } from '@/types/invitation.types';
 import { EventCustomization, BackgroundType } from '@/types/event.types';
 
@@ -69,59 +69,21 @@ const convertToEventCustomization = (invitationCustomization: InvitationCustomiz
 
 /**
  * Get invitation customization by invitation ID
- * Using direct query to event_invitations table
  */
 export const getInvitationCustomization = async (invitationId: string): Promise<InvitationCustomization | null> => {
   try {
-    // Query the event_invitations table directly
     const { data, error } = await supabase
-      .from('event_invitations')
+      .from('invitation_customizations')
       .select('*')
-      .eq('id', invitationId)
+      .eq('invitation_id', invitationId)
       .single();
     
-    if (error || !data) {
-      console.error('Error fetching invitation:', error || 'No data found');
+    if (error) {
+      console.error('Error fetching invitation customization:', error);
       return null;
     }
     
-    // Get the corresponding event to retrieve customization
-    const { data: eventData, error: eventError } = await supabase
-      .from('events')
-      .select('customization')
-      .eq('id', data.event_id)
-      .single();
-      
-    if (eventError || !eventData) {
-      console.error('Error fetching event customization:', eventError || 'No customization found');
-      return null;
-    }
-    
-    // Create default customization object
-    const defaultCustomization: InvitationCustomization = {
-      backgroundType: 'solid',
-      backgroundValue: '#ffffff',
-      fontFamily: 'system-ui, sans-serif',
-      fontSize: 'medium',
-      textColor: '#000000',
-      textAlign: 'left',
-      buttonStyles: { 
-        style: 'rounded', 
-        color: '#3B82F6' 
-      }
-    };
-    
-    // If customization exists in the event data, merge it with defaults
-    if (eventData.customization) {
-      return {
-        ...defaultCustomization,
-        ...(typeof eventData.customization === 'string' 
-          ? JSON.parse(eventData.customization) 
-          : eventData.customization)
-      } as InvitationCustomization;
-    }
-    
-    return defaultCustomization;
+    return data as InvitationCustomization;
   } catch (error) {
     console.error('Error in getInvitationCustomization:', error);
     return null;
@@ -129,40 +91,31 @@ export const getInvitationCustomization = async (invitationId: string): Promise<
 };
 
 /**
- * Save invitation customization by updating the event
+ * Save invitation customization
  */
 export const saveInvitationCustomization = async (invitationId: string, customization: InvitationCustomization): Promise<InvitationCustomization | null> => {
   try {
-    // Get the event_id from the invitation first
-    const { data: invitation, error: invitationError } = await supabase
-      .from('event_invitations')
-      .select('event_id')
-      .eq('id', invitationId)
+    // Convert InvitationCustomization to EventCustomization for proper processing
+    const eventCustomization = convertToEventCustomization(customization);
+    
+    // Then convert EventCustomization to a safe JSON format
+    const safeCustomization = convertEventCustomization(eventCustomization);
+    
+    const { data, error } = await supabase
+      .from('invitation_customizations')
+      .upsert(
+        { invitation_id: invitationId, customization: safeCustomization },
+        { onConflict: 'invitation_id' }
+      )
+      .select('*')
       .single();
     
-    if (invitationError || !invitation || !invitation.event_id) {
-      console.error('Error finding invitation:', invitationError || 'No invitation found');
-      return null;
-    }
-
-    // Convert the customization to a JSON-compatible object
-    const customizationJson = JSON.parse(JSON.stringify(customization));
-
-    // Update the event with the new customization
-    const { error: updateError } = await supabase
-      .from('events')
-      .update({ 
-        customization: customizationJson,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', invitation.event_id);
-    
-    if (updateError) {
-      console.error('Error updating event customization:', updateError);
+    if (error) {
+      console.error('Error saving invitation customization:', error);
       return null;
     }
     
-    return customization;
+    return data as InvitationCustomization;
   } catch (error) {
     console.error('Error in saveInvitationCustomization:', error);
     return null;

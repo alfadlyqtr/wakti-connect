@@ -1,131 +1,95 @@
+import { toast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
+import { Event, EventsResult, EventWithInvitations } from "@/types/event.types";
 
-// This is a stub file that needs to be completed.
-// For now, just adding enough code to fix the type errors
-import { supabase } from '@/lib/supabase';
-import { Event, EventWithInvitations, EventsResult } from '@/types/event.types';
-import { convertToTypedEvents, convertToTypedEvent } from '@/utils/typeAdapters';
-
-// Fetch events by user and tab
-export const getEvents = async (tab: 'my-events' | 'invited-events' | 'draft-events'): Promise<EventsResult> => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      console.error("No authenticated user found");
-      return { events: [], userRole: 'free', canCreateEvents: false };
-    }
-
-    let query;
+// Simple helper function to check user role instead of importing from userService
+const getUserRole = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return 'free';
+  
+  const { data } = await supabase
+    .from('profiles')
+    .select('account_type')
+    .eq('id', session.user.id)
+    .single();
     
-    if (tab === 'my-events') {
-      query = supabase
-        .from('events')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-    } else if (tab === 'invited-events') {
-      query = supabase
-        .from('event_invitations')
-        .select('event:event_id(*)')
-        .eq('invited_user_id', user.id)
-        .order('created_at', { ascending: false });
-    } else if (tab === 'draft-events') {
-      query = supabase
-        .from('events')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'draft')
-        .order('created_at', { ascending: false });
+  return data?.account_type || 'free';
+};
+
+// Get all events for the current user
+export const getAllEvents = async (): Promise<EventsResult> => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
+      return {
+        events: [],
+        userRole: 'free',
+        canCreateEvents: false
+      };
     }
-
-    const { data, error } = await query;
-
+    
+    const userRole = await getUserRole();
+    const canCreateEvents = userRole !== 'free';
+    
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('start_time', { ascending: true });
+    
     if (error) {
       console.error("Error fetching events:", error);
-      throw error;
-    }
-
-    let events: Event[] = [];
-
-    if (tab === 'invited-events' && data) {
-      // Extract events from invitation data and properly convert types
-      events = convertToTypedEvents(data.filter(item => item.event).map(item => item.event));
-    } else if (data) {
-      // Direct events data, properly convert types
-      events = convertToTypedEvents(data);
-    }
-
-    // Get user role
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('account_type')
-      .eq('id', user.id)
-      .single();
-
-    // Use type assertion to restrict the account_type to the expected values
-    let userRole: 'free' | 'individual' | 'business' = 'free';
-    
-    // Determine actual role and map staff role to a supported type
-    if (profileData) {
-      if (profileData.account_type === 'individual' || profileData.account_type === 'business') {
-        userRole = profileData.account_type;
-      } else if (profileData.account_type === 'staff') {
-        // Staff users are treated as individual users for event creation permissions
-        userRole = 'individual';
-      } else {
-        userRole = 'free';
-      }
+      throw new Error(error.message);
     }
     
-    // Determine if user can create events (individual or business accounts)
-    const canCreateEvents = userRole === 'individual' || userRole === 'business';
-
     return {
-      events,
-      userRole,
-      canCreateEvents
+      events: data || [],
+      userRole: userRole,
+      canCreateEvents: canCreateEvents
     };
-  } catch (error) {
-    console.error("Error in getEvents:", error);
-    return { events: [], userRole: 'free', canCreateEvents: false };
+  } catch (error: any) {
+    console.error("Error in getAllEvents:", error);
+    return {
+      events: [],
+      userRole: 'free',
+      canCreateEvents: false
+    };
   }
 };
 
-// Get event by ID
-export const getEventById = async (eventId: string): Promise<EventWithInvitations | null> => {
+// Get a single event by ID, including its invitations
+export const getEventWithInvitations = async (eventId: string): Promise<EventWithInvitations | null> => {
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
+      throw new Error("You must be logged in to view events");
+    }
+    
     const { data, error } = await supabase
       .from('events')
       .select(`
         *,
-        invitations:event_invitations(*)
+        invitations:event_invitations (*)
       `)
       .eq('id', eventId)
+      .eq('user_id', session.user.id)
       .single();
-
+    
     if (error) {
-      console.error("Error fetching event:", error);
-      throw error;
-    }
-
-    if (!data) {
-      return null;
-    }
-
-    // Convert to properly typed event
-    const typedEvent = convertToTypedEvent(data);
-    
-    if (!typedEvent) {
-      return null;
+      console.error("Error fetching event with invitations:", error);
+      throw new Error(error.message);
     }
     
-    // Add invitations and return as EventWithInvitations
-    return {
-      ...typedEvent,
-      invitations: data.invitations || []
-    } as EventWithInvitations;
-  } catch (error) {
-    console.error("Error in getEventById:", error);
+    return data as EventWithInvitations;
+  } catch (error: any) {
+    console.error("Error in getEventWithInvitations:", error);
+    toast({
+      title: "Failed to Load Event",
+      description: error?.message || "An unexpected error occurred",
+      variant: "destructive",
+    });
     return null;
   }
 };

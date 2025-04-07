@@ -8,7 +8,6 @@ import { useSidebarToggle } from "@/hooks/useSidebarToggle";
 import DashboardContent from "./DashboardContent";
 import { useLocation, useNavigate } from "react-router-dom";
 import { UserRole, getEffectiveRole } from "@/types/user";
-import { useTranslation } from "react-i18next";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -21,8 +20,6 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
-  const { i18n } = useTranslation();
-  const isRTL = i18n.language === 'ar';
   
   // Fetch user profile data
   const { 
@@ -78,7 +75,7 @@ const DashboardLayout = ({ children, userRole: propUserRole }: DashboardLayoutPr
   }, [profileLoading, location.pathname, userRoleValue, isStaff, navigate, location.state, profileData?.account_type, accountType]);
 
   return (
-    <div className={`min-h-screen flex flex-col overflow-hidden ${isSidebarOpen && isMobile ? 'sidebar-open-body' : ''} ${isRTL ? 'rtl' : ''}`}>
+    <div className={`min-h-screen flex flex-col overflow-hidden ${isSidebarOpen && isMobile ? 'sidebar-open-body' : ''}`}>
       <Navbar toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
       
       <div className="flex flex-1 relative overflow-hidden">

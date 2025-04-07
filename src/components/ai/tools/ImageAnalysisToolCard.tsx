@@ -3,20 +3,17 @@ import React from "react";
 import { Image } from "lucide-react";
 import { AIToolCard } from "./AIToolCard";
 import { Button } from "@/components/ui/button";
-import { useTranslation } from "react-i18next";
 
 export const ImageAnalysisToolCard: React.FC = () => {
-  const { t } = useTranslation();
-  
   return (
     <AIToolCard
       icon={Image}
-      title={t("ai.tools.image.title")}
-      description={t("ai.tools.image.uploadDescription")}
+      title="Image Analysis"
+      description="Upload an image to analyze its content and extract information"
       iconColor="text-green-500"
     >
       <Button disabled className="w-full">
-        {t("common.loading")}
+        Coming Soon
       </Button>
     </AIToolCard>
   );

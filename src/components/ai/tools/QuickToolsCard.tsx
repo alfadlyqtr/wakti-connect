@@ -7,7 +7,6 @@ import {
   Calendar, Check, CheckSquare, Lightbulb, BookOpen, BarChart, 
   Users, Search, FileText, Edit, Mic, HelpCircle, HeartHandshake, Settings 
 } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 interface QuickToolsCardProps {
   selectedRole: AIAssistantRole;
@@ -22,8 +21,6 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
   onToolClick,
   inSidebar = false
 }) => {
-  const { t } = useTranslation();
-  
   // Get quick tools for the current role
   const quickTools = RoleContexts[selectedRole]?.quickTools || [];
   
@@ -49,67 +46,57 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
   // Create example prompts based on the role
   const getPromptForTool = (toolName: string): string => {
     switch (toolName) {
-      case "Study Planner": return t("ai.tools.quick.studyPlanner");
-      case "Note Summarizer": return t("ai.tools.quick.noteSummarizer");
-      case "Research Assistant": return t("ai.tools.quick.researchAssistant");
-      case "Concept Explainer": return t("ai.tools.quick.conceptExplainer");
+      case "Study Planner": return "Create a study plan for my upcoming exams";
+      case "Note Summarizer": return "Help me summarize this chapter's key points";
+      case "Research Assistant": return "Find academic sources about climate change";
+      case "Concept Explainer": return "Explain quantum physics in simple terms";
       
-      case "Staff Scheduler": return t("ai.tools.quick.staffScheduler");
-      case "Business Analytics": return t("ai.tools.quick.businessAnalytics");
-      case "Customer Service": return t("ai.tools.quick.customerService");
-      case "Service Manager": return t("ai.tools.quick.serviceManager");
+      case "Staff Scheduler": return "Help me organize staff shifts for next week";
+      case "Business Analytics": return "What trends do you see in my recent business data?";
+      case "Customer Service": return "Draft a response to this customer complaint";
+      case "Service Manager": return "Suggest ways to improve my booking process";
       
-      case "Day Planner": return t("ai.tools.quick.dayPlanner");
-      case "Task Creator": return t("ai.tools.quick.taskCreator");
-      case "Quick Answer": return t("ai.tools.quick.quickAnswer");
-      case "Idea Generator": return t("ai.tools.quick.ideaGenerator");
+      case "Day Planner": return "Help me organize my day efficiently";
+      case "Task Creator": return "Create a task list for my home renovation project";
+      case "Quick Answer": return "What's the best way to improve productivity?";
+      case "Idea Generator": return "Generate ideas for my weekend family activities";
       
-      case "Email Composer": return t("ai.tools.quick.emailComposer");
-      case "Content Creator": return t("ai.tools.quick.contentCreator");
-      case "Creative Writing": return t("ai.tools.quick.creativeWriting");
-      case "Meeting Organizer": return t("ai.tools.quick.meetingOrganizer");
+      case "Email Composer": return "Draft a professional email to my client";
+      case "Content Creator": return "Help me write a blog post about productivity";
+      case "Creative Writing": return "Write a short story about space exploration";
+      case "Meeting Organizer": return "Create an agenda for my team meeting tomorrow";
       
-      case "Content Generator": return t("ai.tools.quick.contentGenerator");
-      case "Editor Helper": return t("ai.tools.quick.editorHelper");
-      case "Writing Scheduler": return t("ai.tools.quick.writingScheduler");
-      case "Research Tool": return t("ai.tools.quick.researchTool");
+      case "Content Generator": return "Give me ideas for my next blog post";
+      case "Editor Helper": return "Help me improve this paragraph";
+      case "Writing Scheduler": return "Create a writing schedule for my book project";
+      case "Research Tool": return "Find information about historical fiction writing";
       
-      default: return `${toolName}`;
+      default: return `Help me with ${toolName}`;
     }
-  };
-
-  // Get translated name and description for each tool
-  const getTranslatedToolInfo = (tool: { name: string; description: string }) => {
-    let translatedName = t(`ai.toolNames.${tool.name.replace(/\s+/g, "")}`, { defaultValue: tool.name });
-    let translatedDesc = t(`ai.toolDescriptions.${tool.name.replace(/\s+/g, "")}`, { defaultValue: tool.description });
-    
-    return {
-      name: translatedName,
-      description: translatedDesc
-    };
   };
 
   if (inSidebar) {
     return (
       <div className="space-y-3">
-        {quickTools.map((tool, index) => {
-          const translatedTool = getTranslatedToolInfo(tool);
-          return (
-            <Button 
-              key={index} 
-              variant="ghost" 
-              className="w-full justify-start text-xs h-auto py-1.5 px-2"
-              onClick={() => onToolClick?.(getPromptForTool(tool.name))}
-            >
-              {getIconComponent(tool.icon)}
-              <span className="ml-2 truncate">{translatedTool.name}</span>
-            </Button>
-          );
-        })}
+        {quickTools.map((tool, index) => (
+          <Button 
+            key={index} 
+            variant="ghost" 
+            className="w-full justify-start text-xs h-auto py-1.5 px-2"
+            onClick={() => onToolClick?.(getPromptForTool(tool.name))}
+          >
+            {getIconComponent(tool.icon)}
+            <span className="ml-2 truncate">{tool.name}</span>
+          </Button>
+        ))}
         
         <div className="mt-3 pt-3 border-t border-border">
           <p className="text-xs text-muted-foreground">
-            {t("ai.tools.quick.suggestedTools")}
+            These tools are designed to help with your 
+            {selectedRole === "general" ? " daily tasks" : 
+             selectedRole === "student" ? " studies" :
+             selectedRole === "business_owner" ? " business" :
+             " work"}
           </p>
         </div>
       </div>
@@ -119,30 +106,30 @@ export const QuickToolsCard: React.FC<QuickToolsCardProps> = ({
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle>{t("ai.tools.quick.title")}</CardTitle>
+        <CardTitle>Quick Tools</CardTitle>
         <CardDescription>
-          {t("ai.tools.quick.suggestedTools")}
+          {selectedRole === "student" ? "Study and learning tools" : 
+           selectedRole === "business_owner" ? "Business management tools" :
+           selectedRole === "employee" || selectedRole === "writer" ? "Work and creative tools" :
+           "Tools to help you be more productive"}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-3">
-          {quickTools.map((tool, index) => {
-            const translatedTool = getTranslatedToolInfo(tool);
-            return (
-              <Button 
-                key={index} 
-                variant="outline" 
-                className="h-auto flex-col items-start p-4 justify-start text-left"
-                onClick={() => onToolSelect?.(getPromptForTool(tool.name))}
-              >
-                <div className="flex items-center mb-2">
-                  {getIconComponent(tool.icon)}
-                  <span className="ml-2 font-medium">{translatedTool.name}</span>
-                </div>
-                <p className="text-xs text-muted-foreground">{translatedTool.description}</p>
-              </Button>
-            );
-          })}
+          {quickTools.map((tool, index) => (
+            <Button 
+              key={index} 
+              variant="outline" 
+              className="h-auto flex-col items-start p-4 justify-start text-left"
+              onClick={() => onToolSelect?.(getPromptForTool(tool.name))}
+            >
+              <div className="flex items-center mb-2">
+                {getIconComponent(tool.icon)}
+                <span className="ml-2 font-medium">{tool.name}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">{tool.description}</p>
+            </Button>
+          ))}
         </div>
       </CardContent>
     </Card>

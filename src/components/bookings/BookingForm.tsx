@@ -8,7 +8,6 @@ import { Loader2 } from "lucide-react";
 import { BookingFormData } from "@/types/booking.types";
 import { useTemplateFormData } from "@/components/bookings/templates/hooks/useTemplateFormData";
 import { useServiceSelection } from "@/components/bookings/templates/hooks/useServiceSelection";
-import { useTranslation } from "react-i18next";
 
 // Import form sections
 import CustomerInfoFields from "./form-sections/CustomerInfoFields";
@@ -17,6 +16,23 @@ import BookingDateTimeFields from "./form-sections/BookingDateTimeFields";
 import StaffServiceFields from "./form-sections/StaffServiceFields";
 import FormActions from "@/components/bookings/templates/form-sections/FormActions";
 
+// Form schema for booking
+const bookingFormSchema = z.object({
+  title: z.string().min(2, "Title must be at least 2 characters"),
+  description: z.string().optional(),
+  customer_name: z.string().min(2, "Customer name is required"),
+  customer_email: z.string().email("Valid email is required"),
+  service_id: z.string().optional(),
+  staff_assigned_id: z.string().optional(),
+  date: z.date({
+    required_error: "Please select a date",
+  }),
+  start_time: z.string().min(1, "Start time is required"),
+  end_time: z.string().min(1, "End time is required"),
+});
+
+type BookingFormSchema = z.infer<typeof bookingFormSchema>;
+
 interface BookingFormProps {
   onSubmit: (data: BookingFormData) => Promise<void>;
   onCancel: () => void;
@@ -24,25 +40,7 @@ interface BookingFormProps {
 }
 
 const BookingForm: React.FC<BookingFormProps> = ({ onSubmit, onCancel, isPending }) => {
-  const { t } = useTranslation();
   const { services, staff, isLoadingData } = useTemplateFormData();
-  
-  // Form schema for booking with translations
-  const bookingFormSchema = z.object({
-    title: z.string().min(2, t('validation.titleRequired')),
-    description: z.string().optional(),
-    customer_name: z.string().min(2, t('validation.customerNameRequired')),
-    customer_email: z.string().email(t('validation.validEmailRequired')),
-    service_id: z.string().optional(),
-    staff_assigned_id: z.string().optional(),
-    date: z.date({
-      required_error: t('validation.dateRequired'),
-    }),
-    start_time: z.string().min(1, t('validation.startTimeRequired')),
-    end_time: z.string().min(1, t('validation.endTimeRequired')),
-  });
-
-  type BookingFormSchema = z.infer<typeof bookingFormSchema>;
   
   // Initialize form
   const form = useForm<BookingFormSchema>({

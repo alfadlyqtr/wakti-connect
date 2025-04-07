@@ -298,4 +298,3 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
     </Card>
   );
 };
-

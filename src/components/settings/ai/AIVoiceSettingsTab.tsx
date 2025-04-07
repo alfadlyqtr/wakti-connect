@@ -5,22 +5,15 @@ import { Button } from '@/components/ui/button';
 import { useVoiceSettings } from '@/store/voiceSettings';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
-import { Mic, RefreshCcw, Globe } from 'lucide-react';
+import { Mic, RefreshCcw } from 'lucide-react';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
-import { useTranslation } from "react-i18next";
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
 
 export const AIVoiceSettingsTab: React.FC = () => {
-  const { t } = useTranslation();
-  
   const { 
     autoSilenceDetection, 
     visualFeedback,
-    language,
     toggleAutoSilenceDetection,
     toggleVisualFeedback,
-    setLanguage,
     resetSettings
   } = useVoiceSettings();
   
@@ -35,34 +28,26 @@ export const AIVoiceSettingsTab: React.FC = () => {
   const handleReset = () => {
     resetSettings();
     toast({
-      title: t("aiSettings.voice.settingsReset"),
-      description: t("aiSettings.voice.resetToDefaults"),
+      title: "Settings Reset",
+      description: "Voice settings have been reset to defaults",
     });
   };
   
   const handleRetryApiKey = async () => {
     toast({
-      title: t("aiSettings.voice.testingConnection"),
-      description: t("aiSettings.voice.verifying")
+      title: "Testing OpenAI API Connection",
+      description: "Please wait while we verify the connection..."
     });
     
     const success = await retryApiKeyValidation();
     
     if (success) {
       toast({
-        title: t("aiSettings.voice.connectionSuccess"),
-        description: t("aiSettings.voice.apiKeyValid"),
+        title: "Connection Successful",
+        description: "OpenAI API key is valid for voice recognition features",
         variant: "success"
       });
     }
-  };
-
-  const handleLanguageChange = (value: string) => {
-    setLanguage(value);
-    toast({
-      title: t("aiSettings.voice.languageChanged"),
-      description: value === 'ar' ? 'تم تغيير لغة التعرف على الكلام إلى العربية' : 'Speech recognition language changed to English',
-    });
   };
   
   return (
@@ -71,24 +56,24 @@ export const AIVoiceSettingsTab: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Mic className="h-5 w-5 text-wakti-blue" />
-            {t("aiSettings.voice.title")}
+            Voice Recognition Settings
           </CardTitle>
           <CardDescription>
-            {t("aiSettings.voice.description")}
+            Configure how the AI assistant listens
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-6">
           <div className="space-y-4">
-            <h3 className="text-sm font-medium">{t("aiSettings.voice.recognition")}</h3>
+            <h3 className="text-sm font-medium">Voice Recognition</h3>
             
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <label htmlFor="silence-detection" className="text-sm font-medium">
-                  {t("aiSettings.voice.silenceDetection")}
+                  Automatic Silence Detection
                 </label>
                 <p className="text-sm text-muted-foreground">
-                  {t("aiSettings.voice.silenceDetectionDesc")}
+                  Automatically stop listening when you pause speaking
                 </p>
               </div>
               <Switch
@@ -101,10 +86,10 @@ export const AIVoiceSettingsTab: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <label htmlFor="visual-feedback" className="text-sm font-medium">
-                  {t("aiSettings.voice.visualFeedback")}
+                  Visual Voice Feedback
                 </label>
                 <p className="text-sm text-muted-foreground">
-                  {t("aiSettings.voice.visualFeedbackDesc")}
+                  Show animations when voice recognition is active
                 </p>
               </div>
               <Switch
@@ -113,35 +98,18 @@ export const AIVoiceSettingsTab: React.FC = () => {
                 onCheckedChange={toggleVisualFeedback}
               />
             </div>
-
-            <div className="pt-2 border-t">
-              <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                {t("aiSettings.voice.language")}
-              </h3>
-              <RadioGroup value={language} onValueChange={handleLanguageChange} className="flex gap-4">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="en" id="lang-en" />
-                  <Label htmlFor="lang-en">English</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="ar" id="lang-ar" />
-                  <Label htmlFor="lang-ar">العربية</Label>
-                </div>
-              </RadioGroup>
-            </div>
             
             {apiKeyStatus === 'invalid' && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 mt-4">
                 <h4 className="text-sm font-medium mb-2 flex items-center gap-1 text-amber-800">
                   <RefreshCcw className="h-4 w-4" />
-                  {t("aiSettings.voice.connectionIssue")}
+                  OpenAI API Connection Issue
                 </h4>
                 <p className="text-sm text-amber-700 mb-2">
-                  {apiKeyErrorDetails || t("aiSettings.voice.issueDesc")}
+                  {apiKeyErrorDetails || "There's an issue with the OpenAI API connection. Voice recognition may not be available."}
                 </p>
                 <Button variant="outline" size="sm" onClick={handleRetryApiKey} className="mt-2">
-                  {t("aiSettings.voice.testConnection")}
+                  Test API Connection
                 </Button>
               </div>
             )}
@@ -150,7 +118,7 @@ export const AIVoiceSettingsTab: React.FC = () => {
         
         <CardFooter>
           <Button variant="outline" size="sm" onClick={handleReset}>
-            {t("aiSettings.voice.resetToDefaults")}
+            Reset to Defaults
           </Button>
         </CardFooter>
       </Card>
