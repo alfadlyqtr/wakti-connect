@@ -4,6 +4,7 @@ import i18n from '@/i18n/i18n';
 import { useTranslation } from 'react-i18next';
 import { translateWithFallback } from '@/services/translationService';
 import { useToast } from '@/components/ui/use-toast';
+import Cookies from 'js-cookie';
 
 // Interface for the context
 interface TranslationContextType {
@@ -24,6 +25,10 @@ const TranslationContext = createContext<TranslationContextType>({
   loadingTranslation: false,
 });
 
+// Cookie name for language preference
+const LANGUAGE_COOKIE_NAME = 'wakti-language';
+const COOKIE_EXPIRY_DAYS = 365;
+
 export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { t, i18n: i18nInstance } = useTranslation();
   const [loadingTranslation, setLoadingTranslation] = useState<boolean>(false);
@@ -33,12 +38,13 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const currentLanguage = i18nInstance.language || 'en';
   const isRTL = currentLanguage === 'ar';
   
-  // Effect to set document direction and language attributes
-  useEffect(() => {
-    document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
-    document.documentElement.lang = currentLanguage;
+  // Function to set document direction and language attributes
+  const applyLanguageToDOM = (language: string) => {
+    const isRightToLeft = language === 'ar';
+    document.documentElement.dir = isRightToLeft ? 'rtl' : 'ltr';
+    document.documentElement.lang = language;
     
-    if (isRTL) {
+    if (isRightToLeft) {
       document.body.classList.add('rtl');
       document.body.classList.add('font-arabic');
     } else {
@@ -46,18 +52,40 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
       document.body.classList.remove('font-arabic');
     }
     
-    console.log(`[TranslationContext] Language set to ${currentLanguage} (RTL: ${isRTL})`);
-  }, [currentLanguage, isRTL]);
+    console.log(`[TranslationContext] Applied ${language} layout, RTL: ${isRightToLeft}`);
+  };
+  
+  // Effect to set document direction and language attributes
+  useEffect(() => {
+    applyLanguageToDOM(currentLanguage);
+  }, [currentLanguage]);
   
   // Initialize on first render
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('wakti-language');
-    if (savedLanguage && savedLanguage !== i18nInstance.language) {
-      console.log(`[TranslationContext] Found saved language: ${savedLanguage}, current is: ${i18nInstance.language}`);
-      // Wait a moment to allow i18n to initialize before changing
-      setTimeout(() => {
-        i18nInstance.changeLanguage(savedLanguage);
-      }, 100);
+    try {
+      // Get language from cookie instead of localStorage
+      const savedLanguage = Cookies.get(LANGUAGE_COOKIE_NAME);
+      
+      if (savedLanguage && savedLanguage !== i18nInstance.language) {
+        console.log(`[TranslationContext] Found saved language in cookie: ${savedLanguage}, current is: ${i18nInstance.language}`);
+        
+        // Wait a moment to allow i18n to initialize before changing
+        setTimeout(() => {
+          i18nInstance.changeLanguage(savedLanguage)
+            .then(() => {
+              console.log(`[TranslationContext] Applied saved language: ${savedLanguage}`);
+              applyLanguageToDOM(savedLanguage);
+            })
+            .catch(err => {
+              console.error('[TranslationContext] Error loading saved language:', err);
+            });
+        }, 100);
+      } else {
+        // Make sure DOM is correctly set even for default language
+        applyLanguageToDOM(i18nInstance.language);
+      }
+    } catch (error) {
+      console.error('[TranslationContext] Error initializing language:', error);
     }
   }, []);
   
@@ -67,8 +95,8 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
       console.log(`[TranslationContext] Changing language to: ${lang}`);
       setLoadingTranslation(true);
       
-      // Save to localStorage
-      localStorage.setItem('wakti-language', lang);
+      // Save to cookie with 1-year expiration instead of localStorage
+      Cookies.set(LANGUAGE_COOKIE_NAME, lang, { expires: COOKIE_EXPIRY_DAYS });
       
       // Show loading toast first
       toast({
@@ -79,6 +107,8 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
       
       // Change i18n language
       i18nInstance.changeLanguage(lang).then(() => {
+        // Apply language changes to DOM immediately
+        applyLanguageToDOM(lang);
         setLoadingTranslation(false);
         
         // Force reload the page to ensure all components update properly

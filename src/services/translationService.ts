@@ -1,4 +1,3 @@
-
 import i18n from '@/i18n/i18n';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,10 +14,6 @@ const translationCache = new Map<string, string>();
 
 /**
  * Enhanced translate function that falls back to DeepSeek API if needed
- * 
- * @param key The translation key
- * @param options Translation options including fallback behavior
- * @returns Translated text or fallback
  */
 export async function translateWithFallback(
   key: string,
@@ -67,6 +62,12 @@ export async function translateWithFallback(
  */
 async function callDeepSeekAPI(text: string, defaultText: string): Promise<string> {
   try {
+    // Check if supabase is initialized
+    if (!supabase) {
+      console.error('Supabase client not initialized');
+      return defaultText;
+    }
+    
     const sourceLang = i18n.language === 'ar' ? 'Arabic' : 'English';
     const targetLang = i18n.language === 'ar' ? 'English' : 'Arabic';
     
@@ -92,7 +93,6 @@ async function callDeepSeekAPI(text: string, defaultText: string): Promise<strin
 export function useEnhancedTranslation() {
   const { t, i18n: i18nInstance } = useTranslation();
   
-  // Return the enhanced functions along with the standard ones
   return {
     t,
     i18n: i18nInstance,

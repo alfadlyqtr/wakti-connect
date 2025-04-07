@@ -2,6 +2,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import Cookies from 'js-cookie';
 
 // Import translation files
 import enTranslation from './locales/en/translation.json';
@@ -19,41 +20,46 @@ const logLanguageInfo = (message: string, data?: any) => {
 
 logLanguageInfo('Initializing i18n');
 
-// Check if we have a stored language preference
-const persistedLanguage = localStorage.getItem('wakti-language');
+// Check if we have a stored language preference (from cookie)
+const persistedLanguage = Cookies.get('wakti-language');
 if (persistedLanguage) {
-  logLanguageInfo(`Found persisted language: ${persistedLanguage}`);
+  logLanguageInfo(`Found persisted language in cookie: ${persistedLanguage}`);
 }
 
-// Initialize i18next
+// Fix for language detection resources
+const resources = {
+  en: {
+    translation: enTranslation
+  },
+  ar: {
+    translation: arTranslation
+  }
+};
+
+// Initialize i18next with prioritized detection order
 i18n
-  // detect user language
-  .use(LanguageDetector)
-  // pass the i18n instance to react-i18next
+  // Add language detector with custom cookie configuration
+  .use(new LanguageDetector({
+    order: ['cookie', 'navigator', 'htmlTag'],
+    lookupCookie: 'wakti-language',
+    caches: ['cookie'],
+    cookieOptions: { expires: 365 }
+  }))
+  // Pass the i18n instance to react-i18next
   .use(initReactI18next)
-  // init i18next
+  // Init i18next
   .init({
-    resources: {
-      en: {
-        translation: enTranslation
-      },
-      ar: {
-        translation: arTranslation
-      }
-    },
+    resources,
     fallbackLng: 'en',
     debug: DEBUG_I18N,
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
     },
-    detection: {
-      order: ['localStorage', 'navigator', 'htmlTag'],
-      lookupLocalStorage: 'wakti-language',
-      caches: ['localStorage'],
-    },
     react: {
       useSuspense: false, // Avoid suspense issues with translations
-    }
+    },
+    // Make sure the language is applied immediately
+    initImmediate: false
   }, (err) => {
     if (err) {
       logLanguageInfo('Error initializing i18n:', err);
@@ -80,7 +86,7 @@ declare module 'i18next' {
   }
 }
 
-// Now add the custom function
+// Add the custom function
 i18n.debugTranslationMissing = (key: string) => {
   logLanguageInfo(`Missing translation for key: ${key} in ${i18n.language}`);
 };
