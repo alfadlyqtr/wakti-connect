@@ -1,5 +1,5 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { InvitationCustomization } from '@/types/invitation.types';
 import { EventCustomization, BackgroundType } from '@/types/event.types';
 
@@ -69,49 +69,50 @@ const convertToEventCustomization = (invitationCustomization: InvitationCustomiz
 
 /**
  * Get invitation customization by invitation ID
- * Using direct query with error handling
+ * Using direct query to event_invitations table
  */
 export const getInvitationCustomization = async (invitationId: string): Promise<InvitationCustomization | null> => {
   try {
-    // First check if table exists in metadata
-    const { data: tableData } = await supabase
-      .from('_metadata')
-      .select('*')
-      .eq('table_name', 'invitation_customizations')
-      .maybeSingle();
-
-    // If table doesn't exist in metadata, fetch from event_invitations instead
-    if (!tableData) {
-      console.warn("invitation_customizations table doesn't exist yet");
-      
-      // Fetch from event_invitations as fallback
-      const { data, error } = await supabase
-        .from('event_invitations')
-        .select('id, customization')
-        .eq('id', invitationId)
-        .maybeSingle();
-      
-      if (error || !data || !data.customization) {
-        console.error('Error fetching customization:', error || 'No data found');
-        return null;
-      }
-      
-      return data.customization as InvitationCustomization;
-    }
-    
-    // If table exists, try direct query
+    // Query the event_invitations table directly
     const { data, error } = await supabase
-      .from('invitation_customizations')
-      .select('customization')
-      .eq('invitation_id', invitationId)
-      .maybeSingle();
+      .from('event_invitations')
+      .select('*')
+      .eq('id', invitationId)
+      .single();
     
-    if (error) {
-      console.error('Error fetching invitation customization:', error);
+    if (error || !data) {
+      console.error('Error fetching invitation:', error || 'No data found');
       return null;
     }
     
-    return data?.customization as InvitationCustomization;
+    // Get the corresponding event to retrieve customization
+    const { data: eventData, error: eventError } = await supabase
+      .from('events')
+      .select('customization')
+      .eq('id', data.event_id)
+      .single();
+      
+    if (eventError || !eventData || !eventData.customization) {
+      console.error('Error fetching event customization:', eventError || 'No customization found');
+      return null;
+    }
+    
+    // Return customization from the event
+    // First try to use it directly as InvitationCustomization
+    // If that doesn't work, use default values
+    return {
+      backgroundType: 'solid',
+      backgroundValue: '#ffffff',
+      fontFamily: 'system-ui, sans-serif',
+      fontSize: 'medium',
+      textColor: '#000000',
+      textAlign: 'left',
+      buttonStyles: { 
+        style: 'rounded', 
+        color: '#3B82F6' 
+      },
+      ...eventData.customization
+    } as InvitationCustomization;
   } catch (error) {
     console.error('Error in getInvitationCustomization:', error);
     return null;
@@ -119,52 +120,34 @@ export const getInvitationCustomization = async (invitationId: string): Promise<
 };
 
 /**
- * Save invitation customization using direct query with fallback
+ * Save invitation customization by updating the event
  */
 export const saveInvitationCustomization = async (invitationId: string, customization: InvitationCustomization): Promise<InvitationCustomization | null> => {
   try {
-    // Convert InvitationCustomization to EventCustomization for proper processing
-    const eventCustomization = convertToEventCustomization(customization);
+    // Get the event_id from the invitation first
+    const { data: invitation, error: invitationError } = await supabase
+      .from('event_invitations')
+      .select('event_id')
+      .eq('id', invitationId)
+      .single();
     
-    // Then convert EventCustomization to a safe JSON format
-    const safeCustomization = convertEventCustomization(eventCustomization);
+    if (invitationError || !invitation || !invitation.event_id) {
+      console.error('Error finding invitation:', invitationError || 'No invitation found');
+      return null;
+    }
+
+    // Update the event with the new customization
+    const { error: updateError } = await supabase
+      .from('events')
+      .update({ 
+        customization: customization,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', invitation.event_id);
     
-    // First check if table exists
-    const { data: tableExists } = await supabase
-      .from('_metadata')
-      .select('id')
-      .eq('table_name', 'invitation_customizations')
-      .maybeSingle();
-    
-    // If table doesn't exist, store in event_invitations instead
-    if (!tableExists) {
-      console.log('Table invitation_customizations does not exist, using fallback storage');
-      
-      const { error: updateError } = await supabase
-        .from('event_invitations')
-        .update({ 
-          customization: safeCustomization
-        })
-        .eq('id', invitationId);
-        
-      if (updateError) {
-        console.error('Error saving customization to event_invitations:', updateError);
-        return null;
-      }
-    } else {
-      // Table exists, we can insert/update directly
-      const { error: upsertError } = await supabase
-        .from('invitation_customizations')
-        .upsert({
-          invitation_id: invitationId,
-          customization: safeCustomization,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'invitation_id' });
-      
-      if (upsertError) {
-        console.error('Error upserting invitation customization:', upsertError);
-        return null;
-      }
+    if (updateError) {
+      console.error('Error updating event customization:', updateError);
+      return null;
     }
     
     return customization;
