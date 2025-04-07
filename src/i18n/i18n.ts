@@ -7,10 +7,28 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import enTranslation from './locales/en/translation.json';
 import arTranslation from './locales/ar/translation.json';
 
+// Define the type for our translation files to allow property extension
+interface TranslationWithLocation {
+  location?: {
+    enterLocation: string;
+    viewOnMap: string;
+    currentLocation: string;
+    searchPlaceholder: string;
+    manualEntry: string;
+    googleMaps: string;
+    getLocation: string;
+    invalidUrl: string;
+    displayName: string;
+    enterUrl: string;
+    previewMap: string;
+    validUrl: string;
+  };
+  [key: string]: any;
+}
+
 // Add location translations from the legacy config
-// Type assertion to allow adding the location properties
-if (!enTranslation.location) {
-  (enTranslation as any).location = {
+if (!((enTranslation as TranslationWithLocation).location)) {
+  (enTranslation as TranslationWithLocation).location = {
     enterLocation: 'Enter event location',
     viewOnMap: 'View on map',
     currentLocation: 'Use my current location',
