@@ -226,7 +226,8 @@
     "createManageAppointments": "Create and manage appointments",
     "messageIndividuals": "Message individual users",
     "businessPlan": "Business Plan",
-    "forTeams": "For teams and business owners"
+    "forTeams": "For teams and business owners",
+    "events": "Events"
   },
   "auth": {
     "welcomeToWakti": "Welcome to Wakti",
@@ -611,7 +612,10 @@
   },
   "event": {
     "tabs": {
-      "past": "Past Events"
+      "past": "Past Events",
+      "myEvents": "My Events",
+      "invitedEvents": "Invitations",
+      "draftEvents": "Drafts"
     },
     "accepted": "Accepted",
     "declined": "Declined",
@@ -619,6 +623,25 @@
     "invitedParticipants": "Invited Participants",
     "noInvitations": "No invitations found",
     "emailInvitation": "Email Invitation",
-    "appUser": "App User"
+    "appUser": "App User",
+    "title": "Events",
+    "subtitle": "Manage your events and invitations",
+    "newEvent": "New Event",
+    "searchEvents": "Search events...",
+    "filter": "Filter",
+    "gridView": "Grid View",
+    "listView": "List View",
+    "noEvents": "No events found",
+    "noEventsDescription": "Create your first event to get started!",
+    "upgradeToCreate": "Upgrade to Individual or Business plan to create events.",
+    "noInvitationsDescription": "You don't have any pending invitations",
+    "noDraftEvents": "No draft events",
+    "noDraftEventsDescription": "You don't have any draft events",
+    "editEvent": "Edit Event",
+    "editEventDescription": "Make changes to your event details",
+    "eventResponses": "Event Responses",
+    "eventResponsesDescription": "View who has responded to your event",
+    "createNewEvent": "Create a New Event",
+    "createNewEventDescription": "Fill in the details to create your event"
   }
 }

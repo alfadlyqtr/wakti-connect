@@ -209,7 +209,8 @@
     "totalSubscribers": "إجمالي المشتركين",
     "activeStaff": "الموظفين النشطين",
     "completionRate": "معدل إكمال المهام",
-    "completionRateThis": "معدل إكمال المهام لهذا"
+    "completionRateThis": "معدل إكمال المهام لهذا",
+    "events": "الفعاليات"
   },
   "auth": {
     "welcomeToWakti": "مرحبًا بك في وقتي",
@@ -594,7 +595,10 @@
   },
   "event": {
     "tabs": {
-      "past": "الأحداث السابقة"
+      "past": "الأحداث السابقة",
+      "myEvents": "فعالياتي",
+      "invitedEvents": "الدعوات",
+      "draftEvents": "المسودات"
     },
     "accepted": "مقبول",
     "declined": "مرفوض",
@@ -602,6 +606,25 @@
     "invitedParticipants": "المدعوون",
     "noInvitations": "لا توجد دعوات",
     "emailInvitation": "دعوة بالبريد الإلكتروني",
-    "appUser": "مستخدم التطبيق"
+    "appUser": "مستخدم التطبيق",
+    "title": "الفعاليات",
+    "subtitle": "إدارة الفعاليات والدعوات الخاصة بك",
+    "newEvent": "فعالية جديدة",
+    "searchEvents": "البحث في الفعاليات...",
+    "filter": "تصفية",
+    "gridView": "عرض الشبكة",
+    "listView": "عرض القائمة",
+    "noEvents": "لم يتم العثور على فعاليات",
+    "noEventsDescription": "قم بإنشاء أول فعالية للبدء!",
+    "upgradeToCreate": "قم بالترقية إلى خطة فردية أو أعمال لإنشاء فعاليات.",
+    "noInvitationsDescription": "ليس لديك أي دعوات معلقة",
+    "noDraftEvents": "لا توجد فعاليات مسودة",
+    "noDraftEventsDescription": "ليس لديك أي فعاليات مسودة",
+    "editEvent": "تعديل الفعالية",
+    "editEventDescription": "إجراء تغييرات على تفاصيل الفعالية الخاصة بك",
+    "eventResponses": "ردود الفعالية",
+    "eventResponsesDescription": "عرض من رد على فعاليتك",
+    "createNewEvent": "إنشاء فعالية جديدة",
+    "createNewEventDescription": "املأ التفاصيل لإنشاء فعاليتك"
   }
 }
