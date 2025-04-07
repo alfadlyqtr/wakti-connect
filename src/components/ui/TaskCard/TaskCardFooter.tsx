@@ -45,7 +45,7 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
           onClick={handleMarkComplete}
         >
           {isCompleted ? <CircleSlash className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
-          {isCompleted ? t("task.status.pending") : t("task.status.completed")}
+          {isCompleted ? t("task.status.markPending") : t("task.status.markCompleted")}
         </button>
       </div>
     </div>

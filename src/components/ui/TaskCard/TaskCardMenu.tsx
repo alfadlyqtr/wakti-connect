@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskStatus } from "@/types/task.types";
+import { useTranslation } from "react-i18next";
 
 interface TaskCardMenuProps {
   id: string;
@@ -48,6 +49,8 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
   userRole,
   isPaidAccount,
 }) => {
+  const { t } = useTranslation();
+  
   // Handle status change
   const startTask = () => {
     onStatusChange(id, "in-progress");
@@ -66,42 +69,42 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="h-8 w-8">
           <MoreVertical className="h-4 w-4" />
-          <span className="sr-only">Open menu</span>
+          <span className="sr-only">{t("task.menu.openMenu")}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Task Actions</DropdownMenuLabel>
+        <DropdownMenuLabel>{t("task.menu.actions")}</DropdownMenuLabel>
         
         {/* Status actions */}
         {showMarkComplete && (
           <DropdownMenuItem onClick={() => onStatusChange(id, "completed")}>
             <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-            Mark as completed
+            {t("task.menu.markCompleted")}
           </DropdownMenuItem>
         )}
         
         {showStartTask && (
           <DropdownMenuItem onClick={startTask}>
             <Clock className="mr-2 h-4 w-4 text-blue-500" />
-            Start task
+            {t("task.menu.startTask")}
           </DropdownMenuItem>
         )}
         
         {/* Snooze options for paid accounts */}
         {showSnooze && onSnooze && (
           <>
-            <DropdownMenuLabel>Snooze</DropdownMenuLabel>
+            <DropdownMenuLabel>{t("task.menu.snooze")}</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => onSnooze(id, 1)}>
               <AlarmClock className="mr-2 h-4 w-4 text-purple-500" />
-              Snooze for 1 day
+              {t("task.menu.snoozeDay", { count: 1 })}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onSnooze(id, 3)}>
               <AlarmClock className="mr-2 h-4 w-4 text-purple-500" />
-              Snooze for 3 days
+              {t("task.menu.snoozeDays", { count: 3 })}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onSnooze(id, 7)}>
               <AlarmClock className="mr-2 h-4 w-4 text-purple-500" />
-              Snooze for 1 week
+              {t("task.menu.snoozeWeek", { count: 1 })}
             </DropdownMenuItem>
           </>
         )}
@@ -112,7 +115,7 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
         {!isArchived && (
           <DropdownMenuItem onClick={() => onEdit(id)}>
             <Pencil className="mr-2 h-4 w-4" />
-            Edit
+            {t("common.edit")}
           </DropdownMenuItem>
         )}
         
@@ -120,7 +123,7 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
         {showCancel && onCancel && (
           <DropdownMenuItem onClick={() => onCancel(id)}>
             <XCircle className="mr-2 h-4 w-4 text-orange-500" />
-            Cancel task
+            {t("task.menu.cancelTask")}
           </DropdownMenuItem>
         )}
         
@@ -128,7 +131,7 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
         {showDelete && (
           <DropdownMenuItem onClick={() => onDelete(id)}>
             <Trash2 className="mr-2 h-4 w-4 text-red-500" />
-            Delete
+            {t("common.delete")}
           </DropdownMenuItem>
         )}
         
@@ -136,7 +139,7 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
         {showRestore && (
           <DropdownMenuItem onClick={() => onRestore(id)}>
             <ArrowUpRight className="mr-2 h-4 w-4 text-green-500" />
-            Restore
+            {t("task.menu.restore")}
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
