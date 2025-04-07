@@ -1,5 +1,6 @@
 
 import i18n from '@/i18n/i18n';
+import { useTranslation } from 'react-i18next';
 
 // Interface for translation options
 interface TranslateOptions {
@@ -76,14 +77,14 @@ async function callTranslationAPI(text: string, defaultText: string): Promise<st
  * Hook for using the enhanced translation service
  */
 export function useEnhancedTranslation() {
-  const { t, i18n } = i18n.useTranslation();
+  const { t, i18n: i18nInstance } = useTranslation();
   
   // Return the enhanced functions along with the standard ones
   return {
     t,
-    i18n,
+    i18n: i18nInstance,
     translateWithFallback,
-    isRTL: i18n.language === 'ar'
+    isRTL: i18nInstance.language === 'ar'
   };
 }
 

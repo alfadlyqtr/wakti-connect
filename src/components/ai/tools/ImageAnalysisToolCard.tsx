@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 
 export const ImageAnalysisToolCard: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   
   return (
     <AIToolCard
       icon={Image}
       title={t("ai.tools.image.title")}
-      description={t("ai.tools.document.uploadDescription")}
+      description={t("ai.tools.image.uploadDescription")}
       iconColor="text-green-500"
     >
       <Button disabled className="w-full">

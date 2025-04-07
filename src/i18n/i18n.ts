@@ -124,7 +124,15 @@ i18n.on('languageChanged', (lng) => {
   window.location.reload();
 });
 
-// Add some debug methods to i18n
+// Add debug function to the i18n instance (properly typed)
+// We need to extend the i18n type to include our custom property
+declare module 'i18next' {
+  interface i18n {
+    debugTranslationMissing: (key: string) => void;
+  }
+}
+
+// Now add the custom function
 i18n.debugTranslationMissing = (key: string) => {
   logLanguageInfo(`Missing translation for key: ${key} in ${i18n.language}`);
 };
