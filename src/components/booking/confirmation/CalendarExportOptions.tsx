@@ -26,7 +26,7 @@ const CalendarExportOptions: React.FC<CalendarExportOptionsProps> = ({
     const eventDetails = {
       text: `${t("booking.serviceDetails")}: ${serviceName}`,
       details: booking.description || `${t("booking.serviceDetails")} ${serviceName}`,
-      location: booking.location || "Event Location",
+      location: "Event Location", // Using a default location since booking doesn't have location
       dates: `${format(startTime, "yyyyMMdd'T'HHmmss")}/${format(endTime, "yyyyMMdd'T'HHmmss")}`
     };
 
