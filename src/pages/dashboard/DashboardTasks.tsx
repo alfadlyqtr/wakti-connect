@@ -16,7 +16,7 @@ import { useTranslation } from "react-i18next";
 import { TaskTab } from "@/types/task.types";
 
 const DashboardTasks = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const {
     isLoading,
     searchQuery,

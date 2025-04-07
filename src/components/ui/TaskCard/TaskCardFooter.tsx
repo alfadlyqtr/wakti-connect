@@ -22,7 +22,7 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
   onStatusChange,
   onEdit
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   
   const isCompleted = status === "completed";
   

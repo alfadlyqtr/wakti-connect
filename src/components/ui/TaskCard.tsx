@@ -8,6 +8,7 @@ import { TaskCardMenu } from "./TaskCard/TaskCardMenu";
 import { TaskCardFooter } from "./TaskCard/TaskCardFooter";
 import { TaskDueDate } from "./task-card/TaskDueDate";
 import { TaskSubtasks } from "./task-card/TaskSubtasks";
+import { useTranslation } from "react-i18next";
 
 interface TaskCardProps {
   id: string;
@@ -60,6 +61,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onRestore,
   onSubtaskToggle
 }) => {
+  const { t } = useTranslation();
   const isPaidAccount = userRole === "individual" || userRole === "business";
   
   // Show or hide certain features based on the task status

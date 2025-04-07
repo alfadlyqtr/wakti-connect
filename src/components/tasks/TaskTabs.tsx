@@ -9,7 +9,7 @@ interface TaskTabsProps {
 }
 
 const TaskTabs = ({ activeTab, onTabChange }: TaskTabsProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   
   const handleTabChange = (value: string) => {
     onTabChange(value as TaskTab);

@@ -49,7 +49,7 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
   userRole,
   isPaidAccount,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   
   // Handle status change
   const startTask = () => {

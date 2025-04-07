@@ -24,7 +24,7 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
   isRecurring,
   isCompleted,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   
   const getPriorityIcon = () => {
     switch (priority) {

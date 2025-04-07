@@ -39,7 +39,7 @@ const TaskControls: React.FC<TaskControlsProps> = ({
   userRole,
   showCreateButton = true
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   
   return (
     <div className="flex flex-col gap-4 sm:flex-row justify-between">

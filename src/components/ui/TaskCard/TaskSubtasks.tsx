@@ -19,7 +19,7 @@ export const TaskSubtasks: React.FC<TaskSubtasksProps> = ({
   onSubtaskToggle,
   refetch
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const completedCount = subtasks.filter(subtask => subtask.is_completed).length;
   const progress = subtasks.length > 0 ? (completedCount / subtasks.length) * 100 : 0;
   
