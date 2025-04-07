@@ -8,8 +8,9 @@ import enTranslation from './locales/en/translation.json';
 import arTranslation from './locales/ar/translation.json';
 
 // Add location translations from the legacy config
+// Type assertion to allow adding the location properties
 if (!enTranslation.location) {
-  enTranslation.location = {
+  (enTranslation as any).location = {
     enterLocation: 'Enter event location',
     viewOnMap: 'View on map',
     currentLocation: 'Use my current location',
