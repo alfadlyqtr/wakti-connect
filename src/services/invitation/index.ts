@@ -1,4 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
+
+import { supabase } from '@/lib/supabase';
 
 // Re-export all invitation service functions for easy imports
 export * from './templates';

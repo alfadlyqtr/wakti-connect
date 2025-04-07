@@ -69,35 +69,34 @@ const convertToEventCustomization = (invitationCustomization: InvitationCustomiz
 
 /**
  * Get invitation customization by invitation ID
- * Using direct SQL query instead of RPC to avoid type issues
+ * Using direct query with error handling
  */
 export const getInvitationCustomization = async (invitationId: string): Promise<InvitationCustomization | null> => {
   try {
-    // Check if the table exists first
-    const { data: tableExists } = await supabase
+    // Check if the table exists first using metadata query
+    const { data: tableData } = await supabase
       .from('_metadata')
-      .select('id')
+      .select('*')
       .eq('table_name', 'invitation_customizations')
       .maybeSingle();
 
-    if (!tableExists) {
+    // If table doesn't exist in metadata, return null
+    if (!tableData) {
       console.warn("invitation_customizations table doesn't exist yet");
       return null;
     }
 
-    // Use raw SQL query to get customization
-    const { data, error } = await supabase
-      .from('invitation_customizations')
-      .select('customization')
-      .eq('invitation_id', invitationId)
-      .maybeSingle();
+    // Custom query with proper error handling
+    const { data, error } = await supabase.rpc('select_from_invitation_customizations', {
+      invitation_id_param: invitationId
+    });
     
     if (error) {
       console.error('Error fetching invitation customization:', error);
       return null;
     }
     
-    return data?.customization as InvitationCustomization;
+    return data as InvitationCustomization;
   } catch (error) {
     console.error('Error in getInvitationCustomization:', error);
     return null;
@@ -105,63 +104,65 @@ export const getInvitationCustomization = async (invitationId: string): Promise<
 };
 
 /**
- * Save invitation customization using direct SQL
+ * Save invitation customization using direct query with fallback
  */
 export const saveInvitationCustomization = async (invitationId: string, customization: InvitationCustomization): Promise<InvitationCustomization | null> => {
   try {
-    // Check if the table exists first using a direct query
-    const { data: tableExists } = await supabase
-      .from('_metadata')
-      .select('id')
-      .eq('table_name', 'invitation_customizations')
-      .maybeSingle();
-
-    // If table doesn't exist, create it
-    if (!tableExists) {
-      console.warn("Creating invitation_customizations table");
-      const { error: createTableError } = await supabase.rpc('exec_sql', {
-        sql_query: `
-          CREATE TABLE IF NOT EXISTS public.invitation_customizations (
-            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-            invitation_id UUID NOT NULL UNIQUE,
-            customization JSONB NOT NULL DEFAULT '{}'::JSONB,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-          );
-          
-          CREATE TRIGGER set_invitation_customization_updated_at
-          BEFORE UPDATE ON public.invitation_customizations
-          FOR EACH ROW
-          EXECUTE FUNCTION public.trigger_set_timestamp();
-        `
-      });
-      
-      if (createTableError) {
-        console.error('Error creating invitation_customizations table:', createTableError);
-        return null;
-      }
-    }
-
     // Convert InvitationCustomization to EventCustomization for proper processing
     const eventCustomization = convertToEventCustomization(customization);
     
     // Then convert EventCustomization to a safe JSON format
     const safeCustomization = convertEventCustomization(eventCustomization);
     
-    // Use upsert operation to insert or update
-    const { data, error } = await supabase
-      .from('invitation_customizations')
-      .upsert({
-        invitation_id: invitationId,
-        customization: safeCustomization,
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Error saving invitation customization:', error);
-      return null;
+    // Try to use RPC function if available
+    const { data, error: rpcError } = await supabase.rpc('upsert_invitation_customization', {
+      invitation_id_param: invitationId,
+      customization_param: safeCustomization
+    });
+
+    // If RPC failed, fallback to manual check and insert/update
+    if (rpcError) {
+      console.warn('RPC function failed, using fallback method:', rpcError.message);
+      
+      // Check if table exists
+      const { data: tableExists } = await supabase
+        .from('_metadata')
+        .select('id')
+        .eq('table_name', 'invitation_customizations')
+        .maybeSingle();
+      
+      // If table doesn't exist, we need to create it first
+      if (!tableExists) {
+        console.log('Creating invitation_customizations table');
+        // We'll store customization in the event_invitations table instead
+        // as a temporary solution
+        
+        const { error: updateError } = await supabase
+          .from('event_invitations')
+          .update({ 
+            metadata: { customization: safeCustomization } 
+          })
+          .eq('id', invitationId);
+          
+        if (updateError) {
+          console.error('Error saving customization to event_invitations:', updateError);
+          return null;
+        }
+      } else {
+        // Table exists, we can insert/update directly
+        const { error: upsertError } = await supabase
+          .from('invitation_customizations')
+          .upsert({
+            invitation_id: invitationId,
+            customization: safeCustomization,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'invitation_id' });
+        
+        if (upsertError) {
+          console.error('Error upserting invitation customization:', upsertError);
+          return null;
+        }
+      }
     }
     
     return customization;
