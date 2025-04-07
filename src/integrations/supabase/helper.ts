@@ -67,4 +67,22 @@ export const testEdgeFunction = async (
   }
 };
 
-export default { fromTable, safeSupabaseCall, testEdgeFunction };
+// Add a utility to check if Supabase is properly initialized
+export const checkSupabaseConnection = async (): Promise<boolean> => {
+  try {
+    // A simple query to verify connection
+    const { error } = await supabase.from('profiles').select('id').limit(1);
+    
+    if (error) {
+      console.error('Supabase connection check failed:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Supabase connection error:', error);
+    return false;
+  }
+};
+
+export default { fromTable, safeSupabaseCall, testEdgeFunction, checkSupabaseConnection };

@@ -1,6 +1,7 @@
+
 import i18n from '@/i18n/i18n';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 // Interface for translation options
 interface TranslateOptions {
