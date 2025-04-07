@@ -1,15 +1,17 @@
 
 import { supabase } from '@/lib/supabase';
 
+// Updated UserProfile interface to match the database structure
 export interface UserProfile {
   id: string;
-  user_id: string;
   full_name?: string;
   display_name?: string;
   avatar_url?: string;
   account_type: 'free' | 'individual' | 'business';
   created_at: string;
   updated_at: string;
+  business_name?: string;
+  // We don't need user_id since the id field is the user_id in Supabase profiles
 }
 
 /**
@@ -24,10 +26,11 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
       return null;
     }
     
+    // Using explicit type selection to ensure proper typing
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
-      .eq('user_id', user.id)
+      .select('id, full_name, display_name, avatar_url, account_type, created_at, updated_at, business_name')
+      .eq('id', user.id)
       .single();
     
     if (error) {
@@ -35,7 +38,22 @@ export const getUserProfile = async (): Promise<UserProfile | null> => {
       throw error;
     }
     
-    return data as UserProfile;
+    if (!data) return null;
+    
+    // Manually cast the account_type to ensure it matches our expected types
+    const accountType = data.account_type as 'free' | 'individual' | 'business';
+
+    // Return the profile with properly typed fields
+    return {
+      id: data.id,
+      full_name: data.full_name,
+      display_name: data.display_name,
+      avatar_url: data.avatar_url,
+      account_type: accountType,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      business_name: data.business_name
+    };
   } catch (error) {
     console.error("Error in getUserProfile:", error);
     return null;

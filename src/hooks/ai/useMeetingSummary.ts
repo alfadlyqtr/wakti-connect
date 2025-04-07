@@ -1,9 +1,11 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
 import { formatTime } from '@/utils/audio/audioProcessing';
 import { improveTranscriptionAccuracy, detectLocationFromText } from '@/utils/text/transcriptionUtils';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/hooks/auth';
 
 type MeetingSummaryState = {
   isRecording: boolean;
@@ -28,6 +30,7 @@ type SavedMeeting = {
 
 export const useMeetingSummary = () => {
   const { t, i18n } = useTranslation();
+  const { user } = useAuth();
   const currentLanguage = i18n.language;
   
   const [state, setState] = useState<MeetingSummaryState>({
@@ -379,6 +382,14 @@ export const useMeetingSummary = () => {
 
   const generateSummary = async () => {
     if (!state.transcribedText) return;
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "You need to be logged in to save meeting summaries",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setState(prev => ({ ...prev, isSummarizing: true }));
     
@@ -439,7 +450,9 @@ ${aiSummary}
       }));
       
       try {
+        // Add user_id to the meeting data
         const { error: saveError } = await supabase.from('meetings').insert({
+          user_id: user.id,
           date: new Date().toISOString(),
           duration: state.recordingTime,
           location: location,

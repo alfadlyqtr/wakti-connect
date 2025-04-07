@@ -36,6 +36,7 @@ export const createEvent = async (formData: EventFormData): Promise<Event | null
     }
     
     // Prepare the event object for insertion
+    // Convert EventCustomization to Json compatible object
     const eventData = {
       title: formData.title,
       description: formData.description,
@@ -47,7 +48,8 @@ export const createEvent = async (formData: EventFormData): Promise<Event | null
       maps_url: formData.maps_url,
       status: formData.status as EventStatus,
       user_id: userId,
-      customization: formData.customization
+      // Convert customization to a JSON compatible format
+      customization: formData.customization ? JSON.parse(JSON.stringify(formData.customization)) : null
     };
     
     // Insert the event into the database
@@ -68,7 +70,8 @@ export const createEvent = async (formData: EventFormData): Promise<Event | null
         event_id: event.id,
         email: invitation.email,
         invited_user_id: invitation.invited_user_id,
-        status: invitation.status || 'pending',
+        // Convert the status to explicit string literal type
+        status: (invitation.status || 'pending') as 'pending' | 'accepted' | 'declined',
         shared_as_link: invitation.shared_as_link || false
       }));
       
@@ -85,7 +88,15 @@ export const createEvent = async (formData: EventFormData): Promise<Event | null
       }
     }
     
-    return event;
+    // Parse JSON back to EventCustomization before returning
+    const typedEvent: Event = {
+      ...event,
+      customization: event.customization ? (typeof event.customization === 'string' 
+        ? JSON.parse(event.customization) 
+        : event.customization) : {}
+    };
+    
+    return typedEvent;
   } catch (error: any) {
     console.error("Error in createEvent:", error);
     return null;

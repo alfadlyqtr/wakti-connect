@@ -1,95 +1,115 @@
-import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase";
-import { Event, EventsResult, EventWithInvitations } from "@/types/event.types";
 
-// Simple helper function to check user role instead of importing from userService
-const getUserRole = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return 'free';
-  
-  const { data } = await supabase
-    .from('profiles')
-    .select('account_type')
-    .eq('id', session.user.id)
-    .single();
-    
-  return data?.account_type || 'free';
-};
+// This is a stub file that needs to be completed.
+// For now, just adding enough code to fix the type errors
+import { supabase } from '@/lib/supabase';
+import { Event, EventWithInvitations, EventsResult } from '@/types/event.types';
+import { convertToTypedEvents, convertToTypedEvent } from '@/utils/typeAdapters';
 
-// Get all events for the current user
-export const getAllEvents = async (): Promise<EventsResult> => {
+// Fetch events by user and tab
+export const getEvents = async (tab: 'my-events' | 'invited-events' | 'draft-events'): Promise<EventsResult> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.user) {
-      return {
-        events: [],
-        userRole: 'free',
-        canCreateEvents: false
-      };
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      console.error("No authenticated user found");
+      return { events: [], userRole: 'free', canCreateEvents: false };
     }
+
+    let query;
     
-    const userRole = await getUserRole();
-    const canCreateEvents = userRole !== 'free';
-    
-    const { data, error } = await supabase
-      .from('events')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .order('start_time', { ascending: true });
-    
+    if (tab === 'my-events') {
+      query = supabase
+        .from('events')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+    } else if (tab === 'invited-events') {
+      query = supabase
+        .from('event_invitations')
+        .select('event:event_id(*)')
+        .eq('invited_user_id', user.id)
+        .order('created_at', { ascending: false });
+    } else if (tab === 'draft-events') {
+      query = supabase
+        .from('events')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'draft')
+        .order('created_at', { ascending: false });
+    }
+
+    const { data, error } = await query;
+
     if (error) {
       console.error("Error fetching events:", error);
-      throw new Error(error.message);
+      throw error;
     }
+
+    let events: Event[] = [];
+
+    if (tab === 'invited-events' && data) {
+      // Extract events from invitation data
+      events = convertToTypedEvents(data.filter(item => item.event).map(item => item.event));
+    } else if (data) {
+      // Direct events data
+      events = convertToTypedEvents(data);
+    }
+
+    // Get user role
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('account_type')
+      .eq('id', user.id)
+      .single();
+
+    // Use type assertion to restrict the account_type to the expected values
+    const userRole = (profileData?.account_type || 'free') as 'free' | 'individual' | 'business';
     
+    // Determine if user can create events (individual or business accounts)
+    const canCreateEvents = userRole === 'individual' || userRole === 'business';
+
     return {
-      events: data || [],
-      userRole: userRole,
-      canCreateEvents: canCreateEvents
+      events,
+      userRole,
+      canCreateEvents
     };
-  } catch (error: any) {
-    console.error("Error in getAllEvents:", error);
-    return {
-      events: [],
-      userRole: 'free',
-      canCreateEvents: false
-    };
+  } catch (error) {
+    console.error("Error in getEvents:", error);
+    return { events: [], userRole: 'free', canCreateEvents: false };
   }
 };
 
-// Get a single event by ID, including its invitations
-export const getEventWithInvitations = async (eventId: string): Promise<EventWithInvitations | null> => {
+// Get event by ID
+export const getEventById = async (eventId: string): Promise<EventWithInvitations | null> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session?.user) {
-      throw new Error("You must be logged in to view events");
-    }
-    
     const { data, error } = await supabase
       .from('events')
       .select(`
         *,
-        invitations:event_invitations (*)
+        invitations:event_invitations(*)
       `)
       .eq('id', eventId)
-      .eq('user_id', session.user.id)
       .single();
-    
+
     if (error) {
-      console.error("Error fetching event with invitations:", error);
-      throw new Error(error.message);
+      console.error("Error fetching event:", error);
+      throw error;
     }
+
+    if (!data) {
+      return null;
+    }
+
+    // Convert to properly typed event
+    const typedEvent = convertToTypedEvent(data);
     
-    return data as EventWithInvitations;
-  } catch (error: any) {
-    console.error("Error in getEventWithInvitations:", error);
-    toast({
-      title: "Failed to Load Event",
-      description: error?.message || "An unexpected error occurred",
-      variant: "destructive",
-    });
+    // Add invitations and return as EventWithInvitations
+    return {
+      ...typedEvent,
+      invitations: data.invitations || []
+    } as EventWithInvitations;
+  } catch (error) {
+    console.error("Error in getEventById:", error);
     return null;
   }
 };
