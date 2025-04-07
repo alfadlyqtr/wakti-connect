@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { Separator } from "@/components/ui/separator";
+import { useTranslation } from "react-i18next";
 
 // Import the components
 import BrandLogo from "./navbar/BrandLogo";
@@ -23,6 +24,8 @@ interface NavbarProps {
 const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
 
   // Get unread notifications count
   const { data: unreadNotifications = [] } = useQuery({
@@ -78,7 +81,7 @@ const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
   }, []);
 
   return (
-    <header className="w-full bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
+    <header className={`w-full bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-50 ${isRTL ? 'rtl' : ''}`}>
       <div className="container mx-auto px-4 flex items-center justify-between h-16">
         <div className="flex items-center gap-4">
           <Button 

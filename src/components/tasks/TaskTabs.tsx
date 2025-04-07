@@ -11,11 +11,12 @@ interface TaskTabsProps {
 }
 
 const TaskTabs: React.FC<TaskTabsProps> = ({ activeTab, onTabChange }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   
   return (
     <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as TaskTab)} className="w-full">
-      <TabsList className="grid w-full max-w-md grid-cols-2">
+      <TabsList className={`grid w-full max-w-md grid-cols-2 ${isRTL ? 'rtl' : ''}`}>
         <TabsTrigger value="my-tasks" className="flex items-center gap-2">
           <CheckSquare className="h-4 w-4" />
           <span>{t("task.tabs.myTasks")}</span>

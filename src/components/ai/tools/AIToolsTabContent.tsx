@@ -26,14 +26,15 @@ export const AIToolsTabContent: React.FC<AIToolsTabContentProps> = ({
   onUseDocumentContent,
   selectedRole,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   
   if (!canAccess) {
     return <AIUpgradeRequired />;
   }
 
   return (
-    <div className="space-y-8">
+    <div className={`space-y-8 ${isRTL ? 'rtl' : ''}`}>
       {/* Quick Tools Section */}
       <div className="grid grid-cols-1 gap-4">
         <QuickToolsCard

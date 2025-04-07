@@ -30,13 +30,15 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   onArchive,
   onRestore
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
+  
   // Use the debounced refresh hook to prevent UI freezing
   const { refresh: debouncedRefetch, isRefreshing } = useDebouncedRefresh(refetch);
 
   if (tasks.length === 0) {
     return (
-      <div className="text-center py-12 border rounded-lg">
+      <div className={`text-center py-12 border rounded-lg ${isRTL ? 'rtl' : ''}`}>
         <h3 className="text-lg font-medium mb-2">
           {isArchiveView ? t('task.noArchivedTasks') : t('task.noTasksFound')}
         </h3>
@@ -51,7 +53,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
             onClick={onCreateTask}
             disabled={isRefreshing}
           >
-            <PlusCircle className="mr-2 h-4 w-4" />
+            <PlusCircle className={`${isRTL ? 'ml-2' : 'mr-2'} h-4 w-4`} />
             {t('task.createTask')}
           </Button>
         )}

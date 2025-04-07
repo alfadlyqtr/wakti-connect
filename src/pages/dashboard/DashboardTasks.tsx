@@ -15,7 +15,9 @@ import TasksContainer from "@/components/tasks/TasksContainer";
 import { useTranslation } from "react-i18next";
 
 const DashboardTasks = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
+  
   const {
     isLoading,
     searchQuery,
@@ -69,7 +71,7 @@ const DashboardTasks = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${isRTL ? 'rtl' : ''}`}>
       <h1 className="text-2xl font-bold tracking-tight">{t("task.tasks")}</h1>
       
       <TaskTabs 
@@ -82,7 +84,7 @@ const DashboardTasks = () => {
       
       {activeTab === "archived" && (
         <div className="bg-muted/50 rounded-lg p-4 flex items-center">
-          <Archive className="h-5 w-5 mr-2 text-muted-foreground" />
+          <Archive className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'} text-muted-foreground`} />
           <div>
             <h3 className="font-medium">{t("task.archive.title")}</h3>
             <p className="text-sm text-muted-foreground">
