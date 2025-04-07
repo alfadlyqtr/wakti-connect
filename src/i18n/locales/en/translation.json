@@ -1,4 +1,3 @@
-
 {
   "common": {
     "wakti": "Wakti",
@@ -348,7 +347,17 @@
   },
   "location": {
     "enterLocation": "Enter a location",
-    "viewOnMap": "View on Map"
+    "viewOnMap": "View on Map",
+    "currentLocation": "Use my current location",
+    "searchPlaceholder": "Search for a location...",
+    "manualEntry": "Enter manually",
+    "googleMaps": "Use Google Maps",
+    "getLocation": "Get my current location",
+    "invalidUrl": "Invalid Google Maps URL",
+    "displayName": "Location display name",
+    "enterUrl": "Enter a Google Maps URL",
+    "previewMap": "Preview on map",
+    "validUrl": "Enter a valid Google Maps URL"
   },
   "ai": {
     "title": "WAKTI AI Assistant",
