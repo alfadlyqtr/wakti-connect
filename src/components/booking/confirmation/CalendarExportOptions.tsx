@@ -6,6 +6,7 @@ import { CalendarDays, Mail, Download } from "lucide-react";
 import { BookingWithRelations } from "@/types/booking.types";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 
 interface CalendarExportOptionsProps {
   booking: BookingWithRelations;
@@ -17,14 +18,15 @@ const CalendarExportOptions: React.FC<CalendarExportOptionsProps> = ({
   serviceName 
 }) => {
   const { isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   
   const generateGoogleCalendarUrl = () => {
     const startTime = new Date(booking.start_time);
     const endTime = new Date(booking.end_time);
     const eventDetails = {
-      text: `Booking: ${serviceName}`,
-      details: booking.description || `Your booking for ${serviceName}`,
-      location: "Event Location",
+      text: `${t("booking.serviceDetails")}: ${serviceName}`,
+      details: booking.description || `${t("booking.serviceDetails")} ${serviceName}`,
+      location: booking.location || "Event Location",
       dates: `${format(startTime, "yyyyMMdd'T'HHmmss")}/${format(endTime, "yyyyMMdd'T'HHmmss")}`
     };
 
@@ -42,8 +44,8 @@ const CalendarExportOptions: React.FC<CalendarExportOptionsProps> = ({
       "BEGIN:VEVENT",
       `DTSTART:${format(startTime, "yyyyMMdd'T'HHmmss")}`,
       `DTEND:${format(endTime, "yyyyMMdd'T'HHmmss")}`,
-      `SUMMARY:Booking: ${serviceName}`,
-      `DESCRIPTION:${booking.description || `Your booking for ${serviceName}`}`,
+      `SUMMARY:${t("booking.serviceDetails")}: ${serviceName}`,
+      `DESCRIPTION:${booking.description || `${t("booking.serviceDetails")} ${serviceName}`}`,
       "END:VEVENT",
       "END:VCALENDAR"
     ].join("\n");
@@ -63,8 +65,8 @@ const CalendarExportOptions: React.FC<CalendarExportOptionsProps> = ({
       "BEGIN:VEVENT",
       `DTSTART:${format(startTime, "yyyyMMdd'T'HHmmss")}`,
       `DTEND:${format(endTime, "yyyyMMdd'T'HHmmss")}`,
-      `SUMMARY:Booking: ${serviceName}`,
-      `DESCRIPTION:${booking.description || `Your booking for ${serviceName}`}`,
+      `SUMMARY:${t("booking.serviceDetails")}: ${serviceName}`,
+      `DESCRIPTION:${booking.description || `${t("booking.serviceDetails")} ${serviceName}`}`,
       "X-MICROSOFT-CDO-BUSYSTATUS:BUSY",
       "END:VEVENT",
       "END:VCALENDAR"
@@ -96,12 +98,12 @@ const CalendarExportOptions: React.FC<CalendarExportOptionsProps> = ({
   };
   
   const emailCalendarInvite = () => {
-    const subject = encodeURIComponent(`Booking Confirmation: ${serviceName}`);
+    const subject = encodeURIComponent(`${t("booking.confirmed")}: ${serviceName}`);
     const startDate = format(new Date(booking.start_time), "MMMM d, yyyy 'at' h:mm a");
     const endDate = format(new Date(booking.end_time), "h:mm a");
     const body = encodeURIComponent(
-      `Your booking for ${serviceName} has been confirmed for ${startDate} to ${endDate}.\n\n` +
-      `Booking Reference: ${booking.id}`
+      `${t("booking.confirmationMessage")} ${startDate} to ${endDate}.\n\n` +
+      `${t("booking.reference")}: ${booking.id}`
     );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
@@ -111,10 +113,10 @@ const CalendarExportOptions: React.FC<CalendarExportOptionsProps> = ({
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center gap-2">
           <CalendarDays className="h-5 w-5 text-primary" />
-          Add to Calendar
+          {t("events.showCalendar")}
         </CardTitle>
         <CardDescription>
-          Save this appointment to your calendar to get reminders
+          {t("booking.saveReference")}
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
