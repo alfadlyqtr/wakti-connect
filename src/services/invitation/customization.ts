@@ -92,15 +92,13 @@ export const getInvitationCustomization = async (invitationId: string): Promise<
       .eq('id', data.event_id)
       .single();
       
-    if (eventError || !eventData || !eventData.customization) {
+    if (eventError || !eventData) {
       console.error('Error fetching event customization:', eventError || 'No customization found');
       return null;
     }
     
-    // Return customization from the event
-    // First try to use it directly as InvitationCustomization
-    // If that doesn't work, use default values
-    return {
+    // Create default customization object
+    const defaultCustomization: InvitationCustomization = {
       backgroundType: 'solid',
       backgroundValue: '#ffffff',
       fontFamily: 'system-ui, sans-serif',
@@ -110,9 +108,20 @@ export const getInvitationCustomization = async (invitationId: string): Promise<
       buttonStyles: { 
         style: 'rounded', 
         color: '#3B82F6' 
-      },
-      ...eventData.customization
-    } as InvitationCustomization;
+      }
+    };
+    
+    // If customization exists in the event data, merge it with defaults
+    if (eventData.customization) {
+      return {
+        ...defaultCustomization,
+        ...(typeof eventData.customization === 'string' 
+          ? JSON.parse(eventData.customization) 
+          : eventData.customization)
+      } as InvitationCustomization;
+    }
+    
+    return defaultCustomization;
   } catch (error) {
     console.error('Error in getInvitationCustomization:', error);
     return null;
@@ -136,11 +145,14 @@ export const saveInvitationCustomization = async (invitationId: string, customiz
       return null;
     }
 
+    // Convert the customization to a JSON-compatible object
+    const customizationJson = JSON.parse(JSON.stringify(customization));
+
     // Update the event with the new customization
     const { error: updateError } = await supabase
       .from('events')
       .update({ 
-        customization: customization,
+        customization: customizationJson,
         updated_at: new Date().toISOString()
       })
       .eq('id', invitation.event_id);
