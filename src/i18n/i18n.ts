@@ -7,6 +7,37 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import enTranslation from './locales/en/translation.json';
 import arTranslation from './locales/ar/translation.json';
 
+// Debug flag for extensive logging
+const DEBUG_I18N = process.env.NODE_ENV === 'development';
+
+// Function to log language changes and debug info
+const logLanguageInfo = (message: string, data?: any) => {
+  if (DEBUG_I18N) {
+    console.log(`[i18n] ${message}`, data || '');
+  }
+};
+
+logLanguageInfo('Initializing i18n');
+
+// Helper function to check browser language preference
+const detectPreferredLanguage = (): string => {
+  const browserLang = navigator.language;
+  const savedLang = localStorage.getItem('wakti-language');
+  
+  if (savedLang) {
+    logLanguageInfo(`Found saved language: ${savedLang}`);
+    return savedLang;
+  }
+  
+  if (browserLang && browserLang.toLowerCase().startsWith('ar')) {
+    logLanguageInfo(`Browser language is Arabic: ${browserLang}`);
+    return 'ar';
+  }
+  
+  logLanguageInfo(`Using default language: en`);
+  return 'en';
+};
+
 // Initialize i18next
 i18n
   // detect user language
@@ -24,7 +55,7 @@ i18n
       }
     },
     fallbackLng: 'en',
-    debug: process.env.NODE_ENV === 'development',
+    debug: DEBUG_I18N,
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
     },
@@ -32,14 +63,27 @@ i18n
       order: ['localStorage', 'navigator', 'htmlTag'],
       lookupLocalStorage: 'wakti-language',
       caches: ['localStorage'],
+    },
+    react: {
+      useSuspense: false, // Avoid suspense issues with translations
+    }
+  }, (err) => {
+    if (err) {
+      logLanguageInfo('Error initializing i18n:', err);
+    } else {
+      logLanguageInfo('i18n initialized successfully');
     }
   });
 
 // Set the HTML dir attribute based on the current language
 const setDocumentDirection = (language: string) => {
-  console.log('Setting document direction for language:', language);
+  logLanguageInfo(`Setting document direction for language: ${language}`);
+  
+  // Set direction attributes
   document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-  document.documentElement.lang = language; // Set the language attribute
+  document.documentElement.lang = language; 
+  
+  // Add/remove CSS classes for styling
   if (language === 'ar') {
     document.body.classList.add('rtl');
     document.body.classList.add('font-arabic');
@@ -47,38 +91,42 @@ const setDocumentDirection = (language: string) => {
     document.body.classList.remove('rtl');
     document.body.classList.remove('font-arabic');
   }
+  
+  // Force a layout recalculation to ensure RTL is properly applied
+  document.body.style.display = 'none';
+  setTimeout(() => {
+    document.body.style.display = '';
+  }, 10);
 };
 
-// Check for saved language preference and apply it immediately on load
-const savedLanguage = localStorage.getItem('wakti-language');
-if (savedLanguage) {
-  console.log('Found saved language in i18n initialization:', savedLanguage);
-  i18n.changeLanguage(savedLanguage);
-  setDocumentDirection(savedLanguage);
-} else {
-  // If no saved language, check if browser language is Arabic
-  const browserLang = navigator.language;
-  if (browserLang && browserLang.toLowerCase().startsWith('ar')) {
-    console.log('Browser language is Arabic, setting language to ar');
-    i18n.changeLanguage('ar');
-    localStorage.setItem('wakti-language', 'ar');
-    setDocumentDirection('ar');
-  } else {
-    // Default to English if no Arabic detected
-    setDocumentDirection(i18n.language);
-  }
+// Initialize language from storage or preferences
+const initialLanguage = detectPreferredLanguage();
+logLanguageInfo(`Setting initial language to: ${initialLanguage}`);
+i18n.changeLanguage(initialLanguage);
+setDocumentDirection(initialLanguage);
+
+// Make sure language preference is saved
+if (!localStorage.getItem('wakti-language')) {
+  localStorage.setItem('wakti-language', initialLanguage);
 }
 
 // Listen for language changes
 i18n.on('languageChanged', (lng) => {
-  console.log('Language changed to:', lng);
+  logLanguageInfo(`Language changed to: ${lng}`);
   setDocumentDirection(lng);
-  // Ensure the language is saved in localStorage
+  
+  // Ensure consistent storage
   localStorage.setItem('wakti-language', lng);
   
   // Force reload the page to ensure all components get the new language
   // This ensures translations are applied consistently throughout the app
+  logLanguageInfo('Reloading page to apply language change');
   window.location.reload();
 });
+
+// Add some debug methods to i18n
+i18n.debugTranslationMissing = (key: string) => {
+  logLanguageInfo(`Missing translation for key: ${key} in ${i18n.language}`);
+};
 
 export default i18n;

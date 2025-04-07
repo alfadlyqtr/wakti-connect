@@ -2,6 +2,7 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface AIToolCardProps {
   icon: LucideIcon;
@@ -20,14 +21,17 @@ export const AIToolCard: React.FC<AIToolCardProps> = ({
   logoSrc,
   children,
 }) => {
+  const { i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
+
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center">
+        <CardTitle className={`text-lg flex items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
           {logoSrc ? (
-            <img src={logoSrc} alt={title} className="h-5 w-5 mr-2" />
+            <img src={logoSrc} alt={title} className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
           ) : (
-            <Icon className={`h-5 w-5 mr-2 ${iconColor}`} />
+            <Icon className={`h-5 w-5 ${isRTL ? 'ml-2' : 'mr-2'} ${iconColor}`} />
           )}
           {title}
         </CardTitle>
