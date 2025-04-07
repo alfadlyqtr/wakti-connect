@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Moon, Sun, User, ChevronDown, ChevronUp } from "lucide-react";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import { useTranslation } from "react-i18next";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import LanguageSwitcher from "@/components/ui/language-switcher";
 
 const Header = () => {
   const { theme, setTheme } = useTheme();

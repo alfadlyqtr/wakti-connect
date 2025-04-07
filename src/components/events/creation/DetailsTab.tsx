@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import LocationInput from "@/components/events/location/LocationInput";
 import { TimePicker } from "@/components/ui/time-picker";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useTranslation } from "react-i18next";
 
 interface DetailsTabProps {
   register: any;
@@ -58,7 +57,6 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
   isEdit = false
 }) => {
   const isMobile = useIsMobile();
-  const { t } = useTranslation();
   
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
@@ -74,10 +72,10 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
     <div className="px-4 py-2 space-y-6 max-w-2xl mx-auto">
       <div className="space-y-3">
         <div>
-          <Label htmlFor="title" className="text-base">{t('events.eventTitle')}</Label>
+          <Label htmlFor="title" className="text-base">Event Title</Label>
           <Input 
             id="title"
-            placeholder={t('events.enterTitle')}
+            placeholder="Enter event title"
             className="w-full mt-1" 
             value={title}
             onChange={handleTitleChange}
@@ -87,15 +85,15 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
             <p className="text-sm text-destructive mt-1">{errors.title.message}</p>
           )}
           {title.trim() === '' && (
-            <p className="text-sm text-amber-600 mt-1">{t('events.titleRequired')}</p>
+            <p className="text-sm text-amber-600 mt-1">Event title is required</p>
           )}
         </div>
         
         <div>
-          <Label htmlFor="description" className="text-base">{t('events.description')}</Label>
+          <Label htmlFor="description" className="text-base">Description (Optional)</Label>
           <Textarea 
             id="description"
-            placeholder={t('events.enterDetails')}
+            placeholder="Enter event details"
             className="w-full mt-1 min-h-[100px]"
             value={description}
             onChange={handleDescriptionChange}
@@ -104,16 +102,16 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
       </div>
 
       <div>
-        <Label className="text-base">{t('events.dateAndTime')}</Label>
+        <Label className="text-base">Date & Time</Label>
         <div className="mt-2 space-y-4">
           <DatePicker 
             date={selectedDate} 
             setDate={setSelectedDate}
-            placeholder={isMobile ? t('events.date') : t('events.selectDate')}
+            placeholder={isMobile ? "Select date" : "Select event date"}
           />
           
           <div className="flex items-center gap-2">
-            <Label htmlFor="all-day" className="cursor-pointer">{t('events.allDayEvent')}</Label>
+            <Label htmlFor="all-day" className="cursor-pointer">All-day event</Label>
             <Switch 
               id="all-day" 
               checked={isAllDay} 
@@ -124,14 +122,14 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
           {!isAllDay && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="start-time" className="text-sm">{t('events.startTime')}</Label>
+                <Label htmlFor="start-time" className="text-sm">Start Time</Label>
                 <TimePicker
                   value={startTime}
                   onChange={setStartTime}
                 />
               </div>
               <div>
-                <Label htmlFor="end-time" className="text-sm">{t('events.endTime')}</Label>
+                <Label htmlFor="end-time" className="text-sm">End Time</Label>
                 <TimePicker
                   value={endTime}
                   onChange={setEndTime}
@@ -144,7 +142,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
       </div>
 
       <div>
-        <Label htmlFor="location" className="text-base">{t('events.location')}</Label>
+        <Label htmlFor="location" className="text-base">Location</Label>
         <div className="mt-2">
           <LocationInput
             locationType={locationType}
@@ -162,7 +160,7 @@ const DetailsTab: React.FC<DetailsTabProps> = ({
           className="px-6"
           disabled={!canProceedToNext}
         >
-          {t('events.next')}
+          Next: Customize
         </Button>
       </div>
     </div>

@@ -41,7 +41,6 @@ import { EventCreationForm } from '@/components/events';
 import { Badge } from '@/components/ui/badge';
 import EmptyState from '@/components/shared/EmptyState';
 import { EventViewResponses } from '@/components/events';
-import { useTranslation } from 'react-i18next';
 
 export default function DashboardEvents() {
   const [openDialog, setOpenDialog] = useState(false);
@@ -50,7 +49,6 @@ export default function DashboardEvents() {
   const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
   const [currentTab, setCurrentTab] = useState<EventTab>('my-events');
   const { toast } = useToast();
-  const { t } = useTranslation();
   
   // Get events with filtering functionality
   const { 
@@ -165,13 +163,13 @@ export default function DashboardEvents() {
     <div className="container mx-auto p-4 max-w-7xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t('events.title')}</h1>
-          <p className="text-muted-foreground">{t('events.subtitle')}</p>
+          <h1 className="text-2xl font-bold tracking-tight">Events</h1>
+          <p className="text-muted-foreground">Manage your events and invitations</p>
         </div>
         
         <Button onClick={() => setOpenDialog(true)} disabled={!canCreateEvents}>
           <Plus className="mr-2 h-4 w-4" />
-          {t('events.newEvent')}
+          New Event
         </Button>
       </div>
       
@@ -181,7 +179,7 @@ export default function DashboardEvents() {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder={t('events.search')}
+              placeholder="Search events..."
               className="pl-8"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -193,7 +191,7 @@ export default function DashboardEvents() {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full sm:w-auto justify-start">
                   <Filter className="mr-2 h-4 w-4" />
-                  {t('events.filter')}
+                  Filter
                   {(filterStatus !== 'all' || filterDate) && (
                     <Badge variant="secondary" className="ml-2 rounded-sm px-1 font-normal">
                       {filterStatus !== 'all' && filterDate ? '2' : '1'}
@@ -204,26 +202,26 @@ export default function DashboardEvents() {
               <PopoverContent className="w-80">
                 <div className="grid gap-4">
                   <div className="space-y-2">
-                    <h4 className="font-medium">{t('events.filter')}</h4>
+                    <h4 className="font-medium">Filters</h4>
                     <div className="grid gap-2">
                       <div className="grid gap-1">
-                        <Label htmlFor="status">{t('events.status')}</Label>
+                        <Label htmlFor="status">Status</Label>
                         <select 
                           id="status"
                           className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
                           value={filterStatus}
                           onChange={(e) => setFilterStatus(e.target.value)}
                         >
-                          <option value="all">{t('events.allStatus')}</option>
-                          <option value="draft">{t('events.draft')}</option>
-                          <option value="published">{t('events.published')}</option>
-                          <option value="cancelled">{t('events.cancelled')}</option>
-                          <option value="accepted">{t('events.accepted')}</option>
-                          <option value="declined">{t('events.declined')}</option>
+                          <option value="all">All status</option>
+                          <option value="draft">Draft</option>
+                          <option value="published">Published</option>
+                          <option value="cancelled">Cancelled</option>
+                          <option value="accepted">Accepted</option>
+                          <option value="declined">Declined</option>
                         </select>
                       </div>
                       <div className="grid gap-1">
-                        <Label htmlFor="date">{t('events.date')}</Label>
+                        <Label htmlFor="date">Date</Label>
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
@@ -235,7 +233,7 @@ export default function DashboardEvents() {
                               )}
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
-                              {filterDate ? format(filterDate, "PPP") : t('events.pickDate')}
+                              {filterDate ? format(filterDate, "PPP") : "Pick a date"}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
@@ -256,7 +254,7 @@ export default function DashboardEvents() {
                     disabled={filterStatus === 'all' && !filterDate}
                   >
                     <X className="mr-2 h-4 w-4" />
-                    {t('events.clearFilters')}
+                    Clear Filters
                   </Button>
                 </div>
               </PopoverContent>
@@ -270,10 +268,10 @@ export default function DashboardEvents() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setViewType('grid')}>
-                  {t('events.gridView')}
+                  Grid View
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setViewType('list')}>
-                  {t('events.listView')}
+                  List View
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -283,9 +281,9 @@ export default function DashboardEvents() {
       
       <Tabs defaultValue="my-events" value={currentTab} onValueChange={(value) => setCurrentTab(value as EventTab)}>
         <TabsList className="mb-6">
-          <TabsTrigger value="my-events">{t('events.myEvents')}</TabsTrigger>
-          <TabsTrigger value="invited-events">{t('events.invitations')}</TabsTrigger>
-          <TabsTrigger value="draft-events">{t('events.drafts')}</TabsTrigger>
+          <TabsTrigger value="my-events">My Events</TabsTrigger>
+          <TabsTrigger value="invited-events">Invitations</TabsTrigger>
+          <TabsTrigger value="draft-events">Drafts</TabsTrigger>
         </TabsList>
         
         <TabsContent value="my-events">
@@ -312,18 +310,18 @@ export default function DashboardEvents() {
             </div>
           ) : (
             <EmptyState
-              title={t('events.noEvents')}
+              title="No events found"
               description={
                 canCreateEvents
-                  ? t('events.createFirst')
-                  : t('events.upgradeRequired')
+                  ? "Create your first event to get started!"
+                  : "Upgrade to Individual or Business plan to create events."
               }
               icon={<CalendarIcon className="h-12 w-12 text-muted-foreground" />}
               action={
                 canCreateEvents && (
                   <Button onClick={() => setOpenDialog(true)}>
                     <Plus className="mr-2 h-4 w-4" />
-                    {t('events.newEvent')}
+                    New Event
                   </Button>
                 )
               }
@@ -353,8 +351,8 @@ export default function DashboardEvents() {
             </div>
           ) : (
             <EmptyState
-              title={t('events.noInvitations')}
-              description={t('events.noPendingInvitations')}
+              title="No invitations"
+              description="You don't have any pending invitations"
               icon={<CalendarIcon className="h-12 w-12 text-muted-foreground" />}
             />
           )}
@@ -383,14 +381,14 @@ export default function DashboardEvents() {
             </div>
           ) : (
             <EmptyState
-              title={t('events.noDrafts')}
-              description={t('events.noDraftsDescription')}
+              title="No draft events"
+              description="You don't have any draft events"
               icon={<CalendarIcon className="h-12 w-12 text-muted-foreground" />}
               action={
                 canCreateEvents && (
                   <Button onClick={() => setOpenDialog(true)}>
                     <Plus className="mr-2 h-4 w-4" />
-                    {t('events.newEvent')}
+                    New Event
                   </Button>
                 )
               }
@@ -403,23 +401,23 @@ export default function DashboardEvents() {
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-auto">
           {editingEvent ? (
             <DialogHeader>
-              <DialogTitle>{t('events.edit')}</DialogTitle>
+              <DialogTitle>Edit Event</DialogTitle>
               <DialogDescription>
-                {t('events.editDescription')}
+                Make changes to your event details
               </DialogDescription>
             </DialogHeader>
           ) : viewResponsesEvent ? (
             <DialogHeader>
-              <DialogTitle>{t('events.responses')}</DialogTitle>
+              <DialogTitle>Event Responses</DialogTitle>
               <DialogDescription>
-                {t('events.responsesDescription')}
+                View who has responded to your event
               </DialogDescription>
             </DialogHeader>
           ) : (
             <DialogHeader>
-              <DialogTitle>{t('events.create')}</DialogTitle>
+              <DialogTitle>Create a New Event</DialogTitle>
               <DialogDescription>
-                {t('events.createDescription')}
+                Fill in the details to create your event
               </DialogDescription>
             </DialogHeader>
           )}

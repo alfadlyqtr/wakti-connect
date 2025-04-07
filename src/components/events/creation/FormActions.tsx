@@ -5,7 +5,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { UseFormReturn } from "react-hook-form";
 import { EventFormValues } from "@/types/event.types";
 import { InvitationRecipient } from "@/types/invitation.types";
-import { useTranslation } from "react-i18next";
 
 export interface FormActionsProps {
   onPrev?: () => void;
@@ -26,8 +25,6 @@ const FormActions: React.FC<FormActionsProps> = ({
   showSubmit = false,
   submitLabel = "Create Event"
 }) => {
-  const { t } = useTranslation();
-  
   return (
     <div className="flex justify-between mt-6">
       <Button
@@ -37,12 +34,12 @@ const FormActions: React.FC<FormActionsProps> = ({
         disabled={!onPrev}
       >
         <ChevronLeft className="mr-2 h-4 w-4" />
-        {t('common.back')}
+        Previous
       </Button>
       
       {showSubmit ? (
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? t('common.loading') : submitLabel}
+          {isSubmitting ? "Submitting..." : submitLabel}
         </Button>
       ) : (
         <Button
@@ -50,7 +47,7 @@ const FormActions: React.FC<FormActionsProps> = ({
           onClick={onNext}
           disabled={!onNext}
         >
-          {t('common.next')}
+          Next
           <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
       )}

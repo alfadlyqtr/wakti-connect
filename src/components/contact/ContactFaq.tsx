@@ -6,11 +6,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { useTranslation } from "react-i18next";
 
 const ContactFaq = () => {
-  const { t } = useTranslation();
-  
   const faqItems = [
     {
       question: "What is WAKTI?",
@@ -36,7 +33,7 @@ const ContactFaq = () => {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold text-center mb-8">{t("contact.frequentlyAskedQuestions")}</h2>
+      <h2 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h2>
       
       <Accordion type="single" collapsible className="w-full">
         {faqItems.map((item, index) => (

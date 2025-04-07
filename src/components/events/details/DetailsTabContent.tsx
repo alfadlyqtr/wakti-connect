@@ -12,7 +12,6 @@ import { CalendarIcon, Clock, MapPin, Navigation } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import LocationPicker from "../location/LocationPicker";
-import { useTranslation } from "react-i18next";
 
 interface DetailsTabContentProps {
   title?: string;
@@ -55,7 +54,6 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
   getCurrentLocation,
   isGettingLocation
 }) => {
-  const { t } = useTranslation();
   const [locationInputType, setLocationInputType] = useState<'manual' | 'maps'>(locationType === 'google_maps' ? 'maps' : 'manual');
   
   const handleLocationTypeChange = (value: 'manual' | 'maps') => {
@@ -82,28 +80,28 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
   return (
     <div className="space-y-4 p-4">
       <div className="space-y-2">
-        <Label htmlFor="title">{t('events.eventTitle')}</Label>
+        <Label htmlFor="title">Event Title</Label>
         <Input 
           id="title" 
           value={title} 
           onChange={(e) => onTitleChange?.(e.target.value)}
-          placeholder={t('events.enterTitle')} 
+          placeholder="Enter event title" 
         />
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="description">{t('events.description')}</Label>
+        <Label htmlFor="description">Description</Label>
         <Textarea 
           id="description" 
           value={description} 
           onChange={(e) => onDescriptionChange?.(e.target.value)}
-          placeholder={t('events.enterDetails')} 
+          placeholder="Enter event description" 
           rows={3} 
         />
       </div>
 
       <div className="space-y-2">
-        <Label>{t('events.dateAndTime')}</Label>
+        <Label>Date</Label>
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -114,7 +112,7 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {selectedDate ? format(selectedDate, "PPP") : t('events.pickDate')}
+              {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -134,13 +132,13 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
           checked={isAllDay}
           onCheckedChange={onIsAllDayChange}
         />
-        <Label htmlFor="isAllDay">{t('events.allDayEvent')}</Label>
+        <Label htmlFor="isAllDay">All day event</Label>
       </div>
 
       {!isAllDay && (
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="startTime">{t('events.startTime')}</Label>
+            <Label htmlFor="startTime">Start Time</Label>
             <div className="flex items-center">
               <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
               <Input 
@@ -153,7 +151,7 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="endTime">{t('events.endTime')}</Label>
+            <Label htmlFor="endTime">End Time</Label>
             <div className="flex items-center">
               <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
               <Input 
@@ -168,7 +166,7 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
       )}
       
       <div className="space-y-3">
-        <Label>{t('events.location')}</Label>
+        <Label>Location</Label>
         
         <RadioGroup 
           value={locationInputType} 
@@ -177,11 +175,11 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="manual" id="manual" />
-            <Label htmlFor="manual">{t('location.manualEntry')}</Label>
+            <Label htmlFor="manual">Manual entry</Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="maps" id="maps" />
-            <Label htmlFor="maps">{t('location.googleMaps')}</Label>
+            <Label htmlFor="maps">Google Maps</Label>
           </div>
         </RadioGroup>
         
@@ -191,7 +189,7 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
             <Input
               value={location}
               onChange={(e) => onLocationChange?.(e.target.value, 'manual')}
-              placeholder={t('location.enterLocation')}
+              placeholder="Enter location manually"
             />
           </div>
         ) : (
@@ -199,18 +197,33 @@ const DetailsTabContent: React.FC<DetailsTabContentProps> = ({
             <LocationPicker
               value={location}
               onChange={handleLocationPickerChange}
-              placeholder={t('location.searchPlaceholder')}
+              placeholder="Search for a location..."
+              onMapUrlChange={handleMapUrlChange}
             />
-            {getCurrentLocation && (
+            
+            {getCurrentLocation && !isGettingLocation && (
               <Button 
                 type="button" 
                 variant="outline" 
-                className="w-full flex items-center justify-center gap-2"
+                size="sm"
+                className="w-full" 
                 onClick={getCurrentLocation}
-                disabled={isGettingLocation}
               >
-                <Navigation className="h-4 w-4" />
-                {isGettingLocation ? t('common.loading') : t('location.getLocation')}
+                <Navigation className="mr-2 h-4 w-4" />
+                Use my current location
+              </Button>
+            )}
+            
+            {isGettingLocation && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                className="w-full" 
+                disabled={true}
+              >
+                <Navigation className="mr-2 h-4 w-4 animate-pulse" />
+                Getting your location...
               </Button>
             )}
           </div>

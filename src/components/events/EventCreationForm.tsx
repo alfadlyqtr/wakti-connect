@@ -12,7 +12,6 @@ import { Event, EventCustomization } from "@/types/event.types";
 import { useEventSubmission } from "@/hooks/events/useEventSubmission";
 import { ShareTab, SHARE_TABS } from "@/types/form.types";
 import { useEventLocation } from "@/hooks/events/useEventLocation";
-import { useTranslation } from "react-i18next";
 
 interface EventCreationFormProps {
   editEvent?: Event | null;
@@ -25,7 +24,6 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
   onCancel, 
   onSuccess 
 }) => {
-  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<EventFormTab>("details");
   const [recipients, setRecipients] = useState<InvitationRecipient[]>([]);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
@@ -237,7 +235,7 @@ const EventCreationForm: React.FC<EventCreationFormProps> = ({
           onNext={handleNext}
           isSubmitting={isSubmitting}
           showSubmit={activeTab === "share"}
-          submitLabel={isEditMode ? t('events.edit') : t('events.create')}
+          submitLabel={isEditMode ? "Update Event" : "Create Event"}
         />
       </form>
     </div>
