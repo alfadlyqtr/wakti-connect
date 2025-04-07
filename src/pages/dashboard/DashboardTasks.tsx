@@ -13,6 +13,7 @@ import { Navigate } from "react-router-dom";
 import { UserRole } from "@/types/user";
 import TasksContainer from "@/components/tasks/TasksContainer";
 import { useTranslation } from "react-i18next";
+import { TaskTab } from "@/types/task.types";
 
 const DashboardTasks = () => {
   const { t } = useTranslation();
@@ -76,7 +77,7 @@ const DashboardTasks = () => {
         activeTab={activeTab}
         onTabChange={(tab) => {
           console.log(`Changing to tab: ${tab}`);
-          setActiveTab(tab);
+          setActiveTab(tab as TaskTab);
         }}
       />
       

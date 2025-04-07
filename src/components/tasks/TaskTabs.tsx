@@ -1,10 +1,11 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslation } from "react-i18next";
+import { TaskTab } from "@/types/task.types";
 
 interface TaskTabsProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
+  activeTab: TaskTab;
+  onTabChange: (tab: TaskTab) => void;
 }
 
 const TaskTabs = ({ activeTab, onTabChange }: TaskTabsProps) => {
