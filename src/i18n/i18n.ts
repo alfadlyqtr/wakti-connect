@@ -69,7 +69,10 @@ i18n
       order: ['localStorage', 'navigator', 'htmlTag'],
       lookupLocalStorage: 'wakti-language',
       caches: ['localStorage'],
-    }
+    },
+    // Add these options to ensure proper fallback
+    returnNull: false,
+    returnEmptyString: false
   });
 
 // Set the HTML dir attribute based on the current language
