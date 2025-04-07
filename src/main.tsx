@@ -7,7 +7,12 @@ import { AuthProvider } from './hooks/auth';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import './i18n/i18n'; // Import i18n configuration
 
-createRoot(document.getElementById("root")!).render(
+// Create the root with immediate access to the DOM element
+const rootElement = document.getElementById("root");
+const root = createRoot(rootElement!);
+
+// Render with i18n already initialized from the import above
+root.render(
   <AuthProvider>
     <CurrencyProvider>
       <App />

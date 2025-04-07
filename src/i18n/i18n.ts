@@ -44,6 +44,9 @@ if (!((enTranslation as TranslationWithLocation).location)) {
   };
 }
 
+// Get saved language before initialization to have it ready
+const savedLanguage = localStorage.getItem('wakti-language');
+
 // Initialize i18next
 i18n
   // detect user language
@@ -60,6 +63,7 @@ i18n
         translation: arTranslation
       }
     },
+    lng: savedLanguage || undefined, // Use saved language if available
     fallbackLng: 'en',
     debug: process.env.NODE_ENV === 'development',
     interpolation: {
@@ -89,22 +93,8 @@ const setDocumentDirection = (language: string) => {
   }
 };
 
-// Check for saved language preference
-const savedLanguage = localStorage.getItem('wakti-language');
-if (savedLanguage) {
-  console.log('Found saved language in i18n initialization:', savedLanguage);
-  i18n.changeLanguage(savedLanguage);
-  setDocumentDirection(savedLanguage);
-} else {
-  // If no saved language, check if browser language is Arabic
-  const browserLang = navigator.language;
-  if (browserLang && browserLang.toLowerCase().startsWith('ar')) {
-    console.log('Browser language is Arabic, setting language to ar');
-    i18n.changeLanguage('ar');
-    localStorage.setItem('wakti-language', 'ar');
-  }
-  setDocumentDirection(i18n.language);
-}
+// Set initial document direction based on detected language
+setDocumentDirection(i18n.language);
 
 // Listen for language changes
 i18n.on('languageChanged', (lng) => {

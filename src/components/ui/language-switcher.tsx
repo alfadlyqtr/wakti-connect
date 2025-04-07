@@ -9,26 +9,22 @@ export function LanguageSwitcher() {
   
   const changeLanguage = (language: string) => {
     console.log(`Changing language to: ${language}`);
-    i18n.changeLanguage(language);
     
-    // The direction and other settings are now handled by the i18n.on('languageChanged') listener
-    // in the main i18n.ts file, so we don't need to duplicate that logic here
-    
-    // Save the language preference in local storage with consistent key name
+    // Save to localStorage first, then change language
     localStorage.setItem('wakti-language', language);
+    i18n.changeLanguage(language);
   };
 
-  // Check current language on component mount
+  // We only need to check for stored language on initial mount
+  // This way we don't fight with the i18n system's own state management
   useEffect(() => {
-    // Try to load language preference from local storage first
+    // This only checks on component mount - no need for dependencies
     const savedLanguage = localStorage.getItem('wakti-language');
-    if (savedLanguage && savedLanguage !== i18n.language) {
+    if (savedLanguage && i18n.language !== savedLanguage) {
       console.log('Applying saved language from localStorage:', savedLanguage);
       i18n.changeLanguage(savedLanguage);
     }
-    
-    // No need to manually set direction here as it's handled in i18n.ts
-  }, [i18n]);
+  }, []); // Empty dependency array ensures this only runs once on mount
 
   // Show different buttons based on current language
   if (i18n.language === 'ar') {
