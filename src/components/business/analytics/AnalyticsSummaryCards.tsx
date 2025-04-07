@@ -4,6 +4,7 @@ import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { UsersRound, TrendingUp } from "lucide-react";
 import { BusinessAnalyticsData } from "@/hooks/useBusinessAnalytics";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTranslation } from "react-i18next";
 
 interface AnalyticsSummaryCardsProps {
   isLoading: boolean;
@@ -12,6 +13,7 @@ interface AnalyticsSummaryCardsProps {
 
 export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ isLoading, data }) => {
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
 
   if (isLoading) {
     return (
@@ -36,7 +38,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
       <Card className="overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-4 pb-2">
           <CardTitle className="text-xs sm:text-sm font-medium">
-            Total Subscribers
+            {t('sidebar.subscribers')}
           </CardTitle>
           <UsersRound className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -51,7 +53,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
       <Card className="overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-4 pb-2">
           <CardTitle className="text-xs sm:text-sm font-medium">
-            Active Staff
+            {t('sidebar.staff')}
           </CardTitle>
           <UsersRound className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -66,7 +68,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
       <Card className="overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-4 pb-2">
           <CardTitle className="text-xs sm:text-sm font-medium">
-            Task Completion Rate
+            {t('task.completionRate')}
           </CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>

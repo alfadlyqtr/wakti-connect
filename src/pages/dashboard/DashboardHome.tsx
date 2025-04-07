@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import TasksOverview from "@/components/dashboard/home/TasksOverview";
@@ -171,7 +170,7 @@ const DashboardHome = () => {
             <CardContent>
               <div className="text-2xl font-bold">{analyticsData.taskCompletionRate}%</div>
               <p className="text-xs text-muted-foreground">
-                {t('task.completionRateThis')} {analyticsData.timeRange}
+                {t('dashboard.completionRateThis')} {analyticsData.timeRange}
               </p>
             </CardContent>
           </Card>

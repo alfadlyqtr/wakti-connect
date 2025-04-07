@@ -204,7 +204,28 @@
     "noTasksToday": "No tasks for today",
     "unreadNotifications": "Unread notifications",
     "noNewNotifications": "No new notifications",
-    "activity": "Activity"
+    "activity": "Activity",
+    "totalSubscribers": "Total subscribers",
+    "activeStaff": "Active staff members",
+    "completionRate": "Task Completion Rate",
+    "completionRateThis": "Task completion rate this",
+    "viewPlans": "View Plans",
+    "professionalFeatures": "Professional Features",
+    "accessToFeatures": "Access to premium features with your Individual plan",
+    "unlimitedTasks": "Unlimited Tasks",
+    "createManage": "Create and manage as many tasks as you need",
+    "eventManagement": "Event Management",
+    "createShare": "Create and share events with others",
+    "premiumSupport": "Premium Support",
+    "prioritySupport": "Priority access to our support team",
+    "upgradeExperience": "Upgrade Your Experience",
+    "upgradeToUnlock": "Upgrade to Individual or Business plan to unlock more features",
+    "individualPlan": "Individual Plan",
+    "perfectFor": "Perfect for personal productivity",
+    "createManageAppointments": "Create and manage appointments",
+    "messageIndividuals": "Message individual users",
+    "businessPlan": "Business Plan",
+    "forTeams": "For teams and business owners"
   },
   "auth": {
     "welcomeToWakti": "Welcome to Wakti",
@@ -367,7 +388,8 @@
     },
     "completedTime": {
       "at": "Completed at"
-    }
+    },
+    "completionRate": "Task Completion Rate"
   },
   "location": {
     "enterLocation": "Enter a location",

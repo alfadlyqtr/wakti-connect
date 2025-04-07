@@ -84,7 +84,7 @@
     "subtitle": "اكتشف الميزات القوية التي تساعد على تبسيط سير عملك وتعزيز الإنتاجية.",
     "taskManagement": {
       "title": "إدارة المهام",
-      "description": "إنشاء وتنظيم وتتبع مهامك بسهولة. حدد الأولويات والمواعيد النهائية للبقاء على رأس عملك."
+      "description": "إنشاء وتنظيم وتتبع مهامك بسهولة. حدد الأولويات والمواعيد النهائية للبقاء على رأ�� عملك."
     },
     "teamCollaboration": {
       "title": "تعاون الفريق",
@@ -204,7 +204,11 @@
     "noTasksToday": "لا توجد مهام لليوم",
     "unreadNotifications": "إشعارات غير مقروءة",
     "noNewNotifications": "لا توجد إشعارات جديدة",
-    "activity": "النشاط"
+    "activity": "النشاط",
+    "totalSubscribers": "إجمالي المشتركين",
+    "activeStaff": "الموظفين النشطين",
+    "completionRate": "معدل إكمال المهام",
+    "completionRateThis": "معدل إكمال المهام لهذا"
   },
   "auth": {
     "welcomeToWakti": "مرحبًا بك في وقتي",
@@ -367,7 +371,8 @@
     },
     "completedTime": {
       "at": "اكتملت في"
-    }
+    },
+    "completionRate": "معدل إكمال المهام"
   },
   "location": {
     "enterLocation": "أدخل موقعًا",
