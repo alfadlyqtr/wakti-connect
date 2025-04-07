@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { Menu, Moon, Sun, Bell, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
-import { getInitials } from "@/utils/stringUtils";
+import { getInitials } from "@/utils/string-utils";
 import { useTranslationContext } from "@/contexts/TranslationContext";
 import LanguageSwitcher from "@/components/ui/language-switcher";
 
@@ -18,7 +19,7 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, isSidebarOpen }) => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const { pathname } = useLocation();
   const { data: profileData } = useProfileSettings();
@@ -28,10 +29,10 @@ const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, isSidebarOpen }) => {
   const isPublicPage = !pathname.includes("/dashboard");
   
   // Get user's profile image if available
-  const profileImage = profileData?.profile_image_url || null;
+  const profileImage = profileData?.avatar_url || null;
   
   // Get user's name or email for the avatar fallback
-  const userDisplayName = profileData?.name || user?.email || "User";
+  const userDisplayName = profileData?.full_name || profileData?.display_name || user?.email || "User";
   
   // Toggle theme between light and dark
   const toggleTheme = () => {

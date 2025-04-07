@@ -36,3 +36,19 @@ export const capitalizeWords = (text: string): string => {
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
 };
+
+/**
+ * Gets the initials from a name
+ * @param name The name to extract initials from
+ * @returns Initials (1-2 characters)
+ */
+export const getInitials = (name: string): string => {
+  if (!name) return '';
+  
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) {
+    return parts[0].charAt(0).toUpperCase();
+  }
+  
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+};
