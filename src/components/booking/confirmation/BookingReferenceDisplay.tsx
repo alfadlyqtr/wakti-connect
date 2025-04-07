@@ -3,6 +3,7 @@ import React from "react";
 import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface BookingReferenceDisplayProps {
   bookingId: string;
@@ -11,11 +12,13 @@ interface BookingReferenceDisplayProps {
 const BookingReferenceDisplay: React.FC<BookingReferenceDisplayProps> = ({ 
   bookingId 
 }) => {
+  const { t } = useTranslation();
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(bookingId);
     toast({
-      title: "Copied to clipboard",
-      description: "Booking reference has been copied to your clipboard.",
+      title: t("common.copyToClipboard"),
+      description: `${t("booking.reference")} ${t("common.clipboardCopyMessage")}.`,
     });
   };
 
@@ -29,7 +32,7 @@ const BookingReferenceDisplay: React.FC<BookingReferenceDisplayProps> = ({
 
   return (
     <div className="bg-primary/5 p-4 rounded-md">
-      <p className="text-sm font-medium mb-2">Booking Reference</p>
+      <p className="text-sm font-medium mb-2">{t("booking.reference")}</p>
       <div className="flex items-center justify-between bg-background border rounded-md p-2">
         <code className="text-sm font-mono">{formatBookingId(bookingId)}</code>
         <Button 
@@ -38,12 +41,12 @@ const BookingReferenceDisplay: React.FC<BookingReferenceDisplayProps> = ({
           onClick={copyToClipboard}
           className="h-8 w-8 p-0"
         >
-          <span className="sr-only">Copy</span>
+          <span className="sr-only">{t("common.copy")}</span>
           <Copy className="h-4 w-4" />
         </Button>
       </div>
       <p className="text-xs text-muted-foreground mt-2">
-        Please save this reference for any inquiries about your booking.
+        {t("booking.saveReference")}
       </p>
     </div>
   );

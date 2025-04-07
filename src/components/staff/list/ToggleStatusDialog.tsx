@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { StaffMember } from "@/pages/dashboard/staff-management/types";
+import { useTranslation } from "react-i18next";
 
 interface ToggleStatusDialogProps {
   staffToToggle: StaffMember | null;
@@ -23,6 +24,8 @@ const ToggleStatusDialog: React.FC<ToggleStatusDialogProps> = ({
   onOpenChange,
   onConfirmToggle
 }) => {
+  const { t } = useTranslation();
+  
   if (!staffToToggle) return null;
   
   const isActive = staffToToggle.status === 'active';
@@ -36,17 +39,17 @@ const ToggleStatusDialog: React.FC<ToggleStatusDialogProps> = ({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {isActive ? 'Suspend' : 'Activate'} Staff Member?
+            {isActive ? t("staff.suspend") : t("staff.activate")}
           </AlertDialogTitle>
           <AlertDialogDescription>
             {isActive 
-              ? `This will suspend access for "${staffToToggle.profile?.full_name || staffToToggle.name}". They will not be able to log in until reactivated.`
-              : `This will restore access for "${staffToToggle.profile?.full_name || staffToToggle.name}". They will be able to log in again.`
+              ? t("staff.suspendConfirm", { name: staffToToggle.profile?.full_name || staffToToggle.name })
+              : t("staff.activateConfirm", { name: staffToToggle.profile?.full_name || staffToToggle.name })
             }
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
           <AlertDialogAction 
             onClick={() => onConfirmToggle(staffToToggle.id, newStatus)}
             className={isActive 
@@ -54,7 +57,7 @@ const ToggleStatusDialog: React.FC<ToggleStatusDialogProps> = ({
               : ""
             }
           >
-            {isActive ? 'Suspend' : 'Activate'}
+            {isActive ? t("staff.suspend") : t("staff.activate")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

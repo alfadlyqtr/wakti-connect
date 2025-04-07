@@ -2,6 +2,7 @@
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useTranslation } from "react-i18next";
 
 interface InteractiveFeaturesProps {
   showButtons: boolean;
@@ -20,13 +21,15 @@ export const InteractiveFeatures: React.FC<InteractiveFeaturesProps> = ({
   onToggleCalendar,
   onToggleChatbot,
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <div>
-      <h3 className="font-medium text-base mb-3">Interactive Features</h3>
+      <h3 className="font-medium text-base mb-3">{t("events.interactiveFeatures")}</h3>
       
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label htmlFor="show-buttons" className="cursor-pointer">Show Accept/Decline Buttons</Label>
+          <Label htmlFor="show-buttons" className="cursor-pointer">{t("events.showButtons")}</Label>
           <Switch 
             id="show-buttons" 
             checked={showButtons}
@@ -35,7 +38,7 @@ export const InteractiveFeatures: React.FC<InteractiveFeaturesProps> = ({
         </div>
         
         <div className="flex items-center justify-between">
-          <Label htmlFor="show-calendar" className="cursor-pointer">Show Add to Calendar Button</Label>
+          <Label htmlFor="show-calendar" className="cursor-pointer">{t("events.showCalendar")}</Label>
           <Switch 
             id="show-calendar" 
             checked={showCalendar}
@@ -44,7 +47,7 @@ export const InteractiveFeatures: React.FC<InteractiveFeaturesProps> = ({
         </div>
         
         <div className="flex items-center justify-between">
-          <Label htmlFor="enable-chatbot" className="cursor-pointer">Enable Event Chatbot</Label>
+          <Label htmlFor="enable-chatbot" className="cursor-pointer">{t("events.enableChatbot")}</Label>
           <Switch 
             id="enable-chatbot" 
             checked={enableChatbot}

@@ -1,17 +1,20 @@
 
 import React from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
 interface PermissionsCardProps {
   permissions: Record<string, boolean | undefined>;
 }
 
 const PermissionsCard: React.FC<PermissionsCardProps> = ({ permissions }) => {
+  const { t } = useTranslation();
+  
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Your Permissions</CardTitle>
-        <CardDescription>Here are the features you have access to:</CardDescription>
+        <CardTitle>{t("staff.permissions")}</CardTitle>
+        <CardDescription>{t("staff.permissionsDesc")}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">

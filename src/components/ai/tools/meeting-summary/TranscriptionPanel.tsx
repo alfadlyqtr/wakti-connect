@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { useTranslation } from "react-i18next";
 
 interface TranscriptionPanelProps {
   transcribedText: string;
@@ -16,13 +17,15 @@ const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
   isSummarizing,
   generateSummary
 }) => {
+  const { t } = useTranslation();
+  
   if (!transcribedText) {
     return null;
   }
 
   return (
     <Card className="p-4 mt-4">
-      <h3 className="text-lg font-semibold mb-2">Transcribed Text</h3>
+      <h3 className="text-lg font-semibold mb-2">{t("meetingTools.transcribedText")}</h3>
       <Textarea
         value={transcribedText}
         readOnly
@@ -36,10 +39,10 @@ const TranscriptionPanel: React.FC<TranscriptionPanelProps> = ({
         {isSummarizing ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Generating Summary...
+            {t("meetingTools.generatingSummary")}
           </>
         ) : (
-          'Generate Summary'
+          t("meetingTools.generateSummary")
         )}
       </Button>
     </Card>

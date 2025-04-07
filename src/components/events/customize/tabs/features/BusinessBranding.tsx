@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { EventCustomization } from "@/types/event.types";
 import { ColorInput } from "@/components/inputs/ColorInput";
+import { useTranslation } from "react-i18next";
 
 interface BusinessBrandingProps {
   customization: EventCustomization;
@@ -16,6 +17,8 @@ export const BusinessBranding: React.FC<BusinessBrandingProps> = ({
   onBrandingChange,
   onPoweredByColorChange
 }) => {
+  const { t } = useTranslation();
+  
   const handleLogoUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onBrandingChange('logo', e.target.value);
   };
@@ -26,11 +29,11 @@ export const BusinessBranding: React.FC<BusinessBrandingProps> = ({
   
   return (
     <div>
-      <h3 className="font-medium text-base mb-3">Business Branding</h3>
+      <h3 className="font-medium text-base mb-3">{t("events.businessBranding")}</h3>
       
       <div className="space-y-3">
         <div className="space-y-2">
-          <Label htmlFor="logo-url">Logo URL</Label>
+          <Label htmlFor="logo-url">{t("events.logoUrl")}</Label>
           <Input 
             id="logo-url" 
             placeholder="https://example.com/logo.png" 
@@ -40,7 +43,7 @@ export const BusinessBranding: React.FC<BusinessBrandingProps> = ({
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="branding-slogan">Business Slogan</Label>
+          <Label htmlFor="branding-slogan">{t("events.businessSlogan")}</Label>
           <Input 
             id="branding-slogan" 
             placeholder="Your catchy slogan" 
@@ -51,14 +54,14 @@ export const BusinessBranding: React.FC<BusinessBrandingProps> = ({
         
         {onPoweredByColorChange && (
           <div className="space-y-2">
-            <Label htmlFor="powered-by-color">Footer Color</Label>
+            <Label htmlFor="powered-by-color">{t("events.footerColor")}</Label>
             <ColorInput 
               id="powered-by-color"
               value={customization.poweredByColor || '#666666'} 
               onChange={(color) => onPoweredByColorChange(color)}
             />
             <p className="text-xs text-muted-foreground mt-1">
-              Color for "Powered by WAKTI" footer text
+              {t("events.footerColorDesc")}
             </p>
           </div>
         )}

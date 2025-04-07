@@ -3,6 +3,7 @@ import React from "react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
+import { useTranslation } from "react-i18next";
 
 interface MapDisplayOptionsProps {
   mapDisplay: string;
@@ -17,6 +18,7 @@ export const MapDisplayOptions: React.FC<MapDisplayOptionsProps> = ({
   showMap,
   onShowMapChange,
 }) => {
+  const { t } = useTranslation();
   const safeMapDisplay = mapDisplay || 'button';
   
   const handleValueChange = (value: string) => {
@@ -26,7 +28,7 @@ export const MapDisplayOptions: React.FC<MapDisplayOptionsProps> = ({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="font-medium text-base mb-3">Map Display</h3>
+        <h3 className="font-medium text-base mb-3">{t("events.mapDisplay")}</h3>
         <RadioGroup 
           value={safeMapDisplay} 
           onValueChange={handleValueChange}
@@ -34,17 +36,17 @@ export const MapDisplayOptions: React.FC<MapDisplayOptionsProps> = ({
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="button" id="map-button" />
-            <Label htmlFor="map-button" className="cursor-pointer">Show Map Button</Label>
+            <Label htmlFor="map-button" className="cursor-pointer">{t("events.showMapButton")}</Label>
           </div>
           
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="qrcode" id="map-qrcode" />
-            <Label htmlFor="map-qrcode" className="cursor-pointer">Show QR Code for Map</Label>
+            <Label htmlFor="map-qrcode" className="cursor-pointer">{t("events.showQRCode")}</Label>
           </div>
           
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="both" id="map-both" />
-            <Label htmlFor="map-both" className="cursor-pointer">Show Both Options</Label>
+            <Label htmlFor="map-both" className="cursor-pointer">{t("events.showBothOptions")}</Label>
           </div>
         </RadioGroup>
       </div>
@@ -57,11 +59,10 @@ export const MapDisplayOptions: React.FC<MapDisplayOptionsProps> = ({
               checked={showMap}
               onCheckedChange={onShowMapChange}
             />
-            <Label htmlFor="show-map-preview">Show Map Preview on Event</Label>
+            <Label htmlFor="show-map-preview">{t("events.showMapPreview")}</Label>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            When enabled, a small map preview will be shown on the event page 
-            if location is provided.
+            {t("events.showMapPreviewDesc")}
           </p>
         </div>
       )}

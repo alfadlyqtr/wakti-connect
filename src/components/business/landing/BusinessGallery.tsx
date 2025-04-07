@@ -2,12 +2,14 @@
 import React from "react";
 import { BusinessPageSection } from "@/types/business.types";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
 interface BusinessGalleryProps {
   section: BusinessPageSection;
 }
 
 const BusinessGallery = ({ section }: BusinessGalleryProps) => {
+  const { t } = useTranslation();
   const content = section.section_content || {};
   
   const {
@@ -21,7 +23,7 @@ const BusinessGallery = ({ section }: BusinessGalleryProps) => {
         <h2 className="text-2xl font-bold mb-4">{title}</h2>
         <Card>
           <CardContent className="p-6 text-center">
-            <p className="text-muted-foreground">No images available</p>
+            <p className="text-muted-foreground">{t("business.noImages")}</p>
           </CardContent>
         </Card>
       </div>

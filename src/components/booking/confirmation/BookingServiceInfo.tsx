@@ -2,6 +2,7 @@
 import React from "react";
 import { BookingWithRelations } from "@/types/booking.types";
 import { useCurrencyFormat } from "@/hooks/useCurrencyFormat";
+import { useTranslation } from "react-i18next";
 
 interface BookingServiceInfoProps {
   booking: BookingWithRelations;
@@ -12,6 +13,8 @@ const BookingServiceInfo: React.FC<BookingServiceInfoProps> = ({
   booking, 
   serviceName 
 }) => {
+  const { t } = useTranslation();
+  
   // Ensure we pass the business_id to the useCurrencyFormat hook
   const { formatCurrency } = useCurrencyFormat({ 
     businessId: booking.business_id 
@@ -42,19 +45,19 @@ const BookingServiceInfo: React.FC<BookingServiceInfoProps> = ({
       
       {staffName && (
         <div className="mt-2 text-sm">
-          <span className="text-muted-foreground">Staff:</span> {staffName}
+          <span className="text-muted-foreground">{t("booking.staffLabel")}</span> {staffName}
         </div>
       )}
       
       {booking.customer_name && (
         <div className="pb-1 text-sm">
-          <span className="text-muted-foreground">Booked for:</span> {booking.customer_name}
+          <span className="text-muted-foreground">{t("booking.bookedFor")}</span> {booking.customer_name}
         </div>
       )}
       
       {booking.customer_phone && (
         <div className="text-sm">
-          <span className="text-muted-foreground">Phone:</span> {booking.customer_phone}
+          <span className="text-muted-foreground">{t("booking.phoneLabel")}</span> {booking.customer_phone}
         </div>
       )}
     </div>

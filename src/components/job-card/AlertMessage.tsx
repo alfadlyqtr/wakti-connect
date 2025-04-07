@@ -2,17 +2,23 @@
 import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
+import { useTranslation } from "react-i18next";
 
 interface LoadingStateProps {
   message?: string;
 }
 
-export const LoadingState: React.FC<LoadingStateProps> = ({ message = 'Loading jobs...' }) => (
-  <div className="flex items-center justify-center py-8">
-    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-    <span className="ml-2">{message}</span>
-  </div>
-);
+export const LoadingState: React.FC<LoadingStateProps> = ({ message }) => {
+  const { t } = useTranslation();
+  const defaultMessage = t("jobCards.loadingJobs");
+  
+  return (
+    <div className="flex items-center justify-center py-8">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <span className="ml-2">{message || defaultMessage}</span>
+    </div>
+  );
+};
 
 interface ErrorAlertProps {
   title: string;

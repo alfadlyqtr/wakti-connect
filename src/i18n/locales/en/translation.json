@@ -1,3 +1,4 @@
+
 {
   "common": {
     "wakti": "Wakti",
@@ -22,7 +23,22 @@
     "logOut": "Log Out",
     "getStarted": "Get Started",
     "scrollToTop": "Scroll to Top",
-    "there": "There"
+    "there": "There",
+    "close": "Close",
+    "copy": "Copy",
+    "copied": "Copied",
+    "date": "Date",
+    "time": "Time",
+    "staff": "Staff",
+    "phone": "Phone",
+    "copyToClipboard": "Copied to clipboard",
+    "clipboardCopyMessage": "has been copied to your clipboard",
+    "returnHome": "Return to Home",
+    "notFound": "Not Found",
+    "notFoundMessage": "The requested information could not be found.",
+    "createAccount": "Create Account",
+    "signIn": "Sign In",
+    "notNow": "Not Now"
   },
   "header": {
     "pricing": "Pricing",
@@ -514,5 +530,143 @@
       "work": "Work Assistant",
       "creative": "Creative Assistant"
     }
+  },
+  "booking": {
+    "reference": "Booking Reference",
+    "saveReference": "Please save this reference for any inquiries about your booking.",
+    "confirmed": "Booking Confirmed!",
+    "confirmationMessage": "Thanks for your booking. We look forward to seeing you soon!",
+    "notFound": "Booking Not Found",
+    "notFoundMessage": "The requested booking information could not be found.",
+    "staffLabel": "Staff:",
+    "bookedFor": "Booked for:",
+    "phoneLabel": "Phone:"
+  },
+  "accountPromotion": {
+    "getMore": "Get More From WAKTI",
+    "createAccount": "Create a free account to manage all your bookings, tasks, and events in one place.",
+    "manageBookings": "Manage bookings & appointments",
+    "trackTasks": "Track tasks & to-dos",
+    "messageBusinesses": "Message businesses",
+    "createBusiness": "Create your business page"
+  },
+  "calendar": {
+    "addToCalendar": "Add to Calendar",
+    "saveReminder": "Save this appointment to your calendar to get reminders",
+    "wakti": "WAKTI",
+    "google": "Google",
+    "apple": "Apple",
+    "outlook": "Outlook",
+    "email": "Email"
+  },
+  "meetingTools": {
+    "stopRecording": "Stop Recording",
+    "startRecording": "Start Recording",
+    "recognitionLanguage": "Recognition Language",
+    "transcribedText": "Transcribed Text",
+    "generatingSummary": "Generating Summary...",
+    "generateSummary": "Generate Summary",
+    "meetingSummary": "Meeting Summary",
+    "export": "Export PDF",
+    "download": "Download Audio",
+    "detectedLocation": "Detected Meeting Location",
+    "openInMaps": "Open in Google Maps",
+    "loadingHistory": "Loading meeting history...",
+    "noMeetings": "No saved meetings found. Record and summarize a meeting to see it here.",
+    "recentSummaries": "Recent Meeting Summaries",
+    "duration": "Duration:",
+    "location": "Location:"
+  },
+  "eventResponses": {
+    "accepted": "Accepted",
+    "declined": "Declined",
+    "pending": "Pending",
+    "invitedParticipants": "Invited Participants",
+    "noInvitations": "No invitations sent",
+    "noInvitationsDesc": "This event doesn't have any invitations.",
+    "emailInvitation": "Email Invitation",
+    "appUser": "App User"
+  },
+  "staff": {
+    "notFound": "Not a Staff Account",
+    "notFoundDesc": "This dashboard is only available for staff accounts. If you're a staff member, please contact your business administrator.",
+    "dashboardError": "Error Loading Dashboard",
+    "dashboardErrorDesc": "We encountered a problem loading your staff dashboard. Please try again or contact support.",
+    "addStaff": "Add Staff Member",
+    "editStaff": "Edit Staff Member",
+    "addDesc": "Add a new staff member to your business. They'll receive login credentials via email.",
+    "editDesc": "Update the staff member's information and permissions.",
+    "noStaffMembers": "No staff members yet",
+    "noStaffDesc": "Add staff members to your business to help manage tasks, appointments, and services.",
+    "loadFailed": "Failed to load staff members",
+    "permissions": "Your Permissions",
+    "permissionsDesc": "Here are the features you have access to:",
+    "workDayTracking": "Work Day Tracking",
+    "recentWorkHistory": "Recent Work History",
+    "createNewStaff": "Create New Staff",
+    "setupDetails": "Set up account details and permissions",
+    "creating": "Creating...",
+    "createStaffAccount": "Create Staff Account",
+    "deleteStaff": "Delete Staff Member?",
+    "deleteConfirm": "This will permanently delete the staff member \"{name}\". They will no longer be able to access your business dashboard.",
+    "suspend": "Suspend Staff Member?",
+    "suspendConfirm": "This will suspend access for \"{name}\". They will not be able to log in until reactivated.",
+    "activate": "Activate Staff Member?",
+    "activateConfirm": "This will restore access for \"{name}\". They will be able to log in again."
+  },
+  "jobCards": {
+    "staffRequired": "Staff Account Required",
+    "staffRequiredDesc": "You need to be registered as staff to access job cards.",
+    "noJobCards": "No job cards found",
+    "createJobCard": "Create a job card to track completed jobs and payments",
+    "needWorkDay": "You need to start your work day before creating job cards. Please use the \"Start Work Day\" button above.",
+    "loadingJobs": "Loading jobs..."
+  },
+  "verification": {
+    "emailVerified": "Email Verified!",
+    "verifiedSuccess": "Your email has been successfully verified. You'll be redirected to your dashboard shortly.",
+    "accessFeatures": "You can now access all features of your account.",
+    "goToDashboard": "Go to Dashboard"
+  },
+  "payment": {
+    "paymentSuccess": "Payment Successful!",
+    "subscriptionActive": "Thank you for your payment. Your subscription is now active.",
+    "redirectMessage": "You'll be redirected to your dashboard automatically."
+  },
+  "contactInfo": {
+    "contactInformation": "Contact Information",
+    "reachOut": "Reach out to us through any of these channels",
+    "email": "Email",
+    "phone": "Phone",
+    "workingHours": "Working Hours",
+    "weekdays": "Sunday - Thursday: 8AM - 5PM",
+    "weekend": "Friday - Saturday: Closed",
+    "messageSentTitle": "Message Sent Successfully!",
+    "messageSentDesc": "Thank you for reaching out. We've received your message and will get back to you as soon as possible."
+  },
+  "business": {
+    "noImages": "No images available",
+    "businessHours": "Business Hours",
+    "closed": "Closed",
+    "notFoundPage": "Business Page Not Found",
+    "notExist": "The business page you're looking for doesn't exist or has been removed.",
+    "specificNotExist": "The business page \"{slug}\" doesn't exist or has been removed."
+  },
+  "events": {
+    "interactiveFeatures": "Interactive Features",
+    "showButtons": "Show Accept/Decline Buttons",
+    "showCalendar": "Show Add to Calendar Button",
+    "enableChatbot": "Enable Event Chatbot",
+    "businessBranding": "Business Branding",
+    "logoUrl": "Logo URL",
+    "businessSlogan": "Business Slogan",
+    "footerColor": "Footer Color",
+    "footerColorDesc": "Color for \"Powered by WAKTI\" footer text",
+    "mapDisplay": "Map Display",
+    "showMapButton": "Show Map Button",
+    "showQRCode": "Show QR Code for Map",
+    "showBothOptions": "Show Both Options",
+    "showMapPreview": "Show Map Preview on Event",
+    "showMapPreviewDesc": "When enabled, a small map preview will be shown on the event page if location is provided."
   }
 }

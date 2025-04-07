@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, Loader2 } from "lucide-react";
 import StaffFormFields from "./StaffFormFields";
 import { StaffFormValues } from "./StaffFormSchema";
+import { useTranslation } from "react-i18next";
 
 interface CreateTabProps {
   form: UseFormReturn<StaffFormValues>;
@@ -21,6 +22,8 @@ const CreateTab: React.FC<CreateTabProps> = ({
   onCancel,
   isSubmitting = false
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 h-full flex flex-col">
@@ -30,8 +33,8 @@ const CreateTab: React.FC<CreateTabProps> = ({
               <UserPlus className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold">Create New Staff</h3>
-              <p className="text-sm text-muted-foreground">Set up account details and permissions</p>
+              <h3 className="text-xl font-semibold">{t("staff.createNewStaff")}</h3>
+              <p className="text-sm text-muted-foreground">{t("staff.setupDetails")}</p>
             </div>
           </div>
         </div>
@@ -48,16 +51,16 @@ const CreateTab: React.FC<CreateTabProps> = ({
             className="mr-2"
             disabled={isSubmitting}
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating...
+                {t("staff.creating")}
               </>
             ) : (
-              "Create Staff Account"
+              t("staff.createStaffAccount")
             )}
           </Button>
         </DialogFooter>

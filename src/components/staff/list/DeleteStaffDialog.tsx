@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { StaffMember } from "@/pages/dashboard/staff-management/types";
+import { useTranslation } from "react-i18next";
 
 interface DeleteStaffDialogProps {
   staffToDelete: StaffMember | null;
@@ -23,23 +24,24 @@ const DeleteStaffDialog: React.FC<DeleteStaffDialogProps> = ({
   onOpenChange,
   onConfirmDelete
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <AlertDialog open={!!staffToDelete} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Staff Member?</AlertDialogTitle>
+          <AlertDialogTitle>{t("staff.deleteStaff")}</AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently delete the staff member "{staffToDelete?.profile?.full_name || staffToDelete?.name}".
-            They will no longer be able to access your business dashboard.
+            {staffToDelete && t("staff.deleteConfirm", { name: staffToDelete.profile?.full_name || staffToDelete.name })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
           <AlertDialogAction 
             onClick={() => staffToDelete && onConfirmDelete(staffToDelete.id)}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            Delete
+            {t("common.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -3,16 +3,18 @@ import React from "react";
 import { BusinessPageSection } from "@/types/business.types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface BusinessHoursProps {
   section: BusinessPageSection;
 }
 
 const BusinessHours = ({ section }: BusinessHoursProps) => {
+  const { t } = useTranslation();
   const content = section.section_content || {};
   
   const {
-    title = "Business Hours",
+    title = t("business.businessHours"),
     hours = {
       monday: { open: "09:00", close: "17:00", closed: false },
       tuesday: { open: "09:00", close: "17:00", closed: false },
@@ -49,7 +51,7 @@ const BusinessHours = ({ section }: BusinessHoursProps) => {
                   <div className="font-medium">{day.label}</div>
                   <div>
                     {isClosed ? (
-                      <span className="text-muted-foreground">Closed</span>
+                      <span className="text-muted-foreground">{t("business.closed")}</span>
                     ) : (
                       <div className="flex items-center space-x-1">
                         <Clock className="h-4 w-4 text-muted-foreground" />

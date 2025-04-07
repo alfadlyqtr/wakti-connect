@@ -2,6 +2,7 @@
 import React from "react";
 import WorkStatusCard from "@/components/staff/WorkStatusCard";
 import ActiveWorkSession from "@/components/staff/ActiveWorkSession";
+import { useTranslation } from "react-i18next";
 
 interface WorkDaySectionProps {
   activeWorkSession: any | null;
@@ -14,9 +15,11 @@ const WorkDaySection: React.FC<WorkDaySectionProps> = ({
   startWorkDay, 
   endWorkDay 
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <div className="mt-6">
-      <h2 className="text-xl font-semibold mb-3">Work Day Tracking</h2>
+      <h2 className="text-xl font-semibold mb-3">{t("staff.workDayTracking")}</h2>
       <WorkStatusCard 
         activeWorkSession={activeWorkSession}
         onStartWorkDay={startWorkDay}

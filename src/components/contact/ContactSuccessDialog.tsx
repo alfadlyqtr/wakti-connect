@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface ContactSuccessDialogProps {
   open: boolean;
@@ -20,6 +21,8 @@ const ContactSuccessDialog: React.FC<ContactSuccessDialogProps> = ({
   open,
   onOpenChange,
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -27,13 +30,13 @@ const ContactSuccessDialog: React.FC<ContactSuccessDialogProps> = ({
           <div className="flex justify-center mb-4">
             <CheckCircle className="h-16 w-16 text-green-500" />
           </div>
-          <DialogTitle className="text-center">Message Sent Successfully!</DialogTitle>
+          <DialogTitle className="text-center">{t("contactInfo.messageSentTitle")}</DialogTitle>
           <DialogDescription className="text-center">
-            Thank you for reaching out. We've received your message and will get back to you as soon as possible.
+            {t("contactInfo.messageSentDesc")}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="sm:justify-center">
-          <Button onClick={() => onOpenChange(false)}>Close</Button>
+          <Button onClick={() => onOpenChange(false)}>{t("common.close")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
