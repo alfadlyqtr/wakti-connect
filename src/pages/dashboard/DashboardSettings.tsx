@@ -9,10 +9,11 @@ import CurrencyTab from "@/components/settings/CurrencyTab";
 import BillingTab from "@/components/settings/BillingTab";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { useTranslation } from "react-i18next";
+import { useTranslationContext } from "@/contexts/TranslationContext";
+import TranslationSettingsTab from "@/components/settings/TranslationSettingsTab";
 
 const DashboardSettings = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslationContext();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
@@ -51,6 +52,9 @@ const DashboardSettings = () => {
           <TabsTrigger value="notifications" className="px-3 py-1.5 whitespace-nowrap">
             {t("settings.notifications")}
           </TabsTrigger>
+          <TabsTrigger value="translation" className="px-3 py-1.5 whitespace-nowrap">
+            {t("settings.language")}
+          </TabsTrigger>
           {!isStaff && (
             <>
               <TabsTrigger value="billing" className="px-3 py-1.5 whitespace-nowrap">
@@ -74,6 +78,10 @@ const DashboardSettings = () => {
         
         <TabsContent value="notifications" className="space-y-4">
           <NotificationsTab />
+        </TabsContent>
+        
+        <TabsContent value="translation" className="space-y-4">
+          <TranslationSettingsTab />
         </TabsContent>
         
         {!isStaff && (

@@ -1,6 +1,7 @@
 
 import i18n from '@/i18n/i18n';
 import { useTranslation } from 'react-i18next';
+import { createClient } from '@supabase/supabase-js';
 
 // Interface for translation options
 interface TranslateOptions {
@@ -11,6 +12,11 @@ interface TranslateOptions {
 
 // Cache for API translations to reduce API calls
 const translationCache = new Map<string, string>();
+
+// Initialize Supabase client for edge function calls
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /**
  * Enhanced translate function that falls back to DeepSeek API if needed
@@ -48,9 +54,8 @@ export async function translateWithFallback(
   try {
     // Only call API if fallback is explicitly enabled
     if (options.fallbackToApi) {
-      // Implementation for API translation would go here
-      // For now return the key or default value
-      const apiTranslation = await callTranslationAPI(key, options.defaultValue || key);
+      console.log(`Calling DeepSeek API for translation of: ${key}`);
+      const apiTranslation = await callDeepSeekAPI(key, options.defaultValue || key);
       translationCache.set(cacheKey, apiTranslation);
       return apiTranslation;
     }
@@ -63,14 +68,27 @@ export async function translateWithFallback(
 }
 
 /**
- * Helper function to call DeepSeek API for translation
- * This would be implemented to call the Supabase Edge Function
+ * Helper function to call DeepSeek API for translation via Supabase Edge Function
  */
-async function callTranslationAPI(text: string, defaultText: string): Promise<string> {
-  // In a real implementation, this would call the DeepSeek API via a Supabase Edge Function
-  // For now, we'll just return the default text
-  console.log(`Would call API to translate: "${text}" from ${i18n.language === 'ar' ? 'English to Arabic' : 'Arabic to English'}`);
-  return defaultText;
+async function callDeepSeekAPI(text: string, defaultText: string): Promise<string> {
+  try {
+    const sourceLang = i18n.language === 'ar' ? 'Arabic' : 'English';
+    const targetLang = i18n.language === 'ar' ? 'English' : 'Arabic';
+    
+    const { data, error } = await supabase.functions.invoke('translate', {
+      body: { text, sourceLang, targetLang }
+    });
+    
+    if (error) {
+      console.error('Supabase function error:', error);
+      return defaultText;
+    }
+    
+    return data?.translation || defaultText;
+  } catch (error) {
+    console.error('Error calling translate function:', error);
+    return defaultText;
+  }
 }
 
 /**
@@ -124,4 +142,41 @@ export function registerTranslation(
   if (process.env.NODE_ENV === 'development') {
     console.log(`Registered translation for "${key}" in ${language}: "${translation}"`);
   }
+}
+
+/**
+ * Utility to determine if a translation exists for a key
+ */
+export function hasTranslation(key: string, language: string = i18n.language): boolean {
+  if (!key) return false;
+  
+  const resources = i18n.getResourceBundle(language, 'translation');
+  if (!resources) return false;
+  
+  // Handle nested keys
+  const keyParts = key.split('.');
+  let current: any = resources;
+  
+  for (const part of keyParts) {
+    if (current[part] === undefined) {
+      return false;
+    }
+    current = current[part];
+  }
+  
+  return typeof current === 'string';
+}
+
+/**
+ * Debug translator that logs all translation attempts
+ */
+export function createDebugTranslator() {
+  const originalT = i18n.t.bind(i18n);
+  
+  return (key: string, options?: any) => {
+    console.log(`[Translation Debug] Translating key: ${key}`);
+    const result = originalT(key, options);
+    console.log(`[Translation Debug] Result: "${result}"`);
+    return result;
+  };
 }

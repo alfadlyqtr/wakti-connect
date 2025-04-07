@@ -1,140 +1,124 @@
-
-import React, { useState, useEffect } from "react";
-import { Menu, X, Search } from "lucide-react";
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { LanguageSwitcher } from "@/components/ui/language-switcher";
-import { Separator } from "@/components/ui/separator";
-import { useTranslation } from "react-i18next";
-
-// Import the components
-import BrandLogo from "./navbar/BrandLogo";
-import MobileSearch from "./navbar/MobileSearch";
-import NavItems from "./navbar/NavItems";
-import UserMenu from "./navbar/UserMenu";
-import ThemeToggle from "./navbar/ThemeToggle";
-import NavDateTime from "./navbar/NavDateTime";
+import { useAuth } from "@/hooks/auth";
+import { useTheme } from "@/hooks/use-theme";
+import { useSidebarToggle } from "@/hooks/useSidebarToggle";
+import { cn } from "@/lib/utils";
+import { Menu, Moon, Sun, Bell, X } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useProfileSettings } from "@/hooks/useProfileSettings";
+import { getInitials } from "@/utils/stringUtils";
+import { useTranslationContext } from "@/contexts/TranslationContext";
+import LanguageSwitcher from "@/components/ui/language-switcher";
 
 interface NavbarProps {
   toggleSidebar: () => void;
   isSidebarOpen: boolean;
 }
 
-const Navbar = ({ toggleSidebar, isSidebarOpen }: NavbarProps) => {
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { i18n } = useTranslation();
-  const isRTL = i18n.language === 'ar';
-
-  // Get unread notifications count
-  const { data: unreadNotifications = [] } = useQuery({
-    queryKey: ['unreadNotifications'],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return [];
-      
-      const { data } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .eq('is_read', false);
-        
-      return data || [];
-    },
-  });
-
-  // Get unread messages count
-  const { data: unreadMessages = [] } = useQuery({
-    queryKey: ['unreadMessages'],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return [];
-      
-      const { data } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('recipient_id', session.user.id)
-        .eq('is_read', false);
-        
-      return data || [];
-    },
-  });
-
-  useEffect(() => {
-    // Check if user is authenticated
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      setIsAuthenticated(!!data.session);
-    };
-
-    checkAuth();
-
-    // Listen for auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-    });
-
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
-  }, []);
-
+const Navbar: React.FC<NavbarProps> = ({ toggleSidebar, isSidebarOpen }) => {
+  const { user, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const { pathname } = useLocation();
+  const { data: profileData } = useProfileSettings();
+  const { t, isRTL } = useTranslationContext();
+  
+  // Check if we're on a public page (not dashboard)
+  const isPublicPage = !pathname.includes("/dashboard");
+  
+  // Get user's profile image if available
+  const profileImage = profileData?.profile_image_url || null;
+  
+  // Get user's name or email for the avatar fallback
+  const userDisplayName = profileData?.name || user?.email || "User";
+  
+  // Toggle theme between light and dark
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+  
   return (
-    <header className={`w-full bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-50 ${isRTL ? 'rtl' : ''}`}>
-      <div className="container mx-auto px-4 flex items-center justify-between h-16">
-        <div className="flex items-center gap-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={toggleSidebar}
-            className="lg:hidden"
-            aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-          >
-            {isSidebarOpen ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
+    <header className={cn(
+      "sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+      isRTL ? "rtl" : ""
+    )}>
+      <div className="container flex h-14 items-center">
+        <div className="flex items-center justify-between w-full gap-2">
+          {/* Left side - Logo and menu toggle */}
+          <div className="flex items-center">
+            {!isPublicPage && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="mr-2"
+                onClick={toggleSidebar}
+                aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+              >
+                {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
             )}
-          </Button>
+            
+            <Link to="/" className="flex items-center space-x-2">
+              <img 
+                src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
+                alt="Wakti Logo" 
+                className="h-8 w-8"
+              />
+              <span className="font-bold text-xl hidden sm:inline-block">Wakti</span>
+            </Link>
+          </div>
           
-          <BrandLogo />
-        </div>
-
-        <MobileSearch searchOpen={searchOpen} setSearchOpen={setSearchOpen} />
-
-        <div className="flex items-center gap-3">
-          {/* Date and Time display */}
-          <NavDateTime className="mr-3 hidden md:block" />
-          
-          {/* Add a subtle separator before other icons (only visible on md+ screens) */}
-          <Separator orientation="vertical" className="h-8 hidden md:block" />
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setSearchOpen(true)}
-            className="lg:hidden"
-            aria-label="Search"
-          >
-            <Search className="h-5 w-5" />
-          </Button>
-
-          {/* Navigation Icons - show on all screen sizes now */}
-          <NavItems 
-            unreadMessages={unreadMessages} 
-            unreadNotifications={unreadNotifications} 
-          />
-
-          <LanguageSwitcher />
-
-          <ThemeToggle />
-
-          <UserMenu 
-            isAuthenticated={isAuthenticated} 
-            unreadMessages={unreadMessages} 
-            unreadNotifications={unreadNotifications} 
-          />
+          {/* Right side - Theme toggle, notifications, user menu */}
+          <div className="flex items-center gap-2">
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+            
+            {/* Theme toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+            
+            {/* Notifications - only show when logged in */}
+            {user && (
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className="relative"
+              >
+                <Link to="/dashboard/notifications">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
+                </Link>
+              </Button>
+            )}
+            
+            {/* User menu or login button */}
+            {user ? (
+              <Button variant="ghost" size="icon" asChild>
+                <Link to="/dashboard/settings">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profileImage || undefined} alt={userDisplayName} />
+                    <AvatarFallback>{getInitials(userDisplayName)}</AvatarFallback>
+                  </Avatar>
+                </Link>
+              </Button>
+            ) : (
+              <Button variant="default" size="sm" asChild>
+                <Link to="/auth/login">{t("header.signIn")}</Link>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </header>

@@ -2,93 +2,111 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import i18n from '@/i18n/i18n';
 import { useTranslation } from 'react-i18next';
-import { translateWithFallback, registerTranslation } from '@/services/translationService';
+import { translateWithFallback } from '@/services/translationService';
+import { useToast } from '@/components/ui/use-toast';
 
+// Interface for the context
 interface TranslationContextType {
-  isRTL: boolean;
   currentLanguage: string;
-  setLanguage: (lang: string) => void;
-  translateWithFallback: (key: string, options?: any) => Promise<string>;
-  registerTranslation: (key: string, translation: string, language?: string) => void;
-  translationCache: Map<string, string>;
-  clearCache: () => void;
-  debugMode: boolean;
-  toggleDebugMode: () => void;
+  isRTL: boolean;
+  changeLanguage: (lang: string) => void;
+  t: (key: string, options?: any) => string;
+  translateAsync: (key: string, options?: any) => Promise<string>;
+  loadingTranslation: boolean;
 }
 
-// Create context with default values
 const TranslationContext = createContext<TranslationContextType>({
-  isRTL: false,
   currentLanguage: 'en',
-  setLanguage: () => {},
-  translateWithFallback: async () => '',
-  registerTranslation: () => {},
-  translationCache: new Map(),
-  clearCache: () => {},
-  debugMode: false,
-  toggleDebugMode: () => {},
+  isRTL: false,
+  changeLanguage: () => {},
+  t: (key: string) => key,
+  translateAsync: async (key: string) => key,
+  loadingTranslation: false,
 });
 
-// Translation cache to avoid duplicate API calls
-const translationCache = new Map<string, string>();
-
-// Provider component
 export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { i18n } = useTranslation();
-  const [debugMode, setDebugMode] = useState(false);
+  const { t, i18n: i18nInstance } = useTranslation();
+  const [loadingTranslation, setLoadingTranslation] = useState<boolean>(false);
+  const { toast } = useToast();
   
-  const isRTL = i18n.language === 'ar';
-
-  // Set language function
-  const setLanguage = (lang: string) => {
-    i18n.changeLanguage(lang);
-  };
-
-  // Clear cache
-  const clearCache = () => {
-    translationCache.clear();
-  };
-
-  // Toggle debug mode
-  const toggleDebugMode = () => {
-    setDebugMode(prev => !prev);
-  };
+  // Current language state
+  const currentLanguage = i18nInstance.language || 'en';
+  const isRTL = currentLanguage === 'ar';
   
-  // Effect to add debug overlay when debug mode is on
+  // Effect to set document direction and language attributes
   useEffect(() => {
-    if (debugMode) {
-      const debugOverlay = document.createElement('div');
-      debugOverlay.id = 'i18n-debug-overlay';
-      debugOverlay.style.position = 'fixed';
-      debugOverlay.style.bottom = '10px';
-      debugOverlay.style.right = '10px';
-      debugOverlay.style.backgroundColor = 'rgba(0,0,0,0.7)';
-      debugOverlay.style.color = 'white';
-      debugOverlay.style.padding = '5px 10px';
-      debugOverlay.style.borderRadius = '4px';
-      debugOverlay.style.fontSize = '12px';
-      debugOverlay.style.zIndex = '9999';
-      debugOverlay.innerText = `Lang: ${i18n.language} | RTL: ${isRTL}`;
-      
-      document.body.appendChild(debugOverlay);
-      
-      return () => {
-        document.body.removeChild(debugOverlay);
-      };
+    document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+    document.documentElement.lang = currentLanguage;
+    
+    if (isRTL) {
+      document.body.classList.add('rtl');
+      document.body.classList.add('font-arabic');
+    } else {
+      document.body.classList.remove('rtl');
+      document.body.classList.remove('font-arabic');
     }
-  }, [debugMode, i18n.language, isRTL]);
+    
+    console.log(`[TranslationContext] Language set to ${currentLanguage} (RTL: ${isRTL})`);
+  }, [currentLanguage, isRTL]);
   
-  // Create context value object
-  const contextValue: TranslationContextType = {
+  // Method to change language without full page reload
+  const changeLanguage = (lang: string) => {
+    try {
+      console.log(`[TranslationContext] Changing language to: ${lang}`);
+      setLoadingTranslation(true);
+      
+      // Save to localStorage
+      localStorage.setItem('wakti-language', lang);
+      
+      // Change i18n language
+      i18nInstance.changeLanguage(lang).then(() => {
+        setLoadingTranslation(false);
+        
+        // Show success toast
+        toast({
+          title: lang === 'ar' ? 'تم تغيير اللغة' : 'Language changed',
+          description: lang === 'ar' ? 'تم تغيير اللغة إلى العربية' : 'Language changed to English',
+          variant: "default",
+        });
+      }).catch(error => {
+        console.error('[TranslationContext] Error changing language:', error);
+        setLoadingTranslation(false);
+        
+        toast({
+          title: "Error changing language",
+          description: "There was a problem changing the language. Please try again.",
+          variant: "destructive",
+        });
+      });
+    } catch (error) {
+      console.error('[TranslationContext] Error in changeLanguage:', error);
+      setLoadingTranslation(false);
+    }
+  };
+  
+  // Async translation with fallback
+  const translateAsync = async (key: string, options?: any) => {
+    try {
+      const result = await translateWithFallback(key, {
+        defaultValue: options?.defaultValue || key,
+        context: options?.context || {},
+        fallbackToApi: options?.fallbackToApi || false
+      });
+      return result;
+    } catch (error) {
+      console.error(`[TranslationContext] Error translating "${key}":`, error);
+      return options?.defaultValue || key;
+    }
+  };
+  
+  // Create value object
+  const contextValue = {
+    currentLanguage,
     isRTL,
-    currentLanguage: i18n.language,
-    setLanguage,
-    translateWithFallback,
-    registerTranslation,
-    translationCache,
-    clearCache,
-    debugMode,
-    toggleDebugMode
+    changeLanguage,
+    t,
+    translateAsync,
+    loadingTranslation
   };
   
   return (
@@ -98,7 +116,6 @@ export const TranslationProvider: React.FC<{ children: React.ReactNode }> = ({ c
   );
 };
 
-// Custom hook for using the translation context
 export const useTranslationContext = () => useContext(TranslationContext);
 
 export default TranslationContext;

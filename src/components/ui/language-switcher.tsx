@@ -1,46 +1,29 @@
 
 import React from "react";
-import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
 import { Globe } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { useTranslationContext } from "@/contexts/TranslationContext";
+import { Loader2 } from "lucide-react";
 
 export function LanguageSwitcher() {
-  const { i18n, t } = useTranslation();
-  const { toast } = useToast();
+  const { currentLanguage, changeLanguage, loadingTranslation } = useTranslationContext();
   
-  const changeLanguage = (language: string) => {
-    console.log(`Changing language to: ${language}`);
-    
-    try {
-      // Save the language preference in local storage with consistent key name
-      localStorage.setItem('wakti-language', language);
-      
-      // Change the language in i18n
-      i18n.changeLanguage(language);
-      
-      // Show success toast
-      toast({
-        title: language === 'ar' ? 'تم تغيير اللغة' : 'Language changed',
-        description: language === 'ar' ? 'تم تغيير اللغة إلى العربية' : 'Language changed to English',
-        variant: "default",
-      });
-      
-      // Note: The page will reload due to the event listener in i18n.ts
-    } catch (error) {
-      console.error("Error changing language:", error);
-      
-      // Show error toast
-      toast({
-        title: "Error changing language",
-        description: "There was an issue changing the language. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
+  if (loadingTranslation) {
+    return (
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className="px-3 flex items-center gap-1.5"
+        disabled
+      >
+        <Loader2 className="h-3 w-3 animate-spin" />
+        <span>Loading...</span>
+      </Button>
+    );
+  }
+  
   // Show different buttons based on current language
-  if (i18n.language === 'ar') {
+  if (currentLanguage === 'ar') {
     return (
       <Button 
         variant="outline" 
@@ -69,5 +52,4 @@ export function LanguageSwitcher() {
   }
 }
 
-// Add a default export that points to the same component
 export default LanguageSwitcher;
