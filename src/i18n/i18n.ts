@@ -60,6 +60,10 @@ const ensureKeysExist = (enObj: any, arObj: any, path = '') => {
 // Synchronize translation keys
 ensureKeysExist(enTranslation, arTranslation);
 
+// Debug: Log the synchronized Arabic translation for priority.normal
+console.log('Arabic translation for task.priority.normal:', 
+  arTranslation?.task?.priority?.normal || 'Missing translation');
+
 // Initialize i18next with enhanced configuration
 i18n
   // Use language detector
@@ -91,7 +95,12 @@ i18n
     returnNull: false,
     returnEmptyString: false,
     // Ensure initialization completes properly
-    initImmediate: false
+    initImmediate: false,
+    // Add missing keys to prevent showing raw keys
+    saveMissing: false,
+    missingKeyHandler: (lngs, ns, key) => {
+      console.warn(`Missing translation key: ${key} in namespace: ${ns} for languages: ${lngs.join(', ')}`);
+    },
   });
 
 // Set the HTML dir attribute based on the current language
