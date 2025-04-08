@@ -1,9 +1,11 @@
+
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Share2, UserCheck, CheckCircle, Clock, AlertTriangle, Bell } from "lucide-react";
 import { TaskStatus, TaskPriority } from "@/types/task.types";
 import { isBefore, isAfter, isToday, format } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 interface TaskBadgesProps {
   dueDate: Date;
@@ -153,10 +155,15 @@ const TaskBadges = ({
   snoozedUntil = null,
   dueTime = null
 }: TaskBadgesProps) => {
+  const { t } = useTranslation();
+  
   const formattedDate = dueDate.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric'
   });
+
+  // Translate the priority with a fallback to the raw priority value
+  const translatedPriority = t(`task.priority.${priority}`, priority);
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -169,7 +176,7 @@ const TaskBadges = ({
       </Badge>
       
       <Badge variant="outline" className={cn("text-xs", getPriorityColor(priority))}>
-        {priority}
+        {translatedPriority}
       </Badge>
       
       <TaskSharingBadges isShared={isShared} isAssigned={isAssigned} />

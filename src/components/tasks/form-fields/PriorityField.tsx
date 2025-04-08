@@ -31,21 +31,21 @@ export const PriorityField: React.FC<PriorityFieldProps> = ({ form }) => {
       name="priority"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{t('task.priority.priority')}</FormLabel>
+          <FormLabel>{t('task.priority.priority', 'Priority')}</FormLabel>
           <Select
             onValueChange={field.onChange}
             defaultValue={field.value}
           >
             <FormControl>
               <SelectTrigger>
-                <SelectValue placeholder={t('task.selectPriority')} />
+                <SelectValue placeholder={t('task.selectPriority', 'Select priority')} />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="urgent">{t('task.priority.urgent')}</SelectItem>
-              <SelectItem value="high">{t('task.priority.high')}</SelectItem>
-              <SelectItem value="medium">{t('task.priority.medium')}</SelectItem>
-              <SelectItem value="normal">{t('task.priority.normal')}</SelectItem>
+              <SelectItem value="urgent">{t('task.priority.urgent', 'Urgent')}</SelectItem>
+              <SelectItem value="high">{t('task.priority.high', 'High')}</SelectItem>
+              <SelectItem value="medium">{t('task.priority.medium', 'Medium')}</SelectItem>
+              <SelectItem value="normal">{t('task.priority.normal', 'Normal')}</SelectItem>
             </SelectContent>
           </Select>
           <FormMessage />

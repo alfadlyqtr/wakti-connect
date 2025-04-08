@@ -33,25 +33,31 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
 
   return (
     <div className="space-y-2">
-      {tasks.map((task) => (
-        <div 
-          key={task.id}
-          className="flex items-center p-2 rounded-md hover:bg-muted cursor-pointer"
-          onClick={() => handleTaskClick(task.id)}
-        >
-          <div className="mr-2">
-            {task.isCompleted ? (
-              <CheckCircle className="h-5 w-5 text-green-500" />
-            ) : (
-              <Circle className="h-5 w-5 text-muted-foreground" />
-            )}
+      {tasks.map((task) => {
+        // Map the task priority to a valid translation key with a fallback
+        const priorityKey = task.priority || 'normal';
+        const translatedPriority = t(`task.priority.${priorityKey}`, priorityKey);
+        
+        return (
+          <div 
+            key={task.id}
+            className="flex items-center p-2 rounded-md hover:bg-muted cursor-pointer"
+            onClick={() => handleTaskClick(task.id)}
+          >
+            <div className="mr-2">
+              {task.isCompleted ? (
+                <CheckCircle className="h-5 w-5 text-green-500" />
+              ) : (
+                <Circle className="h-5 w-5 text-muted-foreground" />
+              )}
+            </div>
+            <div className="flex-1 truncate text-sm">{task.title}</div>
+            <Badge className={`ml-2 ${getPriorityColorClass(task.priority)}`}>
+              {translatedPriority}
+            </Badge>
           </div>
-          <div className="flex-1 truncate text-sm">{task.title}</div>
-          <Badge className={`ml-2 ${getPriorityColorClass(task.priority)}`}>
-            {task.priority ? t(`task.priority.${task.priority}`) : t('task.priority.normal')}
-          </Badge>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

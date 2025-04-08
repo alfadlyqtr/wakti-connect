@@ -24,7 +24,7 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
   isRecurring,
   isCompleted,
 }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   
   const getPriorityIcon = () => {
     switch (priority) {
@@ -38,6 +38,9 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
         return <Clock className="h-4 w-4 text-green-500" />;
     }
   };
+
+  // Translate the priority with fallback to the raw value
+  const translatedPriority = t(`task.priority.${priority}`, priority);
 
   return (
     <div className="flex items-start justify-between mb-2">
@@ -53,13 +56,13 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
         <div className="flex items-center mt-1 gap-2">
           <span className="flex items-center gap-1 text-xs">
             {getPriorityIcon()}
-            <span className="capitalize">{t(`task.priority.${priority}`)}</span>
+            <span className="capitalize">{translatedPriority}</span>
           </span>
           
           {isRecurring && (
             <span className="flex items-center gap-1 text-xs text-muted-foreground">
               <RepeatIcon className="h-3 w-3" />
-              <span>{t('recurring.makeRecurring')}</span>
+              <span>{t('recurring.makeRecurring', 'Make this recurring')}</span>
             </span>
           )}
         </div>

@@ -1,4 +1,6 @@
 
+import { TaskPriority } from "./task.types";
+
 export interface CalendarEvent {
   id: string;
   title: string;
@@ -6,7 +8,7 @@ export interface CalendarEvent {
   type: EventType;
   status?: string;
   isCompleted?: boolean;
-  priority?: string;
+  priority?: TaskPriority | string; // Use the TaskPriority type to ensure consistency
 }
 
 export type EventType = "task" | "booking";
