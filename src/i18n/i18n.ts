@@ -26,34 +26,36 @@ interface TranslationWithLocation {
   [key: string]: any;
 }
 
-// Add location translations from the legacy config
-if (!((enTranslation as TranslationWithLocation).location)) {
-  (enTranslation as TranslationWithLocation).location = {
-    enterLocation: 'Enter event location',
-    viewOnMap: 'View on map',
-    currentLocation: 'Use my current location',
-    searchPlaceholder: 'Search for a location...',
-    manualEntry: 'Enter manually',
-    googleMaps: 'Use Google Maps',
-    getLocation: 'Get my current location',
-    invalidUrl: 'Invalid Google Maps URL',
-    displayName: 'Location display name',
-    enterUrl: 'Enter a Google Maps URL',
-    previewMap: 'Preview on map',
-    validUrl: 'Enter a valid Google Maps URL'
-  };
-}
-
 // Get saved language before initialization to have it ready
-const savedLanguage = localStorage.getItem('wakti-language');
+const savedLanguage = localStorage.getItem('wakti-language') || 'en';
 
-// Initialize i18next
+// Make sure all keys from English exist in Arabic
+const ensureKeysExist = (enObj: any, arObj: any, path = '') => {
+  for (const key in enObj) {
+    const currentPath = path ? `${path}.${key}` : key;
+    if (typeof enObj[key] === 'object' && enObj[key] !== null && !Array.isArray(enObj[key])) {
+      if (!arObj[key] || typeof arObj[key] !== 'object') {
+        arObj[key] = {};
+      }
+      ensureKeysExist(enObj[key], arObj[key], currentPath);
+    } else if (arObj[key] === undefined) {
+      // If key doesn't exist in Arabic, add it with the same value as English
+      console.log(`Adding missing translation key: ${currentPath}`);
+      arObj[key] = enObj[key];
+    }
+  }
+};
+
+// Synchronize translation keys
+ensureKeysExist(enTranslation, arTranslation);
+
+// Initialize i18next with enhanced configuration
 i18n
-  // detect user language
+  // Use language detector
   .use(LanguageDetector)
-  // pass the i18n instance to react-i18next
+  // Connect with React
   .use(initReactI18next)
-  // init i18next
+  // Initialize
   .init({
     resources: {
       en: {
@@ -63,7 +65,7 @@ i18n
         translation: arTranslation
       }
     },
-    lng: savedLanguage || undefined, // Use saved language if available
+    lng: savedLanguage, // Use saved language if available
     fallbackLng: 'en',
     debug: process.env.NODE_ENV === 'development',
     interpolation: {
@@ -76,7 +78,9 @@ i18n
     },
     // Add these options to ensure proper fallback
     returnNull: false,
-    returnEmptyString: false
+    returnEmptyString: false,
+    // Ensure initialization completes properly
+    initImmediate: false
   });
 
 // Set the HTML dir attribute based on the current language

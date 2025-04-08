@@ -1,15 +1,15 @@
 
 import React from "react";
-import { CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { TaskStatus } from "@/types/task.types";
-import { CheckIcon, PenIcon, CheckCircle2Icon } from "lucide-react";
 import { format } from "date-fns";
-
+import { useTranslation } from "react-i18next";
+import { TaskStatus } from "@/types/task.types";
+import { CheckCircle, CircleSlash } from "lucide-react";
+ 
 interface TaskCardFooterProps {
   id: string;
   status: TaskStatus;
   completedDate?: Date | null;
+  dueDate: Date;
   onStatusChange: (id: string, status: string) => void;
   onEdit: (id: string) => void;
 }
@@ -18,41 +18,36 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
   id,
   status,
   completedDate,
+  dueDate,
   onStatusChange,
   onEdit
 }) => {
+  const { t, i18n } = useTranslation();
+  
+  const isCompleted = status === "completed";
+  
+  const handleMarkComplete = () => {
+    onStatusChange(id, isCompleted ? "pending" : "completed");
+  };
+
   return (
-    <CardFooter className="pt-2 pb-3">
-      <div className="flex justify-between w-full">
-        <div className="flex gap-1">
-          {status !== "completed" ? (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => onStatusChange(id, "completed")}
-              className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200"
-            >
-              <CheckIcon className="h-4 w-4 mr-1" /> 
-              Complete
-            </Button>
-          ) : (
-            <div className="flex items-center text-xs text-muted-foreground">
-              <CheckCircle2Icon className="h-4 w-4 mr-1 text-green-500" />
-              Completed {completedDate && format(completedDate, 'MMM d')}
-            </div>
-          )}
-        </div>
-        
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => onEdit(id)}
-          className="text-muted-foreground"
-        >
-          <PenIcon className="h-4 w-4 mr-1" /> 
-          Edit
-        </Button>
+    <div className="px-4 py-2 border-t flex items-center justify-between text-xs text-muted-foreground">
+      <div>
+        {completedDate && (
+          <span>
+            {t("task.completedTime.at")} {format(new Date(completedDate), "MMM d, yyyy")}
+          </span>
+        )}
       </div>
-    </CardFooter>
+      <div className="flex gap-2">
+        <button
+          className="flex items-center gap-1 hover:text-foreground transition-colors"
+          onClick={handleMarkComplete}
+        >
+          {isCompleted ? <CircleSlash className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
+          {isCompleted ? t("task.status.markPending") : t("task.status.markCompleted")}
+        </button>
+      </div>
+    </div>
   );
 };
