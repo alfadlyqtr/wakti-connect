@@ -1,4 +1,3 @@
-
 {
   "common": {
     "wakti": "وقتي",
@@ -91,7 +90,7 @@
     "createFirstTaskFree": "يمكن للحسابات المجانية إنشاء مهمة واحدة. أنشئ مهمتك الأولى الآن!",
     "noTasksFound": "لم يتم العثور على مهام",
     "noArchivedTasks": "لا توجد مهام مؤرشفة",
-    "archivedTasksDescription": "المهام التي تحذفها أو تلغيها ستظهر هنا",
+    "archivedTasksDescription": "المهام التي تحذفها ��و تلغيها ستظهر هنا",
     "noTasksDescription": "ابدأ بإنشاء مهمتك الأولى",
     "tabs": {
       "myTasks": "مهامي",
@@ -156,6 +155,14 @@
     "monthly": "Monthly",
     "frequency": "Frequency",
     "interval": "Interval"
+  },
+  "hero": {
+    "tagline": "أدر وقتك بفعالية",
+    "title": "حل إدارة الوقت الشخصي الخاص بك",
+    "description": "نظم المهام وجدول المواعيد وأدر أعمالك في مكان واحد.",
+    "startForFree": "ابدأ مجانًا",
+    "seeFeatures": "رؤية الميزات",
+    "noCreditCard": "لا حاجة لبطاقة ائتمان"
   },
   "header": {
     "pricing": "التسعير",

@@ -1,4 +1,3 @@
-
 {
   "common": {
     "wakti": "Wakti",
@@ -156,6 +155,14 @@
     "monthly": "Monthly",
     "frequency": "Frequency",
     "interval": "Interval"
+  },
+  "hero": {
+    "tagline": "Manage Your Time Effectively",
+    "title": "Your Personal Time Management Solution",
+    "description": "Organize tasks, schedule appointments, and manage your business all in one place.",
+    "startForFree": "Start For Free",
+    "seeFeatures": "See Features",
+    "noCreditCard": "No credit card required"
   },
   "pricing": {
     "title": "Choose the Right Plan",
