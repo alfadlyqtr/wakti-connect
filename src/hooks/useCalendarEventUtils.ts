@@ -24,6 +24,12 @@ export const useCalendarEventUtils = () => {
 
       // By priority
       switch (event.priority) {
+        case "urgent":
+          return {
+            bgClass: "bg-red-100",
+            textClass: "text-red-800",
+            borderClass: "border-red-300"
+          };
         case "high":
           return {
             bgClass: "bg-red-100",
@@ -36,7 +42,7 @@ export const useCalendarEventUtils = () => {
             textClass: "text-amber-800", 
             borderClass: "border-amber-300"
           };
-        case "low":
+        case "normal":
           return {
             bgClass: "bg-green-100",
             textClass: "text-green-800",
