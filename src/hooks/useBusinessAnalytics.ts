@@ -84,7 +84,7 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
           throw new Error('Invalid service data format');
         }
         
-        // Return the analytics data
+        // Return the analytics data - setting default text to empty strings
         console.log("Business analytics: Returning data successfully");
         return {
           subscriberCount: 0,

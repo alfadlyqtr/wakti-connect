@@ -42,10 +42,10 @@
     "invalidDate": "تاريخ غير صالح",
     "account": "الحساب",
     "total": "المجموع",
-    "shared": "Shared",
-    "assigned": "Assigned",
-    "early": "Early",
-    "late": "Late"
+    "shared": "مشترك",
+    "assigned": "مسند",
+    "early": "مبكر",
+    "late": "متأخر"
   },
   "task": {
     "status": {
@@ -90,7 +90,7 @@
     "createFirstTaskFree": "يمكن للحسابات المجانية إنشاء مهمة واحدة. أنشئ مهمتك الأولى الآن!",
     "noTasksFound": "لم يتم العثور على مهام",
     "noArchivedTasks": "لا توجد مهام مؤرشفة",
-    "archivedTasksDescription": "المهام التي تحذفها أو تلغيها ستظهر هنا",
+    "archivedTasksDescription": "المهام التي تحذفها ��و تلغيها ستظهر هنا",
     "noTasksDescription": "ابدأ بإنشاء مهمتك الأولى",
     "tabs": {
       "myTasks": "مهامي",
@@ -201,7 +201,7 @@
     "contacts": "جهات الاتصال",
     "staffManagement": "إدارة الموظفين",
     "workLogs": "سجلات العمل",
-    "services": "الخدمات",
+    "services": "الخدمات", 
     "businessReports": "تقارير الأعمال",
     "analytics": "التحليلات",
     "billing": "الفواتير والاشتراكات",
@@ -256,10 +256,10 @@
     "businessPlan": "خطة الأعمال",
     "forTeams": "للفرق وأصحاب الأعمال",
     "events": "الأحداث",
-    "shared": "Shared",
-    "assigned": "Assigned",
-    "early": "Early",
-    "late": "Late"
+    "businessAnalytics": "تحليلات الأعمال",
+    "businessServices": "خدمات الأعمال المقدمة",
+    "peopleInNetwork": "الأشخاص في شبكتك",
+    "myProductivity": "إنتاجيتي"
   },
   "pricing": {
     "title": "اختر الخطة المناسبة",

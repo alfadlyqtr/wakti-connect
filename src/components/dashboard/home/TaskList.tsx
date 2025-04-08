@@ -29,7 +29,6 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
     }
   };
   
-  // Create a helper function to properly translate priority
   const getPriorityText = (priority?: string): string => {
     if (!priority) return t("task.priority.normal");
     

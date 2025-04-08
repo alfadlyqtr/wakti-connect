@@ -275,7 +275,8 @@
     "events": "Events",
     "businessAnalytics": "Business Analytics",
     "businessServices": "Business services offered",
-    "peopleInNetwork": "People in your network"
+    "peopleInNetwork": "People in your network",
+    "myProductivity": "My Productivity"
   },
   "calendar": {
     "tasks": "Tasks",
