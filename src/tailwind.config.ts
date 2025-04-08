@@ -34,6 +34,9 @@ const config = {
         redrose: ['Red Rose', 'sans-serif'],
         cairo: ['Cairo', 'sans-serif'],
       },
+      screens: {
+        'xs': '480px',
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

@@ -1,34 +1,41 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import Markdown from "react-markdown";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { format } from "date-fns";
 
 interface MessageContentProps {
   content: string;
-  timestamp: Date;
+  timestamp?: Date;
   isUser: boolean;
 }
 
 export function MessageContent({ content, timestamp, isUser }: MessageContentProps) {
   return (
-    <div
-      className={cn(
-        "rounded-lg p-2 sm:p-3 text-xs sm:text-sm max-w-[75%] sm:max-w-md break-words overflow-hidden shadow-sm transition-all",
-        isUser 
-          ? "bg-wakti-blue text-white animate-slide-in-right" 
-          : "bg-muted animate-fade-in border border-muted"
+    <div className="flex flex-col gap-1">
+      <div
+        className={cn(
+          "rounded-xl py-2 px-3",
+          isUser
+            ? "bg-primary text-primary-foreground ml-auto"
+            : "bg-muted/50 border mr-auto"
+        )}
+      >
+        <div className="prose dark:prose-invert prose-sm max-w-none">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        </div>
+      </div>
+      {timestamp && (
+        <div
+          className={cn(
+            "text-xs text-muted-foreground",
+            isUser ? "text-right" : "text-left"
+          )}
+        >
+          {format(new Date(timestamp), "h:mm a")}
+        </div>
       )}
-      style={{ animationDuration: "0.3s" }}
-    >
-      <div className="prose prose-xs sm:prose-sm max-w-none dark:prose-invert overflow-auto max-h-[400px] thin-scrollbar">
-        <Markdown>{content}</Markdown>
-      </div>
-      <div className={cn(
-        "text-[8px] sm:text-[10px] mt-1 text-right",
-        isUser ? "text-blue-100" : "text-muted-foreground"
-      )}>
-        {timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-      </div>
     </div>
   );
 }

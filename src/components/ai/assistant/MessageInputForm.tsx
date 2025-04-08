@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { AIAssistantUpgradeCard } from '../AIAssistantUpgradeCard';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useTranslation } from 'react-i18next';
 
 interface MessageInputFormProps {
   inputMessage: string;
@@ -24,6 +25,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   canAccess
 }) => {
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
   
   const {
     isListening,
@@ -34,23 +36,21 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
       if (text) {
-        // Updated: Fix the type error by directly setting the text value
-        setInputMessage(text.trim() ? inputMessage + (inputMessage ? ' ' : '') + text : inputMessage);
+        const updatedText = inputMessage + (inputMessage && !inputMessage.endsWith(' ') && !text.startsWith(' ') ? ' ' : '') + text;
+        setInputMessage(updatedText);
       }
     }
   });
 
   React.useEffect(() => {
     if (transcript) {
-      // Updated: Fix the type error by directly setting a string value
       const updatedText = inputMessage + (inputMessage && !inputMessage.endsWith(' ') && !transcript.startsWith(' ') ? ' ' : '') + transcript;
       setInputMessage(updatedText);
     }
   }, [transcript, setInputMessage, inputMessage]);
 
   if (!canAccess) {
-    // Fixed: Remove the compact prop since AIAssistantUpgradeCard doesn't accept it
-    return <AIAssistantUpgradeCard />;
+    return <AIAssistantUpgradeCard compact={true} />;
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -75,7 +75,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       <div className="flex items-end gap-2 relative">
         <div className="relative flex-1">
           <Textarea
-            placeholder="Type a message..."
+            placeholder={t("ai.messagePlaceholder", "Type a message...")}
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -109,7 +109,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
           type="submit" 
           size="icon" 
           disabled={!inputMessage.trim() || isLoading}
-          className="h-10 w-10 rounded-full"
+          className="h-10 w-10 rounded-full shrink-0"
         >
           {isLoading ? (
             <div className="animate-spin h-4 w-4 border-2 border-primary border-opacity-50 border-t-primary rounded-full" />
@@ -124,7 +124,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       {isMobile && (
         <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
           <AlertCircle className="h-3 w-3" /> 
-          Press the send button to submit your message
+          {t("ai.tapToSend", "Tap send button to submit your message")}
         </p>
       )}
       
@@ -132,7 +132,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       {!isMobile && (
         <p className="text-xs text-muted-foreground mt-1.5 hidden sm:flex items-center gap-1">
           <AlertCircle className="h-3 w-3" /> 
-          Press Enter to send, Shift+Enter for new line
+          {t("ai.pressEnter", "Press Enter to send, Shift+Enter for new line")}
         </p>
       )}
     </form>

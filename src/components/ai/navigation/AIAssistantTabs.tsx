@@ -10,6 +10,7 @@ import { Zap, MessageSquare, Wrench, History, Bot, Sparkles, BookOpen, Briefcase
 import { cn } from "@/lib/utils";
 import { RoleSpecificKnowledge } from "../tools/RoleSpecificKnowledge";
 import { KnowledgeProfileToolCard } from "../tools/KnowledgeProfileToolCard";
+import { useTranslation } from "react-i18next";
 
 interface AIAssistantTabsProps {
   messages: AIMessage[];
@@ -40,6 +41,8 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
   activeTab,
   setActiveTab
 }) => {
+  const { t } = useTranslation();
+  
   const handleUseDocumentContent = (content: string) => {
     setInputMessage(content);
     setActiveTab("chat");
@@ -67,11 +70,11 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
 
   const getRoleTitle = () => {
     switch (selectedRole) {
-      case "student": return "Student Assistant";
+      case "student": return t("ai.roles.student", "Student Assistant");
       case "employee": 
-      case "writer": return "Creative Assistant";
-      case "business_owner": return "Business Assistant";
-      default: return "AI Assistant";
+      case "writer": return t("ai.roles.writer", "Creative Assistant");
+      case "business_owner": return t("ai.roles.business", "Business Assistant");
+      default: return t("ai.roles.general", "AI Assistant");
     }
   };
 
@@ -88,10 +91,10 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
         )}>
           {getRoleIcon()}
         </div>
-        <h2 className="text-2xl font-bold text-center relative">
+        <h2 className="text-xl xs:text-2xl font-bold text-center relative truncate">
           WAKTI {getRoleTitle()}
           <motion.span 
-            className="absolute -right-7 top-0"
+            className="absolute -right-7 top-0 hidden sm:inline-block"
             initial={{ rotate: -20, scale: 0.8 }}
             animate={{ rotate: 0, scale: 1 }}
             transition={{ repeat: Infinity, repeatType: "reverse", duration: 2 }}
@@ -106,22 +109,22 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
         onValueChange={setActiveTab} 
         className="w-full space-y-4"
       >
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full max-w-md mx-auto">
-          <TabsTrigger value="chat" className="flex items-center space-x-1 sm:space-x-2">
+        <TabsList className="grid grid-cols-4 w-full max-w-md mx-auto overflow-x-auto">
+          <TabsTrigger value="chat" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4">
             <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="text-xs sm:text-sm">Chat</span>
+            <span className="text-xs sm:text-sm">{t("ai.tabs.chat", "Chat")}</span>
           </TabsTrigger>
-          <TabsTrigger value="tools" className="flex items-center space-x-1 sm:space-x-2">
+          <TabsTrigger value="tools" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4">
             <Wrench className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="text-xs sm:text-sm">Tools</span>
+            <span className="text-xs sm:text-sm">{t("ai.tabs.tools", "Tools")}</span>
           </TabsTrigger>
-          <TabsTrigger value="knowledge" className="flex items-center space-x-1 sm:space-x-2">
+          <TabsTrigger value="knowledge" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4">
             <BookCopy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="text-xs sm:text-sm">Knowledge</span>
+            <span className="text-xs sm:text-sm">{t("ai.tabs.knowledge", "Knowledge")}</span>
           </TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center space-x-1 sm:space-x-2">
+          <TabsTrigger value="history" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4">
             <History className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="text-xs sm:text-sm">History</span>
+            <span className="text-xs sm:text-sm">{t("ai.tabs.history", "History")}</span>
           </TabsTrigger>
         </TabsList>
         

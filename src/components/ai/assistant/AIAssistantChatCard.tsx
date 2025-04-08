@@ -13,6 +13,7 @@ import { getTimeBasedGreeting } from '@/lib/dateUtils';
 import { AIAssistantMouthAnimation } from '../animation/AIAssistantMouthAnimation';
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useTranslation } from 'react-i18next';
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -43,14 +44,15 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
 
   const getRoleTitle = () => {
     switch (selectedRole) {
-      case 'student': return 'Student Assistant';
-      case 'employee': return 'Creative Assistant';
-      case 'writer': return 'Creative Assistant';
-      case 'business_owner': return 'Business Assistant';
-      default: return 'AI Assistant';
+      case 'student': return t("ai.roles.student", "Student Assistant");
+      case 'employee': return t("ai.roles.employee", "Creative Assistant");
+      case 'writer': return t("ai.roles.writer", "Creative Assistant");
+      case 'business_owner': return t("ai.roles.business", "Business Assistant");
+      default: return t("ai.roles.general", "AI Assistant");
     }
   };
 
@@ -84,17 +86,17 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
           <div className={`h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br ${getRoleColor()} flex items-center justify-center flex-shrink-0 mr-2 shadow-sm`}>
             <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
           </div>
-          <div>
+          <div className="overflow-hidden">
             <h3 className="text-sm md:text-base font-medium flex items-center gap-1.5">
-              <span className="truncate max-w-[120px] sm:max-w-full">WAKTI {getRoleTitle()}</span>
+              <span className="truncate max-w-[120px] xs:max-w-[180px] sm:max-w-full">WAKTI {getRoleTitle()}</span>
               {messages.length > 0 && (
                 <Button 
                   variant="ghost" 
                   size="icon" 
                   onClick={clearMessages}
                   className="h-6 w-6 hover:bg-red-50 hover:text-red-500 transition-colors"
-                  aria-label="Clear chat"
-                  title="Clear chat"
+                  aria-label={t("ai.clearChat", "Clear chat")}
+                  title={t("ai.clearChat", "Clear chat")}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
@@ -116,8 +118,8 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
             size="icon"
             className="h-7 w-7 sm:h-8 sm:w-8 hover:bg-blue-50 hover:text-blue-500 transition-colors"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-            title={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+            aria-label={isSidebarOpen ? t("ai.closeSidebar", "Close sidebar") : t("ai.openSidebar", "Open sidebar")}
+            title={isSidebarOpen ? t("ai.closeSidebar", "Close sidebar") : t("ai.openSidebar", "Open sidebar")}
           >
             {isSidebarOpen ? <PanelLeftClose className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <PanelLeftOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
           </Button>
@@ -125,8 +127,8 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
             variant="ghost" 
             size="icon"
             className="h-7 w-7 sm:h-8 sm:w-8 hover:bg-blue-50 hover:text-blue-500 transition-colors"
-            aria-label="Settings"
-            title="Assistant Settings"
+            aria-label={t("ai.settings", "Settings")}
+            title={t("ai.settings", "Assistant Settings")}
             asChild
           >
             <a href="/dashboard/settings?tab=ai-assistant">
@@ -168,7 +170,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
           {messages.length === 0 && showSuggestions && isSidebarOpen && isMobile && (
             <div className="absolute inset-0 z-10 bg-white p-4 overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium">Suggested Prompts</h3>
+                <h3 className="font-medium">{t("ai.suggestedPrompts", "Suggested Prompts")}</h3>
                 <Button 
                   variant="ghost" 
                   size="sm" 

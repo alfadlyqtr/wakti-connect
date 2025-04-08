@@ -28,15 +28,17 @@ export function AIAssistantMessage({
         isUser ? "justify-end" : "justify-start"
       )}
     >
-      {!isUser && !isMobile && (
-        isActive ? (
-          <AIAssistantMouthAnimation isActive={true} isSpeaking={isSpeaking} />
-        ) : (
-          <MessageAvatar isUser={isUser} />
-        )
+      {!isUser && (
+        <div className="shrink-0 hidden xs:block">
+          {isActive ? (
+            <AIAssistantMouthAnimation isActive={true} isSpeaking={isSpeaking} />
+          ) : (
+            <MessageAvatar isUser={isUser} />
+          )}
+        </div>
       )}
       
-      <div className="flex flex-col gap-1 max-w-[85%] sm:max-w-[75%]">
+      <div className="flex flex-col gap-1 max-w-[85%] xs:max-w-[80%] sm:max-w-[75%]">
         <MessageContent 
           content={message.content}
           timestamp={message.timestamp}
@@ -44,7 +46,11 @@ export function AIAssistantMessage({
         />
       </div>
       
-      {isUser && !isMobile && <MessageAvatar isUser={isUser} />}
+      {isUser && (
+        <div className="shrink-0 hidden xs:block">
+          <MessageAvatar isUser={isUser} />
+        </div>
+      )}
     </div>
   );
 }
