@@ -259,7 +259,8 @@
     "businessAnalytics": "تحليلات الأعمال",
     "businessServices": "خدمات الأعمال المقدمة",
     "peopleInNetwork": "الأشخاص في شبكتك",
-    "myProductivity": "إنتاجيتي"
+    "myProductivity": "إنتاجيتي",
+    "noStaffActivity": "لا توجد بيانات نشاط للموظفين"
   },
   "pricing": {
     "title": "اختر الخطة المناسبة",

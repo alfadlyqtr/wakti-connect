@@ -60,26 +60,6 @@ const ensureKeysExist = (enObj: any, arObj: any, path = '') => {
 // Synchronize translation keys
 ensureKeysExist(enTranslation, arTranslation);
 
-// Debug logging code commented out to fix TypeScript errors
-// Will be re-introduced in a safer way in development environment only
-/*
-const taskPriorityPath = arTranslation?.task?.priority;
-const normalPriorityValue = (taskPriorityPath && 
-                           typeof taskPriorityPath === 'object' && 
-                           'normal' in taskPriorityPath) 
-                           ? taskPriorityPath['normal'] 
-                           : 'Missing translation';
-
-console.log('Arabic translation for task.priority.normal:', normalPriorityValue);
-
-const priorityKeysString = (taskPriorityPath && 
-                          typeof taskPriorityPath === 'object') 
-                          ? JSON.stringify(taskPriorityPath) 
-                          : 'Task priority not found';
-
-console.log('All task priority keys in Arabic:', priorityKeysString);
-*/
-
 // Initialize i18next with enhanced configuration
 i18n
   // Use language detector
@@ -114,6 +94,22 @@ i18n
     initImmediate: false,
     // Add missing keys to prevent showing raw keys
     saveMissing: false,
+    // Enhanced error handling for missing translations
+    parseMissingKeyHandler: (key) => {
+      console.warn(`Missing translation key: ${key}`);
+      
+      // Extract the last part of the key after the last dot
+      const lastPart = key.split('.').pop();
+      
+      // Capitalize the first letter and add spaces before capital letters
+      if (lastPart) {
+        return lastPart
+          .replace(/([A-Z])/g, ' $1')
+          .replace(/^./, (str) => str.toUpperCase());
+      }
+      
+      return key; // Return original key if we can't process it
+    },
     missingKeyHandler: (lngs, ns, key) => {
       console.warn(`Missing translation key: ${key} in namespace: ${ns} for languages: ${lngs.join(', ')}`);
     },

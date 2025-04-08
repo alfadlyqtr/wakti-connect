@@ -4,12 +4,14 @@ import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } fro
 import { getStaffPerformanceData } from "@/utils/businessAnalyticsUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export const TeamActivityChart: React.FC = () => {
   const [chartData, setChartData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const loadData = async () => {
@@ -27,20 +29,20 @@ export const TeamActivityChart: React.FC = () => {
         setError(null);
       } catch (err) {
         console.error("Error loading staff performance data:", err);
-        setError("Failed to load staff performance data");
+        setError(t("common.error"));
       } finally {
         setIsLoading(false);
       }
     };
     
     loadData();
-  }, [isMobile]);
+  }, [isMobile, t]);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[300px]">
         <Loader2 className="h-6 w-6 animate-spin mr-2" />
-        <p>Loading staff data...</p>
+        <p>{t("common.loading")}</p>
       </div>
     );
   }
@@ -56,7 +58,7 @@ export const TeamActivityChart: React.FC = () => {
   if (!chartData || chartData.length === 0) {
     return (
       <div className="flex items-center justify-center h-[300px]">
-        <p>No staff activity data available</p>
+        <p>{t("dashboard.noStaffActivity")}</p>
       </div>
     );
   }

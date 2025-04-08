@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getTaskById } from '@/services/taskService';
@@ -71,21 +70,6 @@ const TaskDetails: React.FC = () => {
     }
   };
 
-  const getPriorityLabel = (priority: string): string => {
-    switch (priority) {
-      case "urgent": return t("task.priority.urgent");
-      case "high": return t("task.priority.high");
-      case "medium": return t("task.priority.medium");
-      case "normal": return t("task.priority.normal");
-      default: return t("task.priority.normal");
-    }
-  };
-
-  const getStatusLabel = (status: string): string => {
-    const normalizedStatus = status.replace('-', '');
-    return t(`task.status.${normalizedStatus}`, status);
-  };
-
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -129,10 +113,10 @@ const TaskDetails: React.FC = () => {
               <CardTitle className="text-2xl mb-1">{task.title}</CardTitle>
               <div className="flex gap-2 mt-2">
                 <Badge className={getPriorityColor(task.priority)}>
-                  {getPriorityLabel(task.priority)}
+                  {t(`task.priority.${task.priority}`)}
                 </Badge>
                 <Badge className={getStatusColor(task.status)}>
-                  {getStatusLabel(task.status)}
+                  {t(`task.status.${task.status.replace('-', '')}`)}
                 </Badge>
               </div>
             </div>

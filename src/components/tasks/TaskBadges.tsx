@@ -1,4 +1,3 @@
-
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -168,9 +167,6 @@ const TaskBadges = ({
     day: 'numeric'
   });
 
-  // Use t function to translate the priority
-  const translatedPriority = t(`task.priority.${priority}`, priority);
-
   return (
     <div className="flex flex-wrap gap-2">
       <Badge variant="outline" className="text-xs flex items-center">
@@ -182,7 +178,7 @@ const TaskBadges = ({
       </Badge>
       
       <Badge variant="outline" className={cn("text-xs", getPriorityColor(priority))}>
-        {translatedPriority}
+        {t(`task.priority.${priority}`)}
       </Badge>
       
       <TaskSharingBadges isShared={isShared} isAssigned={isAssigned} />

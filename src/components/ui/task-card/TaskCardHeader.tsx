@@ -39,17 +39,6 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
         return <Clock className="h-4 w-4 text-green-500" />;
     }
   };
-  
-  // Get translated priority text
-  const getPriorityText = (priority: TaskPriority): string => {
-    switch (priority) {
-      case "urgent": return t("task.priority.urgent");
-      case "high": return t("task.priority.high");
-      case "medium": return t("task.priority.medium");
-      case "normal": return t("task.priority.normal");
-      default: return t("task.priority.normal");
-    }
-  };
 
   return (
     <div className="flex items-start justify-between mb-2">
@@ -65,7 +54,7 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
         <div className="flex items-center mt-1 gap-2">
           <span className="flex items-center gap-1 text-xs">
             {getPriorityIcon()}
-            <span className="capitalize">{getPriorityText(priority)}</span>
+            <span className="capitalize">{t(`task.priority.${priority}`)}</span>
           </span>
           
           {isRecurring && (

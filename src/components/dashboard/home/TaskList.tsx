@@ -28,18 +28,6 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
         return "bg-slate-500";
     }
   };
-  
-  const getPriorityText = (priority?: string): string => {
-    if (!priority) return t("task.priority.normal");
-    
-    switch (priority) {
-      case "urgent": return t("task.priority.urgent");
-      case "high": return t("task.priority.high");
-      case "medium": return t("task.priority.medium");
-      case "normal": return t("task.priority.normal");
-      default: return t("task.priority.normal");
-    }
-  };
 
   const handleTaskClick = (taskId: string) => {
     navigate(`/dashboard/tasks/${taskId}`);
@@ -66,7 +54,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
             </div>
             <div className="flex-1 truncate text-sm">{task.title}</div>
             <Badge className={`ml-2 ${getPriorityColorClass(task.priority)}`}>
-              {getPriorityText(task.priority)}
+              {t(`task.priority.${priorityKey}`)}
             </Badge>
           </div>
         );
