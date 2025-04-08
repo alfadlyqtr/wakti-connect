@@ -1,3 +1,4 @@
+
 {
   "common": {
     "wakti": "وقتي",
@@ -90,7 +91,7 @@
     "createFirstTaskFree": "يمكن للحسابات المجانية إنشاء مهمة واحدة. أنشئ مهمتك الأولى الآن!",
     "noTasksFound": "لم يتم العثور على مهام",
     "noArchivedTasks": "لا توجد مهام مؤرشفة",
-    "archivedTasksDescription": "المها�� التي تحذفها أو تلغيها ستظهر هنا",
+    "archivedTasksDescription": "المهام التي تحذفها أو تلغيها ستظهر هنا",
     "noTasksDescription": "ابدأ بإنشاء مهمتك الأولى",
     "tabs": {
       "myTasks": "مهامي",
