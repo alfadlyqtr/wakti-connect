@@ -64,7 +64,7 @@ ensureKeysExist(enTranslation, arTranslation);
 // Type-safe check to access the nested property
 const taskPriority = arTranslation?.task?.priority;
 console.log('Arabic translation for task.priority.normal:', 
-  typeof taskPriority === 'object' && taskPriority !== null ? taskPriority.normal : 'Missing translation');
+  taskPriority && typeof taskPriority === 'object' ? (taskPriority.normal || 'Missing value') : 'Missing translation');
 
 // Initialize i18next with enhanced configuration
 i18n
