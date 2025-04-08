@@ -6,7 +6,7 @@ import { AIAssistantRole, AIMessage } from "@/types/ai-assistant.types";
 import { AIAssistantToolsCard } from "../tools/AIAssistantToolsCard";
 import { AIAssistantHistoryCard } from "../AIAssistantHistoryCard";
 import { AnimatePresence, motion } from "framer-motion";
-import { Zap, MessageSquare, Wrench, History, Bot, Sparkles, BookOpen, Briefcase, Pen, BookCopy, Info } from "lucide-react";
+import { Zap, MessageSquare, Wrench, History, Bot, Sparkles, BookOpen, Briefcase, Pen, BookCopy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RoleSpecificKnowledge } from "../tools/RoleSpecificKnowledge";
 import { KnowledgeProfileToolCard } from "../tools/KnowledgeProfileToolCard";
@@ -106,22 +106,22 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
         onValueChange={setActiveTab} 
         className="w-full space-y-4"
       >
-        <TabsList className="grid grid-cols-4 w-full max-w-md mx-auto">
-          <TabsTrigger value="chat" className="flex items-center space-x-2">
-            <MessageSquare className="h-4 w-4" />
-            <span>Chat</span>
+        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full max-w-md mx-auto">
+          <TabsTrigger value="chat" className="flex items-center space-x-1 sm:space-x-2">
+            <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="text-xs sm:text-sm">Chat</span>
           </TabsTrigger>
-          <TabsTrigger value="tools" className="flex items-center space-x-2">
-            <Wrench className="h-4 w-4" />
-            <span>Tools</span>
+          <TabsTrigger value="tools" className="flex items-center space-x-1 sm:space-x-2">
+            <Wrench className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="text-xs sm:text-sm">Tools</span>
           </TabsTrigger>
-          <TabsTrigger value="knowledge" className="flex items-center space-x-2">
-            <BookCopy className="h-4 w-4" />
-            <span>Knowledge</span>
+          <TabsTrigger value="knowledge" className="flex items-center space-x-1 sm:space-x-2">
+            <BookCopy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="text-xs sm:text-sm">Knowledge</span>
           </TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center space-x-2">
-            <History className="h-4 w-4" />
-            <span>History</span>
+          <TabsTrigger value="history" className="flex items-center space-x-1 sm:space-x-2">
+            <History className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="text-xs sm:text-sm">History</span>
           </TabsTrigger>
         </TabsList>
         

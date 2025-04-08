@@ -1,14 +1,12 @@
 
-import React, { useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Send, Loader2, Upload } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger 
-} from "@/components/ui/tooltip";
+import React from 'react';
+import { Mic, Send, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
+import { AIAssistantUpgradeCard } from '../AIAssistantUpgradeCard';
+import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface MessageInputFormProps {
   inputMessage: string;
@@ -16,12 +14,6 @@ interface MessageInputFormProps {
   handleSendMessage: (e: React.FormEvent) => Promise<void>;
   isLoading: boolean;
   canAccess: boolean;
-  isListening?: boolean;
-  onStartListening?: () => void;
-  onStopListening?: () => void;
-  recognitionSupported?: boolean;
-  onFileUpload?: (file: File) => Promise<void>;
-  onCameraCapture?: () => Promise<void>;
 }
 
 export const MessageInputForm: React.FC<MessageInputFormProps> = ({
@@ -29,130 +21,122 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   setInputMessage,
   handleSendMessage,
   isLoading,
-  canAccess,
-  isListening = false,
-  onStartListening,
-  onStopListening,
-  recognitionSupported = false,
-  onFileUpload,
-  onCameraCapture,
+  canAccess
 }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const isMobile = useIsMobile();
+  
+  const {
+    isListening,
+    transcript,
+    supportsVoice,
+    startListening,
+    stopListening
+  } = useVoiceInteraction({
+    onTranscriptComplete: (text) => {
+      if (text) {
+        setInputMessage((prev) => prev + (prev ? ' ' : '') + text);
+      }
+    }
+  });
 
-  // Handle form submission
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isLoading || !canAccess || !inputMessage.trim()) return;
-    await handleSendMessage(e);
-  };
+  React.useEffect(() => {
+    if (transcript) {
+      // Update the message input in real-time as the user speaks
+      setInputMessage((prev) => {
+        // If there's existing text, preserve it
+        if (prev && !prev.endsWith(' ') && !transcript.startsWith(' ')) {
+          return prev + ' ' + transcript;
+        }
+        return prev + transcript;
+      });
+    }
+  }, [transcript, setInputMessage]);
 
-  // Handle file selection
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !onFileUpload) return;
+  if (!canAccess) {
+    return <AIAssistantUpgradeCard compact />;
+  }
 
-    setIsUploading(true);
-    try {
-      await onFileUpload(file);
-    } catch (error) {
-      console.error("Error uploading file:", error);
-    } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
+      e.preventDefault();
+      if (inputMessage.trim() && !isLoading) {
+        handleSendMessage(e);
       }
     }
   };
 
-  // Handle file upload button click
-  const handleFileUploadClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
   return (
-    <form
-      ref={formRef}
-      onSubmit={onSubmit}
-      className="border-t p-2 flex flex-col gap-2"
+    <form 
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (inputMessage.trim() && !isLoading) {
+          handleSendMessage(e);
+        }
+      }}
+      className="border-t p-2 sm:p-3"
     >
-      <div className="flex gap-2">
-        {/* File Upload */}
-        {onFileUpload && (
-          <>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileSelect}
-              className="hidden"
-              accept=".pdf,.doc,.docx,.txt"
-            />
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleFileUploadClick}
-                    disabled={isLoading || isUploading}
-                  >
-                    <Upload className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Upload document</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </>
-        )}
-      </div>
-
-      <div className="flex gap-2 items-end">
-        <Textarea
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          placeholder={
-            !canAccess
-              ? "Upgrade to use the AI Assistant"
-              : "Type your message here..."
-          }
-          disabled={!canAccess || isLoading}
-          className="min-h-[60px] max-h-[200px] flex-1 resize-none"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              formRef.current?.requestSubmit();
-            }
-          }}
-        />
-
-        <Button
-          type="submit"
-          size="icon"
-          disabled={
-            isLoading ||
-            !canAccess ||
-            !inputMessage.trim() ||
-            isUploading
-          }
-          className="flex-shrink-0 self-end"
+      <div className="flex items-end gap-2 relative">
+        <div className="relative flex-1">
+          <Textarea
+            placeholder="Type a message..."
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className={cn(
+              "min-h-[60px] max-h-[180px] resize-none py-2 pr-12 text-sm sm:text-base",
+              isListening && "bg-primary/5 border-primary/20"
+            )}
+            disabled={isLoading || isListening}
+          />
+          <div className="absolute bottom-2 right-2 flex gap-1">
+            {supportsVoice && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "h-8 w-8 rounded-full", 
+                  isListening && "bg-primary text-white hover:bg-primary hover:text-white"
+                )}
+                onClick={isListening ? stopListening : startListening}
+                disabled={isLoading}
+              >
+                <Mic className="h-4 w-4" />
+                <span className="sr-only">{isListening ? "Stop recording" : "Start recording"}</span>
+              </Button>
+            )}
+          </div>
+        </div>
+        
+        <Button 
+          type="submit" 
+          size="icon" 
+          disabled={!inputMessage.trim() || isLoading}
+          className="h-10 w-10 rounded-full"
         >
           {isLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <div className="animate-spin h-4 w-4 border-2 border-primary border-opacity-50 border-t-primary rounded-full" />
           ) : (
-            <Send className="h-5 w-5" />
+            <Send className="h-4 w-4" />
           )}
+          <span className="sr-only">Send message</span>
         </Button>
       </div>
-
-      {isUploading && (
-        <div className="text-xs text-muted-foreground flex items-center">
-          <Loader2 className="h-3 w-3 animate-spin mr-2" />
-          <span>Uploading file...</span>
-        </div>
+      
+      {/* Mobile note */}
+      {isMobile && (
+        <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
+          <AlertCircle className="h-3 w-3" /> 
+          Press the send button to submit your message
+        </p>
+      )}
+      
+      {/* Desktop note */}
+      {!isMobile && (
+        <p className="text-xs text-muted-foreground mt-1.5 hidden sm:flex items-center gap-1">
+          <AlertCircle className="h-3 w-3" /> 
+          Press Enter to send, Shift+Enter for new line
+        </p>
       )}
     </form>
   );

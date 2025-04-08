@@ -12,6 +12,7 @@ import { AIRoleSelector } from './AIRoleSelector';
 import { getTimeBasedGreeting } from '@/lib/dateUtils';
 import { AIAssistantMouthAnimation } from '../animation/AIAssistantMouthAnimation';
 import { Badge } from '@/components/ui/badge';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -40,7 +41,8 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Set to false by default to give more space to chat
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const getRoleTitle = () => {
     switch (selectedRole) {
@@ -79,12 +81,12 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
     <Card className="flex-1 flex flex-col shadow-md border-wakti-blue/10 overflow-hidden rounded-xl">
       <div className="py-2 px-3 sm:py-3 sm:px-4 border-b flex justify-between items-center bg-gradient-to-r from-white to-gray-50">
         <div className="flex items-center">
-          <div className={`h-9 w-9 rounded-full bg-gradient-to-br ${getRoleColor()} flex items-center justify-center flex-shrink-0 mr-2 shadow-sm`}>
-            <Bot className="h-5 w-5 text-white" />
+          <div className={`h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br ${getRoleColor()} flex items-center justify-center flex-shrink-0 mr-2 shadow-sm`}>
+            <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
           </div>
           <div>
             <h3 className="text-sm md:text-base font-medium flex items-center gap-1.5">
-              <span>WAKTI {getRoleTitle()}</span>
+              <span className="truncate max-w-[120px] sm:max-w-full">WAKTI {getRoleTitle()}</span>
               {messages.length > 0 && (
                 <Button 
                   variant="ghost" 
@@ -99,16 +101,16 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
               )}
               <Badge 
                 variant="outline" 
-                className="ml-2 text-[10px] px-2 py-0 h-5 bg-wakti-blue/5"
+                className="ml-2 text-[10px] px-2 py-0 h-5 bg-wakti-blue/5 hidden sm:inline-flex"
               >
                 v2.0
               </Badge>
             </h3>
-            <p className="text-xs text-muted-foreground">{greeting}{userName ? `, ${userName}` : ''}</p>
+            <p className="text-xs text-muted-foreground truncate">{greeting}{userName ? `, ${userName}` : ''}</p>
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <Button 
             variant="ghost" 
             size="icon"
@@ -117,7 +119,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
             aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
             title={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
           >
-            {isSidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+            {isSidebarOpen ? <PanelLeftClose className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <PanelLeftOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
           </Button>
           <Button 
             variant="ghost" 
@@ -125,20 +127,23 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
             className="h-7 w-7 sm:h-8 sm:w-8 hover:bg-blue-50 hover:text-blue-500 transition-colors"
             aria-label="Settings"
             title="Assistant Settings"
+            asChild
           >
-            <Settings className="h-4 w-4" />
+            <a href="/dashboard/settings?tab=ai-assistant">
+              <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </a>
           </Button>
         </div>
       </div>
       
       <CardContent className="p-0 flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-gray-50/50 to-white">
-        <div className="p-3 border-b bg-white">
+        <div className="p-2 sm:p-3 border-b bg-white">
           <AIRoleSelector selectedRole={selectedRole} onRoleChange={onRoleChange} />
         </div>
 
         <div className="flex flex-1 overflow-hidden">
           {/* Main chat area - larger by default */}
-          <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+          <div className="flex-1 overflow-y-auto p-2 sm:p-4">
             <AIAssistantChat 
               messages={messages} 
               isLoading={isLoading}
@@ -153,9 +158,30 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
           </div>
           
           {/* Sidebar with suggestions - shown conditionally and narrower */}
-          {messages.length === 0 && showSuggestions && isSidebarOpen && (
-            <div className="w-1/4 min-w-[200px] max-w-[250px] border-l p-3 overflow-y-auto bg-gray-50/50">
+          {messages.length === 0 && showSuggestions && isSidebarOpen && !isMobile && (
+            <div className="w-1/4 min-w-[200px] max-w-[250px] border-l p-3 overflow-y-auto bg-gray-50/50 hidden sm:block">
               <EmptyStateView onPromptClick={handlePromptClick} selectedRole={selectedRole} />
+            </div>
+          )}
+          
+          {/* Mobile sidebar with suggestions */}
+          {messages.length === 0 && showSuggestions && isSidebarOpen && isMobile && (
+            <div className="absolute inset-0 z-10 bg-white p-4 overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-medium">Suggested Prompts</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="h-7 w-7"
+                >
+                  <PanelLeftClose className="h-4 w-4" />
+                </Button>
+              </div>
+              <EmptyStateView onPromptClick={(prompt) => {
+                handlePromptClick(prompt);
+                setIsSidebarOpen(false);
+              }} selectedRole={selectedRole} />
             </div>
           )}
         </div>

@@ -3,6 +3,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 // English translations object for essential booking and common terms
+// Also adding AI assistant related translations
 const enTranslations = {
   common: {
     copy: "Copy",
@@ -15,6 +16,20 @@ const enTranslations = {
     staffLabel: "Staff:",
     bookedFor: "Booked For:",
     phoneLabel: "Phone:"
+  },
+  ai: {
+    documentAnalysis: "Document Analysis",
+    suggestionTitle: "Try asking about:",
+    sampleHistory: {
+      efficiency: "How to improve team efficiency",
+      marketing: "Marketing strategy ideas",
+      studyPlan: "Create a study plan for exams"
+    },
+    timeAgo: {
+      days: "{{count}} days ago",
+      week: "{{count}} week ago",
+      weeks: "{{count}} weeks ago"
+    }
   }
 };
 

@@ -1,21 +1,35 @@
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(() => 
-    typeof window !== 'undefined' && window.innerWidth < 768
-  );
-
+export const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const checkSize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    window.addEventListener('resize', checkSize);
-    return () => window.removeEventListener('resize', checkSize);
+    // Check if window is available (client-side rendering)
+    if (typeof window !== 'undefined') {
+      const checkIsMobile = () => {
+        const mobileBreakpoint = 640; // sm breakpoint in Tailwind
+        setIsMobile(window.innerWidth < mobileBreakpoint);
+      };
+      
+      // Initial check
+      checkIsMobile();
+      
+      // Add listener for window resize
+      window.addEventListener('resize', checkIsMobile);
+      
+      // Cleanup
+      return () => {
+        window.removeEventListener('resize', checkIsMobile);
+      };
+    }
   }, []);
-
+  
   return isMobile;
-}
+};
+
+// Alias for backward compatibility with code that uses 'use-mobile'
+export const useMobile = useIsMobile;
+
+// Export default for simpler imports
+export default useIsMobile;
