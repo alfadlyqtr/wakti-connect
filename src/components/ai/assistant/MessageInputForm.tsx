@@ -34,26 +34,23 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
       if (text) {
-        setInputMessage((prev) => prev + (prev ? ' ' : '') + text);
+        // Updated: Fix the type error by directly setting the text value
+        setInputMessage(text.trim() ? inputMessage + (inputMessage ? ' ' : '') + text : inputMessage);
       }
     }
   });
 
   React.useEffect(() => {
     if (transcript) {
-      // Update the message input in real-time as the user speaks
-      setInputMessage((prev) => {
-        // If there's existing text, preserve it
-        if (prev && !prev.endsWith(' ') && !transcript.startsWith(' ')) {
-          return prev + ' ' + transcript;
-        }
-        return prev + transcript;
-      });
+      // Updated: Fix the type error by directly setting a string value
+      const updatedText = inputMessage + (inputMessage && !inputMessage.endsWith(' ') && !transcript.startsWith(' ') ? ' ' : '') + transcript;
+      setInputMessage(updatedText);
     }
-  }, [transcript, setInputMessage]);
+  }, [transcript, setInputMessage, inputMessage]);
 
   if (!canAccess) {
-    return <AIAssistantUpgradeCard compact />;
+    // Fixed: Remove the compact prop since AIAssistantUpgradeCard doesn't accept it
+    return <AIAssistantUpgradeCard />;
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
