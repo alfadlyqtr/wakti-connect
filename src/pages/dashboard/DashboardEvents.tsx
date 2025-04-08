@@ -41,7 +41,6 @@ import { EventCreationForm } from '@/components/events';
 import { Badge } from '@/components/ui/badge';
 import EmptyState from '@/components/shared/EmptyState';
 import { EventViewResponses } from '@/components/events';
-import { useTranslation } from 'react-i18next';
 
 export default function DashboardEvents() {
   const [openDialog, setOpenDialog] = useState(false);
@@ -50,7 +49,6 @@ export default function DashboardEvents() {
   const [viewType, setViewType] = useState<'grid' | 'list'>('grid');
   const [currentTab, setCurrentTab] = useState<EventTab>('my-events');
   const { toast } = useToast();
-  const { t } = useTranslation();
   
   // Get events with filtering functionality
   const { 
@@ -81,14 +79,14 @@ export default function DashboardEvents() {
     try {
       await deleteEvent(eventId);
       toast({
-        title: t("event.delete"),
-        description: t("common.success"),
+        title: "Event Deleted",
+        description: "Success",
       });
     } catch (error) {
       console.error('Error deleting event:', error);
       toast({
-        title: t("common.error"),
-        description: t("common.error"),
+        title: "Error",
+        description: "Error",
         variant: "destructive",
       });
     }
@@ -130,14 +128,14 @@ export default function DashboardEvents() {
     try {
       await respondToInvitation(eventId, 'accepted');
       toast({
-        title: t("event.accepted"),
-        description: t("common.success")
+        title: "Invitation Accepted",
+        description: "Success"
       });
     } catch (error) {
       console.error('Error accepting invitation:', error);
       toast({
-        title: t("common.error"),
-        description: t("common.error"),
+        title: "Error",
+        description: "Error",
         variant: "destructive",
       });
     }
@@ -148,14 +146,14 @@ export default function DashboardEvents() {
     try {
       await respondToInvitation(eventId, 'declined');
       toast({
-        title: t("event.declined"),
-        description: t("common.success")
+        title: "Invitation Declined",
+        description: "Success"
       });
     } catch (error) {
       console.error('Error declining invitation:', error);
       toast({
-        title: t("common.error"),
-        description: t("common.error"),
+        title: "Error",
+        description: "Error",
         variant: "destructive",
       });
     }
@@ -165,13 +163,13 @@ export default function DashboardEvents() {
     <div className="container mx-auto p-4 max-w-7xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t('event.title')}</h1>
-          <p className="text-muted-foreground">{t('event.subtitle')}</p>
+          <h1 className="text-2xl font-bold tracking-tight">Events</h1>
+          <p className="text-muted-foreground">Create and manage your events and invitations</p>
         </div>
         
         <Button onClick={() => setOpenDialog(true)} disabled={!canCreateEvents}>
           <Plus className="mr-2 h-4 w-4" />
-          {t('event.newEvent')}
+          New Event
         </Button>
       </div>
       
@@ -181,7 +179,7 @@ export default function DashboardEvents() {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder={t('event.searchEvents')}
+              placeholder="Search events..."
               className="pl-8"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -193,7 +191,7 @@ export default function DashboardEvents() {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full sm:w-auto justify-start">
                   <Filter className="mr-2 h-4 w-4" />
-                  {t('event.filter')}
+                  Filter
                   {(filterStatus !== 'all' || filterDate) && (
                     <Badge variant="secondary" className="ml-2 rounded-sm px-1 font-normal">
                       {filterStatus !== 'all' && filterDate ? '2' : '1'}
@@ -204,26 +202,26 @@ export default function DashboardEvents() {
               <PopoverContent className="w-80">
                 <div className="grid gap-4">
                   <div className="space-y-2">
-                    <h4 className="font-medium">{t('event.filter')}</h4>
+                    <h4 className="font-medium">Filter</h4>
                     <div className="grid gap-2">
                       <div className="grid gap-1">
-                        <Label htmlFor="status">{t('task.status.all')}</Label>
+                        <Label htmlFor="status">Status</Label>
                         <select 
                           id="status"
                           className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors"
                           value={filterStatus}
                           onChange={(e) => setFilterStatus(e.target.value)}
                         >
-                          <option value="all">{t('task.status.all')}</option>
+                          <option value="all">All Status</option>
                           <option value="draft">Draft</option>
                           <option value="published">Published</option>
                           <option value="cancelled">Cancelled</option>
-                          <option value="accepted">{t('event.accepted')}</option>
-                          <option value="declined">{t('event.declined')}</option>
+                          <option value="accepted">Accepted</option>
+                          <option value="declined">Declined</option>
                         </select>
                       </div>
                       <div className="grid gap-1">
-                        <Label htmlFor="date">{t('common.date')}</Label>
+                        <Label htmlFor="date">Date</Label>
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
@@ -235,7 +233,7 @@ export default function DashboardEvents() {
                               )}
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
-                              {filterDate ? format(filterDate, "PPP") : t('common.date')}
+                              {filterDate ? format(filterDate, "PPP") : "Select date"}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0" align="start">
@@ -256,7 +254,7 @@ export default function DashboardEvents() {
                     disabled={filterStatus === 'all' && !filterDate}
                   >
                     <X className="mr-2 h-4 w-4" />
-                    {t('common.remove')}
+                    Clear filters
                   </Button>
                 </div>
               </PopoverContent>
@@ -270,10 +268,10 @@ export default function DashboardEvents() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setViewType('grid')}>
-                  {t('event.gridView')}
+                  Grid View
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setViewType('list')}>
-                  {t('event.listView')}
+                  List View
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -283,9 +281,9 @@ export default function DashboardEvents() {
       
       <Tabs defaultValue="my-events" value={currentTab} onValueChange={(value) => setCurrentTab(value as EventTab)}>
         <TabsList className="mb-6">
-          <TabsTrigger value="my-events">{t('event.tabs.myEvents')}</TabsTrigger>
-          <TabsTrigger value="invited-events">{t('event.tabs.invitedEvents')}</TabsTrigger>
-          <TabsTrigger value="draft-events">{t('event.tabs.draftEvents')}</TabsTrigger>
+          <TabsTrigger value="my-events">My Events</TabsTrigger>
+          <TabsTrigger value="invited-events">Invitations</TabsTrigger>
+          <TabsTrigger value="draft-events">Drafts</TabsTrigger>
         </TabsList>
         
         <TabsContent value="my-events">
@@ -312,18 +310,18 @@ export default function DashboardEvents() {
             </div>
           ) : (
             <EmptyState
-              title={t('event.noEvents')}
+              title="No events found"
               description={
                 canCreateEvents
-                  ? t('event.noEventsDescription')
-                  : t('event.upgradeToCreate')
+                  ? "Create your first event by clicking the button below."
+                  : "Upgrade to create events and invitations."
               }
               icon={<CalendarIcon className="h-12 w-12 text-muted-foreground" />}
               action={
                 canCreateEvents && (
                   <Button onClick={() => setOpenDialog(true)}>
                     <Plus className="mr-2 h-4 w-4" />
-                    {t('event.newEvent')}
+                    New Event
                   </Button>
                 )
               }
@@ -353,8 +351,8 @@ export default function DashboardEvents() {
             </div>
           ) : (
             <EmptyState
-              title={t('event.noInvitations')}
-              description={t('event.noInvitationsDescription')}
+              title="No invitations"
+              description="You haven't received any invitations yet."
               icon={<CalendarIcon className="h-12 w-12 text-muted-foreground" />}
             />
           )}
@@ -383,14 +381,14 @@ export default function DashboardEvents() {
             </div>
           ) : (
             <EmptyState
-              title={t('event.noDraftEvents')}
-              description={t('event.noDraftEventsDescription')}
+              title="No draft events"
+              description="Start creating an event now!"
               icon={<CalendarIcon className="h-12 w-12 text-muted-foreground" />}
               action={
                 canCreateEvents && (
                   <Button onClick={() => setOpenDialog(true)}>
                     <Plus className="mr-2 h-4 w-4" />
-                    {t('event.newEvent')}
+                    New Event
                   </Button>
                 )
               }
@@ -403,23 +401,23 @@ export default function DashboardEvents() {
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-auto">
           {editingEvent ? (
             <DialogHeader>
-              <DialogTitle>{t('event.editEvent')}</DialogTitle>
+              <DialogTitle>Edit Event</DialogTitle>
               <DialogDescription>
-                {t('event.editEventDescription')}
+                Make changes to your event and save them.
               </DialogDescription>
             </DialogHeader>
           ) : viewResponsesEvent ? (
             <DialogHeader>
-              <DialogTitle>{t('event.eventResponses')}</DialogTitle>
+              <DialogTitle>Event Responses</DialogTitle>
               <DialogDescription>
-                {t('event.eventResponsesDescription')}
+                View responses from invited participants.
               </DialogDescription>
             </DialogHeader>
           ) : (
             <DialogHeader>
-              <DialogTitle>{t('event.createNewEvent')}</DialogTitle>
+              <DialogTitle>Create New Event</DialogTitle>
               <DialogDescription>
-                {t('event.createNewEventDescription')}
+                Create a new event and send invitations.
               </DialogDescription>
             </DialogHeader>
           )}
