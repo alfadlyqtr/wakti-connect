@@ -20,6 +20,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Calendar, Clock } from "lucide-react";
 import { TimePickerField } from "../form-fields/TimePickerField";
+import { useTranslation } from "react-i18next";
 
 interface TaskDetailsTabProps {
   form: UseFormReturn<any>;
@@ -36,6 +37,7 @@ export function TaskDetailsTab({
 }: TaskDetailsTabProps) {
   // Watch enableSubtasks value
   const enableSubtasks = form.watch("enableSubtasks");
+  const { t } = useTranslation();
   
   return (
     <div className="space-y-4 pt-4">
@@ -44,9 +46,9 @@ export function TaskDetailsTab({
         name="title"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Task Title</FormLabel>
+            <FormLabel>{t("task.taskTitle")}</FormLabel>
             <FormControl>
-              <Input placeholder="Enter task title" {...field} />
+              <Input placeholder={t("task.enterTaskTitle")} {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -58,10 +60,10 @@ export function TaskDetailsTab({
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Description</FormLabel>
+            <FormLabel>{t("task.description")}</FormLabel>
             <FormControl>
               <Textarea
-                placeholder="Add task description..."
+                placeholder={t("task.enterTaskDescription")}
                 className="resize-none"
                 {...field}
                 value={field.value || ""}
@@ -77,21 +79,21 @@ export function TaskDetailsTab({
         name="priority"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Priority</FormLabel>
+            <FormLabel>{t("task.priority")}</FormLabel>
             <Select
               onValueChange={field.onChange}
               defaultValue={field.value}
             >
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select priority" />
+                  <SelectValue placeholder={t("task.selectPriority")} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="urgent">Urgent</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="normal">Normal</SelectItem>
+                <SelectItem value="urgent">{t("task.priority.urgent")}</SelectItem>
+                <SelectItem value="high">{t("task.priority.high")}</SelectItem>
+                <SelectItem value="medium">{t("task.priority.medium")}</SelectItem>
+                <SelectItem value="normal">{t("task.priority.normal")}</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />
@@ -107,7 +109,7 @@ export function TaskDetailsTab({
             <FormItem>
               <FormLabel className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                Due Date
+                {t("task.dueDate")}
               </FormLabel>
               <FormControl>
                 <Input type="date" {...field} />
@@ -120,7 +122,7 @@ export function TaskDetailsTab({
         <TimePickerField 
           form={form} 
           name="dueTime"
-          label="Due Time"
+          label={t("task.dueTime")}
         />
       </div>
       
@@ -138,7 +140,7 @@ export function TaskDetailsTab({
               htmlFor="recurring-switch"
               className="cursor-pointer font-medium"
             >
-              Make this a recurring task
+              {t("task.makingRecurring")}
             </FormLabel>
           </FormItem>
         )}
@@ -155,7 +157,7 @@ export function TaskDetailsTab({
                 />
               </FormControl>
               <FormLabel className="cursor-pointer font-medium">
-                Enable Subtasks
+                {t("task.enableSubtasks")}
               </FormLabel>
             </FormItem>
           )}

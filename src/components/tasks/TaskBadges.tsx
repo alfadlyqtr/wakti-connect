@@ -42,6 +42,8 @@ export const getPriorityColor = (priority: TaskPriority) => {
       return "bg-orange-500/10 text-orange-500 hover:bg-orange-500/20";
     case "medium":
       return "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20";
+    case "normal":
+      return "bg-green-500/10 text-green-500 hover:bg-green-500/20";
     default:
       return "bg-green-500/10 text-green-500 hover:bg-green-500/20";
   }
@@ -61,18 +63,20 @@ export const getCategoryColor = (category: string) => {
 };
 
 export const TaskSharingBadges = ({ isShared, isAssigned }: { isShared?: boolean; isAssigned?: boolean }) => {
+  const { t } = useTranslation();
+  
   return (
     <>
       {isShared && (
         <Badge variant="outline" className="mr-2 bg-purple-500/10 text-purple-500 text-xs">
           <Share2 className="h-3 w-3 mr-1" />
-          Shared
+          {t("common.shared")}
         </Badge>
       )}
       {isAssigned && (
         <Badge variant="outline" className="mr-2 bg-emerald-500/10 text-emerald-500 text-xs">
           <UserCheck className="h-3 w-3 mr-1" />
-          Assigned
+          {t("common.assigned")}
         </Badge>
       )}
     </>
@@ -90,11 +94,13 @@ export const TaskCompletionBadge = ({
   completedDate?: Date | null,
   snoozedUntil?: Date | null
 }) => {
+  const { t } = useTranslation();
+  
   if (status === "snoozed" && snoozedUntil) {
     return (
       <Badge variant="outline" className="bg-amber-500/10 text-amber-500 text-xs">
         <Bell className="h-3 w-3 mr-1" />
-        Snoozed until {format(snoozedUntil, 'MMM d')}
+        {t("task.snoozedUntil")} {format(snoozedUntil, 'MMM d')}
       </Badge>
     );
   }
@@ -104,14 +110,14 @@ export const TaskCompletionBadge = ({
       return (
         <Badge variant="outline" className="bg-blue-500/10 text-blue-500 text-xs">
           <Clock className="h-3 w-3 mr-1" />
-          In Progress (Today)
+          {t("task.status.inProgress")} ({t("time.today")})
         </Badge>
       );
     } else if (isAfter(new Date(), dueDate)) {
       return (
         <Badge variant="outline" className="bg-red-500/10 text-red-500 text-xs">
           <AlertTriangle className="h-3 w-3 mr-1" />
-          Overdue
+          {t("task.overdue")}
         </Badge>
       );
     }
@@ -123,14 +129,14 @@ export const TaskCompletionBadge = ({
       return (
         <Badge variant="outline" className="bg-green-500/10 text-green-500 text-xs">
           <CheckCircle className="h-3 w-3 mr-1" />
-          Completed Early
+          {t("task.completed")} ({t("common.early")})
         </Badge>
       );
     } else if (isAfter(completedDate, dueDate)) {
       return (
         <Badge variant="outline" className="bg-amber-500/10 text-amber-500 text-xs">
           <CheckCircle className="h-3 w-3 mr-1" />
-          Completed Late
+          {t("task.completed")} ({t("common.late")})
         </Badge>
       );
     }
@@ -139,7 +145,7 @@ export const TaskCompletionBadge = ({
   return (
     <Badge variant="outline" className="bg-green-500/10 text-green-500 text-xs">
       <CheckCircle className="h-3 w-3 mr-1" />
-      Completed
+      {t("task.completed")}
     </Badge>
   );
 };
@@ -162,7 +168,7 @@ const TaskBadges = ({
     day: 'numeric'
   });
 
-  // Ensure proper translation of priority with fallback
+  // Use t function to translate the priority
   const translatedPriority = t(`task.priority.${priority}`, priority);
 
   return (
@@ -181,7 +187,7 @@ const TaskBadges = ({
       
       <TaskSharingBadges isShared={isShared} isAssigned={isAssigned} />
       
-      {TaskCompletionBadge({ status, dueDate, completedDate, snoozedUntil })}
+      {status && TaskCompletionBadge({ status, dueDate, completedDate, snoozedUntil })}
     </div>
   );
 };

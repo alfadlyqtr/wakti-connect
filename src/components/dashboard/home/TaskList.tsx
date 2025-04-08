@@ -16,11 +16,13 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
 
   const getPriorityColorClass = (priority?: string) => {
     switch (priority) {
+      case "urgent":
+        return "bg-red-500";
       case "high":
         return "bg-red-500";
       case "medium":
         return "bg-amber-500";
-      case "low":
+      case "normal":
         return "bg-green-500";
       default:
         return "bg-slate-500";

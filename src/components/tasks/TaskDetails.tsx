@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 const TaskDetails: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
@@ -29,6 +30,7 @@ const TaskDetails: React.FC = () => {
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchTask = async () => {
@@ -79,19 +81,23 @@ const TaskDetails: React.FC = () => {
         <CardContent className="pt-6">
           <div className="text-center py-8">
             <h2 className="text-xl font-semibold mb-2">
-              {error || "Task not found"}
+              {error || t("common.notFound")}
             </h2>
             <p className="text-muted-foreground mb-4">
-              The task you're looking for couldn't be loaded.
+              {t("common.notFoundMessage")}
             </p>
             <Button onClick={() => navigate('/dashboard/tasks')}>
-              <ArrowLeft className="mr-2 h-4 w-4" /> Go Back to Tasks
+              <ArrowLeft className="mr-2 h-4 w-4" /> {t("common.back")}
             </Button>
           </div>
         </CardContent>
       </Card>
     );
   }
+
+  // Translate status and priority
+  const translatedStatus = t(`task.status.${task.status.replace('-', '')}`, task.status);
+  const translatedPriority = t(`task.priority.${task.priority}`, task.priority);
 
   return (
     <div className="space-y-6">
@@ -101,7 +107,7 @@ const TaskDetails: React.FC = () => {
           size="sm" 
           onClick={() => navigate('/dashboard/tasks')}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Tasks
+          <ArrowLeft className="mr-2 h-4 w-4" /> {t("common.back")}
         </Button>
       </div>
       
@@ -112,10 +118,10 @@ const TaskDetails: React.FC = () => {
               <CardTitle className="text-2xl mb-1">{task.title}</CardTitle>
               <div className="flex gap-2 mt-2">
                 <Badge className={getPriorityColor(task.priority)}>
-                  {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                  {translatedPriority}
                 </Badge>
                 <Badge className={getStatusColor(task.status)}>
-                  {task.status.charAt(0).toUpperCase() + task.status.slice(1).replace('-', ' ')}
+                  {translatedStatus}
                 </Badge>
               </div>
             </div>
@@ -138,7 +144,7 @@ const TaskDetails: React.FC = () => {
         <CardContent className="space-y-4">
           {task.description && (
             <div>
-              <h3 className="text-sm font-medium mb-1">Description</h3>
+              <h3 className="text-sm font-medium mb-1">{t("task.description")}</h3>
               <p className="text-muted-foreground">{task.description}</p>
             </div>
           )}
@@ -146,17 +152,17 @@ const TaskDetails: React.FC = () => {
           <div className="flex flex-col gap-2 text-sm">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>Due: {format(new Date(task.due_date || Date.now()), 'PPP')}</span>
+              <span>{t("task.due")}: {format(new Date(task.due_date || Date.now()), 'PPP')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
-              <span>Created: {format(new Date(task.created_at), 'PPP')}</span>
+              <span>{t("time.created")}: {format(new Date(task.created_at), 'PPP')}</span>
             </div>
           </div>
           
           {task.subtasks && task.subtasks.length > 0 && (
             <div className="mt-4">
-              <h3 className="text-sm font-medium mb-2">Subtasks</h3>
+              <h3 className="text-sm font-medium mb-2">{t("task.subtasks")}</h3>
               <ul className="space-y-2">
                 {task.subtasks.map((subtask, index) => (
                   <li key={subtask.id || index} className="flex items-center gap-2">
@@ -173,10 +179,10 @@ const TaskDetails: React.FC = () => {
         
         <CardFooter className="flex justify-between border-t pt-6">
           {task.status !== 'completed' ? (
-            <Button className="w-full">Mark as Complete</Button>
+            <Button className="w-full">{t("task.status.markCompleted")}</Button>
           ) : (
             <div className="text-center w-full text-muted-foreground">
-              Task was completed on {format(new Date(task.updated_at), 'PPP')}
+              {t("task.completedTime.at")} {format(new Date(task.completed_at || task.updated_at || ''), 'PPP')}
             </div>
           )}
         </CardFooter>

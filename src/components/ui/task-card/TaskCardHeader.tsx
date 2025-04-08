@@ -1,7 +1,6 @@
 
 import React from "react";
 import {
-  Award,
   AlertTriangle,
   Bell,
   Clock,
@@ -34,12 +33,14 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
         return <AlertTriangle className="h-4 w-4 text-orange-500" />;
       case "medium":
         return <Clock className="h-4 w-4 text-amber-500" />;
+      case "normal":
+        return <Clock className="h-4 w-4 text-green-500" />;
       default:
         return <Clock className="h-4 w-4 text-green-500" />;
     }
   };
 
-  // Properly translate the priority with fallback
+  // Use t function to translate the priority
   const translatedPriority = t(`task.priority.${priority}`, priority);
 
   return (
@@ -62,7 +63,7 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
           {isRecurring && (
             <span className="flex items-center gap-1 text-xs text-muted-foreground">
               <RepeatIcon className="h-3 w-3" />
-              <span>{t('recurring.makeRecurring', 'Make this recurring')}</span>
+              <span>{t('recurring.makeRecurring')}</span>
             </span>
           )}
         </div>
