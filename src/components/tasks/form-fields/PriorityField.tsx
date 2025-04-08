@@ -25,6 +25,17 @@ interface PriorityFieldProps {
 export const PriorityField: React.FC<PriorityFieldProps> = ({ form }) => {
   const { t } = useTranslation();
   
+  // This ensures we're rendering the translated text directly in the UI
+  const getPriorityLabel = (priority: string): string => {
+    switch (priority) {
+      case "urgent": return t("task.priority.urgent");
+      case "high": return t("task.priority.high");
+      case "medium": return t("task.priority.medium");
+      case "normal": return t("task.priority.normal");
+      default: return t("task.selectPriority");
+    }
+  };
+
   return (
     <FormField
       control={form.control}
@@ -38,7 +49,9 @@ export const PriorityField: React.FC<PriorityFieldProps> = ({ form }) => {
           >
             <FormControl>
               <SelectTrigger>
-                <SelectValue placeholder={t('task.selectPriority')} />
+                <SelectValue>
+                  {field.value ? getPriorityLabel(field.value) : t('task.selectPriority')}
+                </SelectValue>
               </SelectTrigger>
             </FormControl>
             <SelectContent>

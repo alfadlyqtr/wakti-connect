@@ -39,6 +39,17 @@ export function TaskDetailsTab({
   const enableSubtasks = form.watch("enableSubtasks");
   const { t } = useTranslation();
   
+  // Helper function to get priority translation
+  const getPriorityLabel = (priority: string): string => {
+    switch (priority) {
+      case "urgent": return t("task.priority.urgent");
+      case "high": return t("task.priority.high");
+      case "medium": return t("task.priority.medium");
+      case "normal": return t("task.priority.normal");
+      default: return t("task.selectPriority");
+    }
+  };
+  
   return (
     <div className="space-y-4 pt-4">
       <FormField
@@ -86,7 +97,9 @@ export function TaskDetailsTab({
             >
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder={t("task.selectPriority")} />
+                  <SelectValue>
+                    {field.value ? getPriorityLabel(field.value) : t("task.selectPriority")}
+                  </SelectValue>
                 </SelectTrigger>
               </FormControl>
               <SelectContent>

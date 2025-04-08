@@ -69,7 +69,6 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
     },
   });
 
-  // Update form when task changes
   useEffect(() => {
     if (task) {
       form.reset({
@@ -91,7 +90,7 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
         title: values.title,
         description: values.description || "",
         priority: values.priority,
-        status: task.status, // Keep existing status
+        status: task.status,
         due_date: values.dueDate,
         due_time: values.dueTime || null,
       };
@@ -117,7 +116,17 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
       setLoading(false);
     }
   };
-  
+
+  const getPriorityLabel = (priority: string): string => {
+    switch (priority) {
+      case "urgent": return t("task.priority.urgent");
+      case "high": return t("task.priority.high");
+      case "medium": return t("task.priority.medium");
+      case "normal": return t("task.priority.normal");
+      default: return t("task.selectPriority");
+    }
+  };
+
   const isFormValid = () => {
     const values = form.getValues();
     return !!values.title && !!values.dueDate;
@@ -187,7 +196,9 @@ export const EditTaskDialog: React.FC<EditTaskDialogProps> = ({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={t("task.selectPriority")} />
+                          <SelectValue>
+                            {field.value ? getPriorityLabel(field.value) : t("task.selectPriority")}
+                          </SelectValue>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
