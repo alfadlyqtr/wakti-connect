@@ -155,5 +155,52 @@
     "monthly": "Monthly",
     "frequency": "Frequency",
     "interval": "Interval"
+  },
+  "pricing": {
+    "title": "Choose the Right Plan",
+    "subtitle": "Simple, transparent pricing for everyone",
+    "perMonth": "per month",
+    "perYear": "per year",
+    "forever": "forever",
+    "save": "Save",
+    "year": "year",
+    "plans": {
+      "free": {
+        "title": "Free",
+        "description": "Basic features for personal use",
+        "buttonText": "Get Started",
+        "features": [
+          "1 task per month",
+          "View appointments",
+          "1 message per month",
+          "Basic support"
+        ]
+      },
+      "individual": {
+        "title": "Individual",
+        "description": "Enhanced features for productivity",
+        "buttonText": "Subscribe Now",
+        "features": [
+          "Unlimited tasks",
+          "Create & manage appointments",
+          "Unlimited messaging with individuals",
+          "Priority support"
+        ]
+      },
+      "business": {
+        "title": "Business",
+        "description": "Complete solution for businesses",
+        "buttonText": "Get Business Plan",
+        "features": [
+          "Unlimited tasks",
+          "Complete booking system",
+          "Business profile page",
+          "Staff management",
+          "Customer messaging",
+          "Advanced analytics",
+          "Premium support"
+        ]
+      }
+    }
   }
 }
