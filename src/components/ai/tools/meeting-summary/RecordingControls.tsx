@@ -5,7 +5,6 @@ import { Mic, MicOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatTime } from '@/utils/audio/audioProcessing';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useTranslation } from 'react-i18next';
 
 interface RecordingControlsProps {
   isRecording: boolean;
@@ -26,8 +25,6 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
   stopRecording,
   recordingError
 }) => {
-  const { t } = useTranslation();
-  
   // Language options for speech recognition
   const languageOptions = [
     { value: 'en', label: 'English' },
@@ -39,7 +36,7 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
       {/* Language selector */}
       <div className="flex items-center justify-between">
         <label className="block text-sm font-medium mb-1">
-          {t('recording.recognitionLanguage')}:
+          Recognition Language:
         </label>
         <Select
           value={selectedLanguage}
@@ -47,7 +44,7 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
           disabled={isRecording}
         >
           <SelectTrigger className="w-40">
-            <SelectValue placeholder={t('recording.selectLanguage')} />
+            <SelectValue placeholder="Select Language" />
           </SelectTrigger>
           <SelectContent>
             {languageOptions.map((lang) => (
@@ -76,7 +73,7 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
               className="mt-2"
               onClick={stopRecording}
             >
-              {t('recording.stopRecording')}
+              Stop Recording
             </Button>
           </div>
         ) : (
@@ -92,7 +89,7 @@ const RecordingControls: React.FC<RecordingControlsProps> = ({
               className="mt-2"
               onClick={startRecording}
             >
-              {t('recording.startRecording')}
+              Start Recording
             </Button>
           </div>
         )}

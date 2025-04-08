@@ -9,10 +9,8 @@ import CurrencyTab from "@/components/settings/CurrencyTab";
 import BillingTab from "@/components/settings/BillingTab";
 import { useProfileSettings } from "@/hooks/useProfileSettings";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { useTranslation } from "react-i18next";
 
 const DashboardSettings = () => {
-  const { t } = useTranslation();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
@@ -31,38 +29,38 @@ const DashboardSettings = () => {
   const isBusinessAccount = userRole === 'business';
   
   if (isLoading) {
-    return <div className="mx-auto max-w-7xl py-6">{t("common.loading")}</div>;
+    return <div className="mx-auto max-w-7xl py-6">Loading...</div>;
   }
   
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold">{t("settings.title")}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Settings</h1>
         <p className="text-muted-foreground">
-          {t("settings.manageSettings")}
+          Manage your account settings and preferences
         </p>
       </div>
       
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="flex overflow-x-auto no-scrollbar">
           <TabsTrigger value="profile" className="px-3 py-1.5 whitespace-nowrap">
-            {isBusinessAccount ? t("settings.businessAccount") : t("settings.profile")}
+            {isBusinessAccount ? "Business Account" : "Profile"}
           </TabsTrigger>
           <TabsTrigger value="notifications" className="px-3 py-1.5 whitespace-nowrap">
-            {t("settings.notifications")}
+            Notifications
           </TabsTrigger>
           {!isStaff && (
             <>
               <TabsTrigger value="billing" className="px-3 py-1.5 whitespace-nowrap">
-                {t("settings.billing")}
+                Billing
               </TabsTrigger>
               {isBusinessAccount && (
                 <TabsTrigger value="currency" className="px-3 py-1.5 whitespace-nowrap">
-                  {t("settings.currency")}
+                  Currency
                 </TabsTrigger>
               )}
               <TabsTrigger value="ai-assistant" className="px-3 py-1.5 whitespace-nowrap">
-                {t("settings.aiAssistant")}
+                AI Assistant
               </TabsTrigger>
             </>
           )}

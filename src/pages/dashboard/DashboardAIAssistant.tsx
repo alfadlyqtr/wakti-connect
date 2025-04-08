@@ -35,7 +35,6 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AISystemIntegrationPanel } from "@/components/ai/assistant/AISystemIntegrationPanel";
-import { useTranslation } from "react-i18next";
 
 declare global {
   class ImageCapture {
@@ -46,7 +45,6 @@ declare global {
 }
 
 const DashboardAIAssistant = () => {
-  const { t } = useTranslation();
   const { user } = useAuth();
   const { 
     messages, 
@@ -107,8 +105,8 @@ const DashboardAIAssistant = () => {
       } catch (error) {
         console.error("Failed to update AI role:", error);
         toast({
-          title: t("common.error"),
-          description: t("ai.roleUpdateError"),
+          title: "Error",
+          description: "Failed to update AI role. Please verify your account status",
           variant: "destructive",
         });
       }
@@ -121,20 +119,20 @@ const DashboardAIAssistant = () => {
     try {
       console.log("Uploading file:", file.name);
       toast({
-        title: t("ai.fileUploaded"),
-        description: t("ai.fileUploadSuccess", { name: file.name }),
+        title: "File Uploaded",
+        description: `${file.name} has been uploaded`,
       });
       
-      setInputMessage(t("ai.uploadedFilePrompt", { name: file.name }));
+      setInputMessage(`I've uploaded ${file.name}. Can you analyze it for me?`);
     } catch (error) {
       console.error("File upload error:", error);
       toast({
-        title: t("ai.uploadFailed"),
-        description: t("ai.tryAgain"),
+        title: "Upload Failed",
+        description: "Please try again",
         variant: "destructive"
       });
     }
-  }, [toast, t]);
+  }, [toast]);
 
   const handleCameraCapture = useCallback(async () => {
     try {
@@ -154,12 +152,12 @@ const DashboardAIAssistant = () => {
     } catch (error) {
       console.error("Camera access error:", error);
       toast({
-        title: t("ai.cameraError"),
-        description: t("ai.checkPermissions"),
+        title: "Camera Error",
+        description: "Please check your camera permissions",
         variant: "destructive"
       });
     }
-  }, [toast, t]);
+  }, [toast]);
 
   const takePicture = useCallback(async () => {
     if (!imageCapture || !canvasRef.current) return;
@@ -175,7 +173,7 @@ const DashboardAIAssistant = () => {
       const dataUrl = canvas.toDataURL('image/jpeg');
       setCapturedImage(dataUrl);
       
-      setInputMessage(t("ai.photoTakenPrompt"));
+      setInputMessage("I've taken a photo. Can you analyze what's in it?");
       
       setShowCamera(false);
       
@@ -184,18 +182,18 @@ const DashboardAIAssistant = () => {
       }
       
       toast({
-        title: t("ai.photoTaken"),
-        description: t("ai.photoReady"),
+        title: "Photo Taken",
+        description: "Your photo is ready for analysis",
       });
     } catch (error) {
       console.error("Error taking picture:", error);
       toast({
-        title: t("ai.cameraError"),
-        description: t("ai.tryAgain"),
+        title: "Camera Error",
+        description: "Please try again",
         variant: "destructive"
       });
     }
-  }, [imageCapture, toast, t]);
+  }, [imageCapture, toast]);
 
   const closeCamera = useCallback(() => {
     if (videoRef.current?.srcObject instanceof MediaStream) {
@@ -237,8 +235,8 @@ const DashboardAIAssistant = () => {
         if (profileError) {
           console.error("Error checking access:", profileError);
           toast({
-            title: t("ai.accessError"),
-            description: t("ai.verifyAccountError"),
+            title: "Access Error",
+            description: "Please verify your account status",
             variant: "destructive",
           });
           setCanAccess(false);
@@ -257,7 +255,7 @@ const DashboardAIAssistant = () => {
     };
     
     checkUserAccess();
-  }, [user, toast, t]);
+  }, [user, toast]);
 
   useEffect(() => {
     if (hookCanUseAI !== undefined && !isChecking) {
@@ -323,8 +321,8 @@ const DashboardAIAssistant = () => {
   return (
     <StaffRoleGuard 
       disallowStaff={true}
-      messageTitle={t("ai.notAvailable")}
-      messageDescription={t("ai.staffRestriction")}
+      messageTitle="AI Assistant Not Available"
+      messageDescription="This feature is not available for staff accounts"
     >
       <AISettingsProvider>
         <div className="space-y-4">
@@ -340,10 +338,10 @@ const DashboardAIAssistant = () => {
                     </div>
                     <div>
                       <CardTitle className="flex items-center">
-                        {t("ai.title")}
+                        AI Assistant
                         <Badge variant="outline" className="ml-2 text-xs px-2">v2.0</Badge>
                       </CardTitle>
-                      <p className="text-sm text-muted-foreground">{t("ai.subtitle")}</p>
+                      <p className="text-sm text-muted-foreground">Your personal productivity assistant</p>
                     </div>
                   </div>
                 </CardHeader>
@@ -361,15 +359,15 @@ const DashboardAIAssistant = () => {
                     <TabsList className="mx-auto mb-4 grid w-full max-w-md grid-cols-3">
                       <TabsTrigger value="chat" className="flex items-center gap-2">
                         <MessageSquare className="h-4 w-4" />
-                        <span>{t("ai.tabs.chat")}</span>
+                        <span>Chat</span>
                       </TabsTrigger>
                       <TabsTrigger value="tools" className="flex items-center gap-2">
                         <Wrench className="h-4 w-4" />
-                        <span>{t("ai.tabs.tools")}</span>
+                        <span>Tools</span>
                       </TabsTrigger>
                       <TabsTrigger value="knowledge" className="flex items-center gap-2">
                         <BookCopy className="h-4 w-4" />
-                        <span>{t("ai.tabs.knowledge")}</span>
+                        <span>Knowledge</span>
                       </TabsTrigger>
                     </TabsList>
                     
@@ -431,7 +429,7 @@ const DashboardAIAssistant = () => {
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm flex items-center gap-2">
                           <Cpu className="h-4 w-4" /> 
-                          {t("ai.businessTools")}
+                          Business Tools
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -456,8 +454,10 @@ const DashboardAIAssistant = () => {
                             <Bot className="h-4 w-4" />
                           )}
                           {selectedRole === "employee" || selectedRole === "writer" 
-                            ? t("ai.creativeTools")
-                            : t(`ai.toolsFor.${selectedRole}`)}
+                            ? "Creative Tools"
+                            : selectedRole === "student"
+                            ? "Student Tools"
+                            : "Assistant Tools"}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -481,7 +481,7 @@ const DashboardAIAssistant = () => {
         <Dialog open={showCamera} onOpenChange={setShowCamera}>
           <DialogContent className="max-w-md" onInteractOutside={closeCamera}>
             <DialogHeader>
-              <DialogTitle>{t("ai.takePicture")}</DialogTitle>
+              <DialogTitle>Take Picture</DialogTitle>
             </DialogHeader>
             <div className="flex flex-col items-center space-y-4">
               <div className="relative bg-black rounded-lg overflow-hidden w-full aspect-video">
@@ -494,8 +494,8 @@ const DashboardAIAssistant = () => {
               </div>
               <canvas ref={canvasRef} className="hidden" />
               <div className="flex justify-center gap-4">
-                <Button variant="outline" onClick={closeCamera}>{t("common.cancel")}</Button>
-                <Button onClick={takePicture}>{t("ai.takePicture")}</Button>
+                <Button variant="outline" onClick={closeCamera}>Cancel</Button>
+                <Button onClick={takePicture}>Take Picture</Button>
               </div>
             </div>
           </DialogContent>

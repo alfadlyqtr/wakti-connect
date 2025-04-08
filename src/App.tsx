@@ -18,25 +18,6 @@ import NotificationListener from "@/components/notifications/NotificationListene
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import PublicLayout from "./components/layout/PublicLayout";
 
-// Import English-only translations
-import enTranslation from './i18n/locales/en/translation.json';
-import { I18nextProvider } from 'react-i18next';
-import i18next from 'i18next';
-import { initReactI18next } from 'react-i18next';
-
-// Very simple English-only i18n setup
-const i18n = i18next.createInstance();
-i18n.use(initReactI18next).init({
-  resources: {
-    en: { translation: enTranslation }
-  },
-  lng: 'en',
-  fallbackLng: 'en',
-  interpolation: {
-    escapeValue: false,
-  },
-});
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -48,97 +29,95 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <I18nextProvider i18n={i18n}>
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="system">
-            <HelmetProvider>
-              <TaskProvider>
-                <TooltipProvider>
-                  <BrowserRouter>
-                    <ScrollToTop />
-                    <NotificationListener />
-                    <Toaster />
-                    <Sonner />
-                    <Routes>
-                      {/* Public routes with PublicLayout */}
-                      <Route element={<PublicLayout />}>
-                        {publicRoutes.map((route) => (
-                          <Route
-                            key={route.path}
-                            path={route.path}
-                            element={route.element}
-                          />
-                        ))}
-                      </Route>
-                      
-                      {/* Booking routes - must be defined before auth routes */}
-                      <Route path="/booking">
-                        {bookingRoutes.map((route) => (
-                          <Route
-                            key={route.path}
-                            path={route.path}
-                            element={route.element}
-                          />
-                        ))}
-                      </Route>
-                      
-                      {/* Auth routes */}
-                      {authRoutes.map((route) => (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="system">
+          <HelmetProvider>
+            <TaskProvider>
+              <TooltipProvider>
+                <BrowserRouter>
+                  <ScrollToTop />
+                  <NotificationListener />
+                  <Toaster />
+                  <Sonner />
+                  <Routes>
+                    {/* Public routes with PublicLayout */}
+                    <Route element={<PublicLayout />}>
+                      {publicRoutes.map((route) => (
                         <Route
                           key={route.path}
-                          path={`/auth/${route.path}`}
+                          path={route.path}
                           element={route.element}
                         />
                       ))}
-                      
-                      {/* Dashboard routes */}
-                      <Route
-                        path="/dashboard/*"
-                        element={
-                          <ProtectedRoute>
-                            <DashboardLayout>
-                              <Routes>
-                                {dashboardRoutes.map((route) => (
-                                  <Route
-                                    key={route.path || 'index'}
-                                    path={route.path}
-                                    index={route.index}
-                                    element={route.element}
-                                  />
-                                ))}
-                              </Routes>
-                            </DashboardLayout>
-                          </ProtectedRoute>
-                        }
-                      />
-                      
-                      {/* Business routes */}
-                      <Route path="/business/*">
+                    </Route>
+                    
+                    {/* Booking routes - must be defined before auth routes */}
+                    <Route path="/booking">
+                      {bookingRoutes.map((route) => (
                         <Route
-                          index
-                          element={<Navigate to="/" replace />}
+                          key={route.path}
+                          path={route.path}
+                          element={route.element}
                         />
-                        {businessRoutes.map((route) => (
-                          <Route
-                            key={route.path}
-                            path={route.path}
-                            element={route.element}
-                          />
-                        ))}
-                      </Route>
-                      
-                      {/* Catch-all redirect */}
-                      <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
-                  </BrowserRouter>
-                </TooltipProvider>
-              </TaskProvider>
-            </HelmetProvider>
-          </ThemeProvider>
-        </QueryClientProvider>
-      </ErrorBoundary>
-    </I18nextProvider>
+                      ))}
+                    </Route>
+                    
+                    {/* Auth routes */}
+                    {authRoutes.map((route) => (
+                      <Route
+                        key={route.path}
+                        path={`/auth/${route.path}`}
+                        element={route.element}
+                      />
+                    ))}
+                    
+                    {/* Dashboard routes */}
+                    <Route
+                      path="/dashboard/*"
+                      element={
+                        <ProtectedRoute>
+                          <DashboardLayout>
+                            <Routes>
+                              {dashboardRoutes.map((route) => (
+                                <Route
+                                  key={route.path || 'index'}
+                                  path={route.path}
+                                  index={route.index}
+                                  element={route.element}
+                                />
+                              ))}
+                            </Routes>
+                          </DashboardLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    
+                    {/* Business routes */}
+                    <Route path="/business/*">
+                      <Route
+                        index
+                        element={<Navigate to="/" replace />}
+                      />
+                      {businessRoutes.map((route) => (
+                        <Route
+                          key={route.path}
+                          path={route.path}
+                          element={route.element}
+                        />
+                      ))}
+                    </Route>
+                    
+                    {/* Catch-all redirect */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </BrowserRouter>
+              </TooltipProvider>
+            </TaskProvider>
+          </HelmetProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
