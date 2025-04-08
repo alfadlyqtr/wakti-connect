@@ -17,8 +17,25 @@ import { TaskProvider } from "@/contexts/TaskContext";
 import NotificationListener from "@/components/notifications/NotificationListener";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import PublicLayout from "./components/layout/PublicLayout";
+
+// Import English-only translations
+import enTranslation from './i18n/locales/en/translation.json';
 import { I18nextProvider } from 'react-i18next';
-import i18n from './i18n/i18n';
+import i18next from 'i18next';
+import { initReactI18next } from 'react-i18next';
+
+// Very simple English-only i18n setup
+const i18n = i18next.createInstance();
+i18n.use(initReactI18next).init({
+  resources: {
+    en: { translation: enTranslation }
+  },
+  lng: 'en',
+  fallbackLng: 'en',
+  interpolation: {
+    escapeValue: false,
+  },
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {

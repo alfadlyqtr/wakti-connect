@@ -1,6 +1,5 @@
 
-// Import i18n initialization first to ensure it loads before React renders
-import './i18n/i18n'; 
+// Import React and ReactDOM
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
@@ -12,22 +11,11 @@ import { CurrencyProvider } from './contexts/CurrencyContext';
 const rootElement = document.getElementById("root");
 const root = createRoot(rootElement!);
 
-// Wait for i18n to be initialized, then render
-const renderApp = () => {
-  root.render(
-    <AuthProvider>
-      <CurrencyProvider>
-        <App />
-      </CurrencyProvider>
-    </AuthProvider>
-  );
-};
-
-// Ensure i18n is ready before rendering
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    renderApp();
-  });
-} else {
-  renderApp();
-}
+// Render the app directly - i18n is initialized in App.tsx
+root.render(
+  <AuthProvider>
+    <CurrencyProvider>
+      <App />
+    </CurrencyProvider>
+  </AuthProvider>
+);

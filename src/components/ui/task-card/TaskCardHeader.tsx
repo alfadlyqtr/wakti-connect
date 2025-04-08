@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TaskPriority } from "@/types/task.types";
-import { useTranslation } from "react-i18next";
 
 interface TaskCardHeaderProps {
   title: string;
@@ -23,9 +22,7 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
   isRecurring,
   isCompleted,
 }) => {
-  const { t } = useTranslation();
-  
-  // Explicitly hardcode English values regardless of language
+  // Explicitly hardcode English values
   const getPriorityLabel = (priority: TaskPriority): string => {
     switch (priority) {
       case "urgent": return "Urgent";
@@ -71,7 +68,7 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
           {isRecurring && (
             <span className="flex items-center gap-1 text-xs text-muted-foreground">
               <RepeatIcon className="h-3 w-3" />
-              <span>{t('recurring.makeRecurring')}</span>
+              <span>Recurring</span>
             </span>
           )}
         </div>

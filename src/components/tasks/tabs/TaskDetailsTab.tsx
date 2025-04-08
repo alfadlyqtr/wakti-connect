@@ -20,7 +20,6 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Calendar, Clock } from "lucide-react";
 import { TimePickerField } from "../form-fields/TimePickerField";
-import { useTranslation } from "react-i18next";
 
 interface TaskDetailsTabProps {
   form: UseFormReturn<any>;
@@ -37,9 +36,8 @@ export function TaskDetailsTab({
 }: TaskDetailsTabProps) {
   // Watch enableSubtasks value
   const enableSubtasks = form.watch("enableSubtasks");
-  const { t } = useTranslation();
   
-  // Explicitly hardcode English values regardless of language
+  // Explicitly hardcode English values
   const getPriorityLabel = (priority: string): string => {
     switch (priority) {
       case "urgent": return "Urgent";
@@ -57,9 +55,9 @@ export function TaskDetailsTab({
         name="title"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t("task.taskTitle")}</FormLabel>
+            <FormLabel>Task Title</FormLabel>
             <FormControl>
-              <Input placeholder={t("task.enterTaskTitle")} {...field} />
+              <Input placeholder="Enter task title" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -71,10 +69,10 @@ export function TaskDetailsTab({
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t("task.description")}</FormLabel>
+            <FormLabel>Description</FormLabel>
             <FormControl>
               <Textarea
-                placeholder={t("task.enterTaskDescription")}
+                placeholder="Enter task description"
                 className="resize-none"
                 {...field}
                 value={field.value || ""}
@@ -90,7 +88,7 @@ export function TaskDetailsTab({
         name="priority"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t("task.priority.priority")}</FormLabel>
+            <FormLabel>Priority</FormLabel>
             <Select
               onValueChange={field.onChange}
               defaultValue={field.value}
@@ -122,7 +120,7 @@ export function TaskDetailsTab({
             <FormItem>
               <FormLabel className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                {t("task.dueDate")}
+                Due Date
               </FormLabel>
               <FormControl>
                 <Input type="date" {...field} />
@@ -135,7 +133,7 @@ export function TaskDetailsTab({
         <TimePickerField 
           form={form} 
           name="dueTime"
-          label={t("task.dueTime")}
+          label="Due Time"
         />
       </div>
       
@@ -153,7 +151,7 @@ export function TaskDetailsTab({
               htmlFor="recurring-switch"
               className="cursor-pointer font-medium"
             >
-              {t("task.makingRecurring")}
+              Make this recurring
             </FormLabel>
           </FormItem>
         )}
@@ -170,7 +168,7 @@ export function TaskDetailsTab({
                 />
               </FormControl>
               <FormLabel className="cursor-pointer font-medium">
-                {t("task.enableSubtasks")}
+                Enable Subtasks
               </FormLabel>
             </FormItem>
           )}

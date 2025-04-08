@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarEvent } from "@/types/calendar.types";
 import { CheckCircle, Circle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 
 interface TaskListProps {
   tasks: CalendarEvent[];
@@ -12,7 +11,6 @@ interface TaskListProps {
 
 export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
 
   // Get priority color based on priority value
   const getPriorityColorClass = (priority?: string) => {
@@ -30,7 +28,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
     }
   };
 
-  // Explicitly hardcode English values regardless of language
+  // Explicitly hardcode English values
   const getPriorityLabel = (priority?: string): string => {
     switch (priority) {
       case "urgent": return "Urgent";

@@ -16,16 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useTranslation } from "react-i18next";
 
 interface PriorityFieldProps {
   form: UseFormReturn<TaskFormValues>;
 }
 
 export const PriorityField: React.FC<PriorityFieldProps> = ({ form }) => {
-  const { t } = useTranslation();
-
-  // Explicitly hardcode English values regardless of language
+  // Explicitly hardcode English values
   const getPriorityLabel = (priority: string): string => {
     switch (priority) {
       case "urgent": return "Urgent";
@@ -42,7 +39,7 @@ export const PriorityField: React.FC<PriorityFieldProps> = ({ form }) => {
       name="priority"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{t('task.priority.priority')}</FormLabel>
+          <FormLabel>Priority</FormLabel>
           <Select
             onValueChange={field.onChange}
             defaultValue={field.value}
