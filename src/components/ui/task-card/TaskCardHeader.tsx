@@ -25,6 +25,17 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
 }) => {
   const { t } = useTranslation();
   
+  // Get priority label - using direct English values
+  const getPriorityLabel = (priority: TaskPriority): string => {
+    switch (priority) {
+      case "urgent": return "Urgent";
+      case "high": return "High";
+      case "medium": return "Medium";
+      case "normal": return "Normal";
+      default: return "Normal";
+    }
+  };
+  
   const getPriorityIcon = () => {
     switch (priority) {
       case "urgent":
@@ -54,7 +65,7 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
         <div className="flex items-center mt-1 gap-2">
           <span className="flex items-center gap-1 text-xs">
             {getPriorityIcon()}
-            <span className="capitalize">{t(`task.priority.${priority}`)}</span>
+            <span className="capitalize">{getPriorityLabel(priority)}</span>
           </span>
           
           {isRecurring && (

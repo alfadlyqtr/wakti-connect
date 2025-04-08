@@ -14,6 +14,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
+  // Get priority color based on priority value
   const getPriorityColorClass = (priority?: string) => {
     switch (priority) {
       case "urgent":
@@ -26,6 +27,17 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
         return "bg-green-500";
       default:
         return "bg-slate-500";
+    }
+  };
+
+  // Get priority label - using direct English values
+  const getPriorityLabel = (priority?: string): string => {
+    switch (priority) {
+      case "urgent": return "Urgent";
+      case "high": return "High";
+      case "medium": return "Medium";
+      case "normal": return "Normal";
+      default: return "Normal";
     }
   };
 
@@ -54,7 +66,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
             </div>
             <div className="flex-1 truncate text-sm">{task.title}</div>
             <Badge className={`ml-2 ${getPriorityColorClass(task.priority)}`}>
-              {t(`task.priority.${priorityKey}`)}
+              {getPriorityLabel(task.priority)}
             </Badge>
           </div>
         );

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -162,6 +163,17 @@ const TaskBadges = ({
 }: TaskBadgesProps) => {
   const { t } = useTranslation();
   
+  // Get priority label - using direct English values
+  const getPriorityLabel = (priority: TaskPriority): string => {
+    switch (priority) {
+      case "urgent": return "Urgent";
+      case "high": return "High";
+      case "medium": return "Medium";
+      case "normal": return "Normal";
+      default: return "Normal";
+    }
+  };
+  
   const formattedDate = dueDate.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric'
@@ -178,7 +190,7 @@ const TaskBadges = ({
       </Badge>
       
       <Badge variant="outline" className={cn("text-xs", getPriorityColor(priority))}>
-        {t(`task.priority.${priority}`)}
+        {getPriorityLabel(priority)}
       </Badge>
       
       <TaskSharingBadges isShared={isShared} isAssigned={isAssigned} />

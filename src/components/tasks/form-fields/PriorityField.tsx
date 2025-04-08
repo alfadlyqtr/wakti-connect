@@ -25,6 +25,17 @@ interface PriorityFieldProps {
 export const PriorityField: React.FC<PriorityFieldProps> = ({ form }) => {
   const { t } = useTranslation();
 
+  // Get priority label function - using English values regardless of language
+  const getPriorityLabel = (priority: string): string => {
+    switch (priority) {
+      case "urgent": return "Urgent";
+      case "high": return "High";
+      case "medium": return "Medium";
+      case "normal": return "Normal";
+      default: return "Select Priority";
+    }
+  };
+
   return (
     <FormField
       control={form.control}
@@ -39,15 +50,15 @@ export const PriorityField: React.FC<PriorityFieldProps> = ({ form }) => {
             <FormControl>
               <SelectTrigger>
                 <SelectValue>
-                  {field.value ? t(`task.priority.${field.value}`) : t('task.selectPriority')}
+                  {field.value ? getPriorityLabel(field.value) : "Select Priority"}
                 </SelectValue>
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="urgent">{t('task.priority.urgent')}</SelectItem>
-              <SelectItem value="high">{t('task.priority.high')}</SelectItem>
-              <SelectItem value="medium">{t('task.priority.medium')}</SelectItem>
-              <SelectItem value="normal">{t('task.priority.normal')}</SelectItem>
+              <SelectItem value="urgent">Urgent</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="normal">Normal</SelectItem>
             </SelectContent>
           </Select>
           <FormMessage />

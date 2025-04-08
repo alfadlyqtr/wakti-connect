@@ -39,14 +39,14 @@ export function TaskDetailsTab({
   const enableSubtasks = form.watch("enableSubtasks");
   const { t } = useTranslation();
   
-  // Helper function to get priority translation
+  // Helper function to get priority translation - hardcoded to English
   const getPriorityLabel = (priority: string): string => {
     switch (priority) {
-      case "urgent": return t("task.priority.urgent");
-      case "high": return t("task.priority.high");
-      case "medium": return t("task.priority.medium");
-      case "normal": return t("task.priority.normal");
-      default: return t("task.selectPriority");
+      case "urgent": return "Urgent";
+      case "high": return "High";
+      case "medium": return "Medium";
+      case "normal": return "Normal";
+      default: return "Select Priority";
     }
   };
   
@@ -98,15 +98,15 @@ export function TaskDetailsTab({
               <FormControl>
                 <SelectTrigger>
                   <SelectValue>
-                    {field.value ? getPriorityLabel(field.value) : t("task.selectPriority")}
+                    {field.value ? getPriorityLabel(field.value) : "Select Priority"}
                   </SelectValue>
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="urgent">{t("task.priority.urgent")}</SelectItem>
-                <SelectItem value="high">{t("task.priority.high")}</SelectItem>
-                <SelectItem value="medium">{t("task.priority.medium")}</SelectItem>
-                <SelectItem value="normal">{t("task.priority.normal")}</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="normal">Normal</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />
