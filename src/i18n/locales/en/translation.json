@@ -1,3 +1,4 @@
+
 {
   "common": {
     "wakti": "Wakti",
@@ -284,5 +285,133 @@
   },
   "booking": {
     "reference": "Bookings"
+  },
+  "header": {
+    "pricing": "Pricing",
+    "features": "Features",
+    "contact": "Contact",
+    "lightMode": "Light Mode",
+    "darkMode": "Dark Mode",
+    "signIn": "Sign In",
+    "menu": "Menu"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "tasks": "Tasks",
+    "calendar": "Calendar",
+    "appointments": "Appointments",
+    "bookings": "Bookings",
+    "contacts": "Contacts",
+    "messages": "Messages",
+    "notifications": "Notifications",
+    "staff": "Staff",
+    "users": "Users",
+    "jobs": "Jobs",
+    "services": "Services",
+    "analytics": "Analytics",
+    "reports": "Reports",
+    "settings": "Settings",
+    "subscriber": "Subscriber",
+    "subscribers": "Subscribers"
+  },
+  "language": {
+    "switchToEnglish": "Switch to English",
+    "switchToArabic": "Switch to Arabic"
+  },
+  "dashboardPreview": {
+    "title": "Dashboard Preview",
+    "description": "This is a preview of the WAKTI dashboard interface with task management, appointment scheduling, and business analytics features."
+  },
+  "features": {
+    "title": "Key Features",
+    "subtitle": "Everything you need to manage your time and business efficiently",
+    "taskManagement": {
+      "title": "Task Management",
+      "description": "Create, organize and track tasks with priorities, due dates and reminders."
+    },
+    "appointmentBooking": {
+      "title": "Appointment Booking",
+      "description": "Schedule and manage appointments, with automatic notifications and reminders."
+    },
+    "teamCollaboration": {
+      "title": "Team Collaboration",
+      "description": "Assign tasks, share calendars, and collaborate efficiently with your team."
+    },
+    "messaging": {
+      "title": "Messaging System",
+      "description": "Built-in messaging to communicate with team members and clients."
+    },
+    "analytics": {
+      "title": "Business Analytics",
+      "description": "Track performance, analyze trends, and make data-driven decisions."
+    },
+    "aiIntegration": {
+      "title": "AI Integration",
+      "description": "AI-powered features to automate tasks and provide smart recommendations."
+    }
+  },
+  "cta": {
+    "title": "Ready to Transform How You Manage Your Time?",
+    "description": "Join thousands of users who are organizing their work and life with WAKTI.",
+    "button": "Get Started for Free"
+  },
+  "footer": {
+    "description": "WAKTI is your all-in-one solution for time management, task organization, and business operations.",
+    "quickLinks": "Quick Links",
+    "legal": "Legal",
+    "contactUs": "Contact Us",
+    "address": "Doha, Qatar",
+    "email": "Email",
+    "phone": "Phone",
+    "allRightsReserved": "All Rights Reserved",
+    "designedBy": "Designed & Developed by",
+    "home": "Home",
+    "features": "Features",
+    "pricing": "Pricing", 
+    "about": "About Us",
+    "contact": "Contact Us",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "faq": "FAQ"
+  },
+  "location": {
+    "enterLocation": "Enter Location",
+    "viewOnMap": "View on Map",
+    "currentLocation": "Current Location",
+    "searchPlaceholder": "Search for a location",
+    "manualEntry": "Manual Entry",
+    "googleMaps": "Google Maps",
+    "getLocation": "Get Location",
+    "invalidUrl": "Invalid URL",
+    "displayName": "Location Display Name",
+    "enterUrl": "Enter Google Maps URL",
+    "previewMap": "Preview Map",
+    "validUrl": "Valid URL"
+  },
+  "ai": {
+    "greeting": "Hello",
+    "introduction": "I'm your WAKTI AI assistant",
+    "defaultWelcome": "I can help you with tasks, appointments, and business management. What would you like assistance with today?",
+    "system": "System",
+    "messagePlaceholder": "Type your message...",
+    "stopVoice": "Stop voice input",
+    "startVoice": "Start voice input",
+    "attachFile": "Attach file",
+    "takePhoto": "Take photo",
+    "sendMessage": "Send message",
+    "welcomeMessages": {
+      "student": "I can help you manage your study schedule, assignments, and deadlines. How can I assist with your academic needs?",
+      "business_owner": "I'm here to help with your business operations, staff management, and customer engagement. How can I assist you today?",
+      "writer": "I can help you organize your writing projects, set deadlines, and manage your creative workflow. What are you working on?",
+      "employee": "I can help you manage your work tasks, meetings, and professional schedule. What would you like assistance with?"
+    },
+    "roles": {
+      "student": "Student Assistant",
+      "business_owner": "Business Advisor",
+      "writer": "Writing Companion",
+      "employee": "Professional Assistant"
+    },
+    "fileTooLarge": "File too large",
+    "fileSizeLimit": "File size should not exceed 10MB"
   }
 }
