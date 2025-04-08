@@ -36,7 +36,7 @@ const ShareTabContent: React.FC<ShareTabContentProps> = ({
         <TabsList className="grid grid-cols-3 w-full">
           <TabsTrigger value={SHARE_TABS.RECIPIENTS} className="flex items-center gap-2">
             <Mail className="h-4 w-4" />
-            <span className="hidden sm:inline">Invited Participants</span>
+            <span className="hidden sm:inline">Participants</span>
           </TabsTrigger>
           <TabsTrigger value={SHARE_TABS.QRCODE} className="flex items-center gap-2">
             <QrCode className="h-4 w-4" />
@@ -44,7 +44,7 @@ const ShareTabContent: React.FC<ShareTabContentProps> = ({
           </TabsTrigger>
           <TabsTrigger value={SHARE_TABS.LINK} className="flex items-center gap-2">
             <LinkIcon className="h-4 w-4" />
-            <span className="hidden sm:inline">View Details</span>
+            <span className="hidden sm:inline">Share</span>
           </TabsTrigger>
         </TabsList>
 

@@ -14,7 +14,7 @@ export function LanguageSwitcher() {
     });
   };
 
-  // Just display English and a non-functional Arabic button
+  // Display English and a non-functional Arabic button
   return (
     <Button 
       variant="outline" 

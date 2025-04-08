@@ -2,8 +2,21 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-// Import English translations only
-import enTranslation from './locales/en/translation.json';
+// English translations object for essential booking and common terms
+const enTranslations = {
+  common: {
+    copy: "Copy",
+    copyToClipboard: "Copied to Clipboard",
+    clipboardCopyMessage: "has been copied to clipboard"
+  },
+  booking: {
+    reference: "Booking Reference",
+    saveReference: "Please save this reference number for your records",
+    staffLabel: "Staff:",
+    bookedFor: "Booked For:",
+    phoneLabel: "Phone:"
+  }
+};
 
 // Initialize i18next with English-only configuration
 i18n
@@ -11,7 +24,7 @@ i18n
   .init({
     resources: {
       en: {
-        translation: enTranslation
+        translation: enTranslations
       }
     },
     lng: 'en',
