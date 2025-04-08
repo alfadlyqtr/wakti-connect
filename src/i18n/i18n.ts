@@ -61,14 +61,15 @@ const ensureKeysExist = (enObj: any, arObj: any, path = '') => {
 ensureKeysExist(enTranslation, arTranslation);
 
 // Debug: Log the synchronized Arabic translation for priority.normal
-// Type-safe check to access the nested property with proper null handling
+// Fixed: Add proper null checks to prevent TypeScript errors
 const taskPriority = arTranslation?.task?.priority;
 console.log('Arabic translation for task.priority.normal:', 
-  (taskPriority !== null && taskPriority !== undefined && typeof taskPriority === 'object' && 'normal' in taskPriority) ? 
+  taskPriority && typeof taskPriority === 'object' && 'normal' in taskPriority ? 
   taskPriority['normal'] : 'Missing translation');
 
 // Also log all priority keys in Arabic to debug
-console.log('All task priority keys in Arabic:', taskPriority ? 
+console.log('All task priority keys in Arabic:', 
+  taskPriority && typeof taskPriority === 'object' ? 
   JSON.stringify(taskPriority) : 'Task priority not found');
 
 // Initialize i18next with enhanced configuration
