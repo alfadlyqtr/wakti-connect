@@ -40,9 +40,6 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
     }
   };
 
-  // Use t function to translate the priority
-  const translatedPriority = t(`task.priority.${priority}`, priority);
-
   return (
     <div className="flex items-start justify-between mb-2">
       <div className="flex-1">
@@ -57,7 +54,7 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
         <div className="flex items-center mt-1 gap-2">
           <span className="flex items-center gap-1 text-xs">
             {getPriorityIcon()}
-            <span className="capitalize">{translatedPriority}</span>
+            <span className="capitalize">{t(`task.priority.${priority}`)}</span>
           </span>
           
           {isRecurring && (

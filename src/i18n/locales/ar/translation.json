@@ -41,7 +41,11 @@
     "noDate": "لا يوجد تاريخ",
     "invalidDate": "تاريخ غير صالح",
     "account": "الحساب",
-    "total": "المجموع"
+    "total": "المجموع",
+    "shared": "Shared",
+    "assigned": "Assigned",
+    "early": "Early",
+    "late": "Late"
   },
   "task": {
     "status": {
@@ -58,7 +62,6 @@
     "priority": {
       "high": "عالي",
       "medium": "متوسط",
-      "low": "منخفض",
       "normal": "عادي",
       "urgent": "عاجل",
       "all": "جميع الأولويات",
@@ -142,10 +145,16 @@
   "time": {
     "today": "اليوم",
     "at": "في",
-    "times": "مرات"
+    "times": "مرات",
+    "created": "Created"
   },
   "recurring": {
-    "makeRecurring": "جعلها متكررة"
+    "makeRecurring": "جعلها متكررة",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "frequency": "Frequency",
+    "interval": "Interval"
   },
   "header": {
     "pricing": "التسعير",
@@ -238,6 +247,10 @@
     "messageIndividuals": "مراسلة المستخدمين الفرديين",
     "businessPlan": "خطة الأعمال",
     "forTeams": "للفرق وأصحاب الأعمال",
-    "events": "الأحداث"
+    "events": "الأحداث",
+    "shared": "Shared",
+    "assigned": "Assigned",
+    "early": "Early",
+    "late": "Late"
   }
 }

@@ -79,7 +79,7 @@ export function TaskDetailsTab({
         name="priority"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t("task.priority")}</FormLabel>
+            <FormLabel>{t("task.priority.priority")}</FormLabel>
             <Select
               onValueChange={field.onChange}
               defaultValue={field.value}

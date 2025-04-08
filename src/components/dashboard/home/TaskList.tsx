@@ -38,8 +38,6 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
       {tasks.map((task) => {
         // Ensure we have a valid priority key, defaulting to 'normal'
         const priorityKey = task.priority || 'normal';
-        // Properly translate the priority with a fallback
-        const translatedPriority = t(`task.priority.${priorityKey}`, priorityKey);
         
         return (
           <div 
@@ -56,7 +54,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
             </div>
             <div className="flex-1 truncate text-sm">{task.title}</div>
             <Badge className={`ml-2 ${getPriorityColorClass(task.priority)}`}>
-              {translatedPriority}
+              {t(`task.priority.${priorityKey}`)}
             </Badge>
           </div>
         );
