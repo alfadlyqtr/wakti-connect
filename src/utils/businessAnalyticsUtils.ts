@@ -51,16 +51,18 @@ export const getServiceDistributionData = () => {
 export const getStaffPerformanceData = async () => {
   try {
     // Attempt to get real data from the database
-    const { data: session } = await supabase.auth.getSession();
+    const { data: sessionData } = await supabase.auth.getSession();
     
-    if (!session?.user) {
+    if (!sessionData?.session?.user) {
+      console.log("No authenticated user found, using fallback data");
       return getFallbackStaffPerformanceData();
     }
     
+    // Query the business_staff_activity table which contains staff performance data
     const { data, error } = await supabase
-      .from('staff_performance')
+      .from('business_staff_activity')
       .select('staff_name, hours_worked')
-      .eq('business_id', session.user.id)
+      .eq('business_id', sessionData.session.user.id)
       .order('hours_worked', { ascending: false })
       .limit(10);
       
