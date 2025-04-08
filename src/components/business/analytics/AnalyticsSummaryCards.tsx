@@ -44,12 +44,11 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
         </CardHeader>
         <CardContent className="p-3 md:p-4 pt-2">
           <div className="text-lg sm:text-xl md:text-2xl font-bold">{data.subscriberCount || "-"}</div>
-          {data.subscriberChangeText && (
+          {data.subscriberChangeText ? (
             <p className="text-xs text-muted-foreground">
               {data.subscriberChangeText}
             </p>
-          )}
-          {!data.subscriberChangeText && (
+          ) : (
             <p className="text-xs text-muted-foreground">
               {t('dashboard.totalSubscribers')}
             </p>
@@ -66,12 +65,11 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
         </CardHeader>
         <CardContent className="p-3 md:p-4 pt-2">
           <div className="text-lg sm:text-xl md:text-2xl font-bold">{data.staffCount || "-"}</div>
-          {data.staffChangeText && (
+          {data.staffChangeText ? (
             <p className="text-xs text-muted-foreground">
               {data.staffChangeText}
             </p>
-          )}
-          {!data.staffChangeText && (
+          ) : (
             <p className="text-xs text-muted-foreground">
               {t('dashboard.activeStaff')}
             </p>
@@ -90,12 +88,11 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
           <div className="text-lg sm:text-xl md:text-2xl font-bold">
             {data.taskCompletionRate ? `${data.taskCompletionRate}%` : "-"}
           </div>
-          {data.completionRateChangeText && (
+          {data.completionRateChangeText ? (
             <p className="text-xs text-muted-foreground">
               {data.completionRateChangeText}
             </p>
-          )}
-          {!data.completionRateChangeText && (
+          ) : (
             <p className="text-xs text-muted-foreground">
               {t('dashboard.completionRateThis')} {data.timeRange}
             </p>

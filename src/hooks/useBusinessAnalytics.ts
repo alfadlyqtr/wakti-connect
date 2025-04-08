@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getGrowthTrendsData, getServiceDistributionData } from "@/utils/businessAnalyticsUtils";
 import { toast } from "@/components/ui/use-toast";
 
-type AnalyticsTimeRange = "week" | "month" | "year";
+export type AnalyticsTimeRange = "week" | "month" | "year";
 
 export interface BusinessAnalyticsData {
   subscriberCount: number;
@@ -56,8 +56,11 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
           
           return {
             subscriberCount: 0,
+            subscriberChangeText: "",
             staffCount: 0,
+            staffChangeText: "",
             taskCompletionRate: 0,
+            completionRateChangeText: "",
             timeRange,
             growth: growthData.datasets[0].data,
             serviceDistribution: serviceData.datasets[0].data
@@ -84,7 +87,7 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
           throw new Error('Invalid service data format');
         }
         
-        // Return the analytics data - setting default text to empty strings
+        // Return the analytics data with all required fields
         console.log("Business analytics: Returning data successfully");
         return {
           subscriberCount: 0,

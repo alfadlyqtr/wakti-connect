@@ -15,8 +15,8 @@ interface ProfileDataType {
 
 interface DashboardSummaryCardsProps {
   profileData: ProfileDataType;
-  todayTasks: any[];
-  unreadNotifications: any[];
+  todayTasks: any[] | undefined;
+  unreadNotifications: any[] | undefined;
 }
 
 export const DashboardSummaryCards = ({
@@ -26,6 +26,13 @@ export const DashboardSummaryCards = ({
 }: DashboardSummaryCardsProps) => {
   const { t } = useTranslation();
   
+  // Ensure we have valid arrays
+  const tasks = todayTasks || [];
+  const notifications = unreadNotifications || [];
+  
+  // Only count completed tasks if we have tasks
+  const completedTasksCount = tasks.filter((task: any) => task.status === "completed").length;
+  
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <Card>
@@ -34,10 +41,10 @@ export const DashboardSummaryCards = ({
           <CheckCircle className="h-4 w-4 text-amber-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{todayTasks.length}</div>
+          <div className="text-2xl font-bold">{tasks.length}</div>
           <p className="text-xs text-muted-foreground">
-            {todayTasks.length > 0
-              ? `${todayTasks.filter((task: any) => task.status === "completed").length} ${t('dashboard.completed')}`
+            {tasks.length > 0
+              ? `${completedTasksCount} ${t('dashboard.completed')}`
               : t('dashboard.noTasksToday')}
           </p>
         </CardContent>
@@ -49,9 +56,9 @@ export const DashboardSummaryCards = ({
           <BellRing className="h-4 w-4 text-indigo-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{unreadNotifications.length}</div>
+          <div className="text-2xl font-bold">{notifications.length}</div>
           <p className="text-xs text-muted-foreground">
-            {unreadNotifications.length > 0 ? t('dashboard.unreadNotifications') : t('dashboard.noNewNotifications')}
+            {notifications.length > 0 ? t('dashboard.unreadNotifications') : t('dashboard.noNewNotifications')}
           </p>
         </CardContent>
       </Card>
@@ -62,11 +69,11 @@ export const DashboardSummaryCards = ({
           <Clock className="h-4 w-4 text-green-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold capitalize">{profileData.account_type}</div>
+          <div className="text-2xl font-bold capitalize">{profileData?.account_type || "free"}</div>
           <p className="text-xs text-muted-foreground">
-            {profileData.account_type === "business"
+            {profileData?.account_type === "business"
               ? t('dashboard.businessAccount')
-              : profileData.account_type === "individual"
+              : profileData?.account_type === "individual"
               ? t('dashboard.individualAccount')
               : t('dashboard.freeAccount')}
           </p>
