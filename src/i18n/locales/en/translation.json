@@ -37,7 +37,11 @@
     "notFoundMessage": "The requested information could not be found.",
     "createAccount": "Create Account",
     "signIn": "Sign In",
-    "notNow": "Not Now"
+    "notNow": "Not Now",
+    "noDate": "No date",
+    "invalidDate": "Invalid date",
+    "account": "Account",
+    "total": "Total"
   },
   "header": {
     "pricing": "Pricing",

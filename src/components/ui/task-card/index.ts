@@ -1,6 +1,6 @@
 
-import { TaskCardHeader } from "../TaskCard/TaskCardHeader";
-import { TaskCardMenu } from "../TaskCard/TaskCardMenu";
+import { TaskCardHeader } from "./TaskCardHeader";
+import { TaskCardMenu } from "./TaskCardMenu";
 import { TaskCardFooter } from "./TaskCardFooter";
 import { TaskDueDate } from "./TaskDueDate";
 import { TaskSubtasks } from "./TaskSubtasks";

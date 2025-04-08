@@ -1,4 +1,3 @@
-
 {
   "common": {
     "wakti": "وقتي",
@@ -41,7 +40,8 @@
     "notNow": "ليس الآن",
     "noDate": "لا يوجد تاريخ",
     "invalidDate": "تاريخ غير صالح",
-    "account": "الحساب"
+    "account": "الحساب",
+    "total": "المجموع"
   },
   "task": {
     "status": {

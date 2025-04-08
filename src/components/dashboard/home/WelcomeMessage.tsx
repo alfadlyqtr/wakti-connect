@@ -17,10 +17,12 @@ const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ user }) => {
     return t('dashboard.welcome.evening');
   };
   
+  const userName = user?.displayName || user?.name || t('common.there');
+  
   return (
     <div className="mb-8">
       <h1 className="text-3xl font-bold tracking-tight">
-        {getTimeBasedGreeting()}, {user?.displayName || user?.name || t('common.there')}!
+        {t('dashboard.welcome', { name: userName })}
       </h1>
       <p className="text-muted-foreground mt-1">
         {t('dashboard.welcome.overview')}
