@@ -44,6 +44,17 @@ const ensureKeysExist = (enObj: any, arObj: any, path = '') => {
       arObj[key] = enObj[key];
     }
   }
+  
+  // Also check for any keys in arObj that aren't in enObj and log them
+  for (const key in arObj) {
+    const currentPath = path ? `${path}.${key}` : key;
+    if (enObj[key] === undefined) {
+      console.log(`Found extra key in Arabic translations: ${currentPath}`);
+    } else if (typeof arObj[key] === 'object' && arObj[key] !== null && !Array.isArray(arObj[key]) && 
+               typeof enObj[key] === 'object' && enObj[key] !== null && !Array.isArray(enObj[key])) {
+      ensureKeysExist(enObj[key], arObj[key], currentPath);
+    }
+  }
 };
 
 // Synchronize translation keys
