@@ -2,12 +2,15 @@
 import React from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { useTranslation } from "react-i18next";
 
 export const BusinessDashboardStats = () => {
+  const { t } = useTranslation();
+  
   return (
     <>
       <SectionHeading 
-        title="Business Analytics" 
+        title={t('dashboard.businessAnalytics')} 
         centered={false}
         className="mt-8 mb-4"
       />
@@ -15,13 +18,13 @@ export const BusinessDashboardStats = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Subscribers
+              {t('sidebar.subscribers')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold"></div>
             <p className="text-xs text-muted-foreground">
-              Total business subscribers
+              {t('dashboard.totalSubscribers')}
             </p>
           </CardContent>
         </Card>
@@ -29,13 +32,13 @@ export const BusinessDashboardStats = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Team Members
+              {t('sidebar.staff')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold"></div>
             <p className="text-xs text-muted-foreground">
-              Staff members in your team
+              {t('dashboard.activeStaff')}
             </p>
           </CardContent>
         </Card>
@@ -43,13 +46,13 @@ export const BusinessDashboardStats = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Services
+              {t('sidebar.services')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold"></div>
             <p className="text-xs text-muted-foreground">
-              Business services offered
+              {t('dashboard.businessServices')}
             </p>
           </CardContent>
         </Card>

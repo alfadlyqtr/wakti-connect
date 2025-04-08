@@ -2,8 +2,11 @@
 import React from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { useTranslation } from "react-i18next";
 
 export const IndividualDashboardStats = () => {
+  const { t } = useTranslation();
+  
   return (
     <>
       <SectionHeading 
@@ -15,13 +18,13 @@ export const IndividualDashboardStats = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Completed Tasks
+              {t('task.status.completed')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold"></div>
             <p className="text-xs text-muted-foreground">
-              Tasks completed this week
+              {t('dashboard.completionRateThis')}
             </p>
           </CardContent>
         </Card>
@@ -29,13 +32,13 @@ export const IndividualDashboardStats = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Contacts
+              {t('dashboard.contacts')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold"></div>
             <p className="text-xs text-muted-foreground">
-              People in your network
+              {t('dashboard.peopleInNetwork')}
             </p>
           </CardContent>
         </Card>

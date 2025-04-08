@@ -45,7 +45,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
         <CardContent className="p-3 md:p-4 pt-2">
           <div className="text-lg sm:text-xl md:text-2xl font-bold">{data.subscriberCount}</div>
           <p className="text-xs text-muted-foreground">
-            +12% from last {data.timeRange}
+            {data.subscriberChangeText || ""}
           </p>
         </CardContent>
       </Card>
@@ -60,7 +60,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
         <CardContent className="p-3 md:p-4 pt-2">
           <div className="text-lg sm:text-xl md:text-2xl font-bold">{data.staffCount}</div>
           <p className="text-xs text-muted-foreground">
-            +1 from last {data.timeRange}
+            {data.staffChangeText || ""}
           </p>
         </CardContent>
       </Card>
@@ -75,7 +75,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
         <CardContent className="p-3 md:p-4 pt-2">
           <div className="text-lg sm:text-xl md:text-2xl font-bold">{data.taskCompletionRate}%</div>
           <p className="text-xs text-muted-foreground">
-            +5% from last {data.timeRange}
+            {data.completionRateChangeText || ""}
           </p>
         </CardContent>
       </Card>

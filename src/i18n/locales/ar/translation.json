@@ -90,7 +90,7 @@
     "createFirstTaskFree": "يمكن للحسابات المجانية إنشاء مهمة واحدة. أنشئ مهمتك الأولى الآن!",
     "noTasksFound": "لم يتم العثور على مهام",
     "noArchivedTasks": "لا توجد مهام مؤرشفة",
-    "archivedTasksDescription": "المهام التي تحذفها ��و تلغيها ستظهر هنا",
+    "archivedTasksDescription": "المهام التي تحذفها أو تلغيها ستظهر هنا",
     "noTasksDescription": "ابدأ بإنشاء مهمتك الأولى",
     "tabs": {
       "myTasks": "مهامي",
@@ -146,15 +146,15 @@
     "today": "اليوم",
     "at": "في",
     "times": "مرات",
-    "created": "Created"
+    "created": "تم الإنشاء"
   },
   "recurring": {
     "makeRecurring": "جعلها متكررة",
-    "daily": "Daily",
-    "weekly": "Weekly",
-    "monthly": "Monthly",
-    "frequency": "Frequency",
-    "interval": "Interval"
+    "daily": "يومي",
+    "weekly": "أسبوعي",
+    "monthly": "شهري",
+    "frequency": "التكرار",
+    "interval": "الفاصل الزمني"
   },
   "hero": {
     "tagline": "أدر وقتك بفعالية",
