@@ -44,9 +44,11 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
         </CardHeader>
         <CardContent className="p-3 md:p-4 pt-2">
           <div className="text-lg sm:text-xl md:text-2xl font-bold">{data.subscriberCount}</div>
-          <p className="text-xs text-muted-foreground">
-            {data.subscriberChangeText || ""}
-          </p>
+          {data.subscriberChangeText && (
+            <p className="text-xs text-muted-foreground">
+              {data.subscriberChangeText}
+            </p>
+          )}
         </CardContent>
       </Card>
       
@@ -59,9 +61,11 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
         </CardHeader>
         <CardContent className="p-3 md:p-4 pt-2">
           <div className="text-lg sm:text-xl md:text-2xl font-bold">{data.staffCount}</div>
-          <p className="text-xs text-muted-foreground">
-            {data.staffChangeText || ""}
-          </p>
+          {data.staffChangeText && (
+            <p className="text-xs text-muted-foreground">
+              {data.staffChangeText}
+            </p>
+          )}
         </CardContent>
       </Card>
       
@@ -74,9 +78,11 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
         </CardHeader>
         <CardContent className="p-3 md:p-4 pt-2">
           <div className="text-lg sm:text-xl md:text-2xl font-bold">{data.taskCompletionRate}%</div>
-          <p className="text-xs text-muted-foreground">
-            {data.completionRateChangeText || ""}
-          </p>
+          {data.completionRateChangeText && (
+            <p className="text-xs text-muted-foreground">
+              {data.completionRateChangeText}
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

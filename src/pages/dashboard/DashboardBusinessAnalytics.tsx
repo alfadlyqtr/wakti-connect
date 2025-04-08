@@ -81,6 +81,16 @@ const DashboardBusinessAnalytics = () => {
     );
   }
 
+  // Prepare default analytics data for when data is not yet loaded
+  const defaultAnalyticsData = {
+    subscriberCount: 0,
+    staffCount: 0,
+    taskCompletionRate: 0,
+    timeRange: "month" as const,
+    growth: [],
+    serviceDistribution: []
+  };
+
   return (
     <div className="container py-4 md:py-6 space-y-4 md:space-y-8">
       <h1 className="text-xl md:text-3xl font-bold tracking-tight">
@@ -107,14 +117,7 @@ const DashboardBusinessAnalytics = () => {
         <TabsContent value="overview" className="space-y-4 md:space-y-6 mt-4 md:mt-6">
           <AnalyticsSummaryCards 
             isLoading={isLoading} 
-            data={data || { 
-              subscriberCount: 0, 
-              staffCount: 0, 
-              taskCompletionRate: 0, 
-              timeRange: "month",
-              growth: [],
-              serviceDistribution: []
-            }} 
+            data={data || defaultAnalyticsData} 
           />
 
           <div className="grid gap-4 md:gap-6 md:grid-cols-2">
@@ -164,17 +167,17 @@ const DashboardBusinessAnalytics = () => {
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
                     <div className="bg-muted p-4 rounded-md">
                       <p className="text-xs md:text-sm text-muted-foreground mb-1">Average Hours</p>
-                      <h4 className="text-xl md:text-2xl font-bold">32.5</h4>
+                      <h4 className="text-xl md:text-2xl font-bold">-</h4>
                       <p className="text-xs text-muted-foreground">hrs/week</p>
                     </div>
                     <div className="bg-muted p-4 rounded-md">
                       <p className="text-xs md:text-sm text-muted-foreground mb-1">Task Completion</p>
-                      <h4 className="text-xl md:text-2xl font-bold">87%</h4>
+                      <h4 className="text-xl md:text-2xl font-bold">-</h4>
                       <p className="text-xs text-muted-foreground">on time</p>
                     </div>
                     <div className="bg-muted p-4 rounded-md">
                       <p className="text-xs md:text-sm text-muted-foreground mb-1">Avg. Services</p>
-                      <h4 className="text-xl md:text-2xl font-bold">5.2</h4>
+                      <h4 className="text-xl md:text-2xl font-bold">-</h4>
                       <p className="text-xs text-muted-foreground">per day</p>
                     </div>
                   </div>

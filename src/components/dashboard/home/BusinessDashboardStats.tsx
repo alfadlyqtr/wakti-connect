@@ -10,7 +10,7 @@ export const BusinessDashboardStats = () => {
   return (
     <>
       <SectionHeading 
-        title={t('dashboard.businessAnalytics')} 
+        title={t('dashboard.businessAnalytics')}
         centered={false}
         className="mt-8 mb-4"
       />

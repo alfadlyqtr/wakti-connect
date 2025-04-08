@@ -128,7 +128,7 @@ const DashboardHome = () => {
         </Card>
       </div>
       
-      {/* Business Analytics (only for business accounts) */}
+      {/* Business Analytics (only for business accounts with data) */}
       {isBusiness && analyticsData && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           <Card>
@@ -139,7 +139,7 @@ const DashboardHome = () => {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.subscriberCount}</div>
+              <div className="text-2xl font-bold">{analyticsData.subscriberCount || "-"}</div>
               <p className="text-xs text-muted-foreground">
                 {t('dashboard.totalSubscribers')}
               </p>
@@ -154,7 +154,7 @@ const DashboardHome = () => {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.staffCount}</div>
+              <div className="text-2xl font-bold">{analyticsData.staffCount || "-"}</div>
               <p className="text-xs text-muted-foreground">
                 {t('dashboard.activeStaff')}
               </p>
@@ -169,7 +169,9 @@ const DashboardHome = () => {
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.taskCompletionRate}%</div>
+              <div className="text-2xl font-bold">
+                {analyticsData.taskCompletionRate ? `${analyticsData.taskCompletionRate}%` : "-"}
+              </div>
               <p className="text-xs text-muted-foreground">
                 {t('dashboard.completionRateThis')} {analyticsData.timeRange}
               </p>

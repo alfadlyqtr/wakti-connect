@@ -8,8 +8,11 @@ type AnalyticsTimeRange = "week" | "month" | "year";
 
 export interface BusinessAnalyticsData {
   subscriberCount: number;
+  subscriberChangeText?: string;
   staffCount: number;
+  staffChangeText?: string;
   taskCompletionRate: number;
+  completionRateChangeText?: string;
   timeRange: AnalyticsTimeRange;
   growth: any[];
   serviceDistribution: any[];
@@ -84,9 +87,12 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
         // Return the analytics data
         console.log("Business analytics: Returning data successfully");
         return {
-          subscriberCount: 157,
-          staffCount: 5,
-          taskCompletionRate: 87,
+          subscriberCount: 0,
+          subscriberChangeText: "",
+          staffCount: 0,
+          staffChangeText: "",
+          taskCompletionRate: 0,
+          completionRateChangeText: "",
           timeRange,
           growth: growthData.datasets[0].data,
           serviceDistribution: serviceData.datasets[0].data
