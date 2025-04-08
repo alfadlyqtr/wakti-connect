@@ -1,7 +1,6 @@
 
 import React, { useEffect, useState } from "react";
 import { LineChart } from "@/components/ui/chart";
-import { getGrowthTrendsData } from "@/utils/businessAnalyticsUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface GrowthChartProps {
@@ -11,35 +10,36 @@ interface GrowthChartProps {
 
 export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => {
   const [chartData, setChartData] = useState<any>(null);
-  const defaultGrowthData = getGrowthTrendsData();
   const isMobile = useIsMobile();
   
-  // Validate and prepare chart data
+  // Prepare chart data
   useEffect(() => {
-    // If no data provided or invalid format, use default data
-    if (!data || !Array.isArray(data) || data.length === 0) {
-      console.log("Using default growth data");
-      setChartData(defaultGrowthData);
+    if (!data || data.length === 0) {
+      console.log("No growth data available");
       return;
     }
     
     try {
-      // Use provided data with the structure from default data
-      console.log("Using provided growth data:", data);
+      // Default month labels if none provided
+      const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+      
+      // Format chart data
       setChartData({
-        ...defaultGrowthData,
-        datasets: [
-          {
-            ...defaultGrowthData.datasets[0],
-            data: data
-          }
-        ]
+        labels,
+        datasets: [{
+          label: 'Subscribers',
+          data,
+          borderColor: 'rgb(59, 130, 246)',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4
+        }]
       });
     } catch (error) {
-      console.error("Error processing growth data:", error);
-      setChartData(defaultGrowthData);
+      console.error("Error preparing growth chart data:", error);
     }
-  }, [data, defaultGrowthData]);
+  }, [data]);
 
   // Mobile-optimized chart options
   const chartOptions = {

@@ -1,45 +1,56 @@
 
 import React, { useEffect, useState } from "react";
 import { PieChart } from "@/components/ui/chart";
-import { getServiceDistributionData } from "@/utils/businessAnalyticsUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ServiceDistributionChartProps {
   isLoading: boolean;
   data: any[];
+  labels?: string[];
 }
 
-export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> = ({ isLoading, data }) => {
+export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> = ({ 
+  isLoading, 
+  data, 
+  labels = ['Consultation', 'Treatment', 'Checkup', 'Followup', 'Other'] 
+}) => {
   const [chartData, setChartData] = useState<any>(null);
-  const defaultServiceData = getServiceDistributionData();
   const isMobile = useIsMobile();
   
-  // Validate and prepare chart data
+  // Prepare chart data
   useEffect(() => {
-    // If no data provided or invalid format, use default data
-    if (!data || !Array.isArray(data) || data.length === 0) {
-      console.log("Using default service distribution data");
-      setChartData(defaultServiceData);
+    if (!data || data.length === 0) {
+      console.log("No service distribution data available");
       return;
     }
     
     try {
-      // Use provided data with the structure from default data
-      console.log("Using provided service distribution data:", data);
+      // Format chart data
       setChartData({
-        ...defaultServiceData,
-        datasets: [
-          {
-            ...defaultServiceData.datasets[0],
-            data: data
-          }
-        ]
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: [
+            'rgba(54, 162, 235, 0.7)',
+            'rgba(255, 99, 132, 0.7)',
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(255, 159, 64, 0.7)',
+            'rgba(153, 102, 255, 0.7)'
+          ],
+          borderColor: [
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 99, 132, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(255, 159, 64, 1)',
+            'rgba(153, 102, 255, 1)'
+          ],
+          borderWidth: 1
+        }]
       });
     } catch (error) {
-      console.error("Error processing service distribution data:", error);
-      setChartData(defaultServiceData);
+      console.error("Error preparing service distribution chart data:", error);
     }
-  }, [data, defaultServiceData]);
+  }, [data, labels]);
 
   // Mobile-optimized chart options
   const chartOptions = {
@@ -65,12 +76,10 @@ export const ServiceDistributionChart: React.FC<ServiceDistributionChartProps> =
           size: isMobile ? 12 : 14,
         }
       },
-      // Disable displaying labels on the pie slices for mobile
       datalabels: {
         display: false
       }
     },
-    // Adjust the radius for mobile
     radius: isMobile ? '80%' : '90%',
     layout: {
       padding: {

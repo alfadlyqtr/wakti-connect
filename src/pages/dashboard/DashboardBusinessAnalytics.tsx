@@ -65,23 +65,7 @@ const DashboardBusinessAnalytics = () => {
     );
   }
 
-  // If there's no data but we've verified the account is business type,
-  // show a loading state rather than an error
-  if (!data && !error && !isLoading) {
-    return (
-      <div className="container py-6 space-y-8">
-        <h1 className="text-xl md:text-3xl font-bold tracking-tight">
-          {t("dashboard.analytics")}
-        </h1>
-        <div className="flex items-center justify-center h-[50vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
-          <p>Loading analytics data...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Prepare default analytics data for when data is not yet loaded
+  // Default analytics data
   const defaultAnalyticsData = {
     subscriberCount: 0,
     staffCount: 0,
@@ -142,6 +126,7 @@ const DashboardBusinessAnalytics = () => {
                   <ServiceDistributionChart 
                     isLoading={isLoading} 
                     data={data?.serviceDistribution || []} 
+                    labels={data?.serviceLabels}
                   />
                 </CardContent>
               </Card>
