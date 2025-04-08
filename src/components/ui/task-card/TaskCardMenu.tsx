@@ -1,127 +1,146 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  MoreVertical, 
-  CheckIcon, 
-  PlayIcon, 
-  PauseIcon, 
-  PenIcon, 
-  TrashIcon, 
-  Share2Icon, 
-  UsersIcon, 
-  BellOff 
+import {
+  MoreVertical,
+  Pencil,
+  Trash2,
+  AlarmClock,
+  CheckCircle,
+  Clock,
+  XCircle,
+  ArrowUpRight,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { TaskStatus } from "@/types/task.types";
+import { useTranslation } from "react-i18next";
 
 interface TaskCardMenuProps {
   id: string;
   status: TaskStatus;
-  onEdit: (id: string) => void;
+  isArchived?: boolean;
   onDelete: (id: string) => void;
-  onStatusChange: (id: string, status: string) => void;
-  onShare?: (id: string) => void;
-  onAssign?: (id: string) => void;
+  onEdit: (id: string) => void;
+  onCancel?: (id: string) => void;
   onSnooze?: (id: string, days: number) => void;
+  onRestore?: (id: string) => void;
+  onStatusChange: (id: string, status: string) => void;
+  userRole: "free" | "individual" | "business" | "staff" | null;
+  isPaidAccount: boolean;
 }
 
 export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
   id,
   status,
-  onEdit,
+  isArchived = false,
   onDelete,
+  onEdit,
+  onCancel,
+  onSnooze,
+  onRestore,
   onStatusChange,
-  onShare,
-  onAssign,
-  onSnooze
+  userRole,
+  isPaidAccount,
 }) => {
+  const { t, i18n } = useTranslation();
+  
+  // Handle status change
+  const startTask = () => {
+    onStatusChange(id, "in-progress");
+  };
+
+  // Determine which menu items to show based on status
+  const showMarkComplete = status !== "completed" && status !== "archived";
+  const showSnooze = status !== "completed" && status !== "archived" && isPaidAccount;
+  const showStartTask = status === "snoozed" || status === "late";
+  const showCancel = status !== "completed" && status !== "archived" && onCancel;
+  const showDelete = !isArchived;
+  const showRestore = isArchived && onRestore;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="h-8 w-8">
           <MoreVertical className="h-4 w-4" />
+          <span className="sr-only">{t("task.menu.openMenu")}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[180px]">
-        <DropdownMenuLabel>Task Actions</DropdownMenuLabel>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>{t("task.menu.actions")}</DropdownMenuLabel>
         
-        <DropdownMenuSeparator />
-        
-        {status !== 'completed' && (
-          <DropdownMenuItem onClick={() => onStatusChange(id, 'completed')}>
-            <CheckIcon className="mr-2 h-4 w-4 text-green-500" />
-            <span>Mark Complete</span>
+        {/* Status actions */}
+        {showMarkComplete && (
+          <DropdownMenuItem onClick={() => onStatusChange(id, "completed")}>
+            <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+            {t("task.menu.markCompleted")}
           </DropdownMenuItem>
         )}
         
-        {status !== 'in-progress' && status !== 'completed' && (
-          <DropdownMenuItem onClick={() => onStatusChange(id, 'in-progress')}>
-            <PlayIcon className="mr-2 h-4 w-4 text-blue-500" />
-            <span>Mark In Progress</span>
+        {showStartTask && (
+          <DropdownMenuItem onClick={startTask}>
+            <Clock className="mr-2 h-4 w-4 text-blue-500" />
+            {t("task.menu.startTask")}
           </DropdownMenuItem>
         )}
         
-        {status !== 'pending' && status !== 'completed' && (
-          <DropdownMenuItem onClick={() => onStatusChange(id, 'pending')}>
-            <PauseIcon className="mr-2 h-4 w-4 text-amber-500" />
-            <span>Mark Pending</span>
-          </DropdownMenuItem>
-        )}
-        
-        <DropdownMenuSeparator />
-        
-        <DropdownMenuItem onClick={() => onEdit(id)}>
-          <PenIcon className="mr-2 h-4 w-4" />
-          <span>Edit</span>
-        </DropdownMenuItem>
-        
-        <DropdownMenuItem onClick={() => onDelete(id)} className="text-destructive">
-          <TrashIcon className="mr-2 h-4 w-4" />
-          <span>Delete</span>
-        </DropdownMenuItem>
-        
-        {onShare && (
+        {/* Snooze options for paid accounts */}
+        {showSnooze && onSnooze && (
           <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onShare(id)}>
-              <Share2Icon className="mr-2 h-4 w-4" />
-              <span>Share</span>
-            </DropdownMenuItem>
-          </>
-        )}
-        
-        {onAssign && (
-          <DropdownMenuItem onClick={() => onAssign(id)}>
-            <UsersIcon className="mr-2 h-4 w-4" />
-            <span>Assign</span>
-          </DropdownMenuItem>
-        )}
-        
-        {onSnooze && status !== 'completed' && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>Snooze For</DropdownMenuLabel>
+            <DropdownMenuLabel>{t("task.menu.snooze")}</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => onSnooze(id, 1)}>
-              <BellOff className="mr-2 h-4 w-4" />
-              <span>1 Day</span>
+              <AlarmClock className="mr-2 h-4 w-4 text-purple-500" />
+              {t("task.menu.snoozeDay", { count: 1 })}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onSnooze(id, 3)}>
-              <BellOff className="mr-2 h-4 w-4" />
-              <span>3 Days</span>
+              <AlarmClock className="mr-2 h-4 w-4 text-purple-500" />
+              {t("task.menu.snoozeDays", { count: 3 })}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onSnooze(id, 7)}>
-              <BellOff className="mr-2 h-4 w-4" />
-              <span>1 Week</span>
+              <AlarmClock className="mr-2 h-4 w-4 text-purple-500" />
+              {t("task.menu.snoozeWeek", { count: 1 })}
             </DropdownMenuItem>
           </>
+        )}
+        
+        <DropdownMenuSeparator />
+        
+        {/* Edit option */}
+        {!isArchived && (
+          <DropdownMenuItem onClick={() => onEdit(id)}>
+            <Pencil className="mr-2 h-4 w-4" />
+            {t("common.edit")}
+          </DropdownMenuItem>
+        )}
+        
+        {/* Cancel option */}
+        {showCancel && onCancel && (
+          <DropdownMenuItem onClick={() => onCancel(id)}>
+            <XCircle className="mr-2 h-4 w-4 text-orange-500" />
+            {t("task.menu.cancelTask")}
+          </DropdownMenuItem>
+        )}
+        
+        {/* Delete option */}
+        {showDelete && (
+          <DropdownMenuItem onClick={() => onDelete(id)}>
+            <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+            {t("common.delete")}
+          </DropdownMenuItem>
+        )}
+        
+        {/* Restore option for archived tasks */}
+        {showRestore && (
+          <DropdownMenuItem onClick={() => onRestore(id)}>
+            <ArrowUpRight className="mr-2 h-4 w-4 text-green-500" />
+            {t("task.menu.restore")}
+          </DropdownMenuItem>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

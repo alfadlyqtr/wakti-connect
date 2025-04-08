@@ -1,107 +1,69 @@
 
 import React from "react";
-import { CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { TaskPriority, TaskStatus } from "@/types/task.types";
-import { TaskCardMenu } from "./TaskCardMenu";
+import {
+  Award,
+  AlertTriangle,
+  Bell,
+  Clock,
+  RepeatIcon
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { TaskPriority } from "@/types/task.types";
+import { useTranslation } from "react-i18next";
 
 interface TaskCardHeaderProps {
-  id: string;
   title: string;
-  status: TaskStatus;
   priority: TaskPriority;
   isRecurring?: boolean;
-  isRecurringInstance?: boolean;
-  isAssigned?: boolean;
-  isShared?: boolean;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
-  onStatusChange: (id: string, status: string) => void;
-  onShare?: (id: string) => void;
-  onAssign?: (id: string) => void;
-  onSnooze?: (id: string, days: number) => void;
+  isCompleted: boolean;
 }
 
 export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
-  id,
   title,
-  status,
   priority,
   isRecurring,
-  isRecurringInstance,
-  isAssigned,
-  isShared,
-  onEdit,
-  onDelete,
-  onStatusChange,
-  onShare,
-  onAssign,
-  onSnooze
+  isCompleted,
 }) => {
-  const statusColors = {
-    pending: "bg-amber-500",
-    "in-progress": "bg-blue-500",
-    completed: "bg-green-500",
-    late: "bg-red-500",
-    snoozed: "bg-purple-500"
-  };
-
-  const priorityColors = {
-    urgent: "bg-red-600 hover:bg-red-700",
-    high: "bg-red-500 hover:bg-red-600",
-    medium: "bg-amber-500 hover:bg-amber-600",
-    normal: "bg-green-500 hover:bg-green-600"
+  const { t, i18n } = useTranslation();
+  
+  const getPriorityIcon = () => {
+    switch (priority) {
+      case "urgent":
+        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+      case "high":
+        return <AlertTriangle className="h-4 w-4 text-orange-500" />;
+      case "medium":
+        return <Clock className="h-4 w-4 text-amber-500" />;
+      default:
+        return <Clock className="h-4 w-4 text-green-500" />;
+    }
   };
 
   return (
-    <CardHeader className="pb-2">
-      <div className="flex justify-between items-start">
-        <CardTitle className="text-lg font-medium line-clamp-2">{title}</CardTitle>
-        <TaskCardMenu
-          id={id}
-          status={status}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onStatusChange={onStatusChange}
-          onShare={onShare}
-          onAssign={onAssign}
-          onSnooze={onSnooze}
-        />
+    <div className="flex items-start justify-between mb-2">
+      <div className="flex-1">
+        <h3
+          className={cn(
+            "text-base font-medium line-clamp-2",
+            isCompleted && "line-through text-muted-foreground"
+          )}
+        >
+          {title}
+        </h3>
+        <div className="flex items-center mt-1 gap-2">
+          <span className="flex items-center gap-1 text-xs">
+            {getPriorityIcon()}
+            <span className="capitalize">{t(`task.priority.${priority}`)}</span>
+          </span>
+          
+          {isRecurring && (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <RepeatIcon className="h-3 w-3" />
+              <span>{t('recurring.makeRecurring')}</span>
+            </span>
+          )}
+        </div>
       </div>
-      
-      <div className="flex flex-wrap gap-2 mt-2">
-        <Badge variant="secondary" className={`${statusColors[status]}`}>
-          {status === 'in-progress' ? 'In Progress' : status.charAt(0).toUpperCase() + status.slice(1)}
-        </Badge>
-        
-        <Badge variant="secondary" className={priorityColors[priority]}>
-          {priority.charAt(0).toUpperCase() + priority.slice(1)}
-        </Badge>
-        
-        {isRecurring && (
-          <Badge variant="outline" className="border-blue-500 text-blue-500">
-            Recurring
-          </Badge>
-        )}
-        
-        {isRecurringInstance && (
-          <Badge variant="outline" className="border-purple-500 text-purple-500">
-            Instance
-          </Badge>
-        )}
-        
-        {isAssigned && (
-          <Badge variant="outline" className="border-green-500 text-green-500">
-            Assigned
-          </Badge>
-        )}
-        
-        {isShared && (
-          <Badge variant="outline" className="border-blue-500 text-blue-500">
-            Shared
-          </Badge>
-        )}
-      </div>
-    </CardHeader>
+    </div>
   );
 };
