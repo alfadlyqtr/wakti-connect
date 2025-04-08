@@ -25,7 +25,7 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
 }) => {
   const { t } = useTranslation();
   
-  // Get priority label - using direct English values
+  // Explicitly hardcode English values regardless of language
   const getPriorityLabel = (priority: TaskPriority): string => {
     switch (priority) {
       case "urgent": return "Urgent";

@@ -25,7 +25,7 @@ interface PriorityFieldProps {
 export const PriorityField: React.FC<PriorityFieldProps> = ({ form }) => {
   const { t } = useTranslation();
 
-  // Get priority label function - using English values regardless of language
+  // Explicitly hardcode English values regardless of language
   const getPriorityLabel = (priority: string): string => {
     switch (priority) {
       case "urgent": return "Urgent";

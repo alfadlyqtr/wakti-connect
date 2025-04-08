@@ -39,7 +39,7 @@ export function TaskDetailsTab({
   const enableSubtasks = form.watch("enableSubtasks");
   const { t } = useTranslation();
   
-  // Helper function to get priority translation - hardcoded to English
+  // Explicitly hardcode English values regardless of language
   const getPriorityLabel = (priority: string): string => {
     switch (priority) {
       case "urgent": return "Urgent";

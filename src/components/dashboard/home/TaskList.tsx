@@ -30,7 +30,7 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
     }
   };
 
-  // Get priority label - using direct English values
+  // Explicitly hardcode English values regardless of language
   const getPriorityLabel = (priority?: string): string => {
     switch (priority) {
       case "urgent": return "Urgent";
