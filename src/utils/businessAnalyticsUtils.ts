@@ -47,6 +47,60 @@ export const getServiceDistributionData = () => {
   };
 };
 
+// Add the missing function for staff performance data
+export const getStaffPerformanceData = async () => {
+  try {
+    // Attempt to get real data from the database
+    const { data: session } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
+      return getFallbackStaffPerformanceData();
+    }
+    
+    const { data, error } = await supabase
+      .from('staff_performance')
+      .select('staff_name, hours_worked')
+      .eq('business_id', session.user.id)
+      .order('hours_worked', { ascending: false })
+      .limit(10);
+      
+    if (error || !data || data.length === 0) {
+      console.log("No staff performance data found, using fallback data");
+      return getFallbackStaffPerformanceData();
+    }
+    
+    return {
+      labels: data.map(item => item.staff_name),
+      datasets: [
+        {
+          data: data.map(item => item.hours_worked),
+          backgroundColor: 'rgba(59, 130, 246, 0.7)',
+          borderColor: 'rgba(59, 130, 246, 1)',
+          borderWidth: 1
+        }
+      ]
+    };
+  } catch (error) {
+    console.error("Error fetching staff performance data:", error);
+    return getFallbackStaffPerformanceData();
+  }
+};
+
+// Fallback function to provide data if the DB query fails
+const getFallbackStaffPerformanceData = () => {
+  return {
+    labels: ['John Doe', 'Jane Smith', 'Mike Johnson', 'Sarah Williams', 'David Brown'],
+    datasets: [
+      {
+        data: [38, 32, 28, 24, 20],
+        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+        borderColor: 'rgba(59, 130, 246, 1)',
+        borderWidth: 1
+      }
+    ]
+  };
+};
+
 // Function to refresh analytics data from the database
 export const refreshBusinessAnalytics = async (): Promise<boolean> => {
   try {

@@ -1,18 +1,65 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { getStaffPerformanceData } from "@/utils/businessAnalyticsUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Loader2 } from "lucide-react";
 
 export const TeamActivityChart: React.FC = () => {
-  const data = getStaffPerformanceData();
+  const [chartData, setChartData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
-  // Format data for the chart
-  const chartData = data.datasets[0].data.map((value, index) => ({
-    name: isMobile ? data.labels[index].split(' ')[0] : data.labels[index], // Only first name on mobile
-    "Hours Worked": value,
-  }));
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getStaffPerformanceData();
+        
+        // Format data for the chart
+        const formattedData = data.labels.map((name, index) => ({
+          name: isMobile ? name.split(' ')[0] : name, // Only first name on mobile
+          "Hours Worked": data.datasets[0].data[index],
+        }));
+        
+        setChartData(formattedData);
+        setError(null);
+      } catch (err) {
+        console.error("Error loading staff performance data:", err);
+        setError("Failed to load staff performance data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [isMobile]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[300px]">
+        <Loader2 className="h-6 w-6 animate-spin mr-2" />
+        <p>Loading staff data...</p>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-[300px]">
+        <p className="text-destructive">{error}</p>
+      </div>
+    );
+  }
+  
+  if (!chartData || chartData.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[300px]">
+        <p>No staff activity data available</p>
+      </div>
+    );
+  }
 
   return (
     <ResponsiveContainer width="100%" height={isMobile ? 300 : 400}>
