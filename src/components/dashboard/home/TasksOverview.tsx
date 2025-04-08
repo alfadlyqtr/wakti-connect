@@ -22,7 +22,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
   const completionRate = totalTasks > 0 ? Math.round((completedTasks.length / totalTasks) * 100) : 0;
   
   // Convert Task[] to CalendarEvent[] for TaskList which expects CalendarEvent[]
-  // Ensure priority is mapped correctly
+  // Ensure priority is mapped correctly and consistently
   const taskEvents: CalendarEvent[] = tasks.map(task => ({
     id: task.id,
     title: task.title,
@@ -30,7 +30,7 @@ const TasksOverview: React.FC<TasksOverviewProps> = ({ tasks }) => {
     type: "task",
     status: task.status,
     isCompleted: task.status === "completed",
-    priority: task.priority // This ensures the priority is properly passed from Task to CalendarEvent
+    priority: task.priority // This ensures consistent priority type
   }));
   
   return (

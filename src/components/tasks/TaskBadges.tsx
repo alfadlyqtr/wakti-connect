@@ -162,7 +162,7 @@ const TaskBadges = ({
     day: 'numeric'
   });
 
-  // Translate the priority with a fallback to the raw priority value
+  // Ensure proper translation of priority with fallback
   const translatedPriority = t(`task.priority.${priority}`, priority);
 
   return (

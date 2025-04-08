@@ -34,8 +34,9 @@ export const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
   return (
     <div className="space-y-2">
       {tasks.map((task) => {
-        // Map the task priority to a valid translation key with a fallback
+        // Ensure we have a valid priority key, defaulting to 'normal'
         const priorityKey = task.priority || 'normal';
+        // Properly translate the priority with a fallback
         const translatedPriority = t(`task.priority.${priorityKey}`, priorityKey);
         
         return (

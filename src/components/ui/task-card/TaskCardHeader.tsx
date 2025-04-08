@@ -39,7 +39,7 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
     }
   };
 
-  // Translate the priority with fallback to the raw value
+  // Properly translate the priority with fallback
   const translatedPriority = t(`task.priority.${priority}`, priority);
 
   return (

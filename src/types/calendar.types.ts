@@ -8,7 +8,7 @@ export interface CalendarEvent {
   type: EventType;
   status?: string;
   isCompleted?: boolean;
-  priority?: TaskPriority | string; // Use the TaskPriority type to ensure consistency
+  priority?: TaskPriority; // Ensure we use TaskPriority consistently
 }
 
 export type EventType = "task" | "booking";
