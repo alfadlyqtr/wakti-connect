@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Mic, Send, AlertCircle } from 'lucide-react';
+import { Mic, Send, AlertCircle, Paperclip, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,8 @@ interface MessageInputFormProps {
   handleSendMessage: (e: React.FormEvent) => Promise<void>;
   isLoading: boolean;
   canAccess: boolean;
+  onFileUpload?: (file: File) => void;
+  onCameraCapture?: () => void;
 }
 
 export const MessageInputForm: React.FC<MessageInputFormProps> = ({
@@ -22,10 +24,13 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   setInputMessage,
   handleSendMessage,
   isLoading,
-  canAccess
+  canAccess,
+  onFileUpload,
+  onCameraCapture
 }) => {
   const isMobile = useIsMobile();
   const { t } = useTranslation();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const {
     isListening,
@@ -48,6 +53,18 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       setInputMessage(updatedText);
     }
   }, [transcript, setInputMessage, inputMessage]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !onFileUpload) return;
+    
+    onFileUpload(files[0]);
+    e.target.value = ''; // Reset the input
+  };
+
+  const handleFileUploadClick = () => {
+    fileInputRef.current?.click();
+  };
 
   if (!canAccess) {
     return <AIAssistantUpgradeCard compact={true} />;
@@ -80,7 +97,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             className={cn(
-              "min-h-[60px] max-h-[180px] resize-none py-2 pr-12 text-sm sm:text-base",
+              "min-h-[45px] sm:min-h-[60px] max-h-[120px] sm:max-h-[180px] resize-none py-2 pr-12 text-xs sm:text-sm",
               isListening && "bg-primary/5 border-primary/20"
             )}
             disabled={isLoading || isListening}
@@ -92,29 +109,68 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  "h-8 w-8 rounded-full", 
+                  "h-6 w-6 sm:h-8 sm:w-8 rounded-full", 
                   isListening && "bg-primary text-white hover:bg-primary hover:text-white"
                 )}
                 onClick={isListening ? stopListening : startListening}
                 disabled={isLoading}
               >
-                <Mic className="h-4 w-4" />
+                <Mic className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="sr-only">{isListening ? "Stop recording" : "Start recording"}</span>
               </Button>
             )}
           </div>
         </div>
         
+        {/* File Upload */}
+        {onFileUpload && (
+          <>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 sm:h-10 sm:w-10 rounded-full shrink-0"
+              onClick={handleFileUploadClick}
+              disabled={isLoading}
+            >
+              <Paperclip className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="sr-only">{t("ai.attachFile", "Attach file")}</span>
+            </Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={handleFileChange}
+              accept=".pdf,.doc,.docx,.txt,.md"
+            />
+          </>
+        )}
+        
+        {/* Camera */}
+        {onCameraCapture && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 sm:h-10 sm:w-10 rounded-full shrink-0"
+            onClick={onCameraCapture}
+            disabled={isLoading}
+          >
+            <Camera className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="sr-only">{t("ai.takePhoto", "Take photo")}</span>
+          </Button>
+        )}
+        
         <Button 
           type="submit" 
           size="icon" 
           disabled={!inputMessage.trim() || isLoading}
-          className="h-10 w-10 rounded-full shrink-0"
+          className="h-8 w-8 sm:h-10 sm:w-10 rounded-full shrink-0"
         >
           {isLoading ? (
-            <div className="animate-spin h-4 w-4 border-2 border-primary border-opacity-50 border-t-primary rounded-full" />
+            <div className="animate-spin h-3.5 w-3.5 sm:h-4 sm:w-4 border-2 border-primary border-opacity-50 border-t-primary rounded-full" />
           ) : (
-            <Send className="h-4 w-4" />
+            <Send className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           )}
           <span className="sr-only">Send message</span>
         </Button>

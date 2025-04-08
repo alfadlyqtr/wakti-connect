@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { RoleSpecificKnowledge } from "../tools/RoleSpecificKnowledge";
 import { KnowledgeProfileToolCard } from "../tools/KnowledgeProfileToolCard";
 import { useTranslation } from "react-i18next";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface AIAssistantTabsProps {
   messages: AIMessage[];
@@ -42,6 +43,7 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
   setActiveTab
 }) => {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   
   const handleUseDocumentContent = (content: string) => {
     setInputMessage(content);
@@ -60,11 +62,11 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
 
   const getRoleIcon = () => {
     switch (selectedRole) {
-      case "student": return <BookOpen className="h-5 w-5 text-white" />;
+      case "student": return <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-white" />;
       case "employee": 
-      case "writer": return <Pen className="h-5 w-5 text-white" />;
-      case "business_owner": return <Briefcase className="h-5 w-5 text-white" />;
-      default: return <Bot className="h-5 w-5 text-white" />;
+      case "writer": return <Pen className="h-4 w-4 sm:h-5 sm:w-5 text-white" />;
+      case "business_owner": return <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 text-white" />;
+      default: return <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-white" />;
     }
   };
 
@@ -79,52 +81,54 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
   };
 
   return (
-    <div className="flex flex-col space-y-4 w-full">
+    <div className="flex flex-col space-y-3 sm:space-y-4 w-full">
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-center mb-2"
+        className="flex items-center justify-center mb-1 sm:mb-2"
       >
         <div className={cn(
-          "h-10 w-10 rounded-full bg-gradient-to-br flex items-center justify-center mr-3",
+          "h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br flex items-center justify-center mr-2 sm:mr-3",
           getRoleColor()
         )}>
           {getRoleIcon()}
         </div>
-        <h2 className="text-xl xs:text-2xl font-bold text-center relative truncate">
-          WAKTI {getRoleTitle()}
-          <motion.span 
-            className="absolute -right-7 top-0 hidden sm:inline-block"
-            initial={{ rotate: -20, scale: 0.8 }}
-            animate={{ rotate: 0, scale: 1 }}
-            transition={{ repeat: Infinity, repeatType: "reverse", duration: 2 }}
-          >
-            <Sparkles className="h-5 w-5 text-yellow-500" />
-          </motion.span>
+        <h2 className="text-lg sm:text-xl xs:text-2xl font-bold text-center relative truncate max-w-[180px] xs:max-w-[200px] sm:max-w-full">
+          <span className="hidden xs:inline">WAKTI</span> {getRoleTitle()}
+          {!isMobile && (
+            <motion.span 
+              className="absolute -right-7 top-0 hidden sm:inline-block"
+              initial={{ rotate: -20, scale: 0.8 }}
+              animate={{ rotate: 0, scale: 1 }}
+              transition={{ repeat: Infinity, repeatType: "reverse", duration: 2 }}
+            >
+              <Sparkles className="h-5 w-5 text-yellow-500" />
+            </motion.span>
+          )}
         </h2>
       </motion.div>
       
       <Tabs 
         value={activeTab} 
         onValueChange={setActiveTab} 
-        className="w-full space-y-4"
+        className="w-full space-y-3 sm:space-y-4"
       >
         <TabsList className="grid grid-cols-4 w-full max-w-md mx-auto overflow-x-auto">
-          <TabsTrigger value="chat" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4">
-            <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="text-xs sm:text-sm">{t("ai.tabs.chat", "Chat")}</span>
+          <TabsTrigger value="chat" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
+            <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span>{t("ai.tabs.chat", "Chat")}</span>
           </TabsTrigger>
-          <TabsTrigger value="tools" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4">
-            <Wrench className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="text-xs sm:text-sm">{t("ai.tabs.tools", "Tools")}</span>
+          <TabsTrigger value="tools" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
+            <Wrench className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span>{t("ai.tabs.tools", "Tools")}</span>
           </TabsTrigger>
-          <TabsTrigger value="knowledge" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4">
-            <BookCopy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="text-xs sm:text-sm">{t("ai.tabs.knowledge", "Knowledge")}</span>
+          <TabsTrigger value="knowledge" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
+            <BookCopy className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span>{t("ai.tabs.knowledge", "Knowledge")}</span>
           </TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4">
-            <History className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="text-xs sm:text-sm">{t("ai.tabs.history", "History")}</span>
+          <TabsTrigger value="history" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
+            <History className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span>{t("ai.tabs.history", "History")}</span>
           </TabsTrigger>
         </TabsList>
         

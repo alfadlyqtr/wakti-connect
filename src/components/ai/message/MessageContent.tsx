@@ -23,7 +23,17 @@ export function MessageContent({ content, timestamp, isUser }: MessageContentPro
         )}
       >
         <div className="prose dark:prose-invert prose-sm max-w-none">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+          <ReactMarkdown 
+            remarkPlugins={[remarkGfm]}
+            components={{
+              // Make headings more responsive
+              h1: ({ node, ...props }) => <h1 className="text-lg sm:text-xl md:text-2xl font-bold" {...props} />,
+              h2: ({ node, ...props }) => <h2 className="text-base sm:text-lg md:text-xl font-bold" {...props} />,
+              h3: ({ node, ...props }) => <h3 className="text-sm sm:text-base md:text-lg font-semibold" {...props} />,
+            }}
+          >
+            {content}
+          </ReactMarkdown>
         </div>
       </div>
       {timestamp && (

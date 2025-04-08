@@ -8,12 +8,15 @@ import {
   TooltipProvider,
   TooltipTrigger 
 } from "@/components/ui/tooltip";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface AIAssistantHeaderProps {
   userName?: string;
 }
 
 export const AIAssistantHeader: React.FC<AIAssistantHeaderProps> = ({ userName }) => {
+  const isMobile = useIsMobile();
+  
   const getTimeBasedGreeting = () => {
     const hour = new Date().getHours();
     
@@ -23,31 +26,30 @@ export const AIAssistantHeader: React.FC<AIAssistantHeaderProps> = ({ userName }
   };
 
   return (
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-2">
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 mb-2 px-2 md:px-4">
       <div className="flex items-center gap-2">
         <img 
           src="/lovable-uploads/9b7d0693-89eb-4cc5-b90b-7834bfabda0e.png" 
           alt="WAKTI Logo" 
-          className="h-8 w-8 rounded-md object-cover"
+          className="h-7 w-7 sm:h-8 sm:w-8 rounded-md object-cover"
         />
         <div>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-primary">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-primary truncate max-w-[200px] sm:max-w-full">
             WAKTI AI Assistant
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground truncate max-w-[250px] sm:max-w-full">
             {getTimeBasedGreeting()}{userName ? `, ${userName}` : ""}! How can I help you today?
           </p>
         </div>
       </div>
       
-      <div className="flex items-center gap-2 mt-2 md:mt-0">
+      <div className="flex items-center gap-2 mt-1 md:mt-0 ml-auto md:ml-0">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8">
-                <Info className="mr-1 h-3.5 w-3.5" />
-                <span className="hidden sm:inline">AI Capabilities</span>
-                <span className="sm:hidden">Info</span>
+              <Button variant="outline" size="sm" className="h-7 sm:h-8">
+                <Info className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                {!isMobile && <span className="text-xs sm:text-sm">AI Capabilities</span>}
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-sm">
@@ -56,11 +58,10 @@ export const AIAssistantHeader: React.FC<AIAssistantHeaderProps> = ({ userName }
           </Tooltip>
         </TooltipProvider>
         
-        <Button variant="outline" size="sm" className="h-8" asChild>
+        <Button variant="outline" size="sm" className="h-7 sm:h-8" asChild>
           <a href="/dashboard/settings?tab=ai-assistant">
-            <Cog className="mr-1 h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Customize AI</span>
-            <span className="sm:hidden">Settings</span>
+            <Cog className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            {!isMobile && <span className="text-xs sm:text-sm">Settings</span>}
           </a>
         </Button>
       </div>

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Bot, Trash2, Settings, PanelLeftClose, PanelLeftOpen, Briefcase } from 'lucide-react';
+import { Bot, Trash2, Settings, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AIMessage, AIAssistantRole } from '@/types/ai-assistant.types';
 import { AIAssistantChat } from './AIAssistantChat';
@@ -10,7 +10,6 @@ import { EmptyStateView } from './EmptyStateView';
 import { PoweredByTMW } from './PoweredByTMW';
 import { AIRoleSelector } from './AIRoleSelector';
 import { getTimeBasedGreeting } from '@/lib/dateUtils';
-import { AIAssistantMouthAnimation } from '../animation/AIAssistantMouthAnimation';
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useTranslation } from 'react-i18next';
@@ -81,34 +80,34 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
 
   return (
     <Card className="flex-1 flex flex-col shadow-md border-wakti-blue/10 overflow-hidden rounded-xl">
-      <div className="py-2 px-3 sm:py-3 sm:px-4 border-b flex justify-between items-center bg-gradient-to-r from-white to-gray-50">
+      <div className="py-2 px-2 sm:py-3 sm:px-4 border-b flex justify-between items-center bg-gradient-to-r from-white to-gray-50">
         <div className="flex items-center">
-          <div className={`h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br ${getRoleColor()} flex items-center justify-center flex-shrink-0 mr-2 shadow-sm`}>
-            <Bot className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+          <div className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-gradient-to-br ${getRoleColor()} flex items-center justify-center flex-shrink-0 mr-2 shadow-sm`}>
+            <Bot className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
           </div>
           <div className="overflow-hidden">
-            <h3 className="text-sm md:text-base font-medium flex items-center gap-1.5">
-              <span className="truncate max-w-[120px] xs:max-w-[180px] sm:max-w-full">WAKTI {getRoleTitle()}</span>
+            <h3 className="text-xs sm:text-sm md:text-base font-medium flex items-center gap-1.5">
+              <span className="truncate max-w-[80px] xs:max-w-[120px] sm:max-w-full">WAKTI {getRoleTitle()}</span>
               {messages.length > 0 && (
                 <Button 
                   variant="ghost" 
                   size="icon" 
                   onClick={clearMessages}
-                  className="h-6 w-6 hover:bg-red-50 hover:text-red-500 transition-colors"
+                  className="h-5 w-5 sm:h-6 sm:w-6 hover:bg-red-50 hover:text-red-500 transition-colors"
                   aria-label={t("ai.clearChat", "Clear chat")}
                   title={t("ai.clearChat", "Clear chat")}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 </Button>
               )}
               <Badge 
                 variant="outline" 
-                className="ml-2 text-[10px] px-2 py-0 h-5 bg-wakti-blue/5 hidden sm:inline-flex"
+                className="ml-2 text-[8px] sm:text-[10px] px-1.5 py-0 h-4 sm:h-5 bg-wakti-blue/5 hidden xs:inline-flex"
               >
                 v2.0
               </Badge>
             </h3>
-            <p className="text-xs text-muted-foreground truncate">{greeting}{userName ? `, ${userName}` : ''}</p>
+            <p className="text-[10px] xs:text-xs text-muted-foreground truncate">{greeting}{userName ? `, ${userName}` : ''}</p>
           </div>
         </div>
         
@@ -116,30 +115,30 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
           <Button 
             variant="ghost" 
             size="icon"
-            className="h-7 w-7 sm:h-8 sm:w-8 hover:bg-blue-50 hover:text-blue-500 transition-colors"
+            className="h-6 w-6 sm:h-7 sm:w-7 hover:bg-blue-50 hover:text-blue-500 transition-colors"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             aria-label={isSidebarOpen ? t("ai.closeSidebar", "Close sidebar") : t("ai.openSidebar", "Open sidebar")}
             title={isSidebarOpen ? t("ai.closeSidebar", "Close sidebar") : t("ai.openSidebar", "Open sidebar")}
           >
-            {isSidebarOpen ? <PanelLeftClose className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <PanelLeftOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
+            {isSidebarOpen ? <PanelLeftClose className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : <PanelLeftOpen className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
           </Button>
           <Button 
             variant="ghost" 
             size="icon"
-            className="h-7 w-7 sm:h-8 sm:w-8 hover:bg-blue-50 hover:text-blue-500 transition-colors"
+            className="h-6 w-6 sm:h-7 sm:w-7 hover:bg-blue-50 hover:text-blue-500 transition-colors"
             aria-label={t("ai.settings", "Settings")}
             title={t("ai.settings", "Assistant Settings")}
             asChild
           >
             <a href="/dashboard/settings?tab=ai-assistant">
-              <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <Settings className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             </a>
           </Button>
         </div>
       </div>
       
       <CardContent className="p-0 flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-gray-50/50 to-white">
-        <div className="p-2 sm:p-3 border-b bg-white">
+        <div className="p-1.5 sm:p-3 border-b bg-white">
           <AIRoleSelector selectedRole={selectedRole} onRoleChange={onRoleChange} />
         </div>
 
@@ -161,7 +160,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
           
           {/* Sidebar with suggestions - shown conditionally and narrower */}
           {messages.length === 0 && showSuggestions && isSidebarOpen && !isMobile && (
-            <div className="w-1/4 min-w-[200px] max-w-[250px] border-l p-3 overflow-y-auto bg-gray-50/50 hidden sm:block">
+            <div className="w-1/4 min-w-[180px] sm:min-w-[200px] max-w-[250px] border-l p-2 sm:p-3 overflow-y-auto bg-gray-50/50 hidden sm:block">
               <EmptyStateView onPromptClick={handlePromptClick} selectedRole={selectedRole} />
             </div>
           )}
@@ -170,7 +169,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
           {messages.length === 0 && showSuggestions && isSidebarOpen && isMobile && (
             <div className="absolute inset-0 z-10 bg-white p-4 overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium">{t("ai.suggestedPrompts", "Suggested Prompts")}</h3>
+                <h3 className="text-sm font-medium">{t("ai.suggestedPrompts", "Suggested Prompts")}</h3>
                 <Button 
                   variant="ghost" 
                   size="sm" 
