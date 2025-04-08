@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback, useRef } from "react";
 import { Task, TaskStatus } from "@/types/task.types";
-import TaskCard from "@/components/ui/TaskCard";
+import TaskCard from "@/components/ui/task-card/TaskCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
