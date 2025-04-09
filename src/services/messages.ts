@@ -135,7 +135,7 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
     }
     
     // Transform the data to match the Message interface
-    const messages: Message[] = data.map(msg => {
+    const messages: Message[] = data?.map(msg => {
       // Get sender information with safe property access
       const senderInfo = msg.sender || {};
       
@@ -165,7 +165,7 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         senderName: senderName,
         senderAvatar: senderAvatar
       };
-    });
+    }) || [];
     
     return messages;
     

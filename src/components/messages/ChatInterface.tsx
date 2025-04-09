@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useMessaging } from "@/hooks/useMessaging";
@@ -106,14 +105,12 @@ const ChatInterface = () => {
     },
   });
   
-  // Mark messages as read when component mounts
   useEffect(() => {
     if (userId) {
       markConversationAsRead(userId);
     }
   }, [userId, markConversationAsRead]);
   
-  // Check if this is a business-staff or staff-business conversation
   const { data: isBusinessStaffConversation } = useQuery({
     queryKey: ['isBusinessStaffConversation', userId, currentUserId],
     queryFn: async () => {
@@ -144,7 +141,6 @@ const ChatInterface = () => {
   
   const canShareLocation = userProfile?.account_type !== 'free';
   
-  // Handle different profile types safely
   const getDisplayName = (): string => {
     if (!otherUserProfile) return 'User';
     
@@ -167,10 +163,12 @@ const ChatInterface = () => {
     if ('profile_image_url' in otherUserProfile) {
       // This is a StaffProfile
       return otherUserProfile.profile_image_url;
-    } else {
+    } else if ('avatar_url' in otherUserProfile) {
       // This is a UserProfile
       return otherUserProfile.avatar_url;
     }
+    
+    return undefined;
   };
   
   const handleSendMessage = async (content: string) => {
@@ -202,7 +200,6 @@ const ChatInterface = () => {
     }
   };
   
-  // Show loading state
   if (isLoadingMessages || isCheckingPermission || isLoadingProfile) {
     return (
       <div className="flex-1 flex items-center justify-center">
