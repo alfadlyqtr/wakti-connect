@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskStatus } from "@/types/task.types";
-import { useTranslation } from "react-i18next";
 
 interface TaskCardMenuProps {
   id: string;
@@ -49,8 +48,6 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
   userRole,
   isPaidAccount,
 }) => {
-  const { t, i18n } = useTranslation();
-  
   // Handle status change
   const startTask = () => {
     onStatusChange(id, "in-progress");
@@ -69,42 +66,42 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="h-8 w-8">
           <MoreVertical className="h-4 w-4" />
-          <span className="sr-only">{t("task.menu.openMenu")}</span>
+          <span className="sr-only">Open Menu</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>{t("task.menu.actions")}</DropdownMenuLabel>
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
         
         {/* Status actions */}
         {showMarkComplete && (
           <DropdownMenuItem onClick={() => onStatusChange(id, "completed")}>
             <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-            {t("task.menu.markCompleted")}
+            Mark Completed
           </DropdownMenuItem>
         )}
         
         {showStartTask && (
           <DropdownMenuItem onClick={startTask}>
             <Clock className="mr-2 h-4 w-4 text-blue-500" />
-            {t("task.menu.startTask")}
+            Start Task
           </DropdownMenuItem>
         )}
         
         {/* Snooze options for paid accounts */}
         {showSnooze && onSnooze && (
           <>
-            <DropdownMenuLabel>{t("task.menu.snooze")}</DropdownMenuLabel>
+            <DropdownMenuLabel>Snooze</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => onSnooze(id, 1)}>
               <AlarmClock className="mr-2 h-4 w-4 text-purple-500" />
-              {t("task.menu.snoozeDay", { count: 1 })}
+              Snooze for 1 day
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onSnooze(id, 3)}>
               <AlarmClock className="mr-2 h-4 w-4 text-purple-500" />
-              {t("task.menu.snoozeDays", { count: 3 })}
+              Snooze for 3 days
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => onSnooze(id, 7)}>
               <AlarmClock className="mr-2 h-4 w-4 text-purple-500" />
-              {t("task.menu.snoozeWeek", { count: 1 })}
+              Snooze for 1 week
             </DropdownMenuItem>
           </>
         )}
@@ -115,7 +112,7 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
         {!isArchived && (
           <DropdownMenuItem onClick={() => onEdit(id)}>
             <Pencil className="mr-2 h-4 w-4" />
-            {t("common.edit")}
+            Edit
           </DropdownMenuItem>
         )}
         
@@ -123,7 +120,7 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
         {showCancel && onCancel && (
           <DropdownMenuItem onClick={() => onCancel(id)}>
             <XCircle className="mr-2 h-4 w-4 text-orange-500" />
-            {t("task.menu.cancelTask")}
+            Cancel Task
           </DropdownMenuItem>
         )}
         
@@ -131,7 +128,7 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
         {showDelete && (
           <DropdownMenuItem onClick={() => onDelete(id)}>
             <Trash2 className="mr-2 h-4 w-4 text-red-500" />
-            {t("common.delete")}
+            Delete
           </DropdownMenuItem>
         )}
         
@@ -139,7 +136,7 @@ export const TaskCardMenu: React.FC<TaskCardMenuProps> = ({
         {showRestore && (
           <DropdownMenuItem onClick={() => onRestore(id)}>
             <ArrowUpRight className="mr-2 h-4 w-4 text-green-500" />
-            {t("task.menu.restore")}
+            Restore
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

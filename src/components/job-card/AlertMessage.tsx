@@ -2,15 +2,13 @@
 import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import { useTranslation } from "react-i18next";
 
 interface LoadingStateProps {
   message?: string;
 }
 
 export const LoadingState: React.FC<LoadingStateProps> = ({ message }) => {
-  const { t } = useTranslation();
-  const defaultMessage = t("jobCards.loadingJobs");
+  const defaultMessage = "Loading job cards...";
   
   return (
     <div className="flex items-center justify-center py-8">

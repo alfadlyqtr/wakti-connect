@@ -1,7 +1,6 @@
 
 import React from "react";
 import { format } from "date-fns";
-import { useTranslation } from "react-i18next";
 import { TaskStatus } from "@/types/task.types";
 import { CheckCircle, CircleSlash } from "lucide-react";
  
@@ -22,8 +21,6 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
   onStatusChange,
   onEdit
 }) => {
-  const { t, i18n } = useTranslation();
-  
   const isCompleted = status === "completed";
   
   const handleMarkComplete = () => {
@@ -35,7 +32,7 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
       <div>
         {completedDate && (
           <span>
-            {t("task.completedTime.at")} {format(new Date(completedDate), "MMM d, yyyy")}
+            Completed at {format(new Date(completedDate), "MMM d, yyyy")}
           </span>
         )}
       </div>
@@ -45,7 +42,7 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
           onClick={handleMarkComplete}
         >
           {isCompleted ? <CircleSlash className="h-3 w-3" /> : <CheckCircle className="h-3 w-3" />}
-          {isCompleted ? t("task.status.markPending") : t("task.status.markCompleted")}
+          {isCompleted ? "Mark Pending" : "Mark Completed"}
         </button>
       </div>
     </div>
