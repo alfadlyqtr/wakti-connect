@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { UserRole } from "@/types/user";
 import { toast } from "@/components/ui/use-toast";
@@ -102,8 +101,13 @@ export const getStaffPermissions = async (): Promise<Record<string, boolean>> =>
       return {};
     }
     
-    // Store in cache - create empty object if permissions is null
-    staffPermissionsCache = data.permissions || {};
+    // Store in cache - ensure we handle the case where permissions might not be the expected type
+    const permissions: Record<string, boolean> = 
+      typeof data.permissions === 'object' && data.permissions !== null 
+        ? data.permissions as Record<string, boolean>
+        : {};
+        
+    staffPermissionsCache = permissions;
     lastCacheTime = now;
     
     // Add role-based permissions
@@ -360,4 +364,3 @@ export const getBusinessJobs = async (): Promise<any[]> => {
     return [];
   }
 };
-
