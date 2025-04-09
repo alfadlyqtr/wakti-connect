@@ -30,7 +30,7 @@ const StaffRoleGuard: React.FC<StaffRoleGuardProps> = ({
   const userRole = localStorage.getItem('userRole') as UserRole;
   const queryClient = useQueryClient();
   
-  // Sync staff contacts and permissions when a staff member accesses allowed routes
+  // Enhanced sync staff contacts and permissions when a staff member accesses allowed routes
   useEffect(() => {
     const syncStaffData = async () => {
       if (userRole === 'staff') {
@@ -42,14 +42,22 @@ const StaffRoleGuard: React.FC<StaffRoleGuardProps> = ({
           const result = await forceSyncStaffContacts();
           console.log("Staff contacts sync result:", result);
           
-          // Invalidate any staff-related queries to refresh UI
+          // Set user role in localStorage for quicker access
+          localStorage.setItem('userRole', 'staff');
+          
+          // Invalidate any staff-related queries to refresh UI with real-time data
           queryClient.invalidateQueries({ queryKey: ['staffStats'] });
           queryClient.invalidateQueries({ queryKey: ['staffPermissions'] });
           queryClient.invalidateQueries({ queryKey: ['contacts'] });
           queryClient.invalidateQueries({ queryKey: ['conversations'] });
           
-          // Store user role in localStorage for quicker access
-          localStorage.setItem('userRole', 'staff');
+          // Set up recurring check for updated permissions
+          const checkPermissionsInterval = setInterval(() => {
+            clearStaffCache();
+            queryClient.invalidateQueries({ queryKey: ['staffPermissions'] });
+          }, 60000); // Check every minute
+          
+          return () => clearInterval(checkPermissionsInterval);
         } catch (error) {
           console.error("Error syncing staff data:", error);
         }
@@ -59,13 +67,40 @@ const StaffRoleGuard: React.FC<StaffRoleGuardProps> = ({
     syncStaffData();
     
     // Set up interval to sync every 5 minutes
-    const intervalId = setInterval(syncStaffData, 5 * 60 * 1000);
+    const intervalId = setInterval(() => {
+      syncStaffData();
+    }, 5 * 60 * 1000);
     
     return () => clearInterval(intervalId);
   }, [userRole, queryClient]);
   
-  // Only restrict access if user is a staff member (and not also a business owner)
+  // Only restrict access if user is a staff member
   if (userRole === 'staff' && disallowStaff) {
+    // Check if trying to access contacts page - redirect to messages with business owner instead
+    if (location.pathname === "/dashboard/contacts") {
+      const redirectToBusinessMessages = async () => {
+        try {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const { data: staffData } = await supabase
+            .from('business_staff')
+            .select('business_id')
+            .eq('staff_id', (await supabase.auth.getUser()).data.user?.id)
+            .eq('status', 'active')
+            .single();
+            
+          if (staffData?.business_id) {
+            return <Navigate to={`/dashboard/messages/${staffData.business_id}`} state={{ from: location }} replace />;
+          }
+        } catch (error) {
+          console.error("Error redirecting staff:", error);
+        }
+        
+        return <Navigate to="/dashboard/messages" state={{ from: location }} replace />;
+      };
+      
+      return redirectToBusinessMessages();
+    }
+    
     // Show toast message explaining why they can't access this route
     toast({
       title: messageTitle,

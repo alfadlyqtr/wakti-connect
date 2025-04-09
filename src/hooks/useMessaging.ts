@@ -10,22 +10,23 @@ import { fetchConversations } from "@/services/messages/fetchConversations";
 import { canMessageUser } from "@/services/messages/permissionsService";
 import { getUnreadMessagesCount } from "@/services/messages/notificationsService";
 import { Message, Conversation } from "@/types/message.types";
-import { ensureStaffContacts, forceSyncStaffContacts } from "@/services/contacts/contactSync";
+import { forceSyncStaffContacts } from "@/services/contacts/contactSync";
 import { getStaffBusinessId } from "@/utils/staffUtils";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useMessaging = (otherUserId?: string) => {
   const queryClient = useQueryClient();
+  const isStaff = localStorage.getItem('userRole') === 'staff';
 
   // First ensure that staff contacts are synced
   useQuery({
     queryKey: ['syncStaffContacts'],
     queryFn: async () => {
-      const isStaff = localStorage.getItem('userRole') === 'staff';
       if (isStaff) {
         try {
           // Force sync staff contacts to ensure messaging works
-          await forceSyncStaffContacts();
+          const syncResult = await forceSyncStaffContacts();
+          console.log("Staff contacts sync result:", syncResult);
           
           // Get current user session
           const { data: { session } } = await supabase.auth.getSession();
@@ -50,6 +51,33 @@ export const useMessaging = (otherUserId?: string) => {
             status: 'accepted',
             updated_at: new Date().toISOString()
           }, { onConflict: 'user_id,contact_id' });
+          
+          // Sync with other staff members too
+          const { data: otherStaff } = await supabase
+            .from('business_staff')
+            .select('staff_id')
+            .eq('business_id', businessId)
+            .eq('status', 'active')
+            .neq('staff_id', session.user.id);
+            
+          if (otherStaff && otherStaff.length > 0) {
+            for (const staff of otherStaff) {
+              // Create bidirectional contacts
+              await supabase.from('user_contacts').upsert({
+                user_id: session.user.id,
+                contact_id: staff.staff_id,
+                status: 'accepted',
+                updated_at: new Date().toISOString()
+              }, { onConflict: 'user_id,contact_id' });
+              
+              await supabase.from('user_contacts').upsert({
+                user_id: staff.staff_id,
+                contact_id: session.user.id,
+                status: 'accepted',
+                updated_at: new Date().toISOString()
+              }, { onConflict: 'user_id,contact_id' });
+            }
+          }
           
           return true;
         } catch (error) {
@@ -80,12 +108,43 @@ export const useMessaging = (otherUserId?: string) => {
   const sendMessageMutation = useMutation({
     mutationFn: async ({ recipientId, content }: { recipientId: string; content: string }) => {
       // For staff users, ensure contacts are synced before sending
-      const isStaff = localStorage.getItem('userRole') === 'staff';
       if (isStaff) {
-        const businessId = await getStaffBusinessId();
-        if (businessId === recipientId) {
-          // Make sure the connection exists
-          await forceSyncStaffContacts();
+        try {
+          const businessId = await getStaffBusinessId();
+          
+          // If messaging the business owner or another staff member, ensure contacts are synced
+          if (businessId === recipientId) {
+            // Make sure the connection exists
+            await forceSyncStaffContacts();
+          } else {
+            // Check if recipient is another staff member
+            const { data: staffData } = await supabase
+              .from('business_staff')
+              .select('id')
+              .eq('staff_id', recipientId)
+              .eq('business_id', businessId)
+              .eq('status', 'active')
+              .maybeSingle();
+              
+            if (staffData) {
+              // Ensure staff-to-staff connection exists
+              await supabase.from('user_contacts').upsert({
+                user_id: (await supabase.auth.getUser()).data.user?.id,
+                contact_id: recipientId,
+                status: 'accepted',
+                updated_at: new Date().toISOString()
+              }, { onConflict: 'user_id,contact_id' });
+              
+              await supabase.from('user_contacts').upsert({
+                user_id: recipientId,
+                contact_id: (await supabase.auth.getUser()).data.user?.id,
+                status: 'accepted',
+                updated_at: new Date().toISOString()
+              }, { onConflict: 'user_id,contact_id' });
+            }
+          }
+        } catch (error) {
+          console.error("Error syncing contacts before sending message:", error);
         }
       }
       
@@ -127,7 +186,6 @@ export const useMessaging = (otherUserId?: string) => {
       if (!otherUserId) return false;
       
       // Staff members can always message their business owner
-      const isStaff = localStorage.getItem('userRole') === 'staff';
       if (isStaff) {
         // Get business ID with fresh data (don't rely on cache)
         const { data: { session } } = await supabase.auth.getSession();
@@ -157,6 +215,9 @@ export const useMessaging = (otherUserId?: string) => {
           // Allow staff to message other staff
           return true;
         }
+        
+        // Staff cannot message anyone else
+        return false;
       }
       
       // For all other cases, use the standard permission check

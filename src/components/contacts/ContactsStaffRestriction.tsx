@@ -1,6 +1,7 @@
+
 import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, MessageSquare } from "lucide-react";
+import { AlertCircle, MessageSquare, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { getStaffBusinessId } from "@/utils/staffUtils";
@@ -21,9 +22,11 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
   const [businessId, setBusinessId] = useState<string | null>(propBusinessId || null);
   const [businessName, setBusinessName] = useState<string>(propBusinessName || "your business");
   const [isSyncing, setIsSyncing] = useState(false);
+  const [staffMembers, setStaffMembers] = useState<any[]>([]);
+  const [isLoadingStaff, setIsLoadingStaff] = useState(true);
 
   useEffect(() => {
-    const fetchBusinessId = async () => {
+    const fetchBusinessInfo = async () => {
       try {
         if (!propBusinessId) {
           const businessId = await getStaffBusinessId();
@@ -45,8 +48,54 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
         console.error("Failed to fetch business details:", error);
       }
     };
+
+    const fetchStaffMembers = async () => {
+      setIsLoadingStaff(true);
+      try {
+        const bizId = propBusinessId || await getStaffBusinessId();
+        
+        if (!bizId) {
+          setIsLoadingStaff(false);
+          return;
+        }
+        
+        // Get all active staff members from this business
+        const { data: staffData, error } = await supabase
+          .from('business_staff')
+          .select(`
+            id, 
+            staff_id,
+            profiles:staff_id (
+              display_name,
+              full_name,
+              avatar_url
+            )
+          `)
+          .eq('business_id', bizId)
+          .eq('status', 'active');
+          
+        if (error) {
+          console.error("Error fetching staff:", error);
+          return;
+        }
+        
+        // Format staff data for display
+        const formattedStaff = staffData.map(staff => ({
+          id: staff.staff_id,
+          name: staff.profiles?.display_name || staff.profiles?.full_name || "Staff Member",
+          avatar: staff.profiles?.avatar_url
+        }));
+        
+        setStaffMembers(formattedStaff);
+      } catch (error) {
+        console.error("Error loading staff members:", error);
+      } finally {
+        setIsLoadingStaff(false);
+      }
+    };
     
-    fetchBusinessId();
+    fetchBusinessInfo();
+    fetchStaffMembers();
   }, [propBusinessId]);
 
   const handleSyncContacts = async () => {
@@ -55,13 +104,13 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
       const result = await forceSyncStaffContacts();
       if (result.success) {
         toast({
-          title: "Contacts Synced",
-          description: "Your staff contacts have been refreshed.",
+          title: "Connections Refreshed",
+          description: "Your messaging connections with the business and other staff have been updated.",
         });
       } else {
         toast({
           title: "Sync Failed",
-          description: result.message || "Could not sync staff contacts.",
+          description: result.message || "Could not sync business messaging connections.",
           variant: "destructive"
         });
       }
@@ -82,17 +131,10 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
           <p className="text-muted-foreground max-w-md">
             As a staff member, you can only message 
             {businessName !== "your business" ? ` ${businessName}` : " your business"} and 
-            other staff members if you have permission.
+            other staff members.
           </p>
           
-          <div className="flex flex-wrap gap-3 mt-4 justify-center">
-            <Button 
-              variant="outline"
-              onClick={() => navigate('/dashboard')}
-            >
-              Go to Dashboard
-            </Button>
-            
+          <div className="flex flex-wrap gap-3 mt-4 justify-center">            
             {businessId && (
               <Button 
                 onClick={() => navigate(`/dashboard/messages/${businessId}`)}
@@ -108,9 +150,35 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
               onClick={handleSyncContacts}
               disabled={isSyncing}
             >
-              {isSyncing ? 'Syncing...' : 'Refresh Staff Contacts'}
+              {isSyncing ? 'Syncing...' : 'Refresh Messaging Connections'}
             </Button>
           </div>
+          
+          {staffMembers.length > 0 && (
+            <div className="mt-4 w-full">
+              <h4 className="text-sm font-medium mb-2 flex items-center justify-center gap-1">
+                <Users className="h-4 w-4" /> Other Staff Members
+              </h4>
+              <div className="grid grid-cols-2 gap-2">
+                {staffMembers.map(staff => (
+                  <Button 
+                    key={staff.id}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => navigate(`/dashboard/messages/${staff.id}`)}
+                  >
+                    <MessageSquare className="h-3 w-3 mr-1" />
+                    {staff.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {isLoadingStaff && (
+            <p className="text-sm text-muted-foreground mt-2">Loading staff members...</p>
+          )}
         </div>
       </CardContent>
     </Card>

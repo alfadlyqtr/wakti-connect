@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Mail, Inbox } from "lucide-react";
+import { PlusCircle, Mail, Inbox, Users, Briefcase } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import ConversationsList from "@/components/messages/ConversationsList";
@@ -12,12 +12,16 @@ import { useMessaging } from "@/hooks/useMessaging";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ContactSubmissions from "@/components/messages/ContactSubmissions";
 import { useContactSubmissionsQuery } from "@/hooks/business-page/useContactSubmissionsQuery";
+import { getStaffBusinessId } from "@/utils/staffUtils";
+import ContactsStaffRestriction from "@/components/contacts/ContactsStaffRestriction";
 
 const DashboardMessagesHome = () => {
   const navigate = useNavigate();
   const { conversations } = useMessaging();
   const [activeTab, setActiveTab] = useState<string>("messages");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isStaff, setIsStaff] = useState(false);
+  const [businessId, setBusinessId] = useState<string | null>(null);
   
   // Get current user ID and profile
   const { data: userProfile } = useQuery({
@@ -27,6 +31,13 @@ const DashboardMessagesHome = () => {
       if (!session) return null;
       
       setCurrentUserId(session.user.id);
+      
+      // Check if user is staff
+      if (localStorage.getItem('userRole') === 'staff') {
+        setIsStaff(true);
+        const bizId = await getStaffBusinessId();
+        setBusinessId(bizId);
+      }
       
       const { data } = await supabase
         .from('profiles')
@@ -44,17 +55,18 @@ const DashboardMessagesHome = () => {
   const canSendMessages = userProfile?.account_type !== 'free';
   const isBusinessAccount = userProfile?.account_type === 'business';
   
+  // Effect for ensuring staff contacts are synced
   useEffect(() => {
-    // Get current user ID on mount
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setCurrentUserId(session.user.id);
-      }
-    };
-    
-    getSession();
-  }, []);
+    if (isStaff) {
+      // Import and call forceSyncStaffContacts
+      const syncContacts = async () => {
+        const { forceSyncStaffContacts } = await import('@/services/contacts/contactSync');
+        await forceSyncStaffContacts();
+      };
+      
+      syncContacts();
+    }
+  }, [isStaff]);
   
   return (
     <div className="space-y-6">
@@ -62,13 +74,15 @@ const DashboardMessagesHome = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Messages</h1>
           <p className="text-muted-foreground">
-            {canSendMessages 
-              ? "Connect with others through messaging. Messages expire after 24 hours."
-              : "Free accounts cannot send messages. Upgrade to start messaging."}
+            {isStaff 
+              ? "Connect with your business owner and other staff members."
+              : canSendMessages 
+                ? "Connect with others through messaging. Messages expire after 24 hours."
+                : "Free accounts cannot send messages. Upgrade to start messaging."}
           </p>
         </div>
         
-        {canSendMessages && (
+        {canSendMessages && !isStaff && (
           <Button 
             onClick={() => navigate('/dashboard/contacts')}
             className="flex items-center gap-1"
@@ -78,6 +92,11 @@ const DashboardMessagesHome = () => {
           </Button>
         )}
       </div>
+      
+      {/* Staff specific messaging guide */}
+      {isStaff && (
+        <ContactsStaffRestriction businessId={businessId || undefined} />
+      )}
       
       {isBusinessAccount && (
         <Tabs 
@@ -105,8 +124,14 @@ const DashboardMessagesHome = () => {
           <TabsContent value="messages" className="mt-0">
             <div className="grid h-[calc(100vh-300px)] grid-cols-1 md:grid-cols-3 gap-4 rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
               <div className="border-r md:col-span-1 overflow-hidden flex flex-col">
-                <div className="p-4 border-b">
+                <div className="p-4 border-b flex justify-between items-center">
                   <h2 className="font-semibold">Conversations</h2>
+                  {isStaff && (
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <Users className="h-3 w-3 mr-1" />
+                      Staff Chat
+                    </div>
+                  )}
                 </div>
                 <div className="overflow-y-auto flex-1">
                   {conversations && conversations.length > 0 ? (
@@ -128,6 +153,7 @@ const DashboardMessagesHome = () => {
                   <EmptyMessagesState 
                     canSendMessages={canSendMessages} 
                     userType={userProfile?.account_type || 'free'}
+                    isStaff={isStaff}
                   />
                 )}
               </div>
@@ -146,8 +172,14 @@ const DashboardMessagesHome = () => {
       {!isBusinessAccount && (
         <div className="grid h-[calc(100vh-220px)] grid-cols-1 md:grid-cols-3 gap-4 rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
           <div className="border-r md:col-span-1 overflow-hidden flex flex-col">
-            <div className="p-4 border-b">
+            <div className="p-4 border-b flex justify-between items-center">
               <h2 className="font-semibold">Conversations</h2>
+              {isStaff && (
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <Users className="h-3 w-3 mr-1" />
+                  Staff Chat
+                </div>
+              )}
             </div>
             <div className="overflow-y-auto flex-1">
               {conversations && conversations.length > 0 ? (
@@ -169,6 +201,7 @@ const DashboardMessagesHome = () => {
               <EmptyMessagesState 
                 canSendMessages={canSendMessages} 
                 userType={userProfile?.account_type || 'free'}
+                isStaff={isStaff}
               />
             )}
           </div>
@@ -180,9 +213,19 @@ const DashboardMessagesHome = () => {
 
 const DashboardMessageChat = () => {
   const { userId } = useParams<{ userId: string }>();
+  const [isStaff, setIsStaff] = useState(false);
   const { conversations } = useMessaging();
   
   const navigate = useNavigate();
+
+  // Check if user is staff
+  useEffect(() => {
+    const checkStaffStatus = async () => {
+      const staffRole = localStorage.getItem('userRole') === 'staff';
+      setIsStaff(staffRole);
+    };
+    checkStaffStatus();
+  }, []);
   
   return (
     <div className="space-y-6">
@@ -190,7 +233,9 @@ const DashboardMessageChat = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Messages</h1>
           <p className="text-muted-foreground">
-            Messages expire after 24 hours and are limited to 20 characters.
+            {isStaff 
+              ? "Staff messaging with your business owner and team" 
+              : "Messages expire after 24 hours and are limited to 20 characters."}
           </p>
         </div>
         <Button 
@@ -204,8 +249,14 @@ const DashboardMessageChat = () => {
       
       <div className="grid h-[calc(100vh-220px)] grid-cols-1 md:grid-cols-3 gap-4 rounded-lg border bg-card text-card-foreground shadow-sm overflow-hidden">
         <div className="hidden md:flex border-r md:col-span-1 overflow-hidden flex-col">
-          <div className="p-4 border-b">
+          <div className="p-4 border-b flex justify-between items-center">
             <h2 className="font-semibold">Conversations</h2>
+            {isStaff && (
+              <div className="flex items-center text-xs text-muted-foreground">
+                <Users className="h-3 w-3 mr-1" />
+                Staff Chat
+              </div>
+            )}
           </div>
           <div className="overflow-y-auto flex-1">
             <ConversationsList />

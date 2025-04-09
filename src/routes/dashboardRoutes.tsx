@@ -119,10 +119,19 @@ export const dashboardRoutes: RouteObject[] = [
     path: "reports",
     element: withSuspense(DashboardBusinessReports),
   },
-  // Add new route for contacts
+  // Add new route for contacts with StaffRoleGuard to block staff access
   {
     path: "contacts",
-    element: withSuspense(DashboardContacts),
+    element: (
+      <StaffRoleGuard
+        disallowStaff={true}
+        messageTitle="Contacts Not Available"
+        messageDescription="Contact management is not available for staff accounts"
+        redirectTo="/dashboard/messages"
+      >
+        {withSuspense(DashboardContacts)}
+      </StaffRoleGuard>
+    ),
   },
   // Add new route for subscribers (business users)
   {

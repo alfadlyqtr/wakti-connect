@@ -47,12 +47,21 @@ export const canMessageUser = async (userId: string): Promise<boolean> => {
     }
     
     // Check if the current user is a staff member
-    const staffBusinessId = await getStaffBusinessId();
-    if (staffBusinessId) {
-      console.log("User is staff member of business:", staffBusinessId);
+    const userRole = localStorage.getItem('userRole');
+    if (userRole === 'staff') {
+      console.log("User is a staff member");
       
-      // Staff can ALWAYS message their business owner (this ensures staff-business communication works)
-      if (userId === staffBusinessId) {
+      // Get the business ID for which the user is a staff member
+      const businessId = await getStaffBusinessId();
+      console.log("Staff member's business ID:", businessId);
+      
+      if (!businessId) {
+        console.log("No business ID found for staff member");
+        return false;
+      }
+      
+      // Staff can ALWAYS message their business owner
+      if (userId === businessId) {
         console.log("Staff is messaging their business owner, always allowed");
         return true;
       }
@@ -62,43 +71,15 @@ export const canMessageUser = async (userId: string): Promise<boolean> => {
         .from('business_staff')
         .select('id')
         .eq('staff_id', userId)
-        .eq('business_id', staffBusinessId)
+        .eq('business_id', businessId)
+        .eq('status', 'active')
         .maybeSingle();
         
       if (targetStaffData) {
-        // Staff to staff messaging is allowed by default
-        console.log("Staff is messaging another staff member, allowed by default");
+        console.log("Staff is messaging another staff member of the same business, allowed");
         return true;
-        
-        // If we want to respect permissions, uncomment this code:
-        /*
-        // Check if user has permission to message staff
-        const { data: staffPermissions } = await supabase
-          .from('business_staff')
-          .select('permissions')
-          .eq('staff_id', session.user.id)
-          .eq('business_id', staffBusinessId)
-          .single();
-        
-        // Safely handle permissions by ensuring it's an object and has the property
-        if (staffPermissions?.permissions && 
-            typeof staffPermissions.permissions === 'object' && 
-            staffPermissions.permissions !== null) {
-          // Cast to Record to safely access properties
-          const permissionsObj = staffPermissions.permissions as Record<string, boolean>;
-          
-          if (permissionsObj.can_message_staff) {
-            console.log("Staff is messaging another staff member, allowed");
-            return true;
-          }
-        }
-        
-        console.log("Staff does not have permission to message other staff");
-        return false;
-        */
       }
       
-      // Staff should not be able to message customers
       console.log("Staff cannot message users outside their business context");
       return false;
     }
