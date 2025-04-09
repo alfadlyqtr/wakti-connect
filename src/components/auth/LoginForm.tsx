@@ -1,109 +1,108 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface LoginFormProps {
-  setError?: React.Dispatch<React.SetStateAction<string>>;
+  setError: (error: string) => void;
 }
 
-const LoginForm = ({ setError }: LoginFormProps = {}) => {
+const LoginForm = ({ setError }: LoginFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [internalError, setInternalError] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setLoading(true);
-    setInternalError(null);
-    if (setError) setError("");
+  const location = useLocation();
+  const { login } = useAuth();
+  
+  // Extract return URL from query params if it exists
+  const queryParams = new URLSearchParams(location.search);
+  const returnUrl = queryParams.get('returnUrl') || '/dashboard';
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
     
     try {
-      // Login with Supabase Auth
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const result = await login(email, password);
       
-      if (error) throw error;
-      
-      // After login, check if user is a staff member
-      const { data: staffData, error: staffError } = await supabase
-        .from('business_staff')
-        .select('id, business_id, role')
-        .eq('staff_id', data.user.id)
-        .eq('status', 'active')
-        .maybeSingle();
-        
-      if (staffError) {
-        console.error("Error checking staff status:", staffError);
-      } else if (staffData) {
-        // Store staff status and info in localStorage for quicker access
-        localStorage.setItem('isStaff', 'true');
-        localStorage.setItem('staffRelationId', staffData.id);
-        localStorage.setItem('staffBusinessId', staffData.business_id);
-        localStorage.setItem('userRole', staffData.role);
-        
-        // Redirect staff to staff dashboard
-        navigate('/dashboard/staff-dashboard');
-      } else {
-        // Regular user redirect
-        navigate('/dashboard');
+      if (result.error) {
+        throw result.error;
       }
+      
+      // Successful login is handled by the auth state change in AuthProvider
     } catch (error: any) {
-      console.error("Error signing in:", error);
-      const errorMessage = error.message || "Invalid email or password";
-      setInternalError(errorMessage);
-      if (setError) setError(errorMessage);
+      console.error("Login error:", error);
+      setError(error.message || "Failed to log in. Please check your credentials and try again.");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
   
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid gap-2">
+      <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="email"
+            type="email"
+            placeholder="name@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="pl-10"
+          />
+        </div>
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          placeholder="Enter your password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </div>
-      {internalError && (
-        <p className="text-sm text-destructive text-center">{internalError}</p>
-      )}
       
-      <Button className="w-full" type="submit" disabled={loading}>
-        {loading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Logging in...
-          </>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Password</Label>
+          <Link to="/auth/forgot-password" className="text-xs text-muted-foreground hover:text-primary">
+            Forgot Password?
+          </Link>
+        </div>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="pl-10"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground"
+            onClick={togglePasswordVisibility}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+        </div>
+      </div>
+      
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? (
+          <div className="flex items-center gap-2">
+            <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <span>Logging in...</span>
+          </div>
         ) : (
-          "Login"
+          <span>Login</span>
         )}
       </Button>
     </form>

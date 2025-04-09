@@ -2,7 +2,6 @@
 import React from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { useTranslation } from "react-i18next";
 
 interface AccountTypeSelectorProps {
   value: string;
@@ -10,11 +9,9 @@ interface AccountTypeSelectorProps {
 }
 
 const AccountTypeSelector: React.FC<AccountTypeSelectorProps> = ({ value, onChange }) => {
-  const { t } = useTranslation();
-
   return (
     <div className="space-y-2">
-      <Label htmlFor="account-type">{t('auth.accountType')}</Label>
+      <Label htmlFor="account-type">Account Type</Label>
       <RadioGroup 
         defaultValue="free" 
         value={value}
@@ -23,15 +20,15 @@ const AccountTypeSelector: React.FC<AccountTypeSelectorProps> = ({ value, onChan
       >
         <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-accent cursor-pointer">
           <RadioGroupItem value="free" id="free" />
-          <Label htmlFor="free" className="cursor-pointer">{t('auth.free')}</Label>
+          <Label htmlFor="free" className="cursor-pointer">Free</Label>
         </div>
         <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-accent cursor-pointer">
           <RadioGroupItem value="individual" id="individual" />
-          <Label htmlFor="individual" className="cursor-pointer">{t('auth.individual')}</Label>
+          <Label htmlFor="individual" className="cursor-pointer">Individual</Label>
         </div>
         <div className="flex items-center space-x-2 border rounded-md p-3 hover:bg-accent cursor-pointer">
           <RadioGroupItem value="business" id="business" />
-          <Label htmlFor="business" className="cursor-pointer">{t('auth.business')}</Label>
+          <Label htmlFor="business" className="cursor-pointer">Business</Label>
         </div>
       </RadioGroup>
     </div>

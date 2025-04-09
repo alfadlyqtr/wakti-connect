@@ -7,15 +7,15 @@ interface TroubleshootingTipsProps {
 
 const TroubleshootingTips: React.FC<TroubleshootingTipsProps> = ({ attemptCount }) => {
   if (attemptCount < 2) return null;
-
+  
   return (
-    <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-sm">
-      <p>Having trouble creating an account? Try these steps:</p>
-      <ul className="list-disc ml-5 mt-1">
-        <li>Make sure you've entered a valid email address</li>
-        <li>Use a strong password with at least 6 characters</li>
-        <li>Try again in a few minutes</li>
-        <li>Try using a different browser</li>
+    <div className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-md">
+      <p className="font-medium mb-2">Having trouble signing up?</p>
+      <ul className="list-disc list-inside space-y-1">
+        <li>Make sure your password is at least 6 characters long</li>
+        <li>Try using a different email address</li>
+        <li>Check your internet connection</li>
+        <li>If problems persist, please contact support</li>
       </ul>
     </div>
   );
