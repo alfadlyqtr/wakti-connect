@@ -13,6 +13,21 @@ import MessageList from "./chat/MessageList";
 import MessageInput from "./chat/MessageInput";
 import NoPermissionMessage from "./chat/NoPermissionMessage";
 
+// Define the profile type to match what comes from the database
+interface UserProfile {
+  display_name: string;
+  full_name: string;
+  avatar_url?: string;
+  account_type?: 'free' | 'individual' | 'business' | 'staff';
+  business_name?: string;
+}
+
+interface StaffProfile {
+  name: string;
+  email: string;
+  profile_image_url?: string;
+}
+
 const ChatInterface = () => {
   const { userId } = useParams<{ userId: string }>();
   
@@ -36,7 +51,7 @@ const ChatInterface = () => {
     }
   });
   
-  const { data: otherUserProfile } = useQuery({
+  const { data: otherUserProfile } = useQuery<UserProfile | StaffProfile | null>({
     queryKey: ['profile', userId],
     queryFn: async () => {
       if (!userId) return null;
@@ -61,14 +76,14 @@ const ChatInterface = () => {
         
         if (staffData) {
           return {
-            display_name: staffData.name,
-            full_name: staffData.name,
-            avatar_url: staffData.profile_image_url
-          };
+            name: staffData.name,
+            email: staffData.email,
+            profile_image_url: staffData.profile_image_url
+          } as StaffProfile;
         }
       }
       
-      return data;
+      return data as UserProfile;
     },
     enabled: !!userId
   });
@@ -97,11 +112,18 @@ const ChatInterface = () => {
   }, [userId, markConversationAsRead]);
   
   const canShareLocation = userProfile?.account_type !== 'free';
+  
+  // Handle different profile types safely
   const displayName = 
-    otherUserProfile?.business_name || 
-    otherUserProfile?.display_name || 
-    otherUserProfile?.full_name || 
+    'name' in (otherUserProfile || {}) ? (otherUserProfile as StaffProfile).name :
+    (otherUserProfile as UserProfile)?.business_name || 
+    (otherUserProfile as UserProfile)?.display_name || 
+    (otherUserProfile as UserProfile)?.full_name || 
     'User';
+  
+  const avatarUrl = 
+    'profile_image_url' in (otherUserProfile || {}) ? (otherUserProfile as StaffProfile).profile_image_url :
+    (otherUserProfile as UserProfile)?.avatar_url;
   
   const handleSendMessage = async (content: string) => {
     if (!userId) return;
@@ -135,8 +157,8 @@ const ChatInterface = () => {
   return (
     <div className="flex flex-col h-full">
       <ChatHeader 
-        displayName={displayName} 
-        avatarUrl={otherUserProfile?.avatar_url} 
+        displayName={displayName}
+        avatarUrl={avatarUrl}
       />
       
       <div className="flex-1 overflow-y-auto p-4">

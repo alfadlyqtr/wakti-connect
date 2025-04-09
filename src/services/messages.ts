@@ -113,9 +113,14 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
     
     // Transform the data to match the Message interface
     const messages: Message[] = data.map(msg => {
-      // Get sender information
+      // Get sender information with safe property access
       const senderInfo = msg.sender || {};
-      const senderName = senderInfo.business_name || senderInfo.display_name || senderInfo.full_name || 'Unknown User';
+      // Use nullish coalescing for safe property access
+      const senderName = 
+        (senderInfo as any)?.business_name || 
+        (senderInfo as any)?.display_name || 
+        (senderInfo as any)?.full_name || 
+        'Unknown User';
       
       return {
         id: msg.id,
@@ -125,7 +130,7 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         isRead: msg.is_read,
         createdAt: msg.created_at,
         senderName: senderName,
-        senderAvatar: senderInfo.avatar_url
+        senderAvatar: (senderInfo as any)?.avatar_url
       };
     });
     
