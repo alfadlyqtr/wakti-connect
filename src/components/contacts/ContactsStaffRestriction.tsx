@@ -14,6 +14,12 @@ interface ContactsStaffRestrictionProps {
   businessName?: string;
 }
 
+interface StaffMemberData {
+  id: string;
+  name: string;
+  avatar?: string | null;
+}
+
 const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({ 
   businessId: propBusinessId,
   businessName: propBusinessName 
@@ -22,7 +28,7 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
   const [businessId, setBusinessId] = useState<string | null>(propBusinessId || null);
   const [businessName, setBusinessName] = useState<string>(propBusinessName || "your business");
   const [isSyncing, setIsSyncing] = useState(false);
-  const [staffMembers, setStaffMembers] = useState<any[]>([]);
+  const [staffMembers, setStaffMembers] = useState<StaffMemberData[]>([]);
   const [isLoadingStaff, setIsLoadingStaff] = useState(true);
 
   useEffect(() => {
@@ -65,7 +71,7 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
           .select(`
             id, 
             staff_id,
-            profiles:staff_id (
+            staff_id:profiles(
               display_name,
               full_name,
               avatar_url
@@ -80,11 +86,15 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
         }
         
         // Format staff data for display
-        const formattedStaff = staffData.map(staff => ({
-          id: staff.staff_id,
-          name: staff.profiles?.display_name || staff.profiles?.full_name || "Staff Member",
-          avatar: staff.profiles?.avatar_url
-        }));
+        const formattedStaff = staffData.map(staff => {
+          // Safe access of nested properties using optional chaining
+          const profileData = staff.staff_id as any; // Type assertion for nested join
+          return {
+            id: staff.staff_id as string,
+            name: profileData?.display_name || profileData?.full_name || "Staff Member",
+            avatar: profileData?.avatar_url
+          };
+        });
         
         setStaffMembers(formattedStaff);
       } catch (error) {

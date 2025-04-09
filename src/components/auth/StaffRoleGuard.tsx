@@ -78,27 +78,13 @@ const StaffRoleGuard: React.FC<StaffRoleGuardProps> = ({
   if (userRole === 'staff' && disallowStaff) {
     // Check if trying to access contacts page - redirect to messages with business owner instead
     if (location.pathname === "/dashboard/contacts") {
-      const redirectToBusinessMessages = async () => {
-        try {
-          const { supabase } = await import('@/integrations/supabase/client');
-          const { data: staffData } = await supabase
-            .from('business_staff')
-            .select('business_id')
-            .eq('staff_id', (await supabase.auth.getUser()).data.user?.id)
-            .eq('status', 'active')
-            .single();
-            
-          if (staffData?.business_id) {
-            return <Navigate to={`/dashboard/messages/${staffData.business_id}`} state={{ from: location }} replace />;
-          }
-        } catch (error) {
-          console.error("Error redirecting staff:", error);
-        }
-        
-        return <Navigate to="/dashboard/messages" state={{ from: location }} replace />;
-      };
-      
-      return redirectToBusinessMessages();
+      // We need to convert this async code to synchronous for the component
+      toast({
+        title: messageTitle,
+        description: "Staff should communicate with business owner directly",
+        variant: "destructive",
+      });
+      return <Navigate to="/dashboard/messages" state={{ from: location }} replace />;
     }
     
     // Show toast message explaining why they can't access this route
