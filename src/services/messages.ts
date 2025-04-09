@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { Message } from "@/types/message.types";
 
 /**
  * Sends a message to a recipient user
@@ -74,7 +75,7 @@ export const markMessageAsRead = async (messageId: string) => {
  * @param conversationUserId Optional ID of user to get conversation with
  * @returns Promise with the messages data
  */
-export const getMessages = async (conversationUserId?: string) => {
+export const getMessages = async (conversationUserId?: string): Promise<Message[]> => {
   try {
     // Get the current user's session
     const { data: { session } } = await supabase.auth.getSession();
@@ -96,7 +97,7 @@ export const getMessages = async (conversationUserId?: string) => {
         recipient:recipient_id(id, full_name, display_name, business_name, avatar_url)
       `)
       .or(`sender_id.eq.${session.user.id},recipient_id.eq.${session.user.id}`)
-      .order('created_at', { ascending: false });
+      .order('created_at');
     
     // If a specific conversation user is provided, filter for only messages between the current user and that user
     if (conversationUserId) {
@@ -110,10 +111,28 @@ export const getMessages = async (conversationUserId?: string) => {
       throw error;
     }
     
-    return data;
+    // Transform the data to match the Message interface
+    const messages: Message[] = data.map(msg => {
+      // Get sender information
+      const senderInfo = msg.sender || {};
+      const senderName = senderInfo.business_name || senderInfo.display_name || senderInfo.full_name || 'Unknown User';
+      
+      return {
+        id: msg.id,
+        content: msg.content,
+        senderId: msg.sender_id,
+        recipientId: msg.recipient_id,
+        isRead: msg.is_read,
+        createdAt: msg.created_at,
+        senderName: senderName,
+        senderAvatar: senderInfo.avatar_url
+      };
+    });
+    
+    return messages;
     
   } catch (error) {
     console.error("Failed to fetch messages:", error);
-    throw error;
+    return [];
   }
 };

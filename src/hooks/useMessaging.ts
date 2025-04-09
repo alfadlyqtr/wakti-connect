@@ -96,6 +96,7 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
           
         if (staffData?.business_id === otherUserId) {
           // Staff can always message their business owner
+          console.log("Staff can message business owner");
           return true;
         }
         
@@ -109,12 +110,41 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
           
         if (targetIsStaff) {
           // Staff can message other staff of the same business
+          console.log("Staff can message other staff");
           return true;
         }
         
+        // Default: staff can't message other users
         return false;
       }
       
+      // Business owners can message their staff members
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return false;
+      
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('account_type')
+        .eq('id', session.user.id)
+        .single();
+        
+      if (userProfile?.account_type === 'business') {
+        // Check if the other user is a staff member of this business
+        const { data: isMyStaff } = await supabase
+          .from('business_staff')
+          .select('id')
+          .eq('staff_id', otherUserId)
+          .eq('business_id', session.user.id)
+          .eq('status', 'active')
+          .maybeSingle();
+          
+        if (isMyStaff) {
+          console.log("Business owner can message their staff");
+          return true;
+        }
+      }
+      
+      // For other scenarios, use the general permission check
       return canMessageUser(otherUserId);
     },
     enabled: !!otherUserId,

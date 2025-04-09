@@ -1,20 +1,18 @@
 
 import React from "react";
-import { Shield } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const NoPermissionMessage: React.FC = () => {
   return (
-    <div className="p-4 border-t flex flex-col items-center text-center gap-2">
-      <Shield className="h-8 w-8 text-muted-foreground" />
-      <h3 className="font-medium">No Permission to Message</h3>
-      <p className="text-sm text-muted-foreground max-w-md">
-        You don't have permission to message this user. This may be because:
-      </p>
-      <ul className="text-sm text-muted-foreground list-disc pl-6 text-left">
-        <li>You're using a free account</li>
-        <li>They are not in your contacts</li>
-        <li>You are not subscribed to their business</li>
-      </ul>
+    <div className="p-4 flex items-center justify-center h-full">
+      <Alert variant="destructive" className="max-w-md">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>No Messaging Permission</AlertTitle>
+        <AlertDescription>
+          You don't have permission to message this user. They may need to accept your contact request first.
+        </AlertDescription>
+      </Alert>
     </div>
   );
 };

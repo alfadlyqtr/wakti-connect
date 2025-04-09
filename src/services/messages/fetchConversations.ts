@@ -52,7 +52,7 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
     // Fetch user details for all conversation partners
     const partnerIds = Array.from(conversationPartnersMap.keys());
     
-    if (partnerIds.length === 0) {
+    if (partnerIds.length === 0 && !staffOnly) {
       return [];
     }
     
@@ -126,10 +126,13 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
           return [];
         }
       }
-    } else {
+    } else if (partnerIds.length > 0) {
       // For regular conversations (not staff-only), 
       // just get profiles for the partners we have messages with
       query = query.in('id', partnerIds);
+    } else {
+      // No partners and not staff-only, return empty array
+      return [];
     }
     
     // Execute the profiles query
@@ -138,6 +141,11 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
     if (profilesError) {
       console.error("Error fetching profiles:", profilesError);
       throw profilesError;
+    }
+    
+    if (!profiles || !Array.isArray(profiles)) {
+      console.warn("No profiles found");
+      return [];
     }
     
     // Map profiles to a dictionary for easy lookup

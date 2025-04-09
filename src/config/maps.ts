@@ -1,47 +1,55 @@
 
+// Google Maps API functions and utilities
+
 /**
- * Generates a Google Maps URL from a location string
- * @param location String in format "latitude,longitude"
+ * Generates a Google Maps URL for the given location
+ * @param location - The location to search for
+ * @returns URL to Google Maps for the location
  */
 export const generateGoogleMapsUrl = (location: string): string => {
-  return `https://www.google.com/maps?q=${location}`;
-};
-
-/**
- * Generates a Google Maps embed URL
- * @param location String in format "latitude,longitude" or address
- */
-export const generateMapEmbedUrl = (location: string): string => {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
-  return `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(location)}`;
-};
-
-/**
- * Google Maps API key for embedding maps
- * This is a public key and can be exposed on the client
- */
-export const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
-
-/**
- * Checks if a string is a valid Google Maps URL
- * @param url URL to check
- */
-export const isValidGoogleMapsUrl = (url: string): boolean => {
-  return url.startsWith('https://www.google.com/maps') || 
-         url.startsWith('https://goo.gl/maps') || 
-         url.startsWith('https://maps.google.com');
-};
-
-/**
- * Format a URL to ensure it's a valid maps URL
- * @param url URL to format
- */
-export const formatMapsUrl = (url: string): string => {
-  if (!url) return '';
+  // Remove any existing URLs from the location string
+  const cleanLocation = location.replace(/https?:\/\/[^\s]+/g, '').trim();
   
-  if (!url.startsWith('http')) {
-    return `https://${url}`;
-  }
-  
-  return url;
+  // Create the Google Maps URL
+  const encodedLocation = encodeURIComponent(cleanLocation);
+  return `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
+};
+
+/**
+ * Gets the Google Maps API key from environment variables
+ * @returns The Google Maps API key
+ */
+export const getGoogleMapsApiKey = (): string => {
+  return import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
+};
+
+/**
+ * Creates a script element to load the Google Maps API
+ * @returns Promise that resolves when the API is loaded
+ */
+export const loadGoogleMapsApi = (): Promise<void> => {
+  return new Promise<void>((resolve, reject) => {
+    const apiKey = getGoogleMapsApiKey();
+    
+    if (!apiKey) {
+      console.warn('No Google Maps API key provided');
+    }
+    
+    // Check if API is already loaded
+    if (window.google && window.google.maps) {
+      resolve();
+      return;
+    }
+    
+    // Create script element
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load Google Maps API'));
+    
+    document.head.appendChild(script);
+  });
 };

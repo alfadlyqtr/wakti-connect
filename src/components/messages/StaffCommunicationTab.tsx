@@ -28,9 +28,11 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
   const navigate = useNavigate();
   
   const { data: staffMembers, isLoading, error } = useQuery({
-    queryKey: ['businessStaff'],
+    queryKey: ['businessStaff', businessId],
     queryFn: async () => {
       if (!businessId) return [];
+      
+      console.log("Fetching staff members for business:", businessId);
       
       // First fetch staff records
       const { data: staffData, error: staffError } = await supabase
@@ -40,7 +42,8 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
           staff_id,
           name,
           email,
-          role
+          role,
+          status
         `)
         .eq('business_id', businessId)
         .eq('status', 'active');
@@ -66,6 +69,7 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
         })
       );
       
+      console.log("Found staff members:", staffWithProfiles.length);
       return staffWithProfiles as StaffMember[];
     },
     enabled: !!businessId
@@ -73,6 +77,7 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
   
   // Function to handle messaging a staff member
   const handleMessageStaff = (staffId: string) => {
+    console.log("Navigating to staff chat with:", staffId);
     // Navigate to the messaging page with the staff member's ID
     navigate(`/dashboard/messages/${staffId}`);
   };
@@ -148,10 +153,7 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
                     size="sm" 
                     variant="outline" 
                     className="flex items-center gap-1"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent card click
-                      handleMessageStaff(staff.staff_id);
-                    }}
+                    onClick={() => handleMessageStaff(staff.staff_id)}
                   >
                     <MessageSquare className="h-3.5 w-3.5" />
                     <span>Message</span>

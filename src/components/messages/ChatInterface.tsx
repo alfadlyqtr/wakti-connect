@@ -48,6 +48,26 @@ const ChatInterface = () => {
         .maybeSingle();
         
       if (error) throw error;
+      
+      // If this is a business staff member, get their information
+      if (!data) {
+        const { data: staffData, error: staffError } = await supabase
+          .from('business_staff')
+          .select('name, email, profile_image_url')
+          .eq('staff_id', userId)
+          .maybeSingle();
+          
+        if (staffError) throw staffError;
+        
+        if (staffData) {
+          return {
+            display_name: staffData.name,
+            full_name: staffData.name,
+            avatar_url: staffData.profile_image_url
+          };
+        }
+      }
+      
       return data;
     },
     enabled: !!userId

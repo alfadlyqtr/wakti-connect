@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Routes, Route, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -100,17 +101,17 @@ const DashboardMessagesHome = () => {
           className="w-full"
         >
           <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="messages" className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              <span>Messages</span>
+            <TabsTrigger value="messages" className="flex items-center gap-2 whitespace-nowrap px-2 text-sm">
+              <Mail className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">Messages</span>
             </TabsTrigger>
-            <TabsTrigger value="staff" className="flex items-center gap-2">
-              <Briefcase className="h-4 w-4" />
-              <span>Staff Communication</span>
+            <TabsTrigger value="staff" className="flex items-center gap-2 whitespace-nowrap px-2 text-sm">
+              <Briefcase className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">Staff Communication</span>
             </TabsTrigger>
-            <TabsTrigger value="submissions" className="flex items-center gap-2">
-              <Inbox className="h-4 w-4" />
-              <span>Contact Submissions</span>
+            <TabsTrigger value="submissions" className="flex items-center gap-2 whitespace-nowrap px-2 text-sm">
+              <Inbox className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">Contact Submissions</span>
               {contactSubmissions.filter(s => !s.is_read).length > 0 && (
                 <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-xs text-white">
                   {contactSubmissions.filter(s => !s.is_read).length}
@@ -236,7 +237,7 @@ const DashboardMessageChat = () => {
           <p className="text-muted-foreground">
             {isStaff 
               ? "Staff messaging with your business owner and team" 
-              : "Messages expire after 24 hours and are limited to 20 characters."}
+              : "Messages expire after 24 hours."}
           </p>
         </div>
         <Button 
