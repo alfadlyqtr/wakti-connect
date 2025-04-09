@@ -47,11 +47,7 @@ const BookingsWidget = () => {
     .slice(0, 3);
   
   // Get unacknowledged bookings
-  const unacknowledgedCount = bookings.filter(booking => 
-    booking.staff_assigned_id && 
-    booking.status !== 'cancelled' && 
-    booking.status !== 'no_show' &&
-    !booking.is_no_show &&
+  const unacknowledgedCount = upcomingBookings.filter(booking => 
     booking.is_acknowledged !== true
   ).length;
   
@@ -100,7 +96,7 @@ const BookingsWidget = () => {
         <CardTitle className="text-lg flex items-center">
           <CalendarClock className="mr-2 h-5 w-5" />
           Upcoming Bookings
-          {unacknowledgedCount > 0 && (
+          {unacknowledgedCount > 0 && upcomingBookings.length > 0 && (
             <Badge variant="destructive" className="ml-2">
               {unacknowledgedCount} new
             </Badge>

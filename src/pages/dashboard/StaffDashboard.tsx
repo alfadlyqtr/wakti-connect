@@ -100,14 +100,12 @@ const StaffDashboard = () => {
         />
       )}
       
-      {/* Stats Cards */}
+      {/* Stats Cards - Only showing Hours Worked and Active Bookings */}
       <StaffStats stats={stats} permissions={permissions} />
       
       {/* Bookings Widget */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
         <BookingsWidget />
-        
-        {/* You could add other widgets in this grid too */}
       </div>
       
       {/* Work History Section */}

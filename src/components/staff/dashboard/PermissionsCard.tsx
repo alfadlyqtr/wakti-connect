@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 interface PermissionsProps {
   permissions: Record<string, boolean>;
@@ -21,13 +21,13 @@ const permissionLabels: Record<string, string> = {
 };
 
 const PermissionsCard: React.FC<PermissionsProps> = ({ permissions = {} }) => {
-  // Get permissions for display, using only those with labels
-  const displayPermissions = Object.entries(permissions || {})
-    .filter(([key]) => key in permissionLabels)
+  // Get active permissions only, using only those with labels and true values
+  const activePermissions = Object.entries(permissions || {})
+    .filter(([key, value]) => key in permissionLabels && value === true)
     .sort((a, b) => permissionLabels[a[0]].localeCompare(permissionLabels[b[0]]));
     
-  if (displayPermissions.length === 0) {
-    return null; // Don't show the card if no permissions are available
+  if (activePermissions.length === 0) {
+    return null; // Don't show the card if no active permissions are available
   }
   
   return (
@@ -37,14 +37,10 @@ const PermissionsCard: React.FC<PermissionsProps> = ({ permissions = {} }) => {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {displayPermissions.map(([key, value]) => (
+          {activePermissions.map(([key]) => (
             <div key={key} className="flex items-center gap-2">
-              {value ? (
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-              ) : (
-                <XCircle className="h-5 w-5 text-gray-400" />
-              )}
-              <span className={value ? "font-medium" : "text-muted-foreground"}>
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              <span className="font-medium">
                 {permissionLabels[key] || key}
               </span>
             </div>
