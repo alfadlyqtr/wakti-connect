@@ -183,11 +183,11 @@ const TaskDetails: React.FC = () => {
               </div>
             </div>
             
-            {task.sub_tasks && task.sub_tasks.length > 0 && (
+            {task.subtasks && task.subtasks.length > 0 && (
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">Subtasks</h3>
                 <ul className="space-y-2">
-                  {task.sub_tasks.map((subTask, index) => (
+                  {task.subtasks.map((subTask, index) => (
                     <li key={index} className="flex items-center">
                       <div className={`w-4 h-4 rounded-full mr-2 ${subTask.completed ? 'bg-green-500' : 'bg-amber-500'}`} />
                       <span className={subTask.completed ? 'line-through text-muted-foreground' : ''}>
