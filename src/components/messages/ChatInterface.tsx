@@ -163,6 +163,7 @@ const ChatInterface = () => {
   const getAvatarUrl = (): string | undefined => {
     if (!otherUserProfile) return undefined;
     
+    // Handle both UserProfile (avatar_url) and StaffProfile (profile_image_url)
     if ('profile_image_url' in otherUserProfile) {
       // This is a StaffProfile
       return otherUserProfile.profile_image_url;
