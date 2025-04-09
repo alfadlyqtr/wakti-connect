@@ -43,7 +43,7 @@ const StaffDashboard = () => {
     activeWorkSession,
     startWorkDay,
     endWorkDay,
-    isLoading: sessionLoading
+    isLoading: sessionLoading // Correctly destructure the isLoading property
   } = useWorkSession(staffRelationId);
   
   const { data: stats, isLoading: statsLoading } = useStaffStats(staffRelationId, user?.id || null);

@@ -6,13 +6,18 @@ import { useToast } from "@/hooks/use-toast";
 export const useWorkSession = (staffRelationId: string | null) => {
   const { toast } = useToast();
   const [activeWorkSession, setActiveWorkSession] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Add loading state
   
   // Fetch active work session
   useEffect(() => {
     const fetchActiveWorkSession = async () => {
-      if (!staffRelationId) return;
+      if (!staffRelationId) {
+        setIsLoading(false); // Set loading to false when there's no staffRelationId
+        return;
+      }
       
       try {
+        setIsLoading(true); // Set loading to true before fetch
         console.log("Fetching active work session for staff relation:", staffRelationId);
         
         const { data: activeSessions, error: sessionsError } = await supabase
@@ -25,18 +30,23 @@ export const useWorkSession = (staffRelationId: string | null) => {
           
         if (sessionsError) {
           console.error("Error fetching active work session:", sessionsError);
+          setIsLoading(false); // Set loading to false on error
           return;
         }
         
         console.log("Active work session:", activeSessions);
         setActiveWorkSession(activeSessions);
+        setIsLoading(false); // Set loading to false after successful fetch
       } catch (error: any) {
         console.error("Error fetching active work session:", error);
+        setIsLoading(false); // Set loading to false on error
       }
     };
     
     if (staffRelationId) {
       fetchActiveWorkSession();
+    } else {
+      setIsLoading(false); // Ensure loading is false when no staffRelationId
     }
   }, [staffRelationId]);
   
@@ -130,6 +140,7 @@ export const useWorkSession = (staffRelationId: string | null) => {
   return {
     activeWorkSession,
     startWorkDay,
-    endWorkDay
+    endWorkDay,
+    isLoading // Export isLoading state
   };
 };
