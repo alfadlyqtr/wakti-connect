@@ -15,9 +15,19 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
     }
 
     // Get all messages to/from the user
-    const { data: messages, error } = await supabase.rpc('get_latest_conversations', {
-      current_user_id: user.id
-    });
+    // We need to use raw SQL query with supabase.from('messages').select() instead of rpc 
+    const { data: messages, error } = await supabase
+      .from('messages')
+      .select(`
+        id,
+        sender_id,
+        recipient_id,
+        content,
+        is_read,
+        created_at
+      `)
+      .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error("Error fetching conversations:", error);
@@ -28,12 +38,14 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
     const conversationPartnersMap = new Map();
     
     // Keep track of the latest message for each conversation
-    for (const message of messages) {
-      const partnerId = message.sender_id === user.id ? message.recipient_id : message.sender_id;
-      
-      if (!conversationPartnersMap.has(partnerId) || 
-          new Date(message.created_at) > new Date(conversationPartnersMap.get(partnerId).created_at)) {
-        conversationPartnersMap.set(partnerId, message);
+    if (messages && Array.isArray(messages)) {
+      for (const message of messages) {
+        const partnerId = message.sender_id === user.id ? message.recipient_id : message.sender_id;
+        
+        if (!conversationPartnersMap.has(partnerId) || 
+            new Date(message.created_at) > new Date(conversationPartnersMap.get(partnerId).created_at)) {
+          conversationPartnersMap.set(partnerId, message);
+        }
       }
     }
     
@@ -69,10 +81,12 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
           .eq('business_id', user.id)
           .eq('status', 'active');
           
-        const staffIds = staffData.map(staff => staff.staff_id);
-        
-        // Filter partners to only include staff members
-        query = query.in('id', staffIds);
+        if (staffData && Array.isArray(staffData)) {
+          const staffIds = staffData.map(staff => staff.staff_id);
+          
+          // Filter partners to only include staff members
+          query = query.in('id', staffIds);
+        }
       }
     }
     
@@ -88,9 +102,11 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
     
     // Map profiles to a dictionary for easy lookup
     const profileMap = new Map();
-    profiles.forEach(profile => {
-      profileMap.set(profile.id, profile);
-    });
+    if (profiles && Array.isArray(profiles)) {
+      profiles.forEach(profile => {
+        profileMap.set(profile.id, profile);
+      });
+    }
     
     // Construct the conversations array
     const conversations: Conversation[] = [];

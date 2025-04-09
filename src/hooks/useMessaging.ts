@@ -13,36 +13,39 @@ import { forceSyncStaffContacts } from "@/services/contacts/contactSync";
 import { getStaffBusinessId } from "@/utils/staffUtils";
 import { supabase } from "@/integrations/supabase/client";
 
-interface UseMessagingOptions {
+export interface UseMessagingOptions {
   otherUserId?: string;
   staffOnly?: boolean;
 }
 
-export const useMessaging = (options?: UseMessagingOptions) => {
+export const useMessaging = (options?: string | UseMessagingOptions) => {
   const queryClient = useQueryClient();
   const isStaff = localStorage.getItem('userRole') === 'staff';
-  const otherUserId = options?.otherUserId;
-  const staffOnly = options?.staffOnly || false;
+  
+  let otherUserId: string | undefined;
+  let staffOnly: boolean = false;
+  
+  if (typeof options === 'string') {
+    otherUserId = options;
+  } else if (options && typeof options === 'object') {
+    otherUserId = options.otherUserId;
+    staffOnly = options.staffOnly || false;
+  }
 
-  // First ensure that staff contacts are synced
   useQuery({
     queryKey: ['syncStaffContacts'],
     queryFn: async () => {
       if (isStaff) {
         try {
-          // Force sync staff contacts to ensure messaging works
           const syncResult = await forceSyncStaffContacts();
           console.log("Staff contacts sync result:", syncResult);
           
-          // Get current user session
           const { data: { session } } = await supabase.auth.getSession();
           if (!session?.user) return false;
           
-          // Check if business ID is available
           const businessId = await getStaffBusinessId();
           if (!businessId) return false;
           
-          // Directly create contact relationship between staff and business
           await supabase.from('user_contacts').upsert({
             user_id: session.user.id,
             contact_id: businessId,
@@ -50,7 +53,6 @@ export const useMessaging = (options?: UseMessagingOptions) => {
             updated_at: new Date().toISOString()
           }, { onConflict: 'user_id,contact_id' });
           
-          // And the reverse direction
           await supabase.from('user_contacts').upsert({
             user_id: businessId,
             contact_id: session.user.id,
@@ -58,7 +60,6 @@ export const useMessaging = (options?: UseMessagingOptions) => {
             updated_at: new Date().toISOString()
           }, { onConflict: 'user_id,contact_id' });
           
-          // Sync with other staff members too
           const { data: otherStaff } = await supabase
             .from('business_staff')
             .select('staff_id')
@@ -68,7 +69,6 @@ export const useMessaging = (options?: UseMessagingOptions) => {
             
           if (otherStaff && otherStaff.length > 0) {
             for (const staff of otherStaff) {
-              // Create bidirectional contacts
               await supabase.from('user_contacts').upsert({
                 user_id: session.user.id,
                 contact_id: staff.staff_id,
@@ -94,10 +94,9 @@ export const useMessaging = (options?: UseMessagingOptions) => {
       return false;
     },
     refetchOnMount: true,
-    refetchInterval: 60000 // Check every minute
+    refetchInterval: 60000
   });
 
-  // Fetch messages between the current user and another user
   const { 
     data: messages = [],
     isLoading: isLoadingMessages,
@@ -107,23 +106,18 @@ export const useMessaging = (options?: UseMessagingOptions) => {
     queryKey: ['messages', otherUserId],
     queryFn: () => otherUserId ? getMessages(otherUserId) : Promise.resolve([]),
     enabled: !!otherUserId,
-    refetchInterval: 5000 // Auto-refresh every 5 seconds
+    refetchInterval: 5000
   });
 
-  // Send a message
   const sendMessageMutation = useMutation({
     mutationFn: async ({ recipientId, content }: { recipientId: string; content: string }) => {
-      // For staff users, ensure contacts are synced before sending
       if (isStaff) {
         try {
           const businessId = await getStaffBusinessId();
           
-          // If messaging the business owner or another staff member, ensure contacts are synced
           if (businessId === recipientId) {
-            // Make sure the connection exists
             await forceSyncStaffContacts();
           } else {
-            // Check if recipient is another staff member
             const { data: staffData } = await supabase
               .from('business_staff')
               .select('id')
@@ -133,7 +127,6 @@ export const useMessaging = (options?: UseMessagingOptions) => {
               .maybeSingle();
               
             if (staffData) {
-              // Ensure staff-to-staff connection exists
               await supabase.from('user_contacts').upsert({
                 user_id: (await supabase.auth.getUser()).data.user?.id,
                 contact_id: recipientId,
@@ -157,7 +150,6 @@ export const useMessaging = (options?: UseMessagingOptions) => {
       return sendMessage(recipientId, content);
     },
     onSuccess: () => {
-      // Invalidate messages and conversations queries to refetch updated data
       queryClient.invalidateQueries({ queryKey: ['messages', otherUserId] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['unreadMessages'] });
@@ -171,7 +163,6 @@ export const useMessaging = (options?: UseMessagingOptions) => {
     }
   });
 
-  // Get conversations list with optional staff filtering
   const { 
     data: conversations = [],
     isLoading: isLoadingConversations,
@@ -180,10 +171,9 @@ export const useMessaging = (options?: UseMessagingOptions) => {
   } = useQuery<Conversation[]>({
     queryKey: ['conversations', staffOnly],
     queryFn: () => fetchConversations(staffOnly),
-    refetchInterval: 10000 // Auto-refresh every 10 seconds
+    refetchInterval: 10000
   });
 
-  // Check if the current user can message a given user
   const { 
     data: canMessage = true,
     isLoading: isCheckingPermission 
@@ -192,9 +182,7 @@ export const useMessaging = (options?: UseMessagingOptions) => {
     queryFn: async () => {
       if (!otherUserId) return false;
       
-      // Staff members can always message their business owner
       if (isStaff) {
-        // Get business ID with fresh data (don't rely on cache)
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) return false;
         
@@ -206,11 +194,9 @@ export const useMessaging = (options?: UseMessagingOptions) => {
           .maybeSingle();
           
         if (staffData?.business_id === otherUserId) {
-          // Always allow staff to message business owner
           return true;
         }
         
-        // Check if target is another staff member
         const { data: targetIsStaff } = await supabase
           .from('business_staff')
           .select('id')
@@ -219,38 +205,32 @@ export const useMessaging = (options?: UseMessagingOptions) => {
           .maybeSingle();
           
         if (targetIsStaff) {
-          // Allow staff to message other staff
           return true;
         }
         
-        // Staff cannot message anyone else
         return false;
       }
       
-      // For all other cases, use the standard permission check
       return canMessageUser(otherUserId);
     },
     enabled: !!otherUserId,
-    refetchInterval: 30000 // Check permissions every 30 seconds
+    refetchInterval: 30000
   });
 
-  // Get unread messages count
   const { 
     data: unreadCount = 0,
     isLoading: isLoadingUnreadCount
   } = useQuery<number>({
     queryKey: ['unreadMessages'],
     queryFn: getUnreadMessagesCount,
-    refetchInterval: 15000 // Auto-refresh every 15 seconds
+    refetchInterval: 15000
   });
 
-  // Mark a conversation with a user as read
   const markConversationAsRead = async (userId: string) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
       
-      // Get all unread messages from this user
       const { data: unreadMessages } = await supabase
         .from('messages')
         .select('id')
@@ -260,12 +240,10 @@ export const useMessaging = (options?: UseMessagingOptions) => {
         
       if (!unreadMessages || unreadMessages.length === 0) return;
       
-      // Mark all as read
       for (const msg of unreadMessages) {
         await markMessageAsRead(msg.id);
       }
       
-      // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ['messages', userId] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['unreadMessages'] });

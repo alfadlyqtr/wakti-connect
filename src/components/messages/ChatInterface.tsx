@@ -23,7 +23,9 @@ const ChatInterface = () => {
     isSending,
     canMessage,
     isCheckingPermission
-  } = useMessaging(userId);
+  } = useMessaging({
+    otherUserId: userId
+  });
   
   const { data: currentUserId } = useQuery({
     queryKey: ['currentUserId'],

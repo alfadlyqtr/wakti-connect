@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Routes, Route, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,13 +17,12 @@ import StaffCommunicationTab from "@/components/messages/StaffCommunicationTab";
 
 const DashboardMessagesHome = () => {
   const navigate = useNavigate();
-  const { conversations } = useMessaging();
+  const { conversations } = useMessaging({});
   const [activeTab, setActiveTab] = useState<string>("messages");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isStaff, setIsStaff] = useState(false);
   const [businessId, setBusinessId] = useState<string | null>(null);
   
-  // Get current user ID and profile
   const { data: userProfile } = useQuery({
     queryKey: ['currentUserProfile'],
     queryFn: async () => {
@@ -33,7 +31,6 @@ const DashboardMessagesHome = () => {
       
       setCurrentUserId(session.user.id);
       
-      // Check if user is staff
       if (localStorage.getItem('userRole') === 'staff') {
         setIsStaff(true);
         const bizId = await getStaffBusinessId();
@@ -50,16 +47,13 @@ const DashboardMessagesHome = () => {
     },
   });
   
-  // Pass the current user ID to the contact submissions query
   const { data: contactSubmissions = [], isLoading: submissionsLoading } = useContactSubmissionsQuery(currentUserId);
   
   const canSendMessages = userProfile?.account_type !== 'free';
   const isBusinessAccount = userProfile?.account_type === 'business';
   
-  // Effect for ensuring staff contacts are synced
   useEffect(() => {
     if (isStaff) {
-      // Import and call forceSyncStaffContacts
       const syncContacts = async () => {
         const { forceSyncStaffContacts } = await import('@/services/contacts/contactSync');
         await forceSyncStaffContacts();
@@ -94,7 +88,6 @@ const DashboardMessagesHome = () => {
         )}
       </div>
       
-      {/* Staff specific messaging guide */}
       {isStaff && (
         <ContactsStaffRestriction businessId={businessId || undefined} />
       )}
@@ -223,11 +216,10 @@ const DashboardMessagesHome = () => {
 const DashboardMessageChat = () => {
   const { userId } = useParams<{ userId: string }>();
   const [isStaff, setIsStaff] = useState(false);
-  const { conversations } = useMessaging();
+  const { conversations } = useMessaging({});
   
   const navigate = useNavigate();
 
-  // Check if user is staff
   useEffect(() => {
     const checkStaffStatus = async () => {
       const staffRole = localStorage.getItem('userRole') === 'staff';

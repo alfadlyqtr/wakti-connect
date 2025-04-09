@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { forceSyncStaffContacts } from "@/services/contacts/contactSync";
+import ConversationsList from "./ConversationsList";
 
 interface StaffCommunicationTabProps {
   businessId?: string | null;
@@ -28,7 +28,6 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
   const navigate = useNavigate();
   const [isSyncing, setIsSyncing] = useState(false);
   
-  // Fetch all staff members for this business
   const { data: staffMembers, isLoading, refetch } = useQuery({
     queryKey: ['businessStaff'],
     queryFn: async () => {
@@ -52,7 +51,6 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
         throw error;
       }
       
-      // Transform the response to match the StaffMember interface
       return data.map((staff: any) => ({
         id: staff.id,
         staff_id: staff.staff_id,
@@ -65,7 +63,6 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
     enabled: !!businessId
   });
   
-  // Sync staff contacts to ensure messaging works properly
   const handleSyncContacts = async () => {
     setIsSyncing(true);
     try {
@@ -117,6 +114,15 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
           {isSyncing ? "Syncing..." : "Sync Staff Contacts"}
         </Button>
       </div>
+      
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          <div className="p-4 border-b">
+            <h3 className="font-medium">Recent Staff Conversations</h3>
+          </div>
+          <ConversationsList staffOnly={true} />
+        </CardContent>
+      </Card>
       
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
