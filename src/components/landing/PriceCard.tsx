@@ -20,7 +20,7 @@ const PriceCard = ({
   title,
   price,
   description,
-  features,
+  features = [],
   buttonText,
   buttonLink,
   variant = "default",
@@ -30,6 +30,9 @@ const PriceCard = ({
   const borderClasses = popular
     ? "border-2 border-primary"
     : "border border-border";
+
+  // Ensure features is always treated as an array
+  const featuresList = Array.isArray(features) ? features : [];
 
   return (
     <div
@@ -55,12 +58,16 @@ const PriceCard = ({
       
       <div className="p-6">
         <ul className="space-y-3">
-          {features.map((feature, index) => (
-            <li key={index} className="flex items-start gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-              <span>{feature}</span>
-            </li>
-          ))}
+          {featuresList.length > 0 ? (
+            featuresList.map((feature, index) => (
+              <li key={index} className="flex items-start gap-2">
+                <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                <span>{feature}</span>
+              </li>
+            ))
+          ) : (
+            <li className="text-muted-foreground">No features available</li>
+          )}
         </ul>
         
         <Button 
