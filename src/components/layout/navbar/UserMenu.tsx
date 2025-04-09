@@ -9,7 +9,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useTranslation } from "react-i18next";
 import MobileNavItems from "./MobileNavItems";
 import AccountMenuItems from "./AccountMenuItems";
 import { useQuery } from "@tanstack/react-query";
@@ -25,7 +24,6 @@ interface UserMenuProps {
 }
 
 const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: UserMenuProps) => {
-  const { t } = useTranslation();
   const { data: staffStatus } = useStaffWorkingStatus();
   const isWorking = staffStatus?.isWorking || false;
   
@@ -56,7 +54,7 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
   
   // Determine the display name based on account type
   const getDisplayName = () => {
-    if (!profileData) return t('common.account');
+    if (!profileData) return 'Account';
     
     if (profileData.account_type === 'business' && profileData.business_name) {
       return profileData.business_name;
@@ -65,7 +63,7 @@ const UserMenu = ({ isAuthenticated, unreadMessages, unreadNotifications }: User
     } else if (profileData.full_name) {
       return profileData.full_name;
     } else {
-      return t('common.account');
+      return 'Account';
     }
   };
   

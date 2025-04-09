@@ -66,8 +66,6 @@ const NavItems = ({ unreadMessages, unreadNotifications, isMobile = false }: Nav
     return true;
   });
 
-  // Remove the conditional rendering that hides nav items on mobile
-  // This ensures the icons are always visible regardless of screen size
   return (
     <div className="flex items-center gap-2">
       {filteredItems.map((item, index) => (
