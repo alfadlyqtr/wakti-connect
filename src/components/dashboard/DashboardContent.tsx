@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import StaffDashboardHeader from './StaffDashboardHeader';
 import DashboardLoading from './DashboardLoading';
@@ -35,8 +36,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     if (!isLoading && isMainDashboardPath && userId) {
       console.log("DashboardContent redirect - User role:", userRole, "Is staff:", isStaff);
       
-      // Only redirect staff who are NOT also business owners
-      if (userRole === 'staff') {
+      // Only redirect staff users who are not business owners
+      if (isStaff && userRole === 'staff') {
         navigate('/dashboard/staff-dashboard');
       }
       // For business users we don't redirect them away from the main dashboard

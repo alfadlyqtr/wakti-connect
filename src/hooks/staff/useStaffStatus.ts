@@ -19,12 +19,24 @@ export const useStaffStatus = () => {
         setIsLoading(true);
         setError(null);
         
+        console.log("Starting staff status check");
+        
+        // Check if user is authenticated first
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session) {
+          console.log("No authenticated session found");
+          setIsLoading(false);
+          return;
+        }
+        
         // Check if user is staff
         const staffStatus = await isUserStaff();
+        console.log("Staff status check result:", staffStatus);
         setIsStaff(staffStatus);
         
         // Check if user is business owner
         const businessStatus = await isBusinessOwner();
+        console.log("Business owner status check result:", businessStatus);
         setIsBusiness(businessStatus);
         
         if (staffStatus || businessStatus) {
@@ -51,7 +63,9 @@ export const useStaffStatus = () => {
       if (!staffRelationId) return null;
       console.log("Fetching active work session for staff relation:", staffRelationId);
       try {
-        return await getActiveWorkSession(staffRelationId);
+        const session = await getActiveWorkSession(staffRelationId);
+        console.log("Active work session:", session);
+        return session;
       } catch (error) {
         console.error("Error in activeWorkSession query:", error);
         return null;
@@ -126,7 +140,7 @@ export const useStaffStatus = () => {
     refetchSession,
     startWorkSession,
     endWorkSession,
-    isStartingSession: false, // These should be state variables if needed
+    isStartingSession: false,
     isEndingSession: false
   };
 };

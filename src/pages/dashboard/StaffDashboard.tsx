@@ -30,8 +30,8 @@ interface StaffPermissions {
 }
 
 const StaffDashboard = () => {
-  const { isStaff, staffRelationId } = useStaffStatus();
-  const { data: { user } = { user: null } } = useCurrentUser();
+  const { isStaff, staffRelationId, isLoading: staffStatusLoading } = useStaffStatus();
+  const { data: { user } = { user: null }, isLoading: userLoading } = useCurrentUser();
   
   const { 
     data: staffData, 
@@ -42,18 +42,22 @@ const StaffDashboard = () => {
   const { 
     activeWorkSession,
     startWorkDay,
-    endWorkDay
+    endWorkDay,
+    isLoading: sessionLoading
   } = useWorkSession(staffRelationId);
   
-  const { data: stats } = useStaffStats(staffRelationId, user?.id || null);
+  const { data: stats, isLoading: statsLoading } = useStaffStats(staffRelationId, user?.id || null);
+  
+  // Combined loading state
+  const isLoading = staffStatusLoading || userLoading || staffLoading || sessionLoading || statsLoading;
 
   // If not a staff member, show not found state
-  if (!isStaff) {
+  if (!staffStatusLoading && !isStaff) {
     return <StaffNotFound />;
   }
   
   // Show loading state
-  if (staffLoading || !staffData) {
+  if (isLoading) {
     return <div className="py-8 text-center">Loading staff dashboard...</div>;
   }
 
@@ -61,9 +65,19 @@ const StaffDashboard = () => {
   if (staffError) {
     return <ErrorDisplay error={staffError} />;
   }
+
+  // If we got here but don't have staff data, show a more specific message
+  if (!staffData) {
+    return (
+      <div className="py-8 text-center">
+        <h2 className="text-xl font-medium mb-2">Staff Profile Not Found</h2>
+        <p className="text-muted-foreground">Your staff profile could not be loaded. Please contact your business administrator.</p>
+      </div>
+    );
+  }
   
-  // Extract permissions from staff data
-  const permissions = staffData.permissions as StaffPermissions || {};
+  // Extract permissions from staff data (with fallback to empty object)
+  const permissions = (staffData.permissions || {}) as StaffPermissions;
   
   return (
     <div className="space-y-6">

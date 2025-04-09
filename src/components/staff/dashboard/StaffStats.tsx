@@ -1,77 +1,83 @@
 
 import React from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Users, Calendar, Clock, Briefcase } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Clock, ClipboardList, PieChart, CalendarClock } from "lucide-react";
 
 interface StaffStatsProps {
-  stats: {
-    tasksCount: number;
-    bookingsCount: number;
-    workLogsCount: number;
-    jobCardsCount: number;
-  } | null;
-  permissions: Record<string, boolean | undefined>;
+  stats: any; // Stats data from the API
+  permissions: Record<string, boolean>;
 }
 
-const StaffStats: React.FC<StaffStatsProps> = ({ stats, permissions }) => {
+const StaffStats: React.FC<StaffStatsProps> = ({ stats = {}, permissions = {} }) => {
+  // Create stat cards based on permissions
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {permissions.can_view_tasks && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium flex items-center">
-              <Users className="h-4 w-4 mr-2 text-wakti-blue" />
-              Tasks
-            </CardTitle>
-            <CardDescription>Assigned to you</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{stats?.tasksCount || 0}</p>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Hours Worked */}
+      <Card className="bg-white/50 backdrop-blur-sm">
+        <CardContent className="p-4">
+          <div className="flex items-center space-x-2">
+            <Clock className="h-5 w-5 text-blue-500" />
+            <span className="font-medium">Hours Worked</span>
+          </div>
+          <div className="mt-2">
+            <span className="text-2xl font-bold">
+              {stats?.hoursWorked !== undefined ? stats.hoursWorked : '--'}
+            </span>
+            <span className="text-sm text-muted-foreground ml-1">this month</span>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Tasks Completed (if user has task permissions) */}
+      {(permissions.can_view_tasks || permissions.can_manage_tasks) && (
+        <Card className="bg-white/50 backdrop-blur-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <ClipboardList className="h-5 w-5 text-green-500" />
+              <span className="font-medium">Tasks Completed</span>
+            </div>
+            <div className="mt-2">
+              <span className="text-2xl font-bold">
+                {stats?.tasksCompleted !== undefined ? stats.tasksCompleted : '--'}
+              </span>
+              <span className="text-sm text-muted-foreground ml-1">this week</span>
+            </div>
           </CardContent>
         </Card>
       )}
       
-      {permissions.can_manage_bookings && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium flex items-center">
-              <Calendar className="h-4 w-4 mr-2 text-wakti-blue" />
-              Bookings
-            </CardTitle>
-            <CardDescription>Your appointments</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{stats?.bookingsCount || 0}</p>
+      {/* Completion Rate (if user has task permissions) */}
+      {(permissions.can_view_tasks || permissions.can_manage_tasks) && (
+        <Card className="bg-white/50 backdrop-blur-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <PieChart className="h-5 w-5 text-purple-500" />
+              <span className="font-medium">Completion Rate</span>
+            </div>
+            <div className="mt-2">
+              <span className="text-2xl font-bold">
+                {stats?.completionRate !== undefined ? `${stats.completionRate}%` : '--'}
+              </span>
+              <span className="text-sm text-muted-foreground ml-1">tasks</span>
+            </div>
           </CardContent>
         </Card>
       )}
       
-      {permissions.can_track_hours && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium flex items-center">
-              <Clock className="h-4 w-4 mr-2 text-wakti-blue" />
-              Work Logs
-            </CardTitle>
-            <CardDescription>Your work sessions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{stats?.workLogsCount || 0}</p>
-          </CardContent>
-        </Card>
-      )}
-      
-      {permissions.can_create_job_cards && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium flex items-center">
-              <Briefcase className="h-4 w-4 mr-2 text-wakti-blue" />
-              Job Cards
-            </CardTitle>
-            <CardDescription>Completed jobs</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{stats?.jobCardsCount || 0}</p>
+      {/* Active Bookings (if user has booking permissions) */}
+      {(permissions.can_manage_bookings || permissions.can_view_customer_bookings) && (
+        <Card className="bg-white/50 backdrop-blur-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2">
+              <CalendarClock className="h-5 w-5 text-amber-500" />
+              <span className="font-medium">Active Bookings</span>
+            </div>
+            <div className="mt-2">
+              <span className="text-2xl font-bold">
+                {stats?.activeBookings !== undefined ? stats.activeBookings : '--'}
+              </span>
+              <span className="text-sm text-muted-foreground ml-1">upcoming</span>
+            </div>
           </CardContent>
         </Card>
       )}
