@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AIDocumentProcessor } from "@/components/ai/assistant/AIDocumentProcessor";
 import { FileText, Upload } from "lucide-react";
 import { AIAssistantRole } from "@/types/ai-assistant.types";
-import { useTranslation } from "react-i18next";
 
 interface AIAssistantDocumentsCardProps {
   canAccess: boolean;
@@ -19,8 +18,6 @@ export const AIAssistantDocumentsCard: React.FC<AIAssistantDocumentsCardProps> =
   selectedRole,
   compact = false
 }) => {
-  const { t } = useTranslation();
-  
   if (!canAccess) {
     return null;
   }
@@ -49,7 +46,7 @@ export const AIAssistantDocumentsCard: React.FC<AIAssistantDocumentsCardProps> =
       <div className="space-y-3">
         <div className="flex items-center text-sm mb-1">
           <FileText className="h-4 w-4 mr-1.5" />
-          <span className="font-medium">{t("ai.documentAnalysis")}</span>
+          <span className="font-medium">Document Analysis</span>
         </div>
         <AIDocumentProcessor
           onUseDocumentContent={onUseDocumentContent}
@@ -65,7 +62,7 @@ export const AIAssistantDocumentsCard: React.FC<AIAssistantDocumentsCardProps> =
       <CardHeader className={getHeaderClasses()}>
         <CardTitle className={`flex items-center ${getTitleClasses()}`}>
           <FileText className={getIconClasses()} />
-          {t("ai.documentAnalysis")}
+          Document Analysis
         </CardTitle>
       </CardHeader>
       <CardContent>

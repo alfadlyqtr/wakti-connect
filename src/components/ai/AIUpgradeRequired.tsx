@@ -4,29 +4,26 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useTranslation } from "react-i18next";
 
 export const AIUpgradeRequired: React.FC = () => {
-  const { t } = useTranslation();
-  
   return (
     <Card className="border shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center text-lg">
           <Lock className="h-4 w-4 mr-2 text-muted-foreground" />
-          {t("ai.premiumFeature")}
+          Premium Feature
         </CardTitle>
         <CardDescription>
-          {t("ai.requiresPlan")}
+          This feature requires a paid plan
         </CardDescription>
       </CardHeader>
       <CardContent className="text-sm pb-2">
-        <p>{t("ai.upgradeToAccess")}</p>
+        <p>Upgrade your account to access AI features and more advanced tools</p>
       </CardContent>
       <CardFooter>
         <Button asChild size="sm" className="w-full">
           <Link to="/dashboard/settings">
-            {t("ai.upgradeNow")}
+            Upgrade Now
           </Link>
         </Button>
       </CardFooter>

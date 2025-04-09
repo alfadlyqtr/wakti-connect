@@ -3,7 +3,6 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 interface AIAssistantUpgradeCardProps {
@@ -13,7 +12,6 @@ interface AIAssistantUpgradeCardProps {
 export const AIAssistantUpgradeCard: React.FC<AIAssistantUpgradeCardProps> = ({ 
   compact = false 
 }) => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   
   // If we're in compact mode, show a simplified version
@@ -23,14 +21,14 @@ export const AIAssistantUpgradeCard: React.FC<AIAssistantUpgradeCardProps> = ({
         <CardContent className="p-4">
           <div className="text-center">
             <Zap className="h-5 w-5 mx-auto text-amber-500 mb-2" />
-            <p className="text-sm font-medium mb-2">{t("ai.upgradeToUnlock", "Upgrade to unlock AI Assistant")}</p>
+            <p className="text-sm font-medium mb-2">Upgrade to unlock AI Assistant</p>
             <Button 
               size="sm" 
               variant="default" 
               className="bg-amber-500 hover:bg-amber-600 text-xs"
               onClick={() => navigate('/dashboard/settings?tab=billing')}
             >
-              {t("ai.upgradeNow", "Upgrade Now")}
+              Upgrade Now
             </Button>
           </div>
         </CardContent>
@@ -53,10 +51,10 @@ export const AIAssistantUpgradeCard: React.FC<AIAssistantUpgradeCardProps> = ({
             <Zap className="h-8 w-8 sm:h-12 sm:w-12 text-amber-500" />
           </div>
           
-          <h3 className="text-lg sm:text-xl font-bold">{t("ai.upgradeToAccess", "Upgrade to access the AI Assistant")}</h3>
+          <h3 className="text-lg sm:text-xl font-bold">Upgrade to access the AI Assistant</h3>
           
           <p className="text-muted-foreground max-w-lg text-sm sm:text-base">
-            {t("ai.upgradeDescription", "WAKTI's AI Assistant helps boost your productivity with intelligent task management, appointment scheduling, and business insights. Available with Individual and Business plans.")}
+            WAKTI's AI Assistant helps boost your productivity with intelligent task management, appointment scheduling, and business insights. Available with Individual and Business plans.
           </p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg">
@@ -65,8 +63,8 @@ export const AIAssistantUpgradeCard: React.FC<AIAssistantUpgradeCardProps> = ({
                 <Zap className="h-4 w-4 text-green-600" />
               </div>
               <div className="text-left">
-                <p className="font-medium text-sm">{t("ai.features.taskManagement", "Smart Task Management")}</p>
-                <p className="text-xs text-muted-foreground">{t("ai.features.taskDescription", "Prioritizes and organizes your tasks")}</p>
+                <p className="font-medium text-sm">Smart Task Management</p>
+                <p className="text-xs text-muted-foreground">Prioritizes and organizes your tasks</p>
               </div>
             </div>
             
@@ -75,8 +73,8 @@ export const AIAssistantUpgradeCard: React.FC<AIAssistantUpgradeCardProps> = ({
                 <Zap className="h-4 w-4 text-green-600" />
               </div>
               <div className="text-left">
-                <p className="font-medium text-sm">{t("ai.features.analytics", "Business Analytics")}</p>
-                <p className="text-xs text-muted-foreground">{t("ai.features.analyticsDescription", "Provides insights to grow your business")}</p>
+                <p className="font-medium text-sm">Business Analytics</p>
+                <p className="text-xs text-muted-foreground">Provides insights to grow your business</p>
               </div>
             </div>
             
@@ -85,8 +83,8 @@ export const AIAssistantUpgradeCard: React.FC<AIAssistantUpgradeCardProps> = ({
                 <Zap className="h-4 w-4 text-green-600" />
               </div>
               <div className="text-left">
-                <p className="font-medium text-sm">{t("ai.features.messages", "Draft Messages")}</p>
-                <p className="text-xs text-muted-foreground">{t("ai.features.messagesDescription", "Creates professional communications")}</p>
+                <p className="font-medium text-sm">Draft Messages</p>
+                <p className="text-xs text-muted-foreground">Creates professional communications</p>
               </div>
             </div>
             
@@ -95,8 +93,8 @@ export const AIAssistantUpgradeCard: React.FC<AIAssistantUpgradeCardProps> = ({
                 <Zap className="h-4 w-4 text-green-600" />
               </div>
               <div className="text-left">
-                <p className="font-medium text-sm">{t("ai.features.booking", "Booking Assistance")}</p>
-                <p className="text-xs text-muted-foreground">{t("ai.features.bookingDescription", "Helps manage your calendar efficiently")}</p>
+                <p className="font-medium text-sm">Booking Assistance</p>
+                <p className="text-xs text-muted-foreground">Helps manage your calendar efficiently</p>
               </div>
             </div>
           </div>
@@ -106,11 +104,11 @@ export const AIAssistantUpgradeCard: React.FC<AIAssistantUpgradeCardProps> = ({
             className="bg-amber-500 hover:bg-amber-600 mt-2"
             onClick={() => navigate('/dashboard/settings?tab=billing')}
           >
-            {t("ai.upgradeNow", "Upgrade Now")}
+            Upgrade Now
           </Button>
           
           <p className="text-xs text-muted-foreground">
-            {t("ai.plansStartAt", "Plans start at QAR 20/month")}
+            Plans start at QAR 20/month
           </p>
         </div>
       </CardContent>

@@ -12,7 +12,6 @@ import { AIRoleSelector } from './AIRoleSelector';
 import { getTimeBasedGreeting } from '@/lib/dateUtils';
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { useTranslation } from 'react-i18next';
 
 interface AIAssistantChatCardProps {
   messages: AIMessage[];
@@ -43,15 +42,14 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
-  const { t } = useTranslation();
 
   const getRoleTitle = () => {
     switch (selectedRole) {
-      case 'student': return t("ai.roles.student", "Student Assistant");
-      case 'employee': return t("ai.roles.employee", "Creative Assistant");
-      case 'writer': return t("ai.roles.writer", "Creative Assistant");
-      case 'business_owner': return t("ai.roles.business", "Business Assistant");
-      default: return t("ai.roles.general", "AI Assistant");
+      case 'student': return "Student Assistant";
+      case 'employee': return "Creative Assistant";
+      case 'writer': return "Creative Assistant";
+      case 'business_owner': return "Business Assistant";
+      default: return "AI Assistant";
     }
   };
 
@@ -94,8 +92,8 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
                   size="icon" 
                   onClick={clearMessages}
                   className="h-5 w-5 sm:h-6 sm:w-6 hover:bg-red-50 hover:text-red-500 transition-colors"
-                  aria-label={t("ai.clearChat", "Clear chat")}
-                  title={t("ai.clearChat", "Clear chat")}
+                  aria-label="Clear chat"
+                  title="Clear chat"
                 >
                   <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 </Button>
@@ -117,36 +115,32 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
             size="icon"
             className="h-6 w-6 sm:h-7 sm:w-7 hover:bg-blue-50 hover:text-blue-500 transition-colors"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            aria-label={isSidebarOpen ? t("ai.closeSidebar", "Close sidebar") : t("ai.openSidebar", "Open sidebar")}
-            title={isSidebarOpen ? t("ai.closeSidebar", "Close sidebar") : t("ai.openSidebar", "Open sidebar")}
+            aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+            title={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
           >
-            {isSidebarOpen ? <PanelLeftClose className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : <PanelLeftOpen className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
+            {isSidebarOpen ? 
+              <PanelLeftOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : 
+              <PanelLeftClose className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            }
           </Button>
+          
           <Button 
             variant="ghost" 
             size="icon"
-            className="h-6 w-6 sm:h-7 sm:w-7 hover:bg-blue-50 hover:text-blue-500 transition-colors"
-            aria-label={t("ai.settings", "Settings")}
-            title={t("ai.settings", "Assistant Settings")}
-            asChild
+            className="h-6 w-6 sm:h-7 sm:w-7 hover:bg-violet-50 hover:text-violet-500 transition-colors"
+            aria-label="AI Settings"
+            title="AI Settings"
           >
-            <a href="/dashboard/settings?tab=ai-assistant">
-              <Settings className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-            </a>
+            <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
         </div>
       </div>
-      
-      <CardContent className="p-0 flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-gray-50/50 to-white">
-        <div className="p-1.5 sm:p-3 border-b bg-white">
-          <AIRoleSelector selectedRole={selectedRole} onRoleChange={onRoleChange} />
-        </div>
 
-        <div className="flex flex-1 overflow-hidden">
-          {/* Main chat area - larger by default */}
-          <div className="flex-1 overflow-y-auto p-2 sm:p-4">
-            <AIAssistantChat 
-              messages={messages} 
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <CardContent className="flex-1 overflow-y-auto p-0 pt-4">
+          <div className="px-4 space-y-4 pb-4">
+            <AIAssistantChat
+              messages={messages}
               isLoading={isLoading}
               inputMessage={inputMessage}
               setInputMessage={setInputMessage}
@@ -154,49 +148,24 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
               canAccess={canAccess}
               selectedRole={selectedRole}
             />
-            
             <div ref={messagesEndRef} />
           </div>
-          
-          {/* Sidebar with suggestions - shown conditionally and narrower */}
-          {messages.length === 0 && showSuggestions && isSidebarOpen && !isMobile && (
-            <div className="w-1/4 min-w-[180px] sm:min-w-[200px] max-w-[250px] border-l p-2 sm:p-3 overflow-y-auto bg-gray-50/50 hidden sm:block">
-              <EmptyStateView onPromptClick={handlePromptClick} selectedRole={selectedRole} />
-            </div>
-          )}
-          
-          {/* Mobile sidebar with suggestions */}
-          {messages.length === 0 && showSuggestions && isSidebarOpen && isMobile && (
-            <div className="absolute inset-0 z-10 bg-white p-4 overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-medium">{t("ai.suggestedPrompts", "Suggested Prompts")}</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setIsSidebarOpen(false)}
-                  className="h-7 w-7"
-                >
-                  <PanelLeftClose className="h-4 w-4" />
-                </Button>
-              </div>
-              <EmptyStateView onPromptClick={(prompt) => {
-                handlePromptClick(prompt);
-                setIsSidebarOpen(false);
-              }} selectedRole={selectedRole} />
-            </div>
-          )}
+        </CardContent>
+
+        <div className="p-3 border-t bg-card mt-auto">
+          <MessageInputForm
+            inputMessage={inputMessage}
+            setInputMessage={setInputMessage}
+            handleSendMessage={handleSendMessage}
+            isLoading={isLoading}
+            showSuggestions={showSuggestions && messages.length <= 1}
+            onPromptClick={handlePromptClick}
+          />
+          <div className="flex items-center justify-center mt-3">
+            <PoweredByTMW />
+          </div>
         </div>
-        
-        <MessageInputForm
-          inputMessage={inputMessage}
-          setInputMessage={setInputMessage}
-          handleSendMessage={handleSendMessage}
-          isLoading={isLoading}
-          canAccess={canAccess}
-        />
-        
-        <PoweredByTMW />
-      </CardContent>
+      </div>
     </Card>
   );
 };

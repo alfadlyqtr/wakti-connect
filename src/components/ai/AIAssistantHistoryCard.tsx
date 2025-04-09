@@ -2,7 +2,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { History, Clock } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 
 interface AIAssistantHistoryCardProps {
@@ -14,17 +13,15 @@ export const AIAssistantHistoryCard: React.FC<AIAssistantHistoryCardProps> = ({
   canAccess,
   compact = false
 }) => {
-  const { t } = useTranslation();
-  
   if (!canAccess) {
     return null;
   }
 
   // Sample history data - would be replaced with actual data in a real implementation
   const sampleHistory = [
-    { id: "1", title: t("ai.sampleHistory.efficiency"), date: t("ai.timeAgo.days", { count: 2 }) },
-    { id: "2", title: t("ai.sampleHistory.marketing"), date: t("ai.timeAgo.week", { count: 1 }) },
-    { id: "3", title: t("ai.sampleHistory.studyPlan"), date: t("ai.timeAgo.weeks", { count: 2 }) }
+    { id: "1", title: "Improving Business Efficiency", date: "2 days ago" },
+    { id: "2", title: "Marketing Strategy Ideas", date: "1 week ago" },
+    { id: "3", title: "Creating a Study Plan", date: "2 weeks ago" }
   ];
 
   // Adjust styling for compact mode
