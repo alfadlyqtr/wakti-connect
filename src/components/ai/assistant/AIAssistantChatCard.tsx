@@ -158,6 +158,7 @@ export const AIAssistantChatCard: React.FC<AIAssistantChatCardProps> = ({
             setInputMessage={setInputMessage}
             handleSendMessage={handleSendMessage}
             isLoading={isLoading}
+            canAccess={canAccess}
             showSuggestions={showSuggestions && messages.length <= 1}
             onPromptClick={handlePromptClick}
           />
