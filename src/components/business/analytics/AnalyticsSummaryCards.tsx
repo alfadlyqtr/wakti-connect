@@ -5,6 +5,7 @@ import { UsersRound, TrendingUp } from "lucide-react";
 import { BusinessAnalyticsData } from "@/hooks/useBusinessAnalytics";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatNumber } from "@/utils/businessReportsUtils";
 
 interface AnalyticsSummaryCardsProps {
   isLoading: boolean;
@@ -45,7 +46,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
           <UsersRound className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-3 md:p-4 pt-2">
-          <div className="text-lg sm:text-xl md:text-2xl font-bold">{data.subscriberCount || "—"}</div>
+          <div className="text-lg sm:text-xl md:text-2xl font-bold">{formatNumber(data.subscriberCount)}</div>
           {data.subscriberChangeText ? (
             <p className="text-xs text-muted-foreground">
               {data.subscriberChangeText}
@@ -66,7 +67,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
           <UsersRound className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-3 md:p-4 pt-2">
-          <div className="text-lg sm:text-xl md:text-2xl font-bold">{data.staffCount || "—"}</div>
+          <div className="text-lg sm:text-xl md:text-2xl font-bold">{formatNumber(data.staffCount)}</div>
           {data.staffChangeText ? (
             <p className="text-xs text-muted-foreground">
               {data.staffChangeText}
@@ -88,7 +89,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
         </CardHeader>
         <CardContent className="p-3 md:p-4 pt-2">
           <div className="text-lg sm:text-xl md:text-2xl font-bold">
-            {data.taskCompletionRate ? `${data.taskCompletionRate}%` : "—"}
+            {data.taskCompletionRate !== null ? `${data.taskCompletionRate}%` : "—"}
           </div>
           {data.completionRateChangeText ? (
             <p className="text-xs text-muted-foreground">
@@ -96,7 +97,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
             </p>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Completion rate this {data.timeRange}
+              No tasks found
             </p>
           )}
         </CardContent>

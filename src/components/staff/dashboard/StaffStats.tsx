@@ -9,15 +9,14 @@ interface StaffStatsProps {
 }
 
 const StaffStats: React.FC<StaffStatsProps> = ({ stats = {}, permissions = {} }) => {
-  // Format time to display hours, minutes, and seconds
+  // Format time to display hours and minutes properly
   const formatWorkTime = (totalHours: number | undefined) => {
-    if (totalHours === undefined) return '--:--:--';
+    if (totalHours === undefined || totalHours === null) return '--:--';
     
     const hours = Math.floor(totalHours);
     const minutes = Math.floor((totalHours - hours) * 60);
-    const seconds = Math.floor(((totalHours - hours) * 60 - minutes) * 60);
     
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    return `${hours}h ${minutes}m`;
   };
   
   return (
@@ -48,7 +47,7 @@ const StaffStats: React.FC<StaffStatsProps> = ({ stats = {}, permissions = {} })
             </div>
             <div className="mt-2">
               <span className="text-2xl font-bold">
-                {stats?.activeBookings !== undefined ? stats.activeBookings : '--'}
+                {typeof stats?.activeBookings === 'number' ? stats.activeBookings : '--'}
               </span>
               <span className="text-sm text-muted-foreground ml-1">upcoming</span>
             </div>

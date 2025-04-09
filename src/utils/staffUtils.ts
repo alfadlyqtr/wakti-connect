@@ -1,138 +1,80 @@
 import { supabase } from "@/integrations/supabase/client";
+import { UserRole } from "@/types/user";
+import { toast } from "@/components/ui/use-toast";
 
-/**
- * Check if the current user is a staff member
- * @returns Promise<boolean>
- */
-export const isUserStaff = async (): Promise<boolean> => {
+// Cache for staff permissions to minimize DB calls
+let staffPermissionsCache: Record<string, any> | null = null;
+let staffBusinessIdCache: string | null = null;
+let lastCacheTime = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+export const clearStaffCache = async () => {
+  staffPermissionsCache = null;
+  staffBusinessIdCache = null;
+  lastCacheTime = 0;
+  return true;
+};
+
+export const getStaffPermissions = async (): Promise<Record<string, boolean>> => {
   try {
+    // Check if we have a recent cache
+    const now = Date.now();
+    if (staffPermissionsCache && (now - lastCacheTime < CACHE_TTL)) {
+      return staffPermissionsCache;
+    }
+    
     const { data: { user } } = await supabase.auth.getUser();
-    
     if (!user) {
-      console.log("No authenticated user found");
-      return false;
+      throw new Error('Not logged in');
     }
     
-    console.log("Checking staff status for user:", user.id);
-    
-    // First check if there's a cached value for quicker response
-    const cachedIsStaff = localStorage.getItem('isStaff');
-    if (cachedIsStaff === 'true') {
-      console.log("Using cached staff status: true");
-      return true;
-    }
-    
-    // Check if user has an entry in the business_staff table
     const { data, error } = await supabase
       .from('business_staff')
-      .select('id, permissions, business_id')
+      .select('permissions, role')
       .eq('staff_id', user.id)
       .eq('status', 'active')
       .maybeSingle();
       
     if (error) {
-      console.error("Error checking business_staff table:", error);
+      console.error('Error fetching staff permissions:', error);
       throw error;
     }
     
-    const isStaff = !!data;
-    console.log("Staff check result:", isStaff);
-    
-    // Cache the result for future quick access
-    if (isStaff) {
-      localStorage.setItem('isStaff', 'true');
-      
-      // Also cache staff permissions
-      if (data.permissions) {
-        localStorage.setItem('staffPermissions', JSON.stringify(data.permissions));
-      }
-      
-      // Cache staff relation ID for future quick access
-      localStorage.setItem('staffRelationId', data.id);
-      
-      // Cache business ID too
-      if (data.business_id) {
-        localStorage.setItem('staffBusinessId', data.business_id);
-      }
-    } else {
-      localStorage.removeItem('isStaff');
-      localStorage.removeItem('staffPermissions');
-      localStorage.removeItem('staffRelationId');
-      localStorage.removeItem('staffBusinessId');
+    if (!data) {
+      console.warn('No staff record found for current user');
+      return {};
     }
     
-    return isStaff;
+    // Store in cache
+    staffPermissionsCache = data.permissions || {};
+    lastCacheTime = now;
+    
+    // Add role-based permissions
+    if (data.role === 'co-admin') {
+      staffPermissionsCache.can_manage_tasks = true;
+      staffPermissionsCache.can_view_analytics = true;
+      staffPermissionsCache.can_manage_bookings = true;
+    }
+    
+    return staffPermissionsCache;
   } catch (error) {
-    console.error("Error checking staff status:", error);
-    return false;
+    console.error('Error in getStaffPermissions:', error);
+    return {};
   }
 };
 
-/**
- * Get the staff relation ID for the current user
- * @returns Promise with staff relation ID or null
- */
-export const getStaffRelationId = async (): Promise<string | null> => {
-  try {
-    // First check if there's a cached value for quicker response
-    const cachedStaffRelationId = localStorage.getItem('staffRelationId');
-    if (cachedStaffRelationId) {
-      return cachedStaffRelationId;
-    }
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) return null;
-    
-    const { data, error } = await supabase
-      .from('business_staff')
-      .select('id, business_id')
-      .eq('staff_id', user.id)
-      .eq('status', 'active')
-      .maybeSingle();
-      
-    if (error) {
-      console.error("Error getting staff relation ID:", error);
-      return null;
-    }
-    
-    const staffRelationId = data?.id || null;
-    
-    // Cache the result for future quick access
-    if (staffRelationId) {
-      localStorage.setItem('staffRelationId', staffRelationId);
-      
-      // Also cache business ID
-      if (data.business_id) {
-        localStorage.setItem('staffBusinessId', data.business_id);
-      }
-    }
-    
-    return staffRelationId;
-  } catch (error) {
-    console.error("Error getting staff relation ID:", error);
-    return null;
-  }
-};
-
-/**
- * Get the business ID for which the current user is a staff member
- * @returns Promise with business ID or null
- */
 export const getStaffBusinessId = async (): Promise<string | null> => {
   try {
-    // First check if there's a cached value for quicker response
-    const cachedBusinessId = localStorage.getItem('staffBusinessId');
-    if (cachedBusinessId) {
-      console.log("Using cached business ID:", cachedBusinessId);
-      return cachedBusinessId;
+    // Check if we have a cached value
+    const now = Date.now();
+    if (staffBusinessIdCache && (now - lastCacheTime < CACHE_TTL)) {
+      return staffBusinessIdCache;
     }
     
     const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) return null;
-    
-    console.log("Fetching business ID for staff user:", user.id);
+    if (!user) {
+      throw new Error('Not logged in');
+    }
     
     const { data, error } = await supabase
       .from('business_staff')
@@ -142,165 +84,59 @@ export const getStaffBusinessId = async (): Promise<string | null> => {
       .maybeSingle();
       
     if (error) {
-      console.error("Error getting staff business ID:", error);
-      return null;
-    }
-    
-    const businessId = data?.business_id || null;
-    console.log("Found business ID for staff:", businessId);
-    
-    // Cache the result for future quick access
-    if (businessId) {
-      localStorage.setItem('staffBusinessId', businessId);
-    }
-    
-    return businessId;
-  } catch (error) {
-    console.error("Error getting staff business ID:", error);
-    return null;
-  }
-};
-
-/**
- * Check if staff has a specific permission
- * @param permission The permission key to check
- * @returns boolean indicating if staff has the permission
- */
-export const hasStaffPermission = (permission: string): boolean => {
-  try {
-    const permissionsStr = localStorage.getItem('staffPermissions');
-    if (!permissionsStr) return false;
-    
-    const permissions = JSON.parse(permissionsStr);
-    return permissions[permission] === true;
-  } catch (error) {
-    console.error("Error checking staff permission:", error);
-    return false;
-  }
-};
-
-/**
- * Get all staff permissions
- * @returns Object with all staff permissions
- */
-export const getStaffPermissions = (): Record<string, boolean> => {
-  try {
-    const permissionsStr = localStorage.getItem('staffPermissions');
-    if (!permissionsStr) return {};
-    
-    return JSON.parse(permissionsStr);
-  } catch (error) {
-    console.error("Error getting staff permissions:", error);
-    return {};
-  }
-};
-
-/**
- * Clear staff-related cached data and force a refresh
- * This should be called when making task assignments to ensure data is fresh
- */
-export const clearStaffCache = async (): Promise<void> => {
-  console.log("Clearing staff cache to ensure fresh data");
-  localStorage.removeItem('isStaff');
-  localStorage.removeItem('staffPermissions');
-  localStorage.removeItem('staffRelationId');
-  localStorage.removeItem('staffBusinessId');
-  
-  // Force a check to rebuild the cache if needed
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data } = await supabase
-        .from('business_staff')
-        .select('id, permissions, business_id')
-        .eq('staff_id', user.id)
-        .eq('status', 'active')
-        .maybeSingle();
-        
-      if (data) {
-        localStorage.setItem('isStaff', 'true');
-        if (data.permissions) {
-          localStorage.setItem('staffPermissions', JSON.stringify(data.permissions));
-        }
-        localStorage.setItem('staffRelationId', data.id);
-        if (data.business_id) {
-          localStorage.setItem('staffBusinessId', data.business_id);
-        }
-        console.log("Staff cache refreshed with latest data");
-      }
-    }
-  } catch (error) {
-    console.error("Error refreshing staff cache:", error);
-  }
-};
-
-/**
- * Get the current staff work session if active
- * @param staffRelationId The staff relation ID
- * @returns Promise with active work session or null
- */
-export const getActiveWorkSession = async (staffRelationId: string): Promise<any | null> => {
-  try {
-    if (!staffRelationId) return null;
-    
-    console.log("Fetching active work session for staff relation:", staffRelationId);
-    
-    const { data, error } = await supabase
-      .from('staff_work_logs')
-      .select('*')
-      .eq('staff_relation_id', staffRelationId)
-      .is('end_time', null)
-      .eq('status', 'active')
-      .maybeSingle();
-      
-    if (error) {
-      console.error("Error fetching active work session:", error);
-      return null;
-    }
-    
-    return data;
-  } catch (error) {
-    console.error("Error getting active work session:", error);
-    return null;
-  }
-};
-
-/**
- * Get jobs from the staff's business for job card creation
- * @returns Promise with jobs array or empty array
- */
-export const getBusinessJobs = async (): Promise<any[]> => {
-  try {
-    // Get the business ID for the current staff user
-    const businessId = await getStaffBusinessId();
-    
-    if (!businessId) {
-      console.error("No business ID found for staff");
-      throw new Error("No business ID found for current staff user");
-    }
-    
-    console.log("Fetching jobs for business ID:", businessId);
-    
-    // Fetch jobs for this business
-    const { data, error } = await supabase
-      .from('jobs')
-      .select('*')
-      .eq('business_id', businessId)
-      .order('name');
-      
-    if (error) {
-      console.error("Error fetching jobs:", error);
+      console.error('Error fetching business ID:', error);
       throw error;
     }
     
-    console.log("Found jobs:", data?.length || 0);
-    if (data && data.length > 0) {
-      console.log("Sample job:", data[0]);
+    if (!data) {
+      console.warn('No staff record found for current user');
+      return null;
     }
     
-    return data || [];
+    // Store in cache
+    staffBusinessIdCache = data.business_id;
+    
+    return data.business_id;
   } catch (error) {
-    console.error("Error fetching business jobs:", error.message);
-    throw new Error(`Failed to fetch business jobs: ${error.message}`);
+    console.error('Error in getStaffBusinessId:', error);
+    return null;
+  }
+};
+
+export const getUserRole = async (): Promise<UserRole> => {
+  try {
+    // First check if user is a business owner
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('account_type')
+      .eq('id', user.id)
+      .maybeSingle();
+      
+    // If they are a business account, they're a business owner
+    if (profile?.account_type === 'business') {
+      return 'business';
+    }
+    
+    // Next, check if they're staff
+    const { data: staffData } = await supabase
+      .from('business_staff')
+      .select('id')
+      .eq('staff_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+      
+    // If they have a staff record, they're staff
+    if (staffData) {
+      return 'staff';
+    }
+    
+    // Otherwise, return their account type
+    return (profile?.account_type || 'free') as UserRole;
+  } catch (error) {
+    console.error('Error determining user role:', error);
+    return 'free';
   }
 };

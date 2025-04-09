@@ -2,13 +2,20 @@
 import React, { useEffect, useState } from "react";
 import { LineChart } from "@/components/ui/chart";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 interface GrowthChartProps {
   isLoading: boolean;
   data: any[];
+  labels?: string[];
 }
 
-export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => {
+export const GrowthChart: React.FC<GrowthChartProps> = ({ 
+  isLoading, 
+  data = [],
+  labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+}) => {
   const [chartData, setChartData] = useState<any>(null);
   const isMobile = useIsMobile();
   
@@ -16,16 +23,14 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
   useEffect(() => {
     if (!data || data.length === 0) {
       console.log("No growth data available");
+      setChartData(null);
       return;
     }
     
     try {
-      // Default month labels if none provided
-      const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-      
       // Format chart data
       setChartData({
-        labels,
+        labels: labels.length === data.length ? labels : labels.slice(0, data.length),
         datasets: [{
           label: 'Subscribers',
           data,
@@ -38,8 +43,9 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
       });
     } catch (error) {
       console.error("Error preparing growth chart data:", error);
+      setChartData(null);
     }
-  }, [data]);
+  }, [data, labels]);
 
   // Mobile-optimized chart options
   const chartOptions = {
@@ -88,10 +94,23 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({ isLoading, data }) => 
     }
   };
 
-  if (isLoading || !chartData) {
+  if (isLoading) {
     return (
       <div className="h-[200px] md:h-[300px] w-full flex items-center justify-center">
         <p>Loading growth data...</p>
+      </div>
+    );
+  }
+
+  if (!chartData || data.length === 0) {
+    return (
+      <div className="h-[200px] md:h-[300px] w-full flex items-center justify-center">
+        <Alert variant="default" className="max-w-md">
+          <Info className="h-4 w-4 mr-2" />
+          <AlertDescription>
+            No subscriber growth data available yet. As subscribers join, you'll see trends here.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }

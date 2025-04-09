@@ -5,23 +5,31 @@ import { supabase } from "@/integrations/supabase/client";
 export type AnalyticsTimeRange = "week" | "month" | "year";
 
 export interface BusinessAnalyticsData {
-  subscriberCount: number;
+  subscriberCount: number | null;
+  subscriberChange?: number;
   subscriberChangeText?: string;
-  staffCount: number;
+  staffCount: number | null;
+  staffChange?: number;
   staffChangeText?: string;
-  taskCompletionRate: number;
+  taskCompletionRate: number | null;
+  completionRateChange?: number;
   completionRateChangeText?: string;
   timeRange: AnalyticsTimeRange;
-  growth: any[];
-  serviceDistribution: any[];
+  growth: number[];
+  serviceDistribution: number[];
+  serviceLabels: string[];
 }
 
 export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") => {
+  // If timeRange is undefined (which happens when user is not a business account),
+  // don't execute the query
+  const enabled = !!timeRange;
+  
   return useQuery({
     queryKey: ['businessAnalytics', timeRange],
-    queryFn: async () => {
+    queryFn: async (): Promise<BusinessAnalyticsData> => {
       try {
-        console.log("Fetching real business analytics data for", timeRange);
+        console.log("Fetching business analytics data for", timeRange);
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session?.user) {
@@ -47,7 +55,8 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
           throw new Error('Business account required to access analytics');
         }
         
-        // Fetch main analytics data
+        // Fetch analytics data
+        // First, try to get actual data from analytics tables
         const { data: analyticsData, error: analyticsError } = await supabase
           .from('business_analytics')
           .select('*')
@@ -57,77 +66,114 @@ export const useBusinessAnalytics = (timeRange: AnalyticsTimeRange = "month") =>
         
         if (analyticsError) {
           console.error("Error fetching analytics data:", analyticsError);
-          throw new Error('Failed to fetch analytics data');
         }
         
-        // Fetch growth trend data
-        const { data: growthData, error: growthError } = await supabase
+        // Fetch subscriber count
+        const { count: subscriberCount, error: subscriberError } = await supabase
+          .from('business_subscribers')
+          .select('*', { count: 'exact', head: true })
+          .eq('business_id', session.user.id);
+          
+        if (subscriberError) {
+          console.error("Error fetching subscriber count:", subscriberError);
+        }
+        
+        // Fetch staff count
+        const { count: staffCount, error: staffError } = await supabase
+          .from('business_staff')
+          .select('*', { count: 'exact', head: true })
+          .eq('business_id', session.user.id)
+          .eq('status', 'active');
+          
+        if (staffError) {
+          console.error("Error fetching staff count:", staffError);
+        }
+        
+        // Fetch real services data
+        const { data: servicesData, error: servicesError } = await supabase
+          .from('business_services')
+          .select('name, id')
+          .eq('business_id', session.user.id);
+          
+        if (servicesError) {
+          console.error("Error fetching services:", servicesError);
+        }
+        
+        // Get actual bookings by service for distribution chart
+        const serviceBookingCounts: Record<string, number> = {};
+        const serviceLabels: string[] = [];
+        const serviceDistribution: number[] = [];
+        
+        if (servicesData && servicesData.length > 0) {
+          // Populate from actual services
+          for (const service of servicesData) {
+            serviceLabels.push(service.name);
+            
+            // Count bookings for this service
+            const { count, error } = await supabase
+              .from('bookings')
+              .select('*', { count: 'exact', head: true })
+              .eq('business_id', session.user.id)
+              .eq('service_id', service.id);
+              
+            if (error) {
+              console.error(`Error fetching booking count for service ${service.name}:`, error);
+              serviceDistribution.push(0);
+            } else {
+              serviceDistribution.push(count || 0);
+            }
+          }
+        } else {
+          // No services found, use empty arrays
+          console.log("No services found for business");
+        }
+        
+        // Get growth data (using real data or empty array if not found)
+        const { data: growthData = [] } = await supabase
           .from('business_growth_data')
-          .select('month, subscribers')
+          .select('subscribers')
           .eq('business_id', session.user.id)
           .eq('time_range', timeRange)
-          .order('month');
+          .order('created_at');
         
-        if (growthError) {
-          console.error("Error fetching growth data:", growthError);
-          throw new Error('Failed to fetch growth trend data');
-        }
+        const growth = growthData.map(item => item.subscribers) || [];
         
-        // Fetch service distribution data
-        const { data: serviceData, error: serviceError } = await supabase
-          .from('business_service_distribution')
-          .select('service_name, usage_count')
-          .eq('business_id', session.user.id)
-          .eq('time_range', timeRange);
+        // Calculate task completion rate from actual tasks
+        const { count: totalTasksCount } = await supabase
+          .from('tasks')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', session.user.id);
+          
+        const { count: completedTasksCount } = await supabase
+          .from('tasks')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', session.user.id)
+          .eq('status', 'completed');
         
-        if (serviceError) {
-          console.error("Error fetching service data:", serviceError);
-          throw new Error('Failed to fetch service distribution data');
-        }
+        // Calculate actual task completion rate
+        const taskCompletionRate = totalTasksCount && totalTasksCount > 0 
+          ? Math.round((completedTasksCount || 0) / totalTasksCount * 100)
+          : null;
         
-        // Format growth data for chart
-        const formattedGrowthData = growthData?.map(item => item.subscribers) || [];
-        
-        // Format service data for chart
-        const formattedServiceData = serviceData?.map(item => item.usage_count) || [];
-        const serviceLabels = serviceData?.map(item => item.service_name) || [];
-        
-        // Calculate change percentages
-        let subscriberChangeText = "";
-        let staffChangeText = "";
-        let completionRateChangeText = "";
-        
-        if (analyticsData?.subscriber_count !== undefined) {
-          subscriberChangeText = "Current subscriber count";
-        }
-        
-        if (analyticsData?.staff_count !== undefined) {
-          staffChangeText = "Active staff members";
-        }
-        
-        if (analyticsData?.task_completion_rate !== undefined) {
-          completionRateChangeText = `Completion rate this ${timeRange}`;
-        }
-        
-        // Return formatted analytics data
+        // Return analytics data with real numbers where possible, nulls otherwise
         return {
-          subscriberCount: analyticsData?.subscriber_count || 0,
-          subscriberChangeText,
-          staffCount: analyticsData?.staff_count || 0,
-          staffChangeText,
-          taskCompletionRate: analyticsData?.task_completion_rate || 0,
-          completionRateChangeText,
+          subscriberCount: subscriberCount || null,
+          subscriberChangeText: "Current subscriber count",
+          staffCount: staffCount || null,
+          staffChangeText: "Active staff members",
+          taskCompletionRate,
+          completionRateChangeText: totalTasksCount ? `Based on ${totalTasksCount} tasks` : undefined,
           timeRange,
-          growth: formattedGrowthData,
-          serviceDistribution: formattedServiceData,
-          serviceLabels: serviceLabels
+          growth,
+          serviceDistribution,
+          serviceLabels
         };
       } catch (error) {
         console.error("Error in useBusinessAnalytics:", error);
         throw error;
       }
     },
-    retry: 1,
+    enabled,
     refetchOnWindowFocus: false,
   });
 };
