@@ -170,7 +170,7 @@ export const forceSyncStaffContacts = async (): Promise<{success: boolean; messa
     // Call the edge function to force a sync
     const { data, error } = await supabase.functions.invoke('sync-staff-records', {
       headers: {
-        Authorization: `Bearer ${session.accessToken}`
+        Authorization: `Bearer ${session.access_token}` // Fixed: using access_token instead of accessToken
       }
     });
     
