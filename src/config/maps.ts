@@ -12,7 +12,7 @@ export const generateGoogleMapsUrl = (location: string): string => {
  * @param location String in format "latitude,longitude" or address
  */
 export const generateMapEmbedUrl = (location: string): string => {
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY || '';
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
   return `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(location)}`;
 };
 
@@ -20,7 +20,7 @@ export const generateMapEmbedUrl = (location: string): string => {
  * Google Maps API key for embedding maps
  * This is a public key and can be exposed on the client
  */
-export const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
+export const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
 /**
  * Checks if a string is a valid Google Maps URL
