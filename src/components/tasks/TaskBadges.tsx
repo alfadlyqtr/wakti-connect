@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Share2, UserCheck, CheckCircle, Clock, AlertTriangle, Bell } from "lucide-react";
 import { TaskStatus, TaskPriority } from "@/types/task.types";
 import { isBefore, isAfter, isToday, format } from "date-fns";
-import { useTranslation } from "react-i18next";
 
 interface TaskBadgesProps {
   dueDate: Date;
@@ -63,20 +62,18 @@ export const getCategoryColor = (category: string) => {
 };
 
 export const TaskSharingBadges = ({ isShared, isAssigned }: { isShared?: boolean; isAssigned?: boolean }) => {
-  const { t } = useTranslation();
-  
   return (
     <>
       {isShared && (
         <Badge variant="outline" className="mr-2 bg-purple-500/10 text-purple-500 text-xs">
           <Share2 className="h-3 w-3 mr-1" />
-          {t("common.shared")}
+          Shared
         </Badge>
       )}
       {isAssigned && (
         <Badge variant="outline" className="mr-2 bg-emerald-500/10 text-emerald-500 text-xs">
           <UserCheck className="h-3 w-3 mr-1" />
-          {t("common.assigned")}
+          Assigned
         </Badge>
       )}
     </>
@@ -94,13 +91,12 @@ export const TaskCompletionBadge = ({
   completedDate?: Date | null,
   snoozedUntil?: Date | null
 }) => {
-  const { t } = useTranslation();
   
   if (status === "snoozed" && snoozedUntil) {
     return (
       <Badge variant="outline" className="bg-amber-500/10 text-amber-500 text-xs">
         <Bell className="h-3 w-3 mr-1" />
-        {t("task.snoozedUntil")} {format(snoozedUntil, 'MMM d')}
+        Snoozed until {format(snoozedUntil, 'MMM d')}
       </Badge>
     );
   }
@@ -110,14 +106,14 @@ export const TaskCompletionBadge = ({
       return (
         <Badge variant="outline" className="bg-blue-500/10 text-blue-500 text-xs">
           <Clock className="h-3 w-3 mr-1" />
-          {t("task.status.inProgress")} ({t("time.today")})
+          In Progress (Today)
         </Badge>
       );
     } else if (isAfter(new Date(), dueDate)) {
       return (
         <Badge variant="outline" className="bg-red-500/10 text-red-500 text-xs">
           <AlertTriangle className="h-3 w-3 mr-1" />
-          {t("task.overdue")}
+          Overdue
         </Badge>
       );
     }
@@ -125,79 +121,13 @@ export const TaskCompletionBadge = ({
   }
   
   if (completedDate) {
-    if (isBefore(completedDate, dueDate)) {
-      return (
-        <Badge variant="outline" className="bg-green-500/10 text-green-500 text-xs">
-          <CheckCircle className="h-3 w-3 mr-1" />
-          {t("task.completed")} ({t("common.early")})
-        </Badge>
-      );
-    } else if (isAfter(completedDate, dueDate)) {
-      return (
-        <Badge variant="outline" className="bg-amber-500/10 text-amber-500 text-xs">
-          <CheckCircle className="h-3 w-3 mr-1" />
-          {t("task.completed")} ({t("common.late")})
-        </Badge>
-      );
-    }
+    return (
+      <Badge variant="outline" className="bg-green-500/10 text-green-500 text-xs">
+        <CheckCircle className="h-3 w-3 mr-1" />
+        Completed {format(completedDate, 'MMM d')}
+      </Badge>
+    );
   }
-  
-  return (
-    <Badge variant="outline" className="bg-green-500/10 text-green-500 text-xs">
-      <CheckCircle className="h-3 w-3 mr-1" />
-      {t("task.completed")}
-    </Badge>
-  );
+
+  return null;
 };
-
-const TaskBadges = ({ 
-  dueDate, 
-  priority, 
-  isShared, 
-  isAssigned,
-  status = "pending",
-  category = "personal",
-  completedDate = null,
-  snoozedUntil = null,
-  dueTime = null
-}: TaskBadgesProps) => {
-  const { t } = useTranslation();
-  
-  // Get priority label - using direct English values
-  const getPriorityLabel = (priority: TaskPriority): string => {
-    switch (priority) {
-      case "urgent": return "Urgent";
-      case "high": return "High";
-      case "medium": return "Medium";
-      case "normal": return "Normal";
-      default: return "Normal";
-    }
-  };
-  
-  const formattedDate = dueDate.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric'
-  });
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      <Badge variant="outline" className="text-xs flex items-center">
-        <Clock className="h-3 w-3 mr-1" />
-        {formattedDate}
-        {dueTime && (
-          <span className="ml-1 font-medium">{dueTime}</span>
-        )}
-      </Badge>
-      
-      <Badge variant="outline" className={cn("text-xs", getPriorityColor(priority))}>
-        {getPriorityLabel(priority)}
-      </Badge>
-      
-      <TaskSharingBadges isShared={isShared} isAssigned={isAssigned} />
-      
-      {status && TaskCompletionBadge({ status, dueDate, completedDate, snoozedUntil })}
-    </div>
-  );
-};
-
-export default TaskBadges;
