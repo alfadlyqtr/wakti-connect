@@ -2,14 +2,11 @@
 import React from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { UsersRound, CheckCircle } from "lucide-react";
 
 export const IndividualDashboardStats = () => {
-  const { t } = useTranslation();
-  
   // Get completed tasks count
   const { data: tasksData } = useQuery({
     queryKey: ['completedTasksCount'],
@@ -57,7 +54,7 @@ export const IndividualDashboardStats = () => {
   return (
     <>
       <SectionHeading 
-        title={t('dashboard.myProductivity')}
+        title="My Productivity"
         centered={false}
         className="mt-8 mb-4"
       />
@@ -65,7 +62,7 @@ export const IndividualDashboardStats = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t('task.status.completed')}
+              Completed Tasks
             </CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
@@ -74,7 +71,7 @@ export const IndividualDashboardStats = () => {
               {tasksData?.completedCount !== undefined ? tasksData.completedCount : "-"}
             </div>
             <p className="text-xs text-muted-foreground">
-              {t('dashboard.completionRateThis')}
+              Completion rate this month
             </p>
           </CardContent>
         </Card>
@@ -82,7 +79,7 @@ export const IndividualDashboardStats = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t('dashboard.contacts')}
+              Contacts
             </CardTitle>
             <UsersRound className="h-4 w-4 text-blue-500" />
           </CardHeader>
@@ -91,7 +88,7 @@ export const IndividualDashboardStats = () => {
               {contactsData?.contactsCount !== undefined ? contactsData.contactsCount : "-"}
             </div>
             <p className="text-xs text-muted-foreground">
-              {t('dashboard.peopleInNetwork')}
+              People in your network
             </p>
           </CardContent>
         </Card>

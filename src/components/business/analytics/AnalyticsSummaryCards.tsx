@@ -4,7 +4,6 @@ import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { UsersRound, TrendingUp } from "lucide-react";
 import { BusinessAnalyticsData } from "@/hooks/useBusinessAnalytics";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useTranslation } from "react-i18next";
 
 interface AnalyticsSummaryCardsProps {
   isLoading: boolean;
@@ -13,7 +12,6 @@ interface AnalyticsSummaryCardsProps {
 
 export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ isLoading, data }) => {
   const isMobile = useIsMobile();
-  const { t } = useTranslation();
 
   if (isLoading) {
     return (
@@ -21,11 +19,11 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
         {[...Array(3)].map((_, i) => (
           <Card key={i} className="overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-4 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium">{t('common.loading')}</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium">Loading...</CardTitle>
             </CardHeader>
             <CardContent className="p-3 md:p-4 pt-2">
               <div className="text-lg sm:text-xl md:text-2xl font-bold">-</div>
-              <p className="text-xs text-muted-foreground">{t('common.loading')}</p>
+              <p className="text-xs text-muted-foreground">Loading...</p>
             </CardContent>
           </Card>
         ))}
@@ -38,7 +36,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
       <Card className="overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-4 pb-2">
           <CardTitle className="text-xs sm:text-sm font-medium">
-            {t('sidebar.subscribers')}
+            Subscribers
           </CardTitle>
           <UsersRound className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -50,7 +48,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
             </p>
           ) : (
             <p className="text-xs text-muted-foreground">
-              {t('dashboard.totalSubscribers')}
+              Total subscribers
             </p>
           )}
         </CardContent>
@@ -59,7 +57,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
       <Card className="overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-4 pb-2">
           <CardTitle className="text-xs sm:text-sm font-medium">
-            {t('sidebar.staff')}
+            Staff
           </CardTitle>
           <UsersRound className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -71,7 +69,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
             </p>
           ) : (
             <p className="text-xs text-muted-foreground">
-              {t('dashboard.activeStaff')}
+              Active staff members
             </p>
           )}
         </CardContent>
@@ -80,7 +78,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
       <Card className="overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-4 pb-2">
           <CardTitle className="text-xs sm:text-sm font-medium">
-            {t('task.completionRate')}
+            Task Completion Rate
           </CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
@@ -94,7 +92,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
             </p>
           ) : (
             <p className="text-xs text-muted-foreground">
-              {t('dashboard.completionRateThis')} {data.timeRange}
+              Completion rate this {data.timeRange}
             </p>
           )}
         </CardContent>

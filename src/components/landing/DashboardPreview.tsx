@@ -1,10 +1,7 @@
 
 import React from "react";
-import { useTranslation } from "react-i18next";
 
 const DashboardPreview = () => {
-  const { t } = useTranslation();
-  
   return (
     <section className="py-8 px-4">
       <div className="container mx-auto max-w-6xl animate-fade-in">
@@ -13,7 +10,7 @@ const DashboardPreview = () => {
             {/* Dashboard Preview Image */}
             <img 
               src="/lovable-uploads/dashboard-preview.png" 
-              alt={t('dashboardPreview.title')} 
+              alt="WAKTI Dashboard Preview" 
               className="w-full h-full object-contain p-4"
               onError={(e) => {
                 // If the image fails to load, show the fallback content
@@ -30,8 +27,8 @@ const DashboardPreview = () => {
               className="absolute inset-0 flex flex-col items-center justify-center p-8" 
               style={{ display: 'none' }}
             >
-              <h3 className="text-2xl font-medium mb-4">{t('dashboardPreview.title')}</h3>
-              <p className="text-muted-foreground text-center">{t('dashboardPreview.description')}</p>
+              <h3 className="text-2xl font-medium mb-4">Dashboard Preview</h3>
+              <p className="text-muted-foreground text-center">Experience the powerful WAKTI dashboard with task management, scheduling, and business tools in one place.</p>
             </div>
           </div>
         </div>

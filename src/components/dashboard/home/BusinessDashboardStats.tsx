@@ -2,14 +2,11 @@
 import React from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, ShoppingBag, BarChart3 } from "lucide-react";
+import { Users, ShoppingBag } from "lucide-react";
 
 export const BusinessDashboardStats = () => {
-  const { t } = useTranslation();
-  
   // Get subscribers count
   const { data: subscribersData } = useQuery({
     queryKey: ['dashboardSubscribersCount'],
@@ -77,7 +74,7 @@ export const BusinessDashboardStats = () => {
   return (
     <>
       <SectionHeading 
-        title={t('dashboard.businessAnalytics')}
+        title="Business Analytics"
         centered={false}
         className="mt-8 mb-4"
       />
@@ -85,7 +82,7 @@ export const BusinessDashboardStats = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t('sidebar.subscribers')}
+              Subscribers
             </CardTitle>
             <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
@@ -94,7 +91,7 @@ export const BusinessDashboardStats = () => {
               {subscribersData?.subscribersCount !== undefined ? subscribersData.subscribersCount : "-"}
             </div>
             <p className="text-xs text-muted-foreground">
-              {t('dashboard.totalSubscribers')}
+              Total subscribers
             </p>
           </CardContent>
         </Card>
@@ -102,7 +99,7 @@ export const BusinessDashboardStats = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t('sidebar.staff')}
+              Staff
             </CardTitle>
             <Users className="h-4 w-4 text-indigo-500" />
           </CardHeader>
@@ -111,7 +108,7 @@ export const BusinessDashboardStats = () => {
               {staffData?.staffCount !== undefined ? staffData.staffCount : "-"}
             </div>
             <p className="text-xs text-muted-foreground">
-              {t('dashboard.activeStaff')}
+              Active staff members
             </p>
           </CardContent>
         </Card>
@@ -119,7 +116,7 @@ export const BusinessDashboardStats = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t('sidebar.services')}
+              Services
             </CardTitle>
             <ShoppingBag className="h-4 w-4 text-green-500" />
           </CardHeader>
@@ -128,7 +125,7 @@ export const BusinessDashboardStats = () => {
               {servicesData?.servicesCount !== undefined ? servicesData.servicesCount : "-"}
             </div>
             <p className="text-xs text-muted-foreground">
-              {t('dashboard.businessServices')}
+              Business services
             </p>
           </CardContent>
         </Card>
