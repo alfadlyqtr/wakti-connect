@@ -54,7 +54,7 @@ const AnalyticsTab = () => {
       const serviceDistribution = await getServiceDistribution(servicesData || [], session.user.id);
       
       // Get total revenue, appointment count and customer count
-      const totalRevenue = (revenueData || []).reduce((sum, item) => sum + (parseFloat(item.payment_amount) || 0), 0);
+      const totalRevenue = (revenueData || []).reduce((sum, item) => sum + (parseFloat(String(item.payment_amount)) || 0), 0);
       const appointmentCount = (appointmentsData || []).length;
       
       // Get customer count (unique customer IDs)
@@ -94,7 +94,7 @@ const AnalyticsTab = () => {
     data.forEach(item => {
       const date = new Date(item.created_at);
       const month = months[date.getMonth()];
-      monthlyTotals[month] += parseFloat(item.payment_amount) || 0;
+      monthlyTotals[month] += parseFloat(String(item.payment_amount)) || 0;
     });
     
     // Convert to chart format

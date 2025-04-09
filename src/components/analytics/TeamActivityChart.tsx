@@ -53,15 +53,18 @@ export const TeamActivityChart: React.FC = () => {
           const workLogs = staff.staff_work_logs || [];
           let hoursWorked = 0;
           
-          // Calculate total hours from completed work logs
-          workLogs.forEach(log => {
-            if (log.start_time && log.end_time) {
-              const start = new Date(log.start_time);
-              const end = new Date(log.end_time);
-              const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-              hoursWorked += diffHours;
-            }
-          });
+          // Handle safely in case staff_work_logs is an error and not an array
+          if (Array.isArray(workLogs)) {
+            // Calculate total hours from completed work logs
+            workLogs.forEach(log => {
+              if (log.start_time && log.end_time) {
+                const start = new Date(log.start_time);
+                const end = new Date(log.end_time);
+                const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                hoursWorked += diffHours;
+              }
+            });
+          }
           
           // Format name for display
           const name = isMobile ? staff.name.split(' ')[0] : staff.name;
