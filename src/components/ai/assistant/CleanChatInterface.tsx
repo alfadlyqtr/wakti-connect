@@ -12,7 +12,6 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useToast } from "@/components/ui/use-toast";
 import { MessageAvatar } from "@/components/ai/message";
-import { useTranslation } from "react-i18next";
 
 interface CleanChatInterfaceProps {
   messages: AIMessage[];
@@ -51,7 +50,6 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { t } = useTranslation();
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -66,8 +64,8 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
     const file = files[0];
     if (file.size > 10 * 1024 * 1024) {
       toast({
-        title: t("ai.fileTooLarge"),
-        description: t("ai.fileSizeLimit"),
+        title: "File too large",
+        description: "File size must be less than 10MB",
         variant: "destructive",
       });
       return;
@@ -120,12 +118,10 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               />
             </div>
             <h2 className="text-xl font-bold mb-2">
-              {t("ai.greeting")}{userName ? ` ${userName}` : ''}, {t("ai.introduction", { role: t(`ai.roles.${selectedRole}`) })}
+              Hello{userName ? ` ${userName}` : ''}, I'm your WAKTI AI Assistant
             </h2>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              {t(`ai.welcomeMessages.${selectedRole}`, { 
-                defaultValue: t("ai.defaultWelcome") 
-              })}
+              I'm here to help you with your tasks, answer questions, and provide assistance as needed.
             </p>
             
             {showSuggestions && (
@@ -170,7 +166,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
                 <MessageAvatar isUser={true} />
               ) : (
                 <Avatar className="h-8 w-8 bg-yellow-100">
-                  <span className="text-xs font-medium">{t("ai.system")}</span>
+                  <span className="text-xs font-medium">System</span>
                 </Avatar>
               )}
 
@@ -219,7 +215,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             <Input
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder={t("ai.messagePlaceholder")}
+              placeholder="Type your message here..."
               className={cn(
                 "pr-10",
                 isListening && "bg-rose-50 border-rose-200"
@@ -244,7 +240,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               className={isListening ? "text-rose-500 hover:text-rose-600" : ""}
               onClick={handleVoiceToggle}
               disabled={isLoading || !canAccess}
-              title={t(isListening ? "ai.stopVoice" : "ai.startVoice")}
+              title={isListening ? "Stop voice input" : "Start voice input"}
             >
               {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             </Button>
@@ -258,7 +254,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
                 variant="ghost" 
                 onClick={handleFileUploadClick}
                 disabled={isLoading || !canAccess}
-                title={t("ai.attachFile")}
+                title="Attach file"
               >
                 <Paperclip className="h-5 w-5" />
               </Button>
@@ -279,7 +275,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
               variant="ghost" 
               onClick={onCameraCapture}
               disabled={isLoading || !canAccess}
-              title={t("ai.takePhoto")}
+              title="Take photo"
             >
               <Camera className="h-5 w-5" />
             </Button>
@@ -289,7 +285,7 @@ export const CleanChatInterface: React.FC<CleanChatInterfaceProps> = ({
             type="submit" 
             size="icon" 
             disabled={!inputMessage.trim() || isLoading || !canAccess}
-            title={t("ai.sendMessage")}
+            title="Send message"
           >
             <Send className="h-5 w-5" />
           </Button>

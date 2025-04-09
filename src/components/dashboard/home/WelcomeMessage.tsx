@@ -1,31 +1,28 @@
 
 import React from "react";
-import { useTranslation } from "react-i18next";
 
 interface WelcomeMessageProps {
   user: any;
 }
 
 const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ user }) => {
-  const { t } = useTranslation();
-  
   const getTimeBasedGreeting = () => {
     const hour = new Date().getHours();
     
-    if (hour < 12) return t('dashboard.welcome.morning');
-    if (hour < 18) return t('dashboard.welcome.afternoon');
-    return t('dashboard.welcome.evening');
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
   };
   
-  const userName = user?.displayName || user?.name || t('common.there');
+  const userName = user?.displayName || user?.name || "there";
   
   return (
     <div className="mb-8">
       <h1 className="text-3xl font-bold tracking-tight">
-        {t('dashboard.welcome', { name: userName })}
+        {getTimeBasedGreeting()}, {userName}
       </h1>
       <p className="text-muted-foreground mt-1">
-        {t('dashboard.welcome.overview')}
+        Here's an overview of your activity
       </p>
     </div>
   );
