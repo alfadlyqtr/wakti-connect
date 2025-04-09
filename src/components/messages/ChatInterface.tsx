@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMessaging } from "@/hooks/useMessaging";
@@ -25,6 +24,13 @@ interface StaffProfile {
   name: string;
   email: string;
   profile_image_url?: string;
+}
+
+// Type guard to check if the profile is a UserProfile
+function isUserProfile(profile: UserProfile | StaffProfile): profile is UserProfile {
+  return (profile as UserProfile).avatar_url !== undefined || 
+         (profile as UserProfile).display_name !== undefined ||
+         (profile as UserProfile).account_type !== undefined;
 }
 
 const ChatInterface = () => {
@@ -184,11 +190,12 @@ const ChatInterface = () => {
   const getAvatar = () => {
     if (!otherUserProfile) return null;
     
-    if ('profile_image_url' in otherUserProfile) {
+    // Use the type guard to safely access the correct property
+    if (isUserProfile(otherUserProfile)) {
+      return otherUserProfile.avatar_url;
+    } else {
       return otherUserProfile.profile_image_url;
     }
-    
-    return otherUserProfile.avatar_url;
   };
   
   return (
