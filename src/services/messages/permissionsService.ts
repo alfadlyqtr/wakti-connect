@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { getStaffBusinessId } from "@/utils/staffUtils";
 
 /**
  * Checks if the current user can message a given user
@@ -45,7 +46,58 @@ export const canMessageUser = async (userId: string): Promise<boolean> => {
       return false;
     }
     
-    // First check contacts - this is the most common case
+    // Check if the current user is a staff member
+    const staffBusinessId = await getStaffBusinessId();
+    if (staffBusinessId) {
+      console.log("User is staff member of business:", staffBusinessId);
+      
+      // Check if target user is business owner (staff can message their business)
+      if (userId === staffBusinessId) {
+        console.log("Staff is messaging their business owner, allowed");
+        return true;
+      }
+      
+      // Check if user has permission to message staff (other staff in same business)
+      const { data: staffPermissions } = await supabase
+        .from('business_staff')
+        .select('permissions')
+        .eq('staff_id', session.user.id)
+        .eq('business_id', staffBusinessId)
+        .single();
+      
+      if (staffPermissions?.permissions?.can_message_staff) {
+        // Check if target is another staff member of the same business
+        const { data: targetStaffData } = await supabase
+          .from('business_staff')
+          .select('id')
+          .eq('staff_id', userId)
+          .eq('business_id', staffBusinessId)
+          .maybeSingle();
+          
+        if (targetStaffData) {
+          console.log("Staff is messaging another staff member, allowed");
+          return true;
+        }
+      }
+      
+      // Check if user has permission to message customers
+      if (staffPermissions?.permissions?.can_message_customers) {
+        // Check if target is a customer of the business
+        const { data: isCustomer } = await supabase
+          .from('business_subscribers')
+          .select('id')
+          .eq('subscriber_id', userId)
+          .eq('business_id', staffBusinessId)
+          .maybeSingle();
+          
+        if (isCustomer) {
+          console.log("Staff is messaging a customer, allowed");
+          return true;
+        }
+      }
+    }
+    
+    // First check contacts - this is the most common case for non-staff or permissions not covered above
     const { data: contactData } = await supabase
       .from('user_contacts')
       .select('id')

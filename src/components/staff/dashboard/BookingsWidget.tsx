@@ -1,184 +1,148 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Link } from 'react-router-dom';
-import { useBookings } from '@/hooks/useBookings';
-import { BookingWithRelations } from '@/types/booking.types';
-import { parseISO, format, isToday, isTomorrow, isAfter, differenceInMinutes } from 'date-fns';
-import { CalendarClock, ArrowRight, CheckCircle, Clock, UserX } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { CalendarDays, Filter, PlusCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { getStaffBusinessId } from "@/utils/staffUtils";
+import { format } from "date-fns";
 
 const BookingsWidget = () => {
-  const { bookings, isLoading, acknowledgeBooking, markNoShow } = useBookings();
-  const currentTime = new Date();
+  const [upcomingBookings, setUpcomingBookings] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center">
-            <CalendarClock className="mr-2 h-5 w-5" />
-            Upcoming Bookings
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-4">
-            <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-t-2 border-primary"></div>
-            <span className="ml-2">Loading bookings...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  // Filter bookings assigned to staff that are upcoming (not cancelled or completed)
-  const upcomingBookings = bookings
-    .filter(booking => 
-      booking.staff_assigned_id && 
-      booking.status !== 'cancelled' && 
-      booking.status !== 'completed' &&
-      booking.status !== 'no_show' &&
-      !booking.is_no_show &&
-      isAfter(parseISO(booking.start_time), new Date())
-    )
-    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
-    .slice(0, 3);
-  
-  // Get unacknowledged bookings
-  const unacknowledgedCount = upcomingBookings.filter(booking => 
-    booking.is_acknowledged !== true
-  ).length;
-  
-  // Check if a booking can be marked as no-show
-  const canMarkNoShow = (booking: BookingWithRelations) => {
-    if (!booking) return false;
+  useEffect(() => {
+    const fetchUpcomingBookings = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Get business ID for the staff member
+        const businessId = await getStaffBusinessId();
+        
+        if (!businessId) {
+          console.error("Could not get business ID for staff");
+          setError("Could not determine your business");
+          setIsLoading(false);
+          return;
+        }
+        
+        // Get the current user's ID
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          setError("Authentication required");
+          setIsLoading(false);
+          return;
+        }
+        
+        // Get current date in ISO format for comparison
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayIso = today.toISOString();
+        
+        // Fetch bookings where this staff member is assigned
+        // and the start time is in the future
+        const { data: bookings, error: bookingsError } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('business_id', businessId)
+          .eq('staff_assigned_id', user.id)
+          .gte('start_time', todayIso)
+          .order('start_time', { ascending: true })
+          .limit(5);
+          
+        if (bookingsError) {
+          console.error("Error fetching bookings:", bookingsError);
+          setError("Failed to load bookings");
+          setIsLoading(false);
+          return;
+        }
+        
+        setUpcomingBookings(bookings || []);
+      } catch (err) {
+        console.error("Error in booking widget:", err);
+        setError("An unexpected error occurred");
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    const bookingStartTime = parseISO(booking.start_time);
-    const minutesPast = differenceInMinutes(currentTime, bookingStartTime);
+    fetchUpcomingBookings();
     
-    return (
-      booking.status !== 'cancelled' && 
-      booking.status !== 'completed' &&
-      booking.status !== 'no_show' &&
-      !booking.is_no_show &&
-      minutesPast >= 10 // At least 10 minutes past the start time
-    );
-  };
+    // Set up a refresh interval
+    const interval = setInterval(fetchUpcomingBookings, 60000); // Refresh every minute
+    
+    return () => clearInterval(interval);
+  }, []);
   
-  const handleAcknowledge = async (booking: BookingWithRelations) => {
+  const formatBookingTime = (dateString: string) => {
     try {
-      await acknowledgeBooking.mutateAsync(booking.id);
+      const date = new Date(dateString);
+      return format(date, "MMM d, h:mm a");
     } catch (error) {
-      console.error("Error acknowledging booking:", error);
+      return "Invalid date";
     }
-  };
-  
-  const handleMarkNoShow = async (booking: BookingWithRelations) => {
-    try {
-      await markNoShow.mutateAsync(booking.id);
-    } catch (error) {
-      console.error("Error marking booking as no-show:", error);
-    }
-  };
-  
-  const getDateLabel = (date: string) => {
-    const bookingDate = parseISO(date);
-    if (isToday(bookingDate)) return "Today";
-    if (isTomorrow(bookingDate)) return "Tomorrow";
-    return format(bookingDate, "EEE, MMM d");
   };
   
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center">
-          <CalendarClock className="mr-2 h-5 w-5" />
-          Upcoming Bookings
-          {unacknowledgedCount > 0 && upcomingBookings.length > 0 && (
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div className="flex items-center">
+          <CalendarDays className="mr-2 h-5 w-5 text-muted-foreground" />
+          <CardTitle className="text-lg">Your Upcoming Bookings</CardTitle>
+          {upcomingBookings.length > 0 && (
             <Badge variant="destructive" className="ml-2">
-              {unacknowledgedCount} new
+              {upcomingBookings.length} new
             </Badge>
           )}
-        </CardTitle>
+        </div>
+        <Link to="/dashboard/bookings">
+          <Button variant="outline" size="sm">
+            <Filter className="mr-2 h-4 w-4" /> View All
+          </Button>
+        </Link>
       </CardHeader>
       <CardContent>
-        {upcomingBookings.length === 0 ? (
-          <div className="text-center py-4 text-muted-foreground">
-            No upcoming bookings found
+        {isLoading ? (
+          <div className="py-6 text-center">
+            <div className="h-8 w-8 mx-auto mb-2 border-4 border-t-transparent border-blue-400 rounded-full animate-spin"></div>
+            <p className="text-muted-foreground">Loading bookings...</p>
+          </div>
+        ) : error ? (
+          <div className="py-6 text-center">
+            <p className="text-red-500">{error}</p>
+          </div>
+        ) : upcomingBookings.length === 0 ? (
+          <div className="py-6 text-center">
+            <p className="text-muted-foreground">No upcoming bookings found</p>
+            <Link to="/dashboard/bookings" className="mt-4 inline-block">
+              <Button variant="outline" size="sm">
+                <PlusCircle className="mr-2 h-4 w-4" /> Create Booking
+              </Button>
+            </Link>
           </div>
         ) : (
           <div className="space-y-4">
-            {upcomingBookings.map(booking => (
-              <div key={booking.id} className="border-b pb-3 last:border-b-0">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-medium">{booking.title}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {booking.customer_name || 'No customer name'}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">{getDateLabel(booking.start_time)}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {format(parseISO(booking.start_time), 'h:mm a')}
-                    </p>
-                  </div>
+            {upcomingBookings.map((booking) => (
+              <div key={booking.id} className="flex items-start justify-between border-b pb-3">
+                <div>
+                  <h3 className="font-medium">{booking.title}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {formatBookingTime(booking.start_time)}
+                  </p>
                 </div>
-                <div className="flex justify-between mt-2">
-                  {!booking.is_acknowledged && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleAcknowledge(booking)}
-                      disabled={acknowledgeBooking.isPending}
-                    >
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Acknowledge
-                    </Button>
-                  )}
-                  {booking.is_acknowledged && (
-                    <div className="flex items-center text-sm text-green-600">
-                      <CheckCircle className="mr-1 h-4 w-4" />
-                      Acknowledged
-                    </div>
-                  )}
-                  
-                  {canMarkNoShow(booking) && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            variant="destructive" 
-                            size="sm"
-                            onClick={() => handleMarkNoShow(booking)}
-                            disabled={markNoShow.isPending}
-                          >
-                            <UserX className="mr-1 h-4 w-4" />
-                            No-Show
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Mark customer as no-show (10+ min late)</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                </div>
+                <Badge variant={booking.status === "confirmed" ? "default" : "outline"}>
+                  {booking.status === "confirmed" ? "Confirmed" : "Pending"}
+                </Badge>
               </div>
             ))}
           </div>
         )}
       </CardContent>
-      <CardFooter>
-        <Button variant="ghost" size="sm" asChild className="w-full">
-          <Link to="/dashboard/bookings">
-            View all bookings
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
-      </CardFooter>
     </Card>
   );
 };
