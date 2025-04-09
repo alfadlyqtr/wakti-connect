@@ -38,6 +38,7 @@ export const formatHours = (totalHours: number | null | undefined): string => {
 
 // Adding placeholder data exports to resolve import errors
 // These should eventually be replaced with real data fetching functions
-export const bookingData = [];
-export const servicePopularityData = [];
-export const subscriberData = [];
+export const bookingData: any[] = [];
+export const servicePopularityData: any[] = [];
+export const subscriberData: any[] = [];
+

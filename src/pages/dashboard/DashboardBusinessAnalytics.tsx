@@ -72,7 +72,8 @@ const DashboardBusinessAnalytics = () => {
     taskCompletionRate: 0,
     timeRange: "month" as const,
     growth: [],
-    serviceDistribution: []
+    serviceDistribution: [],
+    serviceLabels: [] // Add the missing serviceLabels property
   };
 
   return (
@@ -126,7 +127,7 @@ const DashboardBusinessAnalytics = () => {
                   <ServiceDistributionChart 
                     isLoading={isLoading} 
                     data={data?.serviceDistribution || []} 
-                    labels={data?.serviceLabels}
+                    labels={data?.serviceLabels || []}
                   />
                 </CardContent>
               </Card>

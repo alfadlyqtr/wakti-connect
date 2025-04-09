@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { UserRole } from "@/types/user";
 import { toast } from "@/components/ui/use-toast";
@@ -68,8 +69,11 @@ export const getStaffPermissions = async (): Promise<Record<string, boolean>> =>
     const cachedPermissions = localStorage.getItem('staffPermissions');
     if (cachedPermissions && (now - Number(localStorage.getItem('permissionsCacheTime') || 0) < CACHE_TTL)) {
       try {
-        staffPermissionsCache = JSON.parse(cachedPermissions);
-        return staffPermissionsCache as Record<string, boolean>;
+        const parsedPermissions = JSON.parse(cachedPermissions);
+        if (parsedPermissions && typeof parsedPermissions === 'object') {
+          staffPermissionsCache = parsedPermissions;
+          return staffPermissionsCache as Record<string, boolean>;
+        }
       } catch (e) {
         // If parsing fails, continue with database query
         console.warn('Failed to parse cached permissions');
@@ -98,7 +102,7 @@ export const getStaffPermissions = async (): Promise<Record<string, boolean>> =>
       return {};
     }
     
-    // Store in cache
+    // Store in cache - create empty object if permissions is null
     staffPermissionsCache = data.permissions || {};
     lastCacheTime = now;
     
@@ -308,3 +312,52 @@ export const getUserRole = async (): Promise<UserRole> => {
     return 'free';
   }
 };
+
+/**
+ * Get all jobs for a business
+ */
+export const getBusinessJobs = async (): Promise<any[]> => {
+  try {
+    // First get the business ID if we're staff
+    const businessId = await getStaffBusinessId();
+    
+    if (!businessId) {
+      // If not staff, check if we're a business owner
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('Not authenticated');
+      }
+      
+      // For business owners, just use their own ID
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('business_id', user.id)
+        .order('name');
+        
+      if (error) {
+        throw error;
+      }
+      
+      return data || [];
+    }
+    
+    // For staff, use the business ID we got
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*')
+      .eq('business_id', businessId)
+      .order('name');
+      
+    if (error) {
+      throw error;
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching business jobs:', error);
+    return [];
+  }
+};
+

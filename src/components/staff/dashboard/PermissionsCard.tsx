@@ -39,7 +39,7 @@ const PermissionsCard: React.FC<PermissionsProps> = ({ permissions = {} }) => {
     setIsRefreshing(true);
     try {
       await clearStaffCache();
-      const refreshedPermissions = getStaffPermissions();
+      const refreshedPermissions = await getStaffPermissions();
       setLocalPermissions(refreshedPermissions);
       toast({
         title: "Permissions Refreshed",
