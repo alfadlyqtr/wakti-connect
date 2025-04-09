@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import ConversationsList from "./ConversationsList";
 import { Button } from "@/components/ui/button";
+import MessageComposerDialog from "./chat/MessageComposerDialog";
 
 interface StaffCommunicationTabProps {
   businessId?: string | null;
@@ -28,7 +29,7 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  const { data: staffMembers, isLoading, error } = useQuery({
+  const { data: staffMembers, isLoading, error, refetch } = useQuery({
     queryKey: ['businessStaff', businessId],
     queryFn: async () => {
       if (!businessId) return [];
@@ -77,20 +78,11 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
     enabled: !!businessId
   });
   
-  // Function to handle messaging a staff member
-  const handleMessageStaff = (staffId: string) => {
-    if (!staffId) {
-      toast({
-        title: "Error",
-        description: "Invalid staff member ID",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    console.log("Navigating to staff chat with:", staffId);
-    // Navigate to the messaging page with the staff member's ID
-    navigate(`/dashboard/messages/${staffId}`);
+  const handleMessageSent = () => {
+    // Refresh the conversations list
+    setTimeout(() => {
+      navigate('/dashboard/messages');
+    }, 500);
   };
   
   return (
@@ -149,7 +141,7 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
           {staffMembers.map((staff) => (
             <Card 
               key={staff.id} 
-              className="overflow-hidden hover:bg-accent/5 transition-colors cursor-pointer"
+              className="overflow-hidden hover:bg-accent/5 transition-colors"
             >
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
@@ -168,15 +160,22 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
                     <h3 className="font-semibold truncate">{staff.name || 'Staff Member'}</h3>
                     <p className="text-sm text-muted-foreground truncate">{staff.role || 'Staff'}</p>
                   </div>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="flex items-center gap-1"
-                    onClick={() => handleMessageStaff(staff.staff_id)}
-                  >
-                    <MessageSquare className="h-3.5 w-3.5" />
-                    <span>Message</span>
-                  </Button>
+                  <MessageComposerDialog
+                    recipientId={staff.staff_id}
+                    recipientName={staff.name}
+                    recipientAvatar={staff.avatar_url || undefined}
+                    onMessageSent={handleMessageSent}
+                    triggerElement={
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="flex items-center gap-1"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        <span>Message</span>
+                      </Button>
+                    }
+                  />
                 </div>
               </CardContent>
             </Card>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Routes, Route, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -52,6 +51,19 @@ const DashboardMessagesHome = () => {
   
   const canSendMessages = userProfile?.account_type !== 'free';
   const isBusinessAccount = userProfile?.account_type === 'business';
+  
+  useEffect(() => {
+    const cleanupMessages = async () => {
+      try {
+        const { cleanupExpiredMessages } = await import('@/utils/messageExpiration');
+        await cleanupExpiredMessages();
+      } catch (error) {
+        console.error("Error cleaning up messages:", error);
+      }
+    };
+    
+    cleanupMessages();
+  }, []);
   
   useEffect(() => {
     if (isStaff) {

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 /**
  * Sends a message to another user
  * @param recipientId The ID of the message recipient
- * @param content Message content (limited to 20 characters)
+ * @param content Message content
  */
 export const sendMessage = async (recipientId: string, content: string): Promise<boolean> => {
   try {
@@ -12,10 +12,6 @@ export const sendMessage = async (recipientId: string, content: string): Promise
     
     if (!session?.user) {
       throw new Error("No active session");
-    }
-    
-    if (content.length > 20) {
-      throw new Error("Message content cannot exceed 20 characters");
     }
     
     // Check if user is allowed to send messages
@@ -43,53 +39,15 @@ export const sendMessage = async (recipientId: string, content: string): Promise
       .maybeSingle();
       
     if (recipientProfileError || !recipientProfileData) {
-      throw new Error("Recipient not found");
-    }
-    
-    const recipientProfile = recipientProfileData as { account_type: string };
-    
-    // If current user is business, allow them to message anyone
-    if (profile.account_type === 'business') {
-      // Insert the message directly - business users have this privilege
-      const { error } = await supabase
-        .from('messages')
-        .insert({
-          sender_id: session.user.id,
-          recipient_id: recipientId,
-          content,
-          is_read: false
-        });
-      
-      if (error) throw error;
-      return true;
-    }
-    
-    // If current user is an individual account and recipient is an individual account,
-    // check if they are contacts
-    if (profile.account_type === 'individual' && recipientProfile.account_type === 'individual') {
-      const { data: contactData } = await supabase
-        .from('user_contacts')
+      // Check if this is a staff member that might not have a profiles entry
+      const { data: staffData } = await supabase
+        .from('business_staff')
         .select('id')
-        .or(`and(user_id.eq.${session.user.id},contact_id.eq.${recipientId},status.eq.accepted),and(user_id.eq.${recipientId},contact_id.eq.${session.user.id},status.eq.accepted)`)
+        .eq('staff_id', recipientId)
         .maybeSingle();
         
-      if (!contactData) {
-        throw new Error("You can only message individual users who are in your contacts");
-      }
-    }
-    
-    // If current user is an individual account and recipient is a business account,
-    // check if user is subscribed to the business
-    if (profile.account_type === 'individual' && recipientProfile.account_type === 'business') {
-      const { data: subscriptionData } = await supabase
-        .from('business_subscribers')
-        .select('id')
-        .eq('subscriber_id', session.user.id)
-        .eq('business_id', recipientId)
-        .maybeSingle();
-        
-      if (!subscriptionData) {
-        throw new Error("You must be subscribed to this business to send messages");
+      if (!staffData) {
+        throw new Error("Recipient not found");
       }
     }
     
@@ -104,6 +62,8 @@ export const sendMessage = async (recipientId: string, content: string): Promise
       });
     
     if (error) throw error;
+    
+    console.log("Message sent successfully");
     
     return true;
   } catch (error) {
