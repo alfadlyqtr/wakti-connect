@@ -45,48 +45,25 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
     );
   }
 
-  // Group messages by date
-  const groupedMessages: {[date: string]: Message[]} = {};
-  
-  activeMessages.forEach(message => {
-    const date = new Date(message.createdAt).toDateString();
-    if (!groupedMessages[date]) {
-      groupedMessages[date] = [];
-    }
-    groupedMessages[date].push(message);
-  });
-
   return (
     <div className="space-y-4">
-      {Object.entries(groupedMessages).map(([date, messagesForDate], index) => (
-        <div key={date} className="space-y-2">
-          {index > 0 && (
-            <div className="flex justify-center my-4">
-              <div className="text-xs text-muted-foreground bg-muted/20 px-2 py-1 rounded-md">
-                {date}
-              </div>
-            </div>
-          )}
-          
-          {messagesForDate.map((message) => {
-            const isCurrentUser = message.senderId === currentUserId;
-            
-            return (
-              <div 
-                key={message.id}
-                className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
-              >
-                <MessageBubble 
-                  content={message.content} 
-                  isCurrentUser={isCurrentUser} 
-                  senderName={message.senderName}
-                  timestamp={message.createdAt}
-                />
-              </div>
-            );
-          })}
-        </div>
-      ))}
+      {activeMessages.map((message) => {
+        const isCurrentUser = message.senderId === currentUserId;
+        
+        return (
+          <div 
+            key={message.id}
+            className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+          >
+            <MessageBubble 
+              content={message.content} 
+              isCurrentUser={isCurrentUser} 
+              senderName={message.senderName}
+              timestamp={message.createdAt}
+            />
+          </div>
+        );
+      })}
       <div ref={messagesEndRef} />
     </div>
   );

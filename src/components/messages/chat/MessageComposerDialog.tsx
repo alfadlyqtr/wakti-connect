@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { 
   Dialog, 
   DialogContent, 
@@ -16,10 +16,6 @@ import { useToast } from "@/components/ui/use-toast";
 import { useVoiceInteraction } from "@/hooks/useVoiceInteraction";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useMessaging } from "@/hooks/useMessaging";
-import RecordingCountdown from "./RecordingCountdown";
-import MessageList from "./MessageList";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 interface MessageComposerDialogProps {
   recipientId: string;
@@ -40,31 +36,20 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  const { sendMessage, isSending, messages, isLoadingMessages } = useMessaging(recipientId);
-  
-  const { data: currentUserId } = useQuery({
-    queryKey: ['currentUserId'],
-    queryFn: async () => {
-      const { data } = await supabase.auth.getSession();
-      return data.session?.user?.id;
-    },
-    enabled: isOpen
-  });
+  const { sendMessage, isSending } = useMessaging({});
   
   const {
     isListening,
     transcript,
     supportsVoice,
     startListening,
-    stopListening,
-    remainingTime
+    stopListening
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
       if (text) {
         setMessage(prev => prev + (prev && !prev.endsWith(' ') ? ' ' : '') + text);
       }
-    },
-    maxRecordingDuration: 10 // 10 seconds max recording
+    }
   });
   
   const handleSendMessage = async () => {
@@ -79,6 +64,7 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
       });
       
       setMessage("");
+      setIsOpen(false);
       
       if (onMessageSent) {
         onMessageSent();
@@ -101,24 +87,6 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
     }
   };
   
-  useEffect(() => {
-    if (isOpen) {
-      // Mark conversation as read when opened
-      const markAsRead = async () => {
-        try {
-          const { markConversationAsRead } = useMessaging();
-          if (recipientId) {
-            await markConversationAsRead(recipientId);
-          }
-        } catch (error) {
-          console.error("Error marking conversation as read:", error);
-        }
-      };
-      
-      markAsRead();
-    }
-  }, [isOpen, recipientId]);
-  
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -129,7 +97,7 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
         )}
       </DialogTrigger>
       
-      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold overflow-hidden">
@@ -143,37 +111,11 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
                 recipientName.charAt(0).toUpperCase()
               )}
             </div>
-            <span>Conversation with {recipientName}</span>
+            <span>Message to {recipientName}</span>
           </DialogTitle>
         </DialogHeader>
         
-        <div className="flex-1 overflow-y-auto py-4 px-1">
-          {messages && messages.length > 0 ? (
-            <MessageList messages={messages} currentUserId={currentUserId} />
-          ) : isLoadingMessages ? (
-            <div className="flex justify-center items-center h-full">
-              <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          ) : (
-            <div className="flex justify-center items-center h-40 text-center text-muted-foreground">
-              <div>
-                <p>No messages yet</p>
-                <p className="text-sm">Start the conversation by sending a message</p>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        <div className="relative mt-2">
-          {isListening && (
-            <div className="absolute -top-14 left-0 right-0">
-              <RecordingCountdown 
-                maxDuration={10} 
-                isRecording={isListening} 
-                onTimeUp={stopListening} 
-              />
-            </div>
-          )}
+        <div className="relative">
           <Textarea
             placeholder="Type your message here..."
             value={message}
@@ -201,7 +143,7 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
           Messages expire after 24 hours. Press Enter to send, Shift+Enter for new line.
         </p>
         
-        <div className="flex justify-between gap-2 mt-2">
+        <div className="flex justify-between gap-2">
           <div className="flex items-center">
             {supportsVoice && (
               <Button
@@ -220,7 +162,7 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
           <div className="flex gap-2">
             <DialogClose asChild>
               <Button variant="outline" disabled={isSending}>
-                Close
+                Cancel
               </Button>
             </DialogClose>
             <Button 

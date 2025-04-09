@@ -1,23 +1,17 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface VoiceInteractionOptions {
   onTranscriptComplete?: (transcript: string) => void;
   continuousListening?: boolean;
-  maxRecordingDuration?: number; // in seconds
 }
 
 export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
-  const { 
-    onTranscriptComplete, 
-    continuousListening = false,
-    maxRecordingDuration = 10 // Default to 10 seconds
-  } = options;
+  const { onTranscriptComplete, continuousListening = false } = options;
   
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState<Error | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Check if browser supports speech recognition
   const supportsVoice = typeof window !== 'undefined' && 
@@ -44,15 +38,6 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       recognition.onstart = () => {
         setIsListening(true);
         setTranscript('');
-        
-        // Set a timer to automatically stop recording after maxRecordingDuration
-        if (maxRecordingDuration > 0) {
-          timerRef.current = setTimeout(() => {
-            if (recognition) {
-              recognition.stop();
-            }
-          }, maxRecordingDuration * 1000);
-        }
       };
       
       recognition.onresult = (event: any) => {
@@ -71,11 +56,6 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       recognition.onend = () => {
         setIsListening(false);
         
-        if (timerRef.current) {
-          clearTimeout(timerRef.current);
-          timerRef.current = null;
-        }
-        
         if (onTranscriptComplete && transcript) {
           onTranscriptComplete(transcript);
         }
@@ -86,18 +66,12 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
       setError(err instanceof Error ? err : new Error('Unknown error'));
       setIsListening(false);
     }
-  }, [continuousListening, onTranscriptComplete, supportsVoice, transcript, maxRecordingDuration]);
+  }, [continuousListening, onTranscriptComplete, supportsVoice, transcript]);
   
   const stopListening = useCallback(() => {
     if (recognition) {
       recognition.stop();
     }
-    
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-    
     setIsListening(false);
   }, []);
   
@@ -106,10 +80,6 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     return () => {
       if (recognition) {
         recognition.stop();
-      }
-      
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
       }
     };
   }, []);
@@ -120,7 +90,6 @@ export const useVoiceInteraction = (options: VoiceInteractionOptions = {}) => {
     supportsVoice,
     error,
     startListening,
-    stopListening,
-    remainingTime: maxRecordingDuration
+    stopListening
   };
 };

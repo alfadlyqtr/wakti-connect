@@ -78,14 +78,10 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
     enabled: !!businessId
   });
   
-  const handleViewConversation = (staffId: string) => {
-    navigate(`/dashboard/messages/${staffId}`);
-  };
-  
   const handleMessageSent = () => {
     // Refresh the conversations list
     setTimeout(() => {
-      refetch();
+      navigate('/dashboard/messages');
     }, 500);
   };
   
@@ -145,8 +141,7 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
           {staffMembers.map((staff) => (
             <Card 
               key={staff.id} 
-              className="overflow-hidden hover:bg-accent/5 transition-colors cursor-pointer group"
-              onClick={() => handleViewConversation(staff.staff_id)}
+              className="overflow-hidden hover:bg-accent/5 transition-colors"
             >
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
@@ -165,27 +160,22 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
                     <h3 className="font-semibold truncate">{staff.name || 'Staff Member'}</h3>
                     <p className="text-sm text-muted-foreground truncate">{staff.role || 'Staff'}</p>
                   </div>
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <MessageComposerDialog
-                      recipientId={staff.staff_id}
-                      recipientName={staff.name}
-                      recipientAvatar={staff.avatar_url || undefined}
-                      onMessageSent={handleMessageSent}
-                      triggerElement={
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="flex items-center gap-1"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent card click
-                          }}
-                        >
-                          <MessageSquare className="h-3.5 w-3.5" />
-                          <span>Message</span>
-                        </Button>
-                      }
-                    />
-                  </div>
+                  <MessageComposerDialog
+                    recipientId={staff.staff_id}
+                    recipientName={staff.name}
+                    recipientAvatar={staff.avatar_url || undefined}
+                    onMessageSent={handleMessageSent}
+                    triggerElement={
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="flex items-center gap-1"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        <span>Message</span>
+                      </Button>
+                    }
+                  />
                 </div>
               </CardContent>
             </Card>
