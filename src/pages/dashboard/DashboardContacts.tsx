@@ -14,7 +14,9 @@ import PendingRequestsList from "@/components/contacts/PendingRequestsList";
 import AddContactDialog from "@/components/contacts/AddContactDialog";
 import AutoApproveToggle from "@/components/contacts/AutoApproveToggle";
 import StaffSyncSection from "@/components/contacts/StaffSyncSection";
+import ContactsStaffRestriction from "@/components/contacts/ContactsStaffRestriction";
 import { supabase } from "@/integrations/supabase/client";
+import { getStaffBusinessId } from "@/utils/staffUtils";
 
 const DashboardContacts = () => {
   const { 
@@ -35,19 +37,41 @@ const DashboardContacts = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddContactOpen, setIsAddContactOpen] = useState(false);
   const [isBusiness, setIsBusiness] = useState(false);
+  const [isStaff, setIsStaff] = useState(false);
+  const [businessId, setBusinessId] = useState<string | null>(null);
+  const [businessName, setBusinessName] = useState<string | null>(null);
 
   useEffect(() => {
     const checkUserType = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
+        // Check if user is a business owner
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('account_type')
+          .select('account_type, business_name')
           .eq('id', data.session.user.id)
           .single();
           
         if (!error && profile) {
           setIsBusiness(profile.account_type === 'business');
+        }
+        
+        // Check if user is a staff member
+        const staffBizId = await getStaffBusinessId();
+        if (staffBizId) {
+          setIsStaff(true);
+          setBusinessId(staffBizId);
+          
+          // Get business name
+          const { data: bizData } = await supabase
+            .from('profiles')
+            .select('business_name, full_name')
+            .eq('id', staffBizId)
+            .single();
+            
+          if (bizData) {
+            setBusinessName(bizData.business_name || bizData.full_name || "your business");
+          }
         }
       }
     };
@@ -96,6 +120,44 @@ const DashboardContacts = () => {
                email.toLowerCase().includes(searchQuery.toLowerCase());
       })
     : contacts;
+
+  // If user is a staff member, show restricted view
+  if (isStaff) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">Contacts</h1>
+          <p className="text-muted-foreground">
+            View your staff contacts.
+          </p>
+        </div>
+        
+        <ContactsStaffRestriction 
+          businessId={businessId || undefined}
+          businessName={businessName || undefined}
+        />
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Staff Contacts</CardTitle>
+            <CardDescription>
+              These contacts are automatically managed by the system.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ContactsList 
+              contacts={filteredContacts || []} 
+              isLoading={isLoading}
+              isSyncing={isSyncingContacts}
+              onRefresh={refreshContacts}
+              // Staff members cannot delete contacts
+              onDeleteContact={undefined}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
