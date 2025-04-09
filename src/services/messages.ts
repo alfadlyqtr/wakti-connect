@@ -18,6 +18,8 @@ export const sendMessage = async (recipientId: string, content: string) => {
       throw new Error("No authenticated user found");
     }
     
+    console.log("Sending message to:", recipientId, "Content:", content);
+    
     // Insert the message
     const { data, error } = await supabase
       .from('messages')
@@ -34,6 +36,7 @@ export const sendMessage = async (recipientId: string, content: string) => {
       throw error;
     }
     
+    console.log("Message sent successfully:", data);
     return data;
     
   } catch (error) {
@@ -77,10 +80,13 @@ export const markMessageAsRead = async (messageId: string) => {
  */
 export const getMessages = async (conversationUserId?: string): Promise<Message[]> => {
   try {
+    console.log("Getting messages for conversation with:", conversationUserId);
+    
     // Get the current user's session
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
+      console.log("No authenticated user found");
       throw new Error("No authenticated user found");
     }
     
@@ -111,6 +117,8 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       throw error;
     }
     
+    console.log(`Retrieved ${data?.length || 0} messages for conversation with ${conversationUserId || 'all users'}`);
+    
     // Check if these are staff messages
     const isStaff = localStorage.getItem('userRole') === 'staff';
     
@@ -125,6 +133,7 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         .eq('status', 'active');
         
       if (staffData && Array.isArray(staffData)) {
+        console.log("Staff profiles found:", staffData.length);
         staffData.forEach(staff => {
           staffProfiles[staff.staff_id] = {
             name: staff.name,
@@ -156,12 +165,12 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         (senderInfo && typeof senderInfo === 'object' ? (senderInfo as any)?.avatar_url : undefined);
       
       return {
-        id: msg.id,
-        content: msg.content,
-        senderId: msg.sender_id,
-        recipientId: msg.recipient_id,
-        isRead: msg.is_read,
-        createdAt: msg.created_at,
+        id: msg.id || '',
+        content: msg.content || '',
+        senderId: msg.sender_id || '',
+        recipientId: msg.recipient_id || '',
+        isRead: msg.is_read || false,
+        createdAt: msg.created_at || '',
         senderName: senderName,
         senderAvatar: senderAvatar
       };

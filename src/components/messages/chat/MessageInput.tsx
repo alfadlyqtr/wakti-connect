@@ -2,110 +2,109 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, Send, Loader2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Send, MapPin } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
 interface MessageInputProps {
-  onSendMessage: (content: string) => Promise<void>;
-  onSendLocation?: (location: string) => Promise<void>;
+  onSendMessage: (content: string) => void;
+  onSendLocation?: (location: string) => void;
   canShareLocation?: boolean;
   isSending: boolean;
 }
 
-const MessageInput: React.FC<MessageInputProps> = ({ 
-  onSendMessage, 
-  onSendLocation, 
+const MessageInput: React.FC<MessageInputProps> = ({
+  onSendMessage,
+  onSendLocation,
   canShareLocation = false,
-  isSending 
+  isSending
 }) => {
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
+  const [location, setLocation] = useState('');
   const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
-  const [locationInput, setLocationInput] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || isSending) return;
-    
-    await onSendMessage(message);
-    setMessage("");
+    if (message.trim() && !isSending) {
+      onSendMessage(message.trim());
+      setMessage('');
+    }
   };
 
-  const handleSendLocation = async () => {
-    if (!locationInput.trim() || isSending) return;
-    
-    if (onSendLocation) {
-      await onSendLocation(locationInput);
+  const handleLocationSubmit = () => {
+    if (location.trim() && onSendLocation) {
+      onSendLocation(location.trim());
+      setLocation('');
+      setIsLocationDialogOpen(false);
     }
-    
-    setLocationInput("");
-    setIsLocationDialogOpen(false);
   };
 
   return (
-    <div className="border-t p-3">
-      <form onSubmit={handleSubmit} className="flex items-center gap-2">
-        <div className="flex items-center gap-2">
-          {canShareLocation && onSendLocation && (
-            <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="text-muted-foreground"
-                >
-                  <MapPin className="h-5 w-5" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Share Location</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Enter location or address</Label>
-                    <Input
-                      id="location"
-                      value={locationInput}
-                      onChange={(e) => setLocationInput(e.target.value)}
-                      placeholder="e.g. 123 Main St, City, Country"
-                    />
-                  </div>
-                  <Button 
-                    onClick={handleSendLocation}
-                    disabled={!locationInput.trim() || isSending}
-                    className="w-full"
-                  >
-                    {isSending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>Share Location</>
-                    )}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
-        </div>
-        
+    <div className="p-3 border-t bg-background">
+      <form onSubmit={handleSubmit} className="flex gap-2">
         <Input
+          placeholder="Type a message..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type your message..."
-          disabled={isSending}
           className="flex-1"
+          disabled={isSending}
         />
-        
+
+        {canShareLocation && onSendLocation && (
+          <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                type="button" 
+                size="icon" 
+                variant="outline"
+                disabled={isSending}
+              >
+                <MapPin className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Share Location</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    placeholder="Enter location (e.g., Doha, Qatar)"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button 
+                  type="button" 
+                  onClick={handleLocationSubmit}
+                  disabled={!location.trim()}
+                >
+                  Share Location
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
         <Button 
           type="submit" 
-          size="icon" 
+          size="icon"
           disabled={!message.trim() || isSending}
         >
           {isSending ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
           ) : (
-            <Send className="h-5 w-5" />
+            <Send className="h-4 w-4" />
           )}
         </Button>
       </form>
