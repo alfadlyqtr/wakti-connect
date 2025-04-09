@@ -1,10 +1,8 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 
 const Footer = () => {
-  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
   
   return (
@@ -19,10 +17,10 @@ const Footer = () => {
                 alt="WAKTI Logo" 
                 className="w-8 h-8 rounded-md"
               />
-              <span className="font-bold text-lg">{t('common.wakti')}</span>
+              <span className="font-bold text-lg">WAKTI</span>
             </div>
             <p className="text-muted-foreground mb-4">
-              {t('footer.description')}
+              The all-in-one business and productivity management platform
             </p>
             <div className="flex space-x-4">
               <a href="https://facebook.com/waktiqa" target="_blank" rel="noopener noreferrer" className="text-foreground hover:text-primary">
@@ -48,59 +46,59 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-medium text-lg mb-4">{t('footer.quickLinks')}</h3>
+            <h3 className="font-medium text-lg mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="text-muted-foreground hover:text-primary">{t('footer.home')}</Link>
+                <Link to="/" className="text-muted-foreground hover:text-primary">Home</Link>
               </li>
               <li>
-                <Link to="/features" className="text-muted-foreground hover:text-primary">{t('footer.features')}</Link>
+                <Link to="/features" className="text-muted-foreground hover:text-primary">Features</Link>
               </li>
               <li>
-                <Link to="/pricing" className="text-muted-foreground hover:text-primary">{t('footer.pricing')}</Link>
+                <Link to="/pricing" className="text-muted-foreground hover:text-primary">Pricing</Link>
               </li>
               <li>
-                <Link to="/about" className="text-muted-foreground hover:text-primary">{t('footer.about')}</Link>
+                <Link to="/about" className="text-muted-foreground hover:text-primary">About</Link>
               </li>
               <li>
-                <Link to="/contact" className="text-muted-foreground hover:text-primary">{t('footer.contact')}</Link>
+                <Link to="/contact" className="text-muted-foreground hover:text-primary">Contact</Link>
               </li>
             </ul>
           </div>
 
           {/* Legal */}
           <div>
-            <h3 className="font-medium text-lg mb-4">{t('footer.legal')}</h3>
+            <h3 className="font-medium text-lg mb-4">Legal</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/terms" className="text-muted-foreground hover:text-primary">{t('footer.terms')}</Link>
+                <Link to="/terms" className="text-muted-foreground hover:text-primary">Terms of Service</Link>
               </li>
               <li>
-                <Link to="/privacy" className="text-muted-foreground hover:text-primary">{t('footer.privacy')}</Link>
+                <Link to="/privacy" className="text-muted-foreground hover:text-primary">Privacy Policy</Link>
               </li>
               <li>
-                <Link to="/faq" className="text-muted-foreground hover:text-primary">{t('footer.faq')}</Link>
+                <Link to="/faq" className="text-muted-foreground hover:text-primary">FAQ</Link>
               </li>
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-            <h3 className="font-medium text-lg mb-4">{t('footer.contactUs')}</h3>
+            <h3 className="font-medium text-lg mb-4">Contact Us</h3>
             <address className="not-italic">
-              <p className="text-muted-foreground mb-2">{t('footer.address')}</p>
-              <p className="text-muted-foreground mb-2">{t('footer.email')}: info@wakti.qa</p>
-              <p className="text-muted-foreground mb-2">{t('footer.phone')}: +974 5000 1111</p>
+              <p className="text-muted-foreground mb-2">Doha, Qatar</p>
+              <p className="text-muted-foreground mb-2">Email: info@wakti.qa</p>
+              <p className="text-muted-foreground mb-2">Phone: +974 5000 1111</p>
             </address>
           </div>
         </div>
 
         <div className="border-t border-border mt-12 pt-8 text-center">
           <p className="text-muted-foreground text-sm">
-            © {currentYear} {t('common.wakti')}. {t('footer.allRightsReserved')}
+            © {currentYear} WAKTI. All Rights Reserved
           </p>
           <p className="text-muted-foreground text-xs mt-2">
-            {t('footer.designedBy')} <a href="https://tmw.qa/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">TMW</a>
+            Designed by <a href="https://tmw.qa/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">TMW</a>
           </p>
         </div>
       </div>

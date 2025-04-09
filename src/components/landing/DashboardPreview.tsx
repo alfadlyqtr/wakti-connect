@@ -7,10 +7,10 @@ const DashboardPreview = () => {
       <div className="container mx-auto max-w-6xl animate-fade-in">
         <div className="rounded-xl overflow-hidden border border-border shadow-xl bg-gradient-to-b from-background to-muted/50">
           <div className="w-full h-[500px] bg-grid-pattern flex items-center justify-center relative">
-            {/* Dashboard Preview Image */}
+            {/* Business Dashboard Preview Image */}
             <img 
               src="/lovable-uploads/dashboard-preview.png" 
-              alt="WAKTI Dashboard Preview" 
+              alt="WAKTI Business Dashboard Preview" 
               className="w-full h-full object-contain p-4"
               onError={(e) => {
                 // If the image fails to load, show the fallback content
@@ -27,8 +27,8 @@ const DashboardPreview = () => {
               className="absolute inset-0 flex flex-col items-center justify-center p-8" 
               style={{ display: 'none' }}
             >
-              <h3 className="text-2xl font-medium mb-4">Dashboard Preview</h3>
-              <p className="text-muted-foreground text-center">Experience the powerful WAKTI dashboard with task management, scheduling, and business tools in one place.</p>
+              <h3 className="text-2xl font-medium mb-4">Business Dashboard Preview</h3>
+              <p className="text-muted-foreground text-center">Experience the powerful WAKTI dashboard with advanced business analytics, staff management, and booking tools all in one place.</p>
             </div>
           </div>
         </div>
