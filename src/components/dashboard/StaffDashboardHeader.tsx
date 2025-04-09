@@ -106,7 +106,7 @@ const StaffDashboardHeader: React.FC<StaffDashboardHeaderProps> = ({ staffId }) 
         </div>
         
         <div className="flex flex-col sm:flex-row sm:items-center text-xs text-muted-foreground gap-y-1 gap-x-3 mt-1">
-          <span>{businessInfo?.position}</span>
+          <span>{businessInfo?.position || 'Staff Member'}</span>
           
           {joinedDate && (
             <span className="flex items-center gap-1">
