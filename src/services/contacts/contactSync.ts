@@ -4,17 +4,19 @@ import { toast } from "@/components/ui/use-toast";
 
 export const ensureStaffContacts = async () => {
   try {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session?.user) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session?.user) {
       console.log("No user session found");
       return { success: false, message: "Not logged in" };
     }
+    
+    const user = sessionData.session.user;
     
     // Check if user is staff
     const { data: staffData } = await supabase
       .from('business_staff')
       .select('business_id, id')
-      .eq('staff_id', session.user.id)
+      .eq('staff_id', user.id)
       .eq('status', 'active')
       .maybeSingle();
       
@@ -28,7 +30,7 @@ export const ensureStaffContacts = async () => {
       .from('user_contacts')
       .upsert([
         {
-          user_id: session.user.id,
+          user_id: user.id,
           contact_id: staffData.business_id,
           status: 'accepted',
           staff_relation_id: staffData.id
@@ -41,7 +43,7 @@ export const ensureStaffContacts = async () => {
       .select('id, staff_id')
       .eq('business_id', staffData.business_id)
       .eq('status', 'active')
-      .neq('staff_id', session.user.id);
+      .neq('staff_id', user.id);
       
     if (otherStaffError) {
       console.error("Error fetching other staff:", otherStaffError);
@@ -54,7 +56,7 @@ export const ensureStaffContacts = async () => {
         .from('user_contacts')
         .upsert([
           {
-            user_id: session.user.id,
+            user_id: user.id,
             contact_id: staff.staff_id,
             status: 'accepted',
             staff_relation_id: staff.id
@@ -71,16 +73,18 @@ export const ensureStaffContacts = async () => {
 
 export const forceSyncStaffContacts = async () => {
   try {
-    const { data: session } = await supabase.auth.getSession();
-    if (!session?.user) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session?.user) {
       return { success: false, message: "Not logged in" };
     }
+    
+    const user = sessionData.session.user;
     
     // Check if this is a staff account
     const { data: staffData } = await supabase
       .from('business_staff')
       .select('business_id, id')
-      .eq('staff_id', session.user.id)
+      .eq('staff_id', user.id)
       .eq('status', 'active')
       .maybeSingle();
       
@@ -101,4 +105,11 @@ export const forceSyncStaffContacts = async () => {
     console.error("Error in forceSyncStaffContacts:", error);
     return { success: false, message: String(error) };
   }
+};
+
+// Adding missing exports that other files are importing
+export const syncStaffBusinessContacts = forceSyncStaffContacts;
+export const getAutoAddStaffSetting = async () => {
+  // This is a placeholder implementation
+  return true;
 };

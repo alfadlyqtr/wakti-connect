@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getStaffRelationId } from "@/utils/staffUtils";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 
 export const useStaffRelationFetcher = () => {
   const { toast } = useToast();
@@ -76,7 +76,7 @@ export const useStaffRelationFetcher = () => {
           .select('id, permissions')
           .eq('staff_id', user.id)
           .eq('status', 'active')
-          .single();
+          .maybeSingle();
           
         if (error) {
           console.error("Error fetching staff relation:", error);

@@ -1,7 +1,7 @@
 
 // Business reports utilities for real data handling
 
-// Replace dummy data with empty arrays that will be populated from the database
+// Color palette for charts
 export const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 // Utility function to calculate growth percentage
@@ -35,3 +35,9 @@ export const formatHours = (totalHours: number | null | undefined): string => {
   
   return `${hours}h ${minutes}m`;
 };
+
+// Adding placeholder data exports to resolve import errors
+// These should eventually be replaced with real data fetching functions
+export const bookingData = [];
+export const servicePopularityData = [];
+export const subscriberData = [];
