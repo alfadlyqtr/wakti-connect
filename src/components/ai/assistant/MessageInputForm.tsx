@@ -18,6 +18,9 @@ interface MessageInputFormProps {
   onPromptClick?: (prompt: string) => void;
   onFileUpload?: (file: File) => void;
   onCameraCapture?: () => void;
+  onStartVoiceInput?: () => void;
+  onStopVoiceInput?: () => void;
+  isListening?: boolean;
 }
 
 export const MessageInputForm: React.FC<MessageInputFormProps> = ({
@@ -29,17 +32,20 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   showSuggestions,
   onPromptClick,
   onFileUpload,
-  onCameraCapture
+  onCameraCapture,
+  onStartVoiceInput,
+  onStopVoiceInput,
+  isListening = false
 }) => {
   const isMobile = useIsMobile();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const {
-    isListening,
+    isListening: internalIsListening,
     transcript,
     supportsVoice,
-    startListening,
-    stopListening
+    startListening: internalStartListening,
+    stopListening: internalStopListening
   } = useVoiceInteraction({
     onTranscriptComplete: (text) => {
       if (text) {
@@ -49,6 +55,9 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
     }
   });
 
+  // Use external listening state if provided, otherwise use internal state
+  const activeListening = onStartVoiceInput && onStopVoiceInput ? isListening : internalIsListening;
+  
   React.useEffect(() => {
     if (transcript) {
       const updatedText = inputMessage + (inputMessage && !inputMessage.endsWith(' ') && !transcript.startsWith(' ') ? ' ' : '') + transcript;
@@ -81,6 +90,22 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
     }
   };
 
+  const handleVoiceClick = () => {
+    if (onStartVoiceInput && onStopVoiceInput) {
+      if (isListening) {
+        onStopVoiceInput();
+      } else {
+        onStartVoiceInput();
+      }
+    } else {
+      if (internalIsListening) {
+        internalStopListening();
+      } else {
+        internalStartListening();
+      }
+    }
+  };
+
   return (
     <form 
       onSubmit={(e) => {
@@ -100,9 +125,9 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
             onKeyDown={handleKeyDown}
             className={cn(
               "min-h-[45px] sm:min-h-[60px] max-h-[120px] sm:max-h-[180px] resize-none py-2 pr-12 text-xs sm:text-sm",
-              isListening && "bg-primary/5 border-primary/20"
+              activeListening && "bg-primary/5 border-primary/20"
             )}
-            disabled={isLoading || isListening}
+            disabled={isLoading || activeListening}
           />
           <div className="absolute bottom-2 right-2 flex gap-1">
             {supportsVoice && (
@@ -112,13 +137,13 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
                 size="icon"
                 className={cn(
                   "h-6 w-6 sm:h-8 sm:w-8 rounded-full", 
-                  isListening && "bg-primary text-white hover:bg-primary hover:text-white"
+                  activeListening && "bg-primary text-white hover:bg-primary hover:text-white"
                 )}
-                onClick={isListening ? stopListening : startListening}
+                onClick={handleVoiceClick}
                 disabled={isLoading}
               >
                 <Mic className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="sr-only">{isListening ? "Stop recording" : "Start recording"}</span>
+                <span className="sr-only">{activeListening ? "Stop recording" : "Start recording"}</span>
               </Button>
             )}
           </div>

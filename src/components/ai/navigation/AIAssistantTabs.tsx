@@ -10,7 +10,6 @@ import { Zap, MessageSquare, Wrench, History, Bot, Sparkles, BookOpen, Briefcase
 import { cn } from "@/lib/utils";
 import { RoleSpecificKnowledge } from "../tools/RoleSpecificKnowledge";
 import { KnowledgeProfileToolCard } from "../tools/KnowledgeProfileToolCard";
-import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface AIAssistantTabsProps {
@@ -42,7 +41,6 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
   activeTab,
   setActiveTab
 }) => {
-  const { t } = useTranslation();
   const isMobile = useIsMobile();
   
   const handleUseDocumentContent = (content: string) => {
@@ -72,11 +70,11 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
 
   const getRoleTitle = () => {
     switch (selectedRole) {
-      case "student": return t("ai.roles.student", "Student Assistant");
+      case "student": return "Student Assistant";
       case "employee": 
-      case "writer": return t("ai.roles.writer", "Creative Assistant");
-      case "business_owner": return t("ai.roles.business", "Business Assistant");
-      default: return t("ai.roles.general", "AI Assistant");
+      case "writer": return "Creative Assistant";
+      case "business_owner": return "Business Assistant";
+      default: return "AI Assistant";
     }
   };
 
@@ -116,19 +114,19 @@ export const AIAssistantTabs: React.FC<AIAssistantTabsProps> = ({
         <TabsList className="grid grid-cols-4 w-full max-w-md mx-auto overflow-x-auto">
           <TabsTrigger value="chat" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
             <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span>{t("ai.tabs.chat", "Chat")}</span>
+            <span>Chat</span>
           </TabsTrigger>
           <TabsTrigger value="tools" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
             <Wrench className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span>{t("ai.tabs.tools", "Tools")}</span>
+            <span>Tools</span>
           </TabsTrigger>
           <TabsTrigger value="knowledge" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
             <BookCopy className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span>{t("ai.tabs.knowledge", "Knowledge")}</span>
+            <span>Knowledge</span>
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm">
             <History className="h-3 w-3 sm:h-4 sm:w-4" />
-            <span>{t("ai.tabs.history", "History")}</span>
+            <span>History</span>
           </TabsTrigger>
         </TabsList>
         
