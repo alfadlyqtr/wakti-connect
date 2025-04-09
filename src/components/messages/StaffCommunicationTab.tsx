@@ -71,6 +71,12 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
     enabled: !!businessId
   });
   
+  // Function to handle messaging a staff member
+  const handleMessageStaff = (staffId: string) => {
+    // Navigate to the messaging page with the staff member's ID
+    navigate(`/dashboard/messages/${staffId}`);
+  };
+  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -128,7 +134,6 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
             <Card 
               key={staff.id} 
               className="overflow-hidden hover:bg-accent/5 transition-colors cursor-pointer"
-              onClick={() => navigate(`/dashboard/messages/${staff.staff_id}`)}
             >
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
@@ -139,7 +144,15 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
                     <h3 className="font-semibold truncate">{staff.name}</h3>
                     <p className="text-sm text-muted-foreground truncate">{staff.role}</p>
                   </div>
-                  <Button size="sm" variant="outline" className="flex items-center gap-1">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex items-center gap-1"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent card click
+                      handleMessageStaff(staff.staff_id);
+                    }}
+                  >
                     <MessageSquare className="h-3.5 w-3.5" />
                     <span>Message</span>
                   </Button>

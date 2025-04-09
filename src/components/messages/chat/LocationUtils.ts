@@ -1,18 +1,17 @@
 
-export const generateLocationMessage = (locationValue: string, mapsUrl: string): string => {
-  return `📍 ${locationValue}\n${mapsUrl}`;
+/**
+ * Generates a Google Maps URL from a location string
+ * @param location String in format "latitude,longitude"
+ */
+export const generateGoogleMapsUrl = (location: string): string => {
+  return `https://www.google.com/maps?q=${location}`;
 };
 
-export const isLocationMessage = (message: string): boolean => {
-  return message.startsWith('📍') && message.includes('maps.google.com');
-};
-
-export const parseLocationMessage = (message: string): { locationName: string, mapsUrl: string } | null => {
-  const lines = message.split('\n');
-  if (lines.length !== 2) return null;
-  
-  const locationName = lines[0].replace('📍 ', '');
-  const mapsUrl = lines[1];
-  
-  return { locationName, mapsUrl };
+/**
+ * Creates a formatted message with location information
+ * @param location Raw location string
+ * @param mapsUrl Google Maps URL
+ */
+export const generateLocationMessage = (location: string, mapsUrl: string): string => {
+  return `📍 Shared Location: ${mapsUrl}`;
 };

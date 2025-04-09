@@ -22,7 +22,8 @@ const ChatInterface = () => {
     sendMessage,
     isSending,
     canMessage,
-    isCheckingPermission
+    isCheckingPermission,
+    markConversationAsRead
   } = useMessaging({
     otherUserId: userId
   });
@@ -42,7 +43,7 @@ const ChatInterface = () => {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('display_name, full_name, avatar_url, account_type')
+        .select('display_name, full_name, avatar_url, account_type, business_name')
         .eq('id', userId)
         .maybeSingle();
         
@@ -68,8 +69,19 @@ const ChatInterface = () => {
     },
   });
   
+  // Mark messages as read when component mounts
+  React.useEffect(() => {
+    if (userId) {
+      markConversationAsRead(userId);
+    }
+  }, [userId, markConversationAsRead]);
+  
   const canShareLocation = userProfile?.account_type !== 'free';
-  const displayName = otherUserProfile?.display_name || otherUserProfile?.full_name || 'User';
+  const displayName = 
+    otherUserProfile?.business_name || 
+    otherUserProfile?.display_name || 
+    otherUserProfile?.full_name || 
+    'User';
   
   const handleSendMessage = async (content: string) => {
     if (!userId) return;

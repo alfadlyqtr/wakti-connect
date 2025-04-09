@@ -1,105 +1,94 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Send, MapPin } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import LocationPicker from "@/components/events/location/LocationPicker";
-import { generateGoogleMapsUrl } from "@/config/maps";
 
 interface MessageInputProps {
-  onSendMessage: (content: string) => Promise<void>;
-  onSendLocation: (location: string) => Promise<void>;
-  canShareLocation: boolean;
+  onSendMessage: (message: string) => Promise<void>;
+  onSendLocation?: (location: string) => Promise<void>;
+  canShareLocation?: boolean;
   isSending: boolean;
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({ 
   onSendMessage, 
-  onSendLocation,
-  canShareLocation,
+  onSendLocation, 
+  canShareLocation = false,
   isSending
 }) => {
-  const [messageContent, setMessageContent] = useState("");
-  const [sendingLocation, setSendingLocation] = useState(false);
-  const [locationValue, setLocationValue] = useState("");
-
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const [message, setMessage] = useState("");
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!messageContent.trim() || isSending) return;
-    
-    try {
-      await onSendMessage(messageContent.trim());
-      setMessageContent("");
-    } catch (error) {
-      console.error("Failed to send message:", error);
+    if (message.trim() && !isSending) {
+      try {
+        await onSendMessage(message.trim());
+        setMessage("");
+      } catch (error) {
+        console.error("Failed to send message", error);
+      }
     }
   };
 
-  const handleSendLocation = async () => {
-    if (!locationValue || isSending) return;
+  const handleShareLocation = async () => {
+    if (!navigator.geolocation || !canShareLocation || !onSendLocation) {
+      return;
+    }
+    
+    setIsGettingLocation(true);
     
     try {
-      await onSendLocation(locationValue);
-      setLocationValue("");
-      setSendingLocation(false);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          const locationString = `${latitude},${longitude}`;
+          await onSendLocation(locationString);
+          setIsGettingLocation(false);
+        },
+        (error) => {
+          console.error("Error getting location", error);
+          setIsGettingLocation(false);
+        }
+      );
     } catch (error) {
-      console.error("Failed to send location:", error);
+      console.error("Error sharing location", error);
+      setIsGettingLocation(false);
     }
   };
-
+  
   return (
-    <form 
-      onSubmit={handleSendMessage} 
-      className="border-t p-4 flex gap-2"
-    >
-      <Input
-        placeholder="Type a message (max 20 chars)"
-        value={messageContent}
-        onChange={(e) => setMessageContent(e.target.value)}
-        maxLength={20}
-        className="flex-1"
-      />
+    <form onSubmit={handleSubmit} className="p-4 border-t flex items-center gap-2">
+      <div className="relative flex-1">
+        <input
+          type="text"
+          className="w-full rounded-md border-input bg-background px-3 py-2 text-sm ring-offset-background"
+          placeholder="Type a message..."
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          maxLength={20} // Apply 20 character limit
+        />
+        <div className="absolute right-3 bottom-1 text-xs text-muted-foreground">
+          {message.length > 0 && `${message.length}/20`}
+        </div>
+      </div>
       
-      {canShareLocation && (
-        <Popover open={sendingLocation} onOpenChange={setSendingLocation}>
-          <PopoverTrigger asChild>
-            <Button 
-              type="button" 
-              variant="outline" 
-              size="icon"
-            >
-              <MapPin className="h-4 w-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80">
-            <div className="space-y-4">
-              <h3 className="font-medium">Share Location</h3>
-              <LocationPicker
-                value={locationValue}
-                onChange={(value) => setLocationValue(value)}
-                placeholder="Search for a location"
-              />
-              <div className="flex justify-end">
-                <Button 
-                  type="button" 
-                  onClick={handleSendLocation}
-                  disabled={!locationValue.trim()}
-                  size="sm"
-                >
-                  <MapPin className="mr-2 h-4 w-4" />
-                  Send Location
-                </Button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+      {canShareLocation && onSendLocation && (
+        <Button 
+          type="button" 
+          variant="outline" 
+          size="icon" 
+          onClick={handleShareLocation}
+          disabled={isGettingLocation || isSending}
+        >
+          <MapPin className="h-4 w-4" />
+        </Button>
       )}
       
       <Button 
         type="submit" 
-        disabled={!messageContent.trim() || isSending}
+        size="icon" 
+        disabled={!message.trim() || isSending}
       >
         <Send className="h-4 w-4" />
       </Button>

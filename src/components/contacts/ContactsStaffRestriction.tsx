@@ -106,6 +106,18 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
     fetchStaffMembers();
   }, [propBusinessId]);
 
+  // Handler for messaging business owner
+  const handleMessageBusinessOwner = () => {
+    if (businessId) {
+      navigate(`/dashboard/messages/${businessId}`);
+    }
+  };
+
+  // Handler for messaging another staff member
+  const handleMessageStaff = (staffId: string) => {
+    navigate(`/dashboard/messages/${staffId}`);
+  };
+
   return (
     <Card className="border-amber-200 bg-amber-50/50">
       <CardContent className="pt-6 pb-4">
@@ -122,7 +134,7 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
           <div className="flex flex-wrap gap-3 mt-4 justify-center">            
             {businessId && (
               <Button 
-                onClick={() => navigate(`/dashboard/messages/${businessId}`)}
+                onClick={handleMessageBusinessOwner}
                 className="flex items-center gap-2"
               >
                 <MessageSquare className="h-4 w-4" />
@@ -143,7 +155,7 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
                     variant="outline"
                     size="sm"
                     className="text-xs"
-                    onClick={() => navigate(`/dashboard/messages/${staff.id}`)}
+                    onClick={() => handleMessageStaff(staff.id)}
                   >
                     <MessageSquare className="h-3 w-3 mr-1" />
                     {staff.name}
