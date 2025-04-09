@@ -3,7 +3,6 @@ import React from "react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
-import { useTranslation } from "react-i18next";
 
 interface MapDisplayOptionsProps {
   mapDisplay: string;
@@ -18,7 +17,6 @@ export const MapDisplayOptions: React.FC<MapDisplayOptionsProps> = ({
   showMap,
   onShowMapChange,
 }) => {
-  const { t } = useTranslation();
   const safeMapDisplay = mapDisplay || 'button';
   
   const handleValueChange = (value: string) => {
@@ -28,7 +26,7 @@ export const MapDisplayOptions: React.FC<MapDisplayOptionsProps> = ({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="font-medium text-base mb-3">{t("events.mapDisplay")}</h3>
+        <h3 className="font-medium text-base mb-3">Map Display Options</h3>
         <RadioGroup 
           value={safeMapDisplay} 
           onValueChange={handleValueChange}
@@ -36,17 +34,17 @@ export const MapDisplayOptions: React.FC<MapDisplayOptionsProps> = ({
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="button" id="map-button" />
-            <Label htmlFor="map-button" className="cursor-pointer">{t("events.showMapButton")}</Label>
+            <Label htmlFor="map-button" className="cursor-pointer">Show map button</Label>
           </div>
           
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="qrcode" id="map-qrcode" />
-            <Label htmlFor="map-qrcode" className="cursor-pointer">{t("events.showQRCode")}</Label>
+            <Label htmlFor="map-qrcode" className="cursor-pointer">Show QR code only</Label>
           </div>
           
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="both" id="map-both" />
-            <Label htmlFor="map-both" className="cursor-pointer">{t("events.showBothOptions")}</Label>
+            <Label htmlFor="map-both" className="cursor-pointer">Show both options</Label>
           </div>
         </RadioGroup>
       </div>
@@ -59,10 +57,10 @@ export const MapDisplayOptions: React.FC<MapDisplayOptionsProps> = ({
               checked={showMap}
               onCheckedChange={onShowMapChange}
             />
-            <Label htmlFor="show-map-preview">{t("events.showMapPreview")}</Label>
+            <Label htmlFor="show-map-preview">Show map preview</Label>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            {t("events.showMapPreviewDesc")}
+            Display a small map preview on the event page
           </p>
         </div>
       )}

@@ -12,7 +12,6 @@ import {
 import { Search, Plus } from "lucide-react";
 import { TaskStatusFilter, TaskPriorityFilter } from "./types";
 import { UserRole } from "@/types/user";
-import { useTranslation } from "react-i18next";
 
 interface TaskControlsProps {
   searchQuery: string;
@@ -39,8 +38,6 @@ const TaskControls: React.FC<TaskControlsProps> = ({
   userRole,
   showCreateButton = true
 }) => {
-  const { t, i18n } = useTranslation();
-  
   return (
     <div className="flex flex-col gap-4 sm:flex-row justify-between">
       <div className="flex flex-1 items-center space-x-2">
@@ -48,7 +45,7 @@ const TaskControls: React.FC<TaskControlsProps> = ({
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground/70" />
           <Input
             type="search"
-            placeholder={t("common.search")}
+            placeholder="Search"
             className="pl-8 w-full sm:max-w-[300px]"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
@@ -60,15 +57,15 @@ const TaskControls: React.FC<TaskControlsProps> = ({
           onValueChange={(value) => onStatusChange(value as TaskStatusFilter)}
         >
           <SelectTrigger className="w-[130px]">
-            <SelectValue placeholder={t("task.status.status")} />
+            <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t("task.status.all")}</SelectItem>
-            <SelectItem value="pending">{t("task.status.pending")}</SelectItem>
-            <SelectItem value="in-progress">{t("task.status.inProgress")}</SelectItem>
-            <SelectItem value="completed">{t("task.status.completed")}</SelectItem>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="in-progress">In Progress</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
             {isPaidAccount && (
-              <SelectItem value="snoozed">{t("task.status.snoozed")}</SelectItem>
+              <SelectItem value="snoozed">Snoozed</SelectItem>
             )}
           </SelectContent>
         </Select>
@@ -78,14 +75,14 @@ const TaskControls: React.FC<TaskControlsProps> = ({
           onValueChange={(value) => onPriorityChange(value as TaskPriorityFilter)}
         >
           <SelectTrigger className="w-[130px]">
-            <SelectValue placeholder={t("task.priority.priority")} />
+            <SelectValue placeholder="Priority" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{t("task.priority.all")}</SelectItem>
-            <SelectItem value="urgent">{t("task.priority.urgent")}</SelectItem>
-            <SelectItem value="high">{t("task.priority.high")}</SelectItem>
-            <SelectItem value="medium">{t("task.priority.medium")}</SelectItem>
-            <SelectItem value="normal">{t("task.priority.normal")}</SelectItem>
+            <SelectItem value="all">All Priority</SelectItem>
+            <SelectItem value="urgent">Urgent</SelectItem>
+            <SelectItem value="high">High</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="normal">Normal</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -93,7 +90,7 @@ const TaskControls: React.FC<TaskControlsProps> = ({
       {showCreateButton && userRole !== "staff" && (
         <Button onClick={onCreateTask} className="shrink-0">
           <Plus className="mr-2 h-4 w-4" />
-          {t("task.createTask")}
+          Create Task
         </Button>
       )}
     </div>

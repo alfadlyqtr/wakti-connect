@@ -2,15 +2,12 @@
 import React from "react";
 import { CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { TaskStatus } from "@/types/task.types";
-import { useTranslation } from "react-i18next";
 
 interface TaskStatusIconProps {
   status: TaskStatus;
 }
 
 const TaskStatusIcon = ({ status }: TaskStatusIconProps) => {
-  const { t } = useTranslation();
-  
   // Helper function to create icon with accessible title
   const createIconWithTitle = (Icon: any, className: string, titleText: string) => {
     return (
@@ -25,25 +22,25 @@ const TaskStatusIcon = ({ status }: TaskStatusIconProps) => {
       return createIconWithTitle(
         CheckCircle2, 
         "h-5 w-5 text-green-500", 
-        t('task.status.completed')
+        "Completed"
       );
     case "in-progress":
       return createIconWithTitle(
         Clock, 
         "h-5 w-5 text-blue-500", 
-        t('task.status.inProgress')
+        "In Progress"
       );
     case "late":
       return createIconWithTitle(
         AlertCircle, 
         "h-5 w-5 text-red-500", 
-        t('task.status.late')
+        "Late"
       );
     default:
       return createIconWithTitle(
         Clock, 
         "h-5 w-5 text-amber-500", 
-        t('task.status.pending')
+        "Pending"
       );
   }
 };

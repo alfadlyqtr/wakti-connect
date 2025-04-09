@@ -11,7 +11,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { StaffMember } from "@/pages/dashboard/staff-management/types";
-import { useTranslation } from "react-i18next";
 
 interface DeleteStaffDialogProps {
   staffToDelete: StaffMember | null;
@@ -24,24 +23,22 @@ const DeleteStaffDialog: React.FC<DeleteStaffDialogProps> = ({
   onOpenChange,
   onConfirmDelete
 }) => {
-  const { t } = useTranslation();
-  
   return (
     <AlertDialog open={!!staffToDelete} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{t("staff.deleteStaff")}</AlertDialogTitle>
+          <AlertDialogTitle>Delete Staff Member</AlertDialogTitle>
           <AlertDialogDescription>
-            {staffToDelete && t("staff.deleteConfirm", { name: staffToDelete.profile?.full_name || staffToDelete.name })}
+            {staffToDelete && `Are you sure you want to delete ${staffToDelete.profile?.full_name || staffToDelete.name}? This action cannot be undone.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction 
             onClick={() => staffToDelete && onConfirmDelete(staffToDelete.id)}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {t("common.delete")}
+            Delete
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

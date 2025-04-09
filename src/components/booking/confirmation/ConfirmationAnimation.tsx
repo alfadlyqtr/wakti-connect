@@ -2,11 +2,8 @@
 import React from "react";
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
 
 const ConfirmationAnimation: React.FC = () => {
-  const { t } = useTranslation();
-  
   return (
     <div className="flex flex-col items-center justify-center py-6">
       <motion.div
@@ -35,7 +32,7 @@ const ConfirmationAnimation: React.FC = () => {
         transition={{ delay: 0.5, duration: 0.4 }}
         className="text-2xl font-bold mb-2"
       >
-        {t("booking.confirmed")}
+        Booking Confirmed
       </motion.h3>
       
       <motion.p
@@ -44,7 +41,7 @@ const ConfirmationAnimation: React.FC = () => {
         transition={{ delay: 0.7, duration: 0.4 }}
         className="text-muted-foreground text-center"
       >
-        {t("booking.confirmationMessage")}
+        Your booking has been successfully confirmed. You will receive a confirmation email shortly.
       </motion.p>
     </div>
   );

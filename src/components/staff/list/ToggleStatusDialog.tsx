@@ -11,7 +11,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { StaffMember } from "@/pages/dashboard/staff-management/types";
-import { useTranslation } from "react-i18next";
 
 interface ToggleStatusDialogProps {
   staffToToggle: StaffMember | null;
@@ -24,8 +23,6 @@ const ToggleStatusDialog: React.FC<ToggleStatusDialogProps> = ({
   onOpenChange,
   onConfirmToggle
 }) => {
-  const { t } = useTranslation();
-  
   if (!staffToToggle) return null;
   
   const isActive = staffToToggle.status === 'active';
@@ -39,17 +36,17 @@ const ToggleStatusDialog: React.FC<ToggleStatusDialogProps> = ({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {isActive ? t("staff.suspend") : t("staff.activate")}
+            {isActive ? "Suspend Staff Member" : "Activate Staff Member"}
           </AlertDialogTitle>
           <AlertDialogDescription>
             {isActive 
-              ? t("staff.suspendConfirm", { name: staffToToggle.profile?.full_name || staffToToggle.name })
-              : t("staff.activateConfirm", { name: staffToToggle.profile?.full_name || staffToToggle.name })
+              ? `Are you sure you want to suspend ${staffToToggle.profile?.full_name || staffToToggle.name}? They will not be able to access the system.`
+              : `Are you sure you want to activate ${staffToToggle.profile?.full_name || staffToToggle.name}? They will regain access to the system.`
             }
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction 
             onClick={() => onConfirmToggle(staffToToggle.id, newStatus)}
             className={isActive 
@@ -57,7 +54,7 @@ const ToggleStatusDialog: React.FC<ToggleStatusDialogProps> = ({
               : ""
             }
           >
-            {isActive ? t("staff.suspend") : t("staff.activate")}
+            {isActive ? "Suspend" : "Activate"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

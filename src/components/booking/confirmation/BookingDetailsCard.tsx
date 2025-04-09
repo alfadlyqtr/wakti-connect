@@ -3,14 +3,12 @@ import React from "react";
 import { Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { BookingWithRelations } from "@/types/booking.types";
-import { useTranslation } from "react-i18next";
 
 interface BookingDetailsCardProps {
   booking: BookingWithRelations;
 }
 
 const BookingDetailsCard: React.FC<BookingDetailsCardProps> = ({ booking }) => {
-  const { t } = useTranslation();
   const startTime = new Date(booking.start_time);
   const endTime = new Date(booking.end_time);
   
@@ -22,7 +20,7 @@ const BookingDetailsCard: React.FC<BookingDetailsCardProps> = ({ booking }) => {
       <div className="flex">
         <Calendar className="h-5 w-5 mr-3 text-primary" />
         <div>
-          <p className="font-medium">{t("common.date")}</p>
+          <p className="font-medium">Date</p>
           <p className="text-muted-foreground">{format(startTime, "EEEE, MMMM d, yyyy")}</p>
         </div>
       </div>
@@ -30,7 +28,7 @@ const BookingDetailsCard: React.FC<BookingDetailsCardProps> = ({ booking }) => {
       <div className="flex">
         <Clock className="h-5 w-5 mr-3 text-primary" />
         <div>
-          <p className="font-medium">{t("common.time")}</p>
+          <p className="font-medium">Time</p>
           <p className="text-muted-foreground">
             {format(startTime, "h:mm a")} - {format(endTime, "h:mm a")}
           </p>
@@ -41,7 +39,7 @@ const BookingDetailsCard: React.FC<BookingDetailsCardProps> = ({ booking }) => {
         <div className="flex">
           <div className="h-5 w-5 mr-3 text-primary flex items-center justify-center">👤</div>
           <div>
-            <p className="font-medium">{t("common.staff")}</p>
+            <p className="font-medium">Staff</p>
             <p className="text-muted-foreground">{staffName}</p>
           </div>
         </div>

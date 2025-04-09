@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getTaskById } from '@/services/taskService';
@@ -21,7 +22,6 @@ import {
 } from 'lucide-react';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { format } from 'date-fns';
-import { useTranslation } from 'react-i18next';
 
 const TaskDetails: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
@@ -29,7 +29,6 @@ const TaskDetails: React.FC = () => {
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchTask = async () => {
@@ -78,15 +77,15 @@ const TaskDetails: React.FC = () => {
     return (
       <Card className="max-w-3xl mx-auto">
         <CardContent className="pt-6">
-          <div className="text-center py-8">
-            <h2 className="text-xl font-semibold mb-2">
-              {error || t("common.notFound")}
-            </h2>
-            <p className="text-muted-foreground mb-4">
-              {t("common.notFoundMessage")}
-            </p>
-            <Button onClick={() => navigate('/dashboard/tasks')}>
-              <ArrowLeft className="mr-2 h-4 w-4" /> {t("common.back")}
+          <div className="text-center">
+            <p className="text-destructive">Error: {error || "Task not found"}</p>
+            <Button 
+              variant="secondary"
+              onClick={() => navigate('/dashboard/tasks')}
+              className="mt-4"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Tasks
             </Button>
           </div>
         </CardContent>
@@ -94,94 +93,126 @@ const TaskDetails: React.FC = () => {
     );
   }
 
+  const handleDelete = async () => {
+    // Implementation for delete functionality
+    navigate('/dashboard/tasks');
+  };
+
+  const handleEdit = () => {
+    navigate(`/dashboard/tasks/edit/${taskId}`);
+  };
+
+  const handleComplete = async () => {
+    // Implementation for mark as complete functionality
+    navigate('/dashboard/tasks');
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center mb-4">
+    <div className="max-w-3xl mx-auto">
+      <div className="mb-6">
         <Button 
-          variant="outline" 
-          size="sm" 
+          variant="ghost" 
           onClick={() => navigate('/dashboard/tasks')}
+          className="mb-4"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" /> {t("common.back")}
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Tasks
         </Button>
-      </div>
-      
-      <Card className="max-w-3xl mx-auto">
-        <CardHeader>
-          <div className="flex justify-between items-start">
+        
+        <Card>
+          <CardHeader className="flex flex-row items-start justify-between">
             <div>
-              <CardTitle className="text-2xl mb-1">{task.title}</CardTitle>
+              <CardTitle className="text-2xl">{task.title}</CardTitle>
               <div className="flex gap-2 mt-2">
-                <Badge className={getPriorityColor(task.priority)}>
-                  {t(`task.priority.${task.priority}`)}
+                <Badge className={`${getPriorityColor(task.priority)}`}>
+                  {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
                 </Badge>
-                <Badge className={getStatusColor(task.status)}>
-                  {t(`task.status.${task.status.replace('-', '')}`)}
+                <Badge className={`${getStatusColor(task.status)}`}>
+                  {task.status === 'in-progress' 
+                    ? 'In Progress' 
+                    : task.status.charAt(0).toUpperCase() + task.status.slice(1)}
                 </Badge>
               </div>
             </div>
+            
             <div className="flex gap-2">
-              <Button variant="outline" size="icon">
-                <Edit className="h-4 w-4" />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8"
+                onClick={handleEdit}
+              >
+                <Edit className="h-3.5 w-3.5 mr-1" />
+                Edit
               </Button>
-              <Button variant="outline" size="icon" className="text-destructive">
-                <Trash2 className="h-4 w-4" />
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                className="h-8"
+                onClick={handleDelete}
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1" />
+                Delete
               </Button>
-              {task.status !== 'completed' && (
-                <Button variant="outline" size="icon" className="text-green-500">
-                  <CheckCircle className="h-4 w-4" />
-                </Button>
-              )}
             </div>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
-          {task.description && (
+          </CardHeader>
+          
+          <CardContent className="space-y-6">
             <div>
-              <h3 className="text-sm font-medium mb-1">{t("task.description")}</h3>
-              <p className="text-muted-foreground">{task.description}</p>
+              <h3 className="text-sm font-medium text-muted-foreground mb-2">Description</h3>
+              <p className="whitespace-pre-wrap">
+                {task.description || "No description provided."}
+              </p>
             </div>
-          )}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                <span className="text-sm">
+                  Due Date: {task.due_date 
+                    ? format(new Date(task.due_date), "MMMM d, yyyy") 
+                    : "No due date"}
+                </span>
+              </div>
+              
+              <div className="flex items-center">
+                <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                <span className="text-sm">
+                  Created: {format(new Date(task.created_at), "MMMM d, yyyy")}
+                </span>
+              </div>
+            </div>
+            
+            {task.sub_tasks && task.sub_tasks.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">Subtasks</h3>
+                <ul className="space-y-2">
+                  {task.sub_tasks.map((subTask, index) => (
+                    <li key={index} className="flex items-center">
+                      <div className={`w-4 h-4 rounded-full mr-2 ${subTask.completed ? 'bg-green-500' : 'bg-amber-500'}`} />
+                      <span className={subTask.completed ? 'line-through text-muted-foreground' : ''}>
+                        {subTask.title}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </CardContent>
           
-          <div className="flex flex-col gap-2 text-sm">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>{t("task.due")}: {format(new Date(task.due_date || Date.now()), 'PPP')}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span>{t("time.created")}: {format(new Date(task.created_at), 'PPP')}</span>
-            </div>
-          </div>
-          
-          {task.subtasks && task.subtasks.length > 0 && (
-            <div className="mt-4">
-              <h3 className="text-sm font-medium mb-2">{t("task.subtasks")}</h3>
-              <ul className="space-y-2">
-                {task.subtasks.map((subtask, index) => (
-                  <li key={subtask.id || index} className="flex items-center gap-2">
-                    <div className={`h-4 w-4 rounded-full ${subtask.is_completed ? 'bg-green-500' : 'border border-muted-foreground'}`} />
-                    <span className={subtask.is_completed ? 'line-through text-muted-foreground' : ''}>
-                      {subtask.content}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </CardContent>
-        
-        <CardFooter className="flex justify-between border-t pt-6">
-          {task.status !== 'completed' ? (
-            <Button className="w-full">{t("task.status.markCompleted")}</Button>
-          ) : (
-            <div className="text-center w-full text-muted-foreground">
-              {t("task.completedTime.at")} {format(new Date(task.completed_at || task.updated_at || ''), 'PPP')}
-            </div>
-          )}
-        </CardFooter>
-      </Card>
+          <CardFooter>
+            {task.status !== 'completed' && (
+              <Button 
+                className="w-full" 
+                onClick={handleComplete}
+              >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Mark as Complete
+              </Button>
+            )}
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 };

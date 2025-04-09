@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskStatus } from "@/types/task.types";
-import { useTranslation } from "react-i18next";
 
 interface TaskActionsMenuProps {
   userRole: "free" | "individual" | "business" | "staff";
@@ -57,8 +56,6 @@ export function TaskActionsMenu({
   taskId,
   snoozeCount = 0
 }: TaskActionsMenuProps) {
-  const { t } = useTranslation();
-  
   const isPaidAccount = userRole === "individual" || userRole === "business";
   
   const canAssignTasks = userRole === "business" || userRole === "staff";
@@ -83,25 +80,25 @@ export function TaskActionsMenu({
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="h-8 w-8">
           <MoreVertical className="h-4 w-4" />
-          <span className="sr-only">{t("common.actions")}</span>
+          <span className="sr-only">Actions</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>{t("actions.actions")}</DropdownMenuLabel>
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
         
         <DropdownMenuSeparator />
         
         {canEditTask && (
           <DropdownMenuItem onClick={() => handleAction(onEdit)}>
             <Edit className="h-4 w-4 mr-2" />
-            {t("actions.edit")}
+            Edit
           </DropdownMenuItem>
         )}
         
         {canDeleteTask && (
           <DropdownMenuItem onClick={() => handleAction(onDelete)}>
             <Trash className="h-4 w-4 mr-2" />
-            {t("actions.delete")}
+            Delete
           </DropdownMenuItem>
         )}
         
@@ -110,21 +107,21 @@ export function TaskActionsMenu({
         {status !== "completed" && (
           <DropdownMenuItem onClick={() => handleAction(onStatusChange, "completed")}>
             <CheckSquare className="h-4 w-4 mr-2" />
-            {t("actions.complete")}
+            Complete
           </DropdownMenuItem>
         )}
         
         {status !== "in-progress" && (
           <DropdownMenuItem onClick={() => handleAction(onStatusChange, "in-progress")}>
             <SquarePen className="h-4 w-4 mr-2" />
-            {t("actions.markInProgress")}
+            Mark as In Progress
           </DropdownMenuItem>
         )}
         
         {status !== "pending" as TaskStatus && (
           <DropdownMenuItem onClick={() => handleAction(onStatusChange, "pending")}>
             <Clock className="h-4 w-4 mr-2" />
-            {t("actions.markPending")}
+            Mark as Pending
           </DropdownMenuItem>
         )}
         
@@ -134,7 +131,7 @@ export function TaskActionsMenu({
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <Bell className="h-4 w-4 mr-2" />
-                {t("actions.snooze")}
+                Snooze
                 {snoozeCount > 0 && (
                   <span className="ml-1 text-xs bg-muted px-1 rounded">
                     x{snoozeCount}
@@ -144,19 +141,19 @@ export function TaskActionsMenu({
               <DropdownMenuSubContent>
                 <DropdownMenuItem onClick={() => handleAction(onSnooze, 1)}>
                   <Calendar className="h-4 w-4 mr-2" />
-                  1 {t("time.day")}
+                  1 day
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleAction(onSnooze, 3)}>
                   <Calendar className="h-4 w-4 mr-2" />
-                  3 {t("time.days")}
+                  3 days
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleAction(onSnooze, 7)}>
                   <Calendar className="h-4 w-4 mr-2" />
-                  1 {t("time.week")}
+                  1 week
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleAction(onSnooze, 14)}>
                   <Calendar className="h-4 w-4 mr-2" />
-                  2 {t("time.weeks")}
+                  2 weeks
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuSub>
@@ -168,7 +165,7 @@ export function TaskActionsMenu({
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => handleAction(onShare)}>
               <Share className="h-4 w-4 mr-2" />
-              {t("actions.share")}
+              Share
             </DropdownMenuItem>
           </>
         )}
@@ -181,7 +178,7 @@ export function TaskActionsMenu({
               className="opacity-50"
             >
               <UserPlus className="h-4 w-4 mr-2" />
-              {t("actions.assign")} ({t("common.disabled")})
+              Assign (disabled)
             </DropdownMenuItem>
           </>
         )}

@@ -4,7 +4,6 @@ import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { useTranslation } from "react-i18next";
 
 // Import refactored components
 import FormInputField from "./signup/FormInputField";
@@ -19,7 +18,6 @@ interface SignupFormProps {
 }
 
 const SignupForm = ({ setError }: SignupFormProps) => {
-  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -96,7 +94,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
     <form onSubmit={handleSignup} className="space-y-4">
       <FormInputField
         id="full-name"
-        label={t('auth.fullName')}
+        label="Full Name"
         type="text"
         placeholder="John Doe"
         value={fullName}
@@ -107,7 +105,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
       
       <FormInputField
         id="signup-email"
-        label={t('auth.email')}
+        label="Email"
         type="email"
         placeholder="name@example.com"
         value={email}
@@ -118,7 +116,7 @@ const SignupForm = ({ setError }: SignupFormProps) => {
       
       <FormInputField
         id="signup-password"
-        label={t('auth.password')}
+        label="Password"
         type={showPassword ? "text" : "password"}
         placeholder="••••••••"
         value={password}

@@ -17,7 +17,6 @@ import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import SocialAuth from "./SocialAuth";
 import LanguageSwitcher from "@/components/ui/language-switcher";
-import { useTranslation } from "react-i18next";
 
 interface AuthFormProps {
   defaultTab?: 'login' | 'register';
@@ -26,7 +25,6 @@ interface AuthFormProps {
 const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
   const navigate = useNavigate();
   const [error, setError] = useState("");
-  const { t } = useTranslation();
 
   useEffect(() => {
     const checkSession = async () => {
@@ -64,20 +62,20 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
             >
               <Link to="/" className="flex items-center gap-1 text-muted-foreground hover:text-foreground">
                 <ChevronLeft className="h-4 w-4" />
-                <span>{t('auth.back')}</span>
+                <span>Back to Home</span>
               </Link>
             </Button>
             <div className="flex items-center gap-2">
               <LanguageSwitcher />
               <TabsList className="grid w-32 sm:w-48 grid-cols-2">
-                <TabsTrigger value="login">{t('auth.login')}</TabsTrigger>
-                <TabsTrigger value="register">{t('auth.signUp')}</TabsTrigger>
+                <TabsTrigger value="login">Login</TabsTrigger>
+                <TabsTrigger value="register">Sign Up</TabsTrigger>
               </TabsList>
             </div>
           </div>
-          <CardTitle className="text-2xl text-center">{t('auth.welcomeToWakti')}</CardTitle>
+          <CardTitle className="text-2xl text-center">Welcome to WAKTI</CardTitle>
           <CardDescription className="text-center">
-            {t('auth.manageEfficiently')}
+            Manage your tasks, appointments, and business efficiently
           </CardDescription>
         </CardHeader>
 
@@ -103,7 +101,7 @@ const AuthForm = ({ defaultTab = 'login' }: AuthFormProps) => {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-card px-2 text-muted-foreground">
-                {t('auth.continueWith')}
+                Continue with
               </span>
             </div>
           </div>
