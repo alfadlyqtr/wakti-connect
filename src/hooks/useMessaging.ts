@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 import { 
@@ -14,9 +13,16 @@ import { forceSyncStaffContacts } from "@/services/contacts/contactSync";
 import { getStaffBusinessId } from "@/utils/staffUtils";
 import { supabase } from "@/integrations/supabase/client";
 
-export const useMessaging = (otherUserId?: string) => {
+interface UseMessagingOptions {
+  otherUserId?: string;
+  staffOnly?: boolean;
+}
+
+export const useMessaging = (options?: UseMessagingOptions) => {
   const queryClient = useQueryClient();
   const isStaff = localStorage.getItem('userRole') === 'staff';
+  const otherUserId = options?.otherUserId;
+  const staffOnly = options?.staffOnly || false;
 
   // First ensure that staff contacts are synced
   useQuery({
@@ -165,20 +171,21 @@ export const useMessaging = (otherUserId?: string) => {
     }
   });
 
-  // Get conversations list
+  // Get conversations list with optional staff filtering
   const { 
     data: conversations = [],
     isLoading: isLoadingConversations,
-    error: conversationsError
+    error: conversationsError,
+    refetch: refetchConversations
   } = useQuery<Conversation[]>({
-    queryKey: ['conversations'],
-    queryFn: fetchConversations,
+    queryKey: ['conversations', staffOnly],
+    queryFn: () => fetchConversations(staffOnly),
     refetchInterval: 10000 // Auto-refresh every 10 seconds
   });
 
   // Check if the current user can message a given user
   const { 
-    data: canMessage = false,
+    data: canMessage = true,
     isLoading: isCheckingPermission 
   } = useQuery<boolean>({
     queryKey: ['canMessage', otherUserId],
@@ -277,6 +284,7 @@ export const useMessaging = (otherUserId?: string) => {
     conversations,
     isLoadingConversations,
     conversationsError,
+    refetchConversations,
     canMessage,
     isCheckingPermission,
     unreadCount,

@@ -14,6 +14,7 @@ import ContactSubmissions from "@/components/messages/ContactSubmissions";
 import { useContactSubmissionsQuery } from "@/hooks/business-page/useContactSubmissionsQuery";
 import { getStaffBusinessId } from "@/utils/staffUtils";
 import ContactsStaffRestriction from "@/components/contacts/ContactsStaffRestriction";
+import StaffCommunicationTab from "@/components/messages/StaffCommunicationTab";
 
 const DashboardMessagesHome = () => {
   const navigate = useNavigate();
@@ -105,10 +106,14 @@ const DashboardMessagesHome = () => {
           onValueChange={setActiveTab}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
             <TabsTrigger value="messages" className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
               <span>Messages</span>
+            </TabsTrigger>
+            <TabsTrigger value="staff" className="flex items-center gap-2">
+              <Briefcase className="h-4 w-4" />
+              <span>Staff Communication</span>
             </TabsTrigger>
             <TabsTrigger value="submissions" className="flex items-center gap-2">
               <Inbox className="h-4 w-4" />
@@ -158,6 +163,10 @@ const DashboardMessagesHome = () => {
                 )}
               </div>
             </div>
+          </TabsContent>
+          
+          <TabsContent value="staff" className="mt-0">
+            <StaffCommunicationTab businessId={currentUserId} />
           </TabsContent>
           
           <TabsContent value="submissions" className="mt-0">

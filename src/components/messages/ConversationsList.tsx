@@ -7,8 +7,12 @@ import { formatDistanceToNow } from "date-fns";
 import { useMessaging } from "@/hooks/useMessaging";
 import { Conversation } from "@/types/message.types";
 
-const ConversationsList = () => {
-  const { conversations, isLoadingConversations } = useMessaging();
+interface ConversationsListProps {
+  staffOnly?: boolean;
+}
+
+const ConversationsList: React.FC<ConversationsListProps> = ({ staffOnly = false }) => {
+  const { conversations, isLoadingConversations } = useMessaging({ staffOnly });
   const navigate = useNavigate();
   
   if (isLoadingConversations) {

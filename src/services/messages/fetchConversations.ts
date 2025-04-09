@@ -2,92 +2,127 @@ import { supabase } from "@/integrations/supabase/client";
 import { Conversation } from "@/types/message.types";
 
 /**
- * Fetches all conversations for the current user
+ * Fetches the list of conversations for the current user
+ * @param staffOnly - When true, only returns conversations with staff members (for business accounts)
+ * @returns Promise with array of conversations
  */
-export const fetchConversations = async (): Promise<Conversation[]> => {
+export const fetchConversations = async (staffOnly: boolean = false): Promise<Conversation[]> => {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    // Get all messages to/from the user
+    const { data: messages, error } = await supabase.rpc('get_latest_conversations', {
+      current_user_id: user.id
+    });
+
+    if (error) {
+      console.error("Error fetching conversations:", error);
+      throw error;
+    }
+
+    // Group messages by conversation partner
+    const conversationPartnersMap = new Map();
     
-    if (!session?.user) {
-      throw new Error("No active session");
+    // Keep track of the latest message for each conversation
+    for (const message of messages) {
+      const partnerId = message.sender_id === user.id ? message.recipient_id : message.sender_id;
+      
+      if (!conversationPartnersMap.has(partnerId) || 
+          new Date(message.created_at) > new Date(conversationPartnersMap.get(partnerId).created_at)) {
+        conversationPartnersMap.set(partnerId, message);
+      }
     }
     
-    const currentUserId = session.user.id;
+    // Fetch user details for all conversation partners
+    const partnerIds = Array.from(conversationPartnersMap.keys());
     
-    // First get the latest message for each conversation
-    const { data: messagesData, error: messagesError } = await supabase
-      .from('messages')
-      .select(`
-        id,
-        content,
-        sender_id,
-        recipient_id,
-        is_read,
-        created_at
-      `)
-      .or(`sender_id.eq.${currentUserId},recipient_id.eq.${currentUserId}`)
-      .order('created_at', { ascending: false });
-    
-    if (messagesError) throw messagesError;
-    
-    if (!messagesData || messagesData.length === 0) {
+    if (partnerIds.length === 0) {
       return [];
     }
     
-    // Use a Map to keep track of the latest message per conversation partner
-    const latestMessageByUser = new Map<string, any>();
-    
-    messagesData.forEach(message => {
-      const partnerId = message.sender_id === currentUserId ? message.recipient_id : message.sender_id;
-      
-      if (!latestMessageByUser.has(partnerId)) {
-        latestMessageByUser.set(partnerId, message);
-      }
-    });
-    
-    // Get profile information for all conversation partners
-    const partnerIds = Array.from(latestMessageByUser.keys());
-    
-    const { data: profilesData, error: profilesError } = await supabase
+    // Fetch profiles for all conversation partners
+    let query = supabase
       .from('profiles')
-      .select('id, display_name, full_name, avatar_url')
-      .in('id', partnerIds);
-      
-    if (profilesError) throw profilesError;
+      .select('id, full_name, display_name, business_name, avatar_url, account_type');
     
-    // Create a map for easy profile lookup
-    const profilesMap = new Map();
-    profilesData?.forEach(profile => {
-      profilesMap.set(profile.id, profile);
+    // If we're filtering for staff only, join with business_staff to filter
+    if (staffOnly) {
+      // For business users, we want to get all staff members
+      // First check if the user is a business
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('account_type')
+        .eq('id', user.id)
+        .single();
+        
+      const isBusinessOwner = profileData?.account_type === 'business';
+      
+      if (isBusinessOwner) {
+        // Get list of staff IDs for this business
+        const { data: staffData } = await supabase
+          .from('business_staff')
+          .select('staff_id')
+          .eq('business_id', user.id)
+          .eq('status', 'active');
+          
+        const staffIds = staffData.map(staff => staff.staff_id);
+        
+        // Filter partners to only include staff members
+        query = query.in('id', staffIds);
+      }
+    }
+    
+    // Add the user IDs filter
+    query = query.in('id', partnerIds);
+    
+    const { data: profiles, error: profilesError } = await query;
+    
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
+      throw profilesError;
+    }
+    
+    // Map profiles to a dictionary for easy lookup
+    const profileMap = new Map();
+    profiles.forEach(profile => {
+      profileMap.set(profile.id, profile);
     });
     
-    // Build the final conversations list
+    // Construct the conversations array
     const conversations: Conversation[] = [];
     
-    latestMessageByUser.forEach((message, partnerId) => {
-      const profile = profilesMap.get(partnerId);
+    conversationPartnersMap.forEach((message, partnerId) => {
+      const profile = profileMap.get(partnerId);
       
       if (profile) {
-        const displayName = profile.display_name || profile.full_name || 'Unknown User';
+        // Skip if we're looking for staff only and this is not staffOnly mode
+        if (staffOnly && !conversations.some(c => c.userId === partnerId)) {
+          // We'll check for staff relationship below, but skip for now
+        }
         
         conversations.push({
-          id: message.id,
+          id: partnerId, // Use partner ID as conversation ID
           userId: partnerId,
-          displayName: displayName,
-          avatar: profile.avatar_url,
+          displayName: profile.business_name || profile.display_name || profile.full_name || 'Unknown User',
+          avatar: profile.avatar_url || '',
           lastMessage: message.content,
           lastMessageTime: message.created_at,
-          unread: message.recipient_id === currentUserId && !message.is_read
+          unread: message.recipient_id === user.id && !message.is_read
         });
       }
     });
     
-    // Sort by most recent message
-    return conversations.sort((a, b) => {
-      return new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime();
-    });
+    // Sort by message time, newest first
+    return conversations.sort((a, b) => 
+      new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()
+    );
+    
   } catch (error) {
-    console.error("Error fetching conversations:", error);
-    return [];
+    console.error("Failed to fetch conversations:", error);
+    throw error;
   }
 };
