@@ -10,9 +10,25 @@ import { fetchConversations } from "@/services/messages/fetchConversations";
 import { canMessageUser } from "@/services/messages/permissionsService";
 import { getUnreadMessagesCount } from "@/services/messages/notificationsService";
 import { Message, Conversation } from "@/types/message.types";
+import { ensureStaffContacts } from "@/services/contacts/contactSync";
+import { getStaffBusinessId } from "@/utils/staffUtils";
 
 export const useMessaging = (otherUserId?: string) => {
   const queryClient = useQueryClient();
+
+  // First ensure that staff contacts are synced
+  useQuery({
+    queryKey: ['syncStaffContacts'],
+    queryFn: async () => {
+      const isStaff = localStorage.getItem('isStaff') === 'true';
+      if (isStaff) {
+        // Make sure staff can message business owner
+        await ensureStaffContacts();
+        return true;
+      }
+      return false;
+    }
+  });
 
   // Fetch messages between the current user and another user
   const { 
@@ -64,7 +80,20 @@ export const useMessaging = (otherUserId?: string) => {
     isLoading: isCheckingPermission 
   } = useQuery<boolean>({
     queryKey: ['canMessage', otherUserId],
-    queryFn: () => otherUserId ? canMessageUser(otherUserId) : Promise.resolve(false),
+    queryFn: async () => {
+      if (!otherUserId) return false;
+      
+      // Staff members can always message their business owner
+      const isStaff = localStorage.getItem('isStaff') === 'true';
+      if (isStaff) {
+        const businessId = await getStaffBusinessId();
+        if (businessId === otherUserId) {
+          return true;
+        }
+      }
+      
+      return canMessageUser(otherUserId);
+    },
     enabled: !!otherUserId
   });
 

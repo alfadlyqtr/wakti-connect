@@ -1,141 +1,183 @@
 
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
-import { 
-  fetchStaffRelation, 
-  fetchActiveWorkSession, 
-  startWorkSession, 
-  endWorkSession 
-} from '@/services/jobs/workHistoryApi';
+import { supabase } from '@/integrations/supabase/client';
+import { getStaffRelationId, getActiveWorkSession } from '@/utils/staffUtils';
+import { toast } from "@/components/ui/use-toast";
+import { forceSyncStaffContacts } from '@/services/contacts/contactSync';
 
 export const useStaffStatus = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [isStaff, setIsStaff] = useState<boolean>(false);
   const [staffRelationId, setStaffRelationId] = useState<string | null>(null);
+  const [activeWorkSession, setActiveWorkSession] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isStartingSession, setIsStartingSession] = useState(false);
+  const [isEndingSession, setIsEndingSession] = useState(false);
 
-  // Query to check staff status
-  const { 
-    data: staffRelation, 
-    isLoading: isLoadingStaffRelation, 
-    error: staffError 
-  } = useQuery({
-    queryKey: ['staffRelation'],
-    queryFn: async () => {
-      try {
-        setError(null);
-        const result = await fetchStaffRelation();
-        console.log("Staff relation query result:", result);
-        return result;
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error('Failed to fetch staff relation');
-        console.error("Error fetching staff relation:", error);
-        setError(error);
-        return null;
+  // Function to check staff status
+  const checkStaffStatus = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Check if user is staff from localStorage first for quick response
+      const cachedIsStaff = localStorage.getItem('isStaff');
+      if (cachedIsStaff === 'true') {
+        setIsStaff(true);
       }
-    }
-  });
-
-  // Set staff relation ID when data is loaded
-  useEffect(() => {
-    if (staffRelation) {
-      console.log("Setting staff relation ID:", staffRelation.id);
-      setStaffRelationId(staffRelation.id);
-    }
-  }, [staffRelation]);
-
-  // Query to fetch active work session
-  const { 
-    data: activeWorkSession, 
-    isLoading: isLoadingSession,
-    refetch: refetchSession 
-  } = useQuery({
-    queryKey: ['activeWorkSession', staffRelationId],
-    queryFn: async () => {
-      try {
-        if (!staffRelationId) {
-          console.log("No staff relation ID available for active work session query");
-          return null;
+      
+      // Check if user is staff from localStorage first for quick response
+      const cachedStaffRelationId = localStorage.getItem('staffRelationId');
+      if (cachedStaffRelationId) {
+        setStaffRelationId(cachedStaffRelationId);
+        
+        // Get active work session
+        if (cachedStaffRelationId) {
+          const session = await getActiveWorkSession(cachedStaffRelationId);
+          setActiveWorkSession(session);
         }
-        console.log("Fetching active work session for staff ID:", staffRelationId);
-        return await fetchActiveWorkSession(staffRelationId);
-      } catch (err) {
-        console.error('Error fetching active session:', err);
-        return null;
+        
+        setIsLoading(false);
+        return;
       }
-    },
-    enabled: !!staffRelationId
-  });
-
-  // Mutation to start work session
-  const startSessionMutation = useMutation({
-    mutationFn: () => {
-      if (!staffRelationId) {
-        console.error("Cannot start work session: No staff relation ID");
-        return Promise.reject('No staff relation ID');
+      
+      // Fallback to checking from database
+      const relationId = await getStaffRelationId();
+      setStaffRelationId(relationId);
+      setIsStaff(!!relationId);
+      
+      if (relationId) {
+        // Get active work session
+        const session = await getActiveWorkSession(relationId);
+        setActiveWorkSession(session);
+        
+        // Ensure staff contacts are synced
+        await forceSyncStaffContacts();
       }
-      console.log("Starting work session for staff ID:", staffRelationId);
-      return startWorkSession(staffRelationId);
-    },
-    onSuccess: () => {
-      console.log("Work session started successfully");
-      queryClient.invalidateQueries({ queryKey: ['activeWorkSession', staffRelationId] });
-      toast({
-        title: 'Work session started',
-        description: 'Your work session has been started successfully.',
-        variant: 'success'
-      });
-    },
-    onError: (error: Error) => {
-      console.error("Error starting work session:", error);
-      toast({
-        title: 'Error starting work session',
-        description: error.message,
-        variant: 'destructive'
-      });
+      
+    } catch (err: any) {
+      console.error("Error checking staff status:", err);
+      setError(err);
+    } finally {
+      setIsLoading(false);
     }
-  });
-
-  // Mutation to end work session
-  const endSessionMutation = useMutation({
-    mutationFn: () => {
-      if (!activeWorkSession) {
-        console.error("Cannot end work session: No active work session");
-        return Promise.reject('No active work session');
-      }
-      console.log("Ending work session:", activeWorkSession.id);
-      return endWorkSession(activeWorkSession.id);
-    },
-    onSuccess: () => {
-      console.log("Work session ended successfully");
-      queryClient.invalidateQueries({ queryKey: ['activeWorkSession', staffRelationId] });
+  };
+  
+  // Function to start work session
+  const startWorkSession = async () => {
+    if (!staffRelationId) {
       toast({
-        title: 'Work session ended',
-        description: 'Your work session has been ended successfully.',
-        variant: 'success'
+        title: "Error",
+        description: "Staff ID not found",
+        variant: "destructive"
       });
-    },
-    onError: (error: Error) => {
-      console.error("Error ending work session:", error);
-      toast({
-        title: 'Error ending work session',
-        description: error.message,
-        variant: 'destructive'
-      });
+      return;
     }
-  });
+    
+    try {
+      setIsStartingSession(true);
+      
+      const { data, error } = await supabase
+        .from('staff_work_logs')
+        .insert({
+          staff_relation_id: staffRelationId,
+          start_time: new Date().toISOString(),
+          status: 'active'
+        })
+        .select()
+        .single();
+        
+      if (error) {
+        throw error;
+      }
+      
+      setActiveWorkSession(data);
+      
+      toast({
+        title: "Work Day Started",
+        description: "Your work day has been started successfully"
+      });
+    } catch (error: any) {
+      console.error("Error starting work day:", error);
+      toast({
+        title: "Failed to Start Work Day",
+        description: error.message || "An error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsStartingSession(false);
+    }
+  };
+  
+  // Function to end work session
+  const endWorkSession = async () => {
+    if (!activeWorkSession) {
+      toast({
+        title: "Error",
+        description: "No active work session found",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsEndingSession(true);
+      
+      const { error } = await supabase
+        .from('staff_work_logs')
+        .update({
+          end_time: new Date().toISOString(),
+          status: 'completed'
+        })
+        .eq('id', activeWorkSession.id);
+        
+      if (error) {
+        throw error;
+      }
+      
+      setActiveWorkSession(null);
+      
+      toast({
+        title: "Work Day Ended",
+        description: "Your work day has been ended successfully"
+      });
+    } catch (error: any) {
+      console.error("Error ending work day:", error);
+      toast({
+        title: "Failed to End Work Day",
+        description: error.message || "An error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsEndingSession(false);
+    }
+  };
 
-  return {
-    isStaff: !!staffRelation,
-    staffRelationId,
+  // Run the check on component mount
+  useEffect(() => {
+    checkStaffStatus();
+  }, []);
+  
+  // Function to manually fetch active work session
+  const fetchActiveWorkSession = async (relationId: string) => {
+    try {
+      const session = await getActiveWorkSession(relationId);
+      setActiveWorkSession(session);
+    } catch (error) {
+      console.error("Error fetching active work session:", error);
+    }
+  };
+
+  return { 
+    isStaff, 
+    staffRelationId, 
     activeWorkSession,
-    isLoading: isLoadingStaffRelation || isLoadingSession,
-    error: error || staffError,
-    refetchSession,
-    startWorkSession: startSessionMutation.mutate,
-    endWorkSession: endSessionMutation.mutate,
-    isStartingSession: startSessionMutation.isPending,
-    isEndingSession: endSessionMutation.isPending
+    isLoading, 
+    error,
+    startWorkSession,
+    endWorkSession,
+    isStartingSession,
+    isEndingSession,
+    fetchActiveWorkSession,
+    refreshStatus: checkStaffStatus
   };
 };
