@@ -1,18 +1,17 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMessaging } from "@/hooks/useMessaging";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { generateGoogleMapsUrl } from "@/config/maps";
-import { generateLocationMessage } from "./chat/LocationUtils";
 import { toast } from "@/components/ui/use-toast";
-
-// Import refactored components
-import ChatHeader from "./chat/ChatHeader";
+import { Send, Mic, MicOff, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { useVoiceInteraction } from "@/hooks/useVoiceInteraction";
+import RecordingCountdown from "./chat/RecordingCountdown";
 import MessageList from "./chat/MessageList";
-import MessageInput from "./chat/MessageInput";
-import NoPermissionMessage from "./chat/NoPermissionMessage";
 
 interface UserProfile {
   display_name?: string;
@@ -32,6 +31,9 @@ const ChatInterface = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const [isError, setIsError] = useState(false);
+  const [message, setMessage] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   
   // Validate we have a userId
   useEffect(() => {
@@ -54,9 +56,7 @@ const ChatInterface = () => {
     isCheckingPermission,
     markConversationAsRead,
     refetchMessages
-  } = useMessaging({
-    otherUserId: userId
-  });
+  } = useMessaging(userId);
   
   // Get current user ID
   const { data: currentUserId } = useQuery({
@@ -114,210 +114,195 @@ const ChatInterface = () => {
         return null;
       }
     },
-    enabled: !!userId,
-    retry: 3
+    enabled: !!userId
   });
-  
-  // Get current user profile for message permissions
-  const { data: userProfile } = useQuery({
-    queryKey: ['currentUserProfile'],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return null;
-      
-      const { data } = await supabase
-        .from('profiles')
-        .select('account_type')
-        .eq('id', session.user.id)
-        .single();
-        
-      return data;
+
+  const {
+    isListening,
+    transcript,
+    supportsVoice,
+    startListening,
+    stopListening
+  } = useVoiceInteraction({
+    onTranscriptComplete: (text) => {
+      if (text) {
+        setMessage(prev => prev + (prev && !prev.endsWith(' ') ? ' ' : '') + text);
+      }
     },
+    maxRecordingDuration: 10 // 10 seconds max
   });
   
-  // Mark messages as read when the conversation opens
+  // Mark messages as read when conversation is opened
   useEffect(() => {
     if (userId) {
       markConversationAsRead(userId);
-      
-      // Set up an interval to refetch messages every 10 seconds
-      const intervalId = setInterval(() => {
-        refetchMessages();
-      }, 10000);
-      
-      return () => clearInterval(intervalId);
     }
-  }, [userId, markConversationAsRead, refetchMessages]);
+  }, [userId, markConversationAsRead]);
   
-  // Check if this is a business-staff or staff-business conversation
-  const { data: isBusinessStaffConversation } = useQuery({
-    queryKey: ['isBusinessStaffConversation', userId, currentUserId],
-    queryFn: async () => {
-      if (!userId || !currentUserId) return false;
-      
-      try {
-        // Check if current user is a business owner and other user is their staff
-        const { data: staffData } = await supabase
-          .from('business_staff')
-          .select('id')
-          .eq('business_id', currentUserId)
-          .eq('staff_id', userId)
-          .maybeSingle();
-          
-        if (staffData) return true;
-        
-        // Check if current user is staff and other user is their business owner
-        const { data: currentUserStaffData } = await supabase
-          .from('business_staff')
-          .select('id')
-          .eq('staff_id', currentUserId)
-          .eq('business_id', userId)
-          .maybeSingle();
-          
-        return !!currentUserStaffData;
-      } catch (error) {
-        console.error("Error checking business-staff relationship:", error);
-        return false;
-      }
-    },
-    enabled: !!userId && !!currentUserId
-  });
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
   
-  const canShareLocation = userProfile?.account_type !== 'free';
+  const handleSendMessage = async () => {
+    if (!message.trim() || isSending || !userId) return;
+    
+    try {
+      await sendMessage({ recipientId: userId, content: message });
+      setMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast({
+        title: "Failed to send message",
+        description: "Your message could not be sent. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   
-  // Handle different profile types safely
-  const getDisplayName = (): string => {
-    if (!otherUserProfile) return 'User';
+  const toggleVoiceRecording = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+  
+  const getDisplayName = () => {
+    if (!otherUserProfile) return "User";
     
     if ('name' in otherUserProfile) {
-      // This is a StaffProfile
-      return otherUserProfile.name || 'Staff Member';
-    } else {
-      // This is a UserProfile
-      return otherUserProfile.business_name || 
-             otherUserProfile.display_name || 
-             otherUserProfile.full_name || 
-             'User';
+      return otherUserProfile.name;
     }
+    
+    return otherUserProfile.display_name || 
+           otherUserProfile.full_name || 
+           otherUserProfile.business_name || 
+           "User";
   };
   
-  const getAvatarUrl = (): string | undefined => {
-    if (!otherUserProfile) return undefined;
+  const getAvatar = () => {
+    if (!otherUserProfile) return null;
     
-    // Handle both UserProfile (avatar_url) and StaffProfile (profile_image_url)
     if ('profile_image_url' in otherUserProfile) {
-      // This is a StaffProfile
       return otherUserProfile.profile_image_url;
-    } else if ('avatar_url' in otherUserProfile) {
-      // This is a UserProfile
-      return otherUserProfile.avatar_url;
     }
     
-    return undefined;
+    return otherUserProfile.avatar_url;
   };
-  
-  const handleSendMessage = async (content: string) => {
-    if (!userId) return;
-    
-    try {
-      console.log("Sending message:", content);
-      await sendMessage({ 
-        recipientId: userId, 
-        content
-      });
-      
-      // Force refetch messages after sending
-      setTimeout(() => {
-        refetchMessages();
-      }, 500);
-    } catch (error) {
-      console.error("Failed to send message:", error);
-      toast({
-        title: "Error sending message",
-        description: "Your message could not be sent. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleSendLocation = async (location: string) => {
-    if (!userId || !canShareLocation) return;
-    
-    const mapsUrl = generateGoogleMapsUrl(location);
-    const locationMessage = generateLocationMessage(location, mapsUrl);
-    
-    try {
-      await sendMessage({
-        recipientId: userId,
-        content: locationMessage
-      });
-      
-      // Force refetch messages after sending
-      setTimeout(() => {
-        refetchMessages();
-      }, 500);
-    } catch (error) {
-      console.error("Failed to send location:", error);
-      toast({
-        title: "Error sharing location",
-        description: "Your location could not be shared. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  if (isLoadingMessages || isCheckingPermission || isLoadingProfile) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <p>Loading conversation...</p>
-      </div>
-    );
-  }
-  
-  if (isError) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-destructive font-semibold mb-2">Could not load conversation</p>
-          <p className="text-muted-foreground mb-4">This user may not exist or you don't have permission to message them.</p>
-          <button 
-            onClick={() => navigate('/dashboard/messages')}
-            className="px-4 py-2 bg-primary text-white rounded-md"
-          >
-            Back to Messages
-          </button>
-        </div>
-      </div>
-    );
-  }
-  
-  const displayName = getDisplayName();
-  const avatarUrl = getAvatarUrl();
   
   return (
     <div className="flex flex-col h-full">
-      <ChatHeader 
-        displayName={displayName}
-        avatarUrl={avatarUrl}
-      />
-      
-      <div className="flex-1 overflow-y-auto p-4">
-        <MessageList 
-          messages={messages} 
-          currentUserId={currentUserId} 
-        />
+      {/* Chat Header */}
+      <div className="p-4 border-b flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={() => navigate('/dashboard/messages')}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        
+        <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold overflow-hidden">
+          {getAvatar() ? (
+            <img 
+              src={getAvatar() || ""} 
+              alt={getDisplayName()} 
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            getDisplayName().charAt(0).toUpperCase()
+          )}
+        </div>
+        
+        <div>
+          <h3 className="font-medium leading-none">{getDisplayName()}</h3>
+          <p className="text-xs text-muted-foreground">
+            {isCheckingPermission ? "Checking permissions..." : canMessage ? "Messages expire after 24 hours" : "You cannot message this user"}
+          </p>
+        </div>
       </div>
       
-      {canMessage || isBusinessStaffConversation ? (
-        <MessageInput 
-          onSendMessage={handleSendMessage}
-          onSendLocation={handleSendLocation}
-          canShareLocation={canShareLocation}
-          isSending={isSending}
-        />
-      ) : (
-        <NoPermissionMessage />
-      )}
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {isLoadingMessages ? (
+          <div className="flex justify-center items-center h-full">
+            <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : (
+          <MessageList messages={messages || []} currentUserId={currentUserId} />
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+      
+      {/* Message Input */}
+      <div className="p-4 border-t">
+        <div className="relative">
+          {isListening && (
+            <div className="absolute -top-14 left-0 right-0">
+              <RecordingCountdown 
+                maxDuration={10} 
+                isRecording={isListening} 
+                onTimeUp={stopListening} 
+              />
+            </div>
+          )}
+          <Textarea
+            placeholder={canMessage ? "Type your message..." : "You cannot message this user"}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            className={`min-h-[80px] resize-none pr-20 ${isListening ? "bg-rose-50 border-rose-200" : ""}`}
+            disabled={!canMessage || isSending || isListening}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && !isMobile) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
+          />
+          
+          <div className="absolute bottom-2 right-2 flex items-center gap-2">
+            {supportsVoice && canMessage && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={toggleVoiceRecording}
+                disabled={isSending || !canMessage}
+                className={isListening ? "text-rose-500" : ""}
+              >
+                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+            )}
+            
+            <Button
+              onClick={handleSendMessage}
+              disabled={!message.trim() || isSending || !canMessage}
+              size="icon"
+            >
+              {isSending ? (
+                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+          
+          {isListening && (
+            <span className="absolute right-12 top-3">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+              </span>
+            </span>
+          )}
+        </div>
+        
+        <p className="text-xs text-muted-foreground mt-2">
+          {isMobile ? "Tap send button to submit your message" : "Press Enter to send, Shift+Enter for new line"}
+        </p>
+      </div>
     </div>
   );
 };
