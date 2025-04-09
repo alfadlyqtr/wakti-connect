@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { differenceInSeconds } from "date-fns";
+import { differenceInSeconds, format } from "date-fns";
 
 // Define a complete interface for staff stats
 interface StaffStats {
@@ -10,7 +10,11 @@ interface StaffStats {
   workLogsCount: number;
   jobCardsCount: number;
   hoursWorked: number;
+  hoursWorkedFormatted: string;
   activeBookings: number;
+  isActiveSession: boolean;
+  activeSessionStart: string | null;
+  activeSessionDuration: string | null;
 }
 
 export const useStaffStats = (staffRelationId: string | null, userId: string | null) => {
@@ -23,7 +27,11 @@ export const useStaffStats = (staffRelationId: string | null, userId: string | n
         workLogsCount: 0,
         jobCardsCount: 0,
         hoursWorked: 0,
-        activeBookings: 0
+        hoursWorkedFormatted: "0h 0m",
+        activeBookings: 0,
+        isActiveSession: false,
+        activeSessionStart: null,
+        activeSessionDuration: null
       };
       
       try {
@@ -47,6 +55,35 @@ export const useStaffStats = (staffRelationId: string | null, userId: string | n
         const activeBookings = bookings?.filter(b => 
           b.status === 'confirmed' || b.status === 'pending'
         ).length || 0;
+        
+        // Get current active work session if exists
+        const { data: activeSession, error: activeSessionError } = await supabase
+          .from('staff_work_logs')
+          .select('start_time')
+          .eq('staff_relation_id', staffRelationId)
+          .is('end_time', null)
+          .eq('status', 'active')
+          .maybeSingle();
+          
+        if (activeSessionError) throw activeSessionError;
+        
+        let activeSessionStart: string | null = null;
+        let activeSessionDuration: string | null = null;
+        let isActiveSession = false;
+        
+        if (activeSession) {
+          isActiveSession = true;
+          activeSessionStart = activeSession.start_time;
+          const now = new Date();
+          const startTime = new Date(activeSession.start_time);
+          const activeSeconds = differenceInSeconds(now, startTime);
+          
+          // Format as HH:MM:SS
+          const hours = Math.floor(activeSeconds / 3600);
+          const minutes = Math.floor((activeSeconds % 3600) / 60);
+          const seconds = Math.floor(activeSeconds % 60);
+          activeSessionDuration = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
         
         // Get work logs and calculate total hours worked
         const { data: workLogs, error: workLogsError } = await supabase
@@ -73,8 +110,13 @@ export const useStaffStats = (staffRelationId: string | null, userId: string | n
           }
         });
         
-        // Convert seconds to hours
+        // Convert seconds to hours (as a number for calculations)
         const hoursWorked = totalSeconds / 3600;
+        
+        // Format hours worked for display (hours and minutes)
+        const hoursWorkedHours = Math.floor(hoursWorked);
+        const hoursWorkedMinutes = Math.floor((hoursWorked - hoursWorkedHours) * 60);
+        const hoursWorkedFormatted = `${hoursWorkedHours}h ${hoursWorkedMinutes}m`;
         
         // Get job cards count
         const { count: jobCardsCount, error: jobCardsError } = await supabase
@@ -90,7 +132,11 @@ export const useStaffStats = (staffRelationId: string | null, userId: string | n
           workLogsCount: workLogs?.length || 0,
           jobCardsCount: jobCardsCount || 0,
           hoursWorked: hoursWorked,
-          activeBookings: activeBookings
+          hoursWorkedFormatted: hoursWorkedFormatted,
+          activeBookings: activeBookings,
+          isActiveSession,
+          activeSessionStart,
+          activeSessionDuration
         };
       } catch (error) {
         console.error("Error fetching staff stats:", error);
@@ -100,10 +146,15 @@ export const useStaffStats = (staffRelationId: string | null, userId: string | n
           workLogsCount: 0,
           jobCardsCount: 0,
           hoursWorked: 0,
-          activeBookings: 0
+          hoursWorkedFormatted: "0h 0m",
+          activeBookings: 0,
+          isActiveSession: false,
+          activeSessionStart: null,
+          activeSessionDuration: null
         };
       }
     },
-    enabled: !!staffRelationId && !!userId
+    enabled: !!staffRelationId && !!userId,
+    refetchInterval: 30000 // Refetch every 30 seconds to keep work time updated
   });
 };

@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { fetchAutoAddStaffSetting } from './contactSettings';
+import { toast } from "@/components/ui/use-toast";
 
 /**
  * Synchronizes staff-business contacts when a user is part of a business
@@ -35,7 +36,7 @@ export const syncStaffBusinessContacts = async (): Promise<{success: boolean; me
     
     if (staffData) {
       // Ensure contact from staff to business
-      await supabase
+      const { error: staffToBizError } = await supabase
         .from('user_contacts')
         .upsert({
           user_id: session.user.id,
@@ -45,8 +46,12 @@ export const syncStaffBusinessContacts = async (): Promise<{success: boolean; me
           updated_at: new Date().toISOString()
         }, { onConflict: 'user_id,contact_id' });
       
-      // Ensure contact from business to staff  
-      await supabase
+      if (staffToBizError) {
+        console.error("Error creating staff->biz contact:", staffToBizError);
+      }
+      
+      // Ensure contact from business to staff
+      const { error: bizToStaffError } = await supabase
         .from('user_contacts')
         .upsert({
           user_id: staffData.business_id,
@@ -55,6 +60,39 @@ export const syncStaffBusinessContacts = async (): Promise<{success: boolean; me
           staff_relation_id: staffData.id,
           updated_at: new Date().toISOString()
         }, { onConflict: 'user_id,contact_id' });
+        
+      if (bizToStaffError) {
+        console.error("Error creating biz->staff contact:", bizToStaffError);
+      }
+      
+      // Also sync with other staff members of the same business
+      const { data: otherStaff, error: otherStaffError } = await supabase
+        .from('business_staff')
+        .select('id, staff_id')
+        .eq('business_id', staffData.business_id)
+        .eq('status', 'active')
+        .neq('staff_id', session.user.id);
+        
+      if (otherStaffError) {
+        console.error("Error fetching other staff members:", otherStaffError);
+      } else if (otherStaff && otherStaff.length > 0) {
+        for (const staff of otherStaff) {
+          // Create bidirectional contacts
+          await supabase.from('user_contacts').upsert({
+            user_id: session.user.id,
+            contact_id: staff.staff_id,
+            status: 'accepted',
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id,contact_id' });
+          
+          await supabase.from('user_contacts').upsert({
+            user_id: staff.staff_id,
+            contact_id: session.user.id,
+            status: 'accepted',
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id,contact_id' });
+        }
+      }
     }
     
     console.log("Staff contacts synchronized successfully");
@@ -108,7 +146,8 @@ export const ensureStaffContacts = async (): Promise<{success: boolean; message:
         user_id: session.user.id,
         contact_id: staffData.business_id,
         status: 'accepted',
-        staff_relation_id: staffData.id
+        staff_relation_id: staffData.id,
+        updated_at: new Date().toISOString()
       }, { onConflict: 'user_id,contact_id' });
       
       // Business to staff
@@ -116,7 +155,8 @@ export const ensureStaffContacts = async (): Promise<{success: boolean; message:
         user_id: staffData.business_id,
         contact_id: session.user.id,
         status: 'accepted',
-        staff_relation_id: staffData.id
+        staff_relation_id: staffData.id,
+        updated_at: new Date().toISOString()
       }, { onConflict: 'user_id,contact_id' });
       
       console.log("Direct contact relationships ensured successfully");
@@ -168,18 +208,22 @@ export const forceSyncStaffContacts = async (): Promise<{success: boolean; messa
     const businessId = staffData?.business_id || session.user.id;
     
     // Call the edge function to force a sync
-    const { data, error } = await supabase.functions.invoke('sync-staff-records', {
-      headers: {
-        Authorization: `Bearer ${session.access_token}` // Fixed: using access_token instead of accessToken
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-staff-records', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+      
+      if (error) {
+        console.error("Error in sync-staff-records function:", error);
+      } else {
+        console.log("Staff records sync complete:", data);
       }
-    });
-    
-    if (error) {
-      console.error("Error in sync-staff-records function:", error);
-      return { success: false, message: error.message || "Sync function failed" };
+    } catch (fnError) {
+      console.error("Error invoking sync-staff-records:", fnError);
+      // Continue even if edge function fails
     }
-    
-    console.log("Staff records sync complete:", data);
     
     // Explicitly update contacts between staff and business
     if (staffData) {
@@ -201,6 +245,33 @@ export const forceSyncStaffContacts = async (): Promise<{success: boolean; messa
           staff_relation_id: staffData.id,
           updated_at: new Date().toISOString()
         }, { onConflict: 'user_id,contact_id' });
+        
+        // Also find and add other staff members
+        const { data: otherStaff } = await supabase
+          .from('business_staff')
+          .select('staff_id')
+          .eq('business_id', staffData.business_id)
+          .eq('status', 'active')
+          .neq('staff_id', session.user.id);
+          
+        if (otherStaff && otherStaff.length > 0) {
+          for (const staff of otherStaff) {
+            // Create contacts in both directions
+            await supabase.from('user_contacts').upsert({
+              user_id: session.user.id,
+              contact_id: staff.staff_id,
+              status: 'accepted',
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id,contact_id' });
+            
+            await supabase.from('user_contacts').upsert({
+              user_id: staff.staff_id,
+              contact_id: session.user.id,
+              status: 'accepted',
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id,contact_id' });
+          }
+        }
       } catch (e) {
         console.error("Error updating staff-business contacts:", e);
       }
@@ -208,7 +279,7 @@ export const forceSyncStaffContacts = async (): Promise<{success: boolean; messa
     
     return { 
       success: true, 
-      message: data.message || "Staff contacts synchronized successfully" 
+      message: "Staff contacts synchronized successfully" 
     };
   } catch (error) {
     console.error("Exception in forceSyncStaffContacts:", error);

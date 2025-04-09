@@ -3,7 +3,9 @@ import React, { useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { UserRole } from "@/types/user";
-import { ensureStaffContacts } from "@/services/contacts/contactSync";
+import { ensureStaffContacts, forceSyncStaffContacts } from "@/services/contacts/contactSync";
+import { clearStaffCache } from "@/utils/staffUtils";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface StaffRoleGuardProps {
   children: React.ReactNode;
@@ -26,21 +28,41 @@ const StaffRoleGuard: React.FC<StaffRoleGuardProps> = ({
 }) => {
   const location = useLocation();
   const userRole = localStorage.getItem('userRole') as UserRole;
+  const queryClient = useQueryClient();
   
-  // Sync staff contacts when a staff member accesses allowed routes
+  // Sync staff contacts and permissions when a staff member accesses allowed routes
   useEffect(() => {
-    const syncContacts = async () => {
-      if (userRole === 'staff' && !disallowStaff) {
+    const syncStaffData = async () => {
+      if (userRole === 'staff') {
         try {
-          await ensureStaffContacts();
+          // First clear cached permissions to ensure we get fresh data
+          await clearStaffCache();
+          
+          // Then ensure contacts are synced (staff-business relationship)
+          const result = await forceSyncStaffContacts();
+          console.log("Staff contacts sync result:", result);
+          
+          // Invalidate any staff-related queries to refresh UI
+          queryClient.invalidateQueries({ queryKey: ['staffStats'] });
+          queryClient.invalidateQueries({ queryKey: ['staffPermissions'] });
+          queryClient.invalidateQueries({ queryKey: ['contacts'] });
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+          
+          // Store user role in localStorage for quicker access
+          localStorage.setItem('userRole', 'staff');
         } catch (error) {
-          console.error("Error syncing staff contacts:", error);
+          console.error("Error syncing staff data:", error);
         }
       }
     };
     
-    syncContacts();
-  }, [userRole, disallowStaff]);
+    syncStaffData();
+    
+    // Set up interval to sync every 5 minutes
+    const intervalId = setInterval(syncStaffData, 5 * 60 * 1000);
+    
+    return () => clearInterval(intervalId);
+  }, [userRole, queryClient]);
   
   // Only restrict access if user is a staff member (and not also a business owner)
   if (userRole === 'staff' && disallowStaff) {

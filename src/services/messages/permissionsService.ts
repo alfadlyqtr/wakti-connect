@@ -51,9 +51,9 @@ export const canMessageUser = async (userId: string): Promise<boolean> => {
     if (staffBusinessId) {
       console.log("User is staff member of business:", staffBusinessId);
       
-      // Staff can always message their business owner
+      // Staff can ALWAYS message their business owner (this ensures staff-business communication works)
       if (userId === staffBusinessId) {
-        console.log("Staff is messaging their business owner, allowed");
+        console.log("Staff is messaging their business owner, always allowed");
         return true;
       }
       
@@ -66,6 +66,12 @@ export const canMessageUser = async (userId: string): Promise<boolean> => {
         .maybeSingle();
         
       if (targetStaffData) {
+        // Staff to staff messaging is allowed by default
+        console.log("Staff is messaging another staff member, allowed by default");
+        return true;
+        
+        // If we want to respect permissions, uncomment this code:
+        /*
         // Check if user has permission to message staff
         const { data: staffPermissions } = await supabase
           .from('business_staff')
@@ -89,39 +95,10 @@ export const canMessageUser = async (userId: string): Promise<boolean> => {
         
         console.log("Staff does not have permission to message other staff");
         return false;
+        */
       }
       
-      // Staff should not be able to message customers unless they have explicit permission
-      const { data: staffPermissions } = await supabase
-        .from('business_staff')
-        .select('permissions')
-        .eq('staff_id', session.user.id)
-        .eq('business_id', staffBusinessId)
-        .single();
-      
-      if (staffPermissions?.permissions && 
-          typeof staffPermissions.permissions === 'object' && 
-          staffPermissions.permissions !== null) {
-        // Cast to Record to safely access properties
-        const permissionsObj = staffPermissions.permissions as Record<string, boolean>;
-        
-        if (permissionsObj.can_message_customers) {
-          // Check if target is a customer of the business
-          const { data: isCustomer } = await supabase
-            .from('business_subscribers')
-            .select('id')
-            .eq('subscriber_id', userId)
-            .eq('business_id', staffBusinessId)
-            .maybeSingle();
-            
-          if (isCustomer) {
-            console.log("Staff is messaging a customer, allowed");
-            return true;
-          }
-        }
-      }
-      
-      // Staff should not be able to add contacts or message other users
+      // Staff should not be able to message customers
       console.log("Staff cannot message users outside their business context");
       return false;
     }

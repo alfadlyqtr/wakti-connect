@@ -2,8 +2,22 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { isUserStaff, getStaffRelationId, getActiveWorkSession } from '@/utils/staffUtils';
+import { isUserStaff, getStaffRelationId, getActiveWorkSession, clearStaffCache } from '@/utils/staffUtils';
 import { isBusinessOwner } from '@/utils/jobsUtils';
+import { differenceInSeconds, format } from 'date-fns';
+
+// Interface for the work session data
+interface WorkSession {
+  id: string;
+  start_time: string;
+  end_time?: string | null;
+  status: string;
+  staff_relation_id: string;
+  earnings?: number;
+  notes?: string;
+  formatted_duration?: string;
+  duration_seconds?: number;
+}
 
 export const useStaffStatus = () => {
   const [isStaff, setIsStaff] = useState<boolean>(false);
@@ -11,6 +25,8 @@ export const useStaffStatus = () => {
   const [staffRelationId, setStaffRelationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isStartingSession, setIsStartingSession] = useState(false);
+  const [isEndingSession, setIsEndingSession] = useState(false);
   
   // Check staff and business status
   useEffect(() => {
@@ -20,6 +36,9 @@ export const useStaffStatus = () => {
         setError(null);
         
         console.log("Starting staff status check");
+        
+        // Clear cached data to ensure fresh data
+        await clearStaffCache();
         
         // Check if user is authenticated first
         const { data: sessionData } = await supabase.auth.getSession();
@@ -54,6 +73,11 @@ export const useStaffStatus = () => {
     };
     
     checkUserStatus();
+    
+    // Set up interval to check status every 2 minutes
+    const intervalId = setInterval(checkUserStatus, 2 * 60 * 1000);
+    
+    return () => clearInterval(intervalId);
   }, []);
   
   // Get active work session if staff
@@ -64,20 +88,42 @@ export const useStaffStatus = () => {
       console.log("Fetching active work session for staff relation:", staffRelationId);
       try {
         const session = await getActiveWorkSession(staffRelationId);
-        console.log("Active work session:", session);
-        return session;
+        
+        // If there's an active session, calculate and add the formatted duration
+        if (session) {
+          const startTime = new Date(session.start_time);
+          const now = new Date();
+          const durationSeconds = differenceInSeconds(now, startTime);
+          
+          // Format duration as HH:MM:SS
+          const hours = Math.floor(durationSeconds / 3600);
+          const minutes = Math.floor((durationSeconds % 3600) / 60);
+          const seconds = Math.floor(durationSeconds % 60);
+          
+          const formattedDuration = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+          
+          return {
+            ...session,
+            formatted_duration: formattedDuration,
+            duration_seconds: durationSeconds
+          } as WorkSession;
+        }
+        
+        return session as WorkSession | null;
       } catch (error) {
         console.error("Error in activeWorkSession query:", error);
         return null;
       }
     },
     enabled: !!staffRelationId && (isStaff || isBusiness),
-    refetchInterval: 60000 // Refetch every minute to keep the session updated
+    refetchInterval: 15000 // Refetch every 15 seconds to keep the duration updated
   });
   
   // Functions to start and end work sessions
   const startWorkSession = async () => {
     try {
+      setIsStartingSession(true);
+      
       if (!staffRelationId) {
         throw new Error("No staff relation ID available");
       }
@@ -94,17 +140,21 @@ export const useStaffStatus = () => {
         
       if (error) throw error;
       
-      refetchSession();
+      await refetchSession();
       return data;
     } catch (err) {
       console.error("Error starting work session:", err);
       setError(err instanceof Error ? err : new Error('Failed to start work session'));
       throw err;
+    } finally {
+      setIsStartingSession(false);
     }
   };
   
   const endWorkSession = async () => {
     try {
+      setIsEndingSession(true);
+      
       if (!activeWorkSession?.id) {
         throw new Error("No active work session to end");
       }
@@ -121,12 +171,14 @@ export const useStaffStatus = () => {
         
       if (error) throw error;
       
-      refetchSession();
+      await refetchSession();
       return data;
     } catch (err) {
       console.error("Error ending work session:", err);
       setError(err instanceof Error ? err : new Error('Failed to end work session'));
       throw err;
+    } finally {
+      setIsEndingSession(false);
     }
   };
   
@@ -140,7 +192,7 @@ export const useStaffStatus = () => {
     refetchSession,
     startWorkSession,
     endWorkSession,
-    isStartingSession: false,
-    isEndingSession: false
+    isStartingSession,
+    isEndingSession
   };
 };
