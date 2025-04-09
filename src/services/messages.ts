@@ -111,16 +111,48 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       throw error;
     }
     
+    // Check if these are staff messages
+    const isStaff = localStorage.getItem('userRole') === 'staff';
+    
+    // Get staff profiles if needed
+    let staffProfiles: Record<string, any> = {};
+    
+    if (conversationUserId) {
+      const { data: staffData } = await supabase
+        .from('business_staff')
+        .select('staff_id, name, profile_image_url')
+        .or(`staff_id.eq.${conversationUserId},staff_id.eq.${session.user.id}`)
+        .eq('status', 'active');
+        
+      if (staffData && Array.isArray(staffData)) {
+        staffData.forEach(staff => {
+          staffProfiles[staff.staff_id] = {
+            name: staff.name,
+            avatar_url: staff.profile_image_url
+          };
+        });
+      }
+    }
+    
     // Transform the data to match the Message interface
     const messages: Message[] = data.map(msg => {
       // Get sender information with safe property access
       const senderInfo = msg.sender || {};
-      // Use nullish coalescing for safe property access
+      
+      // Check if sender is a staff member
+      const staffInfo = staffProfiles[msg.sender_id];
+      
+      // Use staff info if available, otherwise use profile info
       const senderName = 
+        staffInfo?.name ||
         (senderInfo as any)?.business_name || 
         (senderInfo as any)?.display_name || 
         (senderInfo as any)?.full_name || 
         'Unknown User';
+      
+      const senderAvatar = 
+        staffInfo?.avatar_url ||
+        (senderInfo as any)?.avatar_url;
       
       return {
         id: msg.id,
@@ -130,7 +162,7 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
         isRead: msg.is_read,
         createdAt: msg.created_at,
         senderName: senderName,
-        senderAvatar: (senderInfo as any)?.avatar_url
+        senderAvatar: senderAvatar
       };
     });
     

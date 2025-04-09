@@ -21,6 +21,7 @@ interface StaffMember {
   email: string;
   avatar_url?: string | null;
   role: string;
+  status: string;
 }
 
 const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessId }) => {
@@ -34,7 +35,7 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
       
       console.log("Fetching staff members for business:", businessId);
       
-      // First fetch staff records
+      // First fetch staff records, ensuring we only get active staff
       const { data: staffData, error: staffError } = await supabase
         .from('business_staff')
         .select(`
@@ -43,7 +44,8 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
           name,
           email,
           role,
-          status
+          status,
+          profile_image_url
         `)
         .eq('business_id', businessId)
         .eq('status', 'active');
@@ -60,11 +62,11 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
             .from('profiles')
             .select('avatar_url')
             .eq('id', staff.staff_id)
-            .single();
+            .maybeSingle();
             
           return {
             ...staff,
-            avatar_url: profileData?.avatar_url || null
+            avatar_url: profileData?.avatar_url || staff.profile_image_url || null
           };
         })
       );
@@ -77,6 +79,15 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
   
   // Function to handle messaging a staff member
   const handleMessageStaff = (staffId: string) => {
+    if (!staffId) {
+      toast({
+        title: "Error",
+        description: "Invalid staff member ID",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     console.log("Navigating to staff chat with:", staffId);
     // Navigate to the messaging page with the staff member's ID
     navigate(`/dashboard/messages/${staffId}`);
@@ -142,12 +153,20 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
             >
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold">
-                    {staff.name.charAt(0).toUpperCase()}
+                  <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold overflow-hidden">
+                    {staff.avatar_url ? (
+                      <img 
+                        src={staff.avatar_url} 
+                        alt={staff.name} 
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      staff.name.charAt(0).toUpperCase()
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold truncate">{staff.name}</h3>
-                    <p className="text-sm text-muted-foreground truncate">{staff.role}</p>
+                    <h3 className="font-semibold truncate">{staff.name || 'Staff Member'}</h3>
+                    <p className="text-sm text-muted-foreground truncate">{staff.role || 'Staff'}</p>
                   </div>
                   <Button 
                     size="sm" 

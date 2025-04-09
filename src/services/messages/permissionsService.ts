@@ -34,6 +34,31 @@ export const canMessageUser = async (targetUserId: string): Promise<boolean> => 
       return true;
     }
     
+    // Check if this is a staff-business relationship
+    const { data: isBusinessStaff } = await supabase
+      .from('business_staff')
+      .select('id')
+      .eq('business_id', session.user.id)
+      .eq('staff_id', targetUserId)
+      .eq('status', 'active')
+      .maybeSingle();
+      
+    if (isBusinessStaff) {
+      return true; // Business can message its staff
+    }
+    
+    const { data: isStaffBusiness } = await supabase
+      .from('business_staff')
+      .select('id')
+      .eq('business_id', targetUserId)
+      .eq('staff_id', session.user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+      
+    if (isStaffBusiness) {
+      return true; // Staff can message their business
+    }
+    
     // Get current user profile
     const { data: currentUserProfile } = await supabase
       .from('profiles')

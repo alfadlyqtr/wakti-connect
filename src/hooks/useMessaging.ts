@@ -12,6 +12,7 @@ import { getUnreadMessagesCount } from "@/services/messages/notificationsService
 import { Message, Conversation } from "@/types/message.types";
 import { getStaffBusinessId } from "@/utils/staffUtils";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useRef } from "react";
 
 export interface UseMessagingOptions {
   otherUserId?: string;
@@ -21,6 +22,7 @@ export interface UseMessagingOptions {
 export const useMessaging = (options?: string | UseMessagingOptions) => {
   const queryClient = useQueryClient();
   const isStaff = localStorage.getItem('userRole') === 'staff';
+  const pollingIntervalRef = useRef<number | null>(null);
   
   let otherUserId: string | undefined;
   let staffOnly: boolean = false;
@@ -32,8 +34,7 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     staffOnly = options.staffOnly || false;
   }
 
-  // We don't need to explicitly sync staff contacts anymore since that's handled by DB triggers
-  
+  // Fetch messages
   const { 
     data: messages = [],
     isLoading: isLoadingMessages,
@@ -46,6 +47,7 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     refetchInterval: 5000
   });
 
+  // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async ({ recipientId, content }: { recipientId: string; content: string }) => {
       return sendMessage(recipientId, content);
@@ -64,6 +66,7 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     }
   });
 
+  // Fetch conversations
   const { 
     data: conversations = [],
     isLoading: isLoadingConversations,
@@ -75,6 +78,7 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     refetchInterval: 10000
   });
 
+  // Check messaging permissions
   const { 
     data: canMessage = true,
     isLoading: isCheckingPermission 
@@ -83,10 +87,12 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     queryFn: async () => {
       if (!otherUserId) return false;
       
+      // Check if this is a staff-business conversation
       if (isStaff) {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) return false;
         
+        // Get staff's business ID
         const { data: staffData } = await supabase
           .from('business_staff')
           .select('business_id')
@@ -94,28 +100,28 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
           .eq('status', 'active')
           .maybeSingle();
           
-        if (staffData?.business_id === otherUserId) {
-          // Staff can always message their business owner
-          console.log("Staff can message business owner");
-          return true;
-        }
-        
-        // Check if the other user is a staff member in the same business
-        const { data: targetIsStaff } = await supabase
-          .from('business_staff')
-          .select('id')
-          .eq('staff_id', otherUserId)
-          .eq('business_id', staffData?.business_id)
-          .maybeSingle();
+        if (staffData) {
+          // If the other user is the business owner, staff can message them
+          if (staffData?.business_id === otherUserId) {
+            console.log("Staff can message business owner");
+            return true;
+          }
           
-        if (targetIsStaff) {
-          // Staff can message other staff of the same business
-          console.log("Staff can message other staff");
-          return true;
+          // Check if the other user is a staff member in the same business
+          const { data: targetIsStaff } = await supabase
+            .from('business_staff')
+            .select('id')
+            .eq('staff_id', otherUserId)
+            .eq('business_id', staffData?.business_id)
+            .eq('status', 'active')
+            .maybeSingle();
+            
+          if (targetIsStaff) {
+            // Staff can message other staff of the same business
+            console.log("Staff can message other staff");
+            return true;
+          }
         }
-        
-        // Default: staff can't message other users
-        return false;
       }
       
       // Business owners can message their staff members
@@ -151,6 +157,7 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     refetchInterval: 30000
   });
 
+  // Get unread message count
   const { 
     data: unreadCount = 0,
     isLoading: isLoadingUnreadCount
@@ -160,11 +167,23 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     refetchInterval: 15000
   });
 
+  // Set up real-time updates using Supabase subscription
+  useEffect(() => {
+    // Clean up the polling interval on component unmount
+    return () => {
+      if (pollingIntervalRef.current) {
+        window.clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Mark conversation as read
   const markConversationAsRead = async (userId: string) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
       
+      // Find unread messages from this user
       const { data: unreadMessages } = await supabase
         .from('messages')
         .select('id')
@@ -174,10 +193,12 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
         
       if (!unreadMessages || unreadMessages.length === 0) return;
       
+      // Mark each message as read
       for (const msg of unreadMessages) {
         await markMessageAsRead(msg.id);
       }
       
+      // Invalidate queries to update UI
       queryClient.invalidateQueries({ queryKey: ['messages', userId] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['unreadMessages'] });

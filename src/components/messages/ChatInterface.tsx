@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useMessaging } from "@/hooks/useMessaging";
 import { useQuery } from "@tanstack/react-query";
@@ -13,10 +13,9 @@ import MessageList from "./chat/MessageList";
 import MessageInput from "./chat/MessageInput";
 import NoPermissionMessage from "./chat/NoPermissionMessage";
 
-// Define the profile type to match what comes from the database
 interface UserProfile {
-  display_name: string;
-  full_name: string;
+  display_name?: string;
+  full_name?: string;
   avatar_url?: string;
   account_type?: 'free' | 'individual' | 'business' | 'staff';
   business_name?: string;
@@ -51,29 +50,31 @@ const ChatInterface = () => {
     }
   });
   
-  const { data: otherUserProfile } = useQuery<UserProfile | StaffProfile | null>({
+  const { data: otherUserProfile, isLoading: isLoadingProfile } = useQuery<UserProfile | StaffProfile | null>({
     queryKey: ['profile', userId],
     queryFn: async () => {
       if (!userId) return null;
       
-      const { data, error } = await supabase
+      // First try to get from profiles table
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('display_name, full_name, avatar_url, account_type, business_name')
         .eq('id', userId)
         .maybeSingle();
         
-      if (error) throw error;
+      if (profileData) {
+        return profileData as UserProfile;
+      }
       
-      // If this is a business staff member, get their information
-      if (!data) {
+      // If not found in profiles, try business_staff table
+      if (!profileData) {
+        console.log("Profile not found, checking business_staff");
         const { data: staffData, error: staffError } = await supabase
           .from('business_staff')
           .select('name, email, profile_image_url')
           .eq('staff_id', userId)
           .maybeSingle();
           
-        if (staffError) throw staffError;
-        
         if (staffData) {
           return {
             name: staffData.name,
@@ -83,7 +84,8 @@ const ChatInterface = () => {
         }
       }
       
-      return data as UserProfile;
+      console.log("No profile found for user:", userId);
+      return null;
     },
     enabled: !!userId
   });
@@ -105,33 +107,82 @@ const ChatInterface = () => {
   });
   
   // Mark messages as read when component mounts
-  React.useEffect(() => {
+  useEffect(() => {
     if (userId) {
       markConversationAsRead(userId);
     }
   }, [userId, markConversationAsRead]);
   
+  // Check if this is a business-staff or staff-business conversation
+  const { data: isBusinessStaffConversation } = useQuery({
+    queryKey: ['isBusinessStaffConversation', userId, currentUserId],
+    queryFn: async () => {
+      if (!userId || !currentUserId) return false;
+      
+      // Check if current user is a business owner and other user is their staff
+      const { data: staffData } = await supabase
+        .from('business_staff')
+        .select('id')
+        .eq('business_id', currentUserId)
+        .eq('staff_id', userId)
+        .maybeSingle();
+        
+      if (staffData) return true;
+      
+      // Check if current user is staff and other user is their business owner
+      const { data: currentUserStaffData } = await supabase
+        .from('business_staff')
+        .select('id')
+        .eq('staff_id', currentUserId)
+        .eq('business_id', userId)
+        .maybeSingle();
+        
+      return !!currentUserStaffData;
+    },
+    enabled: !!userId && !!currentUserId
+  });
+  
   const canShareLocation = userProfile?.account_type !== 'free';
   
   // Handle different profile types safely
-  const displayName = 
-    'name' in (otherUserProfile || {}) ? (otherUserProfile as StaffProfile).name :
-    (otherUserProfile as UserProfile)?.business_name || 
-    (otherUserProfile as UserProfile)?.display_name || 
-    (otherUserProfile as UserProfile)?.full_name || 
-    'User';
+  const getDisplayName = (): string => {
+    if (!otherUserProfile) return 'User';
+    
+    if ('name' in otherUserProfile) {
+      // This is a StaffProfile
+      return otherUserProfile.name || 'Staff Member';
+    } else {
+      // This is a UserProfile
+      return otherUserProfile.business_name || 
+             otherUserProfile.display_name || 
+             otherUserProfile.full_name || 
+             'User';
+    }
+  };
   
-  const avatarUrl = 
-    'profile_image_url' in (otherUserProfile || {}) ? (otherUserProfile as StaffProfile).profile_image_url :
-    (otherUserProfile as UserProfile)?.avatar_url;
+  const getAvatarUrl = (): string | undefined => {
+    if (!otherUserProfile) return undefined;
+    
+    if ('profile_image_url' in otherUserProfile) {
+      // This is a StaffProfile
+      return otherUserProfile.profile_image_url;
+    } else {
+      // This is a UserProfile
+      return otherUserProfile.avatar_url;
+    }
+  };
   
   const handleSendMessage = async (content: string) => {
     if (!userId) return;
     
-    await sendMessage({ 
-      recipientId: userId, 
-      content
-    });
+    try {
+      await sendMessage({ 
+        recipientId: userId, 
+        content
+      });
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    }
   };
 
   const handleSendLocation = async (location: string) => {
@@ -140,19 +191,27 @@ const ChatInterface = () => {
     const mapsUrl = generateGoogleMapsUrl(location);
     const locationMessage = generateLocationMessage(location, mapsUrl);
     
-    await sendMessage({
-      recipientId: userId,
-      content: locationMessage
-    });
+    try {
+      await sendMessage({
+        recipientId: userId,
+        content: locationMessage
+      });
+    } catch (error) {
+      console.error("Failed to send location:", error);
+    }
   };
   
-  if (isLoadingMessages || isCheckingPermission) {
+  // Show loading state
+  if (isLoadingMessages || isCheckingPermission || isLoadingProfile) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <p>Loading conversation...</p>
       </div>
     );
   }
+  
+  const displayName = getDisplayName();
+  const avatarUrl = getAvatarUrl();
   
   return (
     <div className="flex flex-col h-full">
@@ -168,7 +227,7 @@ const ChatInterface = () => {
         />
       </div>
       
-      {canMessage ? (
+      {canMessage || isBusinessStaffConversation ? (
         <MessageInput 
           onSendMessage={handleSendMessage}
           onSendLocation={handleSendLocation}

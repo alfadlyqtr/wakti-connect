@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Conversation } from "@/types/message.types";
 
@@ -49,11 +48,21 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
       }
     }
     
-    // Fetch user details for all conversation partners
-    const partnerIds = Array.from(conversationPartnersMap.keys());
+    // Get the user's role and business ID if they are staff
+    const isStaff = localStorage.getItem('userRole') === 'staff';
+    let userBusinessId = null;
     
-    if (partnerIds.length === 0 && !staffOnly) {
-      return [];
+    if (isStaff) {
+      const { data: staffData } = await supabase
+        .from('business_staff')
+        .select('business_id')
+        .eq('staff_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+        
+      if (staffData) {
+        userBusinessId = staffData.business_id;
+      }
     }
     
     // Start with a base query for profiles
@@ -63,8 +72,7 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
     
     // If we're filtering for staff only, we need to handle it differently
     if (staffOnly) {
-      // For business users, we want to get all staff members
-      // Get the business ID (which is the user ID for business accounts)
+      // Get the user profile to determine if they are a business owner
       const { data: profileData } = await supabase
         .from('profiles')
         .select('account_type')
@@ -74,7 +82,7 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
       const isBusinessOwner = profileData?.account_type === 'business';
       
       if (isBusinessOwner) {
-        // Get all staff IDs for this business directly from business_staff
+        // Business owners see their staff
         const { data: staffData } = await supabase
           .from('business_staff')
           .select('staff_id')
@@ -82,57 +90,44 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
           .eq('status', 'active');
           
         if (staffData && Array.isArray(staffData) && staffData.length > 0) {
-          // Filter profiles to only include staff members
+          // Filter profiles to only include active staff members
           const staffIds = staffData.map(staff => staff.staff_id);
           query = query.in('id', staffIds);
         } else {
           // No staff members, return empty array
           return [];
         }
-      } else {
-        // This could be a staff member trying to see staff-only conversations
-        const { data: staffData } = await supabase
+      } else if (isStaff && userBusinessId) {
+        // Staff members see their business owner and other staff
+        const businessOwnerId = userBusinessId;
+        
+        // Get other staff members for the same business
+        const { data: otherStaffData } = await supabase
           .from('business_staff')
-          .select('business_id')
-          .eq('staff_id', user.id)
+          .select('staff_id')
+          .eq('business_id', businessOwnerId)
           .eq('status', 'active')
-          .maybeSingle();
+          .neq('staff_id', user.id);
           
-        if (staffData) {
-          // Get the business ID
-          const businessId = staffData.business_id;
+        // Include the business owner and other staff
+        const profileIds = otherStaffData 
+          ? [businessOwnerId, ...otherStaffData.map(s => s.staff_id)]
+          : [businessOwnerId];
           
-          // Get other staff members for the same business
-          const { data: otherStaffData } = await supabase
-            .from('business_staff')
-            .select('staff_id')
-            .eq('business_id', businessId)
-            .eq('status', 'active')
-            .neq('staff_id', user.id);
-            
-          if (otherStaffData && Array.isArray(otherStaffData) && otherStaffData.length > 0) {
-            // Include business owner in the staff-only conversations
-            const staffIds = otherStaffData.map(staff => staff.staff_id);
-            staffIds.push(businessId); // Add the business owner ID
-            
-            // Filter profiles to include business owner and other staff members
-            query = query.in('id', staffIds);
-          } else {
-            // Just include the business owner
-            query = query.eq('id', businessId);
-          }
-        } else {
-          // Not a staff member, return empty array
-          return [];
-        }
+        query = query.in('id', profileIds);
+      } else {
+        // Not a business owner or staff member, return empty array
+        return [];
       }
-    } else if (partnerIds.length > 0) {
-      // For regular conversations (not staff-only), 
-      // just get profiles for the partners we have messages with
-      query = query.in('id', partnerIds);
     } else {
-      // No partners and not staff-only, return empty array
-      return [];
+      // For regular conversations, get profiles for the partners we have messages with
+      const partnerIds = Array.from(conversationPartnersMap.keys());
+      
+      if (partnerIds.length === 0) {
+        return [];
+      }
+      
+      query = query.in('id', partnerIds);
     }
     
     // Execute the profiles query
@@ -148,11 +143,38 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
       return [];
     }
     
-    // Map profiles to a dictionary for easy lookup
+    // Get business staff information for profiles that might be staff
+    const profileIdsToCheck = profiles.map(p => p.id);
+    
+    const { data: staffProfiles } = await supabase
+      .from('business_staff')
+      .select('staff_id, name, profile_image_url')
+      .in('staff_id', profileIdsToCheck)
+      .eq('status', 'active');
+      
+    // Create a map of staff profiles by staff_id
+    const staffProfileMap = new Map();
+    if (staffProfiles && Array.isArray(staffProfiles)) {
+      staffProfiles.forEach(staff => {
+        staffProfileMap.set(staff.staff_id, {
+          name: staff.name,
+          profile_image_url: staff.profile_image_url
+        });
+      });
+    }
+    
+    // Map profiles to a dictionary for easy lookup and enhance with staff info
     const profileMap = new Map();
     if (profiles && Array.isArray(profiles)) {
       profiles.forEach(profile => {
-        profileMap.set(profile.id, profile);
+        const staffInfo = staffProfileMap.get(profile.id);
+        
+        profileMap.set(profile.id, {
+          ...profile,
+          // If this user is also a staff member, use staff name if available
+          display_name: staffInfo?.name || profile.display_name,
+          avatar_url: staffInfo?.profile_image_url || profile.avatar_url
+        });
       });
     }
     
@@ -163,12 +185,13 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
     if (staffOnly) {
       profiles?.forEach(profile => {
         const message = conversationPartnersMap.get(profile.id);
+        const staffInfo = staffProfileMap.get(profile.id);
         
         conversations.push({
           id: profile.id, // Use partner ID as conversation ID
           userId: profile.id,
-          displayName: profile.business_name || profile.display_name || profile.full_name || 'Unknown User',
-          avatar: profile.avatar_url || '',
+          displayName: staffInfo?.name || profile.business_name || profile.display_name || profile.full_name || 'Unknown User',
+          avatar: staffInfo?.profile_image_url || profile.avatar_url || '',
           lastMessage: message?.content || 'No messages yet',
           lastMessageTime: message?.created_at || new Date().toISOString(),
           unread: message ? (message.recipient_id === user.id && !message.is_read) : false
@@ -180,11 +203,17 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
         const profile = profileMap.get(partnerId);
         
         if (profile) {
+          const staffInfo = staffProfileMap.get(partnerId);
+          
           conversations.push({
             id: partnerId, // Use partner ID as conversation ID
             userId: partnerId,
-            displayName: profile.business_name || profile.display_name || profile.full_name || 'Unknown User',
-            avatar: profile.avatar_url || '',
+            displayName: staffInfo?.name || 
+                       profile.business_name || 
+                       profile.display_name || 
+                       profile.full_name || 
+                       'Unknown User',
+            avatar: staffInfo?.profile_image_url || profile.avatar_url || '',
             lastMessage: message.content,
             lastMessageTime: message.created_at,
             unread: message.recipient_id === user.id && !message.is_read
@@ -200,6 +229,6 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
     
   } catch (error) {
     console.error("Failed to fetch conversations:", error);
-    throw error;
+    return [];
   }
 };

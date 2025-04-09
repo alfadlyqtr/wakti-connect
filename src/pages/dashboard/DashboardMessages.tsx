@@ -100,20 +100,29 @@ const DashboardMessagesHome = () => {
           onValueChange={setActiveTab}
           className="w-full"
         >
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="messages" className="flex items-center gap-2 whitespace-nowrap px-2 text-sm">
+          <TabsList className="grid w-full grid-cols-3 mb-4 relative">
+            <TabsTrigger 
+              value="messages" 
+              className="flex items-center gap-1 px-1 md:px-2 text-xs md:text-sm overflow-hidden"
+            >
               <Mail className="h-4 w-4 flex-shrink-0" />
               <span className="truncate">Messages</span>
             </TabsTrigger>
-            <TabsTrigger value="staff" className="flex items-center gap-2 whitespace-nowrap px-2 text-sm">
+            <TabsTrigger 
+              value="staff" 
+              className="flex items-center gap-1 px-1 md:px-2 text-xs md:text-sm overflow-hidden"
+            >
               <Briefcase className="h-4 w-4 flex-shrink-0" />
               <span className="truncate">Staff Communication</span>
             </TabsTrigger>
-            <TabsTrigger value="submissions" className="flex items-center gap-2 whitespace-nowrap px-2 text-sm">
+            <TabsTrigger 
+              value="submissions" 
+              className="flex items-center gap-1 px-1 md:px-2 text-xs md:text-sm overflow-hidden"
+            >
               <Inbox className="h-4 w-4 flex-shrink-0" />
               <span className="truncate">Contact Submissions</span>
               {contactSubmissions.filter(s => !s.is_read).length > 0 && (
-                <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-xs text-white">
+                <span className="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] md:text-xs text-white min-w-[18px] text-center">
                   {contactSubmissions.filter(s => !s.is_read).length}
                 </span>
               )}
