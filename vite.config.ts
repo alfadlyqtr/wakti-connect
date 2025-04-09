@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => ({
   },
   define: {
     // Define empty values for environment variables if they don't exist
-    'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '')
+    'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify('')
   },
   optimizeDeps: {
     include: ['@/config/maps'],
