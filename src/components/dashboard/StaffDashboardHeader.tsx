@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Building2, CalendarClock, MapPin } from "lucide-react";
+import { Building2, CalendarClock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,7 +15,6 @@ interface StaffBusinessInfo {
   position: string;
   businessAvatar?: string | null;
   joinedAt?: string;
-  location?: string | null;
 }
 
 const StaffDashboardHeader: React.FC<StaffDashboardHeaderProps> = ({ staffId }) => {
@@ -41,7 +40,7 @@ const StaffDashboardHeader: React.FC<StaffDashboardHeaderProps> = ({ staffId }) 
         // Then get the business profile information 
         const { data: businessData, error: businessError } = await supabase
           .from('profiles')
-          .select('business_name, avatar_url, occupation')
+          .select('business_name, avatar_url')  // Removed the occupation field here
           .eq('id', staffData.business_id)
           .maybeSingle();
           
@@ -58,8 +57,7 @@ const StaffDashboardHeader: React.FC<StaffDashboardHeaderProps> = ({ staffId }) 
           businessName: businessData.business_name || 'Business',
           position: staffData.position || 'Staff Member',
           businessAvatar: businessData.avatar_url,
-          joinedAt: staffData.created_at,
-          location: businessData.occupation
+          joinedAt: staffData.created_at
         };
       } catch (error) {
         console.error("Error in staff dashboard header:", error);
@@ -115,12 +113,7 @@ const StaffDashboardHeader: React.FC<StaffDashboardHeaderProps> = ({ staffId }) 
             </span>
           )}
           
-          {businessInfo?.location && (
-            <span className="flex items-center gap-1">
-              <MapPin className="h-3 w-3" />
-              {businessInfo.location}
-            </span>
-          )}
+          {/* Removed the location/occupation display here */}
         </div>
       </div>
     </div>
