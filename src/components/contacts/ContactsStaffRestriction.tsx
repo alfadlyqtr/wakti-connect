@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { getStaffBusinessId } from "@/utils/staffUtils";
 import { supabase } from "@/integrations/supabase/client";
-import { forceSyncStaffContacts } from "@/services/contacts/contactSync";
-import { toast } from "@/components/ui/use-toast";
 
 interface ContactsStaffRestrictionProps {
   businessId?: string;
@@ -27,7 +25,6 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
   const navigate = useNavigate();
   const [businessId, setBusinessId] = useState<string | null>(propBusinessId || null);
   const [businessName, setBusinessName] = useState<string>(propBusinessName || "your business");
-  const [isSyncing, setIsSyncing] = useState(false);
   const [staffMembers, setStaffMembers] = useState<StaffMemberData[]>([]);
   const [isLoadingStaff, setIsLoadingStaff] = useState(true);
 
@@ -71,7 +68,8 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
           .select(`
             id, 
             staff_id,
-            staff_id:profiles(
+            name,
+            profiles:staff_id(
               display_name,
               full_name,
               avatar_url
@@ -88,10 +86,10 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
         // Format staff data for display
         const formattedStaff = staffData.map(staff => {
           // Safe access of nested properties using optional chaining
-          const profileData = staff.staff_id as any; // Type assertion for nested join
+          const profileData = staff.profiles as any; // Type assertion for nested join
           return {
             id: staff.staff_id as string,
-            name: profileData?.display_name || profileData?.full_name || "Staff Member",
+            name: staff.name || profileData?.display_name || profileData?.full_name || "Staff Member",
             avatar: profileData?.avatar_url
           };
         });
@@ -108,29 +106,6 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
     fetchStaffMembers();
   }, [propBusinessId]);
 
-  const handleSyncContacts = async () => {
-    setIsSyncing(true);
-    try {
-      const result = await forceSyncStaffContacts();
-      if (result.success) {
-        toast({
-          title: "Connections Refreshed",
-          description: "Your messaging connections with the business and other staff have been updated.",
-        });
-      } else {
-        toast({
-          title: "Sync Failed",
-          description: result.message || "Could not sync business messaging connections.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Error syncing contacts:", error);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
   return (
     <Card className="border-amber-200 bg-amber-50/50">
       <CardContent className="pt-6 pb-4">
@@ -139,9 +114,9 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
           <h3 className="text-xl font-semibold">Staff Messaging System</h3>
           
           <p className="text-muted-foreground max-w-md">
-            As a staff member, you can only message 
+            As a staff member, you can message 
             {businessName !== "your business" ? ` ${businessName}` : " your business"} and 
-            other staff members.
+            other staff members directly. No contact requests are needed.
           </p>
           
           <div className="flex flex-wrap gap-3 mt-4 justify-center">            
@@ -154,14 +129,6 @@ const ContactsStaffRestriction: React.FC<ContactsStaffRestrictionProps> = ({
                 Message Business Owner
               </Button>
             )}
-            
-            <Button 
-              variant="secondary"
-              onClick={handleSyncContacts}
-              disabled={isSyncing}
-            >
-              {isSyncing ? 'Syncing...' : 'Refresh Messaging Connections'}
-            </Button>
           </div>
           
           {staffMembers.length > 0 && (

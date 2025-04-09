@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from "react";
+
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Users, RefreshCw, MessageSquare } from "lucide-react";
+import { Users, MessageSquare } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
-import { forceSyncStaffContacts } from "@/services/contacts/contactSync";
 import ConversationsList from "./ConversationsList";
 
 interface StaffCommunicationTabProps {
@@ -26,9 +25,8 @@ interface StaffMember {
 const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessId }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [isSyncing, setIsSyncing] = useState(false);
   
-  const { data: staffMembers, isLoading, refetch } = useQuery({
+  const { data: staffMembers, isLoading, error } = useQuery({
     queryKey: ['businessStaff'],
     queryFn: async () => {
       if (!businessId) return [];
@@ -63,36 +61,6 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
     enabled: !!businessId
   });
   
-  const handleSyncContacts = async () => {
-    setIsSyncing(true);
-    try {
-      const result = await forceSyncStaffContacts();
-      if (result.success) {
-        toast({
-          title: "Staff Contacts Synced",
-          description: "Staff contacts have been synchronized successfully.",
-          variant: "default"
-        });
-        refetch();
-      } else {
-        toast({
-          title: "Sync Failed",
-          description: result.message || "Failed to sync staff contacts",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Error syncing staff contacts:", error);
-      toast({
-        title: "Sync Error",
-        description: "An unexpected error occurred",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -102,17 +70,9 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
             Staff Communication
           </h2>
           <p className="text-muted-foreground">
-            Manage and message your team members
+            Message your team members directly
           </p>
         </div>
-        <Button 
-          onClick={handleSyncContacts}
-          disabled={isSyncing}
-          variant="outline"
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
-          {isSyncing ? "Syncing..." : "Sync Staff Contacts"}
-        </Button>
       </div>
       
       <Card className="overflow-hidden">
@@ -140,6 +100,18 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
             </Card>
           ))}
         </div>
+      ) : error ? (
+        <Card>
+          <CardContent className="p-6 text-center">
+            <div className="flex flex-col items-center gap-2">
+              <Users className="h-12 w-12 text-muted-foreground opacity-20" />
+              <h3 className="font-medium text-lg">Error Loading Staff</h3>
+              <p className="text-muted-foreground">
+                There was an error loading your staff members.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       ) : staffMembers && staffMembers.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {staffMembers.map((staff) => (
@@ -173,15 +145,8 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
               <Users className="h-12 w-12 text-muted-foreground opacity-20" />
               <h3 className="font-medium text-lg">No Staff Members</h3>
               <p className="text-muted-foreground">
-                You don't have any staff members yet, or there was an error loading them.
+                You don't have any staff members yet.
               </p>
-              <Button 
-                onClick={handleSyncContacts} 
-                variant="default" 
-                className="mt-2"
-              >
-                Try Syncing Contacts
-              </Button>
             </div>
           </CardContent>
         </Card>
@@ -189,5 +154,8 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
     </div>
   );
 };
+
+// Fix missing import
+import { Button } from "@/components/ui/button";
 
 export default StaffCommunicationTab;

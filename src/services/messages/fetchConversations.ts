@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Conversation } from "@/types/message.types";
 
@@ -56,15 +57,15 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
       return [];
     }
     
-    // Fetch profiles for all conversation partners
+    // Start with a base query for profiles
     let query = supabase
       .from('profiles')
       .select('id, full_name, display_name, business_name, avatar_url, account_type');
     
-    // If we're filtering for staff only, join with business_staff to filter
+    // If we're filtering for staff only, we need to handle it differently
     if (staffOnly) {
       // For business users, we want to get all staff members
-      // First check if the user is a business
+      // Get the business ID (which is the user ID for business accounts)
       const { data: profileData } = await supabase
         .from('profiles')
         .select('account_type')
@@ -74,25 +75,65 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
       const isBusinessOwner = profileData?.account_type === 'business';
       
       if (isBusinessOwner) {
-        // Get list of staff IDs for this business
+        // Get all staff IDs for this business directly from business_staff
         const { data: staffData } = await supabase
           .from('business_staff')
           .select('staff_id')
           .eq('business_id', user.id)
           .eq('status', 'active');
           
-        if (staffData && Array.isArray(staffData)) {
+        if (staffData && Array.isArray(staffData) && staffData.length > 0) {
+          // Filter profiles to only include staff members
           const staffIds = staffData.map(staff => staff.staff_id);
-          
-          // Filter partners to only include staff members
           query = query.in('id', staffIds);
+        } else {
+          // No staff members, return empty array
+          return [];
+        }
+      } else {
+        // This could be a staff member trying to see staff-only conversations
+        const { data: staffData } = await supabase
+          .from('business_staff')
+          .select('business_id')
+          .eq('staff_id', user.id)
+          .eq('status', 'active')
+          .maybeSingle();
+          
+        if (staffData) {
+          // Get the business ID
+          const businessId = staffData.business_id;
+          
+          // Get other staff members for the same business
+          const { data: otherStaffData } = await supabase
+            .from('business_staff')
+            .select('staff_id')
+            .eq('business_id', businessId)
+            .eq('status', 'active')
+            .neq('staff_id', user.id);
+            
+          if (otherStaffData && Array.isArray(otherStaffData) && otherStaffData.length > 0) {
+            // Include business owner in the staff-only conversations
+            const staffIds = otherStaffData.map(staff => staff.staff_id);
+            staffIds.push(businessId); // Add the business owner ID
+            
+            // Filter profiles to include business owner and other staff members
+            query = query.in('id', staffIds);
+          } else {
+            // Just include the business owner
+            query = query.eq('id', businessId);
+          }
+        } else {
+          // Not a staff member, return empty array
+          return [];
         }
       }
+    } else {
+      // For regular conversations (not staff-only), 
+      // just get profiles for the partners we have messages with
+      query = query.in('id', partnerIds);
     }
     
-    // Add the user IDs filter
-    query = query.in('id', partnerIds);
-    
+    // Execute the profiles query
     const { data: profiles, error: profilesError } = await query;
     
     if (profilesError) {
@@ -111,26 +152,39 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
     // Construct the conversations array
     const conversations: Conversation[] = [];
     
-    conversationPartnersMap.forEach((message, partnerId) => {
-      const profile = profileMap.get(partnerId);
-      
-      if (profile) {
-        // Skip if we're looking for staff only and this is not staffOnly mode
-        if (staffOnly && !conversations.some(c => c.userId === partnerId)) {
-          // We'll check for staff relationship below, but skip for now
-        }
+    // If staffOnly and we're a business account, include all staff, even if no messages yet
+    if (staffOnly) {
+      profiles?.forEach(profile => {
+        const message = conversationPartnersMap.get(profile.id);
         
         conversations.push({
-          id: partnerId, // Use partner ID as conversation ID
-          userId: partnerId,
+          id: profile.id, // Use partner ID as conversation ID
+          userId: profile.id,
           displayName: profile.business_name || profile.display_name || profile.full_name || 'Unknown User',
           avatar: profile.avatar_url || '',
-          lastMessage: message.content,
-          lastMessageTime: message.created_at,
-          unread: message.recipient_id === user.id && !message.is_read
+          lastMessage: message?.content || 'No messages yet',
+          lastMessageTime: message?.created_at || new Date().toISOString(),
+          unread: message ? (message.recipient_id === user.id && !message.is_read) : false
         });
-      }
-    });
+      });
+    } else {
+      // Regular conversation logic - only include users with messages
+      conversationPartnersMap.forEach((message, partnerId) => {
+        const profile = profileMap.get(partnerId);
+        
+        if (profile) {
+          conversations.push({
+            id: partnerId, // Use partner ID as conversation ID
+            userId: partnerId,
+            displayName: profile.business_name || profile.display_name || profile.full_name || 'Unknown User',
+            avatar: profile.avatar_url || '',
+            lastMessage: message.content,
+            lastMessageTime: message.created_at,
+            unread: message.recipient_id === user.id && !message.is_read
+          });
+        }
+      });
+    }
     
     // Sort by message time, newest first
     return conversations.sort((a, b) => 

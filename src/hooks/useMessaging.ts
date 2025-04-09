@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/components/ui/use-toast";
 import { 
@@ -9,7 +10,6 @@ import { fetchConversations } from "@/services/messages/fetchConversations";
 import { canMessageUser } from "@/services/messages/permissionsService";
 import { getUnreadMessagesCount } from "@/services/messages/notificationsService";
 import { Message, Conversation } from "@/types/message.types";
-import { forceSyncStaffContacts } from "@/services/contacts/contactSync";
 import { getStaffBusinessId } from "@/utils/staffUtils";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -32,71 +32,8 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
     staffOnly = options.staffOnly || false;
   }
 
-  useQuery({
-    queryKey: ['syncStaffContacts'],
-    queryFn: async () => {
-      if (isStaff) {
-        try {
-          const syncResult = await forceSyncStaffContacts();
-          console.log("Staff contacts sync result:", syncResult);
-          
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session?.user) return false;
-          
-          const businessId = await getStaffBusinessId();
-          if (!businessId) return false;
-          
-          await supabase.from('user_contacts').upsert({
-            user_id: session.user.id,
-            contact_id: businessId,
-            status: 'accepted',
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'user_id,contact_id' });
-          
-          await supabase.from('user_contacts').upsert({
-            user_id: businessId,
-            contact_id: session.user.id,
-            status: 'accepted',
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'user_id,contact_id' });
-          
-          const { data: otherStaff } = await supabase
-            .from('business_staff')
-            .select('staff_id')
-            .eq('business_id', businessId)
-            .eq('status', 'active')
-            .neq('staff_id', session.user.id);
-            
-          if (otherStaff && otherStaff.length > 0) {
-            for (const staff of otherStaff) {
-              await supabase.from('user_contacts').upsert({
-                user_id: session.user.id,
-                contact_id: staff.staff_id,
-                status: 'accepted',
-                updated_at: new Date().toISOString()
-              }, { onConflict: 'user_id,contact_id' });
-              
-              await supabase.from('user_contacts').upsert({
-                user_id: staff.staff_id,
-                contact_id: session.user.id,
-                status: 'accepted',
-                updated_at: new Date().toISOString()
-              }, { onConflict: 'user_id,contact_id' });
-            }
-          }
-          
-          return true;
-        } catch (error) {
-          console.error("Error syncing staff contacts:", error);
-          return false;
-        }
-      }
-      return false;
-    },
-    refetchOnMount: true,
-    refetchInterval: 60000
-  });
-
+  // We don't need to explicitly sync staff contacts anymore since that's handled by DB triggers
+  
   const { 
     data: messages = [],
     isLoading: isLoadingMessages,
@@ -111,42 +48,6 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
 
   const sendMessageMutation = useMutation({
     mutationFn: async ({ recipientId, content }: { recipientId: string; content: string }) => {
-      if (isStaff) {
-        try {
-          const businessId = await getStaffBusinessId();
-          
-          if (businessId === recipientId) {
-            await forceSyncStaffContacts();
-          } else {
-            const { data: staffData } = await supabase
-              .from('business_staff')
-              .select('id')
-              .eq('staff_id', recipientId)
-              .eq('business_id', businessId)
-              .eq('status', 'active')
-              .maybeSingle();
-              
-            if (staffData) {
-              await supabase.from('user_contacts').upsert({
-                user_id: (await supabase.auth.getUser()).data.user?.id,
-                contact_id: recipientId,
-                status: 'accepted',
-                updated_at: new Date().toISOString()
-              }, { onConflict: 'user_id,contact_id' });
-              
-              await supabase.from('user_contacts').upsert({
-                user_id: recipientId,
-                contact_id: (await supabase.auth.getUser()).data.user?.id,
-                status: 'accepted',
-                updated_at: new Date().toISOString()
-              }, { onConflict: 'user_id,contact_id' });
-            }
-          }
-        } catch (error) {
-          console.error("Error syncing contacts before sending message:", error);
-        }
-      }
-      
       return sendMessage(recipientId, content);
     },
     onSuccess: () => {
@@ -194,9 +95,11 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
           .maybeSingle();
           
         if (staffData?.business_id === otherUserId) {
+          // Staff can always message their business owner
           return true;
         }
         
+        // Check if the other user is a staff member in the same business
         const { data: targetIsStaff } = await supabase
           .from('business_staff')
           .select('id')
@@ -205,6 +108,7 @@ export const useMessaging = (options?: string | UseMessagingOptions) => {
           .maybeSingle();
           
         if (targetIsStaff) {
+          // Staff can message other staff of the same business
           return true;
         }
         
