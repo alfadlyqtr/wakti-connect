@@ -4,6 +4,7 @@ import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { UsersRound, TrendingUp } from "lucide-react";
 import { BusinessAnalyticsData } from "@/hooks/useBusinessAnalytics";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AnalyticsSummaryCardsProps {
   isLoading: boolean;
@@ -19,11 +20,14 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
         {[...Array(3)].map((_, i) => (
           <Card key={i} className="overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 md:p-4 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium">Loading...</CardTitle>
+              <CardTitle className="text-xs sm:text-sm font-medium">
+                <Skeleton className="h-4 w-24" />
+              </CardTitle>
+              <Skeleton className="h-4 w-4 rounded-full" />
             </CardHeader>
             <CardContent className="p-3 md:p-4 pt-2">
-              <div className="text-lg sm:text-xl md:text-2xl font-bold">-</div>
-              <p className="text-xs text-muted-foreground">Loading...</p>
+              <Skeleton className="h-6 w-16 mb-1" />
+              <Skeleton className="h-3 w-32" />
             </CardContent>
           </Card>
         ))}
@@ -41,7 +45,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
           <UsersRound className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-3 md:p-4 pt-2">
-          <div className="text-lg sm:text-xl md:text-2xl font-bold">{data.subscriberCount || "-"}</div>
+          <div className="text-lg sm:text-xl md:text-2xl font-bold">{data.subscriberCount || "—"}</div>
           {data.subscriberChangeText ? (
             <p className="text-xs text-muted-foreground">
               {data.subscriberChangeText}
@@ -62,7 +66,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
           <UsersRound className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-3 md:p-4 pt-2">
-          <div className="text-lg sm:text-xl md:text-2xl font-bold">{data.staffCount || "-"}</div>
+          <div className="text-lg sm:text-xl md:text-2xl font-bold">{data.staffCount || "—"}</div>
           {data.staffChangeText ? (
             <p className="text-xs text-muted-foreground">
               {data.staffChangeText}
@@ -84,7 +88,7 @@ export const AnalyticsSummaryCards: React.FC<AnalyticsSummaryCardsProps> = ({ is
         </CardHeader>
         <CardContent className="p-3 md:p-4 pt-2">
           <div className="text-lg sm:text-xl md:text-2xl font-bold">
-            {data.taskCompletionRate ? `${data.taskCompletionRate}%` : "-"}
+            {data.taskCompletionRate ? `${data.taskCompletionRate}%` : "—"}
           </div>
           {data.completionRateChangeText ? (
             <p className="text-xs text-muted-foreground">

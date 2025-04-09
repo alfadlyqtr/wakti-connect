@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
   Table, 
@@ -33,18 +33,22 @@ const WorkHistory: React.FC<WorkHistoryProps> = ({
   // Group sessions by date
   const sessionsByDate: Record<string, any[]> = {};
   
-  workLogs.forEach(log => {
-    // Skip active sessions that we're displaying separately
-    if (activeWorkSession && log.id === activeWorkSession.id) {
-      return;
-    }
-    
-    const dateStr = format(new Date(log.start_time), 'yyyy-MM-dd');
-    if (!sessionsByDate[dateStr]) {
-      sessionsByDate[dateStr] = [];
-    }
-    sessionsByDate[dateStr].push(log);
-  });
+  if (workLogs && workLogs.length > 0) {
+    workLogs.forEach(log => {
+      // Skip active sessions that we're displaying separately
+      if (activeWorkSession && log.id === activeWorkSession.id) {
+        return;
+      }
+      
+      if (log.start_time) {
+        const dateStr = format(new Date(log.start_time), 'yyyy-MM-dd');
+        if (!sessionsByDate[dateStr]) {
+          sessionsByDate[dateStr] = [];
+        }
+        sessionsByDate[dateStr].push(log);
+      }
+    });
+  }
   
   if (isLoading) {
     return (
@@ -109,7 +113,7 @@ const WorkHistory: React.FC<WorkHistoryProps> = ({
                 {logs.map(log => {
                   // Calculate duration
                   let duration = "In progress";
-                  if (log.end_time) {
+                  if (log.start_time && log.end_time) {
                     const start = new Date(log.start_time);
                     const end = new Date(log.end_time);
                     duration = formatDuration(start, end);
@@ -117,7 +121,7 @@ const WorkHistory: React.FC<WorkHistoryProps> = ({
                   
                   return (
                     <TableRow key={log.id}>
-                      <TableCell>{formatDateTime(log.start_time)}</TableCell>
+                      <TableCell>{log.start_time ? formatDateTime(log.start_time) : "—"}</TableCell>
                       <TableCell>
                         {log.end_time ? formatDateTime(log.end_time) : 'In progress'}
                       </TableCell>

@@ -1,78 +1,113 @@
 
 import React from "react";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Skeleton } from "@/components/ui/skeleton"; 
 import { Button } from "@/components/ui/button";
-import { Download, TrendingUp, DollarSign, Calendar } from "lucide-react";
+import { DownloadIcon } from "lucide-react";
 
 interface RevenueOverviewProps {
-  serviceCount: number | null;
+  serviceCount: number | undefined;
   servicesLoading: boolean;
   onDownload: () => void;
 }
 
-export const RevenueOverview = ({ serviceCount, servicesLoading, onDownload }: RevenueOverviewProps) => {
+export const RevenueOverview: React.FC<RevenueOverviewProps> = ({
+  serviceCount,
+  servicesLoading,
+  onDownload
+}) => {
+  const chartColors = {
+    completed: "#22c55e",
+    pending: "#f59e0b",
+    cancelled: "#ef4444"
+  };
+
+  // Mock data that would ideally come from the database
+  const data = [
+    {
+      name: 'January',
+      completed: 400,
+      pending: 240,
+      cancelled: 20,
+    },
+    {
+      name: 'February',
+      completed: 300,
+      pending: 138,
+      cancelled: 10,
+    },
+    {
+      name: 'March',
+      completed: 200,
+      pending: 98,
+      cancelled: 30,
+    },
+    {
+      name: 'April',
+      completed: 278,
+      pending: 38,
+      cancelled: 0,
+    },
+    {
+      name: 'May',
+      completed: 189,
+      pending: 48,
+      cancelled: 8,
+    },
+  ];
+  
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Revenue Overview</CardTitle>
-        <CardDescription>
-          Financial performance analysis
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Monthly Revenue</p>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div className="text-2xl font-bold">$5,240</div>
-              <p className="text-xs text-muted-foreground flex items-center">
-                <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-                <span className="text-green-500 font-medium">+12%</span>
-                <span className="ml-1">from last month</span>
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Average Booking Value</p>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div className="text-2xl font-bold">$67.18</div>
-              <p className="text-xs text-muted-foreground flex items-center">
-                <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-                <span className="text-green-500 font-medium">+3.2%</span>
-                <span className="ml-1">from last month</span>
-              </p>
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium">Services Offered</p>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div className="text-2xl font-bold">
-                {servicesLoading ? (
-                  <div className="h-6 w-12 bg-muted animate-pulse rounded"></div>
-                ) : (
-                  serviceCount
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Active services available for booking
-              </p>
-            </div>
+    <Card className="mt-6 col-span-full">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle className="text-base font-semibold">
+            Bookings Overview
+          </CardTitle>
+          <div className="text-sm text-muted-foreground mt-1">
+            {servicesLoading ? (
+              <Skeleton className="h-4 w-24" />
+            ) : (
+              <>
+                <span className="font-medium">{serviceCount || 0}</span> services offered
+              </>
+            )}
           </div>
         </div>
-      </CardContent>
-      <CardFooter className="border-t px-6 py-4">
-        <Button variant="outline" className="w-full" onClick={onDownload}>
-          <Download className="mr-2 h-4 w-4" />
-          Download Detailed Report
+        <Button onClick={onDownload} variant="outline" size="sm">
+          <DownloadIcon className="h-3.5 w-3.5 mr-2" />
+          Download Report
         </Button>
-      </CardFooter>
+      </CardHeader>
+      <CardContent className="pt-2">
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              margin={{
+                top: 20,
+                right: 0,
+                left: -10,
+                bottom: 0,
+              }}
+              barSize={15}
+              barGap={2}
+            >
+              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+              <XAxis dataKey="name" fontSize={12} tickMargin={8} />
+              <YAxis fontSize={12} />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="completed" name="Completed" fill={chartColors.completed} />
+              <Bar dataKey="pending" name="Pending" fill={chartColors.pending} />
+              <Bar dataKey="cancelled" name="Cancelled" fill={chartColors.cancelled} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="text-xs text-muted-foreground text-center mt-2">
+          Note: This is mock data for UI presentation. Will be replaced with real booking data in the next update.
+        </div>
+      </CardContent>
     </Card>
   );
 };

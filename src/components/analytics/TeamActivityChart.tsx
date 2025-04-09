@@ -1,48 +1,89 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
-import { getStaffPerformanceData } from "@/utils/businessAnalyticsUtils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Loader2 } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export const TeamActivityChart: React.FC = () => {
-  const [chartData, setChartData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const isMobile = useIsMobile();
-  const { t } = useTranslation();
-
-  useEffect(() => {
-    const loadData = async () => {
+  
+  // Add querying for real staff performance data
+  const { data: chartData, isLoading, error } = useQuery({
+    queryKey: ['staffPerformance'],
+    queryFn: async () => {
       try {
-        setIsLoading(true);
-        const data = await getStaffPerformanceData();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          throw new Error("Not authenticated");
+        }
         
-        // Format data for the chart
-        const formattedData = data.labels.map((name, index) => ({
-          name: isMobile ? name.split(' ')[0] : name, // Only first name on mobile
-          "Hours Worked": data.datasets[0].data[index],
-        }));
+        // Check if user is a business account
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('account_type')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (profile?.account_type !== 'business') {
+          throw new Error("Must be a business account to view staff performance");
+        }
         
-        setChartData(formattedData);
-        setError(null);
-      } catch (err) {
-        console.error("Error loading staff performance data:", err);
-        setError(t("common.error"));
-      } finally {
-        setIsLoading(false);
+        // Get staff members with work logs
+        const { data: staffData, error: staffError } = await supabase
+          .from('business_staff')
+          .select(`
+            id,
+            staff_id,
+            name,
+            staff_work_logs (id, start_time, end_time)
+          `)
+          .eq('business_id', session.user.id)
+          .eq('status', 'active');
+        
+        if (staffError) throw staffError;
+        
+        if (!staffData || staffData.length === 0) {
+          return [];
+        }
+        
+        // Calculate hours worked for each staff member
+        return staffData.map(staff => {
+          const workLogs = staff.staff_work_logs || [];
+          let hoursWorked = 0;
+          
+          // Calculate total hours from completed work logs
+          workLogs.forEach(log => {
+            if (log.start_time && log.end_time) {
+              const start = new Date(log.start_time);
+              const end = new Date(log.end_time);
+              const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+              hoursWorked += diffHours;
+            }
+          });
+          
+          // Format name for display
+          const name = isMobile ? staff.name.split(' ')[0] : staff.name;
+          
+          return {
+            name,
+            "Hours Worked": Math.round(hoursWorked * 10) / 10 // Round to 1 decimal place
+          };
+        });
+      } catch (error) {
+        console.error("Error loading staff performance data:", error);
+        throw error;
       }
-    };
-    
-    loadData();
-  }, [isMobile, t]);
+    },
+    refetchOnWindowFocus: false,
+  });
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[300px]">
         <Loader2 className="h-6 w-6 animate-spin mr-2" />
-        <p>{t("common.loading")}</p>
+        <p>Loading staff data...</p>
       </div>
     );
   }
@@ -50,7 +91,9 @@ export const TeamActivityChart: React.FC = () => {
   if (error) {
     return (
       <div className="flex items-center justify-center h-[300px]">
-        <p className="text-destructive">{error}</p>
+        <p className="text-destructive">
+          {error instanceof Error ? error.message : "Error loading data"}
+        </p>
       </div>
     );
   }
@@ -58,7 +101,7 @@ export const TeamActivityChart: React.FC = () => {
   if (!chartData || chartData.length === 0) {
     return (
       <div className="flex items-center justify-center h-[300px]">
-        <p>{t("dashboard.noStaffActivity")}</p>
+        <p>No staff activity data available</p>
       </div>
     );
   }

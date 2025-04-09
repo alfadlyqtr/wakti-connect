@@ -5,10 +5,11 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { UsersRound, CheckCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const IndividualDashboardStats = () => {
   // Get completed tasks count
-  const { data: tasksData } = useQuery({
+  const { data: tasksData, isLoading: tasksLoading } = useQuery({
     queryKey: ['completedTasksCount'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -30,14 +31,14 @@ export const IndividualDashboardStats = () => {
   });
   
   // Get contacts count
-  const { data: contactsData } = useQuery({
+  const { data: contactsData, isLoading: contactsLoading } = useQuery({
     queryKey: ['contactsCount'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return null;
       
       const { count, error } = await supabase
-        .from('contacts')
+        .from('user_contacts')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', session.user.id)
         .eq('status', 'accepted');
@@ -67,9 +68,13 @@ export const IndividualDashboardStats = () => {
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {tasksData?.completedCount !== undefined ? tasksData.completedCount : "-"}
-            </div>
+            {tasksLoading ? (
+              <Skeleton className="h-8 w-16 mb-1" />
+            ) : (
+              <div className="text-2xl font-bold">
+                {tasksData?.completedCount !== undefined ? tasksData.completedCount : "—"}
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
               Completion rate this month
             </p>
@@ -84,9 +89,13 @@ export const IndividualDashboardStats = () => {
             <UsersRound className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {contactsData?.contactsCount !== undefined ? contactsData.contactsCount : "-"}
-            </div>
+            {contactsLoading ? (
+              <Skeleton className="h-8 w-16 mb-1" />
+            ) : (
+              <div className="text-2xl font-bold">
+                {contactsData?.contactsCount !== undefined ? contactsData.contactsCount : "—"}
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
               People in your network
             </p>

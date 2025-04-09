@@ -4,11 +4,12 @@ import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, ShoppingBag } from "lucide-react";
+import { Users, ShoppingBag, Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const BusinessDashboardStats = () => {
   // Get subscribers count
-  const { data: subscribersData } = useQuery({
+  const { data: subscribersData, isLoading: isLoadingSubscribers } = useQuery({
     queryKey: ['dashboardSubscribersCount'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -29,7 +30,7 @@ export const BusinessDashboardStats = () => {
   });
   
   // Get staff count
-  const { data: staffData } = useQuery({
+  const { data: staffData, isLoading: isLoadingStaff } = useQuery({
     queryKey: ['dashboardStaffCount'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -51,7 +52,7 @@ export const BusinessDashboardStats = () => {
   });
   
   // Get services count
-  const { data: servicesData } = useQuery({
+  const { data: servicesData, isLoading: isLoadingServices } = useQuery({
     queryKey: ['dashboardServicesCount'],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -87,12 +88,18 @@ export const BusinessDashboardStats = () => {
             <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {subscribersData?.subscribersCount !== undefined ? subscribersData.subscribersCount : "-"}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Total subscribers
-            </p>
+            {isLoadingSubscribers ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">
+                  {subscribersData?.subscribersCount !== undefined ? subscribersData.subscribersCount : "—"}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Total subscribers
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
         
@@ -104,12 +111,18 @@ export const BusinessDashboardStats = () => {
             <Users className="h-4 w-4 text-indigo-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {staffData?.staffCount !== undefined ? staffData.staffCount : "-"}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Active staff members
-            </p>
+            {isLoadingStaff ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">
+                  {staffData?.staffCount !== undefined ? staffData.staffCount : "—"}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Active staff members
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
         
@@ -121,12 +134,18 @@ export const BusinessDashboardStats = () => {
             <ShoppingBag className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {servicesData?.servicesCount !== undefined ? servicesData.servicesCount : "-"}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Business services
-            </p>
+            {isLoadingServices ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">
+                  {servicesData?.servicesCount !== undefined ? servicesData.servicesCount : "—"}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Business services
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
