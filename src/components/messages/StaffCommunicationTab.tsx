@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import ConversationsList from "./ConversationsList";
+import { Button } from "@/components/ui/button";
 
 interface StaffCommunicationTabProps {
   businessId?: string | null;
@@ -31,32 +32,41 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
     queryFn: async () => {
       if (!businessId) return [];
       
-      const { data, error } = await supabase
+      // First fetch staff records
+      const { data: staffData, error: staffError } = await supabase
         .from('business_staff')
         .select(`
           id,
           staff_id,
           name,
           email,
-          role,
-          profiles:staff_id(avatar_url)
+          role
         `)
         .eq('business_id', businessId)
         .eq('status', 'active');
         
-      if (error) {
-        console.error("Error fetching staff members:", error);
-        throw error;
+      if (staffError) {
+        console.error("Error fetching staff members:", staffError);
+        throw staffError;
       }
+
+      // For each staff member, get their profile data to access avatar_url
+      const staffWithProfiles = await Promise.all(
+        staffData.map(async (staff) => {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('avatar_url')
+            .eq('id', staff.staff_id)
+            .single();
+            
+          return {
+            ...staff,
+            avatar_url: profileData?.avatar_url || null
+          };
+        })
+      );
       
-      return data.map((staff: any) => ({
-        id: staff.id,
-        staff_id: staff.staff_id,
-        name: staff.name,
-        email: staff.email,
-        role: staff.role,
-        avatar_url: staff.profiles?.avatar_url
-      })) as StaffMember[];
+      return staffWithProfiles as StaffMember[];
     },
     enabled: !!businessId
   });
@@ -154,8 +164,5 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
     </div>
   );
 };
-
-// Fix missing import
-import { Button } from "@/components/ui/button";
 
 export default StaffCommunicationTab;
