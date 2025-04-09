@@ -21,3 +21,11 @@ declare namespace google {
     }
   }
 }
+
+// Add proper typing for import.meta.env
+interface ImportMeta {
+  readonly env: {
+    readonly VITE_GOOGLE_MAPS_API_KEY: string;
+    readonly [key: string]: string;
+  };
+}
