@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils';
 import { AIAssistantUpgradeCard } from '../AIAssistantUpgradeCard';
 import { useVoiceInteraction } from '@/hooks/ai/useVoiceInteraction';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { useTranslation } from 'react-i18next';
 
 interface MessageInputFormProps {
   inputMessage: string;
@@ -15,6 +14,8 @@ interface MessageInputFormProps {
   handleSendMessage: (e: React.FormEvent) => Promise<void>;
   isLoading: boolean;
   canAccess: boolean;
+  showSuggestions?: boolean;
+  onPromptClick?: (prompt: string) => void;
   onFileUpload?: (file: File) => void;
   onCameraCapture?: () => void;
 }
@@ -25,11 +26,12 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
   handleSendMessage,
   isLoading,
   canAccess,
+  showSuggestions,
+  onPromptClick,
   onFileUpload,
   onCameraCapture
 }) => {
   const isMobile = useIsMobile();
-  const { t } = useTranslation();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const {
@@ -92,7 +94,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       <div className="flex items-end gap-2 relative">
         <div className="relative flex-1">
           <Textarea
-            placeholder={t("ai.messagePlaceholder", "Type a message...")}
+            placeholder="Type a message..."
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -134,7 +136,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
               disabled={isLoading}
             >
               <Paperclip className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="sr-only">{t("ai.attachFile", "Attach file")}</span>
+              <span className="sr-only">Attach file</span>
             </Button>
             <input
               type="file"
@@ -157,7 +159,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
             disabled={isLoading}
           >
             <Camera className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="sr-only">{t("ai.takePhoto", "Take photo")}</span>
+            <span className="sr-only">Take photo</span>
           </Button>
         )}
         
@@ -180,7 +182,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       {isMobile && (
         <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
           <AlertCircle className="h-3 w-3" /> 
-          {t("ai.tapToSend", "Tap send button to submit your message")}
+          Tap send button to submit your message
         </p>
       )}
       
@@ -188,7 +190,7 @@ export const MessageInputForm: React.FC<MessageInputFormProps> = ({
       {!isMobile && (
         <p className="text-xs text-muted-foreground mt-1.5 hidden sm:flex items-center gap-1">
           <AlertCircle className="h-3 w-3" /> 
-          {t("ai.pressEnter", "Press Enter to send, Shift+Enter for new line")}
+          Press Enter to send, Shift+Enter for new line
         </p>
       )}
     </form>
