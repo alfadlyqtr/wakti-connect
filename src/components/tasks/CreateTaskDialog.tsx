@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -55,7 +56,6 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { useTranslation } from "react-i18next";
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -74,7 +74,6 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
   const [showSubtasks, setShowSubtasks] = useState(false);
   const [showRecurring, setShowRecurring] = useState(false);
   const [freeAccountAlertOpen, setFreeAccountAlertOpen] = useState(false);
-  const { t } = useTranslation();
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -153,15 +152,15 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       onOpenChange(false);
       
       toast({
-        title: t("task.createTask"),
-        description: t("common.success"),
+        title: "Create Task",
+        description: "Success",
         variant: "success"
       });
     } catch (error) {
       console.error("Error creating task:", error);
       toast({
-        title: t("common.error"),
-        description: error instanceof Error ? error.message : t("common.error"),
+        title: "Error",
+        description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive"
       });
     } finally {
@@ -184,9 +183,9 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t("task.createTask")}</DialogTitle>
+            <DialogTitle>Create Task</DialogTitle>
             <DialogDescription>
-              {t("task.createTaskDescription")}
+              Create a new task with details and optional subtasks.
             </DialogDescription>
           </DialogHeader>
 
@@ -200,10 +199,10 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("task.taskTitle")}</FormLabel>
+                    <FormLabel>Task Title</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t("task.enterTaskTitle")}
+                        placeholder="Enter task title"
                         {...field}
                         autoFocus
                       />
@@ -218,10 +217,10 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("task.description")}</FormLabel>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder={t("task.enterTaskDescription")}
+                        placeholder="Enter task description"
                         {...field}
                         className="min-h-[100px]"
                       />
@@ -237,21 +236,21 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                   name="priority"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("task.priority.priority")}</FormLabel>
+                      <FormLabel>Priority</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t("task.selectPriority")} />
+                            <SelectValue placeholder="Select Priority" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="urgent">{t("task.priority.urgent")}</SelectItem>
-                          <SelectItem value="high">{t("task.priority.high")}</SelectItem>
-                          <SelectItem value="medium">{t("task.priority.medium")}</SelectItem>
-                          <SelectItem value="normal">{t("task.priority.normal")}</SelectItem>
+                          <SelectItem value="urgent">Urgent</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="normal">Normal</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -266,7 +265,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                   name="dueDate"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>{t("task.dueDate")}</FormLabel>
+                      <FormLabel>Due Date</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -280,7 +279,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                               {field.value ? (
                                 format(new Date(field.value), "PPP")
                               ) : (
-                                <span>{t("task.pickDate")}</span>
+                                <span>Pick a date</span>
                               )}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
@@ -316,11 +315,11 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                   name="dueTime"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("task.dueTime")}</FormLabel>
+                      <FormLabel>Due Time</FormLabel>
                       <FormControl>
                         <Input
                           type="time"
-                          placeholder={t("task.selectTime")}
+                          placeholder="Select time"
                           {...field}
                         />
                       </FormControl>
@@ -336,7 +335,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                   checked={showSubtasks}
                   onCheckedChange={setShowSubtasks}
                 />
-                <Label htmlFor="enable-subtasks">{t("task.addSubtasks")}</Label>
+                <Label htmlFor="enable-subtasks">Add Subtasks</Label>
               </div>
 
               {showSubtasks && (
@@ -353,9 +352,9 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <FormLabel>{t("task.enableSubtasks")}</FormLabel>
+                          <FormLabel>Enable Subtasks</FormLabel>
                           <FormDescription>
-                            {t("task.subtasksDescription")}
+                            Break down your task into smaller subtasks
                           </FormDescription>
                         </div>
                       </FormItem>
@@ -377,7 +376,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                                 <FormItem>
                                   <FormControl>
                                     <Input
-                                      placeholder={t("task.subtaskContent")}
+                                      placeholder="Subtask content"
                                       {...field}
                                     />
                                   </FormControl>
@@ -403,7 +402,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                         onClick={handleAddSubtask}
                       >
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        {t("task.addSubtask")}
+                        Add Subtask
                       </Button>
                     </div>
                   )}
@@ -416,7 +415,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                   checked={showRecurring}
                   onCheckedChange={setShowRecurring}
                 />
-                <Label htmlFor="enable-recurring">{t("task.makingRecurring")}</Label>
+                <Label htmlFor="enable-recurring">Make Recurring</Label>
               </div>
 
               {showRecurring && (
@@ -433,9 +432,9 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <FormLabel>{t("task.enableRecurring")}</FormLabel>
+                          <FormLabel>Enable Recurring</FormLabel>
                           <FormDescription>
-                            {t("task.recurringDescription")}
+                            Set this task to repeat automatically
                           </FormDescription>
                         </div>
                       </FormItem>
@@ -449,20 +448,20 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                         name="recurring.frequency"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t("recurring.frequency")}</FormLabel>
+                            <FormLabel>Frequency</FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder={t("task.selectFrequency")} />
+                                  <SelectValue placeholder="Select frequency" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="daily">{t("recurring.daily")}</SelectItem>
-                                <SelectItem value="weekly">{t("recurring.weekly")}</SelectItem>
-                                <SelectItem value="monthly">{t("recurring.monthly")}</SelectItem>
+                                <SelectItem value="daily">Daily</SelectItem>
+                                <SelectItem value="weekly">Weekly</SelectItem>
+                                <SelectItem value="monthly">Monthly</SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -475,12 +474,12 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                         name="recurring.interval"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t("recurring.interval")}</FormLabel>
+                            <FormLabel>Interval</FormLabel>
                             <FormControl>
                               <Input
                                 type="number"
                                 min={1}
-                                placeholder={t("task.enterInterval")}
+                                placeholder="Enter interval"
                                 {...field}
                                 onChange={(e) =>
                                   field.onChange(parseInt(e.target.value))
@@ -488,7 +487,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                               />
                             </FormControl>
                             <FormDescription>
-                              {t("task.intervalDescription")}
+                              How often to repeat (e.g. every 2 weeks)
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -505,7 +504,7 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                   variant="outline"
                   onClick={() => onOpenChange(false)}
                 >
-                  {t("common.cancel")}
+                  Cancel
                 </Button>
                 <Button 
                   type="submit" 
@@ -514,10 +513,10 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t("task.creating")}
+                      Creating...
                     </>
                   ) : (
-                    t("task.createTask")
+                    "Create Task"
                   )}
                 </Button>
               </DialogFooter>
@@ -532,15 +531,15 @@ export const CreateTaskDialog: React.FC<CreateTaskDialogProps> = ({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("task.freeAccountLimit")}</AlertDialogTitle>
+            <AlertDialogTitle>Free Account Limit</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("task.freeAccountMessage")}
+              Free accounts are limited to one task. Are you sure you want to continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmFreeAccount}>
-              {t("task.createTask")}
+              Create Task
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

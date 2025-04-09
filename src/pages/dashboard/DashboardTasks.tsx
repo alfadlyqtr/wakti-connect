@@ -12,11 +12,9 @@ import { Archive } from "lucide-react";
 import { Navigate } from "react-router-dom";
 import { UserRole } from "@/types/user";
 import TasksContainer from "@/components/tasks/TasksContainer";
-import { useTranslation } from "react-i18next";
 import { TaskTab } from "@/types/task.types";
 
 const DashboardTasks = () => {
-  const { t, i18n } = useTranslation();
   const {
     isLoading,
     searchQuery,
@@ -71,7 +69,7 @@ const DashboardTasks = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">{t("task.tasks")}</h1>
+      <h1 className="text-2xl font-bold tracking-tight">Tasks</h1>
       
       <TaskTabs 
         activeTab={activeTab}
@@ -85,9 +83,9 @@ const DashboardTasks = () => {
         <div className="bg-muted/50 rounded-lg p-4 flex items-center">
           <Archive className="h-5 w-5 mr-2 text-muted-foreground" />
           <div>
-            <h3 className="font-medium">{t("task.archive.title")}</h3>
+            <h3 className="font-medium">Archived Tasks</h3>
             <p className="text-sm text-muted-foreground">
-              {t("task.archive.description")}
+              These tasks have been archived and are no longer active.
             </p>
           </div>
         </div>
