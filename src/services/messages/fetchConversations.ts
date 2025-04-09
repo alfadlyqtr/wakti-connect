@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Conversation } from "@/types/message.types";
 
@@ -15,7 +16,6 @@ export const fetchConversations = async (staffOnly: boolean = false): Promise<Co
     }
 
     // Get all messages to/from the user
-    // We need to use raw SQL query with supabase.from('messages').select() instead of rpc 
     const { data: messages, error } = await supabase
       .from('messages')
       .select(`
