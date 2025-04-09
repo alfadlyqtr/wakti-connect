@@ -143,16 +143,17 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       const staffInfo = staffProfiles[msg.sender_id];
       
       // Use staff info if available, otherwise use profile info
+      // Add proper null checking to avoid TypeScript errors
       const senderName = 
         staffInfo?.name ||
-        (senderInfo as any)?.business_name || 
-        (senderInfo as any)?.display_name || 
-        (senderInfo as any)?.full_name || 
+        (senderInfo && typeof senderInfo === 'object' ? (senderInfo as any)?.business_name : undefined) || 
+        (senderInfo && typeof senderInfo === 'object' ? (senderInfo as any)?.display_name : undefined) || 
+        (senderInfo && typeof senderInfo === 'object' ? (senderInfo as any)?.full_name : undefined) || 
         'Unknown User';
       
       const senderAvatar = 
         staffInfo?.avatar_url ||
-        (senderInfo as any)?.avatar_url;
+        (senderInfo && typeof senderInfo === 'object' ? (senderInfo as any)?.avatar_url : undefined);
       
       return {
         id: msg.id,
