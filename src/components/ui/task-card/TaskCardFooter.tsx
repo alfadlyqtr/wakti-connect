@@ -32,7 +32,7 @@ export const TaskCardFooter: React.FC<TaskCardFooterProps> = ({
       <div>
         {completedDate && (
           <span>
-            Completed at {format(new Date(completedDate), "MMM d, yyyy")}
+            Completed on {format(new Date(completedDate), "MMM d, yyyy")}
           </span>
         )}
       </div>

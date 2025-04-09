@@ -22,7 +22,7 @@ export const TaskCardHeader: React.FC<TaskCardHeaderProps> = ({
   isRecurring,
   isCompleted,
 }) => {
-  // Explicitly hardcode English values
+  // Hardcoded English values for priority labels
   const getPriorityLabel = (priority: TaskPriority): string => {
     switch (priority) {
       case "urgent": return "Urgent";
