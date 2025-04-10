@@ -76,6 +76,7 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
     
     // If no data or empty array, return empty array
     if (!messageData || messageData.length === 0) {
+      console.log("No messages found");
       return [];
     }
     
@@ -84,12 +85,20 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
     
     if (conversationUserId) {
       filteredData = messageData.filter(msg => {
-        return (
+        const isMatch =
           (msg.sender_id === session.user.id && msg.recipient_id === conversationUserId) ||
-          (msg.sender_id === conversationUserId && msg.recipient_id === session.user.id)
-        );
+          (msg.sender_id === conversationUserId && msg.recipient_id === session.user.id);
+
+        if (!isMatch) {
+          console.log("Filtered out message:", msg);
+        }
+
+        return isMatch;
       });
     }
+    
+    console.log("Total messages fetched:", messageData.length);
+    console.log("Messages after filtering:", filteredData.length);
     
     // Get all unique user IDs from messages (both senders and recipients)
     const userIds = new Set<string>();
@@ -172,6 +181,7 @@ export const getMessages = async (conversationUserId?: string): Promise<Message[
       };
     });
     
+    console.log("Returning messages:", messages);
     return messages;
   } catch (error) {
     console.error("Failed to fetch messages:", error);
