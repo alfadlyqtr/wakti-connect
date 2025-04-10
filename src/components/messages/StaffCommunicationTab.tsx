@@ -5,7 +5,6 @@ import { Users, MessageSquare, RefreshCcw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import MessageComposerDialog from "./chat/MessageComposerDialog";
@@ -28,8 +27,9 @@ interface StaffMember {
 
 const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessId }) => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [selectedMessageForReply, setSelectedMessageForReply] = useState<any | null>(null);
+  const [isReplyDialogOpen, setIsReplyDialogOpen] = useState(false);
   
   // Fetch the current user ID
   React.useEffect(() => {
@@ -114,6 +114,7 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
     setTimeout(() => {
       refetchMessages();
     }, 500);
+    setIsReplyDialogOpen(false);
   };
   
   const handleReplyClick = (message: any) => {
@@ -126,10 +127,13 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
       ? message.recipientName
       : message.senderName;
     
-    // Open MessageComposerDialog with the recipient information
-    // Implementation would be specific to how you want to handle replies
-    // For now, just navigate to the main messaging interface with the recipient
-    navigate(`/dashboard/messages/${recipientId}`);
+    // Store the message info and open the dialog
+    setSelectedMessageForReply({
+      recipientId,
+      recipientName,
+      message
+    });
+    setIsReplyDialogOpen(true);
   };
   
   if (messagesError) {
@@ -295,6 +299,18 @@ const StaffCommunicationTab: React.FC<StaffCommunicationTabProps> = ({ businessI
             </div>
           </CardContent>
         </Card>
+      )}
+      
+      {/* Reply Dialog - Only render when needed */}
+      {selectedMessageForReply && (
+        <MessageComposerDialog
+          key={`reply-${selectedMessageForReply.recipientId}`}
+          recipientId={selectedMessageForReply.recipientId}
+          recipientName={selectedMessageForReply.recipientName}
+          open={isReplyDialogOpen}
+          onOpenChange={setIsReplyDialogOpen}
+          onMessageSent={handleMessageSent}
+        />
       )}
     </div>
   );

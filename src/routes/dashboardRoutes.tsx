@@ -1,4 +1,3 @@
-
 import { RouteObject } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -26,6 +25,7 @@ const DashboardBusinessReports = lazy(() => import("@/pages/dashboard/DashboardB
 const DashboardContacts = lazy(() => import("@/pages/dashboard/DashboardContacts"));
 const DashboardSubscribers = lazy(() => import("@/pages/dashboard/DashboardSubscribers"));
 const DashboardUserSubscriptions = lazy(() => import("@/pages/dashboard/DashboardUserSubscriptions"));
+const DashboardStaffCommunication = lazy(() => import("@/pages/dashboard/DashboardStaffCommunication"));
 
 // Wrap dynamic imports with suspense
 const withSuspense = (Component: React.ComponentType) => (
@@ -75,17 +75,14 @@ export const dashboardRoutes: RouteObject[] = [
     path: "team",
     element: withSuspense(DashboardTeamManagement),
   },
-  // Updated the work route to be accessible by staff - no StaffRoleGuard here
   {
     path: "work",
     element: withSuspense(DashboardWorkManagement),
   },
-  // Added the jobs route accessible by staff - no StaffRoleGuard here
   {
     path: "jobs",
     element: withSuspense(DashboardJobs),
   },
-  // Added the job-cards route accessible by staff - no StaffRoleGuard here
   {
     path: "job-cards",
     element: withSuspense(DashboardJobCards),
@@ -102,7 +99,6 @@ export const dashboardRoutes: RouteObject[] = [
     path: "messages",
     element: withSuspense(DashboardMessages),
   },
-  // Added explicit route for notifications
   {
     path: "notifications",
     element: withSuspense(DashboardNotifications),
@@ -119,7 +115,6 @@ export const dashboardRoutes: RouteObject[] = [
     path: "reports",
     element: withSuspense(DashboardBusinessReports),
   },
-  // Add new route for contacts with StaffRoleGuard to block staff access
   {
     path: "contacts",
     element: (
@@ -133,14 +128,16 @@ export const dashboardRoutes: RouteObject[] = [
       </StaffRoleGuard>
     ),
   },
-  // Add new route for subscribers (business users)
   {
     path: "subscribers",
     element: withSuspense(DashboardSubscribers),
   },
-  // Add new route for user subscriptions (individual users)
   {
     path: "subscriptions",
     element: withSuspense(DashboardUserSubscriptions),
+  },
+  {
+    path: "staff-communication",
+    element: withSuspense(DashboardStaffCommunication),
   },
 ];

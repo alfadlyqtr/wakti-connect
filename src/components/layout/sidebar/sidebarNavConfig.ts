@@ -1,4 +1,3 @@
-
 import {
   LayoutDashboard,
   Settings,
@@ -14,7 +13,8 @@ import {
   FileText,
   Bot,
   MessageSquare,
-  Bookmark
+  Bookmark,
+  Headphones
 } from "lucide-react";
 
 export type NavItem = {
@@ -115,5 +115,11 @@ export const navItems: NavItem[] = [
     path: "help",
     icon: HelpCircle,
     showFor: ['free', 'individual', 'business', 'staff'],
+  },
+  {
+    label: "Staff Communication",
+    path: "staff-communication",
+    icon: Headphones,
+    showFor: ['staff'],
   },
 ];

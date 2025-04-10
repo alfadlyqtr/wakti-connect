@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { 
   Dialog, 
@@ -23,6 +22,8 @@ interface MessageComposerDialogProps {
   recipientAvatar?: string;
   triggerElement?: React.ReactNode;
   onMessageSent?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
@@ -30,7 +31,9 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
   recipientName,
   recipientAvatar,
   triggerElement,
-  onMessageSent
+  onMessageSent,
+  open,
+  onOpenChange
 }) => {
   const [message, setMessage] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -41,6 +44,15 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
   const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { sendMessage, isSending } = useMessaging({});
+  
+  const dialogOpen = open !== undefined ? open : isOpen;
+  const setDialogOpen = (value: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(value);
+    } else {
+      setIsOpen(value);
+    }
+  };
   
   const MAX_MESSAGE_LENGTH = 300;
   const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
@@ -53,7 +65,6 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
       let audioUrl: string | undefined;
       let imageUrl: string | undefined;
       
-      // For voice messages, upload audio file
       if (type === 'voice' && audioFile) {
         const { data: audioData, error: audioError } = await supabase.storage
           .from('message_attachments')
@@ -68,12 +79,10 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
           .getPublicUrl(audioData.path);
           
         audioUrl = audioPubUrlData.publicUrl;
-        messageContent = null; // Set content to null for voice messages
+        messageContent = null;
       }
       
-      // For image messages, upload image file
       if (type === 'image' && imageFile) {
-        // Check file size
         if (imageFile.size > MAX_IMAGE_SIZE) {
           toast({
             title: "File too large",
@@ -96,14 +105,12 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
           .getPublicUrl(imageData.path);
           
         imageUrl = imagePubUrlData.publicUrl;
-        messageContent = null; // Set content to null for image messages
+        messageContent = null;
         
-        // Clear image preview
         setImagePreview(null);
         setImageFile(null);
       }
       
-      // Validate for text message
       if (type === 'text') {
         if (!messageContent || messageContent.length > MAX_MESSAGE_LENGTH) {
           toast({
@@ -159,7 +166,6 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
     
     const selectedFile = files[0];
     
-    // Check file size
     if (selectedFile.size > MAX_IMAGE_SIZE) {
       toast({
         title: "File too large",
@@ -169,7 +175,6 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
       return;
     }
     
-    // Check if file is image
     if (!selectedFile.type.startsWith('image/')) {
       toast({
         title: "Invalid file type",
@@ -179,7 +184,6 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
       return;
     }
     
-    // Create preview
     const reader = new FileReader();
     reader.onload = (event) => {
       setImagePreview(event.target?.result as string);
@@ -187,7 +191,7 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
     reader.readAsDataURL(selectedFile);
     
     setImageFile(selectedFile);
-    e.target.value = ''; // Reset input
+    e.target.value = '';
   };
   
   const handleClearImage = () => {
@@ -196,14 +200,12 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {triggerElement || (
-          <Button variant="outline" size="sm">
-            Message
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {triggerElement && (
+        <DialogTrigger asChild>
+          {triggerElement}
+        </DialogTrigger>
+      )}
       
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -223,7 +225,6 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
           </DialogTitle>
         </DialogHeader>
         
-        {/* Voice recorder */}
         {isRecording ? (
           <VoiceRecorder 
             onRecordingComplete={handleVoiceRecordingComplete}
@@ -232,7 +233,6 @@ const MessageComposerDialog: React.FC<MessageComposerDialogProps> = ({
           />
         ) : (
           <div className="space-y-4">
-            {/* Image preview */}
             {imagePreview && (
               <div className="relative">
                 <img 
